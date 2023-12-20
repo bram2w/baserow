@@ -1,47 +1,42 @@
 import Error from '@baserow/modules/core/components/Error'
-import { bootstrapVueContext } from '@baserow/test/helpers/components'
+import { TestApp } from '@baserow/test/helpers/testApp'
+// import { bootstrapVueContext } from '@baserow/test/helpers/components'
 
 describe('Error Component Tests', () => {
-  let vueContext = null
+  let testApp = null
 
-  beforeEach(() => {
-    vueContext = bootstrapVueContext()
+  beforeAll(() => {
+    testApp = new TestApp()
   })
 
   afterEach(() => {
-    vueContext.teardownVueContext()
+    testApp.afterEach()
   })
 
-  function errorComponent(props) {
-    return vueContext.vueTestUtils.shallowMount(Error, {
-      localVue: vueContext.vue,
-      propsData: props,
-    })
-  }
-
-  test('When visible prop is true title and message are shown', () => {
-    const error = errorComponent({
+  const mountComponent = (
+    props = {
       error: {
         visible: true,
-        title: 'TestError',
-        message: 'message',
+        title: 'error title',
+        message: 'error content message',
       },
-    })
+    }
+  ) => {
+    return testApp.mount(Error, { propsData: props })
+  }
 
-    const html = error.html()
-    expect(html).toMatch('TestError')
-    expect(html).toMatch('message')
+  test('When visible prop is true title and message are shown', async () => {
+    const wrapper = await mountComponent()
+
+    expect(wrapper.html()).toContain('error title')
+    expect(wrapper.find('.alert__message p').text()).toContain(
+      'error content message'
+    )
   })
 
-  test('When visible prop is false no html is rendered', () => {
-    const error = errorComponent({
-      error: {
-        visible: false,
-        title: 'TestError',
-        message: 'message',
-      },
-    })
+  test('When visible prop is false no html is rendered', async () => {
+    const wrapper = await mountComponent({ error: { visible: false } })
 
-    expect(error.html()).toStrictEqual('')
+    expect(wrapper.html()).toStrictEqual('')
   })
 })

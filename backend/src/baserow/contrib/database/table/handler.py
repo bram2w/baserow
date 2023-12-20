@@ -26,6 +26,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import (
     CreateTableDatabaseTableOperationType,
+    ListTablesDatabaseTableOperationType,
     OrderTablesDatabaseTableOperationType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
@@ -37,7 +38,12 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
 
-from .constants import ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, TABLE_CREATION
+from .constants import (
+    CREATED_BY_COLUMN_NAME,
+    LAST_MODIFIED_BY_COLUMN_NAME,
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+    TABLE_CREATION,
+)
 from .exceptions import (
     FailedToLockTableDueToConflict,
     InitialTableDataDuplicateName,
@@ -62,6 +68,34 @@ tracer = trace.get_tracer(__name__)
 
 
 class TableHandler(metaclass=baserow_trace_methods(tracer)):
+    def list_workspace_tables(
+        self, user: AbstractUser, workspace, include_trashed=False, base_queryset=None
+    ) -> QuerySet[Table]:
+        """
+        Lists available tables for a user/workspace combination.
+
+        :user: The user on whose behalf we want to return tables.
+        :workspace: The workspace for which the tables should be returned.
+        :base_queryset: specify a base queryset to use.
+        :return: Iterator over returned tables.
+        """
+
+        table_qs = base_queryset if base_queryset else Table.objects.all()
+
+        table_qs = table_qs.filter(database__workspace=workspace).select_related(
+            "database", "database__workspace"
+        )
+
+        if not include_trashed:
+            table_qs = table_qs.filter(database__workspace__trashed=False)
+
+        return CoreHandler().filter_queryset(
+            user,
+            ListTablesDatabaseTableOperationType.type,
+            table_qs,
+            workspace=workspace,
+        )
+
     def get_table(
         self, table_id: int, base_queryset: Optional[QuerySet] = None
     ) -> Table:
@@ -425,7 +459,6 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             OrderTablesDatabaseTableOperationType.type,
             all_tables,
             workspace=database.workspace,
-            context=database,
         )
 
         table_ids = user_tables.values_list("id", flat=True)
@@ -705,3 +738,36 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             schema_editor.add_index(model, get_row_needs_background_update_index(table))
 
         table.save(update_fields=("needs_background_update_column_added",))
+
+    def create_created_by_and_last_modified_by_fields(self, table: "Table") -> None:
+        """
+        Creates the created_by and last_modified_by fields for the provided
+        table if they have not yet been created.
+
+        :param table: Table that should have created_by and last_modified_by
+            fields.
+        """
+
+        last_modified_by_column_added = table.last_modified_by_column_added
+        created_by_column_added = table.created_by_column_added
+        if last_modified_by_column_added and created_by_column_added:
+            return
+
+        table.last_modified_by_column_added = True
+        table.created_by_column_added = True
+        model = table.get_model(use_cache=False, field_ids=[])
+
+        with safe_django_schema_editor(atomic=False) as schema_editor:
+            if not last_modified_by_column_added:
+                last_modified_by_field = model._meta.get_field(
+                    LAST_MODIFIED_BY_COLUMN_NAME
+                )
+                schema_editor.add_field(model, last_modified_by_field)
+
+            if not created_by_column_added:
+                created_by_field = model._meta.get_field(CREATED_BY_COLUMN_NAME)
+                schema_editor.add_field(model, created_by_field)
+
+        table.save(
+            update_fields=["created_by_column_added", "last_modified_by_column_added"]
+        )

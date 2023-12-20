@@ -21,5 +21,23 @@ export default (client) => {
         values
       )
     },
+    order(pageId, order, elementId = null) {
+      const payload = { workflow_action_ids: order }
+
+      if (elementId) {
+        payload.element_id = elementId
+      }
+
+      return client.post(
+        `builder/page/${pageId}/workflow_actions/order/`,
+        payload
+      )
+    },
+    dispatch(workflowActionId, data) {
+      return client.post(
+        `builder/workflow_action/${workflowActionId}/dispatch/`,
+        data
+      )
+    },
   }
 }

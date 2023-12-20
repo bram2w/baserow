@@ -99,7 +99,14 @@ from .signals import (
 )
 from .telemetry.utils import baserow_trace_methods, disable_instrumentation
 from .trash.handler import TrashHandler
-from .types import Actor, ContextObject, PermissionCheck, PermissionObjectResult
+from .types import (
+    Actor,
+    ContextObject,
+    Email,
+    PermissionCheck,
+    PermissionObjectResult,
+    UserEmailMapping,
+)
 from .utils import (
     ChildProgressBuilder,
     atomic_if_not_already,
@@ -424,7 +431,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional[Workspace] = None,
-        context: Optional[ContextObject] = None,
         allow_if_template: Optional[bool] = False,
     ) -> QuerySet:
         """
@@ -441,7 +447,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             object that are in the same `ObjectScopeType` as the one described in the
             `OperationType` corresponding to the given `operation_name`.
         :param workspace: An optional workspace into which the operation occurs.
-        :param context: The optional context of the operation.
         :param allow_if_template: If true and if the workspace is related to a template,
             then we don't want to filter on the queryset.
         :return: The queryset, potentially filtered.
@@ -458,7 +463,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 continue
 
             queryset = permission_manager_type.filter_queryset(
-                actor, operation_name, queryset, workspace=workspace, context=context
+                actor, operation_name, queryset, workspace=workspace
             )
 
         return queryset
@@ -759,6 +764,12 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             WorkspaceUser.objects_and_trash if include_trash else WorkspaceUser.objects
         )
         return workspace_user_queryset.filter(user__in=users, workspace=workspace)
+
+    def get_users_in_workspace(self, workspace: Workspace) -> list[User]:
+        wk_users = WorkspaceUser.objects.filter(workspace=workspace).select_related(
+            "user"
+        )
+        return [wk_user.user for wk_user in wk_users]
 
     def update_workspace_user(
         self,
@@ -1191,6 +1202,22 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         return workspace_user
 
+    @classmethod
+    def get_user_email_mapping(
+        cls, workspace_id: int, only_emails: list[Email]
+    ) -> UserEmailMapping:
+        workspace_users = WorkspaceUser.objects.filter(
+            workspace_id=workspace_id
+        ).select_related("user")
+
+        if only_emails:
+            workspace_users = workspace_users.filter(user__email__in=only_emails)
+
+        return {
+            workspace_user.user.email: workspace_user.user
+            for workspace_user in workspace_users
+        }
+
     def get_user_application(
         self,
         user: AbstractUser,
@@ -1457,7 +1484,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             OrderApplicationsOperationType.type,
             all_applications,
             workspace=workspace,
-            context=workspace,
         )
 
         users_application_ids = users_applications.values_list("id", flat=True)

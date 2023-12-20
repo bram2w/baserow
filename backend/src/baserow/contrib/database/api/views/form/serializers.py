@@ -142,3 +142,32 @@ class FormViewSubmittedSerializer(serializers.ModelSerializer):
             "submit_action_redirect_url",
             "row_id",
         )
+
+
+class FormViewNotifyOnSubmitSerializerMixin(serializers.Serializer):
+    receive_notification_on_submit = serializers.SerializerMethodField(
+        help_text="A boolean indicating if the current user should be notified when "
+        "the form is submitted."
+    )
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_receive_notification_on_submit(self, obj):
+        logged_user_id = self.context["user"].id
+        for usr in obj.users_to_notify_on_submit.all():
+            if usr.id == logged_user_id:
+                return True
+        return False
+
+    def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
+
+        receive_notification = data.get("receive_notification_on_submit", None)
+        if receive_notification is not None:
+            if not isinstance(receive_notification, bool):
+                raise serializers.ValidationError(
+                    "The value must be a boolean indicating if the current user should be "
+                    "notified on submit or not."
+                )
+            ret["receive_notification_on_submit"] = receive_notification
+
+        return ret

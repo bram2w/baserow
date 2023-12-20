@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for multiple select in the formula field. Add `has_option` formula to check if a multiple select field has a specific option.",
+    "issue_number": 1363,
+    "bullet_points": [],
+    "created_at": "2023-11-02"
+}

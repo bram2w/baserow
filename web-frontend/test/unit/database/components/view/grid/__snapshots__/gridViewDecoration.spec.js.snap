@@ -17,6 +17,7 @@ exports[`GridView component with decoration Default component with first_cell de
     class="grid-view__left"
     style="width: 72px;"
   >
+      
     <div
       class="grid-view__inner"
       style="min-width: 72px;"
@@ -24,8 +25,9 @@ exports[`GridView component with decoration Default component with first_cell de
       <div
         class="grid-view__head"
       >
+         
         <div
-          class="grid-view__column"
+          class="grid-view__column grid-view__column--no-border-right"
           style="width: 72px;"
         >
           <div
@@ -50,11 +52,19 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__placeholder"
             style="height: 66px; width: 72px;"
-          />
+          >
+            <div
+              class="grid-view__placeholder-groups"
+              style="width: 0px;"
+            />
+             
+          </div>
+           
+          <!---->
            
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(nullpx);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
@@ -62,7 +72,7 @@ exports[`GridView component with decoration Default component with first_cell de
               <!---->
                
               <div
-                class="grid-view__column"
+                class="grid-view__column grid-view__column--no-border-right"
                 style="width: 72px;"
               >
                 <div
@@ -162,6 +172,7 @@ exports[`GridView component with decoration Default component with first_cell de
     class="grid-view__right"
     style="left: 72px;"
   >
+      
     <div
       class="grid-view__inner"
       style="min-width: 800px;"
@@ -169,6 +180,7 @@ exports[`GridView component with decoration Default component with first_cell de
       <div
         class="grid-view__head"
       >
+         
         <!---->
          
         <div
@@ -311,6 +323,8 @@ exports[`GridView component with decoration Default component with first_cell de
             class="grid-view__placeholder"
             style="height: 66px; width: 600px;"
           >
+            <!---->
+             
             <div
               class="grid-view__placeholder-column"
               style="left: 199px;"
@@ -325,9 +339,11 @@ exports[`GridView component with decoration Default component with first_cell de
             />
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
@@ -386,6 +402,7 @@ exports[`GridView component with decoration Default component with first_cell de
       <div
         class="grid-view__foot"
       >
+        <!---->
          
         <div
           style="width: 200px;"
@@ -437,7 +454,7 @@ exports[`GridView component with decoration Default component with first_cell de
    
   <div
     class="grid-view__row-dragging-container"
-    style="display: none;"
+    style="left: 0px; display: none;"
   >
     <div
       class="grid-view__row-dragging"
@@ -471,6 +488,7 @@ exports[`GridView component with decoration Default component with row wrapper d
     class="grid-view__left"
     style="width: 72px;"
   >
+      
     <div
       class="grid-view__inner"
       style="min-width: 72px;"
@@ -478,8 +496,9 @@ exports[`GridView component with decoration Default component with row wrapper d
       <div
         class="grid-view__head"
       >
+         
         <div
-          class="grid-view__column"
+          class="grid-view__column grid-view__column--no-border-right"
           style="width: 72px;"
         >
           <div
@@ -504,11 +523,19 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__placeholder"
             style="height: 66px; width: 72px;"
-          />
+          >
+            <div
+              class="grid-view__placeholder-groups"
+              style="width: 0px;"
+            />
+             
+          </div>
+           
+          <!---->
            
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(nullpx);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="test-wrapper"
@@ -576,6 +603,7 @@ exports[`GridView component with decoration Default component with row wrapper d
     class="grid-view__right"
     style="left: 72px;"
   >
+      
     <div
       class="grid-view__inner"
       style="min-width: 800px;"
@@ -583,6 +611,7 @@ exports[`GridView component with decoration Default component with row wrapper d
       <div
         class="grid-view__head"
       >
+         
         <!---->
          
         <div
@@ -725,6 +754,8 @@ exports[`GridView component with decoration Default component with row wrapper d
             class="grid-view__placeholder"
             style="height: 66px; width: 600px;"
           >
+            <!---->
+             
             <div
               class="grid-view__placeholder-column"
               style="left: 199px;"
@@ -739,9 +770,11 @@ exports[`GridView component with decoration Default component with row wrapper d
             />
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="test-wrapper"
@@ -769,6 +802,7 @@ exports[`GridView component with decoration Default component with row wrapper d
       <div
         class="grid-view__foot"
       >
+        <!---->
          
         <div
           style="width: 200px;"
@@ -820,7 +854,7 @@ exports[`GridView component with decoration Default component with row wrapper d
    
   <div
     class="grid-view__row-dragging-container"
-    style="display: none;"
+    style="left: 0px; display: none;"
   >
     <div
       class="grid-view__row-dragging"
@@ -854,6 +888,7 @@ exports[`GridView component with decoration Default component with unavailable d
     class="grid-view__left"
     style="width: 72px;"
   >
+      
     <div
       class="grid-view__inner"
       style="min-width: 72px;"
@@ -861,8 +896,9 @@ exports[`GridView component with decoration Default component with unavailable d
       <div
         class="grid-view__head"
       >
+         
         <div
-          class="grid-view__column"
+          class="grid-view__column grid-view__column--no-border-right"
           style="width: 72px;"
         >
           <div
@@ -887,11 +923,19 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__placeholder"
             style="height: 66px; width: 72px;"
-          />
+          >
+            <div
+              class="grid-view__placeholder-groups"
+              style="width: 0px;"
+            />
+             
+          </div>
+           
+          <!---->
            
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(nullpx);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
@@ -899,7 +943,7 @@ exports[`GridView component with decoration Default component with unavailable d
               <!---->
                
               <div
-                class="grid-view__column"
+                class="grid-view__column grid-view__column--no-border-right"
                 style="width: 72px;"
               >
                 <div
@@ -993,6 +1037,7 @@ exports[`GridView component with decoration Default component with unavailable d
     class="grid-view__right"
     style="left: 72px;"
   >
+      
     <div
       class="grid-view__inner"
       style="min-width: 800px;"
@@ -1000,6 +1045,7 @@ exports[`GridView component with decoration Default component with unavailable d
       <div
         class="grid-view__head"
       >
+         
         <!---->
          
         <div
@@ -1142,6 +1188,8 @@ exports[`GridView component with decoration Default component with unavailable d
             class="grid-view__placeholder"
             style="height: 66px; width: 600px;"
           >
+            <!---->
+             
             <div
               class="grid-view__placeholder-column"
               style="left: 199px;"
@@ -1156,9 +1204,11 @@ exports[`GridView component with decoration Default component with unavailable d
             />
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
@@ -1217,6 +1267,7 @@ exports[`GridView component with decoration Default component with unavailable d
       <div
         class="grid-view__foot"
       >
+        <!---->
          
         <div
           style="width: 200px;"
@@ -1268,7 +1319,7 @@ exports[`GridView component with decoration Default component with unavailable d
    
   <div
     class="grid-view__row-dragging-container"
-    style="display: none;"
+    style="left: 0px; display: none;"
   >
     <div
       class="grid-view__row-dragging"

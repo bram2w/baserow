@@ -131,7 +131,8 @@ export const mutations = {
     view._.loading = value
   },
   ADD_ITEM(state, item) {
-    state.items = [...state.items, item].sort((a, b) => a.order - b.order)
+    if (!state.items.some((existingItem) => existingItem.id === item.id))
+      state.items = [...state.items, item].sort((a, b) => a.order - b.order)
   },
   UPDATE_ITEM(state, { id, values, repopulate }) {
     const index = state.items.findIndex((item) => item.id === id)
@@ -397,6 +398,7 @@ export const actions = {
    * Updates the values of the view with the provided id.
    */
   async update({ commit, dispatch }, { view, values, readOnly = false }) {
+    commit('SET_ITEM_LOADING', { view, value: true })
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -426,11 +428,19 @@ export const actions = {
     dispatch('forceUpdate', { view, values: newValues })
     try {
       if (!readOnly) {
+        dispatch(
+          'undoRedo/updateCurrentScopeSet',
+          DATABASE_ACTION_SCOPES.view(view.id),
+          {
+            root: true,
+          }
+        )
         await ViewService(this.$client).update(view.id, values)
         updatePublicViewHasPassword()
       }
       commit('SET_ITEM_LOADING', { view, value: false })
     } catch (error) {
+      commit('SET_ITEM_LOADING', { view, value: false })
       dispatch('forceUpdate', { view, values: oldValues })
       throw error
     }
@@ -629,7 +639,7 @@ export const actions = {
       this.$cookies.set('defaultViewId', fittedList, {
         path: '/',
         maxAge: 60 * 60 * 24 * 365, // 1 year
-        sameSite: 'lax',
+        sameSite: this.$config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
         secure,
       })
       commit('SET_DEFAULT_VIEW', view.id)
@@ -1196,6 +1206,10 @@ export const actions = {
       values.order = 'ASC'
     }
 
+    if (!Object.prototype.hasOwnProperty.call(values, 'width')) {
+      values.width = 200
+    }
+
     const groupBy = Object.assign({}, values)
     populateGroupBy(groupBy)
     groupBy.id = uuid()
@@ -1394,21 +1408,22 @@ export const getters = {
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
   },
-  first(state) {
-    const items = state.items
-      .map((item) => item)
-      .sort((a, b) => a.order - b.order)
+  first(state, getters) {
+    const items = getters.getAllOrdered
     return items.length > 0 ? items[0] : null
   },
   // currently only used during unit tests:
   defaultId: (state) => {
     return state.defaultViewId
   },
-  defaultOrFirst: (state, getters) => {
-    return getters.get(state.defaultViewId) || getters.first
+  default: (state, getters) => {
+    return getters.get(state.defaultViewId)
   },
   getAll(state) {
     return state.items
+  },
+  getAllOrdered(state) {
+    return state.items.map((item) => item).sort((a, b) => a.order - b.order)
   },
 }
 

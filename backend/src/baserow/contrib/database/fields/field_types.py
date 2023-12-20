@@ -1,4 +1,5 @@
 import re
+import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
@@ -15,8 +16,9 @@ from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
-from django.db import OperationalError, models
+from django.db import OperationalError, connection, models
 from django.db.models import (
+    Case,
     CharField,
     DateTimeField,
     Expression,
@@ -27,8 +29,10 @@ from django.db.models import (
     QuerySet,
     Subquery,
     Value,
+    When,
+    Window,
 )
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, RowNumber
 from django.utils.timezone import make_aware
 
 import pytz
@@ -54,7 +58,9 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_WITH_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
+    BaserowBooleanField,
     CollaboratorSerializer,
+    DurationFieldSerializer,
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
     IntegerOrStringField,
@@ -62,8 +68,8 @@ from baserow.contrib.database.api.fields.serializers import (
     MustBeEmptyField,
     SelectOptionSerializer,
 )
+from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
-from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
     BaserowExpression,
@@ -77,13 +83,16 @@ from baserow.contrib.database.formula import (
     BaserowFormulaType,
     FormulaHandler,
 )
+from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.models import Table
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.db import (
     CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
     collate_expression,
 )
+from baserow.core.expressions import DateTrunc
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.formula import BaserowFormulaException
 from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
@@ -96,10 +105,11 @@ from baserow.core.utils import list_to_comma_separated_string
 
 from ..formula.types.formula_types import (
     BaserowFormulaArrayType,
+    BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
 )
 from ..search.handler import SearchHandler
-from .constants import UPSERT_OPTION_DICT_KEY
+from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
@@ -125,6 +135,7 @@ from .exceptions import (
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .expressions import extract_jsonb_array_values_to_single_string
+from .field_cache import FieldCache
 from .field_filters import (
     AnnotatedQ,
     contains_filter,
@@ -132,23 +143,29 @@ from .field_filters import (
     filename_contains_filter,
 )
 from .field_sortings import OptionallyAnnotatedOrderBy
+from .fields import BaserowExpressionField, BaserowLastModifiedField
+from .fields import DurationField as DurationModelField
 from .fields import (
-    BaserowExpressionField,
-    BaserowLastModifiedField,
+    IntegerFieldWithSequence,
     MultipleSelectManyToManyField,
     SingleSelectForeignKey,
+    SyncedUserForeignKeyField,
 )
 from .handler import FieldHandler
 from .models import (
     AbstractSelectOption,
+    AutonumberField,
     BooleanField,
     CountField,
+    CreatedByField,
     CreatedOnField,
     DateField,
+    DurationField,
     EmailField,
     Field,
     FileField,
     FormulaField,
+    LastModifiedByField,
     LastModifiedField,
     LinkRowField,
     LongTextField,
@@ -163,20 +180,31 @@ from .models import (
     SingleSelectField,
     TextField,
     URLField,
+    UUIDField,
 )
 from .operations import CreateFieldOperationType, DeleteRelatedLinkRowFieldOperationType
 from .registries import (
     FieldType,
+    ManyToManyGroupByMixin,
     ReadOnlyFieldType,
     StartingRowType,
     field_type_registry,
 )
+from .utils.duration import (
+    DURATION_FORMAT_TOKENS,
+    DURATION_FORMATS,
+    convert_duration_input_value_to_timedelta,
+    prepare_duration_value_for_db,
+)
+
+User = get_user_model()
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.dependencies.update_collector import (
         FieldUpdateCollector,
     )
-    from baserow.contrib.database.table.models import GeneratedTableModel
+    from baserow.contrib.database.table.models import FieldObject, GeneratedTableModel
+    from baserow.contrib.database.views.models import View
 
 
 class CollationSortMixin:
@@ -312,6 +340,14 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaCharType(nullable=True)
+
+
+class ManyToManyFieldTypeSerializeToInputValueMixin:
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return [v.id for v in value.all()]
+
+    def random_to_input_value(self, field: Field, value: any) -> any:
+        return value
 
 
 class TextFieldType(CollationSortMixin, FieldType):
@@ -563,7 +599,7 @@ class NumberFieldType(FieldType):
         field: Field,
         row: "GeneratedTableModel",
         metadata,
-    ) -> Dict[str, Any]:
+    ) -> SerializedRowHistoryFieldMetadata:
         base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {
@@ -699,10 +735,6 @@ class BooleanFieldType(FieldType):
     model_class = BooleanField
     _can_group_by = True
 
-    # lowercase serializers.BooleanField.TRUE_VALUES + "checked" keyword
-    # WARNING: these values are prone to SQL injection
-    TRUE_VALUES = ["t", "true", "on", "y", "yes", 1, "checked"]
-
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         Prepare value for Boolean field.
@@ -710,7 +742,7 @@ class BooleanFieldType(FieldType):
         'checked' or to one of the serializers.BooleanField.TRUE_VALUES.
         """
 
-        true_values = ",".join(["'%s'" % v for v in self.TRUE_VALUES])
+        true_values = ",".join(["'%s'" % v for v in BASEROW_BOOLEAN_FIELD_TRUE_VALUES])
         return f"""
             IF lower(p_in::text) IN ({true_values}) THEN
                 p_in = TRUE;
@@ -720,9 +752,7 @@ class BooleanFieldType(FieldType):
         """
 
     def get_serializer_field(self, instance, **kwargs):
-        return serializers.BooleanField(
-            **{"required": False, "default": False, **kwargs}
-        )
+        return BaserowBooleanField(**{"required": False, "default": False, **kwargs})
 
     def get_model_field(self, instance, **kwargs):
         return models.BooleanField(default=False, **kwargs)
@@ -896,7 +926,7 @@ class DateFieldType(FieldType):
 
         utc = timezone("UTC")
 
-        if type(value) == str:
+        if isinstance(value, str):
             try:
                 # Try first to parse isodate
                 value = parser.isoparse(value)
@@ -914,10 +944,10 @@ class DateFieldType(FieldType):
                         code="invalid",
                     ) from exc
 
-        if type(value) == date:
+        if isinstance(value, date) and not isinstance(value, datetime):
             value = make_aware(datetime(value.year, value.month, value.day), utc)
 
-        if type(value) == datetime:
+        if isinstance(value, datetime):
             value = value.astimezone(utc)
             return value if instance.date_include_time else value.date()
 
@@ -1115,9 +1145,12 @@ class DateFieldType(FieldType):
         return old_field.date_include_time and not new_date_include_time
 
     def serialize_metadata_for_row_history(
-        self, field: Field, new_value: Any, old_value: Any
-    ) -> Dict[str, Any]:
-        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {
             **base,
@@ -1127,6 +1160,28 @@ class DateFieldType(FieldType):
             "date_show_tzinfo": field.date_show_tzinfo,
             "date_force_timezone": field.date_force_timezone,
         }
+
+    def get_group_by_field_unique_value(
+        self, field: Field, field_name: str, value: Any
+    ) -> Any:
+        if value and isinstance(value, datetime):
+            # We want to ignore seconds and microseconds when grouping.
+            value = value.replace(second=0, microsecond=0)
+        return value
+
+    def get_group_by_field_filters_and_annotations(
+        self, field, field_name, base_queryset, value
+    ):
+        filters = {field_name: value}
+        annotations = {}
+
+        if value and isinstance(value, datetime):
+            # DateTrunc cuts of every after the minute, so we can do a comparison
+            # with the provided value that doesn't have the seconds and microseconds.
+            annotations[field_name] = DateTrunc(
+                "minute", field_name, output_field=models.DateTimeField(null=True)
+            )
+        return filters, annotations
 
 
 class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
@@ -1209,6 +1264,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
 class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
     type = "last_modified"
     model_class = LastModifiedField
+    update_always = True
     source_field_name = "updated_on"
     model_field_class = BaserowLastModifiedField
     model_field_kwargs = {"sync_with": "updated_on"}
@@ -1221,7 +1277,563 @@ class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
     model_field_kwargs = {"sync_with_add": "created_on"}
 
 
-class LinkRowFieldType(FieldType):
+class LastModifiedByFieldType(ReadOnlyFieldType):
+    type = "last_modified_by"
+    model_class = LastModifiedByField
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+    update_always = True
+
+    source_field_name = "last_modified_by"
+    model_field_kwargs = {"sync_with": "last_modified_by"}
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        kwargs.update(self.model_field_kwargs)
+        return SyncedUserForeignKeyField(
+            User,
+            on_delete=models.SET_NULL,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
+            **kwargs,
+        )
+
+    def get_serializer_field(self, instance, **kwargs):
+        return CollaboratorSerializer(required=False, **kwargs)
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        """
+        If last_modified_by column is still not present on the table,
+        we need to create it first.
+        """
+
+        if not table.last_modified_by_column_added:
+            table_to_update = TableHandler().get_table_for_update(table.id)
+            TableHandler().create_created_by_and_last_modified_by_fields(
+                table_to_update
+            )
+            table.refresh_from_db()
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
+        model.objects.all().update(
+            **{f"{field.db_column}": models.F(self.source_field_name)}
+        )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        """
+        If the field type has changed, we need to update the values from
+        the source_field_name column.
+        """
+
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F(self.source_field_name)}
+            )
+
+    def enhance_queryset(self, queryset, field, name):
+        return queryset.select_related(name)
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        return False
+
+    def random_value(self, instance, fake, cache):
+        return None
+
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Any:
+        """
+        Exported value will be the user's email address.
+        """
+
+        user = self.get_internal_value_from_db(row, field_name)
+        return user.email if user else None
+
+    def set_import_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Importing will use the value from source_field_name column.
+        """
+
+        value = getattr(row, self.source_field_name)
+        setattr(row, field_name, value)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> Any:
+        return getattr(row, field_name)
+
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
+        """
+        Exported value will be the user's email address.
+        """
+
+        user = value
+        return user.email if user else None
+
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        """
+        If the user wants to sort the results they expect them to be ordered
+        alphabetically based on the user's name.
+        """
+
+        name = f"{field_name}__first_name"
+        order = collate_expression(F(name))
+
+        if order_direction == "ASC":
+            order = order.asc(nulls_first=True)
+        else:
+            order = order.desc(nulls_last=True)
+        return OptionallyAnnotatedOrderBy(order=order)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return value
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__first_name")[
+                :1
+            ]
+        )
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        if value == "":
+            return Q()
+        return Q(**{f"{field_name}__first_name__icontains": value})
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        When converting to last modified by field type we won't preserve any
+        values.
+        """
+
+        # fmt: off
+        sql = (
+            f"""
+            p_in = NULL;
+            """  # nosec b608
+        )
+        # fmt: on
+        return sql, {}
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        When converting to another field type we won't preserve any values.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type and connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+            # fmt: off
+            sql = (
+                f"""
+                p_in = NULL;
+                """  # nosec b608
+            )
+            # fmt: on
+            return sql, {}
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+
+class CreatedByFieldType(ReadOnlyFieldType):
+    type = "created_by"
+    model_class = CreatedByField
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+
+    source_field_name = "created_by"
+    model_field_kwargs = {"sync_with_add": "created_by"}
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        kwargs.update(self.model_field_kwargs)
+        return SyncedUserForeignKeyField(
+            User,
+            on_delete=models.SET_NULL,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
+            **kwargs,
+        )
+
+    def get_serializer_field(self, instance, **kwargs):
+        return CollaboratorSerializer(required=False, **kwargs)
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        """
+        If created_by column is still not present on the table,
+        we need to create it first.
+        """
+
+        if not table.created_by_column_added:
+            table_to_update = TableHandler().get_table_for_update(table.id)
+            TableHandler().create_created_by_and_last_modified_by_fields(
+                table_to_update
+            )
+            table.refresh_from_db()
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
+        model.objects.all().update(
+            **{f"{field.db_column}": models.F(self.source_field_name)}
+        )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        """
+        If the field type has changed, we need to update the values from
+        the source_field_name column.
+        """
+
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F(self.source_field_name)}
+            )
+
+    def enhance_queryset(self, queryset, field, name):
+        return queryset.select_related(name)
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        return False
+
+    def random_value(self, instance, fake, cache):
+        return None
+
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Any:
+        """
+        Exported value will be the user's email address.
+        """
+
+        user = self.get_internal_value_from_db(row, field_name)
+        return user.email if user else None
+
+    def set_import_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Importing will use the value from source_field_name column.
+        """
+
+        value = getattr(row, self.source_field_name)
+        setattr(row, field_name, value)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> Any:
+        return getattr(row, field_name)
+
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
+        """
+        Exported value will be the user's email address.
+        """
+
+        user = value
+        return user.email if user else None
+
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        """
+        If the user wants to sort the results they expect them to be ordered
+        alphabetically based on the user's name.
+        """
+
+        name = f"{field_name}__first_name"
+        order = collate_expression(F(name))
+
+        if order_direction == "ASC":
+            order = order.asc(nulls_first=True)
+        else:
+            order = order.desc(nulls_last=True)
+        return OptionallyAnnotatedOrderBy(order=order)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return value
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__first_name")[
+                :1
+            ]
+        )
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        if value == "":
+            return Q()
+        return Q(**{f"{field_name}__first_name__icontains": value})
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        When converting to created by field type we won't preserve any
+        values.
+        """
+
+        # fmt: off
+        sql = (
+            f"""
+            p_in = NULL;
+            """  # nosec b608
+        )
+        # fmt: on
+        return sql, {}
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        When converting to another field type we won't preserve any values.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type and connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+            # fmt: off
+            sql = (
+                f"""
+                p_in = NULL;
+                """  # nosec b608
+            )
+            # fmt: on
+            return sql, {}
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+
+class DurationFieldType(FieldType):
+    type = "duration"
+    model_class = DurationField
+    allowed_fields = ["duration_format"]
+    serializer_field_names = ["duration_format"]
+
+    def get_model_field(self, instance, **kwargs):
+        return DurationModelField(instance.duration_format, null=True)
+
+    def get_serializer_field(self, instance, **kwargs):
+        return DurationFieldSerializer(
+            **{
+                "required": False,
+                "allow_null": True,
+                "duration_format": instance.duration_format,
+                **kwargs,
+            },
+        )
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "The provided value can be a string in one of the available formats "
+            "or a number representing the duration in seconds. In any case, the "
+            "value will be rounded to match the field's duration format."
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        return prepare_duration_value_for_db(value, instance.duration_format)
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        search_exprs = []
+        for token in field.duration_format.split(":"):
+            search_expr = DURATION_FORMAT_TOKENS[token]["search_expr"](field.db_column)
+            search_exprs.append(search_expr)
+        separators = [Value(" ")] * len(search_exprs)
+        # interleave a separator between each extract_expr
+        exprs = [expr for pair in zip(search_exprs, separators) for expr in pair][:-1]
+        return Func(*exprs, function="CONCAT")
+
+    def random_value(self, instance, fake, cache):
+        random_seconds = fake.random.random() * 60 * 60 * 2
+        return convert_duration_input_value_to_timedelta(
+            random_seconds, instance.duration_format
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type in (TextFieldType.type, LongTextFieldType.type):
+            format_func = " || ':' || ".join(
+                [
+                    DURATION_FORMAT_TOKENS[format_token]["sql_to_text"]
+                    for format_token in from_field.duration_format.split(":")
+                ]
+            )
+
+            return f"p_in = {format_func};"
+        elif to_field_type.type == NumberFieldType.type:
+            return "p_in = EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::NUMERIC;"
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        from_field_type = field_type_registry.get_by_model(from_field)
+
+        if from_field_type.type in (NumberFieldType.type, self.type):
+            duration_format = to_field.duration_format
+            sql_round_func = DURATION_FORMATS[duration_format]["sql_round_func"]
+
+            return f"p_in = {sql_round_func} * INTERVAL '1 second';"
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return value.total_seconds()
+
+    def format_duration(
+        self, value: Optional[timedelta], duration_format: str
+    ) -> Optional[str]:
+        """
+        Formats a timedelta object to a string based on the provided duration_format.
+
+        :param value: The timedelta object that needs to be formatted.
+        :param duration_format: The format that needs to be used.
+        :return: The formatted string.
+        """
+
+        if value is None:
+            return None
+
+        secs_in_a_min = 60
+        secs_in_an_hour = 60 * 60
+
+        total_seconds = value.total_seconds()
+        hours = int(total_seconds / secs_in_an_hour)
+        minutes = int(total_seconds % secs_in_an_hour / secs_in_a_min)
+        seconds = total_seconds % secs_in_a_min
+
+        format_func = DURATION_FORMATS[duration_format]["format_func"]
+        return format_func(hours, minutes, seconds)
+
+    def get_export_value(
+        self,
+        value: Optional[timedelta],
+        field_object: "FieldObject",
+        rich_value: bool = False,
+    ) -> Optional[str]:
+        if value is None:
+            return None
+
+        secs_in_a_min = 60
+        secs_in_an_hour = 60 * 60
+
+        total_seconds = value.total_seconds()
+
+        hours = int(total_seconds / secs_in_an_hour)
+        mins = int(total_seconds % secs_in_an_hour / secs_in_a_min)
+        secs = total_seconds % secs_in_a_min
+
+        field = field_object["field"]
+        duration_format = field.duration_format
+        format_func = DURATION_FORMATS[duration_format]["format_func"]
+        return format_func(hours, mins, secs)
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: DurationField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        new_duration_format = new_field_attrs.get(
+            "duration_format", old_field.duration_format
+        )
+
+        formats_needing_a_backup = DURATION_FORMATS[old_field.duration_format][
+            "backup_field_if_changing_to"
+        ]
+        return new_duration_format in formats_needing_a_backup
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        curr_format = from_field.duration_format
+        formats_needing_alter_column = DURATION_FORMATS[curr_format][
+            "backup_field_if_changing_to"
+        ]
+        return to_field.duration_format in formats_needing_alter_column
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        return {**base, "duration_format": field.duration_format}
+
+
+class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):
     """
     The link row field can be used to link a field to a row of another table. Because
     the user should also be able to see which rows are linked to the related table,
@@ -2163,7 +2775,20 @@ class LinkRowFieldType(FieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
-        getattr(row, field_name).set(value)
+        through_model = row._meta.get_field(field_name).remote_field.through
+        through_model_fields = through_model._meta.get_fields()
+        current_field_name = through_model_fields[1].name
+        relation_field_name = through_model_fields[2].name
+
+        return [
+            through_model(
+                **{
+                    f"{current_field_name}_id": row.id,
+                    f"{relation_field_name}_id": item,
+                }
+            )
+            for item in value
+        ]
 
     def get_other_fields_to_trash_restore_always_together(self, field) -> List[Field]:
         fields = []
@@ -2576,28 +3201,31 @@ class FileFieldType(FieldType):
             # it must be fetched and added to to it.
             cache_entry = f"user_file_{file['name']}"
             if cache_entry not in cache:
-                try:
-                    user_file = UserFile.objects.all().name(file["name"]).get()
-                except UserFile.DoesNotExist:
-                    continue
-
                 if files_zip is not None and file["name"] not in files_zip.namelist():
                     # Load the user file from the content and write it to the zip file
                     # because it might not exist in the environment that it is going
                     # to be imported in.
-                    file_path = user_file_handler.user_file_path(user_file.name)
+                    file_path = user_file_handler.user_file_path(file["name"])
                     with storage.open(file_path, mode="rb") as storage_file:
                         files_zip.writestr(file["name"], storage_file.read())
 
-                cache[cache_entry] = user_file
+                # This is just used to avoid writing the same file twice.
+                cache[cache_entry] = True
 
-            file_names.append(
-                DatabaseExportSerializedStructure.file_field_value(
-                    name=file["name"],
-                    visible_name=file["visible_name"],
-                    original_name=cache[cache_entry].original_name,
+            if files_zip is None:
+                # If the zip file is `None`, it means we're duplicating this row. To
+                # avoid unnecessary queries, we jump add the complete file, and will
+                # use that during import instead of fetching the user file object.
+                file_names.append(file)
+            else:
+                file_names.append(
+                    DatabaseExportSerializedStructure.file_field_value(
+                        name=file["name"],
+                        visible_name=file["visible_name"],
+                        original_name=file["name"],
+                    )
                 )
-            )
+
         return file_names
 
     def set_import_serialized_value(
@@ -2617,7 +3245,7 @@ class FileFieldType(FieldType):
             # files_zip could be None when files are in the same storage of the export
             # so no need to export/reimport files already present in the storage.
             if files_zip is None:
-                user_file = user_file_handler.get_user_file_by_name(file["name"])
+                files.append(file)
             else:
                 with files_zip.open(file["name"]) as stream:
                     # Try to upload the user file with the original name to make sure
@@ -2626,9 +3254,9 @@ class FileFieldType(FieldType):
                         None, file["original_name"], stream, storage=storage
                     )
 
-            value = user_file.serialize()
-            value["visible_name"] = file["visible_name"]
-            files.append(value)
+                value = user_file.serialize()
+                value["visible_name"] = file["visible_name"]
+                files.append(value)
 
         setattr(row, field_name, files)
 
@@ -3031,13 +3659,32 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     def from_baserow_formula_type(self, formula_type) -> Field:
         return self.model_class()
 
+    def get_group_by_serializer_field(self, field, **kwargs):
+        return serializers.IntegerField(
+            **{
+                "required": False,
+                "allow_null": True,
+                **kwargs,
+            }
+        )
 
-class MultipleSelectFieldType(SelectOptionBaseFieldType):
+
+class MultipleSelectFieldType(
+    ManyToManyFieldTypeSerializeToInputValueMixin,
+    ManyToManyGroupByMixin,
+    SelectOptionBaseFieldType,
+):
     type = "multiple_select"
     model_class = MultipleSelectField
     can_get_unique_values = False
     is_many_to_many_field = True
     _can_group_by = True
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaMultipleSelectType(nullable=True)
+
+    def from_baserow_formula_type(self, formula_type) -> Field:
+        return self.model_class()
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
@@ -3100,6 +3747,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         id_map = defaultdict(list)
         name_map = defaultdict(list)
         invalid_values = []
+        options_from_ids, options_from_names = [], []
         for row_index, values in values_by_row.items():
             for value in values:
                 if isinstance(value, int):
@@ -3112,7 +3760,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
                         break
                     else:
                         # Fail on first error
-                        raise AllProvidedValuesMustBeIntegersOrStrings(values)
+                        raise AllProvidedValuesMustBeIntegersOrStrings(value)
 
         if invalid_values:
             # Replace values by error for failing rows
@@ -3123,12 +3771,13 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         if id_map:
             # Query database for existing options
-            option_from_ids = SelectOption.objects.filter(
+            options_from_ids = SelectOption.objects.filter(
                 field=instance, id__in=id_map.keys()
-            ).values_list("id", flat=True)
+            )
+            option_ids = [opt.id for opt in options_from_ids]
 
-            if len(option_from_ids) != len(id_map):
-                invalid_ids = sorted(list(set(id_map.keys()) - set(option_from_ids)))
+            if len(option_ids) != len(id_map):
+                invalid_ids = sorted(list(set(id_map.keys()) - set(option_ids)))
                 if continue_on_error:
                     # Replace values by error for failing rows
                     for invalid_name in invalid_ids:
@@ -3184,12 +3833,27 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
                         for val in value
                     ]
 
-        # Removes duplicate ids while keeping ordering
-        values_by_row = {
-            k: list(dict.fromkeys(v)) if isinstance(v, list) else v
-            for k, v in values_by_row.items()
+        options = {
+            **{opt.id: opt for opt in options_from_ids},
+            **{opt.id: opt for opt in options_from_names},
         }
-        return values_by_row
+
+        def are_invalid_options(value):
+            return isinstance(value, Exception)
+
+        # Removes duplicates while keeping ordering
+        final_values_by_row = {}
+        for row_id, value in values_by_row.items():
+            if are_invalid_options(value):
+                final_values_by_row[row_id] = value
+                continue
+
+            value_without_duplicates = list(dict.fromkeys(value))
+            final_values_by_row[row_id] = [
+                options[v_id] for v_id in value_without_duplicates
+            ]
+
+        return final_values_by_row
 
     def get_serializer_help_text(self, instance):
         return (
@@ -3314,12 +3978,23 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
-        mapped_values = [
-            id_mapping["database_field_select_options"][item]
+        through_model = row._meta.get_field(field_name).remote_field.through
+        through_model_fields = through_model._meta.get_fields()
+        current_field_name = through_model_fields[1].name
+        relation_field_name = through_model_fields[2].name
+
+        return [
+            through_model(
+                **{
+                    f"{current_field_name}_id": row.id,
+                    f"{relation_field_name}_id": id_mapping[
+                        "database_field_select_options"
+                    ][item],
+                }
+            )
             for item in value
             if item in id_mapping["database_field_select_options"]
         ]
-        getattr(row, field_name).set(mapped_values)
 
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
@@ -3826,7 +4501,14 @@ class FormulaFieldType(ReadOnlyFieldType):
 
         old_name = updated_old_field.name
         new_name = updated_field.name
-        rename = old_name != new_name
+        rename = (
+            old_name != new_name
+            # Because the `rename_field_references_in_formula_string` only updates
+            # field references in the same table, there is no need to rename if the
+            # table id doesn't match because it can cause incorrect renames if fields
+            # have the same name in the two tables.
+            and field.table_id == updated_field.table_id
+        )
         if rename:
             field.formula = FormulaHandler.rename_field_references_in_formula_string(
                 field.formula, {old_name: new_name}
@@ -3855,19 +4537,6 @@ class FormulaFieldType(ReadOnlyFieldType):
         update_collector.add_field_with_pending_update_statement(
             field, expr, via_path_to_starting_table=via_path_to_starting_table
         )
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.field_dependency_updated(
-                dependant_field,
-                field,
-                old_field,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
 
     def field_dependency_deleted(
         self,
@@ -4492,7 +5161,9 @@ class LookupFieldType(FormulaFieldType):
         return field
 
 
-class MultipleCollaboratorsFieldType(FieldType):
+class MultipleCollaboratorsFieldType(
+    ManyToManyFieldTypeSerializeToInputValueMixin, FieldType
+):
     type = "multiple_collaborators"
     model_class = MultipleCollaboratorsField
     can_get_unique_values = False
@@ -4649,18 +5320,6 @@ class MultipleCollaboratorsFieldType(FieldType):
     def are_row_values_equal(self, value1: any, value2: any) -> bool:
         return {v["id"] for v in value1} == {v["id"] for v in value2}
 
-    def serialize_to_input_value(self, field: Field, value: any) -> any:
-        if value is None or len(value) == 0:
-            return []
-
-        serialized = [
-            {
-                "id": user_id,
-            }
-            for user_id in value
-        ]
-        return serialized
-
     def get_model_field(self, instance, **kwargs):
         return None
 
@@ -4773,13 +5432,27 @@ class MultipleCollaboratorsFieldType(FieldType):
             for workspaceuser in workspaceusers_from_workspace:
                 cache[cache_entry][workspaceuser.user.email] = workspaceuser.user.id
 
-        user_ids = []
+        through_model = row._meta.get_field(field_name).remote_field.through
+        through_model_fields = through_model._meta.get_fields()
+        current_field_name = through_model_fields[1].name
+        relation_field_name = through_model_fields[2].name
+
+        through_objects = []
         for email in value:
             user_id = cache[cache_entry].get(email, None)
             if user_id is not None:
-                user_ids.append(user_id)
+                through_objects.append(
+                    through_model(
+                        **{
+                            f"{current_field_name}_id": row.id,
+                            f"{relation_field_name}_id": cache[cache_entry].get(
+                                email, None
+                            ),
+                        }
+                    )
+                )
 
-        getattr(row, field_name).set(user_ids)
+        return through_objects
 
     def random_value(self, instance, fake, cache):
         """
@@ -4801,6 +5474,9 @@ class MultipleCollaboratorsFieldType(FieldType):
             return None
 
         return sample(collaborators, randint(0, len(collaborators)))  # nosec
+
+    def random_to_input_value(self, field, value):
+        return [{"id": user_id} for user_id in value]
 
     def get_order(self, field, field_name, order_direction):
         """
@@ -4828,3 +5504,310 @@ class MultipleCollaboratorsFieldType(FieldType):
         values = [related_object.first_name for related_object in related_objects.all()]
         value = list_to_comma_separated_string(values)
         return value
+
+
+class UUIDFieldType(ReadOnlyFieldType):
+    """
+    The UUIDFieldType is ReadOnly, but does not extend the `ReadOnlyFieldType` class
+    because the value should persistent on export/import and field duplication.
+    """
+
+    type = "uuid"
+    model_class = UUIDField
+    can_get_unique_values = False
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.UUIDField(required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return "Contains a unique and persistent UUID for every row."
+
+    def get_model_field(self, instance, **kwargs):
+        return models.UUIDField(
+            default=uuid.uuid4,
+            null=True,
+            **kwargs,
+        )
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        model.objects.all().update(**{f"{field.db_column}": RandomUUID()})
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(**{f"{to_field.db_column}": RandomUUID()})
+
+    def prepare_value_for_db(self, instance: Field, value):
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> None:
+        return str(
+            super().get_export_serialized_value(
+                row, field_name, cache, files_zip, storage
+            )
+        )
+
+    def get_export_value(self, value, field_object, rich_value=False) -> str:
+        return "" if value is None else str(value)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
+    def to_baserow_formula_expression(self, field):
+        # Cast the uuid to text, to make it compatible with all the text related
+        # functions.
+        totext = formula_function_registry.get("totext")
+        return totext(super().to_baserow_formula_expression(field))
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType(nullable=True, unwrap_cast_to_text=False)
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaTextType
+    ) -> UUIDField:
+        return UUIDField()
+
+
+class AutonumberFieldType(ReadOnlyFieldType):
+    """
+    Autonumber fields automatically generate unique and incremented numbers for
+    each record. Autonumbers can be helpful when you need a unique identifier
+    for each record or when using a formula in the primary field
+    """
+
+    type = "autonumber"
+    model_class = AutonumberField
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+    request_serializer_field_names = ["view_id"]
+    request_serializer_field_overrides = {
+        "view_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the view to use for the initial ordering.",
+        )
+    }
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.IntegerField(required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "Contains a unique and persistent incremental integer number for every row."
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return IntegerFieldWithSequence(null=True, **kwargs)
+
+    def after_rows_imported(
+        self,
+        field: FormulaField,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
+    ):
+        super().after_rows_imported(
+            field, update_collector, field_cache, via_path_to_starting_table
+        )
+
+        # Create the sequence so that rows can start being automatically numbered.
+        self.create_field_sequence(field, field.table.get_model(), connection)
+
+    def _extract_view_from_field_kwargs(self, user, field_kwargs):
+        view_id = field_kwargs.get("view_id", None)
+        if view_id is not None:
+            from baserow.contrib.database.views.handler import ViewHandler
+
+            field_kwargs["view"] = ViewHandler().get_view_as_user(user, view_id)
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        self._extract_view_from_field_kwargs(user, field_kwargs)
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        self.create_field_sequence(field, model, connection)
+        self.update_rows_with_field_sequence(field, field_kwargs.get("view", None))
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
+        self._extract_view_from_field_kwargs(user, field_kwargs)
+
+    def before_schema_change(
+        self,
+        from_field,
+        to_field,
+        to_model,
+        from_model,
+        from_model_field,
+        to_model_field,
+        user,
+        to_field_kwargs,
+    ):
+        from_autonumber = isinstance(from_field, self.model_class)
+        to_autonumber = isinstance(to_field, self.model_class)
+
+        if from_autonumber and not to_autonumber:
+            self.drop_field_sequence(from_field, to_model, connection)
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        if isinstance(to_field, self.model_class) and not isinstance(
+            from_field, self.model_class
+        ):
+            self.create_field_sequence(to_field, to_model, connection)
+            self.update_rows_with_field_sequence(
+                to_field, to_field_kwargs.get("view", None)
+            )
+
+    def prepare_value_for_db(self, instance: Field, value):
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
+    def update_rows_with_field_sequence(
+        self, field: Field, view: Optional["View"] = None
+    ):
+        """
+        Renumber the row values for the given field, according to the view's
+        filters and sorting. If the view has filters, the rows matching the
+        filters will have lower row numbers than the rows that don't match the
+        filters. If the view has sorting, the rows will be numbered accordingly.
+        If the table have trashed rows, they will receive the highest row
+        numbers. If no view is provided, then all the rows in the table are
+        renumbered according to the default ordering of the table (order, id).
+
+        :param field: The field to initialize the values for.
+        :param view: The view to initialize the values according to.
+        """
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        not_trashed_first = Case(When(Q(trashed=False), then=Value(0)), default=1).asc()
+        order_bys = (not_trashed_first, "order", "id")
+
+        if view is not None:
+            queryset = ViewHandler().get_queryset(view).values("id")
+
+            filters = queryset.query.where
+            filtered_first = Case(When(filters, then=Value(0)), default=1).asc()
+
+            # The last two order bys are the default order bys of the table
+            if custom_order_bys := queryset.query.order_by[:-2]:
+                order_bys = (*custom_order_bys, *order_bys)
+
+            order_bys = (filtered_first, *order_bys)
+
+        table_model = field.table.get_model()
+        qs = table_model.objects_and_trash.annotate(
+            row_nr=Window(expression=RowNumber(), order_by=order_bys),
+        ).values("id", "row_nr")
+        sql, params = qs.query.get_compiler(connection=connection).as_sql()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                WITH ordered AS ({sql})
+                UPDATE {table_model._meta.db_table} AS t
+                SET {field.db_column} = ordered.row_nr
+                FROM ordered
+                WHERE t.id = ordered.id;
+                """,  # nosec B608
+                params,
+            )
+
+    def create_field_sequence(
+        self, field: Field, model: "GeneratedTableModel", connection
+    ):
+        """
+        Create a sequence and set the default value to the next value in the
+        sequence for the given field. The sequence is needed to make sure that
+        the autonumber field is unique and incremented.
+
+        :param field: The field to create the sequence for.
+        :param model: The model of the table that the field belongs to.
+        :param connection: The connection to use for the queries.
+        """
+
+        db_table = model._meta.db_table
+        db_column = field.db_column
+
+        with connection.cursor() as cursor:
+            cursor.execute(f"CREATE SEQUENCE IF NOT EXISTS {db_column}_seq;")
+            cursor.execute(
+                f"ALTER TABLE {db_table} ALTER COLUMN {db_column} SET DEFAULT nextval('{db_column}_seq');"
+            )
+            cursor.execute(
+                f"ALTER SEQUENCE {db_column}_seq OWNED BY {db_table}.{db_column};"
+            )
+            # Set the sequence to the count of rows in the table, only if there
+            # is at least one row.
+            cursor.execute(
+                f"""
+                WITH count AS (SELECT COUNT(*) FROM {db_table})
+                SELECT setval('{db_column}_seq', count) FROM count WHERE count > 0;
+                """  # nosec B608
+            )
+
+    def drop_field_sequence(
+        self, field: Field, model: "GeneratedTableModel", connection
+    ):
+        """
+        Drop the sequence for the given autonumber field.
+
+        :param field: The field to drop the sequence for.
+        :param model: The model of the table that the field belongs to.
+        :param connection: The connection to use for the queries.
+        """
+
+        db_table = model._meta.db_table
+        db_column = field.db_column
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"ALTER TABLE {db_table} ALTER COLUMN {db_column} DROP DEFAULT;"
+            )
+            cursor.execute(f"DROP SEQUENCE IF EXISTS {db_column}_seq;")
+
+    def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
+        return BaserowFormulaNumberType(
+            number_decimal_places=0, requires_refresh_after_insert=True
+        )
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaNumberType
+    ) -> NumberField:
+        return NumberField(number_decimal_places=0, number_negative=False)

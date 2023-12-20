@@ -2,8 +2,10 @@ from copy import deepcopy
 
 from baserow.contrib.builder.elements.models import (
     ButtonElement,
-    CollectionElementField,
+    CollectionField,
     ColumnElement,
+    DropdownElement,
+    FormContainerElement,
     HeadingElement,
     ImageElement,
     LinkElement,
@@ -38,9 +40,21 @@ class ElementFixtures:
             "fields",
             deepcopy(
                 [
-                    {"name": "Field 1", "value": "get('test1')"},
-                    {"name": "Field 2", "value": "get('test2')"},
-                    {"name": "Field 3", "value": "get('test3')"},
+                    {
+                        "name": "Field 1",
+                        "type": "text",
+                        "config": {"value": "get('test1')"},
+                    },
+                    {
+                        "name": "Field 2",
+                        "type": "text",
+                        "config": {"value": "get('test2')"},
+                    },
+                    {
+                        "name": "Field 3",
+                        "type": "text",
+                        "config": {"value": "get('test3')"},
+                    },
                 ]
             ),
         )
@@ -53,9 +67,9 @@ class ElementFixtures:
         element = self.create_builder_element(TableElement, user, page, **kwargs)
 
         if fields:
-            created_fields = CollectionElementField.objects.bulk_create(
+            created_fields = CollectionField.objects.bulk_create(
                 [
-                    CollectionElementField(**field, order=index)
+                    CollectionField(**field, order=index)
                     for index, field in enumerate(fields)
                 ]
             )
@@ -65,6 +79,16 @@ class ElementFixtures:
 
     def create_builder_button_element(self, user=None, page=None, **kwargs):
         element = self.create_builder_element(ButtonElement, user, page, **kwargs)
+        return element
+
+    def create_builder_form_container_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(
+            FormContainerElement, user, page, **kwargs
+        )
+        return element
+
+    def create_builder_dropdown_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(DropdownElement, user, page, **kwargs)
         return element
 
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):

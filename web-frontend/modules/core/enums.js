@@ -8,3 +8,11 @@ export const EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS = {
   WEEKLY: 'weekly',
   NEVER: 'never',
 }
+
+export const DATA_TYPE_TO_ICON_MAP = {
+  string: 'iconoir-text',
+  number: 'baserow-icon-hashtag',
+  boolean: 'baserow-icon-circle-checked',
+}
+
+export const UNKNOWN_DATA_TYPE_ICON = 'iconoir-question-mark'

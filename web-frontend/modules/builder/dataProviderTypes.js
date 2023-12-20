@@ -30,7 +30,7 @@ export class DataSourceDataProviderType extends DataProviderType {
       'dataSourceContent/fetchPageDataSourceContent',
       {
         page: applicationContext.page,
-        data: DataProviderType.getAllBackendContext(
+        data: DataProviderType.getAllDispatchContext(
           this.app.$registry.getAll('builderDataProvider'),
           applicationContext
         ),
@@ -54,10 +54,14 @@ export class DataSourceDataProviderType extends DataProviderType {
       'dataSourceContent/getDataSourceContents'
     ](applicationContext.page)
 
+    if (!dataSource?.type) {
+      return null
+    }
+
     const serviceType = this.app.$registry.get('service', dataSource.type)
 
     if (serviceType.returnsList) {
-      return dataSourceContents[dataSource.id].results
+      return dataSourceContents[dataSource.id]?.results
     } else {
       return dataSourceContents[dataSource.id]
     }
@@ -160,7 +164,7 @@ export class PageParameterDataProviderType extends DataProviderType {
     return _.get(content, path.join('.'))
   }
 
-  getBackendContext(applicationContext) {
+  getDispatchContext(applicationContext) {
     return this.getDataContent(applicationContext)
   }
 
@@ -218,7 +222,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
             'dataSource/getPageDataSourceById'
           ](page, element.data_source_id)
 
-          const dispatchContext = DataProviderType.getAllBackendContext(
+          const dispatchContext = DataProviderType.getAllDispatchContext(
             this.app.$registry.getAll('builderDataProvider'),
             { ...applicationContext, element }
           )
@@ -310,6 +314,100 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       return this.app.i18n.t('currentRecordDataProviderType.firstPartName', {
         name: dataSource.name,
       })
+    }
+
+    return super.getPathTitle(applicationContext, pathParts)
+  }
+}
+
+export class FormDataProviderType extends DataProviderType {
+  static getType() {
+    return 'form_data'
+  }
+
+  get name() {
+    return this.app.i18n.t('dataProviderType.formData')
+  }
+
+  async init(applicationContext) {
+    const { page } = applicationContext
+    const elements = await this.app.store.getters['element/getElements'](page)
+    const formElementTypes = Object.values(this.app.$registry.getAll('element'))
+      .filter((elementType) => elementType.isFormElement)
+      .map((elementType) => elementType.getType())
+    const formElements = elements.filter((element) =>
+      formElementTypes.includes(element.type)
+    )
+
+    return formElements.map((element) => {
+      const elementType = this.app.$registry.get('element', element.type)
+      const payload = {
+        value: elementType.getInitialFormDataValue(element, applicationContext),
+        type: elementType.formDataType,
+      }
+      return this.app.store.dispatch('formData/setFormData', {
+        page,
+        payload,
+        elementId: element.id,
+      })
+    })
+  }
+
+  getDispatchContext(applicationContext) {
+    return this.getDataContent(applicationContext)
+  }
+
+  getDataChunk(applicationContext, path) {
+    const content = this.getDataContent(applicationContext)
+    return _.get(content, path.join('')).value
+  }
+
+  getDataContent(applicationContext) {
+    return this.app.store.getters['formData/getFormData'](
+      applicationContext.page
+    )
+  }
+
+  getDataSchema(applicationContext) {
+    const { page } = applicationContext
+    return {
+      type: 'object',
+      properties: Object.fromEntries(
+        Object.entries(page.formData || {}).map(([elementId, { type }]) => {
+          const element = this.app.store.getters['element/getElementById'](
+            page,
+            parseInt(elementId)
+          )
+          const elementType = this.app.$registry.get('element', element.type)
+          const name = elementType.getFormDataName(element, applicationContext)
+          const order = elementType.getElementPosition(
+            element,
+            applicationContext
+          )
+          return [
+            elementId,
+            {
+              title: name,
+              type,
+              order,
+            },
+          ]
+        })
+      ),
+    }
+  }
+
+  getPathTitle(applicationContext, pathParts) {
+    if (pathParts.length === 2) {
+      const elementId = parseInt(pathParts[1], 10)
+
+      const element = this.app.store.getters['element/getElementById'](
+        applicationContext.page,
+        parseInt(elementId)
+      )
+      if (!element) {
+        return this.app.i18n.t('formDataProviderType.nodeMissing')
+      }
     }
 
     return super.getPathTitle(applicationContext, pathParts)

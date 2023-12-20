@@ -32,7 +32,7 @@ def test_personal_views_created_by_editor_cant_be_shared_publicly(
     )
     table = data_fixture.create_database_table(user)
     view = data_fixture.create_grid_view(
-        user, table=table, created_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
+        user, table=table, owned_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
     )
     editor_role = RoleAssignmentHandler().get_role_by_uid("EDITOR")
     RoleAssignmentHandler().assign_role(
@@ -61,7 +61,7 @@ def test_personal_views_created_by_builder_can_be_shared_publicly(
     )
     table = data_fixture.create_database_table(user)
     view = data_fixture.create_grid_view(
-        user, table=table, created_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
+        user, table=table, owned_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
     )
     builder = RoleAssignmentHandler().get_role_by_uid("BUILDER")
     RoleAssignmentHandler().assign_role(
@@ -93,7 +93,7 @@ def test_personal_views_shared_by_builder_stops_working_if_builder_looses_table_
     view = data_fixture.create_grid_view(
         user,
         table=table,
-        created_by=user,
+        owned_by=user,
         ownership_type=OWNERSHIP_TYPE_PERSONAL,
         public=True,
     )
@@ -217,7 +217,7 @@ def test_viewer_can_create_filter_on_their_own_personal_view(api_client, data_fi
         user, table.database.workspace, role=viewer, scope=table
     )
     view = data_fixture.create_grid_view(
-        user, table=table, created_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
+        user, table=table, owned_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
     )
     response = api_client.post(
         reverse("api:database:views:list_filters", kwargs={"view_id": view.id}),
@@ -248,7 +248,7 @@ def test_viewer_cant_create_filter_on_someone_elses_personal_view(
         user, table.database.workspace, role=viewer, scope=table
     )
     view = data_fixture.create_grid_view(
-        user2, table=table, created_by=user2, ownership_type=OWNERSHIP_TYPE_PERSONAL
+        user2, table=table, owned_by=user2, ownership_type=OWNERSHIP_TYPE_PERSONAL
     )
     response = api_client.post(
         reverse("api:database:views:list_filters", kwargs={"view_id": view.id}),
@@ -272,7 +272,7 @@ def test_viewer_cant_submit_their_own_personal_form_view(api_client, data_fixtur
         user, table.database.workspace, role=viewer, scope=table
     )
     view = data_fixture.create_form_view(
-        user, table=table, created_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
+        user, table=table, owned_by=user, ownership_type=OWNERSHIP_TYPE_PERSONAL
     )
     data_fixture.create_form_view_field_option(
         view,
@@ -341,7 +341,7 @@ def test_list_views_doesnt_include_personal_views_the_user_used_to_have(data_fix
         collab_view.id,
     }
 
-    # Now they loose the ability to make and user personal views
+    # Now they loose the ability to make and use personal views
     RoleAssignmentHandler().assign_role(
         user, table.database.workspace, role=editor, scope=table
     )
@@ -380,7 +380,7 @@ def test_viewer_can_create_filters_and_filter_groups_in_personal_views(
         user, table.database.workspace, role=viewer, scope=table
     )
     view = data_fixture.create_grid_view(
-        user, table=table, created_by=user, ownership_type=ownership_type
+        user, table=table, owned_by=user, ownership_type=ownership_type
     )
     response = api_client.post(
         reverse("api:database:views:list_filter_groups", kwargs={"view_id": view.id}),
@@ -404,3 +404,64 @@ def test_viewer_can_create_filters_and_filter_groups_in_personal_views(
     if expected_status_code == HTTP_200_OK:
         assert response.json()["id"] is not None
         assert response.json()["group"] == group_id
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "role,initial_ownership_type,final_ownership_type,expected_status_code",
+    [
+        ("ADMIN", OWNERSHIP_TYPE_COLLABORATIVE, OWNERSHIP_TYPE_PERSONAL, HTTP_200_OK),
+        ("ADMIN", OWNERSHIP_TYPE_PERSONAL, OWNERSHIP_TYPE_COLLABORATIVE, HTTP_200_OK),
+        ("BUILDER", OWNERSHIP_TYPE_COLLABORATIVE, OWNERSHIP_TYPE_PERSONAL, HTTP_200_OK),
+        ("BUILDER", OWNERSHIP_TYPE_PERSONAL, OWNERSHIP_TYPE_COLLABORATIVE, HTTP_200_OK),
+        (
+            "EDITOR",
+            OWNERSHIP_TYPE_COLLABORATIVE,
+            OWNERSHIP_TYPE_PERSONAL,
+            HTTP_401_UNAUTHORIZED,
+        ),
+        (
+            "EDITOR",
+            OWNERSHIP_TYPE_PERSONAL,
+            OWNERSHIP_TYPE_COLLABORATIVE,
+            HTTP_401_UNAUTHORIZED,
+        ),
+    ],
+)
+@pytest.mark.view_ownership
+def test_builders_and_up_can_change_views_ownership_type(
+    api_client,
+    data_fixture,
+    role,
+    initial_ownership_type,
+    final_ownership_type,
+    expected_status_code,
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user)
+    view = data_fixture.create_grid_view(
+        user, table=table, owned_by=user, ownership_type=initial_ownership_type
+    )
+
+    rbac_role = RoleAssignmentHandler().get_role_by_uid(role)
+    RoleAssignmentHandler().assign_role(
+        user, table.database.workspace, role=rbac_role, scope=table
+    )
+
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": view.id}),
+        {"ownership_type": final_ownership_type},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == expected_status_code
+
+    view.refresh_from_db()
+    expected_ownership_type = (
+        final_ownership_type
+        if expected_status_code == HTTP_200_OK
+        else initial_ownership_type
+    )
+    assert view.ownership_type == expected_ownership_type

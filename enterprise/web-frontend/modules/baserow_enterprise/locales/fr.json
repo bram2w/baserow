@@ -282,5 +282,16 @@
     "auditLogSidebarWorkspace": {
         "title": "Journal d’audit",
         "deactivated": "Disponible en version avancée/entreprise"
+    },
+    "localBaserowUserSourceForm": {
+        "description": "Chaque ligne de la table est un compte utilisateur. Veuillez sélectionner les champs correspondants dans la table. Le champ « courriel » sera utilisé pour identifier l'utilisateur.",
+        "emailFieldLabel": "Sélectionner le champ courriel",
+        "noFields": "Pas de champs",
+        "nameFieldLabel": "Sélectionner le champ pour le nom",
+        "nameFieldPlaceholder": "Sélectionnez un champ...",
+        "emailFieldLabelPlaceholder": "Sélectionnez un champ..."
+    },
+    "localBaserowUserSourceType": {
+        "notConfigured": "Non configurée"
     }
 }

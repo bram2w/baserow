@@ -1,7 +1,7 @@
 <template>
   <div>
-    <Alert v-if="linkRowFieldsInThisTable.length === 0" minimal type="error">
-      {{ $t('fieldSelectThroughFieldSubForm.noTable') }}
+    <Alert v-if="linkRowFieldsInThisTable.length === 0" type="error">
+      <p>{{ $t('fieldSelectThroughFieldSubForm.noTable') }}</p>
     </Alert>
     <div v-if="linkRowFieldsInThisTable.length > 0" class="control">
       <label class="control__label control__label--small">
@@ -12,6 +12,7 @@
           v-model="values.through_field_id"
           :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
           :fixed-items="true"
+          small
           @hide="$v.values.through_field_id.$touch()"
           @input="throughFieldChanged($event)"
         >

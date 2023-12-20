@@ -15,3 +15,7 @@ class UserNotRowCommentAuthorException(Exception):
 
 class InvalidRowCommentMentionException(Exception):
     pass
+
+
+class InvalidRowsCommentNotificationModeException(ValueError):
+    pass

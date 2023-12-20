@@ -300,6 +300,39 @@ export class BaserowEqual extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowHasOption extends BaserowFunctionDefinition {
+  static getType() {
+    return 'has_option'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.hasOptionDescription')
+  }
+
+  getSyntaxUsage() {
+    return [
+      'has_option(multiple select, text)',
+      'has_option(lookup(link row, single select), text)',
+    ]
+  }
+
+  getExamples() {
+    return [
+      "has_option(field('multiple select'), 'option_a')",
+      "has_option(lookup(field('link row'), field('single select')), 'option_a')",
+    ]
+  }
+
+  getFormulaType() {
+    return 'boolean'
+  }
+
+  isOperator() {
+    return true
+  }
+}
+
 export class BaserowIf extends BaserowFunctionDefinition {
   static getType() {
     return 'if'

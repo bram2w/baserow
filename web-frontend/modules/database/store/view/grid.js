@@ -10,14 +10,17 @@ import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
   calculateSingleRowSearchMatches,
+  extractRowMetadata,
   getRowSortFunction,
   matchSearchFilters,
   getFilters,
+  getGroupBy,
   getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
+import { fieldValuesAreEqualInObjects } from '@baserow/modules/database/utils/groupBy'
 
 const ORDER_STEP = '1'
 const ORDER_STEP_BEFORE = '0.00000000000000000001'
@@ -43,12 +46,6 @@ export function populateRow(row, metadata = {}) {
     selectedFieldId: -1,
   }
   return row
-}
-
-function extractMetadataAndPopulateRow(data, rowIndex) {
-  const metadata = data.row_metadata || {}
-  const row = data.results[rowIndex]
-  populateRow(row, metadata[row.id])
 }
 
 const updatePositionFn = {
@@ -125,6 +122,8 @@ export const state = () => ({
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
   fieldAggregationData: {},
+  activeGroupBys: [],
+  groupByMetadata: {},
 })
 
 export const mutations = {
@@ -141,6 +140,9 @@ export const mutations = {
     state.addRowHover = false
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
+  },
+  SET_ACTIVE_GROUP_BYS(state, groupBys) {
+    state.activeGroupBys = groupBys
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm.trim()
@@ -475,6 +477,100 @@ export const mutations = {
       [fieldId]: { ...current, loading: newLoadingValue },
     }
   },
+  /**
+   * Overwrites the group by metadata. This should be done when all the rows in the
+   * buffer are refreshed.
+   */
+  SET_GROUP_BY_METADATA(state, metadata) {
+    state.groupByMetadata = metadata
+  },
+  /**
+   * Merges the existing group by metadata and the newly provided metadata. If a
+   * count for the value combination already exists, it will be updated, otherwise
+   * it will be created.
+   */
+  UPDATE_GROUP_BY_METADATA(state, newMetadata) {
+    const existingMetadata = state.groupByMetadata
+
+    const getFields = (object) => {
+      const newObject = {}
+      Object.keys(object)
+        .filter((key) => key.startsWith('field_'))
+        .forEach((key) => {
+          newObject[key] = object[key]
+        })
+      return newObject
+    }
+
+    Object.keys(newMetadata).forEach((newGroupField) => {
+      newMetadata[newGroupField].forEach((newGroupEntry) => {
+        const newGroupEntryValues = getFields(newGroupEntry)
+        const existingIndex = existingMetadata[newGroupField].findIndex(
+          (existingGroupEntry) => {
+            const existingGroupEntryValues = getFields(existingGroupEntry)
+            return _.isEqual(newGroupEntryValues, existingGroupEntryValues)
+          }
+        )
+
+        if (existingIndex !== -1) {
+          Vue.set(existingMetadata[newGroupField], existingIndex, newGroupEntry)
+        } else {
+          existingMetadata[newGroupField].push(newGroupEntry)
+        }
+      })
+    })
+  },
+  /**
+   * Increases or decreases the count of all group entries that match the row values.
+   */
+  UPDATE_GROUP_BY_METADATA_COUNT(
+    state,
+    { fields, registry, row, increase, decrease }
+  ) {
+    const groupBys = state.activeGroupBys
+    const existingMetadata = state.groupByMetadata
+
+    groupBys.forEach((groupBy, groupByIndex) => {
+      let updated = false
+      const groupByFields = groupBys
+        .slice(0, groupByIndex + 1)
+        .map((groupBy) => {
+          return fields.find((f) => f.id === groupBy.field)
+        })
+      const entries = existingMetadata[`field_${groupBy.field}`] || []
+      entries.forEach((entry, index) => {
+        const equal = fieldValuesAreEqualInObjects(
+          groupByFields,
+          registry,
+          entry,
+          row,
+          true
+        )
+        if (equal) {
+          let count = entry.count
+          if (increase) {
+            count += 1
+          }
+          if (decrease) {
+            count -= 1
+          }
+
+          Vue.set(entry, 'count', count)
+          updated = true
+        }
+      })
+
+      if (!updated && increase) {
+        const newEntry = { count: 1 }
+        groupByFields.forEach((field) => {
+          const key = `field_${field.id}`
+          const fieldType = registry.get('field', field.type)
+          newEntry[key] = fieldType.getGroupValueFromRowValue(field, row[key])
+        })
+        existingMetadata[`field_${groupBy.field}`].push(newEntry)
+      }
+    })
+  },
 }
 
 // Contains the info needed for the delayed scroll top action.
@@ -614,12 +710,14 @@ export const actions = {
           searchMode: getDefaultSearchModeFromEnv(this.$config),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          groupBy: getGroupBy(rootGetters, getters.getLastGridId),
           orderBy: getOrderBy(rootGetters, getters.getLastGridId),
           filters: getFilters(rootGetters, getters.getLastGridId),
         })
         .then(({ data }) => {
-          data.results.forEach((part, index) => {
-            extractMetadataAndPopulateRow(data, index)
+          data.results.forEach((row) => {
+            const metadata = extractRowMetadata(data, row.id)
+            populateRow(row, metadata)
           })
           commit('ADD_ROWS', {
             rows: data.results,
@@ -629,6 +727,7 @@ export const actions = {
             bufferStartIndex,
             bufferLimit,
           })
+          commit('UPDATE_GROUP_BY_METADATA', data.group_by_metadata || {})
           dispatch('visibleByScrollTop')
           dispatch('updateSearch', { fields })
           lastRequest = null
@@ -775,11 +874,13 @@ export const actions = {
       searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      groupBy: getGroupBy(rootGetters, getters.getLastGridId),
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
       filters: getFilters(rootGetters, getters.getLastGridId),
     })
-    data.results.forEach((part, index) => {
-      extractMetadataAndPopulateRow(data, index)
+    data.results.forEach((row) => {
+      const metadata = extractRowMetadata(data, row.id)
+      populateRow(row, metadata)
     })
     commit('CLEAR_ROWS')
     commit('ADD_ROWS', {
@@ -798,6 +899,7 @@ export const actions = {
       top: 0,
     })
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+    commit('SET_GROUP_BY_METADATA', data.group_by_metadata || {})
     dispatch('updateSearch', { fields })
   },
   /**
@@ -849,6 +951,7 @@ export const actions = {
             searchMode: getDefaultSearchModeFromEnv(this.$config),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+            groupBy: getGroupBy(rootGetters, getters.getLastGridId),
             orderBy: getOrderBy(rootGetters, getters.getLastGridId),
             filters: getFilters(rootGetters, getters.getLastGridId),
           })
@@ -860,8 +963,9 @@ export const actions = {
       .then(({ data, offset }) => {
         // If there are results we can replace the existing rows so that the user stays
         // at the same scroll offset.
-        data.results.forEach((part, index) => {
-          extractMetadataAndPopulateRow(data, index)
+        data.results.forEach((row) => {
+          const metadata = extractRowMetadata(data, row.id)
+          populateRow(row, metadata)
         })
         commit('ADD_ROWS', {
           rows: data.results,
@@ -871,6 +975,7 @@ export const actions = {
           bufferStartIndex: offset,
           bufferLimit: data.results.length,
         })
+        commit('SET_GROUP_BY_METADATA', data.group_by_metadata || {})
         dispatch('updateSearch', { fields })
         if (includeFieldOptions) {
           if (rootGetters['page/view/public/getIsPublic']) {
@@ -897,6 +1002,9 @@ export const actions = {
         }
       })
     return lastRefreshRequest
+  },
+  updateActiveGroupBys({ commit }, groupBys) {
+    commit('SET_ACTIVE_GROUP_BYS', groupBys)
   },
   /**
    * Updates the field options of a given field and also makes an API request to the
@@ -1222,24 +1330,26 @@ export const actions = {
   setAddRowHover({ commit }, value) {
     commit('SET_ADD_ROW_HOVER', value)
   },
-  setSelectedCell({ commit, getters, rootGetters }, { rowId, fieldId }) {
+  setSelectedCell(
+    { commit, getters, rootGetters },
+    { rowId, fieldId, fields }
+  ) {
     commit('SET_SELECTED_CELL', { rowId, fieldId })
 
     const rowIndex = getters.getRowIndexById(rowId)
 
     if (rowIndex !== -1) {
       commit('SET_MULTISELECT_START_ROW_INDEX', rowIndex)
-
-      const visibleFieldEntries = getters.getOrderedVisibleFieldOptions
+      const visibleFieldOptions = getters.getOrderedVisibleFieldOptions(fields)
       commit(
         'SET_MULTISELECT_START_FIELD_INDEX',
-        visibleFieldEntries.findIndex((f) => parseInt(f[0]) === fieldId)
+        visibleFieldOptions.findIndex((f) => parseInt(f[0]) === fieldId)
       )
     }
   },
   setSelectedCellCancelledMultiSelect(
     { commit, getters, rootGetters, dispatch },
-    { direction }
+    { direction, fields }
   ) {
     const rowIndex = getters.getMultiSelectStartRowIndex
     const fieldIndex = getters.getMultiSelectStartFieldIndex
@@ -1249,7 +1359,7 @@ export const actions = {
     )
 
     const rows = getters.getAllRows
-    const visibleFieldEntries = getters.getOrderedVisibleFieldOptions
+    const visibleFieldEntries = getters.getOrderedVisibleFieldOptions(fields)
     const row = rows[newRowIndex - getters.getBufferStartIndex]
     const field = visibleFieldEntries[newFieldIndex]
 
@@ -1257,6 +1367,7 @@ export const actions = {
       dispatch('setSelectedCell', {
         rowId: row.id,
         fieldId: parseInt(field[0]),
+        fields,
       })
     } else {
       const oldRow = rows[rowIndex - getters.getBufferStartIndex]
@@ -1266,6 +1377,7 @@ export const actions = {
         dispatch('setSelectedCell', {
           rowId: oldRow.id,
           fieldId: parseInt(oldField[0]),
+          fields,
         })
       }
     }
@@ -1415,7 +1527,6 @@ export const actions = {
     const rowIndex = getters.getRowIndexById(rowId)
     const startRowIndex = getters.getMultiSelectStartRowIndex
     const startFieldIndex = getters.getMultiSelectStartFieldIndex
-
     const newHeadRowIndex = Math.min(startRowIndex, rowIndex)
     const newHeadFieldIndex = Math.min(startFieldIndex, fieldIndex)
     const newTailRowIndex = Math.max(startRowIndex, rowIndex)
@@ -1522,6 +1633,7 @@ export const actions = {
       searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      groupBy: getGroupBy(rootGetters, getters.getLastGridId),
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
       filters: getFilters(rootGetters, getters.getLastGridId),
       includeFields: fields,
@@ -1580,7 +1692,7 @@ export const actions = {
    * object can be provided which will forcefully add the row before that row. If no
    * `before` is provided, the row will be added last.
    */
-  createNewRow(
+  async createNewRow(
     { commit, getters, dispatch },
     {
       view,
@@ -1591,7 +1703,7 @@ export const actions = {
       selectPrimaryCell = false,
     }
   ) {
-    dispatch('createNewRows', {
+    await dispatch('createNewRows', {
       view,
       table,
       fields,
@@ -1636,13 +1748,7 @@ export const actions = {
         ? getters.getBufferEndIndex
         : getters.getAllRows.findIndex((r) => r.id === before.id)
 
-    const rowsPrepared = rows.map((row) => {
-      row = { ...clone(fieldNewRowValueMap), ...row }
-      row = prepareRowForRequest(row, fields, this.$registry)
-      return row
-    })
-
-    const rowsPopulated = rowsPrepared.map((row) => {
+    const rowsPopulated = rows.map((row) => {
       row = { ...clone(fieldNewRowValueMap), ...row }
       row = populateRow(row)
       row.id = uuid()
@@ -1660,6 +1766,11 @@ export const actions = {
     if (isSingleRowInsertion) {
       // When a single row is inserted we don't want to deal with filters, sorts and
       // search just yet. Therefore it is okay to just insert the row into the buffer.
+      await dispatch('updateGroupByMetadataCount', {
+        fields,
+        row: rowsPopulated[0],
+        increase: true,
+      })
       commit('INSERT_NEW_ROWS_IN_BUFFER_AT_INDEX', {
         rows: rowsPopulated,
         index,
@@ -1667,11 +1778,11 @@ export const actions = {
     } else {
       // When inserting multiple rows we will need to deal with filters, sorts or search
       // not matching. `createdNewRow` deals with exactly that for us.
-      for (let i = 0; i < rowsPopulated.length; i += 1) {
+      for (const rowPopulated of rowsPopulated) {
         await dispatch('createdNewRow', {
           view,
           fields,
-          values: rowsPopulated[i],
+          values: rowPopulated,
           metadata: {},
           populate: false,
         })
@@ -1700,8 +1811,18 @@ export const actions = {
       await dispatch('setSelectedCell', {
         rowId: rowsPopulated[0].id,
         fieldId: primaryField.id,
+        fields,
       })
     }
+
+    // The backend expects slightly different values than what we have in the row
+    // buffer. Therefore, we need to prepare the rows before we can send them to the
+    // backend.
+    const rowsPrepared = rows.map((row) => {
+      row = { ...clone(fieldNewRowValueMap), ...row }
+      row = prepareRowForRequest(row, fields, this.$registry)
+      return row
+    })
 
     try {
       const { data } = await RowService(this.$client).batchCreate(
@@ -1711,7 +1832,11 @@ export const actions = {
       )
 
       const fieldsToFinalize = fields
-        .filter((field) => field.read_only)
+        .filter(
+          (field) =>
+            field.read_only ||
+            this.$registry.get('field', field._.type.type).isReadOnly
+        )
         .map((field) => `field_${field.id}`)
       commit('FINALIZE_ROWS_IN_BUFFER', {
         oldRows: rowsPopulated,
@@ -1729,16 +1854,21 @@ export const actions = {
       })
     } catch (error) {
       if (isSingleRowInsertion) {
+        await dispatch('updateGroupByMetadataCount', {
+          fields,
+          row: rowsPopulated[0],
+          decrease: true,
+        })
         commit('DELETE_ROW_IN_BUFFER', rowsPopulated[0])
       } else {
         // When we have multiple rows we will need to re-evaluate where the rest of the
         // rows are now positioned. Therefore, we need to call `deletedExistingRow` to
         // deal with all the potential edge cases
-        for (let i = 0; i < rowsPopulated.length; i += 1) {
+        for (const rowPopulated of rowsPopulated) {
           await dispatch('deletedExistingRow', {
             view,
             fields,
-            row: rowsPopulated[i],
+            row: rowPopulated,
           })
         }
       }
@@ -1755,7 +1885,7 @@ export const actions = {
    * another channel. It will only add the row if it belongs inside the views and it
    * also makes sure that row will be inserted at the correct position.
    */
-  createdNewRow(
+  async createdNewRow(
     { commit, getters, dispatch },
     { view, fields, values, metadata, populate = true }
   ) {
@@ -1767,14 +1897,21 @@ export const actions = {
 
     // Check if the row belongs into the current view by checking if it matches the
     // filters and search.
-    dispatch('updateMatchFilters', { view, row, fields })
-    dispatch('updateSearchMatchesForRow', { row, fields })
+    await dispatch('updateMatchFilters', { view, row, fields })
+    await dispatch('updateSearchMatchesForRow', { row, fields })
 
     // If the row does not match the filters or the search then we don't have to add
     // it at all.
     if (!row._.matchFilters || !row._.matchSearch) {
       return
     }
+
+    // Update the group by metadata if needed.
+    await dispatch('updateGroupByMetadataCount', {
+      fields,
+      row,
+      increase: true,
+    })
 
     // Now that we know that the row applies to the filters, which means it belongs
     // in this view, we need to estimate what position it has in the table.
@@ -1918,9 +2055,19 @@ export const actions = {
         // If the row exists in the buffer, we can visually show to the user that
         // the values have changed, without immediately reflecting the change in
         // the buffer.
+        await dispatch('updateGroupByMetadataCount', {
+          fields,
+          row,
+          decrease: true,
+        })
         commit('UPDATE_ROW_VALUES', {
           row,
           values: { ...values },
+        })
+        await dispatch('updateGroupByMetadataCount', {
+          fields,
+          row,
+          increase: true,
         })
         await dispatch('onRowChange', { view, row, fields })
       } else {
@@ -1928,6 +2075,14 @@ export const actions = {
         // bring in into there. Dispatching the `updatedExistingRow` will make
         // sure that will happen in the right way.
         await dispatch('updatedExistingRow', { view, fields, row, values })
+        // There is a chance that the row is not in the buffer, but it does exist in
+        // the view. In that case, the `updatedExistingRow` action has not done
+        // anything. There is a possibility that the row is visible in the row edit
+        // modal, but then it won't be updated, so we have to update it forcefully.
+        commit('UPDATE_ROW_VALUES', {
+          row,
+          values: { ...values },
+        })
         await dispatch('fetchByScrollTopDelayed', {
           scrollTop: getters.getScrollTop,
           fields,
@@ -2034,7 +2189,7 @@ export const actions = {
         position === 'head'
           ? getters.getMultiSelectTailRowIndex
           : getters.getMultiSelectHeadRowIndex
-      if (Math.abs(previousIndex - rowIndex) > limit) {
+      if (Math.abs(previousIndex - rowIndex) > limit - 1) {
         return
       }
     }
@@ -2219,7 +2374,7 @@ export const actions = {
    * via another channel. It will make sure that the row has the correct position or
    * that is will be deleted or created depending if was already in the view.
    */
-  updatedExistingRow(
+  async updatedExistingRow(
     { commit, getters, dispatch },
     { view, fields, row, values, metadata }
   ) {
@@ -2228,25 +2383,38 @@ export const actions = {
     populateRow(oldRow, metadata)
     populateRow(newRow, metadata)
 
-    dispatch('updateMatchFilters', { view, row: oldRow, fields })
-    dispatch('updateSearchMatchesForRow', { row: oldRow, fields })
+    await dispatch('updateMatchFilters', { view, row: oldRow, fields })
+    await dispatch('updateSearchMatchesForRow', { row: oldRow, fields })
 
-    dispatch('updateMatchFilters', { view, row: newRow, fields })
-    dispatch('updateSearchMatchesForRow', { row: newRow, fields })
+    await dispatch('updateMatchFilters', { view, row: newRow, fields })
+    await dispatch('updateSearchMatchesForRow', { row: newRow, fields })
 
     const oldRowExists = oldRow._.matchFilters && oldRow._.matchSearch
     const newRowExists = newRow._.matchFilters && newRow._.matchSearch
 
     if (oldRowExists && !newRowExists) {
-      dispatch('deletedExistingRow', { view, fields, row })
+      await dispatch('deletedExistingRow', { view, fields, row })
     } else if (!oldRowExists && newRowExists) {
-      dispatch('createdNewRow', {
+      await dispatch('createdNewRow', {
         view,
         fields,
         values: newRow,
         metadata,
       })
     } else if (oldRowExists && newRowExists) {
+      // Instead of implementing a metadata updated mutation, we can easily just
+      // call the deleted and created mutation because that will have the same effect.
+      await dispatch('updateGroupByMetadataCount', {
+        fields,
+        row: oldRow,
+        decrease: true,
+      })
+      await dispatch('updateGroupByMetadataCount', {
+        fields,
+        row: newRow,
+        increase: true,
+      })
+
       // If the new order already exists in the buffer and is not the row that has
       // been updated, we need to decrease all the other orders, otherwise we could
       // have duplicate orders.
@@ -2346,7 +2514,7 @@ export const actions = {
       if (oldRowInBuffer && !newRowInBuffer && (newIsFirst || newIsLast)) {
         commit('DELETE_ROW_IN_BUFFER_WITHOUT_UPDATE', row)
       }
-      dispatch('correctMultiSelect')
+      await dispatch('correctMultiSelect')
     }
   },
   /**
@@ -2422,19 +2590,29 @@ export const actions = {
    * Called after an existing row has been deleted, which could be by the user or
    * via another channel.
    */
-  deletedExistingRow({ commit, getters, dispatch }, { view, fields, row }) {
+  async deletedExistingRow(
+    { commit, getters, dispatch },
+    { view, fields, row }
+  ) {
     row = clone(row)
     populateRow(row)
 
     // Check if that row was visible in the view.
-    dispatch('updateMatchFilters', { view, row, fields })
-    dispatch('updateSearchMatchesForRow', { row, fields })
+    await dispatch('updateMatchFilters', { view, row, fields })
+    await dispatch('updateSearchMatchesForRow', { row, fields })
 
     // If the row does not match the filters or the search then did not exist in the
     // view, so we don't have to do anything.
     if (!row._.matchFilters || !row._.matchSearch) {
       return
     }
+
+    // Decrease the count in the group by metadata if an entry exists.
+    await dispatch('updateGroupByMetadataCount', {
+      fields,
+      row,
+      decrease: true,
+    })
 
     // Now that we know for sure that the row belongs in the view, we need to figure
     // out if is before, inside or after the buffered results.
@@ -2446,7 +2624,7 @@ export const actions = {
     // accordingly.
     if (exists) {
       commit('DELETE_ROW_IN_BUFFER', row)
-      dispatch('correctMultiSelect')
+      await dispatch('correctMultiSelect')
       return
     }
 
@@ -2469,7 +2647,7 @@ export const actions = {
 
     // Regardless of where the
     commit('SET_COUNT', getters.getCount - 1)
-    dispatch('correctMultiSelect')
+    await dispatch('correctMultiSelect')
   },
   /**
    * Triggered when a row has been changed, or has a pending change in the provided
@@ -2675,6 +2853,29 @@ export const actions = {
       fieldIndex: minFieldIndex,
     })
   },
+  /**
+   * Increases or decreases the count value of the group by entries if the row
+   * values match the group by values.
+   */
+  updateGroupByMetadataCount(
+    { commit, getters },
+    { fields, row, increase = false, decrease = false }
+  ) {
+    if (increase && decrease) {
+      throw new Error("The group count can't be increased and decreased.")
+    }
+    if (!increase && !decrease) {
+      throw new Error('The group count must be increased or decreased.')
+    }
+
+    commit('UPDATE_GROUP_BY_METADATA_COUNT', {
+      fields,
+      registry: this.$registry,
+      row,
+      increase,
+      decrease,
+    })
+  },
 }
 
 export const getters = {
@@ -2738,24 +2939,38 @@ export const getters = {
   getAllFieldOptions(state) {
     return state.fieldOptions
   },
-  getOrderedFieldOptions(state, getters) {
+  getOrderedFieldOptions: (state, getters) => (fields) => {
+    const primaryField = fields.find((f) => f.primary === true)
+    const primaryFieldId = primaryField?.id || -1
+
     return Object.entries(getters.getAllFieldOptions)
       .map(([fieldIdStr, options]) => [parseInt(fieldIdStr), options])
       .sort(([a, { order: orderA }], [b, { order: orderB }]) => {
-        // First by order.
+        const isAPrimary = a === primaryFieldId
+        const isBPrimary = b === primaryFieldId
+
+        // Place primary field first
+        if (isAPrimary === true && !isBPrimary) {
+          return -1
+        } else if (isBPrimary === true && !isAPrimary) {
+          return 1
+        }
+
+        // Then by order
         if (orderA > orderB) {
           return 1
         } else if (orderA < orderB) {
           return -1
         }
 
+        // Finally by id if order is the same
         return a - b
       })
   },
-  getOrderedVisibleFieldOptions(state, getters) {
-    return getters.getOrderedFieldOptions.filter(
-      ([fieldId, options]) => options.hidden === false
-    )
+  getOrderedVisibleFieldOptions: (state, getters) => (fields) => {
+    return getters
+      .getOrderedFieldOptions(fields)
+      .filter(([fieldId, options]) => options.hidden === false)
   },
   getNumberOfVisibleFields(state) {
     return Object.values(state.fieldOptions).filter((fo) => fo.hidden === false)
@@ -2849,8 +3064,8 @@ export const getters = {
     }
     return -1
   },
-  getFieldIdByIndex: (state, getters) => (fieldIndex) => {
-    const orderedFieldOptions = getters.getOrderedVisibleFieldOptions
+  getFieldIdByIndex: (state, getters) => (fieldIndex, fields) => {
+    const orderedFieldOptions = getters.getOrderedVisibleFieldOptions(fields)
     if (orderedFieldOptions[fieldIndex]) {
       return orderedFieldOptions[fieldIndex][0]
     }
@@ -2883,6 +3098,12 @@ export const getters = {
     return state.rows.some((row) => {
       return row._.selected && row._.selectedFieldId !== -1
     })
+  },
+  getActiveGroupBys(state) {
+    return state.activeGroupBys
+  },
+  getGroupByMetadata(state) {
+    return state.groupByMetadata
   },
 }
 

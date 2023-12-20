@@ -1,13 +1,20 @@
+from django.db import connection
+
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.field_types import AutonumberFieldType
 from baserow.contrib.database.fields.models import (
+    AutonumberField,
     BooleanField,
+    CreatedByField,
     CreatedOnField,
     DateField,
+    DurationField,
     EmailField,
     FileField,
     FormulaField,
+    LastModifiedByField,
     LastModifiedField,
     LinkRowField,
     LongTextField,
@@ -21,6 +28,7 @@ from baserow.contrib.database.fields.models import (
     SingleSelectField,
     TextField,
     URLField,
+    UUIDField,
 )
 from baserow.contrib.database.formula import FormulaHandler
 
@@ -67,6 +75,35 @@ class FieldFixtures:
 
         if create_field:
             self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_duration_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = DurationField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_autonumber_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+        view = kwargs.pop("view", None)
+
+        field = AutonumberField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+            # Manually call the after_create hook to number existing rows and to create
+            # the sequence needed by the field.
+            model = kwargs["table"].get_model()
+            field_kwargs = {"view": view}
+            AutonumberFieldType().after_create(
+                field, model, user, connection, None, field_kwargs
+            )
 
         return field
 
@@ -248,6 +285,26 @@ class FieldFixtures:
 
         return field
 
+    def create_last_modified_by_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = LastModifiedByField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_created_by_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = CreatedByField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
     def create_created_on_field(self, user=None, create_field=True, **kwargs):
         if "date_include_time" not in kwargs:
             kwargs["date_include_time"] = False
@@ -330,5 +387,15 @@ class FieldFixtures:
 
         if setup_dependencies:
             FieldDependencyHandler().rebuild_dependencies(field, FieldCache())
+
+        return field
+
+    def create_uuid_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = UUIDField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
 
         return field

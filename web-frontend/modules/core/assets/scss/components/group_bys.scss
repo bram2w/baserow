@@ -23,8 +23,6 @@
 
 .group-bys__item {
   position: relative;
-  display: flex;
-  align-items: center;
   padding: 6px 0;
   @include rounded($rounded);
   @include flex-align-items(10px);
@@ -41,7 +39,7 @@
       margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(50%, auto, 0, 10px);
+      @include absolute(50%, auto, 0, 5px);
     }
   }
 }
@@ -65,8 +63,8 @@
 }
 
 .group-bys__description {
-  flex: 0 0 60px;
-  width: 60px;
+  flex: 0 0 50px;
+  width: 50px;
   margin-right: 10px;
 
   span {
@@ -143,8 +141,4 @@
 
 .group-bys__add-icon {
   font-size: 20px;
-}
-
-.group-bys__add-context .context__menu-icon {
-  color: $color-neutral-900;
 }

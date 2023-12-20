@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 
 from django.db.models import (
     CharField,
@@ -11,6 +11,7 @@ from django.db.models import (
     TextField,
     Value,
 )
+from django.db.models.expressions import Combinable
 from django.db.models.functions import Cast
 
 import typing_extensions
@@ -20,8 +21,8 @@ if typing_extensions.TYPE_CHECKING:
 
 
 def extract_jsonb_list_values_to_array(
-    field: "Field",
     queryset: QuerySet,
+    array_elements_expr: Union[Combinable, Expression],
     path_to_value_in_jsonb_list: Optional[List[Expression]] = None,
     transform_value_to_text_func: Optional[Callable[[Expression], Expression]] = None,
     extract_as_text: bool = True,
@@ -34,7 +35,7 @@ def extract_jsonb_list_values_to_array(
     For example a table with a JSONB field with cell values like:
     Row 1) - [{value: {value: 'a'}}, {value: {value: 'b'}]
     Row 2) - [{value: {value: 'c'}}, {value: {value: 'd'}]
-    You can then say select the concatted inner values per row like so:
+    You can then say select the concatenated inner values per row like so:
 
     ```
     results = model.objects.values_list(
@@ -52,7 +53,8 @@ def extract_jsonb_list_values_to_array(
     assert results[1] == 'b,c'
     ```
 
-    :param field: The field whose column that contains the JSONB you wish to query
+    :param array_elements_expr: An Expression or a Combinable (e.g. F("field_name"))
+        that contains the JSONB you wish to query
     :param queryset: A queryset over the model containing the field
     :param path_to_value_in_jsonb_list: An optional list of arguments to pass to the
         jsonb_extract_path_text function to describe the path in the JSONB object
@@ -62,7 +64,7 @@ def extract_jsonb_list_values_to_array(
         which can then transform it to another value before it is aggregated into
         an array.
     :param extract_as_text: When true the jsonb value will be extracted as a text value
-        , when false instead the raw jsob will be provided to the transform func.
+        , when false instead the raw jsonb will be provided to the transform func.
 
     :return: A Django expression.
     """
@@ -82,7 +84,7 @@ def extract_jsonb_list_values_to_array(
             .annotate(
                 transformed_values=transform_value_to_text_func(
                     json_extract_path(
-                        Func(F(field.db_column), function="jsonb_array_elements"),
+                        Func(array_elements_expr, function="jsonb_array_elements"),
                         path_to_value_in_jsonb_list,
                         extract_as_text,
                     )
@@ -151,8 +153,8 @@ def extract_jsonb_array_values_to_single_string(
 
     return Func(
         extract_jsonb_list_values_to_array(
-            field,
             queryset,
+            F(field.db_column),
             path_to_value_in_jsonb_list,
             transform_value_to_text_func,
             extract_as_text,

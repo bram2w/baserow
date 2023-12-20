@@ -8,8 +8,12 @@
       <li
         v-for="authProviderType in authProviderTypes"
         :key="authProviderType.type"
+        class="context__menu-item"
       >
-        <a @click="$emit('create', authProviderType)">
+        <a
+          class="context__menu-item-link"
+          @click="$emit('create', authProviderType)"
+        >
           <AuthProviderIcon :icon="getIcon(authProviderType)" />
           {{ getName(authProviderType) }}
         </a>

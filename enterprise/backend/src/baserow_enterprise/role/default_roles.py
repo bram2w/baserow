@@ -51,7 +51,9 @@ from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
 from baserow.contrib.builder.workflow_actions.operations import (
     CreateBuilderWorkflowActionOperationType,
     DeleteBuilderWorkflowActionOperationType,
+    DispatchBuilderWorkflowActionOperationType,
     ListBuilderWorkflowActionsPageOperationType,
+    OrderBuilderWorkflowActionOperationType,
     ReadBuilderWorkflowActionOperationType,
     UpdateBuilderWorkflowActionOperationType,
 )
@@ -195,6 +197,14 @@ from baserow.core.trash.operations import (
     ReadApplicationTrashOperationType,
     ReadWorkspaceTrashOperationType,
 )
+from baserow.core.user_sources.operations import (
+    CreateUserSourceOperationType,
+    DeleteUserSourceOperationType,
+    ListUserSourcesApplicationOperationType,
+    OrderUserSourcesOperationType,
+    ReadUserSourceOperationType,
+    UpdateUserSourceOperationType,
+)
 from baserow_enterprise.audit_log.operations import (
     ListWorkspaceAuditLogEntriesOperationType,
 )
@@ -315,6 +325,7 @@ default_roles[EDITOR_ROLE_UID].extend(
         ListTeamSubjectsOperationType,
         ReadTeamSubjectOperationType,
         UpdateBuilderWorkflowActionOperationType,
+        OrderBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(
@@ -407,8 +418,15 @@ default_roles[BUILDER_ROLE_UID].extend(
         ReadDataSourceOperationType,
         UpdateDataSourceOperationType,
         DispatchDataSourceOperationType,
+        DispatchBuilderWorkflowActionOperationType,
         DeleteBuilderWorkflowActionOperationType,
         CreateBuilderWorkflowActionOperationType,
+        CreateUserSourceOperationType,
+        DeleteUserSourceOperationType,
+        ListUserSourcesApplicationOperationType,
+        ReadUserSourceOperationType,
+        UpdateUserSourceOperationType,
+        OrderUserSourcesOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

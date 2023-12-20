@@ -23,7 +23,7 @@ def test_signal_listener(mock_call_webhook, data_fixture):
     RowHandler().create_row(user=user, table=table, values={})
 
     mock_call_webhook.delay.assert_called_once()
-    args, kwargs = mock_call_webhook.delay.call_args
+    _, kwargs = mock_call_webhook.delay.call_args
     assert kwargs["webhook_id"] == webhook.id
     assert isinstance(kwargs["event_id"], uuid.UUID)
     assert kwargs["event_type"] == "rows.created"
@@ -35,6 +35,8 @@ def test_signal_listener(mock_call_webhook, data_fixture):
     assert kwargs["url"] == "http://localhost/"
     assert kwargs["payload"] == {
         "table_id": table.id,
+        "database_id": table.database_id,
+        "workspace_id": table.database.workspace_id,
         "event_id": kwargs["payload"]["event_id"],
         "event_type": "rows.created",
         "items": [{"id": 1, "order": "1.00000000000000000000"}],

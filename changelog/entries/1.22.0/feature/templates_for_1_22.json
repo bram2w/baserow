@@ -1,0 +1,12 @@
+{
+  "type": "feature",
+  "message": "New templates:",
+  "issue_number": null,
+  "bullet_points": [
+    "Beverage Sales Management",
+    "Car Comparison",
+    "ESG Management",
+    "Staff Development"
+  ],
+  "created_at": "2023-12-18"
+}

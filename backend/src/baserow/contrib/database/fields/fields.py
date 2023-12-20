@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from django.db import models
 from django.db.models import Field, Value
@@ -9,6 +9,9 @@ from django.db.models.fields.related_descriptors import (
 )
 from django.utils.functional import cached_property
 
+from baserow.contrib.database.fields.utils.duration import (
+    convert_duration_input_value_to_timedelta,
+)
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
 from baserow.core.fields import SyncedDateTimeField
 
@@ -17,7 +20,7 @@ class BaserowLastModifiedField(SyncedDateTimeField):
     requires_refresh_after_update = True
 
 
-class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
+class IgnoreMissingForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
     def get_queryset(self, **hints):
         """
         We specifically want to return a new query set without the provided hints
@@ -42,7 +45,11 @@ class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
 
 
 class SingleSelectForeignKey(models.ForeignKey):
-    forward_related_accessor_class = SingleSelectForwardManyToOneDescriptor
+    forward_related_accessor_class = IgnoreMissingForwardManyToOneDescriptor
+
+
+class IgnoreMissingForeignKey(models.ForeignKey):
+    forward_related_accessor_class = IgnoreMissingForwardManyToOneDescriptor
 
 
 class MultipleSelectManyToManyDescriptor(ManyToManyDescriptor):
@@ -279,7 +286,7 @@ class BaserowExpressionField(models.Field):
 class SerialField(models.Field):
     """
     The serial field works very similar compared to the `AutoField` (primary key field).
-    Everytime a new row is created and the value is not set, it will automatically
+    Every time a new row is created and the value is not set, it will automatically
     increment a sequence and that will be set as value. It's basically an auto
     increment column. The sequence is independent of a transaction to prevent race
     conditions.
@@ -301,6 +308,44 @@ class SerialField(models.Field):
             return super().pre_save(model_instance, add)
 
 
+class DurationField(models.DurationField):
+    """
+    Extend the default Django DurationField to allow for more flexible input values.
+    """
+
+    def __init__(self, duration_format, *args, **kwargs):
+        self.duration_format = duration_format
+        super().__init__(*args, **kwargs)
+
+    def get_prep_value(self, value: Any) -> Any:
+        value = convert_duration_input_value_to_timedelta(value, self.duration_format)
+        return super().get_prep_value(value)
+
+
+class IntegerFieldWithSequence(models.IntegerField):
+    """
+    This field is similar to the `SerialField` but it uses a `integer` db_type
+    instead of a `serial` one. This is needed in the autonumber field because
+    the `bulk_update` operation will try to cast the result to the field type,
+    but it's not possible to cast to `serial` because `serial` is not really a
+    type. For more info, look at Postgres data types docs,
+    connection.features.requires_casted_case_in_updates and
+    django.db.models.query.QuerySet.bulk_update.
+    Note that the sequence must be created manually.
+    """
+
+    db_returning = True
+
+    def pre_save(self, model_instance, add):
+        if add and not getattr(model_instance, self.name):
+            return RawSQL(  # nosec
+                f"nextval('{self.name}_seq'::regclass)",
+                (),
+            )
+        else:
+            return super().pre_save(model_instance, add)
+
+
 class DurationFieldUsingPostgresFormatting(models.DurationField):
     def to_python(self, value):
         return value
@@ -312,3 +357,37 @@ class DurationFieldUsingPostgresFormatting(models.DurationField):
         # same values as non lookup intervals. The postgres str representation is also
         # more human readable.
         return sql + "::text", params
+
+
+class SyncedUserForeignKeyField(IgnoreMissingForeignKey):
+    def __init__(self, to, sync_with=None, sync_with_add=None, *args, **kwargs):
+        self.requires_refresh_after_update = sync_with is not None
+        self.sync_with = sync_with
+        self.sync_with_add = sync_with_add
+        if sync_with or sync_with_add:
+            kwargs["editable"] = False
+            kwargs["blank"] = True
+        super().__init__(to, *args, **kwargs)
+
+    def pre_save(self, model_instance, add):
+        if add and self.sync_with_add:
+            value = getattr(model_instance, self.sync_with_add)
+            if value:
+                value = value.id
+            setattr(model_instance, self.attname, value)
+            return value
+        elif self.sync_with:
+            value = getattr(model_instance, self.sync_with)
+            if value:
+                value = value.id
+            setattr(model_instance, self.attname, value)
+            return value
+        else:
+            return super().pre_save(model_instance, add)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        if self.sync_with or self.sync_with_add:
+            kwargs.pop("editable", None)
+            kwargs.pop("blank", None)
+        return name, path, args, kwargs

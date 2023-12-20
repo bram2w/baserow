@@ -46,6 +46,19 @@
   @include select-option-style(flex, true);
 }
 
+.array-field__multiple-select-item {
+  display: flex;
+}
+
+.array-field__multiple-select-option {
+  white-space: nowrap;
+  margin: auto 0;
+  margin-right: 5px;
+  overflow: unset;
+
+  @include select-option-style(flex, true);
+}
+
 .array-field__file {
   white-space: nowrap;
   margin: 5px 3px;
@@ -63,7 +76,7 @@
 }
 
 %array-field__file-border {
-  border: solid 1px $color-neutral-300;
+  border: solid 1px $color-neutral-400;
 
   @include rounded($rounded);
 }

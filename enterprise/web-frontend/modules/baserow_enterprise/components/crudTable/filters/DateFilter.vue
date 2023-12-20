@@ -4,7 +4,7 @@
       ref="date"
       v-model="dateString"
       type="text"
-      class="input crud-table-filters__filter-value-input"
+      class="input input--small crud-table-filters__filter-value-input"
       :disabled="disabled"
       :class="{ 'input--error': $v.copy.$error }"
       :placeholder="placeholder"

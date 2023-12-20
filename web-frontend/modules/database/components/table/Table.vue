@@ -127,8 +127,7 @@
                 'database.table.view.create_group_by',
                 view,
                 database.workspace.id
-              )) &&
-            $featureFlagIsEnabled('group_by')
+              ))
           "
           class="header__filter-item"
         >

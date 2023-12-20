@@ -2,10 +2,11 @@ import itertools
 import re
 from collections import defaultdict
 from types import MethodType
-from typing import Generator, Iterable, List, Optional, Type, TypedDict, Union
+from typing import Generator, Iterable, List, Optional, Type, TypedDict
 
 from django.apps import apps
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchQuery, SearchVectorField
 from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
@@ -27,18 +28,22 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
     FilterBuilder,
 )
+from baserow.contrib.database.fields.fields import IgnoreMissingForeignKey
 from baserow.contrib.database.fields.models import (
     CreatedOnField,
     Field,
     LastModifiedField,
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.search.handler import SearchHandler, SearchModes
 from baserow.contrib.database.table.cache import (
     get_cached_model_field_attrs,
     set_cached_model_field_attrs,
 )
 from baserow.contrib.database.table.constants import (
+    CREATED_BY_COLUMN_NAME,
+    LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
     TSV_FIELD_PREFIX,
     USER_TABLE_DATABASE_NAME_PREFIX,
@@ -66,6 +71,9 @@ extract_filter_sections_regex = re.compile(r"filter__(.+)__(.+)$")
 field_id_regex = re.compile(r"field_(\d+)$")
 
 tracer = trace.get_tracer(__name__)
+
+
+User = get_user_model()
 
 
 def get_row_needs_background_update_index(table):
@@ -258,24 +266,6 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         else:
             return field
 
-    def _get_field_id(self, field: str) -> Union[int, None]:
-        """
-        Helper method for parsing a field ID from a string.
-
-        :param field: The string from which the field id
-            should be parsed.
-        :type field: str
-        :return: The ID of the field or None
-        :rtype: int or None
-        """
-
-        try:
-            field_id = int(re.sub("[^0-9]", "", str(field)))
-        except ValueError:
-            field_id = None
-
-        return field_id
-
     def order_by_fields_string(
         self, order_string, user_field_names=False, only_order_by_field_ids=None
     ):
@@ -325,7 +315,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
             if user_field_names:
                 field_name_or_id = self._get_field_name(order)
             else:
-                field_name_or_id = self._get_field_id(order)
+                field_name_or_id = get_field_id_from_field_key(order, False)
 
             if field_name_or_id not in field_object_dict or (
                 only_order_by_field_ids is not None
@@ -509,6 +499,49 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
     like `isinstance(possible_baserow_model, GeneratedTableModel)`.
     """
 
+    @classmethod
+    def info(cls):
+        """
+        Print basic information about the generated table.
+
+        Use only in development.
+        """
+
+        from rich import box
+        from rich.console import Console
+        from rich.table import Table
+
+        table = Table(
+            title=f"{cls.baserow_table.name} ({cls.baserow_table.id})", box=box.ROUNDED
+        )
+        table.add_column("Name", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Column", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Type", style="magenta")
+        table.add_column("Order", style="grey84")
+        table.add_column("Trashed", justify="center", style="green")
+        table.add_column("TS vector column", style="yellow")
+
+        field_objects = cls.get_field_objects(include_trash=True)
+        for field_obj in field_objects:
+            primary = "(primary) " if field_obj["field"].primary else ""
+            name = f"{primary}{field_obj['field'].name}"
+            ts_vector_created = (
+                "✓" if field_obj["field"].tsvector_column_created else ""
+            )
+            ts_vector = f"{field_obj['field'].tsv_db_column} {ts_vector_created}"
+            trashed = "🗑️" if field_obj["field"].trashed else ""
+            table.add_row(
+                name,
+                field_obj["field"].db_column,
+                field_obj["type"].type,
+                str(field_obj["field"].order),
+                trashed,
+                ts_vector,
+            )
+
+        console = Console()
+        console.print(table)
+
     def _do_update(self, base_qs, using, pk_val, values, update_fields, forced_update):
         """
         We override this method to prevent safe and bulk save queries from setting
@@ -572,10 +605,14 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         return field_objects
 
     @classmethod
-    def get_field_objects_by_type(cls, field_type: str, include_trash: bool = False):
-        field_objects = cls.get_field_objects(include_trash)
-
-        return filter(lambda f: f["type"].type == field_type, field_objects)
+    def get_field_objects_to_always_update(cls):
+        field_objects = cls.get_field_objects(True)
+        return [
+            field_object
+            for field_object in field_objects
+            if field_type_registry.get_by_type(field_object["type"]).update_always
+            is True
+        ]
 
     @classmethod
     def get_fields_missing_search_index(cls) -> List[Field]:
@@ -670,12 +707,6 @@ def patch_meta_get_field(_meta):
                 raise exc
 
             field_type = field_object["type"]
-            logger.debug(
-                "Lazy load missing {} of type {} for table {}",
-                field_name,
-                field_type.type,
-                self.model.pk,
-            )
             field_type.after_model_generation(
                 field_object["field"], self.model, field_object["name"]
             )
@@ -701,6 +732,17 @@ class Table(
         default=False,
         help_text="Indicates whether the table has had the background_update_needed "
         "column added.",
+    )
+    last_modified_by_column_added = models.BooleanField(
+        default=True,
+        null=True,
+        help_text="Indicates whether the table has had the last_modified_by "
+        "column added.",
+    )
+    created_by_column_added = models.BooleanField(
+        default=True,
+        null=True,
+        help_text="Indicates whether the table has had the created_by column added.",
     )
 
     class Meta:
@@ -780,15 +822,6 @@ class Table(
         :rtype: Model
         """
 
-        logger.debug(
-            "Generating model for table {} with fields {}, manytomany_models {}, add_dependencies {}, use_cache {}",
-            str(self.pk),
-            fields,
-            manytomany_models,
-            add_dependencies,
-            use_cache,
-        )
-
         filtered = field_names is not None or field_ids is not None
         model_name = f"Table{self.pk}Model"
 
@@ -861,14 +894,12 @@ class Table(
         )
 
         if use_cache:
-            logger.debug("Using cached model for table {}", self.pk)
             self.refresh_from_db(fields=["version"])
             field_attrs = get_cached_model_field_attrs(self)
         else:
             field_attrs = None
 
         if field_attrs is None:
-            logger.debug("Generating model field attrs for table {}", self.pk)
             field_attrs = self._fetch_and_generate_field_attrs(
                 add_dependencies,
                 attribute_names,
@@ -918,6 +949,12 @@ class Table(
         if self.needs_background_update_column_added:
             self._add_needs_background_update_column(field_attrs, indexes)
 
+        if self.created_by_column_added:
+            self._add_created_by(field_attrs, indexes)
+
+        if self.last_modified_by_column_added:
+            self._add_last_modified_by(field_attrs, indexes)
+
         attrs.update(**field_attrs)
 
         # Create the model class.
@@ -961,6 +998,28 @@ class Table(
         )
 
         indexes.append(get_row_needs_background_update_index(self))
+
+    def _add_created_by(self, field_attrs, indexes):
+        field_attrs[CREATED_BY_COLUMN_NAME] = IgnoreMissingForeignKey(
+            User,
+            null=True,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
+            on_delete=models.SET_NULL,
+            help_text="Stores information about the user that created the row.",
+        )
+
+    def _add_last_modified_by(self, field_attrs, indexes):
+        field_attrs[LAST_MODIFIED_BY_COLUMN_NAME] = IgnoreMissingForeignKey(
+            User,
+            null=True,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
+            on_delete=models.SET_NULL,
+            help_text="Stores information about the user that modified the row last.",
+        )
 
     @baserow_trace(tracer)
     def _after_model_generation(self, attrs, model):

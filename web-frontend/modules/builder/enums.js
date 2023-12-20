@@ -6,6 +6,7 @@ import {
   DataSourceDataProviderType,
   PageParameterDataProviderType,
   CurrentRecordDataProviderType,
+  FormDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 export const PLACEMENTS = {
@@ -45,21 +46,36 @@ export const HORIZONTAL_ALIGNMENTS = {
 export const VERTICAL_ALIGNMENTS = {
   TOP: {
     name: 'verticalAlignmentSelector.alignmentTop',
-    value: 'iconoir-align-top-box',
+    value: 'top',
+    icon: 'iconoir-align-top-box',
   },
   CENTER: {
     name: 'verticalAlignmentSelector.alignmentCenter',
-    value: 'iconoir-center-align',
+    value: 'center',
+    icon: 'iconoir-center-align',
   },
   BOTTOM: {
     name: 'verticalAlignmentSelector.alignmentBottom',
-    value: 'iconoir-align-bottom-box',
+    value: 'bottom',
+    icon: 'iconoir-align-bottom-box',
   },
 }
 
 export const WIDTHS = {
   AUTO: { value: 'auto', name: 'widthSelector.widthAuto' },
   FULL: { value: 'full', name: 'widthSelector.widthFull' },
+}
+
+export const BACKGROUND_TYPES = {
+  NONE: { value: 'none', name: 'backgroundTypes.none' },
+  COLOR: { value: 'color', name: 'backgroundTypes.color' },
+}
+
+export const WIDTH_TYPES = {
+  FULL: { value: 'full', name: 'widthTypes.full' },
+  NORMAL: { value: 'normal', name: 'widthTypes.normal' },
+  MEDIUM: { value: 'medium', name: 'widthTypes.medium' },
+  SMALL: { value: 'small', name: 'widthTypes.small' },
 }
 
 /**
@@ -69,6 +85,13 @@ export const WIDTHS = {
  * @type {String[]}
  */
 export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
+  CurrentRecordDataProviderType.getType(),
+  PageParameterDataProviderType.getType(),
+  DataSourceDataProviderType.getType(),
+  FormDataProviderType.getType(),
+]
+
+export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),

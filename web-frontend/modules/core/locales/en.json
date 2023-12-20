@@ -390,6 +390,7 @@
             "removeAll": "Remove all",
             "addField": "Add field"
         },
+        "notifyUserOnSubmit": "Receive notification on submit",
         "fieldsDescription": "All the fields are in the form.",
         "prefillOrHideInfoLink": "Prefill or hide dynamically",
         "modal": {
@@ -541,6 +542,12 @@
         "name": "Integration name",
         "namePlaceholder": "Enter integration name..."
     },
+    "integrationDropdown": {
+        "addIntegration": "Add new integration",
+        "noIntegrations": "No integrations found.",
+        "selectTypeFirst": "Choose the type first",
+        "integrationPlaceholder": "Select an integration"
+    },
     "dropdown": {
         "empty": "No items available"
     },
@@ -548,13 +555,16 @@
         "notFound": "No users found"
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} has accepted your invitation to join {workspaceName}"
+        "title": "{sender} has accepted your invitation to join {workspaceName}",
+        "deletedUser": "A deleted user"
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{sender} has rejected your invitation to join {workspaceName}"
+        "title": "{sender} has rejected your invitation to join {workspaceName}",
+        "deletedUser": "A deleted user"
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{sender} has invited you to join {workspaceName}"
+        "title": "{sender} has invited you to join {workspaceName}",
+        "deletedUser": "A deleted user"
     },
     "versionUpgradeNotification": {
         "title": "{version} is here! Check out what's new."

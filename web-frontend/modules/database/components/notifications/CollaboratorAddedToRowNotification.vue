@@ -7,9 +7,12 @@
     <div class="notification-panel__notification-content-title">
       <i18n path="collaboratorAddedToRowNotification.title" tag="span">
         <template #sender>
-          <strong>{{
-            notification.sender?.first_name || $t('anonymous')
-          }}</strong>
+          <strong v-if="sender">{{ sender }}</strong>
+          <strong v-else
+            ><s>{{
+              $t('collaboratorAddedToRowNotification.deletedUser')
+            }}</s></strong
+          >
         </template>
         <template #fieldName>
           <strong>{{ notification.data.field_name }}</strong>
@@ -39,22 +42,10 @@ export default {
   },
   computed: {
     params() {
-      let viewId = null
-
-      if (
-        ['database-table-row', 'database-table'].includes(
-          this.$nuxt.$route.name
-        ) &&
-        this.$nuxt.$route.params.tableId === this.notification.data.table_id
-      ) {
-        viewId = this.$nuxt.$route.params.viewId
-      }
-
       return {
         databaseId: this.notification.data.database_id,
         tableId: this.notification.data.table_id,
         rowId: this.notification.data.row_id,
-        viewId,
       }
     },
     url() {

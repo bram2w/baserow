@@ -1,6 +1,10 @@
 .local-baserow-form__user {
   display: flex;
   align-items: center;
-  gap: 50px;
+  gap: 20px;
   line-height: 18px;
+
+  & .presentation {
+    flex: 1 0 auto;
+  }
 }

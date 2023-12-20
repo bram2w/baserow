@@ -3,7 +3,7 @@
 exports[`GridViewRows component Default component 1`] = `
 <div
   class="grid-view__rows"
-  style="transform: translateY(0px) translateX(0px);"
+  style="transform: translateY(0px) translateX(0px); left: 0px;"
 >
   <div
     class="grid-view__row"
@@ -113,7 +113,7 @@ exports[`GridViewRows component Default component 1`] = `
 exports[`GridViewRows component With row details 1`] = `
 <div
   class="grid-view__rows"
-  style="transform: translateY(0px) translateX(0px);"
+  style="transform: translateY(0px) translateX(0px); left: 0px;"
 >
   <div
     class="grid-view__row"
@@ -121,7 +121,7 @@ exports[`GridViewRows component With row details 1`] = `
     <!---->
      
     <div
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       style="width: 72px;"
     >
       <div
@@ -186,7 +186,7 @@ exports[`GridViewRows component With row details 1`] = `
     <!---->
      
     <div
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       style="width: 72px;"
     >
       <div
@@ -251,7 +251,7 @@ exports[`GridViewRows component With row details 1`] = `
     <!---->
      
     <div
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       style="width: 72px;"
     >
       <div

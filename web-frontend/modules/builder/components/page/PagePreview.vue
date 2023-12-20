@@ -6,6 +6,18 @@
     <PreviewNavigationBar :page="page" :style="{ maxWidth }" />
     <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
       <div ref="previewScaled" class="page-preview__scaled">
+        <CallToAction
+          v-if="!elements.length"
+          class="page-preview__empty"
+          icon="baserow-icon-plus"
+          icon-color="ghost"
+          icon-size="tiny"
+          icon-rounded
+          @click="$refs.addElementModal.show()"
+        >
+          {{ $t('pagePreview.emptyMessage') }}
+        </CallToAction>
+        <AddElementModal ref="addElementModal" :page="page" />
         <ElementPreview
           v-for="(element, index) in elements"
           :key="element.id"
@@ -29,10 +41,15 @@ import ElementPreview from '@baserow/modules/builder/components/elements/Element
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import PreviewNavigationBar from '@baserow/modules/builder/components/page/PreviewNavigationBar'
 import { PLACEMENTS } from '@baserow/modules/builder/enums'
+import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal.vue'
 
 export default {
   name: 'PagePreview',
-  components: { ElementPreview, PreviewNavigationBar },
+  components: {
+    AddElementModal,
+    ElementPreview,
+    PreviewNavigationBar,
+  },
   inject: ['page'],
   data() {
     return {

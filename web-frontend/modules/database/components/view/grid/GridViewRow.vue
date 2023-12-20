@@ -38,7 +38,8 @@
           }}</template>
         </div>
         <div
-          class="grid-view__column"
+          class="grid-view__column grid-view__column--no-border-right"
+          :class="{ 'grid-view__column--group-end': groupEnd }"
           :style="{ width: gridViewRowDetailsWidth + 'px' }"
         >
           <div
@@ -93,6 +94,7 @@
         :multi-select-position="getMultiSelectPosition(row.id, field)"
         :read-only="readOnly"
         :store-prefix="storePrefix"
+        :group-end="groupEnd"
         :style="{
           width: fieldWidths[field.id] + 'px',
           ...getSelectedCellStyle(field),
@@ -125,7 +127,11 @@ import RecursiveWrapper from '@baserow/modules/database/components/RecursiveWrap
 
 export default {
   name: 'GridViewRow',
-  components: { GridViewRowExpandButton, GridViewCell, RecursiveWrapper },
+  components: {
+    GridViewRowExpandButton,
+    GridViewCell,
+    RecursiveWrapper,
+  },
   mixins: [gridViewHelpers],
   provide() {
     return {
@@ -145,7 +151,12 @@ export default {
       type: Object,
       required: true,
     },
-    fields: {
+    groupEnd: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    renderedFields: {
       type: Array,
       required: true,
     },
@@ -153,7 +164,11 @@ export default {
       type: Object,
       required: true,
     },
-    allFields: {
+    visibleFields: {
+      type: Array,
+      required: true,
+    },
+    allFieldsInTable: {
       type: Array,
       required: true,
     },
@@ -162,6 +177,11 @@ export default {
       required: true,
     },
     includeRowDetails: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    includeGroupBy: {
       type: Boolean,
       required: false,
       default: () => false,
@@ -183,7 +203,7 @@ export default {
       type: Number,
       required: true,
     },
-    canFitInTwoColumns: {
+    primaryFieldIsSticky: {
       type: Boolean,
       required: false,
       default: () => true,
@@ -207,8 +227,8 @@ export default {
   },
   computed: {
     /**
-     * This component already accepts a `fields` property containing the fields that
-     * must be rendered based on the viewport width and horizontal scroll offset,
+     * This component already accepts a `renderedFields` property containing the fields
+     * that must be rendered based on the viewport width and horizontal scroll offset,
      * meaning it only renders the fields that are in the viewport. Because a selected
      * field must always be rendered, this computed property checks if there is a
      * selected field and if so, it's added to the array. This doesn't influence the
@@ -220,12 +240,12 @@ export default {
       // If the row doesn't have a selected field, we can safely return the fields
       // because we just want to render the fields inside of the view port.
       if (!this.row._.selected) {
-        return this.fields
+        return this.renderedFields
       }
 
       // Check if the selected field exists in the all fields array, so not just the to
       // be rendered ones.
-      const selectedField = this.allFields.find(
+      const selectedField = this.visibleFields.find(
         (field) => field.id === this.row._.selectedFieldId
       )
 
@@ -233,15 +253,16 @@ export default {
       // add it because it's already rendered.
       if (
         selectedField === undefined ||
-        this.fields.find((field) => field.id === selectedField.id) !== undefined
+        this.renderedFields.find((field) => field.id === selectedField.id) !==
+          undefined
       ) {
-        return this.fields
+        return this.renderedFields
       }
 
       // If the selected field exists in all fields, but not in fields it must be added
       // to the fields array because we want to render it. It won't influence the other
       // cells because it's positioned absolute.
-      const fields = this.fields.slice()
+      const fields = this.renderedFields.slice()
       fields.unshift(selectedField)
       return fields
     },
@@ -265,10 +286,7 @@ export default {
       return this.row._.selected && this.row._.selectedFieldId === fieldId
     },
     selectCell(fieldId, rowId = this.row.id) {
-      this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
-        rowId,
-        fieldId,
-      })
+      this.$emit('cell-selected', { fieldId, rowId })
     },
     // Return an object that represents if a cell is selected,
     // and it's current position in the selection grid
@@ -288,9 +306,9 @@ export default {
             rowId
           )
 
-        const allFieldIds = this.allFields.map((field) => field.id)
+        const allFieldIds = this.visibleFields.map((field) => field.id)
         let fieldIndex = allFieldIds.findIndex((id) => field.id === id)
-        fieldIndex += !field.primary && this.canFitInTwoColumns ? 1 : 0
+        fieldIndex += !field.primary && this.primaryFieldIsSticky ? 1 : 0
 
         const [minRow, maxRow] =
           this.$store.getters[
@@ -349,7 +367,8 @@ export default {
      * otherwise certain functionality won't work.
      */
     getSelectedCellStyle(field) {
-      const exists = this.fields.find((f) => f.id === field.id) !== undefined
+      const exists =
+        this.renderedFields.find((f) => f.id === field.id) !== undefined
 
       // If the field already exists in the field list it means that it's already
       // rendered. In that case we don't have to provide any other styling because it's
@@ -363,14 +382,15 @@ export default {
       // the other cells.
       const styling = { position: 'absolute' }
 
-      const selectedFieldIndex = this.allFields.findIndex(
+      const selectedFieldIndex = this.visibleFields.findIndex(
         (field) => field.id === this.row._.selectedFieldId
       )
-      const firstVisibleFieldIndex = this.allFields.findIndex(
-        (field) => field.id === this.fields[0].id
+      const firstVisibleFieldIndex = this.visibleFields.findIndex(
+        (field) => field.id === this.renderedFields[0].id
       )
-      const lastVisibleFieldIndex = this.allFields.findIndex(
-        (field) => field.id === this.fields[this.fields.length - 1].id
+      const lastVisibleFieldIndex = this.visibleFields.findIndex(
+        (field) =>
+          field.id === this.renderedFields[this.renderedFields.length - 1].id
       )
 
       // Positions the selected field cell on the right position without influencing the
@@ -381,14 +401,14 @@ export default {
         // If the selected field must be positioned before the other fields
         let spaceBetween = 0
         for (let i = selectedFieldIndex; i < firstVisibleFieldIndex; i++) {
-          spaceBetween += this.fieldWidths[this.allFields[i].id]
+          spaceBetween += this.fieldWidths[this.visibleFields[i].id]
         }
         styling.left = -spaceBetween + 'px'
       } else if (selectedFieldIndex > lastVisibleFieldIndex) {
         // If the selected field must be positioned after the other fields.
         let spaceBetween = 0
         for (let i = lastVisibleFieldIndex; i < selectedFieldIndex; i++) {
-          spaceBetween += this.fieldWidths[this.allFields[i].id]
+          spaceBetween += this.fieldWidths[this.visibleFields[i].id]
         }
         styling.right = -spaceBetween + 'px'
       }

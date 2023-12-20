@@ -98,7 +98,6 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     assert args[1] == ListApplicationsWorkspaceOperationType.type
     assert isinstance(args[2], QuerySet)
     assert kwargs["workspace"] == workspace_1
-    assert kwargs["context"] == workspace_1
     assert kwargs["allow_if_template"] is True
 
     assert response_json[0]["id"] == application_1.id

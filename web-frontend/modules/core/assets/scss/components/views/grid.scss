@@ -14,6 +14,25 @@
   }
 }
 
+%grid-view__divider-width-handle {
+  width: 9px;
+  height: 26px;
+  cursor: col-resize;
+
+  &::before {
+    content: '';
+
+    @include absolute(0, 2px, 0, 2px);
+
+    border-radius: 2px;
+  }
+
+  &:hover::before,
+  &.dragging::before {
+    background-color: $color-primary-500;
+  }
+}
+
 .grid-view__left,
 .grid-view__right {
   @include absolute(0, auto);
@@ -48,7 +67,7 @@
 
   z-index: 3;
   width: 4px;
-  border-left: 1px solid $color-neutral-300;
+  border-left: 1px solid $color-neutral-400;
   overflow: hidden;
   pointer-events: none;
 
@@ -70,26 +89,11 @@
 }
 
 .grid-view__divider-width {
+  @extend %grid-view__divider-width-handle;
   @include absolute(3px, auto, auto, auto);
 
   margin-left: -4.5px;
   z-index: 3;
-  width: 9px;
-  height: 26px;
-  cursor: col-resize;
-
-  &::before {
-    content: '';
-
-    @include absolute(0, 2px, 0, 2px);
-
-    border-radius: 2px;
-  }
-
-  &:hover::before,
-  &.dragging::before {
-    background-color: $color-primary-500;
-  }
 }
 
 .grid-view__head {
@@ -116,6 +120,19 @@
   &:hover {
     color: $color-neutral-900;
   }
+}
+
+.grid-view__head-group {
+  position: relative;
+  height: 33px;
+}
+
+.grid-view__head-group-width-handle {
+  @extend %grid-view__divider-width-handle;
+  @include absolute(3px, auto, auto, auto);
+
+  margin-left: -4.5px;
+  z-index: 3;
 }
 
 .grid-view__body {
@@ -176,11 +193,18 @@
   background-size: 66px 66px;
 }
 
+.grid-view__placeholder-groups {
+  @include absolute(0, auto, 0, 0);
+
+  background-color: $color-neutral-50;
+}
+
 .grid-view__placeholder-column {
   @include absolute(0, auto, 0, auto);
 
   border-right: 1px solid $color-neutral-200;
 
+  &.grid-view__placeholder-column--no-border-right,
   .grid-view__left & {
     border-right: none;
   }
@@ -229,6 +253,11 @@
   }
 }
 
+.grid-view__row-placeholder {
+  height: 32px + 1px;
+  width: 1px;
+}
+
 .grid-view__row-warning {
   @include absolute(auto, auto, -20px, 0);
   @include fixed-height(20px, 12px);
@@ -257,11 +286,13 @@
     border-bottom: 0;
   }
 
+  &.grid-view__column--no-border-right,
   .grid-view__left & {
     border-right: none;
   }
 
   &.grid-view__column--sorted::after,
+  &.grid-view__column--grouped::after,
   &.grid-view__column--filtered::after {
     content: '';
 
@@ -272,9 +303,93 @@
     background-color: rgba($color-warning-100, 0.8);
   }
 
+  &.grid-view__column--grouped::after {
+    background-color: rgba($color-purple-100, 0.5);
+  }
+
   &.grid-view__column--filtered::after {
     background-color: rgba($color-success-100, 0.5);
   }
+
+  &.grid-view__column--group-end::before {
+    @include absolute(auto, auto, -1px, 0);
+
+    content: '';
+    height: 1px;
+    background-color: $color-neutral-400;
+    width: 100%;
+    pointer-events: none;
+  }
+}
+
+.grid-view__group-by-divider {
+  @include absolute(0, auto, 0, auto);
+
+  z-index: 3;
+  width: 1px;
+  background-color: $color-neutral-400;
+}
+
+.grid-view__groups {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  background-color: $color-neutral-50;
+}
+
+.grid-view__group-span {
+  position: relative;
+
+  &::after {
+    @include absolute(auto, auto, 0, 0);
+
+    content: '';
+    height: 1px;
+    background-color: $color-neutral-400;
+    width: 100%;
+    pointer-events: none;
+  }
+}
+
+.grid-view__group {
+  position: sticky;
+  top: 0;
+  background-color: $color-neutral-50;
+  width: 100%;
+}
+
+.grid-view__group-cell {
+  display: flex;
+  height: 33px;
+  align-items: center;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.grid-view__group-name {
+  @extend %ellipsis;
+
+  line-height: 33px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.grid-view__group-value {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.grid-view__group-count {
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+  padding: 0 5px;
+  background-color: $color-neutral-200;
+  margin-left: 8px;
+
+  @include rounded($rounded);
 }
 
 .grid-view__row-info {
@@ -339,15 +454,18 @@
 
 .grid-view__row-more {
   padding: 2px;
-  @include center-text(18px, 14px);
-
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   color: $color-neutral-400;
   visibility: hidden;
   @include rounded($rounded);
 
+  @include flex-align-items();
+
   .grid-view__row--hover &,
   .grid-view__row--selected & {
-    display: block;
+    display: flex;
     visibility: visible;
   }
 
@@ -513,23 +631,10 @@
   }
 
   .grid-view__description-width {
+    @extend %grid-view__divider-width-handle;
     @include absolute(3px, -4.5px, 3px, auto);
 
     z-index: 2;
-    width: 9px;
-    cursor: col-resize;
-
-    &::before {
-      content: '';
-      border-radius: 2px;
-
-      @include absolute(0, 2px, 0, 2px);
-    }
-
-    &:hover::before,
-    &.dragging::before {
-      background-color: $color-primary-500;
-    }
   }
 
   .grid-view__description-name {
@@ -581,6 +686,7 @@
 .grid-view__add-row {
   color: $color-neutral-900;
   background-color: $white;
+  padding-left: 8px;
   height: 100%;
 
   @include flex-align-items();
@@ -591,10 +697,6 @@
 
   &.hover {
     background-color: $color-primary-100;
-  }
-
-  .grid-view__left & {
-    padding-left: 8px;
   }
 }
 

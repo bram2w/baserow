@@ -17,7 +17,7 @@ tool gives you the powers of a developer without leaving your browser.
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
 ```bash
-docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.21.2
+docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.22.0
 ```
 
 ![Baserow screenshot](docs/assets/screenshot.png "Baserow screenshot")
@@ -34,12 +34,10 @@ Join our forum on https://community.baserow.io/. See
 * [**Docker**](docs/installation/install-with-docker.md)
 * [**Ubuntu**](docs/installation/install-on-ubuntu.md)
 * [**Docker Compose** ](docs/installation/install-with-docker-compose.md)
-* [**
-  Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
-* [**
-  Render**: Easily install and scale up Baserow on Render.](docs/installation/install-on-render.md)
-* [**
-  Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
+* [**Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
+* [**Render**: Easily install and scale up Baserow on Render.](docs/installation/install-on-render.md)
+* [**Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
+* [**Elestio**: Fully managed by Elestio.](https://elest.io/open-source/baserow)
 
 ## Official documentation
 
@@ -89,7 +87,7 @@ Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.21.2
+Version: 1.22.0
 
 The official repository can be found at https://gitlab.com/baserow/baserow.
 

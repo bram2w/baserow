@@ -9,15 +9,23 @@
       class="loading margin-left-2 margin-top-2 margin-right-2 margin-bottom-2"
     ></div>
     <ul v-else class="context__menu">
-      <li v-for="(applicationType, type) in applications" :key="type">
+      <li
+        v-for="(applicationType, type) in applications"
+        :key="type"
+        class="context__menu-item"
+      >
         <a
           :ref="'createApplicationModalToggle' + type"
+          class="context__menu-item-link"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
           @click="toggleCreateApplicationModal(type)"
         >
-          <i class="context__menu-icon" :class="applicationType.iconClass"></i>
+          <i
+            class="context__menu-item-icon"
+            :class="applicationType.iconClass"
+          ></i>
           {{ applicationType.getName() }}
         </a>
         <CreateApplicationModal
@@ -27,14 +35,15 @@
           @created="hide"
         ></CreateApplicationModal>
       </li>
-      <li>
+      <li class="context__menu-item">
         <a
+          class="context__menu-item-link"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
           @click="openTemplateModal()"
         >
-          <i class="context__menu-icon iconoir-page"></i>
+          <i class="context__menu-item-icon iconoir-page"></i>
           {{ $t('createApplicationContext.fromTemplate') }}
         </a>
         <TemplateModal

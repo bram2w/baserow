@@ -34,6 +34,7 @@ from baserow.api.utils import (
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
+    ERROR_CANNOT_CREATE_FIELD_TYPE,
     ERROR_CANNOT_DELETE_PRIMARY_FIELD,
     ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
     ERROR_FIELD_CIRCULAR_REFERENCE,
@@ -62,6 +63,7 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
 )
 from baserow.contrib.database.fields.exceptions import (
     CannotChangeFieldType,
+    CannotCreateFieldType,
     CannotDeletePrimaryField,
     FailedToLockFieldDueToConflict,
     FieldDoesNotExist,
@@ -255,6 +257,7 @@ class FieldsView(APIView):
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
             CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
             FailedToLockTableDueToConflict: ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
+            CannotCreateFieldType: ERROR_CANNOT_CREATE_FIELD_TYPE,
         }
     )
     def post(self, request, data, table_id):

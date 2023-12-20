@@ -5,6 +5,9 @@
       'grid-view__column--filtered':
         !view.filters_disabled &&
         view.filters.findIndex((filter) => filter.field === field.id) !== -1,
+      'grid-view__column--grouped':
+        view.group_bys.findIndex((groupBy) => groupBy.field === field.id) !==
+        -1,
       'grid-view__column--sorted':
         view.sortings.findIndex((sort) => sort.field === field.id) !== -1,
     }"
@@ -54,14 +57,16 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <a
             ref="insertLeftLink"
+            class="context__menu-item-link"
             @click="
               $refs.insertFieldContext.toggle($refs.insertLeftLink, 'left')
             "
           >
-            <i class="context__menu-icon iconoir-arrow-left"></i>
+            <i class="context__menu-item-icon iconoir-arrow-left"></i>
             {{ $t('gridViewFieldType.insertLeft') }}
           </a>
         </li>
@@ -75,14 +80,16 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <a
             ref="insertRightLink"
+            class="context__menu-item-link"
             @click="
               $refs.insertFieldContext.toggle($refs.insertRightLink, 'right')
             "
           >
-            <i class="context__menu-icon iconoir-arrow-right"></i>
+            <i class="context__menu-item-icon iconoir-arrow-right"></i>
             {{ $t('gridViewFieldType.insertRight') }}
           </a>
           <InsertFieldContext
@@ -102,11 +109,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <a
+            class="context__menu-item-link"
             @click=";[$refs.duplicateFieldModal.toggle(), $refs.context.hide()]"
           >
-            <i class="context__menu-icon iconoir-copy"></i>
+            <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridViewFieldType.duplicate') }}
           </a>
           <DuplicateFieldModal
@@ -127,9 +136,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="createFilter($event, view, field)">
-            <i class="context__menu-icon iconoir-filter"></i>
+          <a
+            class="context__menu-item-link"
+            @click="createFilter($event, view, field)"
+          >
+            <i class="context__menu-item-icon iconoir-filter"></i>
             {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
@@ -142,9 +155,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="createSort($event, view, field, 'ASC')">
-            <i class="context__menu-icon iconoir-sort-down"></i>
+          <a
+            class="context__menu-item-link"
+            @click="createSort($event, view, field, 'ASC')"
+          >
+            <i class="context__menu-item-icon iconoir-sort-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
             <template v-if="getSortIndicator(field, 0) === 'text'">{{
               getSortIndicator(field, 1)
@@ -172,9 +189,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="createSort($event, view, field, 'DESC')">
-            <i class="context__menu-icon iconoir-sort-down"></i>
+          <a
+            class="context__menu-item-link"
+            @click="createSort($event, view, field, 'DESC')"
+          >
+            <i class="context__menu-item-icon iconoir-sort-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
             <template v-if="getSortIndicator(field, 0) === 'text'">{{
               getSortIndicator(field, 2)
@@ -202,30 +223,21 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="hide($event, view, field)">
-            <i class="context__menu-icon iconoir-eye-off"></i>
+          <a class="context__menu-item-link" @click="hide($event, view, field)">
+            <i class="context__menu-item-icon iconoir-eye-off"></i>
             {{ $t('gridViewFieldType.hideField') }}
           </a>
         </li>
       </FieldContext>
-      <GridViewFieldWidthHandle
+      <GridViewWidthHandle
         v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
-        :database="database"
-        :grid="view"
-        :field="field"
         :width="width"
-        :read-only="
-          readOnly ||
-          !$hasPermission(
-            'database.table.view.update_field_options',
-            view,
-            database.workspace.id
-          )
-        "
-        :store-prefix="storePrefix"
-      ></GridViewFieldWidthHandle>
+        @move="moveFieldWidth(field, $event)"
+        @update="updateFieldWidth(field, view, database, readOnly, $event)"
+      ></GridViewWidthHandle>
     </div>
   </div>
 </template>
@@ -237,14 +249,14 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
-import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
   components: {
     FieldContext,
-    GridViewFieldWidthHandle,
+    GridViewWidthHandle,
     InsertFieldContext,
     DuplicateFieldModal,
   },

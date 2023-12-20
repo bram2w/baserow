@@ -86,10 +86,15 @@
   color: $color-neutral-500;
   font-size: 16px;
   border-radius: 6px;
-  border: 1px solid #b5b5b7;
+  border: 1px solid $palette-neutral-400;
   background: #fff;
   box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
-  padding: 8px 6px 3px;
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+
+  @include add-elevation($elevation-low);
+  @include flex-align-items();
 
   &:hover {
     text-decoration: none;
@@ -134,7 +139,7 @@
 .filters__value-input {
   padding-top: 0;
   padding-bottom: 0;
-  line-height: 30px;
+  line-height: 36px;
 }
 
 .filters__combined_value-input {
@@ -156,9 +161,10 @@
 }
 
 .filters__value-rating {
-  border: solid 1px $color-neutral-400;
+  border: solid 1px $palette-neutral-400;
   padding: 6px 12px;
   @include rounded($rounded);
+  @include add-elevation($elevation-low);
 }
 
 .filters__value-link-row {
@@ -167,13 +173,14 @@
   display: block;
   position: relative;
   color: $color-neutral-900;
-  line-height: 30px;
-  height: 30px;
-  border: solid 1px $color-neutral-400;
+  line-height: 36px;
+  height: 36px;
+  border: 1px solid $palette-neutral-400;
   padding: 0 10px;
   background-color: $white;
   width: 100%;
   @include rounded($rounded);
+  @include add-elevation($elevation-low);
 
   &:hover {
     text-decoration: none;
@@ -244,8 +251,8 @@
   display: grid;
   width: 500px;
 
-  /* 48px = 30px + 8px (gap) * 3 (number of gaps) */
-  grid-template-columns: calc(42% - 54px) 26% 32% 30px;
+  /* 60px = 36px (button) + (8px (gap) * 3 (number of gaps))  */
+  grid-template-columns: calc(42% - 60px) 26% 32% 36px;
   column-gap: 8px;
   align-items: center;
   position: relative;

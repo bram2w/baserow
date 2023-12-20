@@ -121,21 +121,23 @@ def test_list_builder_applications_theme(
     response_json = response.json()
     assert response_json[0]["theme"] == {
         "primary_color": "#ccccccff",
-        "secondary_color": "#000000ff",
+        "secondary_color": "#0eaa42ff",
+        "border_color": "#d7d8d9ff",
         "heading_1_font_size": 24,
-        "heading_1_color": "#000000ff",
+        "heading_1_color": "#070810ff",
         "heading_2_font_size": 20,
-        "heading_2_color": "#000000ff",
+        "heading_2_color": "#070810ff",
         "heading_3_font_size": 16,
-        "heading_3_color": "#000000ff",
+        "heading_3_color": "#070810ff",
     }
     assert response_json[1]["theme"] == {
-        "primary_color": "#000000ff",
-        "secondary_color": "#000000ff",
+        "primary_color": "#5190efff",
+        "secondary_color": "#0eaa42ff",
+        "border_color": "#d7d8d9ff",
         "heading_1_font_size": 24,
-        "heading_1_color": "#000000ff",
+        "heading_1_color": "#070810ff",
         "heading_2_font_size": 20,
-        "heading_2_color": "#000000ff",
+        "heading_2_color": "#070810ff",
         "heading_3_font_size": 16,
-        "heading_3_color": "#000000ff",
+        "heading_3_color": "#070810ff",
     }

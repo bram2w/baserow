@@ -33,7 +33,7 @@
       <DownloadLink
         class="field-file__action"
         loading-class="button--loading"
-        :filename="file.name"
+        :filename="file.visible_name"
         :url="file.url"
       >
         <i class="iconoir-download"></i>

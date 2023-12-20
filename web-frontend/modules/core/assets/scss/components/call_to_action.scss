@@ -1,0 +1,19 @@
+.call-to-action {
+  cursor: pointer;
+  flex-direction: column;
+  padding: 30px 60px;
+  font-size: 16px;
+  border: 1px dashed $color-neutral-400;
+  box-sizing: border-box;
+  color: $color-neutral-500;
+  background-color: $white;
+  text-align: center;
+
+  @include flex-align-items(20px);
+  @include rounded($rounded-md);
+
+  &:hover {
+    color: $color-neutral-600;
+    border-color: $color-neutral-600;
+  }
+}

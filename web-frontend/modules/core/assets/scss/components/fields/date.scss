@@ -4,11 +4,17 @@
 
 .field-date {
   width: 30%;
+  flex: 30;
+  min-width: 80px;
+  max-width: 200px;
 }
 
 .field-date__time {
   width: 25%;
   margin-left: 4px;
+  flex: 25;
+  min-width: 70px;
+  max-width: 150px;
 }
 
 .field-date__tzinfo {
@@ -17,6 +23,8 @@
   margin-top: auto;
   margin-bottom: auto;
   color: $color-neutral-400;
+  flex: 10;
+  min-width: fit-content;
 }
 
 .field-date-read-only-timestamp {

@@ -4,6 +4,7 @@ from .registries import ThemeConfigBlockType
 main_theme_config_block_fields = [
     "primary_color",
     "secondary_color",
+    "border_color",
     "heading_1_font_size",
     "heading_1_color",
     "heading_2_font_size",

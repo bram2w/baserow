@@ -244,7 +244,7 @@ def test_can_create_and_index_and_search_interesting_test_table(
 ):
     with transaction.atomic():
         user, jwt_token = data_fixture.create_user_and_token()
-        table, _, _, _, context = setup_interesting_test_table(
+        table, _, _, _, _ = setup_interesting_test_table(
             data_fixture,
             user,
         )
@@ -260,7 +260,7 @@ def test_can_create_and_index_and_search_interesting_test_table(
             kwargs={"view_id": view.id},
         ),
         data={
-            "search": "a",
+            "search": "a.txt",
             "search_mode": SearchModes.MODE_FT_WITH_COUNT,
         },
         format="json",

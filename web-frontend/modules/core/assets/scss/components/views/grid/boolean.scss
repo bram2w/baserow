@@ -7,20 +7,21 @@
   margin: auto;
   color: $color-success-600;
   cursor: pointer;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  justify-content: center;
 
-  @include center-text(20px, 18px);
   @include rounded($rounded);
+  @include flex-align-items();
 
   &.grid-field-boolean__checkbox--read-only {
     cursor: initial;
-
-    .grid-view__cell.active & {
-      background-color: $color-neutral-50;
-    }
+    background-color: $color-neutral-100;
   }
 
   .grid-view__cell.active & {
-    border: 1px solid $color-neutral-300;
+    border: 1px solid $color-neutral-400;
   }
 
   .grid-field-boolean__checkbox-icon {

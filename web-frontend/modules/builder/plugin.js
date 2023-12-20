@@ -9,6 +9,7 @@ import {
   DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
+  UserSourcesBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
@@ -21,6 +22,7 @@ import dataSourceContentStore from '@baserow/modules/builder/store/dataSourceCon
 import elementContentStore from '@baserow/modules/builder/store/elementContent'
 import themeStore from '@baserow/modules/builder/store/theme'
 import workflowActionStore from '@baserow/modules/builder/store/workflowAction'
+import formDataStore from '@baserow/modules/builder/store/formData'
 
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
@@ -32,6 +34,8 @@ import {
   ColumnElementType,
   ButtonElementType,
   TableElementType,
+  FormContainerElementType,
+  DropdownElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -72,13 +76,21 @@ import {
   PageParameterDataProviderType,
   DataSourceDataProviderType,
   CurrentRecordDataProviderType,
+  FormDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
+  CreateRowWorkflowActionType,
   NotificationWorkflowActionType,
   OpenPageWorkflowActionType,
+  UpdateRowWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
+
+import {
+  TextCollectionFieldType,
+  LinkCollectionFieldType,
+} from '@baserow/modules/builder/collectionFieldTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -107,6 +119,7 @@ export default (context) => {
   store.registerModule('elementContent', elementContentStore)
   store.registerModule('theme', themeStore)
   store.registerModule('workflowAction', workflowActionStore)
+  store.registerModule('formData', formDataStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
@@ -133,6 +146,10 @@ export default (context) => {
     'builderSettings',
     new DomainsBuilderSettingsType(context)
   )
+  app.$registry.register(
+    'builderSettings',
+    new UserSourcesBuilderSettingsType(context)
+  )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
 
@@ -144,6 +161,8 @@ export default (context) => {
   app.$registry.register('element', new ColumnElementType(context))
   app.$registry.register('element', new ButtonElementType(context))
   app.$registry.register('element', new TableElementType(context))
+  app.$registry.register('element', new FormContainerElementType(context))
+  app.$registry.register('element', new DropdownElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
@@ -196,6 +215,10 @@ export default (context) => {
     'builderDataProvider',
     new PageParameterDataProviderType(context)
   )
+  app.$registry.register(
+    'builderDataProvider',
+    new FormDataProviderType(context)
+  )
   app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
 
   app.$registry.register(
@@ -205,5 +228,22 @@ export default (context) => {
   app.$registry.register(
     'workflowAction',
     new OpenPageWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new CreateRowWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new UpdateRowWorkflowActionType(context)
+  )
+
+  app.$registry.register(
+    'collectionField',
+    new TextCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
+    new LinkCollectionFieldType(context)
   )
 }

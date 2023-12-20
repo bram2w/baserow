@@ -1,7 +1,7 @@
 <template>
   <div class="checkbox" :class="classNames" @click="toggle(value)">
     <i v-if="value === true" class="checkbox__checked-icon iconoir-check"></i>
-    <slot></slot>
+    <label class="checkbox__label"><slot></slot></label>
   </div>
 </template>
 

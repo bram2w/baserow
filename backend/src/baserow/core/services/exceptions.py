@@ -8,3 +8,10 @@ class ServiceImproperlyConfigured(Exception):
 
 class DoesNotExist(Exception):
     """Raised when calling a service dispatch method and nothing is found."""
+
+
+class InvalidServiceTypeDispatchSource(Exception):
+    """
+    Raised when a `DataSource` or `BuilderWorkflowAction` is created or updated,
+    and the `ServiceType` that is referenced is not valid for that dispatch-able source.
+    """

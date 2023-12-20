@@ -36,6 +36,9 @@ from baserow.contrib.builder.api.domains.serializers import (
     UpdateDomainSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
+from baserow.contrib.builder.api.workflow_actions.serializers import (
+    BuilderWorkflowActionSerializer,
+)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
@@ -55,6 +58,12 @@ from baserow.contrib.builder.handler import BuilderHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.service import BuilderService
+from baserow.contrib.builder.workflow_actions.registries import (
+    builder_workflow_action_type_registry,
+)
+from baserow.contrib.builder.workflow_actions.service import (
+    BuilderWorkflowActionService,
+)
 from baserow.core.exceptions import ApplicationDoesNotExist
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.services.registries import service_type_registry
@@ -544,4 +553,59 @@ class PublicDataSourcesView(APIView):
             for data_source in data_sources
             if data_source.service and data_source.service.integration_id
         ]
+        return Response(data)
+
+
+class PublicBuilderWorkflowActionsView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns only the public workflow actions of the page related "
+                "to the provided Id.",
+            )
+        ],
+        tags=["Builder workflow_actions"],
+        operation_id="list_public_builder_page_workflow_actions",
+        description=(
+            "Lists all the workflow actions with their public accessible data. Some "
+            "configuration might be omitted for security reasons such as passwords or "
+            "PII."
+        ),
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                builder_workflow_action_type_registry,
+                BuilderWorkflowActionSerializer,
+                many=True,
+                name_prefix="public_",
+                extra_params={"public": True},
+            ),
+            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request, page_id: int):
+        page = PageHandler().get_page(page_id)
+
+        workflow_actions = BuilderWorkflowActionService().get_workflow_actions(
+            request.user, page
+        )
+
+        data = [
+            builder_workflow_action_type_registry.get_serializer(
+                workflow_action,
+                BuilderWorkflowActionSerializer,
+                extra_params={"public": True},
+            ).data
+            for workflow_action in workflow_actions
+        ]
+
         return Response(data)

@@ -279,9 +279,7 @@ class RolePermissionManagerType(PermissionManagerType):
 
         return policy_per_operation_with_exception_ids
 
-    def filter_queryset(
-        self, actor, operation_name, queryset, workspace=None, context=None
-    ):
+    def filter_queryset(self, actor, operation_name, queryset, workspace=None):
         """
         Filter the given queryset according to the role given for the specified
         operation.

@@ -187,7 +187,13 @@ def broadcast_to_users_individual_payloads(
 
 
 @app.task(bind=True)
-def broadcast_to_channel_group(self, workspace, payload, ignore_web_socket_id=None):
+def broadcast_to_channel_group(
+    self,
+    workspace,
+    payload,
+    ignore_web_socket_id=None,
+    exclude_user_ids=None,
+):
     """
     Broadcasts a JSON payload all the users within the channel workspace having the
     provided name.
@@ -201,6 +207,9 @@ def broadcast_to_channel_group(self, workspace, payload, ignore_web_socket_id=No
         sent. This is normally the web socket id that has originally made the change
         request.
     :type ignore_web_socket_id: str
+    :param exclude_user_ids: A list of User ids which should be excluded from
+        receiving the message.
+    :type exclude_user_ids: Optional[list]
     """
 
     from asgiref.sync import async_to_sync
@@ -214,6 +223,7 @@ def broadcast_to_channel_group(self, workspace, payload, ignore_web_socket_id=No
             "type": "broadcast_to_group",
             "payload": payload,
             "ignore_web_socket_id": ignore_web_socket_id,
+            "exclude_user_ids": exclude_user_ids,
         },
     )
 

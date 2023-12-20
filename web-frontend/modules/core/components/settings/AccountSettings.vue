@@ -2,12 +2,9 @@
   <div>
     <h2 class="box__title">{{ $t('accountSettings.title') }}</h2>
     <Error :error="error"></Error>
-    <Alert
-      v-if="success"
-      type="success"
-      icon="iconoir-check"
-      :title="$t('accountSettings.changedTitle')"
-      ><p>{{ $t('accountSettings.changedDescription') }}</p>
+    <Alert v-if="success" type="success">
+      <template #title>{{ $t('accountSettings.changedTitle') }}</template>
+      <p>{{ $t('accountSettings.changedDescription') }}</p>
     </Alert>
     <AccountForm :default-values="user" @submitted="submitted">
       <div class="actions actions--right">

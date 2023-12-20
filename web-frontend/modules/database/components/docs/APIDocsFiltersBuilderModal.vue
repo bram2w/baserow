@@ -108,7 +108,7 @@ export default {
   mixins: [modal],
   props: {
     userFieldNames: {
-      type: Object,
+      type: Boolean,
       required: true,
     },
     fields: {

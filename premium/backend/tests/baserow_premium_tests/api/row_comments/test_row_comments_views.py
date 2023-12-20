@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.test.utils import override_settings
 
 import pytest
+from baserow_premium.row_comments.handler import RowCommentsNotificationModes
 from baserow_premium.row_comments.models import RowComment
 from freezegun import freeze_time
 from rest_framework.reverse import reverse
@@ -1098,7 +1099,7 @@ def test_only_the_author_can_restore_a_trashed_row_comment(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_user_con_be_mentioned_in_message(premium_data_fixture, api_client):
+def test_user_can_be_mentioned_in_message(premium_data_fixture, api_client):
     user, token = premium_data_fixture.create_user_and_token(
         first_name="Test User", has_active_premium_license=True
     )
@@ -1233,3 +1234,126 @@ def test_multiple_users_can_be_mentioned_in_a_comment(premium_data_fixture, api_
     }
     mentions = RowComment.objects.first().mentions.all()
     assert {u.pk for u in mentions} == {user_2.pk, user_3.pk}
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_user_without_premium_license_cannot_update_row_comments_notification_mode(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": rows[0].id, "table_id": table.id},
+        ),
+        {"mode": RowCommentsNotificationModes.MODE_ALL_COMMENTS.value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_user_cannot_update_row_comments_notification_mode_if_data_is_invalid(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    external_table = premium_data_fixture.create_database_table()
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": 0, "table_id": external_table.id},
+        ),
+        {"mode": RowCommentsNotificationModes.MODE_ALL_COMMENTS.value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": rows[0].id, "table_id": 99999},
+        ),
+        {"mode": RowCommentsNotificationModes.MODE_ALL_COMMENTS.value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": 0, "table_id": table.id},
+        ),
+        {"mode": RowCommentsNotificationModes.MODE_ALL_COMMENTS.value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROW_DOES_NOT_EXIST"
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": rows[0].id, "table_id": table.id},
+        ),
+        {"mode": "invalid_mode"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "mode": [
+            {"code": "invalid_choice", "error": '"invalid_mode" is not a valid choice.'}
+        ]
+    }
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_user_update_row_comments_notification_mode(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": rows[0].id, "table_id": table.id},
+        ),
+        {"mode": RowCommentsNotificationModes.MODE_ALL_COMMENTS.value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.put(
+        reverse(
+            "api:premium:row_comments:notification_mode",
+            kwargs={"row_id": rows[1].id, "table_id": table.id},
+        ),
+        {"mode": RowCommentsNotificationModes.MODE_ONLY_MENTIONS.value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT

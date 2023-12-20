@@ -280,5 +280,16 @@
     "auditLogSidebarWorkspace": {
         "title": "Audit log",
         "deactivated": "Available in advanced/enterprise"
+    },
+    "localBaserowUserSourceType": {
+      "notConfigured": "Not configured"
+    },
+    "localBaserowUserSourceForm": {
+      "description": "Every row in the table is a user account. Please select the matching fields in the table. The email field will be used to identify.",
+      "emailFieldLabel": "Select email field",
+      "emailFieldLabelPlaceholder": "Select a field...",
+      "noFields": "No fields",
+      "nameFieldLabel": "Select name field",
+      "nameFieldPlaceholder": "Select a field..."
     }
 }

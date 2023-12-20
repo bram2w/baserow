@@ -5,9 +5,12 @@
         {{ workspace.name }} ({{ workspace.id }})
       </div>
       <ul class="context__menu">
-        <li>
-          <a @click.prevent="showDeleteModal">
-            <i class="context__menu-icon iconoir-bin"></i>
+        <li class="context__menu-item context__menu-item--with-separator">
+          <a
+            class="context__menu-item-link context__menu-item-link--delete"
+            @click.prevent="showDeleteModal"
+          >
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('editWorkspaceContext.delete') }}
           </a>
         </li>

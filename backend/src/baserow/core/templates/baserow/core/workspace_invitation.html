@@ -141,19 +141,19 @@
                   <tbody>
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Inter;font-size:22px;font-weight:600;line-height:1;text-align:left;color:#070810;">{% trans "Invitation" %}</div>
+                        <div style="font-family:Inter,sans-serif;font-size:22px;font-weight:600;line-height:1;text-align:left;color:#070810;">{% trans "Invitation" %}</div>
                       </td>
                     </tr>
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Inter;font-size:13px;line-height:170%;text-align:left;color:#070810;">{% blocktrans trimmed with invitation.invited_by.first_name as first_name and invitation.workspace.name as workspace_name %} <strong>{{ first_name }}</strong> has invited you to collaborate on <strong>{{ workspace_name }}</strong>. {% endblocktrans %}</div>
+                        <div style="font-family:Inter,sans-serif;font-size:13px;line-height:170%;text-align:left;color:#070810;">{% blocktrans trimmed with invitation.invited_by.first_name as first_name and invitation.workspace.name as workspace_name %} <strong>{{ first_name }}</strong> has invited you to collaborate on <strong>{{ workspace_name }}</strong>. {% endblocktrans %}</div>
                       </td>
                     </tr>
                     <!-- htmlmin:ignore -->{% if invitation.message %}
                     <!-- htmlmin:ignore -->
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Inter;font-size:13px;line-height:170%;text-align:left;color:#070810;">"{{ invitation.message }}"</div>
+                        <div style="font-family:Inter,sans-serif;font-size:13px;line-height:170%;text-align:left;color:#070810;">"{{ invitation.message }}"</div>
                       </td>
                     </tr>
                     <!-- htmlmin:ignore -->{% endif %}
@@ -164,7 +164,7 @@
                           <tbody>
                             <tr>
                               <td align="center" bgcolor="#5190ef" role="presentation" style="border:none;border-radius:4px;cursor:auto;mso-padding-alt:12px 30px;background:#5190ef;" valign="middle">
-                                <a href="{{ public_accept_url }}" style="display:inline-block;background:#5190ef;color:#ffffff;font-family:Inter;font-size:15px;font-weight:600;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:12px 30px;mso-padding-alt:0px;border-radius:4px;" target="_blank"> {% trans "Accept invitation" %} </a>
+                                <a href="{{ public_accept_url }}" style="display:inline-block;background:#5190ef;color:#ffffff;font-family:Inter,sans-serif;font-size:15px;font-weight:600;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:12px 30px;mso-padding-alt:0px;border-radius:4px;" target="_blank"> {% trans "Accept invitation" %} </a>
                               </td>
                             </tr>
                           </tbody>
@@ -173,12 +173,12 @@
                     </tr>
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Inter;font-size:12px;line-height:1;text-align:left;color:#9c9c9f;">{{ public_accept_url }}</div>
+                        <div style="font-family:Inter,sans-serif;font-size:12px;line-height:1;text-align:left;color:#9c9c9f;">{{ public_accept_url }}</div>
                       </td>
                     </tr>
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Inter;font-size:13px;line-height:170%;text-align:left;color:#070810;">{% blocktrans trimmed %} Baserow is an open source no-code database tool which allows you to collaborate on projects, customers and more. It gives you the powers of a developer without leaving your browser. {% endblocktrans %}</div>
+                        <div style="font-family:Inter,sans-serif;font-size:13px;line-height:170%;text-align:left;color:#070810;">{% blocktrans trimmed %} Baserow is an open source no-code database tool which allows you to collaborate on projects, customers and more. It gives you the powers of a developer without leaving your browser. {% endblocktrans %}</div>
                       </td>
                     </tr>
                   </tbody>

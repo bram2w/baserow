@@ -1,28 +1,38 @@
 from abc import ABC
+from enum import Enum
 from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
 from baserow.core.integrations.handler import IntegrationHandler
-from baserow.core.integrations.models import Integration
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
-    ImportExportMixin,
+    EasyImportExportMixin,
     Instance,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.services.dispatch_context import DispatchContext
 
+from ..integrations.exceptions import IntegrationDoesNotExist
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
 
 
+class DispatchTypes(str, Enum):
+    # A `ServiceType` which is used by a `WorkflowAction`.
+    DISPATCH_WORKFLOW_ACTION = "dispatch-action"
+    # A `ServiceType` which is used by a `DataSource`.
+    DISPATCH_DATA_SOURCE = "dispatch-data-source"
+
+
 class ServiceType(
     ModelInstanceMixin[Service],
-    ImportExportMixin[ServiceSubClass],
+    EasyImportExportMixin[ServiceSubClass],
     CustomFieldsInstanceMixin,
     Instance,
     ABC,
@@ -34,6 +44,8 @@ class ServiceType(
     integration_type = None
 
     SerializedDict: Type[ServiceDictSubClass]
+    parent_property_name = "integration"
+    id_mapping_name = "builder_services"
 
     # The maximum number of records this service is able to return.
     # By default, the maximum is `None`, which is unlimited.
@@ -45,6 +57,12 @@ class ServiceType(
 
     # Does this service return a list of record?
     returns_list = False
+
+    # What parent object is responsible for dispatching this `ServiceType`?
+    # It could be via a `DataSource`, in which case `DISPATCH_DATA_SOURCE`
+    # should be chosen, or via a `WorkflowAction`, in which case
+    # `DISPATCH_WORKFLOW_ACTION` should be chosen.
+    dispatch_type = None
 
     def prepare_values(
         self,
@@ -69,7 +87,12 @@ class ServiceType(
         if "integration_id" in values:
             integration_id = values.pop("integration_id")
             if integration_id is not None:
-                integration = IntegrationHandler().get_integration(integration_id)
+                try:
+                    integration = IntegrationHandler().get_integration(integration_id)
+                except IntegrationDoesNotExist:
+                    raise DRFValidationError(
+                        f"The integration with ID {integration_id} does not exist."
+                    )
                 values["integration"] = integration
             else:
                 values["integration"] = None
@@ -108,6 +131,23 @@ class ServiceType(
         :param instance: The to be deleted service instance.
         """
 
+    def resolve_service_formulas(
+        self,
+        service: ServiceSubClass,
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
+        """
+        Responsible for resolving any formulas in the service's fields, and then
+        performing a validation step prior to `ServiceType.dispatch_data` is executed.
+
+        :param service: The service instance we want to use.
+        :param dispatch_context: The runtime_formula_context instance used to
+            resolve formulas (if any).
+        :return: Any
+        """
+
+        return {}
+
     def dispatch_transform(
         self,
         data: Any,
@@ -123,44 +163,36 @@ class ServiceType(
     def dispatch_data(
         self,
         service: ServiceSubClass,
-        runtime_formula_context: RuntimeFormulaContext,
+        resolved_values: Dict[str, Any],
+        dispatch_context: DispatchContext,
     ) -> Any:
         """
         Responsible for executing the service's principle task.
 
         :param service: The service instance to dispatch with.
-        :param runtime_formula_context: The runtime_formula_context instance used to
-            resolve formulas (if any).
+        :param resolved_values: If the service has any formulas, this dictionary will
+            contain their resolved values.
+        :param dispatch_context: The context used for the dispatch.
         :return: The service `dispatch_data` result if any.
         """
 
     def dispatch(
         self,
         service: ServiceSubClass,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: DispatchContext,
     ) -> Any:
         """
         Responsible for calling `dispatch_data` and `dispatch_transform` to execute
         the service's task, and generating the dispatch's response, respectively.
 
         :param service: The service instance to dispatch with.
-        :param runtime_formula_context: The runtime_formula_context instance used to
-            resolve formulas (if any).
+        :param dispatch_context: The context used for the dispatch.
         :return: The service dispatch result if any.
         """
 
-        data = self.dispatch_data(service, runtime_formula_context)
+        resolved_values = self.resolve_service_formulas(service, dispatch_context)
+        data = self.dispatch_data(service, resolved_values, dispatch_context)
         return self.dispatch_transform(data)
-
-    def get_property_for_serialization(self, service: Service, prop_name: str):
-        """
-        This hooks allow to customize the serialization of a property.
-        """
-
-        if prop_name == "type":
-            return self.type
-
-        return getattr(service, prop_name)
 
     def get_schema_name(self, service: Service) -> str:
         """
@@ -184,83 +216,6 @@ class ServiceType(
 
         return None
 
-    def export_serialized(
-        self,
-        service: Service,
-    ) -> ServiceDictSubClass:
-        """Serialize the service"""
-
-        property_names = self.SerializedDict.__annotations__.keys()
-
-        serialized = self.SerializedDict(
-            **{
-                key: self.get_property_for_serialization(service, key)
-                for key in property_names
-            }
-        )
-
-        return serialized
-
-    def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
-    ):
-        """
-        This hooks allow to customize the deserialization of a property.
-
-        :param prop_name: the name of the property being transformed.
-        :param value: the value of this property.
-        :param id_mapping: the id mapping dict.
-        """
-
-        return value
-
-    def create_instance_from_serialized(self, integration, serialized_values):
-        """
-        Create the instance related to the given serialized values.
-        Allow to hook into instance creation while still having the serialized values.
-        """
-
-        service = self.model_class(integration=integration, **serialized_values)
-        service.save()
-        return service
-
-    def import_serialized(
-        self,
-        integration: Integration,
-        serialized_values: Dict[str, Any],
-        id_mapping: Dict[str, Any],
-    ) -> Service:
-        """Import a previously serialized service."""
-
-        if "services" not in id_mapping:
-            id_mapping["services"] = {}
-
-        serialized_copy = serialized_values.copy()
-
-        # We remove the integration_id key here because it has already been consumed
-        # by the parent
-        property_names = [
-            p
-            for p in self.SerializedDict.__annotations__.keys()
-            if p != "integration_id"
-        ]
-
-        for name in property_names:
-            if name in serialized_copy:
-                serialized_copy[name] = self.transform_serialized_value(
-                    name, serialized_copy[name], id_mapping
-                )
-
-        # Remove extra keys
-        service_exported_id = serialized_copy.pop("id")
-        serialized_copy.pop("type")
-
-        service = self.create_instance_from_serialized(integration, serialized_copy)
-
-        id_mapping["services"][service_exported_id] = service.id
-
-        return service
-
     def enhance_queryset(self, queryset):
         """
         Allow to enhance the queryset when querying the service mainly to improve
@@ -268,6 +223,28 @@ class ServiceType(
         """
 
         return queryset
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        **kwargs,
+    ) -> Any:
+        """
+        This hooks allow to customize the deserialization of a property.
+
+        :param prop_name: the name of the property being transformed.
+        :param value: the value of this property.
+        :param id_mapping: the id mapping dict.
+        :param import_formula: the import formula function.
+        :return: the deserialized version for this property.
+        """
+
+        if "import_formula" not in kwargs:
+            raise ValueError("Missing import formula function.")
+
+        return value
 
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)

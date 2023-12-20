@@ -25,6 +25,7 @@ import { mapState } from 'vuex'
 
 import Table from '@baserow/modules/database/components/table/Table'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
+import { getDefaultView } from '@baserow/modules/database/utils/view'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -146,17 +147,13 @@ export default {
     data.fields = store.getters['field/getAll']
     data.view = undefined
 
-    // Because we do not have a dashboard for the table yet we're going to redirect to
-    // the last visited or the first available view.
-    const viewToUse = store.getters['view/defaultOrFirst']
+    // Without a viewId, redirect the user to the default or the first available view.
+    if (viewId === null) {
+      const rowId = params.rowId ? parseInt(params.rowId) : null
+      const workspaceId = data.database.workspace.id
+      const viewToUse = getDefaultView(app, store, workspaceId, rowId !== null)
 
-    if (viewId === null && viewToUse !== null) {
-      const firstViewType = app.$registry.get('view', viewToUse.type)
-      // If the view is deactivated, it's not possible to open the view because it will
-      // put the user in an unrecoverable state. Therefore, it's better to not select a
-      // view, so that the user can choose which they want to select in the top left
-      // corner.
-      if (!firstViewType.isDeactivated(data.database.workspace.id)) {
+      if (viewToUse !== undefined) {
         return redirect({
           name: route.name,
           params: {

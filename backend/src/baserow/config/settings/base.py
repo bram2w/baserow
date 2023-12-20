@@ -479,7 +479,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.21.2",
+    "VERSION": "1.22.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -1177,6 +1177,7 @@ USE_PG_FULLTEXT_SEARCH = str_to_bool(
 )
 PG_SEARCH_CONFIG = os.getenv("BASEROW_PG_SEARCH_CONFIG", "simple")
 AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(os.getenv("BASEROW_AUTO_VACUUM", "true"))
+TSV_UPDATE_CHUNK_SIZE = int(os.getenv("BASEROW_TSV_UPDATE_CHUNK_SIZE", "2000"))
 
 POSTHOG_PROJECT_API_KEY = os.getenv("POSTHOG_PROJECT_API_KEY", "")
 POSTHOG_HOST = os.getenv("POSTHOG_HOST", "")

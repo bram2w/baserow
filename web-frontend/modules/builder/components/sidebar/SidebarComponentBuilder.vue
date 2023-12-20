@@ -15,9 +15,10 @@
               application.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="settingsClicked">
-            <i class="context__menu-icon iconoir-settings"></i>
+          <a class="context__menu-item-link" @click="settingsClicked">
+            <i class="context__menu-item-icon iconoir-settings"></i>
             {{ $t('sidebarComponentBuilder.settings') }}
           </a>
         </li>

@@ -126,6 +126,23 @@ def construct_all_possible_field_kwargs(
                 "date_show_tzinfo": True,
             },
         ],
+        "last_modified_by": [
+            {
+                "name": "last_modified_by",
+            }
+        ],
+        "created_by": [
+            {
+                "name": "created_by",
+            }
+        ],
+        "duration": [
+            {"name": "duration_hm", "duration_format": "h:mm"},
+            {"name": "duration_hms", "duration_format": "h:mm:ss"},
+            {"name": "duration_hms_s", "duration_format": "h:mm:ss.s"},
+            {"name": "duration_hms_ss", "duration_format": "h:mm:ss.ss"},
+            {"name": "duration_hms_sss", "duration_format": "h:mm:ss.sss"},
+        ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
             {
@@ -183,6 +200,7 @@ def construct_all_possible_field_kwargs(
                 "formula": "button('https://google.com', 'label')",
             },
             {"name": "formula_link_url_only", "formula": "link('https://google.com')"},
+            {"name": "formula_multipleselect", "formula": "field('multiple_select')"},
         ],
         "count": [
             {
@@ -206,6 +224,8 @@ def construct_all_possible_field_kwargs(
                 "target_field_name": "text_field",
             }
         ],
+        "uuid": [{"name": "uuid"}],
+        "autonumber": [{"name": "autonumber"}],
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs

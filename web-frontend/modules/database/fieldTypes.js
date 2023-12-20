@@ -1,5 +1,11 @@
 import BigNumber from 'bignumber.js'
-
+import {
+  formatDuration,
+  parseDurationValue,
+  roundDurationValueToFormat,
+  DURATION_FORMATS,
+  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
+} from '@baserow/modules/database/utils/duration'
 import {
   collatedStringCompare,
   getFilenameFromUrl,
@@ -14,6 +20,8 @@ import guessFormat from 'moment-guess'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
+import FieldAutonumberSubForm from '@baserow/modules/database/components/field/FieldAutonumberSubForm'
+import FieldDurationSubForm from '@baserow/modules/database/components/field/FieldDurationSubForm'
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
@@ -35,9 +43,14 @@ import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
+import GridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDuration'
 import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
+import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
+import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
+import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
+import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
 import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
@@ -50,6 +63,9 @@ import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/com
 import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
 import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
 import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
+import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
+import FunctionalGridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber'
+import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -57,6 +73,7 @@ import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFie
 import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
+import RowEditFieldDuration from '@baserow/modules/database/components/row/RowEditFieldDuration'
 import RowEditFieldRating from '@baserow/modules/database/components/row/RowEditFieldRating'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
@@ -66,9 +83,13 @@ import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/R
 import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
+import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
+import RowEditFieldAutonumber from '@baserow/modules/database/components/row/RowEditFieldAutonumber'
+import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
+import RowCardFieldDuration from '@baserow/modules/database/components/card/RowCardFieldDuration'
 import RowCardFieldEmail from '@baserow/modules/database/components/card/RowCardFieldEmail'
 import RowCardFieldFile from '@baserow/modules/database/components/card/RowCardFieldFile'
 import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCardFieldFormula'
@@ -81,10 +102,14 @@ import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
+import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
+import RowCardFieldAutonumber from '@baserow/modules/database/components/card/RowCardFieldAutonumber'
+import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
 import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
+import RowHistoryFieldDuration from '@baserow/modules/database/components/row/RowHistoryFieldDuration'
 import RowHistoryFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowHistoryFieldMultipleCollaborators'
 import RowHistoryFieldFile from '@baserow/modules/database/components/row/RowHistoryFieldFile'
 import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/row/RowHistoryFieldMultipleSelect'
@@ -94,6 +119,8 @@ import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/Row
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
+import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
+import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
@@ -214,6 +241,15 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * This component should represent the grouped by field's value in the grid view. To
+   * improve performance, this component should be a functional component. The card
+   * component almost always compatible here, so we're returning that one by default.
+   */
+  getGroupByComponent() {
+    return this.getCardComponent()
+  }
+
+  /**
    * This component displays row change difference for values of the field type.
    */
   getRowHistoryEntryComponent() {
@@ -255,6 +291,16 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Should return true if both provided row values are equal. This is used to determine
+   * whether they both belong in the same group for example. It's not possible to
+   * compare a group value and row value, in that case the
+   * `getRowValueFromGroupValue` method be called first to convert to a row value.
+   */
+  isEqual(field, value1, value2) {
+    return JSON.stringify(value1) === JSON.stringify(value2)
+  }
+
+  /**
    * Should return a string containing the error if the value is invalid. If the
    * value is valid, then null must be returned.
    */
@@ -278,6 +324,33 @@ export class FieldType extends Registerable {
 
   getGroupByIndicator(field, registry) {
     return this.getSortIndicator(field, registry)
+  }
+
+  /**
+   * In some cases, the group by value can not be directly compared to a row value
+   * because the format is different for technical reasons in the backend. This
+   * method can be used to convert it to a row value that can be used in combination
+   * with the `isEqual` method.
+   *
+   * An example is with a ManyToMany field, where the backend group by value is
+   * `{id},{id2}` as a string, but in the frontend, this should be an array like
+   * `[1, 2]`.
+   */
+  getRowValueFromGroupValue(field, value) {
+    return value
+  }
+
+  /**
+   * In some cases, the new group entry must be created that doesn't yet exist. In
+   * that scenario, we do have the row value. This method should convert the row
+   * value to a group value so that it can be used there.
+   *
+   * An example is with a ManyToMany field, where the frontend value is an object
+   * containing ids, but the group by value is a string containing the ids joined by
+   * a comma.
+   */
+  getGroupValueFromRowValue(field, value) {
+    return value
   }
 
   /**
@@ -659,6 +732,17 @@ export class FieldType extends Registerable {
    */
   getCanImport() {
     return false
+  }
+
+  /**
+   * Parse a value given as input. This Can be used to convert values from
+   * different formats to the format that is used by the field type. For example
+   * a date field could accept a string like '2020-01-01' and convert it to a
+   * moment object, or a duration field can accept a string like '1:30' to
+   * convert it to a number of seconds.
+   */
+  static parseInputValue(field, value) {
+    return value
   }
 }
 
@@ -1198,6 +1282,10 @@ export class NumberFieldType extends FieldType {
     return number.toFixed(field.number_decimal_places)
   }
 
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return NumberFieldType.formatNumber(field, value)
+  }
+
   static unlocalizeString(value) {
     return value.replace(/,/g, '.')
   }
@@ -1249,6 +1337,10 @@ export class NumberFieldType extends FieldType {
 
   getCanGroupByInView(field) {
     return true
+  }
+
+  static parseInputValue(field, value) {
+    return parseFloat(value)
   }
 }
 
@@ -1579,7 +1671,7 @@ class BaseDateFieldType extends FieldType {
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData, richClipboardData) {
-    const dateValue = DateFieldType.parseDate(field, clipboardData || '')
+    const dateValue = DateFieldType.parseInputValue(field, clipboardData || '')
     return DateFieldType.formatDate(field, dateValue)
   }
 
@@ -1620,7 +1712,7 @@ class BaseDateFieldType extends FieldType {
     return formats
   }
 
-  static parseDate(field, dateString) {
+  static parseInputValue(field, dateString) {
     const formats = DateFieldType.getDateFormatsOptionsForValue(
       field,
       dateString
@@ -1691,6 +1783,20 @@ class BaseDateFieldType extends FieldType {
   getCanGroupByInView(field) {
     return true
   }
+
+  isEqual(field, value1, value2) {
+    if (field.date_include_time) {
+      // Seconds are visually ignored for a field that includes the time, so we'd
+      // have to compare the values without them. A date is normally `null` or
+      // `2023-10-27T18:17:00.758266Z`, and if you only take the first 16
+      // characters, it's the value without the seconds.
+      return (
+        ('' + value1).substring(0, 16) ===
+        ('' + value2).toString().substring(0, 16)
+      )
+    }
+    return super.isEqual(field, value1, value2)
+  }
 }
 
 export class DateFieldType extends BaseDateFieldType {
@@ -1722,7 +1828,7 @@ export class DateFieldType extends BaseDateFieldType {
   parseQueryParameter(field, value) {
     return DateFieldType.formatDate(
       field.field,
-      DateFieldType.parseDate(field.field, value)
+      DateFieldType.parseInputValue(field.field, value)
     )
   }
 }
@@ -1838,6 +1944,437 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.createdOn')
+  }
+}
+
+export class LastModifiedByFieldType extends FieldType {
+  static getType() {
+    return 'last_modified_by'
+  }
+
+  getIconClass() {
+    return 'iconoir-user'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.lastModifiedBy')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLastModifiedBy
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLastModifiedBy
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldLastModifiedBy
+  }
+
+  getCardComponent() {
+    return RowCardFieldLastModifiedBy
+  }
+
+  getCanSortInView(field) {
+    return true
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      let userNameA = a[name] === null ? '' : a[name].name
+      let userNameB = b[name] === null ? '' : b[name].name
+
+      const workspaces = this.app.store.getters['workspace/getAll']
+      const workspaceAvailable = workspaces.length > 0
+      if (workspaceAvailable) {
+        if (a[name] !== null) {
+          const workspaceUserA = this.app.store.getters[
+            'workspace/getUserById'
+          ](a[name].id)
+          userNameA = workspaceUserA ? workspaceUserA.name : userNameA
+        }
+
+        if (b[name] !== null) {
+          const workspaceUserB = this.app.store.getters[
+            'workspace/getUserById'
+          ](b[name].id)
+          userNameB = workspaceUserB ? workspaceUserB.name : userNameB
+        }
+      }
+
+      return collatedStringCompare(userNameA, userNameB, order)
+    }
+  }
+
+  canBeReferencedByFormulaField() {
+    return false
+  }
+
+  _getCurrentUserValue() {
+    return {
+      id: this.app.store.getters['auth/getUserId'],
+      name: this.app.store.getters['auth/getName'],
+    }
+  }
+
+  getNewRowValue() {
+    return this._getCurrentUserValue()
+  }
+
+  onRowChange(row, currentField, currentFieldValue) {
+    return this._getCurrentUserValue()
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    const name = value.name
+
+    const workspaces = this.app.store.getters['workspace/getAll']
+    if (workspaces.length > 0) {
+      const workspaceUser = this.app.store.getters['workspace/getUserById'](
+        value.id
+      )
+      return workspaceUser ? workspaceUser.name : name
+    }
+
+    return name
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return this.prepareValueForCopy(field, value)
+  }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return this.toHumanReadableString(field, value, delimiter)
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getDocsDataType(field) {
+    return 'object'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.lastModifiedBy')
+  }
+
+  getDocsRequestExample() {
+    return {
+      id: 1,
+      name: 'John',
+    }
+  }
+}
+
+export class CreatedByFieldType extends FieldType {
+  static getType() {
+    return 'created_by'
+  }
+
+  getIconClass() {
+    return 'iconoir-user'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.createdBy')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLastModifiedBy
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLastModifiedBy
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldLastModifiedBy
+  }
+
+  getCardComponent() {
+    return RowCardFieldLastModifiedBy
+  }
+
+  getCanSortInView(field) {
+    return true
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      let userNameA = a[name] === null ? '' : a[name].name
+      let userNameB = b[name] === null ? '' : b[name].name
+
+      const workspaces = this.app.store.getters['workspace/getAll']
+      const workspaceAvailable = workspaces.length > 0
+      if (workspaceAvailable) {
+        if (a[name] !== null) {
+          const workspaceUserA = this.app.store.getters[
+            'workspace/getUserById'
+          ](a[name].id)
+          userNameA = workspaceUserA ? workspaceUserA.name : userNameA
+        }
+
+        if (b[name] !== null) {
+          const workspaceUserB = this.app.store.getters[
+            'workspace/getUserById'
+          ](b[name].id)
+          userNameB = workspaceUserB ? workspaceUserB.name : userNameB
+        }
+      }
+
+      return collatedStringCompare(userNameA, userNameB, order)
+    }
+  }
+
+  canBeReferencedByFormulaField() {
+    return false
+  }
+
+  _getCurrentUserValue() {
+    return {
+      id: this.app.store.getters['auth/getUserId'],
+      name: this.app.store.getters['auth/getName'],
+    }
+  }
+
+  getNewRowValue() {
+    return this._getCurrentUserValue()
+  }
+
+  onRowChange(row, currentField, currentFieldValue) {
+    return currentFieldValue
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    const name = value.name
+
+    const workspaces = this.app.store.getters['workspace/getAll']
+    if (workspaces.length > 0) {
+      const workspaceUser = this.app.store.getters['workspace/getUserById'](
+        value.id
+      )
+      return workspaceUser ? workspaceUser.name : name
+    }
+
+    return name
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return this.prepareValueForCopy(field, value)
+  }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return this.toHumanReadableString(field, value, delimiter)
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getDocsDataType(field) {
+    return 'object'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.createdBy')
+  }
+
+  getDocsRequestExample() {
+    return {
+      id: 1,
+      name: 'John',
+    }
+  }
+}
+
+export class DurationFieldType extends FieldType {
+  static getType() {
+    return 'duration'
+  }
+
+  getCardComponent() {
+    return RowCardFieldDuration
+  }
+
+  getIconClass() {
+    return 'iconoir-clock-rotate-right'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.duration')
+  }
+
+  getDocsDataType(field) {
+    return 'duration'
+  }
+
+  getDocsRequestExample(field) {
+    return DURATION_FORMATS.get(field.duration_format).example
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.duration', {
+      format: field.duration_format,
+    })
+  }
+
+  getFormComponent() {
+    return FieldDurationSubForm
+  }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value, options) {
+    return DurationFieldType.parseInputValue(field, value)
+  }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return DurationFieldType.formatValue(field, value)
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const aValue = parseDurationValue(a[name])
+      const bValue = parseDurationValue(b[name])
+
+      if (aValue === bValue) {
+        return 0
+      }
+
+      if (
+        (aValue === null && order === 'ASC') ||
+        (bValue === null && order === 'DESC')
+      ) {
+        return -1
+      }
+
+      if (
+        (bValue === null && order === 'ASC') ||
+        (aValue === null && order === 'DESC')
+      ) {
+        return 1
+      }
+
+      if (order === 'ASC') {
+        return aValue < bValue ? -1 : 1
+      } else {
+        return bValue < aValue ? -1 : 1
+      }
+    }
+  }
+
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldDuration
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDuration
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDuration
+  }
+
+  getCanImport() {
+    return true
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === undefined || value === '') {
+      return null
+    }
+
+    let totalSecs
+    try {
+      totalSecs = parseDurationValue(value, field.duration_format)
+    } catch (e) {
+      totalSecs = null
+    }
+
+    if (totalSecs === null) {
+      return this.app.i18n.t('fieldErrors.invalidDuration', {
+        durationFormat: field.duration_format,
+      })
+    } else if (totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS) {
+      return this.app.i18n.t('fieldErrors.overflowDuration')
+    }
+    return null
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldDuration
+  }
+
+  static formatValue(field, value) {
+    return formatDuration(value, field.duration_format)
+  }
+
+  static parseInputValue(field, value) {
+    const format = field.duration_format
+    const preparedValue = parseDurationValue(value, format)
+    return roundDurationValueToFormat(preparedValue, format)
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return DurationFieldType.formatValue(field, value)
+  }
+
+  prepareValueForCopy(field, value) {
+    return DurationFieldType.formatValue(field, value)
+  }
+
+  prepareRichValueForCopy(field, value) {
+    return value
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (richClipboardData && isNumeric(richClipboardData)) {
+      return richClipboardData
+    }
+    return DurationFieldType.parseInputValue(field, clipboardData)
   }
 }
 
@@ -2263,9 +2800,18 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getFormViewFieldComponents(field) {
+    const { i18n } = this.app
     const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].name = i18n.t(
+      'fieldType.singleSelectDropdown'
+    )
     components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
+    }
+    components.radios = {
+      name: i18n.t('fieldType.singleSelectRadios'),
+      component: FormViewFieldSingleSelectRadios,
+      properties: {},
     }
     return components
   }
@@ -2422,6 +2968,20 @@ export class SingleSelectFieldType extends FieldType {
   getCanGroupByInView(field) {
     return true
   }
+
+  getGroupValueFromRowValue(field, value) {
+    return value ? value.id : null
+  }
+
+  getRowValueFromGroupValue(field, value) {
+    return value ? { id: value } : null
+  }
+
+  isEqual(field, value1, value2) {
+    const value1Id = value1?.id || null
+    const value2Id = value2?.id || null
+    return value1Id === value2Id
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -2455,10 +3015,20 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   getFormViewFieldComponents(field) {
+    const { i18n } = this.app
     const components = super.getFormViewFieldComponents(field)
     components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
     }
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].name = i18n.t(
+      'fieldType.multipleSelectDropdown'
+    )
+    components.checkboxes = {
+      name: i18n.t('fieldType.multipleSelectCheckboxes'),
+      component: FormViewFieldMultipleSelectCheckboxes,
+      properties: {},
+    }
+
     return components
   }
 
@@ -2569,7 +3139,11 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value, delimiter = ', ') {
-    if (value === undefined || value === null || value === []) {
+    if (
+      value === undefined ||
+      value === null ||
+      (Array.isArray(value) && value.length === 0)
+    ) {
       return ''
     }
     return value.map((item) => item.value).join(delimiter)
@@ -2665,8 +3239,29 @@ export class MultipleSelectFieldType extends FieldType {
     return true
   }
 
+  canBeReferencedByFormulaField() {
+    return true
+  }
+
   getCanGroupByInView(field) {
     return true
+  }
+
+  getRowValueFromGroupValue(field, value) {
+    return value.map((optId) => {
+      return { id: optId }
+    })
+  }
+
+  getGroupValueFromRowValue(field, value) {
+    return value.map((o) => o.id)
+  }
+
+  isEqual(field, value1, value2) {
+    const value1Ids = value1.map((v) => v.id)
+    const value2Ids = value2.map((v) => v.id)
+
+    return _.isEqual(value1Ids, value2Ids)
   }
 }
 
@@ -3218,5 +3813,183 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       return ''
     }
     return this._collaboratorCellValueToListOfNames(value).join(delimiter)
+  }
+}
+
+export class UUIDFieldType extends FieldType {
+  static getType() {
+    return 'uuid'
+  }
+
+  getIconClass() {
+    return 'iconoir-fingerprint'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.uuid')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldUUID
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldUUID
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldUUID
+  }
+
+  getCardComponent() {
+    return RowCardFieldUUID
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+      return collatedStringCompare(stringA, stringB, order)
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'uuid'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.uuid')
+  }
+
+  getDocsRequestExample(field) {
+    return '00000000-0000-0000-0000-000000000000'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
+}
+
+export class AutonumberFieldType extends FieldType {
+  static getType() {
+    return 'autonumber'
+  }
+
+  getIconClass() {
+    return 'iconoir-numbered-list-left'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.autonumber')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldAutonumber
+  }
+
+  getFormComponent() {
+    return FieldAutonumberSubForm
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldAutonumber
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldAutonumber
+  }
+
+  getCardComponent() {
+    return RowCardFieldAutonumber
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      if (a[name] === b[name]) {
+        return 0
+      }
+
+      if (
+        (a[name] === null && order === 'ASC') ||
+        (b[name] === null && order === 'DESC')
+      ) {
+        return -1
+      }
+
+      if (
+        (b[name] === null && order === 'ASC') ||
+        (a[name] === null && order === 'DESC')
+      ) {
+        return 1
+      }
+
+      const numberA = new BigNumber(a[name])
+      const numberB = new BigNumber(b[name])
+
+      let result
+      // Add your code here
+
+      if (order === 'ASC') {
+        result = numberA.isLessThan(numberB) ? -1 : 1
+      } else {
+        result = numberB.isLessThan(numberA) ? -1 : 1
+      }
+
+      return result
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'autonumber'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.autonumber')
+  }
+
+  getDocsRequestExample(field) {
+    return '1'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }

@@ -12,12 +12,9 @@
       </div>
       <!-- Disabled info message -->
       <template v-if="!settings.allow_reset_password">
-        <Alert
-          simple
-          type="error"
-          icon="iconoir-warning-triangle"
-          :title="$t('resetPassword.disabled')"
-          ><p>{{ $t('resetPassword.disabledMessage') }}</p>
+        <Alert type="error">
+          <template #title>{{ $t('resetPassword.disabled') }}</template>
+          <p>{{ $t('resetPassword.disabledMessage') }}</p>
         </Alert>
         <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
           <i class="iconoir-arrow-left"></i>
@@ -52,7 +49,7 @@
                 v-model="account.passwordConfirm"
                 :class="{ 'input--error': $v.account.passwordConfirm.$error }"
                 type="password"
-                class="input input--large"
+                class="input"
                 @blur="$v.account.passwordConfirm.$touch()"
               />
               <div class="auth__control-error">

@@ -8,6 +8,7 @@ import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 import { newFieldMatchesActiveSearchTerm } from '@baserow/modules/database/utils/view'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export const maxPossibleOrderValue = 32767
 
@@ -64,6 +65,13 @@ export class ViewType extends Registerable {
    * Indicates whether it is possible to share this view via an url publically.
    */
   canShare() {
+    return false
+  }
+
+  /**
+   * Indicates whether it is possible to show a modal when clicking on a row.
+   */
+  canShowRowModal() {
     return false
   }
 
@@ -259,14 +267,26 @@ export class ViewType extends Registerable {
    * provided and should be used to calculate and store the new metadata value for the
    * specified metadata type and row.
    */
-  rowMetadataUpdated(
+  async rowMetadataUpdated(
     { store },
     tableId,
     rowId,
-    metadataType,
+    rowMetadataType,
     updateFunction,
     storePrefix = ''
-  ) {}
+  ) {
+    if (this.isCurrentView(store, tableId)) {
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/updateRowMetadata',
+        {
+          tableId,
+          rowId,
+          rowMetadataType,
+          updateFunction,
+        }
+      )
+    }
+  }
 
   /**
    * @return object
@@ -357,6 +377,10 @@ export class GridViewType extends ViewType {
     return true
   }
 
+  canShowRowModal() {
+    return true
+  }
+
   getPublicRoute() {
     return 'database-public-grid-view'
   }
@@ -366,6 +390,13 @@ export class GridViewType extends ViewType {
       gridId: view.id,
       fields,
     })
+    // The grid view store keeps a copy of the group bys that must only be updated
+    // after the refresh of the page. This is because the group by depends on the rows
+    // being sorted, and this will only be the case after a refresh.
+    await store.dispatch(
+      storePrefix + 'view/grid/updateActiveGroupBys',
+      clone(view.group_bys)
+    )
   }
 
   async refresh(
@@ -544,24 +575,6 @@ export class GridViewType extends ViewType {
       })
       store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
         view: store.getters['view/getSelected'],
-      })
-    }
-  }
-
-  async rowMetadataUpdated(
-    { store },
-    tableId,
-    rowId,
-    rowMetadataType,
-    updateFunction,
-    storePrefix = ''
-  ) {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(storePrefix + 'view/grid/updateRowMetadata', {
-        tableId,
-        rowId,
-        rowMetadataType,
-        updateFunction,
       })
     }
   }
@@ -749,6 +762,10 @@ export class GalleryViewType extends BaseBufferedRowView {
   }
 
   canShare() {
+    return true
+  }
+
+  canShowRowModal() {
     return true
   }
 

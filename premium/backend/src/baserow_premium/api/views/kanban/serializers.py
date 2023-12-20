@@ -2,6 +2,7 @@ from baserow_premium.views.models import KanbanViewFieldOptions
 from rest_framework import serializers
 
 from baserow.contrib.database.api.rows.serializers import (
+    get_example_row_metadata_field_serializer,
     get_example_row_serializer_class,
 )
 
@@ -23,9 +24,19 @@ class KanbanViewExampleResponseStackSerializer(serializers.Serializer):
     )
 
 
-class KanbanViewExampleResponseSerializer(serializers.Serializer):
-    OPTION_ID = KanbanViewExampleResponseStackSerializer(
-        help_text="Every select option related to the view's single select field can "
-        "have its own entry like this."
+def get_kanban_view_example_response_serializer():
+    return type(
+        "KanbanViewExampleResponseSerializer",
+        (serializers.Serializer,),
+        {
+            "rows": serializers.DictField(
+                child=KanbanViewExampleResponseStackSerializer(),
+                help_text="Every select option related to the view's single select field can "
+                "have its own entry like this.",
+            ),
+            "field_options": serializers.ListSerializer(
+                child=KanbanViewFieldOptionsSerializer()
+            ),
+            "row_metadata": get_example_row_metadata_field_serializer(),
+        },
     )
-    field_options = serializers.ListSerializer(child=KanbanViewFieldOptionsSerializer())

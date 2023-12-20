@@ -2,6 +2,7 @@ import { Registerable } from '@baserow/modules/core/registry'
 import IntegrationSettings from '@baserow/modules/builder/components/settings/IntegrationSettings'
 import ThemeSettings from '@baserow/modules/builder/components/settings/ThemeSettings'
 import DomainsSettings from '@baserow/modules/builder/components/settings/DomainsSettings'
+import UserSourcesSettings from '@baserow/modules/builder/components/settings/UserSourcesSettings'
 
 class BuilderSettingType extends Registerable {
   static getType() {
@@ -92,5 +93,27 @@ export class DomainsBuilderSettingsType extends BuilderSettingType {
 
   get component() {
     return DomainsSettings
+  }
+}
+
+export class UserSourcesBuilderSettingsType extends BuilderSettingType {
+  static getType() {
+    return 'user_sources'
+  }
+
+  get name() {
+    return this.app.i18n.t('builderSettingTypes.userSourcesName')
+  }
+
+  get icon() {
+    return 'iconoir-community'
+  }
+
+  getOrder() {
+    return 15
+  }
+
+  get component() {
+    return UserSourcesSettings
   }
 }

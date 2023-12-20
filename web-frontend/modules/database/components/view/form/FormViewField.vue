@@ -92,6 +92,8 @@
                 :key="key"
                 :model-value="fieldOptions.field_component"
                 :value="key"
+                :disabled="readOnly"
+                class="margin-right-1"
                 @input="
                   $emit('updated-field-options', { field_component: $event })
                 "
@@ -101,7 +103,6 @@
           </div>
           <SwitchInput
             :value="fieldOptions.required"
-            :large="true"
             :disabled="readOnly"
             @input="$emit('updated-field-options', { required: $event })"
             >{{ $t('formViewField.required') }}</SwitchInput
@@ -109,7 +110,6 @@
           <SwitchInput
             v-if="allowedConditionalFields.length > 0"
             :value="fieldOptions.show_when_matching_conditions"
-            :large="true"
             :disabled="readOnly"
             @input="setShowWhenMatchingConditions($event)"
             >{{ $t('formViewField.showWhenMatchingConditions') }}</SwitchInput

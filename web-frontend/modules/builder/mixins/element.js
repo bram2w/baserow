@@ -1,6 +1,6 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
-import { ClickEvent } from '@baserow/modules/builder/eventTypes'
+import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
 
 export default {
   inject: ['builder', 'page', 'mode'],
@@ -9,6 +9,11 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      workflowActionsInProgress: false,
+    }
   },
   computed: {
     elementType() {
@@ -51,19 +56,42 @@ export default {
   },
   methods: {
     resolveFormula(formula) {
-      return resolveFormula(
-        formula,
-        this.formulaFunctions,
-        this.runtimeFormulaContext
-      )
+      try {
+        return resolveFormula(
+          formula,
+          this.formulaFunctions,
+          this.runtimeFormulaContext
+        )
+      } catch (e) {
+        return ''
+      }
     },
-    fireEvent(EventType) {
+    async fireEvent(EventType) {
       if (this.mode !== 'editing') {
-        new EventType(this).fire({ element: this.element })
+        this.workflowActionsInProgress = true
+
+        const workflowActions = this.$store.getters[
+          'workflowAction/getElementWorkflowActions'
+        ](this.page, this.element.id)
+
+        await new EventType({
+          i18n: this.$i18n,
+          store: this.$store,
+          registry: this.$registry,
+        }).fire({
+          workflowActions,
+          resolveFormula: this.resolveFormula,
+          applicationContext: this.applicationContext,
+        })
+
+        this.workflowActionsInProgress = false
       }
     },
     fireClickEvent() {
-      this.fireEvent(ClickEvent)
+      return this.fireEvent(ClickEvent)
+    },
+    fireSubmitEvent() {
+      this.fireEvent(SubmitEvent)
     },
   },
 }

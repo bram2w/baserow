@@ -4,7 +4,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
 <div>
   <div>
     <div
-      class="toast__top-right"
+      class="toasts__container-top"
     >
       <!---->
        
@@ -21,7 +21,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
     </div>
      
     <div
-      class="toast__bottom-right"
+      class="toasts__container-bottom"
     >
       <!---->
        
@@ -226,6 +226,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             class="grid-view__left"
             style="width: 72px;"
           >
+              
             <div
               class="grid-view__inner"
               style="min-width: 72px;"
@@ -233,8 +234,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
               <div
                 class="grid-view__head"
               >
+                 
                 <div
-                  class="grid-view__column"
+                  class="grid-view__column grid-view__column--no-border-right"
                   style="width: 72px;"
                 >
                   <!---->
@@ -252,11 +254,19 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__placeholder"
                     style="height: 33px; width: 72px;"
-                  />
+                  >
+                    <div
+                      class="grid-view__placeholder-groups"
+                      style="width: 0px;"
+                    />
+                     
+                  </div>
+                   
+                  <!---->
                    
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(nullpx);"
+                    style="transform: translateY(0px) translateX(0px); left: 0px;"
                   >
                     <div
                       class="grid-view__row"
@@ -264,7 +274,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                       <!---->
                        
                       <div
-                        class="grid-view__column"
+                        class="grid-view__column grid-view__column--no-border-right"
                         style="width: 72px;"
                       >
                         <div
@@ -295,7 +305,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     </div>
                   </div>
                    
-                  <!---->
+                  <div
+                    class="grid-view__row-placeholder"
+                  />
                 </div>
               </div>
                
@@ -341,6 +353,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             class="grid-view__right"
             style="left: 72px;"
           >
+              
             <div
               class="grid-view__inner"
               style="min-width: 1000px;"
@@ -348,6 +361,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
               <div
                 class="grid-view__head"
               >
+                 
                 <!---->
                  
                 <div
@@ -496,6 +510,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     class="grid-view__placeholder"
                     style="height: 33px; width: 800px;"
                   >
+                    <!---->
+                     
                     <div
                       class="grid-view__placeholder-column"
                       style="left: 799px;"
@@ -514,9 +530,11 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     />
                   </div>
                    
+                  <!---->
+                   
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(0px);"
+                    style="transform: translateY(0px) translateX(0px); left: 0px;"
                   >
                     <div
                       class="grid-view__row"
@@ -554,13 +572,16 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     </div>
                   </div>
                    
-                  <!---->
+                  <div
+                    class="grid-view__row-placeholder"
+                  />
                 </div>
               </div>
                
               <div
                 class="grid-view__foot"
               >
+                <!---->
                  
                 <!---->
               </div>
@@ -583,7 +604,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__row-dragging-container"
-            style="display: none;"
+            style="left: 0px; display: none;"
           >
             <div
               class="grid-view__row-dragging"

@@ -14,12 +14,10 @@
       <div class="loading loading-absolute-center" />
     </div>
 
-    <Alert
-      v-else-if="$fetchState.error"
-      type="error"
-      icon="iconoir-warning-triangle"
-      :title="$t('deleteAccountSettings.workspaceLoadingError')"
-    >
+    <Alert v-else-if="$fetchState.error" type="error">
+      <template #title>{{
+        $t('deleteAccountSettings.workspaceLoadingError')
+      }}</template>
       <p>{{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}</p>
     </Alert>
 

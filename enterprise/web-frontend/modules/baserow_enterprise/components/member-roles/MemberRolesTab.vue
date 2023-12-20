@@ -21,12 +21,11 @@
     </div>
     <div v-if="loading" class="loading"></div>
     <div v-else>
-      <Alert
-        type="warning"
-        icon="iconoir-warning-triangle"
-        simple
-        :title="$t(`memberRolesTab.${translationPrefix}.warningTitle`)"
-        ><p>{{ $t(`memberRolesTab.${translationPrefix}.warningMessage`) }}</p>
+      <Alert type="warning">
+        <template #title>{{
+          $t(`memberRolesTab.${translationPrefix}.warningTitle`)
+        }}</template>
+        <p>{{ $t(`memberRolesTab.${translationPrefix}.warningMessage`) }}</p>
       </Alert>
       <MemberRolesMembersList
         :role-assignments="roleAssignments"

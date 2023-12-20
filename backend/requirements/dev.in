@@ -40,3 +40,4 @@ isort==5.12.0
 ipython
 django-fakeredis==0.1.2
 fakeredis[lua]==2.10.2
+ipdb

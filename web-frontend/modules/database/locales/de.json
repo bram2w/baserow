@@ -410,7 +410,7 @@
     "shareViewLink": {
         "shareView": "Teilen {viewTypeSharingLinkName}",
         "shareViewTitle": "Erstellen Sie einen privaten, gemeinsam nutzbaren Link zum {ViewTypeSharingLinkName}",
-        "sharedViewTitle": "Dieser {ViewTypeSharingLinkName} wird derzeit über einen privaten Link freigegeben",
+        "sharedViewTitle": "Dieser {ViewTypeSharingLinkName} ist derzeit über einen privaten Link freigegeben",
         "sharedViewDescription": "Personen, die den Link haben, können den {ViewTypeSharingLinkName} sehen.",
         "disableLink": "freigegebenen Link deaktivieren",
         "generateNewUrl": "neue Url generieren",

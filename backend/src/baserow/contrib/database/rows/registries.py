@@ -18,18 +18,20 @@ class RowMetadataRegistry(Registry):
 
     name = "row_metadata"
 
-    def generate_and_merge_metadata_for_row(self, table, row_id: int) -> Dict[str, Any]:
+    def generate_and_merge_metadata_for_row(
+        self, user, table, row_id: int
+    ) -> Dict[str, Any]:
         """
         Alternative for generate_and_merge_metadata_for_rows which takes a single row
         id.
         """
 
         return self.generate_and_merge_metadata_for_rows(
-            table, (i for i in [row_id])
+            user, table, (i for i in [row_id])
         ).get(row_id, {})
 
     def generate_and_merge_metadata_for_rows(
-        self, table, row_ids: Generator[int, None, None]
+        self, user, table, row_ids: Generator[int, None, None]
     ) -> Dict[int, Dict[str, Any]]:
         """
         For every type of row metadata will generate that type of metadata for each
@@ -44,6 +46,7 @@ class RowMetadataRegistry(Registry):
         respective generate_metadata_for_rows methods. This function would then return
         a dict which looked like: {'1': {'A':10, 'B':False}, '2': {'A':2, 'B':True}}.
 
+        :param user: The user who the metadata is being generated for.
         :param table: The table containing the row_ids.
         :param row_ids: A generator which should return the row ids generate metadata
             for. If no RowMetadataTypes are registered then this generator will not be
@@ -58,7 +61,7 @@ class RowMetadataRegistry(Registry):
             row_metadata = {}
             for metadata_type in metadata_types:
                 per_row_metadata = metadata_type.generate_metadata_for_rows(
-                    table, row_ids
+                    user, table, row_ids
                 )
                 for row_id, metadata in per_row_metadata.items():
                     single_row_metadata = row_metadata.setdefault(row_id, {})
@@ -81,12 +84,15 @@ class RowMetadataType(Instance, abc.ABC):
     """
 
     @abc.abstractmethod
-    def generate_metadata_for_rows(self, table, row_ids: List[int]) -> Dict[int, Any]:
+    def generate_metadata_for_rows(
+        self, user, table, row_ids: List[int]
+    ) -> Dict[int, Any]:
         """
         Given a table and a list of row ids to generate metadata for this function
         should be overridden and implemented to return a dictionary of row id to the
         metadata you wish to attach to that row.
 
+        :param user: The user who the metadata is being generated for.
         :param table: The table containing the row_ids.
         :param row_ids: A list of the row ids to generate metadata for.
         :return: A dictionary of Row Id -> Metadata Value.

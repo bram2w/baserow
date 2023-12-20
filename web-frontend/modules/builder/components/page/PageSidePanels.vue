@@ -1,10 +1,16 @@
 <template>
   <aside class="side-panels">
-    <Tabs :full-height="true">
+    <Tabs :key="element?.id" :full-height="true">
       <Tab
         v-for="pageSidePanelType in pageSidePanelTypes"
         :key="pageSidePanelType.getType()"
+        :tooltip="
+          element && pageSidePanelType.isDeactivated(element)
+            ? pageSidePanelType.getDeactivatedText()
+            : null
+        "
         :title="pageSidePanelType.label"
+        :disabled="!element || pageSidePanelType.isDeactivated(element)"
       >
         <component
           :is="pageSidePanelType.component"

@@ -10,7 +10,7 @@
               v-model="values.email"
               :class="{ 'input--error': fieldHasErrors('email') }"
               type="text"
-              class="input"
+              class="input input--small"
               @blur="$v.values.email.$touch()"
             />
             <div v-if="fieldHasErrors('email')" class="error">
@@ -28,6 +28,7 @@
                 v-model="values.permissions"
                 class="group-invite-form__role-selector-dropdown"
                 :show-search="false"
+                small
               >
                 <DropdownItem
                   v-for="role in roles"
@@ -56,7 +57,7 @@
               ref="message"
               v-model="values.message"
               type="text"
-              class="input"
+              class="input input--small"
               :placeholder="
                 $t('workspaceInviteForm.optionalMessagePlaceholder')
               "

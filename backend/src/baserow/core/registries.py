@@ -13,14 +13,13 @@ from django.db.transaction import Atomic
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
+from baserow.core.auth_provider.registries import AuthenticationProviderTypeRegistry
 from baserow.core.exceptions import SubjectTypeNotExist
 from baserow.core.utils import ChildProgressBuilder
 
 from .exceptions import (
     ApplicationTypeAlreadyRegistered,
     ApplicationTypeDoesNotExist,
-    AuthenticationProviderTypeAlreadyRegistered,
-    AuthenticationProviderTypeDoesNotExist,
     ObjectScopeTypeAlreadyRegistered,
     ObjectScopeTypeDoesNotExist,
     OperationTypeAlreadyRegistered,
@@ -34,7 +33,6 @@ from .registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
     Instance,
-    MapAPIExceptionsInstanceMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
@@ -82,6 +80,12 @@ class ImportExportConfig:
     when the user opens a view.
     """
     reduce_disk_space_usage: bool = False
+
+    """
+    Determines an alternative workspace to search for user references
+    during imports.
+    """
+    workspace_for_user_references: "Workspace" = None
 
 
 class Plugin(APIUrlsInstanceMixin, Instance):
@@ -246,6 +250,8 @@ class ApplicationType(
     supports_snapshots = True
 
     supports_integrations = False
+
+    supports_user_sources = False
 
     def pre_delete(self, application):
         """
@@ -491,33 +497,6 @@ class ApplicationTypeRegistry(
     already_registered_exception_class = ApplicationTypeAlreadyRegistered
 
 
-class AuthenticationProviderTypeRegistry(
-    MapAPIExceptionsInstanceMixin, APIUrlsRegistryMixin, ModelRegistryMixin, Registry
-):
-    """
-    With the authentication provider registry it is possible to register new
-    authentication providers. An authentication provider is an abstraction made
-    specifically for Baserow. If added to the registry a user can use that
-    authentication provider to login.
-    """
-
-    name = "authentication_provider"
-    does_not_exist_exception_class = AuthenticationProviderTypeDoesNotExist
-    already_registered_exception_class = AuthenticationProviderTypeAlreadyRegistered
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._default = None
-
-    def get_all_available_login_options(self):
-        login_options = {}
-        for provider in self.get_all():
-            provider_login_options = provider.get_login_options()
-            if provider_login_options:
-                login_options[provider.type] = provider_login_options
-        return login_options
-
-
 class PermissionManagerType(abc.ABC, Instance):
     """
     A permission manager is responsible to permit or disallow a specific operation
@@ -654,7 +633,6 @@ class PermissionManagerType(abc.ABC, Instance):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional["Workspace"] = None,
-        context: Optional[Any] = None,
     ) -> QuerySet:
         """
         This method allows a permission manager to filter a given queryset accordingly
@@ -669,7 +647,6 @@ class PermissionManagerType(abc.ABC, Instance):
         :param queryset: The base queryset where the permission filter must be
             applied to.
         :param workspace: An optional workspace into which the operation takes place.
-        :param context: An optional context object related to the current operation.
         :return: The queryset potentially filtered.
         """
 

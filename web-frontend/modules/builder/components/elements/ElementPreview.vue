@@ -9,7 +9,7 @@
   >
     <InsertElementButton
       v-if="isSelected"
-      class="element-preview__insert--top"
+      class="element-preview__insert element-preview__insert--top"
       @click="showAddElementModal(PLACEMENTS.BEFORE)"
     />
     <ElementMenu
@@ -31,7 +31,7 @@
 
     <InsertElementButton
       v-if="isSelected"
-      class="element-preview__insert--bottom"
+      class="element-preview__insert element-preview__insert--bottom"
       @click="showAddElementModal(PLACEMENTS.AFTER)"
     />
     <AddElementModal

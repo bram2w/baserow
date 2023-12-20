@@ -22,7 +22,14 @@
   color: $color-neutral-900;
 }
 
-.event__workflow-action:not(:first-child) {
+.event__workflow-action {
   border-top: 1px solid $color-neutral-200;
   padding-top: 20px;
+
+  // :first-child doesn't work here as the draggable directives adds an element
+  &.event__workflow-action--first {
+    border-top: none;
+    padding-top: 10px;
+    margin-top: 10px;
+  }
 }

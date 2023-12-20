@@ -1,5 +1,9 @@
 <template>
-  <div v-show="dragging" class="grid-view__row-dragging-container">
+  <div
+    v-show="dragging"
+    class="grid-view__row-dragging-container"
+    :style="{ left: offset + 'px' }"
+  >
     <div
       class="grid-view__row-dragging"
       :style="{ width: width + 'px', top: draggingTop + 'px' }"
@@ -36,6 +40,11 @@ export default {
     vertical: {
       type: String,
       required: true,
+    },
+    offset: {
+      type: Number,
+      required: false,
+      default: () => 0,
     },
   },
   data() {

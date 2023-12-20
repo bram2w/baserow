@@ -35,6 +35,18 @@ class WIDTHS(models.TextChoices):
     FULL = "full"
 
 
+class BackgroundTypes(models.TextChoices):
+    NONE = "none"
+    COLOR = "color"
+
+
+class WidthTypes(models.TextChoices):
+    FULL = "full"
+    NORMAL = "normal"
+    MEDIUM = "medium"
+    SMALL = "small"
+
+
 def get_default_element_content_type():
     return ContentType.objects.get_for_model(Element)
 
@@ -87,8 +99,51 @@ class Element(
         help_text="The place in the container.",
     )
 
-    style_padding_top = models.PositiveIntegerField(default=10)
-    style_padding_bottom = models.PositiveIntegerField(default=10)
+    style_border_top_color = models.CharField(
+        max_length=20,
+        default="border",
+        blank=True,
+        help_text="Top border color.",
+    )
+    style_border_top_size = models.PositiveIntegerField(
+        default=0, help_text="Pixel height of the top border."
+    )
+    style_padding_top = models.PositiveIntegerField(
+        default=10, help_text="Padding height of the top border."
+    )
+
+    style_border_bottom_color = models.CharField(
+        max_length=20,
+        default="border",
+        blank=True,
+        help_text="Bottom border color",
+    )
+    style_border_bottom_size = models.PositiveIntegerField(
+        default=0, help_text="Pixel height of the bottom border."
+    )
+    style_padding_bottom = models.PositiveIntegerField(
+        default=10, help_text="Padding height of the bottom border."
+    )
+
+    style_background = models.CharField(
+        choices=BackgroundTypes.choices,
+        default=BackgroundTypes.NONE,
+        help_text="What type of background the element should have.",
+        max_length=20,
+    )
+    style_background_color = models.CharField(
+        max_length=20,
+        default="#ffffffff",
+        blank=True,
+        help_text="The background color if `style_background` is color.",
+    )
+
+    style_width = models.CharField(
+        choices=WidthTypes.choices,
+        default=WidthTypes.NORMAL,
+        help_text="Indicates the width of the element.",
+        max_length=20,
+    )
 
     class Meta:
         ordering = ("order", "id")
@@ -360,10 +415,10 @@ class ImageElement(Element):
         related_name="image_element_image_file",
         help_text="An image file uploaded by the user to be used by the element",
     )
-    image_url = models.URLField(
+    image_url = FormulaField(
         help_text="A link to the image file", blank=True, default="", max_length=1000
     )
-    alt_text = models.TextField(
+    alt_text = FormulaField(
         help_text="Text that is displayed when the image can't load",
         default="",
         blank=True,
@@ -390,6 +445,10 @@ class InputTextElement(InputElement):
     An input element of text type.
     """
 
+    label = FormulaField(
+        default="",
+        help_text="The text label for this input",
+    )
     default_value = FormulaField(
         default="", help_text="This text input's default value."
     )
@@ -422,7 +481,7 @@ class ButtonElement(Element):
     )
 
 
-class CollectionElementField(models.Model):
+class CollectionField(models.Model):
     """
     A field of a Collection element
     """
@@ -432,7 +491,23 @@ class CollectionElementField(models.Model):
         max_length=225,
         help_text="The name of the field.",
     )
-    value = FormulaField(default="", help_text="The value of the field.")
+
+    type = models.CharField(
+        max_length=225,
+        help_text="The type of the field.",
+    )
+
+    config = models.JSONField(
+        default=dict,
+        help_text="The configuration of the field.",
+    )
+
+    def get_type(self):
+        """Returns the type for this model instance"""
+
+        from .registries import collection_field_type_registry
+
+        return collection_field_type_registry.get(self.type)
 
     class Meta:
         ordering = ("order", "id")
@@ -456,9 +531,7 @@ class CollectionElement(Element):
         ],
     )
 
-    fields = models.ManyToManyField(
-        CollectionElementField, help_text="Fields of the collection element."
-    )
+    fields = models.ManyToManyField(CollectionField)
 
     class Meta:
         abstract = True
@@ -468,3 +541,38 @@ class TableElement(CollectionElement):
     """
     A table element
     """
+
+
+class FormContainerElement(ContainerElement):
+    """
+    A form element
+    """
+
+    submit_button_label = FormulaField(default="")
+
+
+class DropdownElement(Element):
+    label = FormulaField(
+        default="",
+        help_text="The text label for this dropdown",
+    )
+    default_value = FormulaField(
+        default="", help_text="This dropdowns input's default value."
+    )
+    required = models.BooleanField(
+        default=False, help_text="Whether this drodpown is a required field."
+    )
+    placeholder = FormulaField(
+        default="",
+        help_text="The placeholder text which should be applied to the element.",
+    )
+
+
+class DropdownElementOption(models.Model):
+    value = models.TextField(
+        blank=True, default="", help_text="The value of the option"
+    )
+    name = models.TextField(
+        blank=True, default="", help_text="The display name of the option"
+    )
+    dropdown = models.ForeignKey(DropdownElement, on_delete=models.CASCADE)

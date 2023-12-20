@@ -32,7 +32,7 @@ export class BuilderApplicationType extends ApplicationType {
 
   populate(application) {
     const values = super.populate(application)
-    values.pages.forEach((object, pages) => populatePage(object))
+    values.pages = values.pages.map(populatePage)
     return values
   }
 
@@ -43,22 +43,19 @@ export class BuilderApplicationType extends ApplicationType {
     }
   }
 
-  select(application, { $router, $i18n, $store }, callback = null) {
+  async select(application, { $router, $i18n, $store }) {
     const pages = application.pages
       .map((p) => p)
       .sort((a, b) => a.order - b.order)
 
     if (pages.length > 0) {
-      $router.push(
-        {
-          name: 'builder-page',
-          params: {
-            builderId: application.id,
-            pageId: pages[0].id,
-          },
+      await $router.push({
+        name: 'builder-page',
+        params: {
+          builderId: application.id,
+          pageId: pages[0].id,
         },
-        callback
-      )
+      })
       return true
     } else {
       $store.dispatch('toast/error', {

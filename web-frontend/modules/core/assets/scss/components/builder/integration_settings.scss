@@ -1,9 +1,13 @@
 .integration_settings__integration {
   display: flex;
   padding: 10px 0;
+  overflow: hidden;
+  gap: 10px;
 }
 
-.integration-settings__loading {
+.integration-settings__loader {
+  @include loading();
+
   margin: auto;
 }
 

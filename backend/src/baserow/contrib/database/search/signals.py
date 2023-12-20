@@ -42,12 +42,21 @@ def view_loaded_maybe_create_tsvector(
 
     from baserow.contrib.database.search.handler import SearchHandler
 
+    # Count the number of fields which don't yet have a `tsvector` column.
     num_fields_to_add_tsvs_for = len(table_model.get_fields_missing_search_index())
 
+    # If we have fewer than `INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT`
+    # (by default: 600) fields to update, we'll try and convert the table to
+    # full-text search. Anything larger than 600 will likely result in the
+    # migration stalling at some point.
     if (
         num_fields_to_add_tsvs_for
         < settings.INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT
     ):
+        # We will migrate the table to full text search if:
+        # 1. Postgres full text is enabled in our config.
+        # 2. The table doesn't have its background update column.
+        # 3. There are one or more fields in the table without a tsvector column.
         migrate_table_for_search = SearchHandler.full_text_enabled() and (
             not table.needs_background_update_column_added
             or num_fields_to_add_tsvs_for > 0

@@ -1,5 +1,69 @@
 # Changelog
 
+## Released 1.22.0
+
+### New features
+* Add support for multiple select in the formula field. Add `has_option` formula to check if a multiple select field has a specific option. [#1363](https://gitlab.com/baserow/baserow/-/issues/1363)
+* Group rows by field. [#143](https://gitlab.com/baserow/baserow/-/issues/143)
+* Allow switching between personal and collaborative views. [#1449](https://gitlab.com/baserow/baserow/-/issues/1449)
+* Added UUID field type. [#1463](https://gitlab.com/baserow/baserow/-/issues/1463)
+* Allow choosing a checkbox input option for the multiple select field in the form view. [#1899](https://gitlab.com/baserow/baserow/-/issues/1899)
+* Add chips UI component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Redesign context and select menus [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Restyle input and textarea [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Restyle radio button [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Add Last Modified By field [#2042](https://gitlab.com/baserow/baserow/-/issues/2042)
+* Send a notification on form submission to subscribed users. [#2054](https://gitlab.com/baserow/baserow/-/issues/2054)
+* Allow to follow/unfollow comments on a specific row. [#2086](https://gitlab.com/baserow/baserow/-/issues/2086)
+* Display 'available in premium version' message for non-premium users when switching view to Personal [#2087](https://gitlab.com/baserow/baserow/-/issues/2087)
+* Add the duration field type. [#2088](https://gitlab.com/baserow/baserow/-/issues/2088)
+* Add support for sorting Last Modified By fields [#2106](https://gitlab.com/baserow/baserow/-/issues/2106)
+* Add support for search for last modified by field type [#2108](https://gitlab.com/baserow/baserow/-/issues/2108)
+* Add is, is not, empty, not empty filters for last modified by field [#2109](https://gitlab.com/baserow/baserow/-/issues/2109)
+* Immediate frontend rendering for changing Last modified by field values [#2113](https://gitlab.com/baserow/baserow/-/issues/2113)
+* Add the created_by field type. [#624](https://gitlab.com/baserow/baserow/-/issues/624)
+* Add autonumber field [#811](https://gitlab.com/baserow/baserow/-/issues/811)
+* Allow choosing a radio input option for the single select field in the form view. [#813](https://gitlab.com/baserow/baserow/-/issues/813)
+* Introduced `BASEROW_FRONTEND_SAME_SITE_COOKIE` environment variable to change the cookie sameSite value.
+* New templates:
+  * Beverage Sales Management
+  * Car Comparison
+  * ESG Management
+  * Staff Development
+
+### Bug fixes
+* Fixed incorrect font in emails by introducing fallback. [#1947](https://gitlab.com/baserow/baserow/-/issues/1947)
+* Fixes the deadlock errors that can occur when updating TSV cells. [#1984](https://gitlab.com/baserow/baserow/-/issues/1984)
+* Fix shift arrow selection on grid view when primary key field option is not first [#1998](https://gitlab.com/baserow/baserow/-/issues/1998)
+* Make date field responsive in Row dialog. [#2048](https://gitlab.com/baserow/baserow/-/issues/2048)
+* Fixed a bug that prevented table duplication when a 'Link to Table' field is modified to link to a different table. [#2053](https://gitlab.com/baserow/baserow/-/issues/2053)
+* Remove the 'App pitch planner' database from the 'Elementary School Management System' template. [#2060](https://gitlab.com/baserow/baserow/-/issues/2060)
+* Fix a bug causing the 'Duplicate row' in the UI not showing values correctly for single and multiple select fields. [#2068](https://gitlab.com/baserow/baserow/-/issues/2068)
+* Fix a bug preventing lookup fields to work properly with last modified fields. [#2081](https://gitlab.com/baserow/baserow/-/issues/2081)
+* Fixed a bug causing the UI to freeze on clicking the already opened table link in sidebar. [#2082](https://gitlab.com/baserow/baserow/-/issues/2082)
+* Fix filename inconsistency for downloaded files [#2096](https://gitlab.com/baserow/baserow/-/issues/2096)
+* Disable incompatible filters in public views [#2116](https://gitlab.com/baserow/baserow/-/issues/2116)
+* Fix values not being updated in row edit modal if the row is not in the buffer. [#2128](https://gitlab.com/baserow/baserow/-/issues/2128)
+* Fix a bug causing comments not syncing in row edit modal on navigation. [#2144](https://gitlab.com/baserow/baserow/-/issues/2144)
+* Fix bug causing the notification panel to crash with comment notifications lacking user sender [#2157](https://gitlab.com/baserow/baserow/-/issues/2157)
+* Disable session recording in Posthog to prevent ReportingObserver error.
+* Fix show paginated response of the APIListingView in the OpenAPI spec.
+* Fixed undefined event when copying rows via multiple row context.
+* Fix duplicate darker color in palette.
+* Fix limit of the multiple selection in the web-frontend
+* Resolve the postcss-loader warnings.
+* Fix bug where commenters were not able to see row comments and change history.
+* Suppress redirect error when selecting the database application.
+
+### Refactors
+* Alert and toast refactor [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Reduce the amount of data written from automatic field updates when possible. [#2021](https://gitlab.com/baserow/baserow/-/issues/2021)
+* Pick a valid view from the available ones if a rowId is provided in the route params. [#2095](https://gitlab.com/baserow/baserow/-/issues/2095)
+* Add the `workspace_id` and the `database_id` to webhook payload. [#2147](https://gitlab.com/baserow/baserow/-/issues/2147)
+* Improved performance of the field dependency updating.
+* Improved performance of the field serialized import export, resulting in fast duplication.
+
+
 ## Released 1.21.2
 
 ### Bug fixes
@@ -20,7 +84,10 @@
 * Make it possible to edit values in the row edit modal of a relationship [#1117](https://gitlab.com/baserow/baserow/-/issues/1117)
 * Added condition groups for advanced row filtering using 'And' & 'Or' conjunctions. [#1271](https://gitlab.com/baserow/baserow/-/issues/1271)
 * Add a new view filter for selecting rows whose file columns have less files than a given number [#1771](https://gitlab.com/baserow/baserow/-/issues/1771)
+* Introduce new button styling [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
 * Replace icons [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Restyle datepicker [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Restyle switch and checkbox components [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
 * Restyle tabs component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
 * Add ability to subscribe to multiple pages via websockets [#2019](https://gitlab.com/baserow/baserow/-/issues/2019)
 * Add row edit history [#2030](https://gitlab.com/baserow/baserow/-/issues/2030)

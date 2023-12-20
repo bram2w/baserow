@@ -1,5 +1,7 @@
 import pytest
 
+from baserow.contrib.builder.elements.models import ColumnElement, ParagraphElement
+from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.pages.constants import ILLEGAL_PATH_SAMPLE_CHARACTER
 from baserow.contrib.builder.pages.exceptions import (
     DuplicatePathParamsInPath,
@@ -260,3 +262,81 @@ def test_generalise_path():
         PageHandler().generalise_path("/test/:id-:hello")
         == f"/test/{ILLEGAL_PATH_SAMPLE_CHARACTER}-{ILLEGAL_PATH_SAMPLE_CHARACTER}"
     )
+
+
+@pytest.mark.django_db
+def test_import_element(data_fixture):
+    element = data_fixture.create_builder_paragraph_element(value="'test'")
+    element_type = element_type_registry.get_by_model(element)
+    element_serialized = element_type.export_serialized(element)
+    new_page = data_fixture.create_builder_page(builder=element.page.builder)
+
+    elements_imported = PageHandler().import_elements(
+        new_page,
+        [element_serialized],
+        {},
+    )
+
+    assert len(elements_imported) == 1
+    assert elements_imported[0].id != element.id
+    assert elements_imported[0].specific.value == element.value
+
+
+@pytest.mark.django_db
+def test_import_element_has_to_import_parent_first(data_fixture):
+    page = data_fixture.create_builder_page()
+    parent_column = data_fixture.create_builder_column_element(
+        page=page, column_amount=15
+    )
+    paragraph_element = data_fixture.create_builder_paragraph_element(
+        page=page, parent_element=parent_column
+    )
+    parent_serialized = element_type_registry.get_by_model(
+        parent_column
+    ).export_serialized(parent_column)
+    element_serialized = element_type_registry.get_by_model(
+        paragraph_element
+    ).export_serialized(paragraph_element)
+    new_page = data_fixture.create_builder_page(builder=paragraph_element.page.builder)
+
+    [imported_column, imported_paragraph] = PageHandler().import_elements(
+        new_page,
+        [parent_serialized, element_serialized],
+        {},
+    )
+
+    assert isinstance(imported_column, ColumnElement)
+    assert isinstance(imported_paragraph, ParagraphElement)
+
+    assert imported_paragraph.parent_element_id != paragraph_element.parent_element_id
+    assert imported_paragraph.parent_element_id == imported_column.id
+
+
+@pytest.mark.django_db
+def test_import_element_has_to_instance_already_created(data_fixture):
+    page = data_fixture.create_builder_page()
+    parent_column = data_fixture.create_builder_column_element(
+        page=page, column_amount=15
+    )
+    paragraph_element = data_fixture.create_builder_paragraph_element(
+        page=page, parent_element=parent_column
+    )
+    parent_serialized = element_type_registry.get_by_model(
+        parent_column
+    ).export_serialized(parent_column)
+    element_serialized = element_type_registry.get_by_model(
+        paragraph_element
+    ).export_serialized(paragraph_element)
+    new_page = data_fixture.create_builder_page(builder=paragraph_element.page.builder)
+
+    [imported_column, imported_paragraph] = PageHandler().import_elements(
+        new_page,
+        [element_serialized, parent_serialized],
+        {},
+    )
+
+    assert isinstance(imported_column, ColumnElement)
+    assert isinstance(imported_paragraph, ParagraphElement)
+
+    assert imported_paragraph.parent_element_id != paragraph_element.parent_element_id
+    assert imported_paragraph.parent_element_id == imported_column.id

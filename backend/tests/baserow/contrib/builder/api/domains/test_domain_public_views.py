@@ -36,10 +36,26 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
     response_json = response.json()
 
     assert response.status_code == HTTP_200_OK
-    assert response_json["id"] == builder_to.id
-    assert len(response_json["pages"]) == 2
-    assert "order" not in response_json
-    assert "order" not in response_json["pages"][0]
+    assert response_json == {
+        "id": builder_to.id,
+        "name": builder_to.name,
+        "pages": [
+            {"id": page.id, "name": page.name, "path": page.path, "path_params": []},
+            {"id": page2.id, "name": page2.name, "path": page2.path, "path_params": []},
+        ],
+        "type": "builder",
+        "theme": {
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
+            "heading_1_font_size": 24,
+            "heading_1_color": "#070810ff",
+            "heading_2_font_size": 20,
+            "heading_2_color": "#070810ff",
+            "heading_3_font_size": 16,
+            "heading_3_color": "#070810ff",
+        },
+    }
 
     # Even if I'm authenticated I should be able to see it.
     response = api_client.get(
@@ -115,8 +131,26 @@ def test_get_public_builder_by_id(api_client, data_fixture):
     response_json = response.json()
 
     assert response.status_code == HTTP_200_OK
-    assert response_json["id"] == page.builder.id
-    assert len(response_json["pages"]) == 2
+    assert response_json == {
+        "id": page.builder.id,
+        "name": page.builder.name,
+        "pages": [
+            {"id": page.id, "name": page.name, "path": page.path, "path_params": []},
+            {"id": page2.id, "name": page2.name, "path": page2.path, "path_params": []},
+        ],
+        "type": "builder",
+        "theme": {
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
+            "heading_1_font_size": 24,
+            "heading_1_color": "#070810ff",
+            "heading_2_font_size": 20,
+            "heading_2_color": "#070810ff",
+            "heading_3_font_size": 16,
+            "heading_3_color": "#070810ff",
+        },
+    }
 
 
 @pytest.mark.django_db

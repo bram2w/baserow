@@ -66,7 +66,8 @@
         "createTable": "Tabel aanmaken"
     },
     "sidebarItem": {
-        "exportTable": "Tabel exporteren"
+        "exportTable": "Tabel exporteren",
+        "webhooks": "Webhooks"
     },
     "apiToken": {
         "create": "aanmaken",
@@ -456,7 +457,9 @@
         "deleteView": "Weergave verwijderen",
         "webhooks": "Webhooks",
         "duplicateView": "View dupliceren",
-        "importFile": "Bestand importeren"
+        "importFile": "Bestand importeren",
+        "toPersonal": "Naar persoonlijk",
+        "toCollaborative": "Naar gedeeld"
     },
     "deleteViewModal": {
         "title": "Verwijder {name}",
@@ -500,7 +503,9 @@
         "hiddenRowsInsertedTitle": "Rijen toegevoegd",
         "copiedRowURLMessage": "De URL van rij {id} is gekopieerd naar je klembord.",
         "copiedRowURL": "Rij URL gekopieerd.",
-        "copyRowURL": "URL van rij kopiëren"
+        "copyRowURL": "URL van rij kopiëren",
+        "tooManyItemsTitle": "Te veel items",
+        "tooManyItemsDescription": "Het is niet mogelijk om meer dan {limit} rijen tegelijk bij te werken, dus we hebben alleen de eerste bijgewerkt."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
@@ -821,5 +826,9 @@
     },
     "viewFieldConditionsForm": {
         "addCondition": "Voorwaarde toevoegen"
+    },
+    "formSubmittedNotification": {
+        "title": "{formName} is verstuurd in tabel {tableName}:",
+        "moreValues": "0 | en nog 1 veld. | en {count} meer velden."
     }
 }

@@ -1,6 +1,6 @@
 import datetime
 
-from django.db import OperationalError
+from django.db import OperationalError, transaction
 from django.utils import timezone
 
 import pytest
@@ -42,6 +42,37 @@ def test_perform_create(data_fixture: Fixtures):
     model = snapshotted_table.get_model()
     assert model.objects.count() == 2
     assert progress.progress == 100
+
+
+@pytest.mark.django_db
+def test_perform_create_preserves_last_modified_by(data_fixture: Fixtures):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace, order=1)
+    table = data_fixture.create_database_table(user=user, database=application)
+    field = data_fixture.create_text_field(user=user, table=table)
+    model = table.get_model()
+    row_1 = model.objects.create(
+        **{f"field_{field.id}": "Row 1", "last_modified_by": user}
+    )
+    row_1 = model.objects.create(
+        **{f"field_{field.id}": "Row 2", "last_modified_by": None}
+    )
+    snapshot = data_fixture.create_snapshot(
+        snapshot_from_application=application,
+        name="snapshot",
+        created_by=user,
+    )
+    progress = Progress(total=100)
+
+    SnapshotHandler().perform_create(snapshot, progress)
+
+    snapshot.refresh_from_db()
+    snapshotted_table = Table.objects.get(database=snapshot.snapshot_to_application)
+    model = snapshotted_table.get_model()
+    assert model.objects.count() == 2
+    assert model.objects.all()[0].last_modified_by == user
+    assert model.objects.all()[1].last_modified_by is None
 
 
 @pytest.mark.django_db
@@ -107,7 +138,7 @@ def test_perform_restore(data_fixture: Fixtures):
     assert progress.progress == 100
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_delete_expired_snapshots(data_fixture: Fixtures, settings):
     exp_days = 1
     settings.BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = exp_days
@@ -143,7 +174,7 @@ def test_delete_expired_snapshots(data_fixture: Fixtures, settings):
 
     assert Snapshot.objects.count() == 3
 
-    with freeze_time(now):
+    with freeze_time(now), transaction.atomic():
         SnapshotHandler().delete_expired()
 
     assert Snapshot.objects.count() == 1

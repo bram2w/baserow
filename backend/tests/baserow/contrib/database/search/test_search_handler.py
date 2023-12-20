@@ -1,6 +1,7 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from django.db import connection
+from django.test.utils import override_settings
 
 import pytest
 
@@ -236,3 +237,150 @@ def test_querying_table_with_trashed_field_doesnt_include_its_tsv(
     assert len(requeried_rows_from_a) == 1
     m2m = getattr(requeried_rows_from_a[0], link_field.db_column)
     assert len(m2m.all()) == 1
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.search.handler.SearchHandler.update_tsvector_columns")
+def test_update_tsvector_columns_locked_without_cache_lock(mocked_update, data_fixture):
+    table = data_fixture.create_database_table()
+    SearchHandler.update_tsvector_columns_locked(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
+    mocked_update.assert_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.search.handler.SearchHandler.update_tsvector_columns")
+@patch("baserow.contrib.database.search.handler.cache")
+def test_update_tsvector_columns_locked_with_cache_lock_changed_rows_only_false(
+    mocked_cache, mocked_update, data_fixture
+):
+    table = data_fixture.create_database_table()
+
+    # If `update_tsvectors_for_changed_rows_only` is False, we don't expect anything
+    # to be locked.
+    SearchHandler.update_tsvector_columns_locked(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
+    mocked_cache.lock.assert_not_called()
+    mocked_update.assert_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.search.handler.SearchHandler.update_tsvector_columns")
+@patch("baserow.contrib.database.search.handler.cache")
+def test_update_tsvector_columns_locked_with_cache_lock_changed_rows_only_true_locked(
+    mocked_cache, mocked_update, data_fixture
+):
+    table = data_fixture.create_database_table()
+
+    # If `update_tsvectors_for_changed_rows_only` is False, we expect it to be locked.
+    mocked_cache.lock.return_value.locked.return_value = True
+    SearchHandler.update_tsvector_columns_locked(
+        table, update_tsvectors_for_changed_rows_only=True
+    )
+    mocked_cache.lock.assert_called_with(
+        f"_update_tsvector_columns_update_tsvectors_for_changed_rows_only_{table.id}"
+        f"_lock",
+        timeout=60 * 60,
+    )
+    mocked_update.assert_not_called()
+    mocked_cache.lock.return_value.release.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.search.handler.SearchHandler.update_tsvector_columns")
+@patch("baserow.contrib.database.search.handler.cache")
+def test_update_tsvector_columns_locked_with_cache_lock_changed_rows_only_true(
+    mocked_cache, mocked_update, data_fixture
+):
+    table = data_fixture.create_database_table()
+
+    # If `update_tsvectors_for_changed_rows_only` is False, we expect it to be locked.
+    mocked_cache.lock.return_value.locked.return_value = False
+    SearchHandler.update_tsvector_columns_locked(
+        table, update_tsvectors_for_changed_rows_only=True
+    )
+    mocked_cache.lock.assert_called_with(
+        f"_update_tsvector_columns_update_tsvectors_for_changed_rows_only_{table.id}"
+        f"_lock",
+        timeout=60 * 60,
+    )
+    mocked_update.assert_called()
+    mocked_cache.lock.return_value.release.assert_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.search.handler.SearchHandler.update_tsvector_columns")
+@patch("baserow.contrib.database.search.handler.cache")
+def test_update_tsvector_columns_locked_with_cache_lock_changed_rows_only_true_on_exception(
+    mocked_cache, mocked_update, data_fixture
+):
+    table = data_fixture.create_database_table()
+
+    # If `update_tsvectors_for_changed_rows_only` is False, we expect it to be locked.
+    mocked_cache.lock.return_value.locked.return_value = False
+    mocked_update.side_effect = Exception()
+
+    with pytest.raises(Exception):
+        SearchHandler.update_tsvector_columns_locked(
+            table, update_tsvectors_for_changed_rows_only=True
+        )
+    mocked_cache.lock.assert_called_with(
+        f"_update_tsvector_columns_update_tsvectors_for_changed_rows_only_{table.id}"
+        f"_lock",
+        timeout=60 * 60,
+    )
+    mocked_cache.lock.return_value.release.assert_called()
+
+
+@override_settings(TSV_UPDATE_CHUNK_SIZE=2)
+@pytest.mark.django_db
+def test_split_update_into_chunks_by_ranges(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(user, table=table, primary=True)
+
+    model = table.get_model()
+    model.objects.create(**{f"field_{field.id}": "Test 1"})
+    model.objects.create(**{f"field_{field.id}": "Test 2"})
+    model.objects.create(**{f"field_{field.id}": "Test 3"})
+    model.objects.create(**{f"field_{field.id}": "Test 4"})
+
+    SearchHandler().update_tsvector_columns(table, False)
+
+    rows = model.objects.all()
+    assert getattr(rows[0], field.tsv_db_column) == "'1':2 'test':1"
+    assert rows[0].needs_background_update is False
+    assert getattr(rows[1], field.tsv_db_column) == "'2':2 'test':1"
+    assert rows[1].needs_background_update is False
+    assert getattr(rows[2], field.tsv_db_column) == "'3':2 'test':1"
+    assert rows[2].needs_background_update is False
+    assert getattr(rows[3], field.tsv_db_column) == "'4':2 'test':1"
+    assert rows[3].needs_background_update is False
+
+
+@override_settings(TSV_UPDATE_CHUNK_SIZE=2)
+@pytest.mark.django_db
+def test_split_update_into_chunks_until_all_background_done(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(user, table=table, primary=True)
+
+    model = table.get_model()
+    model.objects.create(**{f"field_{field.id}": "Test 1"})
+    model.objects.create(**{f"field_{field.id}": "Test 2"})
+    model.objects.create(**{f"field_{field.id}": "Test 3"})
+    model.objects.create(**{f"field_{field.id}": "Test 4"})
+
+    SearchHandler().update_tsvector_columns(table, True)
+
+    rows = model.objects.all()
+    assert getattr(rows[0], field.tsv_db_column) == "'1':2 'test':1"
+    assert rows[0].needs_background_update is False
+    assert getattr(rows[1], field.tsv_db_column) == "'2':2 'test':1"
+    assert rows[1].needs_background_update is False
+    assert getattr(rows[2], field.tsv_db_column) == "'3':2 'test':1"
+    assert rows[2].needs_background_update is False
+    assert getattr(rows[3], field.tsv_db_column) == "'4':2 'test':1"
+    assert rows[3].needs_background_update is False

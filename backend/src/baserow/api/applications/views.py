@@ -113,7 +113,6 @@ class AllApplicationsView(APIView):
                 ListApplicationsWorkspaceOperationType.type,
                 applications,
                 workspace=workspace,
-                context=workspace,
             )
             applications_ids += applications.values_list("id", flat=True)
 
@@ -209,7 +208,6 @@ class ApplicationsView(APIView):
             ListApplicationsWorkspaceOperationType.type,
             applications,
             workspace=workspace,
-            context=workspace,
             allow_if_template=True,
         )
 

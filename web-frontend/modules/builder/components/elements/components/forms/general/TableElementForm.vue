@@ -38,7 +38,7 @@
       <label class="control__label">
         {{ $t('tableElementForm.fields') }}
       </label>
-      <div>
+      <div v-if="values.data_source_id">
         <Expandable
           v-for="(field, index) in values.fields"
           :key="field.id"
@@ -88,21 +88,36 @@
                 />
               </template>
             </FormInput>
-            <ApplicationBuilderFormulaInputGroup
-              v-model="field.value"
-              :label="$t('tableElementForm.fieldValueLabel')"
-              :placeholder="$t('tableElementForm.fieldValuePlaceholder')"
-              :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-              :application-context-additions="{
-                element,
-              }"
-              horizontal
+            <FormElement class="control control--horizontal">
+              <label class="control__label">
+                {{ $t('tableElementForm.fieldType') }}
+              </label>
+              <div class="control__elements">
+                <Dropdown
+                  :value="field.type"
+                  :show-search="false"
+                  @input="changeFieldType(field, $event)"
+                >
+                  <DropdownItem
+                    v-for="collectionType in orderedCollectionTypes"
+                    :key="collectionType.getType()"
+                    :name="collectionType.name"
+                    :value="collectionType.getType()"
+                  />
+                </Dropdown>
+              </div>
+            </FormElement>
+            <component
+              :is="collectionTypes[field.type].formComponent"
+              :element="element"
+              :default-values="field"
+              @values-changed="updateField(field, $event)"
             />
           </template>
         </Expandable>
       </div>
+      <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
       <Button
-        class="table-element-form__add-field"
         prepend-icon="baserow-icon-plus"
         type="link"
         size="tiny"
@@ -178,6 +193,12 @@ export default {
       }
       return this.selectedDataSourceType.maxResultLimit
     },
+    orderedCollectionTypes() {
+      return this.$registry.getOrderedList('collectionField')
+    },
+    collectionTypes() {
+      return this.$registry.getAll('collectionField')
+    },
     DATA_PROVIDERS_ALLOWED_ELEMENTS() {
       return DATA_PROVIDERS_ALLOWED_ELEMENTS
     },
@@ -205,7 +226,25 @@ export default {
           this.values.fields.map(({ name }) => name)
         ),
         value: '',
+        type: 'text',
         id: uuid(), // Temporary id
+      })
+    },
+    changeFieldType(fieldToUpdate, newType) {
+      console.log('newType', newType)
+      this.values.fields = this.values.fields.map((field) => {
+        if (field.id === fieldToUpdate.id) {
+          return { id: field.id, name: field.name, type: newType }
+        }
+        return field
+      })
+    },
+    updateField(fieldToUpdate, values) {
+      this.values.fields = this.values.fields.map((field) => {
+        if (field.id === fieldToUpdate.id) {
+          return { ...field, ...values }
+        }
+        return field
       })
     },
     removeField(field) {

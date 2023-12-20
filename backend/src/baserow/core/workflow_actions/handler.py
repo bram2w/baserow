@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional, Type, cast
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.core.db import specific_iterator
@@ -59,23 +61,23 @@ class WorkflowActionHandler(ABC):
         return specific_iterator(base_queryset)
 
     def create_workflow_action(
-        self, workflow_action_type: WorkflowActionType, **kwargs
+        self, workflow_action_type: WorkflowActionType, **prepared_values
     ) -> WorkflowAction:
         """
         Creates a new workflow action of the given type.
 
         :param workflow_action_type: The type of the new workflow action
-        :param kwargs: Any fields that need to be set for that specific type
+        :param prepared_values: Any fields that need to be set for that specific type
         :return: The created workflow action
         """
 
-        allowed_values = extract_allowed(kwargs, workflow_action_type.allowed_fields)
-
-        allowed_values = workflow_action_type.prepare_value_for_db(allowed_values)
+        allowed_prepared_values = extract_allowed(
+            prepared_values, workflow_action_type.allowed_fields
+        )
 
         model_class = cast(WorkflowAction, workflow_action_type.model_class)
 
-        workflow_action = model_class(**allowed_values)
+        workflow_action = model_class(**allowed_prepared_values)
         workflow_action.save()
 
         return workflow_action
@@ -90,40 +92,56 @@ class WorkflowActionHandler(ABC):
         workflow_action.delete()
 
     def update_workflow_action(
-        self, workflow_action: WorkflowAction, **kwargs
+        self, workflow_action: WorkflowAction, **prepared_values
     ) -> WorkflowAction:
         """
         Update an existing workflow action.
 
         :param workflow_action: The workflow action you want to update.
-        :param kwargs: The updates you wish to perform on the workflow action.
+        :param prepared_values: The updates you wish to perform on the workflow action.
         :return: The updated workflow action.
         """
 
         has_type_changed = (
-            "type" in kwargs and kwargs["type"] != workflow_action.get_type().type
+            "type" in prepared_values
+            and prepared_values["type"] != workflow_action.get_type().type
         )
 
         if has_type_changed:
-            workflow_action_type = self.registry.get(kwargs["type"])
+            workflow_action_type = self.registry.get(prepared_values["type"])
         else:
             workflow_action_type = workflow_action.get_type()
 
-        allowed_updates = extract_allowed(kwargs, workflow_action_type.allowed_fields)
-
-        allowed_updates = workflow_action_type.prepare_value_for_db(
-            allowed_updates, instance=workflow_action
+        allowed_prepared_values = extract_allowed(
+            prepared_values, workflow_action_type.allowed_fields
         )
 
         if has_type_changed:
             self.delete_workflow_action(workflow_action)
             workflow_action = self.create_workflow_action(
-                workflow_action_type, **allowed_updates
+                workflow_action_type, **allowed_prepared_values
             )
         else:
-            for key, value in allowed_updates.items():
+            for key, value in allowed_prepared_values.items():
                 setattr(workflow_action, key, value)
 
             workflow_action.save()
 
         return workflow_action.specific
+
+    def export_workflow_action(
+        self,
+        workflow_action,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Serializes the given workflow action.
+
+        :param workflow_action: The action instance to serialize.
+        :param files_zip: A zip file to store files in necessary.
+        :param storage: Storage to use.
+        :return: The serialized version.
+        """
+
+        return workflow_action.get_type().export_serialized(workflow_action)

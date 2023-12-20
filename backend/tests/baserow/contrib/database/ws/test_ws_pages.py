@@ -37,7 +37,7 @@ def test_table_page_can_add(data_fixture):
 
 
 @pytest.mark.websockets
-def test_table_page_get_group_name(data_fixture):
+def test_table_page_get_group_name():
     table_page = page_registry.get("table")
     table_id = 22
 
@@ -45,7 +45,7 @@ def test_table_page_get_group_name(data_fixture):
 
 
 @pytest.mark.websockets
-def test_table_page_get_permission_channel_group_name(data_fixture):
+def test_table_page_get_permission_channel_group_name():
     table_page = page_registry.get("table")
     table_id = 22
 
@@ -56,7 +56,7 @@ def test_table_page_get_permission_channel_group_name(data_fixture):
 
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 @pytest.mark.websockets
-def test_table_page_broadcast(mock_broadcast_to_channel_group, data_fixture):
+def test_table_page_broadcast(mock_broadcast_to_channel_group):
     table_page = page_registry.get("table")
     ignore_web_socket_id = 999
     payload = {"sample": "payload"}
@@ -133,7 +133,7 @@ def test_public_view_page_can_add(data_fixture):
 
 
 @pytest.mark.websockets
-def test_public_view_page_get_group_name(data_fixture):
+def test_public_view_page_get_group_name():
     view_page = page_registry.get("view")
     slug = "public-view-slug"
 
@@ -142,7 +142,7 @@ def test_public_view_page_get_group_name(data_fixture):
 
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 @pytest.mark.websockets
-def test_public_view_page_broadcast(mock_broadcast_to_channel_group, data_fixture):
+def test_public_view_page_broadcast(mock_broadcast_to_channel_group):
     view_page = page_registry.get("view")
     ignore_web_socket_id = 999
     payload = {"sample": "payload"}
@@ -192,7 +192,7 @@ def test_row_page_can_add(data_fixture):
 
 
 @pytest.mark.websockets
-def test_row_page_get_group_name(data_fixture):
+def test_row_page_get_group_name():
     row_page = page_registry.get("row")
     table_id = 22
     row_id = 2
@@ -200,7 +200,7 @@ def test_row_page_get_group_name(data_fixture):
 
 
 @pytest.mark.websockets
-def test_row_page_get_permission_channel_group_name(data_fixture):
+def test_row_page_get_permission_channel_group_name():
     row_page = page_registry.get("row")
     table_id = 22
     assert (
@@ -210,7 +210,7 @@ def test_row_page_get_permission_channel_group_name(data_fixture):
 
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 @pytest.mark.websockets
-def test_row_page_broadcast(mock_broadcast_to_channel_group, data_fixture):
+def test_row_page_broadcast(mock_broadcast_to_channel_group):
     row_page = page_registry.get("row")
     ignore_web_socket_id = 999
     payload = {"sample": "payload"}

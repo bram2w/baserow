@@ -35,5 +35,9 @@ def resolve_formula(
     :return: the formula result.
     """
 
+    # If we receive a blank formula string, don't attempt to parse it.
+    if not formula:
+        return ""
+
     tree = get_parse_tree_for_formula(formula)
     return BaserowPythonExecutor(functions, formula_context).visit(tree)

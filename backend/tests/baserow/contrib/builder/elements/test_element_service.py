@@ -29,10 +29,10 @@ def test_create_element(element_created_mock, data_fixture, element_type):
     element1 = data_fixture.create_builder_heading_element(page=page, order="1.0000")
     element3 = data_fixture.create_builder_heading_element(page=page, order="2.0000")
 
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
     element = ElementService().create_element(
-        user, element_type, page=page, **sample_params
+        user, element_type, page=page, **pytest_params
     )
 
     last_element = Element.objects.last()
@@ -51,10 +51,10 @@ def test_create_element_before(data_fixture):
     element3 = data_fixture.create_builder_heading_element(page=page, order="2.0000")
 
     element_type = element_type_registry.get("heading")
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
     element2 = ElementService().create_element(
-        user, element_type, page=page, before=element3, **sample_params
+        user, element_type, page=page, before=element3, **pytest_params
     )
 
     elements = Element.objects.all()
@@ -71,11 +71,11 @@ def test_create_element_before_not_same_page(data_fixture):
     element3 = data_fixture.create_builder_heading_element(order="2.0000")
 
     element_type = element_type_registry.get("heading")
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
     with pytest.raises(ElementNotInSamePage):
         ElementService().create_element(
-            user, element_type, page=page, before=element3, **sample_params
+            user, element_type, page=page, before=element3, **pytest_params
         )
 
 
@@ -99,10 +99,10 @@ def test_get_unique_orders_before_element_triggering_full_page_order_reset(
     )
 
     element_type = element_type_registry.get("heading")
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
     element_created = ElementService().create_element(
-        user, element_type, page=page, before=element_3, **sample_params
+        user, element_type, page=page, before=element_3, **pytest_params
     )
 
     element_1.refresh_from_db()
@@ -141,7 +141,10 @@ def test_create_element_permission_denied(data_fixture, stub_check_permissions):
         PermissionException
     ):
         ElementService().create_element(
-            user, element_type, page=page, **element_type.get_sample_params()
+            user,
+            element_type,
+            page=page,
+            **element_type.get_pytest_params(data_fixture)
         )
 
 

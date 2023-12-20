@@ -19,5 +19,10 @@ export default (client) => {
         `builder/domains/published/page/${pageId}/data_sources/`
       )
     },
+    fetchWorkflowActions(pageId) {
+      return client.get(
+        `builder/domains/published/page/${pageId}/workflow_actions/`
+      )
+    },
   }
 }

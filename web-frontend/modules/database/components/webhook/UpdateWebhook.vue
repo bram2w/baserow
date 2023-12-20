@@ -3,7 +3,9 @@
     <Error :error="error" />
     <WebhookForm
       ref="form"
+      :database="database"
       :table="table"
+      :fields="fields"
       :default-values="webhook"
       @submitted="submit"
       @formchange="handleFormChange"
@@ -16,8 +18,10 @@
           {{ $t('action.delete') }}
         </a>
         <div class="align-right">
-          <p v-if="saved" class="color-success">
-            <strong>{{ $t('webhook.successfullyUpdated') }}</strong>
+          <p v-if="saved">
+            <strong class="color-success">{{
+              $t('webhook.successfullyUpdated')
+            }}</strong>
           </p>
           <button
             v-if="!saved"
@@ -53,8 +57,16 @@ export default {
   components: { WebhookForm, DeleteWebhookModal },
   mixins: [error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
     webhook: {

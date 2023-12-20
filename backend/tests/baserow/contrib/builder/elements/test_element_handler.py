@@ -32,13 +32,13 @@ def pytest_generate_tests(metafunc):
 def test_create_element(data_fixture, element_type):
     page = data_fixture.create_builder_page()
 
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
-    element = ElementHandler().create_element(element_type, page=page, **sample_params)
+    element = ElementHandler().create_element(element_type, page=page, **pytest_params)
 
     assert element.page.id == page.id
 
-    for key, value in sample_params.items():
+    for key, value in pytest_params.items():
         assert getattr(element, key) == value
 
     assert element.order == 1
@@ -366,7 +366,7 @@ def test_before_places_in_container_removed_no_change(data_fixture):
 
 @pytest.mark.django_db
 def test_duplicate_element_single_element(data_fixture):
-    element = data_fixture.create_builder_paragraph_element(value="test")
+    element = data_fixture.create_builder_paragraph_element(value="'test'")
 
     [element_duplicated] = ElementHandler().duplicate_element(element)["elements"]
 
@@ -379,10 +379,10 @@ def test_duplicate_element_single_element(data_fixture):
 def test_duplicate_element_multiple_elements(data_fixture):
     container_element = data_fixture.create_builder_column_element(column_amount=12)
     child = data_fixture.create_builder_paragraph_element(
-        value="test", parent_element=container_element, page=container_element.page
+        value="'test'", parent_element=container_element, page=container_element.page
     )
     child_two = data_fixture.create_builder_paragraph_element(
-        value="test2", parent_element=container_element, page=container_element.page
+        value="'test2'", parent_element=container_element, page=container_element.page
     )
 
     [

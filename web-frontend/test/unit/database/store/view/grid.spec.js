@@ -878,40 +878,7 @@ describe('Grid view store', () => {
   })
 
   test('getOrderedFieldOptions', () => {
-    const state = Object.assign(gridStore.state(), {
-      fieldOptions: {
-        1: {
-          order: 0,
-          hidden: false,
-        },
-        2: {
-          order: 1,
-          hidden: true,
-        },
-        3: {
-          order: 3,
-          hidden: false,
-        },
-        4: {
-          order: 2,
-          hidden: false,
-        },
-      },
-    })
-    gridStore.state = () => state
-    store.registerModule('grid', gridStore)
-
-    expect(
-      JSON.parse(JSON.stringify(store.getters['grid/getOrderedFieldOptions']))
-    ).toEqual([
-      [1, { hidden: false, order: 0 }],
-      [2, { hidden: true, order: 1 }],
-      [4, { hidden: false, order: 2 }],
-      [3, { hidden: false, order: 3 }],
-    ])
-  })
-
-  test('getOrderedVisibleFieldOptions', () => {
+    const fields = []
     const state = Object.assign(gridStore.state(), {
       fieldOptions: {
         1: {
@@ -937,7 +904,86 @@ describe('Grid view store', () => {
 
     expect(
       JSON.parse(
-        JSON.stringify(store.getters['grid/getOrderedVisibleFieldOptions'])
+        JSON.stringify(store.getters['grid/getOrderedFieldOptions'](fields))
+      )
+    ).toEqual([
+      [1, { hidden: false, order: 0 }],
+      [2, { hidden: true, order: 1 }],
+      [4, { hidden: false, order: 2 }],
+      [3, { hidden: false, order: 3 }],
+    ])
+  })
+
+  test('getOrderedFieldOptions places primary field first', () => {
+    const fields = [
+      { id: 2, primary: false },
+      { id: 3, primary: true },
+    ]
+    const state = Object.assign(gridStore.state(), {
+      fieldOptions: {
+        1: {
+          order: 0,
+          hidden: false,
+        },
+        2: {
+          order: 1,
+          hidden: true,
+        },
+        3: {
+          order: 3,
+          hidden: false,
+        },
+        4: {
+          order: 2,
+          hidden: false,
+        },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(
+      JSON.parse(
+        JSON.stringify(store.getters['grid/getOrderedFieldOptions'](fields))
+      )
+    ).toEqual([
+      [3, { hidden: false, order: 3 }],
+      [1, { hidden: false, order: 0 }],
+      [2, { hidden: true, order: 1 }],
+      [4, { hidden: false, order: 2 }],
+    ])
+  })
+
+  test('getOrderedVisibleFieldOptions', () => {
+    const fields = []
+    const state = Object.assign(gridStore.state(), {
+      fieldOptions: {
+        1: {
+          order: 0,
+          hidden: false,
+        },
+        2: {
+          order: 1,
+          hidden: true,
+        },
+        3: {
+          order: 3,
+          hidden: false,
+        },
+        4: {
+          order: 2,
+          hidden: false,
+        },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(
+      JSON.parse(
+        JSON.stringify(
+          store.getters['grid/getOrderedVisibleFieldOptions'](fields)
+        )
       )
     ).toEqual([
       [1, { hidden: false, order: 0 }],
@@ -979,6 +1025,7 @@ describe('Grid view store', () => {
   })
 
   test('getFieldIdByIndex', () => {
+    const fields = []
     const state = Object.assign(gridStore.state(), {
       fieldOptions: {
         1: {
@@ -1002,6 +1049,697 @@ describe('Grid view store', () => {
     gridStore.state = () => state
     store.registerModule('grid', gridStore)
 
-    expect(store.getters['grid/getFieldIdByIndex'](2)).toBe(3)
+    expect(store.getters['grid/getFieldIdByIndex'](2, fields)).toBe(3)
+  })
+
+  test('UPDATE_GROUP_BY_METADATA mutation', () => {
+    const state = Object.assign(gridStore.state(), {})
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    store.commit('grid/SET_GROUP_BY_METADATA', {
+      field_1: [
+        {
+          field_1: 1,
+          count: 2,
+        },
+        {
+          field_1: 2,
+          count: 2,
+        },
+      ],
+      field_2: [
+        {
+          field_1: 1,
+          field_2: 'a',
+          count: 1,
+        },
+        {
+          field_1: 1,
+          field_2: 'b',
+          count: 1,
+        },
+        {
+          field_1: 2,
+          field_2: 'a',
+          count: 1,
+        },
+        {
+          field_1: 2,
+          field_2: 'b',
+          count: 1,
+        },
+      ],
+    })
+
+    store.commit('grid/UPDATE_GROUP_BY_METADATA', {
+      field_1: [
+        {
+          count: 4,
+          field_1: 1,
+        },
+        {
+          count: 1,
+          field_1: 3,
+        },
+      ],
+      field_2: [
+        {
+          count: 2,
+          field_1: 1,
+          field_2: 'a',
+        },
+        {
+          count: 1,
+          field_1: 1,
+          field_2: 'c',
+        },
+        {
+          count: 1,
+          field_1: 3,
+          field_2: 'a',
+        },
+      ],
+    })
+
+    expect(store.state.grid.groupByMetadata).toEqual({
+      field_1: [
+        {
+          count: 4,
+          field_1: 1,
+        },
+        {
+          count: 2,
+          field_1: 2,
+        },
+        {
+          count: 1,
+          field_1: 3,
+        },
+      ],
+      field_2: [
+        {
+          count: 2,
+          field_1: 1,
+          field_2: 'a',
+        },
+        {
+          count: 1,
+          field_1: 1,
+          field_2: 'b',
+        },
+        {
+          count: 1,
+          field_1: 2,
+          field_2: 'a',
+        },
+        {
+          count: 1,
+          field_1: 2,
+          field_2: 'b',
+        },
+        {
+          count: 1,
+          field_1: 1,
+          field_2: 'c',
+        },
+        {
+          count: 1,
+          field_1: 3,
+          field_2: 'a',
+        },
+      ],
+    })
+  })
+
+  test('group by metadata count increase on row create', async () => {
+    const state = Object.assign(gridStore.state(), {
+      bufferStartIndex: 0,
+      bufferLimit: 0,
+      rows: [],
+      count: 100,
+      activeGroupBys: [
+        {
+          id: 1,
+          field: 1,
+          order: 'ASC',
+        },
+        {
+          id: 2,
+          field: 2,
+          order: 'ASC',
+        },
+      ],
+      groupByMetadata: {
+        field_1: [
+          {
+            field_1: 'a',
+            count: 1,
+          },
+          {
+            field_1: 'b',
+            count: 1,
+          },
+        ],
+        field_2: [
+          {
+            field_1: 'a',
+            field_2: 1,
+            count: 1,
+          },
+          {
+            field_1: 'b',
+            field_2: 1,
+            count: 1,
+          },
+        ],
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const view = {
+      id: 1,
+      filters_disabled: false,
+      filter_type: 'AND',
+      filters: [],
+      sortings: [],
+    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+      {
+        id: 2,
+        name: 'Test 1',
+        type: 'number',
+        primary: false,
+      },
+    ]
+    const getScrollTop = () => 0
+
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      values: {
+        id: 1,
+        order: '1.00000000000000000000',
+        field_1: 'a',
+        field_2: 1,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      values: {
+        id: 2,
+        order: '2.00000000000000000000',
+        field_1: 'b',
+        field_2: 2,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      values: {
+        id: 3,
+        order: '3.00000000000000000000',
+        field_1: 'c',
+        field_2: 1,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      values: {
+        id: 4,
+        order: '4.00000000000000000000',
+        field_1: 'c',
+        field_2: 2,
+      },
+      getScrollTop,
+    })
+
+    expect(store.state.grid.groupByMetadata).toEqual({
+      field_1: [
+        {
+          field_1: 'a',
+          count: 2,
+        },
+        {
+          field_1: 'b',
+          count: 2,
+        },
+        {
+          count: 2,
+          field_1: 'c',
+        },
+      ],
+      field_2: [
+        {
+          field_1: 'a',
+          field_2: 1,
+          count: 2,
+        },
+        {
+          field_1: 'b',
+          field_2: 1,
+          count: 1,
+        },
+        {
+          count: 1,
+          field_1: 'b',
+          field_2: 2,
+        },
+        {
+          count: 1,
+          field_1: 'c',
+          field_2: 1,
+        },
+        {
+          count: 1,
+          field_1: 'c',
+          field_2: 2,
+        },
+      ],
+    })
+  })
+
+  test('group by metadata count decrease on row delete', async () => {
+    const state = Object.assign(gridStore.state(), {
+      bufferStartIndex: 0,
+      bufferLimit: 0,
+      rows: [],
+      count: 100,
+      activeGroupBys: [
+        {
+          id: 1,
+          field: 1,
+          order: 'ASC',
+        },
+        {
+          id: 2,
+          field: 2,
+          order: 'ASC',
+        },
+      ],
+      groupByMetadata: {
+        field_1: [
+          {
+            field_1: 'a',
+            count: 2,
+          },
+          {
+            field_1: 'b',
+            count: 2,
+          },
+        ],
+        field_2: [
+          {
+            field_1: 'a',
+            field_2: 1,
+            count: 1,
+          },
+          {
+            field_1: 'a',
+            field_2: 2,
+            count: 1,
+          },
+          {
+            field_1: 'b',
+            field_2: 1,
+            count: 2,
+          },
+        ],
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const view = {
+      id: 1,
+      filters_disabled: false,
+      filter_type: 'AND',
+      filters: [],
+      sortings: [],
+    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+      {
+        id: 2,
+        name: 'Test 1',
+        type: 'number',
+        primary: false,
+      },
+    ]
+    const getScrollTop = () => 0
+
+    await store.dispatch('grid/deletedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 1,
+        order: '1.00000000000000000000',
+        field_1: 'a',
+        field_2: 1,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/deletedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 1,
+        order: '1.00000000000000000000',
+        field_1: 'b',
+        field_2: 1,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/deletedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 1,
+        order: '1.00000000000000000000',
+        field_1: 'c',
+        field_2: 1,
+      },
+      getScrollTop,
+    })
+
+    expect(store.state.grid.groupByMetadata).toEqual({
+      field_1: [
+        {
+          field_1: 'a',
+          count: 1,
+        },
+        {
+          field_1: 'b',
+          count: 1,
+        },
+      ],
+      field_2: [
+        {
+          field_1: 'a',
+          field_2: 1,
+          count: 0,
+        },
+        {
+          field_1: 'a',
+          field_2: 2,
+          count: 1,
+        },
+        {
+          field_1: 'b',
+          field_2: 1,
+          count: 1,
+        },
+      ],
+    })
+  })
+
+  test('group by metadata count change on row update', async () => {
+    const state = Object.assign(gridStore.state(), {
+      bufferStartIndex: 0,
+      bufferLimit: 0,
+      rows: [],
+      count: 100,
+      activeGroupBys: [
+        {
+          id: 1,
+          field: 1,
+          order: 'ASC',
+        },
+        {
+          id: 2,
+          field: 2,
+          order: 'ASC',
+        },
+      ],
+      groupByMetadata: {
+        field_1: [
+          {
+            field_1: 'a',
+            count: 1,
+          },
+          {
+            field_1: 'b',
+            count: 1,
+          },
+        ],
+        field_2: [
+          {
+            field_1: 'a',
+            field_2: 1,
+            count: 1,
+          },
+          {
+            field_1: 'b',
+            field_2: 1,
+            count: 1,
+          },
+        ],
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const view = {
+      id: 1,
+      filters_disabled: false,
+      filter_type: 'AND',
+      filters: [],
+      sortings: [],
+    }
+    const fields = [
+      {
+        id: 1,
+        name: 'Test 1',
+        type: 'text',
+        primary: true,
+      },
+      {
+        id: 2,
+        name: 'Test 1',
+        type: 'number',
+        primary: false,
+      },
+    ]
+    const getScrollTop = () => 0
+
+    await store.dispatch('grid/updatedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 1,
+        order: '1.00000000000000000000',
+        field_1: 'a',
+        field_2: 1,
+      },
+      values: {
+        field_1: 'b',
+        field_2: 1,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/updatedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 2,
+        order: '2.00000000000000000000',
+        field_1: 'c',
+        field_2: 1,
+      },
+      values: {
+        field_1: 'd',
+        field_2: 2,
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/updatedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 3,
+        order: '3.00000000000000000000',
+        field_1: 'b',
+        field_2: 1,
+      },
+      values: {
+        field_1: 'b',
+        field_2: 2,
+      },
+      getScrollTop,
+    })
+
+    expect(store.state.grid.groupByMetadata).toEqual({
+      field_1: [
+        {
+          field_1: 'a',
+          count: 0,
+        },
+        {
+          field_1: 'b',
+          count: 2,
+        },
+        {
+          count: 1,
+          field_1: 'd',
+        },
+      ],
+      field_2: [
+        {
+          field_1: 'a',
+          field_2: 1,
+          count: 0,
+        },
+        {
+          field_1: 'b',
+          field_2: 1,
+          count: 1,
+        },
+        {
+          count: 1,
+          field_1: 'd',
+          field_2: 2,
+        },
+        {
+          count: 1,
+          field_1: 'b',
+          field_2: 2,
+        },
+      ],
+    })
+  })
+
+  test('group by metadata count increase decrease using correct field type methods', async () => {
+    const state = Object.assign(gridStore.state(), {
+      bufferStartIndex: 0,
+      bufferLimit: 0,
+      rows: [],
+      count: 100,
+      activeGroupBys: [
+        {
+          id: 1,
+          field: 1,
+          order: 'ASC',
+        },
+      ],
+      groupByMetadata: {
+        field_1: [
+          {
+            field_1: null,
+            count: 0,
+          },
+          {
+            field_1: 1,
+            count: 0,
+          },
+        ],
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const view = {
+      id: 1,
+      filters_disabled: false,
+      filter_type: 'AND',
+      filters: [],
+      sortings: [],
+    }
+    const fields = [
+      {
+        id: 1,
+        name: 'single_select',
+        order: 1,
+        primary: false,
+        table_id: 0,
+        type: 'single_select',
+        select_options: [
+          {
+            id: 1,
+            value: 'Test 1',
+            color: 'orange',
+          },
+        ],
+      },
+    ]
+    const getScrollTop = () => 0
+
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      values: {
+        id: 1,
+        order: '1.00000000000000000000',
+        field_1: {
+          id: 1,
+          value: 'Test 1',
+          color: 'orange',
+        },
+      },
+      getScrollTop,
+    })
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      values: {
+        id: 2,
+        order: '2.00000000000000000000',
+        field_1: null,
+      },
+      getScrollTop,
+    })
+
+    expect(store.state.grid.groupByMetadata).toEqual({
+      field_1: [
+        {
+          field_1: null,
+          count: 1,
+        },
+        {
+          field_1: 1,
+          count: 1,
+        },
+      ],
+    })
+
+    await store.dispatch('grid/deletedExistingRow', {
+      view,
+      fields,
+      row: {
+        id: 2,
+        order: '2.00000000000000000000',
+        field_1: null,
+      },
+      getScrollTop,
+    })
+
+    expect(store.state.grid.groupByMetadata).toEqual({
+      field_1: [
+        {
+          field_1: null,
+          count: 0,
+        },
+        {
+          field_1: 1,
+          count: 1,
+        },
+      ],
+    })
   })
 })

@@ -16,7 +16,7 @@
               v-model="values.password"
               :class="{ 'input--error': fieldHasErrors('password') }"
               type="password"
-              class="input input--large"
+              class="input"
             />
             <div v-if="fieldHasErrors('password')" class="error">
               {{ $t('error.passwordRequired') }}

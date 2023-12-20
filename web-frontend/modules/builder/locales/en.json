@@ -2,7 +2,11 @@
     "dataProviderType": {
         "dataSource": "Data",
         "pageParameter": "Parameter",
-        "currentRecord": "Data source"
+        "currentRecord": "Data source",
+        "formData": "Form data"
+    },
+    "formDataProviderType": {
+        "nodeMissing": "Missing"
     },
     "builderForm": {
         "submit": "Add application"
@@ -17,7 +21,8 @@
     "builderSettingTypes": {
         "integrationsName": "Integrations",
         "themeName": "Theme",
-        "domainsName": "Domains"
+        "domainsName": "Domains",
+        "userSourcesName": "Users"
     },
     "createPageModal": {
         "header": "Create page",
@@ -76,7 +81,11 @@
         "button": "Button",
         "buttonDescription": "A button element",
         "table": "Table",
-        "tableDescription": "A table element"
+        "tableDescription": "A table element",
+        "formContainer": "Form",
+        "formContainerDescription": "A form element",
+        "dropdown": "Dropdown",
+        "dropdownDescription": "Dropdown element"
     },
     "addElementButton": {
         "label": "Element"
@@ -99,10 +108,14 @@
         "general": "General",
         "style": "Style",
         "visibility": "Visibility",
-        "events": "Events"
+        "events": "Events",
+        "eventsTabDeactivatedNoEvents": "This element doesn't support any events"
     },
     "emptySidePanelState": {
         "message": "Click on one of the elements to see more details"
+    },
+    "pagePreview": {
+        "emptyMessage": "Click to create first element"
     },
     "elementForms": {
         "textInputPlaceholder": "Enter text...",
@@ -130,6 +143,15 @@
     "imageElement": {
         "emptyState": "No alt text defined..."
     },
+    "generalForm": {
+        "labelTitle": "Label",
+        "labelPlaceholder": "Enter a label (optional)",
+        "valueTitle": "Default value",
+        "valuePlaceholder": "Enter a default value (optional)",
+        "placeholderTitle": "Placeholder",
+        "placeholderPlaceholder": "Enter a placeholder (optional)",
+        "requiredTitle": "Required"
+    },
     "imageElementForm": {
         "fileLabel": "Image file",
         "invalidUrlError": "URL is invalid",
@@ -139,13 +161,6 @@
         "fileSourceTypeURL": "URL",
         "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
         "uploadFileButton": "Upload file"
-    },
-    "inputTextElementForm": {
-        "valueTitle": "Default value",
-        "valuePlaceholder": "Enter a default value (optional)",
-        "placeholderTitle": "Placeholder",
-        "placeholderPlaceholder": "Enter a placeholder (optional)",
-        "requiredTitle": "Required"
     },
     "columnElementForm": {
         "columnAmountTitle": "Layout",
@@ -158,6 +173,13 @@
         "titleAddDomain": "Add domain",
         "addDomain": "Add domain",
         "noDomainMessage": "You have not yet associated a domain with this application. You must add a domain to be able to publish your application. You can publish different versions of your application for each domain listed here."
+    },
+    "userSourceSettings": {
+      "titleAddUserSource": "New user source",
+      "titleUpdateUserSource": "Edit user source",
+      "noUserSourceMessage": "You have not yet add a user source to this application. You must add a user source if you want users being able to authenticate your application.",
+      "titleOverview": "User sources",
+      "addUserSource": "Add user source"
     },
     "dnsStatus": {
         "description": "Visit your domains' DNS settings and make the following changes",
@@ -214,6 +236,16 @@
         "widthAuto": "Auto",
         "widthFull": "Full width"
     },
+    "backgroundTypes": {
+      "none": "None",
+      "color": "Color"
+    },
+    "widthTypes": {
+      "full": "Full width",
+      "normal": "Normal",
+      "medium": "Medium",
+      "small": "Small"
+    },
     "horizontalAlignmentSelector": {
         "alignment": "Horizontal alignment",
         "alignmentLeft": "Link",
@@ -259,9 +291,6 @@
     },
     "dataSourceForm": {
         "namePlaceholder": "Source name",
-        "addIntegration": "Add new integration",
-        "noIntegrations": "No integrations found.",
-        "selectTypeFirst": "Select the service first",
         "servicePlaceholder": "Select a service",
         "integrationPlaceholder": "Select an integration",
         "errorUniqueName": "Data source name must be unique."
@@ -272,11 +301,16 @@
         "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
     },
     "defaultStyleForm": {
-        "boxTop": "Padding top",
-        "boxBottom": "Padding bottom"
+        "boxTop": "Top",
+        "boxBottom": "Bottom",
+        "backgroundLabel": "Background",
+        "backgroundColor": "Background color",
+        "widthLabel": "Width"
     },
     "styleBoxForm": {
-        "paddingError": "The value must be an integer between 0 and 200."
+        "borderLabel": "Border",
+        "paddingLabel": "Padding",
+        "error": "The value must be an integer between 0 and 200."
     },
     "mainThemeConfigBlock": {
       "colorsLabel": "Colors",
@@ -284,8 +318,7 @@
       "secondaryColor": "Secondary",
       "typography": "Typography",
       "headingLabel": "Heading {i} (h{i})",
-      "headingValue": "Heading <h{i}>",
-      "fontSizeError": "The value must be an integer between 1 and 100."
+      "headingValue": "Heading <h{i}>"
     },
     "buttonElementForm": {
         "valueLabel": "Text",
@@ -295,7 +328,8 @@
         "noValue": "Unnamed..."
     },
     "eventTypes": {
-        "clickLabel": "On click"
+        "clickLabel": "On click",
+        "submitLabel": "On submit"
     },
     "getFormulaComponent": {
         "errorTooltip": "Invalid reference"
@@ -310,19 +344,24 @@
       "addField": "add field",
       "fieldValuePlaceholder": "Enter value...",
       "itemsPerPage": "Items per page",
-      "itemsPerPagePlaceholder": "Enter value..."
+      "fieldDefaultName": "Column",
+      "fieldType": "Type",
+      "itemsPerPagePlaceholder": "Enter value...",
+      "selectSourceFirst": "Choose a list data source to begin configuring your fields."
     },
     "tableElement": {
       "empty": "No items have been found.",
       "showMore": "Show more"
     },
     "currentRecordDataProviderType": {
-      "index": "index",
+      "index": "Index",
       "firstPartName": "Data source: {name}"
     },
     "workflowActionTypes": {
       "notificationLabel": "Show Notification",
-      "openPageLabel": "Open Page"
+      "openPageLabel": "Open Page",
+      "createRowLabel": "Create Row",
+      "updateRowLabel": "Update Row"
     },
     "notificationWorkflowActionForm": {
       "titleLabel": "Title",
@@ -335,6 +374,54 @@
       "urlPlaceholder": "Enter text..."
     },
     "event": {
-      "addAction": "Add action"
+      "addAction": "add action"
+    },
+    "collectionFieldType": {
+      "text": "Text",
+      "link": "Link"
+    },
+    "textFieldForm": {
+      "fieldValueLabel": "Value",
+      "fieldValuePlaceholder": "Enter value..."
+    },
+    "linkFieldForm": {
+      "fieldValueLabel": "Url",
+      "fieldValuePlaceholder": "Enter value...",
+      "fieldLinkNameLabel": "Link text",
+      "fieldLinkNamePlaceholder": "Enter value..."
+    },
+    "linkField": {
+      "details": "Details"
+    },
+    "createUserSourceForm": {
+      "userSourceType":"Type",
+      "userSourceIntegration": "Integration",
+      "userSourceName": "Name"
+    },
+    "updateUserSourceForm": {
+      "nameFieldLabel": "Name",
+      "nameFieldPlaceholder": "Enter a name...",
+      "integrationFieldLabel": "Integration"
+    },
+    "formContainerElementForm": {
+        "submitButtonLabel": "Submit button",
+        "submitButtonPlaceholder": "Enter value..."
+    },
+    "dropdownOptionSelector": {
+        "label": "Options",
+        "value": "Value",
+        "name": "Name",
+        "addOption": "add option"
+    },
+    "dispatchWorkflowActionError": {
+        "defaultTitle": "Event error",
+        "defaultMessage": "An error occurred triggering this event."
+    },
+    "upsertRowWorkflowActionForm": {
+        "integrationDropdownLabel": "Integration",
+        "rowIdLabel": "Row ID",
+        "rowIdPlaceholder": "Select a row ID",
+        "fieldMappingPlaceholder": "Choose a field value",
+        "noTableSelectedMessage": "Choose a table to begin configuring your fields."
     }
 }

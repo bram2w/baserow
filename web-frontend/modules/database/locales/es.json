@@ -66,7 +66,8 @@
         "createTable": "Crear tabla"
     },
     "sidebarItem": {
-        "exportTable": "Exportar tabla"
+        "exportTable": "Exportar tabla",
+        "webhooks": "Webhooks"
     },
     "apiToken": {
         "create": "crear",
@@ -139,12 +140,14 @@
         "userFieldNames": "Cuando se proporciona cualquier valor para el parámetro GET `user_field_names`, los nombres de campo devueltos por este extremo serán los nombres reales de los campos.\n\n Si no se proporciona el parámetro GET `user_field_names`, todos los nombres de campo devueltos serán `field_` seguidos de la identificación del campo. Por ejemplo, `field_1` se refiere al campo con una identificación de `1`.\n\n Además, cuando se establece `user_field_names`, cambia el comportamiento de los otros parámetros GET `order_by`, `include` y `exclude`. En su lugar, esperan listas separadas por comas de los nombres de campo reales.",
         "search": "Si se proporcionan, solo se devolverán las filas con datos que coincidan con la consulta de búsqueda.",
         "orderBy": "Opcionalmente se pueden ordenar las filas por campos separados por coma. De forma predeterminada o si se antepone un '+', un campo se ordena en orden ascendente (A-Z), pero al anteponer el campo con un '-' se puede ordenar de forma descendente (Z-A).\n\n #### Con `user_field_names`:\n\n `order_by` debe ser una lista separada por comas de los nombres de los campos por ordenar. Por ejemplo, si proporciona el siguiente parámetro GET `order_by=My Field,-My Field 2`, las filas se ordenarán por el campo llamado `My Field` en orden ascendente. Si algunos campos tienen el mismo valor, ese subconjunto se ordenará por el campo llamado `Mi campo 2` en orden descendente.\n\n Asegúrese de que los campos con nombres que comienzan con `+` o `-` estén explícitamente precedidos por otro `+` o `-`. Por ejemplo, `+-Nombre`.\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n#### Sin `user_field_names`:\n\n `order_by` debe ser una lista separada por comas de `field_` seguida de la identificación del campo por el que ordenar. Por ejemplo, si proporciona el siguiente parámetro GET `order_by=field_1,-field_2`, las filas se ordenarán por `field_1` en orden ascendente. Si algunos campos tienen el mismo valor, ese subconjunto se ordenará por `field_2` en orden descendente.",
-        "filter": "Las filas se pueden filtrar opcionalmente por los mismos filtros de vista disponibles para las vistas. Se pueden proporcionar múltiples filtros si siguen el mismo formato. Las variables `field` y `filter` indican cómo filtrar y el valor indica dónde filtrar.\n\n Por ejemplo, si proporciona el siguiente parámetro GET `filter__field_1__equal=test`, solo se devolverán las filas donde el valor de field_1 es igual a test.",
+        "filter": "Las filas se pueden filtrar opcionalmente por los mismos filtros de vista disponibles para las vistas. Se pueden proporcionar múltiples filtros si siguen el mismo formato. Las variables `field` y `filter` indican cómo filtrar y el valor indica dónde filtrar.\n\n Por ejemplo, si proporciona el siguiente parámetro GET `filter__field_1__equal=test`, solo se devolverán las filas donde el valor de field_1 es igual a test. ",
         "filterLink": "Puede encontrar una lista de todos los filtros aquí.",
         "filterType": "- `Y`: Indica que las filas deben coincidir con todos los filtros proporcionados.\n- `OR`: Indica que las filas solo tienen que coincidir con uno de los filtros.\n\n Esto funciona solo si se proporcionan dos o más filtros.",
         "include": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para incluir proporcionando el parámetro de consulta de inclusión.\n\n #### Con `user_field_names`:\n\n `include` debe ser una lista separada por comas de nombres de campos que se incluirán en los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `include=My Field,-My Field 2`, solo se incluirán esos campos (a menos que se excluyan explícitamente).\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `include` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para incluir en los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` solo se incluirán esos campos (a menos que se excluyan explícitamente).",
         "exclude": "Todos los campos se incluyen en la respuesta de forma predeterminada. Puede seleccionar un subconjunto de campos para excluir proporcionando el parámetro de consulta de exclusión.\n\n #### Con `user_field_names`:\n\n `excluir` debe ser una lista separada por comas de nombres de campos que se excluirán de los resultados. Por ejemplo, si proporciona el siguiente parámetro GET: `exclude=My Field,-My Field 2`, esos campos se excluirán.\n\n El nombre de los campos que contienen comas debe estar entre comillas: `\"Nombre,\"`. Si los nombres de los campos contienen comillas, deben escaparse con el carácter `\\`. Ej: `Nombre\\\"`.\n\n #### Sin `user_field_names`:\n\n `exclude` debe ser una lista separada por comas de `field_` seguida de la identificación del campo para excluir de los resultados. Por ejemplo: si proporciona el siguiente parámetro GET `exclude=field_1,field_2`, los campos con id `1` e id `2` se excluirán.",
-        "viewId": "Por defecto, no se aplica ningún filtro ni ordenación fuera de los definidos en los parámetros. Puedes añadir los filtros y ordenaciones de una vista proporcionando su `id` en el parámetro GET `view_id`. Por ejemplo, si proporcionas el siguiente parámetro GET `view_id=1`, se aplicarán los filtros y ordenaciones definidos en la vista con id `1`. Puede encontrar el `view_id` en el menú contextual de cualquier vista. Es el número entre paréntesis detrás del nombre de la vista. \n\n#### Con `filtro__{campo}__{filtro}`\n\nSe aplicará tanto el filtro proporcionado en el parámetro de consulta como los filtros definidos en la vista.\n\n#### Con `order_by`\n\nSi se proporciona `order_by` se ignorará la ordenación definida en la vista."
+        "viewId": "Por defecto, no se aplica ningún filtro ni ordenación fuera de los definidos en los parámetros. Puedes añadir los filtros y ordenaciones de una vista proporcionando su `id` en el parámetro GET `view_id`. Por ejemplo, si proporcionas el siguiente parámetro GET `view_id=1`, se aplicarán los filtros y ordenaciones definidos en la vista con id `1`. Puede encontrar el `view_id` en el menú contextual de cualquier vista. Es el número entre paréntesis detrás del nombre de la vista. \n\n#### Con `filtro__{campo}__{filtro}`\n\nSe aplicará tanto el filtro proporcionado en el parámetro de consulta como los filtros definidos en la vista.\n\n#### Con `order_by`\n\nSi se proporciona `order_by` se ignorará la ordenación definida en la vista.",
+        "filtersBuilder": "Abrir el creador de parámetros de filtros",
+        "filters": "Las filas se pueden filtrar opcionalmente utilizando los mismos filtros de vista que están disponibles para las vistas. Este parámetro acepta una cadena serializada JSON que contiene el árbol de filtros a aplicar a esta vista. El árbol de filtros es una estructura anidada que contiene los filtros que deben aplicarse. \n\n#### Con `nombres_campo_usuario`:\n\nUn ejemplo de árbol de filtros válido es el siguiente: `{\"tipo_filtro\": \"Y\", \" filtros\": [{\"campo\": \"Nombre\", \"tipo\": \"igual\", \"valor\": \"prueba\"}]}`.\n\n#### Sin `nombres_campo_usuario`:\n\nPor ejemplo, si proporcionas opcionalmente el siguiente parámetro GET: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`.\n\nTen en cuenta que si proporcionas este parámetro, se ignorarán todos los demás `{filtro__{campo}__{filtro}`, así como el parámetro tipo_filtro."
     },
     "apiDocsIntro": {
         "intro": "La base de datos {name} proporciona una manera fácil de integrar los datos con cualquier sistema externo. La API sigue la semántica REST, utiliza JSON para codificar objetos y se basa en códigos HTTP estándar, errores de lectura humana y mecánica para señalar los resultados de las operaciones.",
@@ -397,7 +400,8 @@
         "relatedFieldNotFound": "El campo relacionado no se encuentra.",
         "filterTypeNotFound": "El tipo de filtro no es compatible.",
         "noCompatibleFilterTypesErrorTitle": "No hay tipos de filtro compatibles",
-        "noCompatibleFilterTypesErrorMessage": "Ninguno de sus campos tiene ningún tipo de filtro compatible"
+        "noCompatibleFilterTypesErrorMessage": "Ninguno de sus campos tiene ningún tipo de filtro compatible",
+        "addFilterGroup": "Añadir grupo de filtros"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "imagen",
@@ -453,7 +457,9 @@
         "webhooks": "Webhooks",
         "deleteView": "Eliminar vista",
         "importFile": "Importar archivo",
-        "duplicateView": "Duplicar vista"
+        "duplicateView": "Duplicar vista",
+        "toPersonal": "A personal",
+        "toCollaborative": "A colaboración"
     },
     "deleteViewModal": {
         "title": "Eliminar {name}",
@@ -494,7 +500,12 @@
         "copyCells": "Copiar células",
         "deleteRows": "Borrar filas",
         "hiddenRowsInsertedTitle": "Filas añadidas",
-        "hiddenRowsInsertedMessage": "{number} se han añadido filas nuevas, pero no son visibles debido a los filtros activos."
+        "hiddenRowsInsertedMessage": "{number} se han añadido filas nuevas, pero no son visibles debido a los filtros activos.",
+        "copiedRowURLMessage": "La URL de la fila {id} se ha copiado en el portapapeles.",
+        "copiedRowURL": "URL de la fila copiada",
+        "copyRowURL": "Copiar URL de fila",
+        "tooManyItemsTitle": "Demasiados artículos",
+        "tooManyItemsDescription": "No es posible actualizar más de {límite} filas a la vez, así que sólo actualizamos la primera."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
@@ -598,11 +609,11 @@
         "decorator": "Color | 1 Color | {recuento} Colores"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "añadir campo de selección individual",
+        "addSelectField": "Añadir campo de selección individual",
         "warningWhenNothingToChooseOrCreate": "No hay campos de selección únicos para elegir y no tienes permisos para hacer uno."
     },
     "viewDecoratorContext": {
-        "addDecorator": "añadir decorador"
+        "addDecorator": "Añadir decorador"
     },
     "shareViewEnablePasswordModal": {
         "newPasswordTitle": "Introduce una contraseña",
@@ -656,7 +667,9 @@
         "required": "requerido",
         "showWhenMatchingConditions": "mostrar cuando se cumplen las condiciones",
         "addCondition": "Añadir condición",
-        "descriptionPlaceholder": "Descripción"
+        "descriptionPlaceholder": "Descripción",
+        "addConditionGroup": "Añadir grupo de condiciones",
+        "showFieldAs": "Mostrar campo como"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicar campo",
@@ -783,5 +796,39 @@
     "fieldRollupSubForm": {
         "label": "Función de enrollado",
         "selectTargetFieldLabel": "Selecciona un campo para enrollar"
+    },
+    "apiDocsFiltersBuilderModal": {
+        "userFieldNames": "Nombres de campos de usuario",
+        "json": "JSON",
+        "title": "Creador de parámetros de filtros",
+        "queryParameter": "Parámetro de consulta"
+    },
+    "viewGroupBy": {
+        "groupBy": "Agrupar | Agrupar por 1 campos | Agrupar por {cuenta} campos"
+    },
+    "rowHistorySidebar": {
+        "you": "Tú",
+        "name": "Historia",
+        "empty": "Aún no hay cambios. Podrás seguir cualquier cambio a esta fila aquí."
+    },
+    "viewGroupByContext": {
+        "groupBy": "Agrupar por",
+        "thenBy": "Y luego por",
+        "addGroupBy": "Elegir un campo por el que agrupar",
+        "noGroupByTitle": "Aún no has creado ninguna agrupación",
+        "noGroupByText": "Agrupar filas por un campo."
+    },
+    "collaboratorAddedToRowNotification": {
+        "title": "{remitente} te asignó a {nombreDeCampo} en la fila {rowId} en {nombreDeTabla}."
+    },
+    "fieldCollaboratorSubForm": {
+        "notifyUserWhenAdded": "Notificar al usuario cuando se añade"
+    },
+    "viewFieldConditionsForm": {
+        "addCondition": "Añadir condición"
+    },
+    "formSubmittedNotification": {
+        "title": "Se ha enviado {nombreDelFormulario} en la tabla {nombreDeLaTabla}:",
+        "moreValues": "0 | y 1 campo más. | y {cuenta} campos más."
     }
 }

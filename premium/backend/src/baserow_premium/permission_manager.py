@@ -7,6 +7,7 @@ from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.operations import (
     CreateAndUsePersonalViewOperationType,
     CreateViewDecorationOperationType,
@@ -178,7 +179,7 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
 
             if premium:
                 if view.ownership_type == OWNERSHIP_TYPE_PERSONAL:
-                    if view.created_by_id != actor.id:
+                    if view.owned_by_id != actor.id:
                         result_by_check[check] = PermissionDenied(
                             "The user doesn't own this personal view"
                         )
@@ -234,7 +235,6 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional["Workspace"] = None,
-        context: Optional[Any] = None,
     ) -> QuerySet:
         """
         filter_queryset() impl for view ownership filtering.
@@ -259,16 +259,21 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
 
         premium = LicenseHandler.user_has_feature(PREMIUM, actor, workspace)
 
-        if premium and CoreHandler().check_permissions(
-            actor,
-            CreateAndUsePersonalViewOperationType.type,
-            workspace,
-            context,
-            raise_permission_exceptions=False,
-        ):
+        if premium:
+            allowed_tables = CoreHandler().filter_queryset(
+                actor,
+                CreateAndUsePersonalViewOperationType.type,
+                Table.objects.filter(database__workspace=workspace),
+                workspace=workspace,
+            )
+
             return queryset.filter(
                 ~Q(ownership_type=OWNERSHIP_TYPE_PERSONAL)
-                | (Q(ownership_type=OWNERSHIP_TYPE_PERSONAL) & Q(created_by=actor))
+                | (
+                    Q(ownership_type=OWNERSHIP_TYPE_PERSONAL)
+                    & Q(owned_by=actor)
+                    & Q(table__in=allowed_tables)
+                )
             )
         else:
             return queryset.exclude(ownership_type=OWNERSHIP_TYPE_PERSONAL)

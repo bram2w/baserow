@@ -471,7 +471,7 @@ def test_delete_snapshot_not_found(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_delete_snapshot(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace_1 = data_fixture.create_workspace(user=user)

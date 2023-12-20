@@ -2,6 +2,7 @@ import moment from '@baserow/modules/core/moment'
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
+import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration'
 import ViewFilterTypeRating from '@baserow/modules/database/components/view/ViewFilterTypeRating'
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
@@ -21,6 +22,7 @@ import {
   FormulaFieldType,
   NumberFieldType,
   RatingFieldType,
+  DurationFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
 export class ViewFilterType extends Registerable {
@@ -105,6 +107,14 @@ export class ViewFilterType extends Registerable {
   }
 
   /**
+   * Determines whether the particular filter type will be available
+   * in public views.
+   */
+  isAllowedInPublicViews() {
+    return true
+  }
+
+  /**
    * Returns if a given field is compatible with this view filter or not. Uses the
    * list provided by getCompatibleFieldTypes to calculate this.
    */
@@ -148,6 +158,7 @@ export class EqualViewFilterType extends ViewFilterType {
     const inputComponent = {
       [RatingFieldType.getType()]: ViewFilterTypeRating,
       [NumberFieldType.getType()]: ViewFilterTypeNumber,
+      [DurationFieldType.getType()]: ViewFilterTypeDuration,
     }
     return inputComponent[field?.type] || ViewFilterTypeText
   }
@@ -161,6 +172,9 @@ export class EqualViewFilterType extends ViewFilterType {
       'number',
       'rating',
       'phone_number',
+      'uuid',
+      'autonumber',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }
@@ -190,6 +204,7 @@ export class NotEqualViewFilterType extends ViewFilterType {
     const inputComponent = {
       [RatingFieldType.getType()]: ViewFilterTypeRating,
       [NumberFieldType.getType()]: ViewFilterTypeNumber,
+      [DurationFieldType.getType()]: ViewFilterTypeDuration,
     }
     return inputComponent[field?.type] || ViewFilterTypeText
   }
@@ -203,6 +218,9 @@ export class NotEqualViewFilterType extends ViewFilterType {
       'number',
       'rating',
       'phone_number',
+      'uuid',
+      'autonumber',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }
@@ -348,6 +366,7 @@ export class ContainsViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'number',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -392,6 +411,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'number',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -1301,6 +1321,7 @@ export class HigherThanViewFilterType extends ViewFilterType {
   getInputComponent(field) {
     const inputComponent = {
       [RatingFieldType.getType()]: ViewFilterTypeRating,
+      [DurationFieldType.getType()]: ViewFilterTypeDuration,
     }
     return inputComponent[field?.type] || ViewFilterTypeNumber
   }
@@ -1309,6 +1330,8 @@ export class HigherThanViewFilterType extends ViewFilterType {
     return [
       'number',
       'rating',
+      'autonumber',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
@@ -1318,9 +1341,13 @@ export class HigherThanViewFilterType extends ViewFilterType {
       return true
     }
 
-    rowValue = parseFloat(rowValue)
-    filterValue = parseFloat(filterValue)
-    return !isNaN(rowValue) && !isNaN(filterValue) && rowValue > filterValue
+    rowValue = fieldType.constructor.parseInputValue(field, rowValue)
+    filterValue = fieldType.constructor.parseInputValue(field, filterValue)
+    return (
+      Number.isFinite(rowValue) &&
+      Number.isFinite(filterValue) &&
+      rowValue > filterValue
+    )
   }
 }
 
@@ -1341,6 +1368,7 @@ export class LowerThanViewFilterType extends ViewFilterType {
   getInputComponent(field) {
     const inputComponent = {
       [RatingFieldType.getType()]: ViewFilterTypeRating,
+      [DurationFieldType.getType()]: ViewFilterTypeDuration,
     }
     return inputComponent[field?.type] || ViewFilterTypeNumber
   }
@@ -1349,6 +1377,8 @@ export class LowerThanViewFilterType extends ViewFilterType {
     return [
       'number',
       'rating',
+      'autonumber',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
@@ -1358,9 +1388,13 @@ export class LowerThanViewFilterType extends ViewFilterType {
       return true
     }
 
-    rowValue = parseFloat(rowValue)
-    filterValue = parseFloat(filterValue)
-    return !isNaN(rowValue) && !isNaN(filterValue) && rowValue < filterValue
+    rowValue = fieldType.constructor.parseInputValue(field, rowValue)
+    filterValue = fieldType.constructor.parseInputValue(field, filterValue)
+    return (
+      Number.isFinite(rowValue) &&
+      Number.isFinite(filterValue) &&
+      rowValue < filterValue
+    )
   }
 }
 
@@ -1379,7 +1413,11 @@ export class IsEvenAndWholeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
+    return [
+      'number',
+      'autonumber',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -1535,6 +1573,10 @@ export class MultipleCollaboratorsHasFilterType extends ViewFilterType {
     return ['multiple_collaborators']
   }
 
+  isAllowedInPublicViews() {
+    return false
+  }
+
   matches(rowValue, filterValue, field, fieldType) {
     if (!isNumeric(filterValue)) {
       return true
@@ -1567,6 +1609,10 @@ export class MultipleCollaboratorsHasNotFilterType extends ViewFilterType {
     return ['multiple_collaborators']
   }
 
+  isAllowedInPublicViews() {
+    return false
+  }
+
   matches(rowValue, filterValue, field, fieldType) {
     if (!isNumeric(filterValue)) {
       return true
@@ -1574,6 +1620,78 @@ export class MultipleCollaboratorsHasNotFilterType extends ViewFilterType {
 
     const filterValueId = parseInt(filterValue)
     return !rowValue.some((user) => user.id === filterValueId)
+  }
+}
+
+export class UserIsFilterType extends ViewFilterType {
+  static getType() {
+    return 'user_is'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.is')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeCollaborators
+  }
+
+  getCompatibleFieldTypes() {
+    return ['created_by', 'last_modified_by']
+  }
+
+  isAllowedInPublicViews() {
+    return false
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue?.id === filterValueId
+  }
+}
+
+export class UserIsNotFilterType extends ViewFilterType {
+  static getType() {
+    return 'user_is_not'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNot')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeCollaborators
+  }
+
+  getCompatibleFieldTypes() {
+    return ['created_by', 'last_modified_by']
+  }
+
+  isAllowedInPublicViews() {
+    return false
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue?.id !== filterValueId
   }
 }
 
@@ -1778,6 +1896,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'multiple_select',
       'multiple_collaborators',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -1834,6 +1953,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'multiple_select',
       'multiple_collaborators',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',

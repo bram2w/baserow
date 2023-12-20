@@ -10,6 +10,7 @@ from typing import (
     Optional,
     Tuple,
     Type,
+    TypedDict,
     TypeVar,
     Union,
     ValuesView,
@@ -147,6 +148,7 @@ class CustomFieldsInstanceMixin:
         request_serializer: bool = False,
         meta_ref_name=None,
         base_class: Serializer = None,
+        extra_params=None,
         **kwargs,
     ) -> serializers.ModelSerializer:
         """
@@ -156,30 +158,24 @@ class CustomFieldsInstanceMixin:
         :return: The generated model serializer class.
         """
 
-        if request_serializer and self.request_serializer_field_overrides is not None:
-            field_overrides = self.request_serializer_field_overrides
-        else:
-            field_overrides = self.serializer_field_overrides
+        if extra_params is None:
+            extra_params = {}
 
-        if request_serializer and self.request_serializer_field_names is not None:
-            field_names = self.request_serializer_field_names
-        else:
-            field_names = self.serializer_field_names
+        field_overrides = self.get_field_overrides(
+            request_serializer, extra_params, **kwargs
+        )
+        field_names = self.get_field_names(request_serializer, extra_params, **kwargs)
 
-        mixins = [] if request_serializer else self.serializer_mixins
-
-        # Prepend the word "Request" to the ref name, so that when this serializer is
-        # generated for the request and response, it doesn't result in a name conflict.
-        if request_serializer and meta_ref_name is None:
-            meta_ref_name = "Request" + generate_meta_ref_name_based_on_model(
-                self.model_class, base_class=kwargs.get("base_class")
+        if meta_ref_name is None:
+            meta_ref_name = self.get_meta_ref_name(
+                request_serializer, extra_params, **kwargs
             )
 
         return get_serializer_class(
             self.model_class,
             field_names,
             field_overrides=field_overrides,
-            base_mixins=mixins,
+            base_mixins=self.serializer_mixins,
             meta_extra_kwargs=self.serializer_extra_kwargs,
             meta_ref_name=meta_ref_name,
             base_class=base_class,
@@ -193,6 +189,7 @@ class CustomFieldsInstanceMixin:
         base_class: Optional[serializers.ModelSerializer] = None,
         context: Optional[Dict[str, Any]] = None,
         request: bool = False,
+        extra_params=None,
         **kwargs: Dict[str, Any],
     ) -> serializers.ModelSerializer:
         """
@@ -205,6 +202,7 @@ class CustomFieldsInstanceMixin:
             common fields could be stored here.
         :param context: Extra context arguments to pass to the serializers context.
         :param request: True if you want the request serializer.
+        :param extra_params: Any additional params that should be passed to the method.
         :param kwargs: The kwargs are used to initialize the serializer class.
         :return: The instantiated generated model serializer.
         """
@@ -220,10 +218,38 @@ class CustomFieldsInstanceMixin:
             model_instance_or_instances = model_instance_or_instances.specific
 
         serializer_class = self.get_serializer_class(
-            base_class=base_class, request_serializer=request
+            base_class=base_class,
+            request_serializer=request,
+            extra_params=extra_params,
         )
 
         return serializer_class(model_instance_or_instances, context=context, **kwargs)
+
+    def get_field_overrides(
+        self, request_serializer: bool, extra_params: Dict, **kwargs
+    ) -> Dict:
+        if request_serializer and self.request_serializer_field_overrides is not None:
+            return self.request_serializer_field_overrides
+        else:
+            return self.serializer_field_overrides
+
+    def get_field_names(
+        self, request_serializer: bool, extra_params: Dict, **kwargs
+    ) -> List[str]:
+        if request_serializer and self.request_serializer_field_names is not None:
+            return self.request_serializer_field_names
+        else:
+            return self.serializer_field_names
+
+    def get_meta_ref_name(
+        self, request_serializer: bool, extra_params: Dict, **kwargs
+    ) -> Optional[str]:
+        if request_serializer is None:
+            return "Request" + generate_meta_ref_name_based_on_model(
+                self.model_class, base_class=kwargs.get("base_class")
+            )
+
+        return None
 
 
 class APIUrlsInstanceMixin:
@@ -328,6 +354,139 @@ class ImportExportMixin(Generic[T], ABC):
 InstanceSubClass = TypeVar("InstanceSubClass", bound=Instance)
 
 
+class EasyImportExportMixin(Generic[T], ABC):
+    """
+    Mixin to automate the export/import process for django models.
+    """
+
+    # Describe the properties to serialize
+    SerializedDict: TypedDict
+
+    # The parent property name for the model
+    parent_property_name: str
+
+    # The name of the id mapping used for import process
+    id_mapping_name: str
+
+    # The model class to create
+    model_class: Type[T]
+
+    def serialize_property(self, instance: T, prop_name: str) -> Any:
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+
+        :param instance: the instance to serialize.
+        :param prop_name: the prop name to serialize.
+        :return: the serialized version of for the given prop_name
+        """
+
+        if prop_name == "type":
+            return self.type
+
+        return getattr(instance, prop_name)
+
+    def export_serialized(
+        self,
+        instance: T,
+    ) -> Dict[str, Any]:
+        """
+        Exports the instance to a serialized dict that can be imported by the
+        `import_serialized` method. This dict is also JSON serializable.
+
+        :param element: The instance that must be serialized.
+        :return: The exported instance as serialized dict.
+        """
+
+        property_names = self.SerializedDict.__annotations__.keys()
+
+        serialized = self.SerializedDict(
+            **{key: self.serialize_property(instance, key) for key in property_names}
+        )
+
+        return serialized
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Dict[int, int]],
+        **kwargs,
+    ) -> Any:
+        """
+        This hooks allow to customize the deserialization of a property.
+
+        :param prop_name: the name of the property being transformed.
+        :param value: the value of this property.
+        :param id_mapping: the id mapping dict.
+        :param kwargs: extra parameters used to deserialize a property.
+        :return: the deserialized version for this property.
+        """
+
+        return value
+
+    def create_instance_from_serialized(self, serialized_values: Dict[str, Any]) -> T:
+        """
+        Create the instance related to the given serialized values.
+        Allow to hook into instance creation while still having the serialized values.
+
+        :param serialized_values: the deserialized values.
+        :return: the created instance.
+        """
+
+        instance = self.model_class(**serialized_values)
+        instance.save()
+
+        return instance
+
+    def import_serialized(
+        self,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        **kwargs,
+    ) -> T:
+        """
+        Imports the previously exported dict generated by the `export_serialized`
+        method.
+
+        An id_mapping for this class is populated during the process.
+
+        :param parent: The parent object of the to be imported values.
+        :param serialized_values: The dict containing the serialized values.
+        :param id_mapping: Used to mapped object ids from export to newly created
+          instances.
+        :param kwargs: extra parameters used to deserialize a property.
+        :return: The created instance.
+        """
+
+        if self.id_mapping_name not in id_mapping:
+            id_mapping[self.id_mapping_name] = {}
+
+        deserialized_properties = {}
+        for name in self.SerializedDict.__annotations__.keys():
+            if name in serialized_values and name != f"{self.parent_property_name}_id":
+                deserialized_properties[name] = self.deserialize_property(
+                    name, serialized_values[name], id_mapping, **kwargs
+                )
+
+        # Remove id key
+        originale_instance_id = deserialized_properties.pop("id")
+
+        # Remove type
+        deserialized_properties.pop("type")
+
+        # Add the parent
+        deserialized_properties[self.parent_property_name] = parent
+
+        created_instance = self.create_instance_from_serialized(deserialized_properties)
+
+        # Add the created instance to the mapping
+        id_mapping[self.id_mapping_name][originale_instance_id] = created_instance.id
+
+        return created_instance
+
+
 class Registry(Generic[InstanceSubClass]):
     name: str
     """The unique name that is used when raising exceptions."""
@@ -359,7 +518,8 @@ class Registry(Generic[InstanceSubClass]):
         :rtype: InstanceModelInstance
         """
 
-        # If the `type_name` isn't in the registry, we may raise DoesNotExist.
+        # If the `type_name` isn't in the registry,
+        # we may raise `InstanceTypeDoesNotExist`.
         if type_name not in self.registry:
             # But first, we'll test to see if it matches an Instance's
             # `compat_name`. If it does, we'll use that Instance's `type`.
@@ -427,7 +587,7 @@ class Registry(Generic[InstanceSubClass]):
         """
 
         if not isinstance(instance, Instance):
-            raise ValueError(f"The {self.name} must be an instance of " f"Instance.")
+            raise ValueError(f"The {self.name} must be an instance of Instance.")
 
         if instance.type in self.registry:
             raise self.already_registered_exception_class(
@@ -541,6 +701,7 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
         model_instance_or_instances: Union[DjangoModel, List[DjangoModel]],
         base_class: Optional[Type[serializers.ModelSerializer]] = None,
         context: Optional[Dict[str, any]] = None,
+        extra_params=None,
         **kwargs,
     ):
         """
@@ -555,6 +716,7 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
         :type base_class: ModelSerializer
         :param context: Extra context arguments to pass to the serializers context.
         :type kwargs: dict
+        :param extra_params: Any additional params that should be passed to the method.
         :param kwargs: The kwargs are used to initialize the serializer class.
         :type kwargs: dict
         :raises ValueError: When the `get_by_model` method was not found, which could
@@ -582,6 +744,7 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
             model_instance_or_instances,
             base_class=base_class,
             context=context,
+            extra_params=extra_params,
             **kwargs,
         )
 

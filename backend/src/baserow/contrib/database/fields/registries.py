@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Tuple, Union
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.fields import JSONField as PostgresJSONField
 from django.core.exceptions import ValidationError
@@ -12,12 +13,19 @@ from django.db.models import (
     CharField,
     DurationField,
     Expression,
+    IntegerField,
     JSONField,
+    Model,
+    OuterRef,
     Q,
     QuerySet,
+    Subquery,
+    Value,
 )
 from django.db.models.fields.related import ForeignKey, ManyToManyField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Coalesce
+
+from rest_framework import serializers
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
@@ -36,7 +44,11 @@ from baserow.core.registry import (
 )
 
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
-from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
+from .exceptions import (
+    FieldTypeAlreadyRegistered,
+    FieldTypeDoesNotExist,
+    ReadOnlyFieldHasNoInternalDbValueError,
+)
 from .fields import DurationFieldUsingPostgresFormatting
 from .models import Field, LinkRowField, SelectOption
 
@@ -116,6 +128,13 @@ class FieldType(
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
 
+    keep_data_on_duplication = True
+    """
+    Indicates whether the data must be kept when duplicating the field. We typically
+    don't want to do this when the field is read_only, but there are exceptions with
+    the read-only UUID field type for example
+    """
+
     field_data_is_derived_from_attrs = False
     """Set this to True if your field can completely reconstruct it's data just from
     it's field attributes. When set to False the fields data will be backed up when
@@ -134,6 +153,12 @@ class FieldType(
     Set this to True if the underlying database field is a ManyToManyField. This
     let the RowM2MChangeTracker to track changes to the field when creating/updating
     values without having to query the database.
+    """
+
+    update_always = False
+    """
+    Set to True if the field value should be updated in update operations at
+    all times.
     """
 
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
@@ -358,7 +383,7 @@ class FieldType(
         doesn't have to update the field each time another field in the same row
         changes.
 
-        :param instance: The field instance for which to get the model field for.
+        :param instance: The field instance for which to get the serializer field for.
         :type instance: Field
         :param kwargs: The kwargs that will be passed to the field.
         :type kwargs: dict
@@ -786,7 +811,7 @@ class FieldType(
     def serialize_to_input_value(self, field: Field, value: any) -> any:
         """
         Converts the field's value to input value. For example, we can use this method
-        to convert the result of random_value() to provide values to row actions
+        to convert the result of getattr(row, field) to provide values to row actions
         such as UpdateRowsActionType.
 
         :param field: The field instance for which the provided value is intended.
@@ -795,6 +820,20 @@ class FieldType(
         """
 
         return value
+
+    def random_to_input_value(self, field: Field, value: any) -> any:
+        """
+        Converts the result of the random_value function to be a valid input
+        value for row actions such as UpdateRowsActionType.
+
+        :param field: The field instance for which the provided value is
+            intended.
+        :param value: The field's value that we want to represent as input
+            value.
+        :return: Value represented as input value.
+        """
+
+        return self.serialize_to_input_value(field, value)
 
     def export_serialized(
         self, field: Field, include_allowed_fields: bool = True
@@ -916,14 +955,6 @@ class FieldType(
         )
 
         FieldDependencyHandler.rebuild_dependencies(field, field_cache)
-        for (
-            dependant_field,
-            dependant_field_type,
-            _,
-        ) in field.dependant_fields_with_types(field_cache):
-            dependant_field_type.after_import_serialized(
-                dependant_field, field_cache, id_mapping
-            )
 
     def after_rows_imported(
         self,
@@ -1004,7 +1035,7 @@ class FieldType(
         cache: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-    ):
+    ) -> Optional[List[Model]]:
         """
         Sets an imported and serialized value on a row instance.
 
@@ -1021,6 +1052,9 @@ class FieldType(
         :param files_zip: A zip file buffer where the files related to the template
             must be copied into.
         :param storage: The storage where the files can be copied to.
+        :return: Optionally return with additional model objects that must be
+            inserted in bulk. This can be used to efficiently add m2m relationships,
+            for example.
         """
 
         setattr(row, field_name, value)
@@ -1257,23 +1291,6 @@ class FieldType(
             back to the starting table where the first row was changed.
         """
 
-        for (
-            dependant_field,
-            dependant_field_type,
-            dependant_path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.row_of_dependency_updated(
-                dependant_field,
-                starting_row,
-                update_collector,
-                field_cache,
-                dependant_path_to_starting_table,
-            )
-
-        from baserow.contrib.database.views.handler import ViewHandler
-
-        ViewHandler().field_value_updated(field)
-
     def row_of_dependency_deleted(
         self,
         field: Field,
@@ -1412,19 +1429,6 @@ class FieldType(
         )
 
         FieldDependencyHandler.rebuild_dependencies(field, field_cache)
-        for (
-            dependant_field,
-            dependant_field_type,
-            dependant_path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.field_dependency_updated(
-                dependant_field,
-                field,
-                field,
-                update_collector,
-                field_cache,
-                dependant_path_to_starting_table,
-            )
 
         from baserow.contrib.database.views.handler import ViewHandler
 
@@ -1493,6 +1497,56 @@ class FieldType(
         """
 
         return self._can_group_by
+
+    def get_group_by_field_unique_value(
+        self, field: Field, field_name: str, value: Any
+    ) -> Any:
+        """
+        Should return a unique hashable value that can be set as key of a dict. In
+        almost all cases, it's fine to just return the actual value, but for example
+        with a more complex structure like a ManyToOneDescription, something
+        compatible can be returned.
+
+        :param field: The field for which to generate the unique value.
+        :param field_name: The name of that field in the table.
+        :param value: The unique value that must be converted.
+        :return: The converted unique value.
+        """
+
+        return value
+
+    def get_group_by_field_filters_and_annotations(
+        self, field: Field, field_name: str, base_queryset: QuerySet, value: Any
+    ) -> Tuple[Dict, Dict]:
+        """
+        The filters that must be applied to match the provided value to the queryset
+        when grouping. By default, a `field_name=value` lookup will suffice for most
+        use cases, but for some other a more complicated lookup must be done.
+
+        :param field: The field that must be looked up.
+        :param field_name: The name of the field in the table that must be looked up.
+        :param base_queryset: The base queryset of the items the grouped rows.
+        :param value: The unique value that must be looked up.
+        :return: A tuple containing the filters and annotations as dict.
+        """
+
+        return {field_name: value}, {}
+
+    def get_group_by_serializer_field(self, instance: Field, **kwargs: dict):
+        """
+        Returns the serializer that is used in the `serialize_group_by_metadata`. By
+        default, we're returning the normal serializer, because that will be fine in
+        most casus, but if a different value is returned in the
+        `get_group_by_field_unique_value` method, then we might need a
+        different serializer field.
+
+        :param instance: The field instance for which to get the serializer field for.
+        :param kwargs: The kwargs that will be passed to the field.
+        :return: The serializer field that represents the field instance attributes.
+        :rtype: serializer.Field
+        """
+
+        return self.get_response_serializer_field(instance, **kwargs)
 
     def before_field_options_update(
         self,
@@ -1630,16 +1684,9 @@ class FieldType(
         return value1 == value2
 
 
-class ReadOnlyFieldHasNoInternalDbValueError(Exception):
-    """
-    Raised when a read only field is trying to get its internal db value.
-    This is because there is no valid value that can be returned which can then pass
-    through "prepare_value_for_db" for a read_only field."
-    """
-
-
 class ReadOnlyFieldType(FieldType):
     read_only = True
+    keep_data_on_duplication = False
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -1648,7 +1695,10 @@ class ReadOnlyFieldType(FieldType):
         Called when a read only field is trying to get its internal db value.
         """
 
-        raise ReadOnlyFieldHasNoInternalDbValueError
+        if not self.keep_data_on_duplication:
+            raise ReadOnlyFieldHasNoInternalDbValueError
+
+        return super().get_internal_value_from_db(row, field_name)
 
     def prepare_value_for_db(self, instance: Field, value: Any) -> NoReturn:
         """
@@ -1668,9 +1718,13 @@ class ReadOnlyFieldType(FieldType):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ) -> None:
-        """
-        Since this is a read only field, no value should be prepared for export.
-        """
+        # Since this is a read only field, no value should be prepared for export,
+        # except when we explicitly want to keep the data on duplication like for
+        # example with the UUID field type.
+        if self.keep_data_on_duplication:
+            return super().get_export_serialized_value(
+                row, field_name, cache, files_zip, storage
+            )
 
     def set_import_serialized_value(
         self,
@@ -1682,9 +1736,57 @@ class ReadOnlyFieldType(FieldType):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
-        """
-        Since this is a read only field, no value should be set with import.
-        """
+        # Since this is a read only field, no value be set with export, except when we
+        # explicitly want to keep the data on duplication like for example with the
+        # UUID field type.
+        if self.keep_data_on_duplication:
+            return super().set_import_serialized_value(
+                row, field_name, value, id_mapping, cache, files_zip, storage
+            )
+
+
+class ManyToManyGroupByMixin:
+    """
+    Mixin that can be added to a field type that uses a ManyToMany relationship. It
+    introduces methods that make it compatible with the group by functionality. Note
+    that the field type must set the `_can_group_by` property to `True`.
+    """
+
+    def get_group_by_field_unique_value(
+        self, field: Field, field_name: str, value: Any
+    ) -> Any:
+        return tuple([v.id for v in value.all()])
+
+    def get_group_by_field_filters_and_annotations(
+        self, field, field_name, base_queryset, value
+    ):
+        filters = {
+            field_name: value,
+        }
+        annotations = {
+            field_name: Subquery(
+                base_queryset.filter(id=OuterRef("id"))
+                .annotate(
+                    res=Coalesce(
+                        ArrayAgg(
+                            f"{field_name}__id",
+                            filter=Q(**{f"{field_name}__id__isnull": False}),
+                        ),
+                        Value([], output_field=ArrayField(IntegerField())),
+                    ),
+                )
+                .values("res")
+            )
+        }
+        return filters, annotations
+
+    def get_group_by_serializer_field(self, field, **kwargs):
+        return serializers.ListSerializer(
+            child=serializers.IntegerField(),
+            required=False,
+            allow_null=True,
+            **kwargs,
+        )
 
 
 class FieldTypeRegistry(

@@ -135,7 +135,9 @@ class BuilderConfig(AppConfig):
         from baserow.contrib.builder.workflow_actions.operations import (
             CreateBuilderWorkflowActionOperationType,
             DeleteBuilderWorkflowActionOperationType,
+            DispatchBuilderWorkflowActionOperationType,
             ListBuilderWorkflowActionsPageOperationType,
+            OrderBuilderWorkflowActionOperationType,
             ReadBuilderWorkflowActionOperationType,
             UpdateBuilderWorkflowActionOperationType,
         )
@@ -145,6 +147,8 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(DeleteBuilderWorkflowActionOperationType())
         operation_type_registry.register(UpdateBuilderWorkflowActionOperationType())
         operation_type_registry.register(ReadBuilderWorkflowActionOperationType())
+        operation_type_registry.register(OrderBuilderWorkflowActionOperationType())
+        operation_type_registry.register(DispatchBuilderWorkflowActionOperationType())
 
         from baserow.core.registries import permission_manager_type_registry
 
@@ -155,6 +159,8 @@ class BuilderConfig(AppConfig):
         from .elements.element_types import (
             ButtonElementType,
             ColumnElementType,
+            DropdownElementType,
+            FormContainerElementType,
             HeadingElementType,
             ImageElementType,
             InputTextElementType,
@@ -172,6 +178,8 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(ColumnElementType())
         element_type_registry.register(ButtonElementType())
         element_type_registry.register(TableElementType())
+        element_type_registry.register(FormContainerElementType())
+        element_type_registry.register(DropdownElementType())
 
         from .domains.domain_types import CustomDomainType, SubDomainType
         from .domains.registries import domain_type_registry
@@ -188,12 +196,16 @@ class BuilderConfig(AppConfig):
         )
 
         from .data_providers.data_provider_types import (
+            CurrentRecordDataProviderType,
             DataSourceDataProviderType,
+            FormDataProviderType,
             PageParameterDataProviderType,
         )
 
         builder_data_provider_type_registry.register(DataSourceDataProviderType())
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
+        builder_data_provider_type_registry.register(CurrentRecordDataProviderType())
+        builder_data_provider_type_registry.register(FormDataProviderType())
 
         from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
 
@@ -206,12 +218,25 @@ class BuilderConfig(AppConfig):
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
+            CreateRowWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
+            UpdateRowWorkflowActionType,
         )
 
         builder_workflow_action_type_registry.register(NotificationWorkflowActionType())
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
+        builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
+
+        from .elements.collection_field_types import (
+            LinkCollectionFieldType,
+            TextCollectionFieldType,
+        )
+        from .elements.registries import collection_field_type_registry
+
+        collection_field_type_registry.register(TextCollectionFieldType())
+        collection_field_type_registry.register(LinkCollectionFieldType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

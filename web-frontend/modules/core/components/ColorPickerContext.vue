@@ -66,7 +66,7 @@
       v-if="Object.keys(variables).length > 0"
       class="color-picker-context__variables"
     >
-      <Dropdown :value="isVariable ? value : ''" @input="setVariable">
+      <Dropdown :value="isVariable ? value : ''" small @input="setVariable">
         <DropdownItem name="Custom" value=""></DropdownItem>
         <DropdownItem
           v-for="variable in variables"

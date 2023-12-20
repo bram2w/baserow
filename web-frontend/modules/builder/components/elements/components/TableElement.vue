@@ -1,43 +1,18 @@
 <template>
   <div>
-    <table class="table-element">
-      <thead>
-        <tr class="table-element__header-row">
-          <th
-            v-for="field in element.fields"
-            :key="field.id"
-            class="table-element__header-cell"
-          >
-            {{ field.name }}
-          </th>
-        </tr>
-      </thead>
-      <tbody v-if="elementContent.length">
-        <tr
-          v-for="(row, index) in elementContent"
-          :key="row.__id__"
-          class="table-element__row"
-        >
-          <td
-            v-for="field in element.fields"
-            :key="field.id"
-            class="table-element__cell"
-          >
-            {{ resolveRowFormula(field.value, index) }}
-          </td>
-        </tr>
-      </tbody>
-      <tbody v-else>
-        <tr>
-          <td
-            class="table-element__empty-message"
-            :colspan="element.fields.length"
-          >
-            {{ $t('tableElement.empty') }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <BaserowTable :fields="element.fields" :rows="rows">
+      <template #cell-content="{ field, value }">
+        <component
+          :is="collectionFieldTypes[field.type].component"
+          v-bind="value"
+        />
+      </template>
+      <template #empty-state>
+        <div class="table-element__empty-message">
+          {{ $t('tableElement.empty') }}
+        </div>
+      </template>
+    </BaserowTable>
     <div class="table-element__footer">
       <button
         v-if="hasMorePage"
@@ -58,9 +33,11 @@ import { resolveFormula } from '@baserow/modules/core/formula'
 import { uuid } from '@baserow/modules/core/utils/string'
 import { mapActions, mapGetters } from 'vuex'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
 
 export default {
   name: 'TableElement',
+  components: { BaserowTable },
   mixins: [element],
   props: {
     /**
@@ -96,15 +73,44 @@ export default {
       }
       return this.getPageDataSourceById(this.page, this.element.data_source_id)
     },
-    elementContent() {
-      if (!this.element.data_source_id) {
+    fields() {
+      if (!this.element.fields) {
         return []
       }
-      // Here we add a temporary __id__ property for the "v-for key"
-      return this.getElementContent(this.element).map((row) => ({
-        ...row,
-        __id__: uuid(),
+      return this.element.fields.map((field, index) => ({
+        ...field,
+        __id__: index,
       }))
+    },
+    elementContent() {
+      if (
+        !this.element.data_source_id ||
+        !this.getElementContent(this.element) ||
+        this.fields.length === 0
+      ) {
+        return []
+      }
+
+      return this.getElementContent(this.element)
+    },
+    rows() {
+      return this.elementContent.map((row, rowIndex) => {
+        const newRow = Object.fromEntries(
+          this.fields.map((field) => {
+            const { name, type } = field
+            const fieldType = this.collectionFieldTypes[type]
+            return [
+              name,
+              fieldType.getProps(field, {
+                resolveFormula: (formula) =>
+                  this.resolveRowFormula(formula, rowIndex),
+              }),
+            ]
+          })
+        )
+        newRow.__id__ = uuid()
+        return newRow
+      })
     },
     hasMorePage() {
       return this.getHasMorePage(this.element)
@@ -114,6 +120,9 @@ export default {
     },
     reset() {
       return this.getReset(this.element)
+    },
+    collectionFieldTypes() {
+      return this.$registry.getAll('collectionField')
     },
   },
   watch: {
@@ -138,7 +147,7 @@ export default {
       clearElementContent: 'elementContent/clearElementContent',
     }),
     async fetchContent(range, replace) {
-      const dispatchContext = DataProviderType.getAllBackendContext(
+      const dispatchContext = DataProviderType.getAllDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )

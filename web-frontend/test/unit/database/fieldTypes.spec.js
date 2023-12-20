@@ -2,6 +2,7 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import {
   BooleanFieldType,
   DateFieldType,
+  DurationFieldType,
   EmailFieldType,
   LinkRowFieldType,
   LongTextFieldType,
@@ -14,6 +15,8 @@ import {
   URLFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
+// The `testing_row_data` is not actually part of the field instance, but it
+// contains an example of how the cell value could be in the frontend.
 const mockedFields = {
   text: {
     id: 1,
@@ -22,6 +25,7 @@ const mockedFields = {
     primary: true,
     table_id: 42,
     type: 'text',
+    testing_row_data: ['test', ''],
   },
   long_text: {
     id: 2,
@@ -30,6 +34,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'long_text',
+    testing_row_data: ['test', ''],
   },
   link_row: {
     id: 3,
@@ -40,6 +45,14 @@ const mockedFields = {
     type: 'link_row',
     link_row_related_field: 270,
     link_row_table_id: 43,
+    testing_row_data: [
+      [],
+      [{ id: 1, value: 'Row 1' }],
+      [
+        { id: 1, value: 'Row 1' },
+        { id: 2, value: 'Row 2' },
+      ],
+    ],
   },
   number: {
     id: 4,
@@ -50,6 +63,7 @@ const mockedFields = {
     type: 'number',
     number_decimal_places: 0,
     number_negative: false,
+    testing_row_data: [null, '10', '20'],
   },
   rating: {
     id: 16,
@@ -58,6 +72,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'rating',
+    testing_row_data: [0, 1, 3],
   },
   boolean: {
     id: 5,
@@ -66,6 +81,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'boolean',
+    testing_row_data: [true, false],
   },
   date: {
     id: 6,
@@ -77,6 +93,7 @@ const mockedFields = {
     date_format: 'EU',
     date_include_time: false,
     date_time_format: '24',
+    testing_row_data: [null, '2023-10-05T02:00:00+02:00'],
   },
   last_modified: {
     id: 7,
@@ -88,6 +105,7 @@ const mockedFields = {
     date_format: 'EU',
     date_include_time: false,
     date_time_format: '24',
+    testing_row_data: ['2023-10-05T02:00:00+02:00'],
   },
   created_on: {
     id: 8,
@@ -99,6 +117,7 @@ const mockedFields = {
     date_format: 'EU',
     date_include_time: false,
     date_time_format: '24',
+    testing_row_data: ['2023-10-05T02:00:00+02:00'],
   },
   url: {
     id: 9,
@@ -107,6 +126,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'url',
+    testing_row_data: ['', 'https://baserow.io'],
   },
   email: {
     id: 10,
@@ -115,6 +135,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'email',
+    testing_row_data: ['', 'bram@baserow.io'],
   },
   file: {
     id: 11,
@@ -123,6 +144,51 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'file',
+    testing_row_data: [
+      [],
+      [
+        {
+          url: 'http://localhost:4000/media/user_files/k03pSb0YtDIUzwHZ6aZaRl9ufGgKROcX_9a2270d5964f64981fb1e91dd13e5941262817bdce873cf357c92adbef906b5d.mp3',
+          thumbnails: null,
+          visible_name: 'file_example_MP3_700KB.mp3',
+          name: 'k03pSb0YtDIUzwHZ6aZaRl9ufGgKROcX_9a2270d5964f64981fb1e91dd13e5941262817bdce873cf357c92adbef906b5d.mp3',
+          size: 733645,
+          mime_type: 'audio/mpeg',
+          is_image: false,
+          image_width: null,
+          image_height: null,
+          uploaded_at: '2023-12-12T21:20:16.484349+00:00',
+        },
+        {
+          url: 'http://localhost:4000/media/user_files/RYrdxidUTNQ8QoE5DxqgVZNyJhHbYCuV_88aeb1f4467bd1e50cf624de972fbf3f40801632fedb64aaa7b1a8a9ef786fc6.jpg',
+          thumbnails: {
+            tiny: {
+              url: 'http://localhost:4000/media/thumbnails/tiny/RYrdxidUTNQ8QoE5DxqgVZNyJhHbYCuV_88aeb1f4467bd1e50cf624de972fbf3f40801632fedb64aaa7b1a8a9ef786fc6.jpg',
+              width: null,
+              height: 21,
+            },
+            small: {
+              url: 'http://localhost:4000/media/thumbnails/small/RYrdxidUTNQ8QoE5DxqgVZNyJhHbYCuV_88aeb1f4467bd1e50cf624de972fbf3f40801632fedb64aaa7b1a8a9ef786fc6.jpg',
+              width: 48,
+              height: 48,
+            },
+            card_cover: {
+              url: 'http://localhost:4000/media/thumbnails/card_cover/RYrdxidUTNQ8QoE5DxqgVZNyJhHbYCuV_88aeb1f4467bd1e50cf624de972fbf3f40801632fedb64aaa7b1a8a9ef786fc6.jpg',
+              width: 300,
+              height: 160,
+            },
+          },
+          visible_name: 'file_example_JPG_100kB.jpg',
+          name: 'RYrdxidUTNQ8QoE5DxqgVZNyJhHbYCuV_88aeb1f4467bd1e50cf624de972fbf3f40801632fedb64aaa7b1a8a9ef786fc6.jpg',
+          size: 102117,
+          mime_type: 'image/jpeg',
+          is_image: true,
+          image_width: 1050,
+          image_height: 700,
+          uploaded_at: '2023-12-12T21:20:16.490292+00:00',
+        },
+      ],
+    ],
   },
   single_select: {
     id: 12,
@@ -132,6 +198,7 @@ const mockedFields = {
     table_id: 42,
     type: 'single_select',
     select_options: [],
+    testing_row_data: [null, { id: 1, value: 'Option 1', color: 'green' }],
   },
   phone_number: {
     id: 13,
@@ -140,6 +207,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'phone_number',
+    testing_row_data: ['', '+12345678'],
   },
   multiple_select: {
     id: 14,
@@ -149,6 +217,14 @@ const mockedFields = {
     table_id: 42,
     type: 'multiple_select',
     select_options: [],
+    testing_row_data: [
+      [],
+      [{ id: 1, value: 'Option 1', color: 'green' }],
+      [
+        { id: 1, value: 'Option 1', color: 'green' },
+        { id: 2, value: 'Option 2', color: 'blue' },
+      ],
+    ],
   },
   formula: {
     id: 15,
@@ -157,6 +233,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'formula',
+    formula_type: 'text',
   },
   lookup: {
     id: 16,
@@ -165,6 +242,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'lookup',
+    formula_type: 'text',
   },
   multiple_collaborators: {
     id: 17,
@@ -173,6 +251,14 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'multiple_collaborators',
+    testing_row_data: [
+      [],
+      [{ id: 1, name: 'Test' }],
+      [
+        { id: 1, name: 'Test' },
+        { id: 2, name: 'Test 2' },
+      ],
+    ],
   },
   count: {
     id: 18,
@@ -181,6 +267,7 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'count',
+    formula_type: 'number',
   },
   rollup: {
     id: 19,
@@ -189,6 +276,52 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'rollup',
+    formula_type: 'text',
+  },
+  uuid: {
+    id: 20,
+    name: 'uuid',
+    order: 20,
+    primary: false,
+    table_id: 42,
+    type: 'uuid',
+    testing_row_data: ['03114cab-64c6-4d27-839d-3ff6f6cb118c'],
+  },
+  last_modified_by: {
+    id: 21,
+    name: 'last_modified_by',
+    order: 21,
+    primary: false,
+    table_id: 42,
+    type: 'last_modified_by',
+    testing_row_data: [null, { id: 1, name: 'Test' }],
+  },
+  created_by: {
+    id: 22,
+    name: 'created_by',
+    order: 22,
+    primary: false,
+    table_id: 42,
+    type: 'created_by',
+    testing_row_data: [null, { id: 1, name: 'Test' }],
+  },
+  autonumber: {
+    id: 23,
+    name: 'autonumber',
+    order: 23,
+    primary: false,
+    table_id: 42,
+    type: 'autonumber',
+    testing_row_data: [1, 2],
+  },
+  duration: {
+    id: 24,
+    name: 'duration',
+    order: 24,
+    primary: false,
+    table_id: 42,
+    type: 'duration',
+    testingRowData: [null, 60],
   },
 }
 
@@ -467,6 +600,21 @@ const queryParametersForParsing = [
     input: { value: '+1 (123) 456-7890', field: {} },
     output: '+1 (123) 456-7890',
   },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: '1:01', field: { duration_format: 'h:mm' } },
+    output: 3660,
+  },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: '1:01:01', field: { duration_format: 'h:mm:ss' } },
+    output: 3661,
+  },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: 61, field: { duration_format: 'h:mm' } },
+    output: 60, // the value is rounded according to the duration format
+  },
 ]
 
 const queryParametersAsyncForParsing = [
@@ -560,6 +708,35 @@ describe('FieldType tests', () => {
         { client, slug: expect.anything() }
       )
       expect(result).toStrictEqual(output)
+    }
+  )
+
+  test.each(Object.keys(mockedFields))(
+    'Verify that the %s getGroupValueFromRowValue, getRowValueFromGroupValue, and' +
+      ' isEqual are compatible.',
+    (key) => {
+      const field = mockedFields[key]
+      const fieldType = fieldRegistry[key]
+
+      // Skip fields that are not compatible with group by because they don't have to
+      // match.
+      if (!fieldType.getCanGroupByInView(field)) {
+        return
+      }
+
+      const testingRowData = field.testing_row_data || []
+      for (let i = 0; i < testingRowData.length; i++) {
+        const rowValue = testingRowData[i]
+        expect(fieldType.isEqual(field, rowValue, rowValue)).toBe(true)
+        const groupValue = fieldType.getGroupValueFromRowValue(field, rowValue)
+        const rowValueFromGroupValue = fieldType.getRowValueFromGroupValue(
+          field,
+          groupValue
+        )
+        expect(fieldType.isEqual(field, rowValue, rowValueFromGroupValue)).toBe(
+          true
+        )
+      }
     }
   )
 })

@@ -25,6 +25,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from baserow.core.models import UserFile
 from baserow.core.utils import get_model_reference_field_name
@@ -62,6 +63,7 @@ class View(
     OrderableMixin,
     PolymorphicContentTypeMixin,
     models.Model,
+    WithRegistry,
 ):
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
@@ -108,7 +110,12 @@ class View(
         default=True,
         help_text="Indicates whether the logo should be shown in the public view.",
     )
-    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    owned_by = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        db_column="created_by_id",
+    )
     ownership_type = models.CharField(
         max_length=255,
         default=DEFAULT_OWNERSHIP_TYPE,
@@ -125,6 +132,12 @@ class View(
         help_text="The name of the database index that is used to speed up the "
         "filtering of the view.",
     )
+
+    @staticmethod
+    def get_type_registry():
+        """Returns the registry related to this model class."""
+
+        return view_type_registry
 
     @property
     def public_view_has_password(self) -> bool:
@@ -261,7 +274,9 @@ class View(
 
         def get_queryset():
             return view_type.enhance_field_options_queryset(
-                through_model.objects.filter(**{field_name: self})
+                through_model.objects.filter(
+                    **{field_name: self, "field__table_id": self.table_id}
+                )
             )
 
         field_options = get_queryset()
@@ -514,6 +529,10 @@ class ViewGroupBy(HierarchicalModelMixin, models.Model):
         "and DESC (Descending) is from Z to A.",
         default=SORT_ORDER_ASC,
     )
+    width = models.PositiveIntegerField(
+        default=200,
+        help_text="The pixel width of the group by in the related view.",
+    )
 
     def get_parent(self):
         return self.view
@@ -714,6 +733,10 @@ class FormView(View):
         help_text=f"If the `submit_action` is {FORM_VIEW_SUBMIT_ACTION_REDIRECT},"
         f"then the visitors will be redirected to the this URL after submitting the "
         f"form.",
+    )
+    users_to_notify_on_submit = models.ManyToManyField(
+        User,
+        help_text="The users that must be notified when the form is submitted.",
     )
 
     @property

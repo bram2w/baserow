@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from copy import copy, deepcopy
 from decimal import Decimal
@@ -14,13 +13,14 @@ from typing import (
     Set,
     Tuple,
     Type,
+    Union,
     cast,
 )
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Model, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 from django.utils.encoding import force_str
 
@@ -38,6 +38,7 @@ from baserow.contrib.database.fields.field_filters import (
     FilterBuilder,
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.operations import (
     CreateRowDatabaseTableOperationType,
@@ -57,7 +58,11 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from ..search.handler import SearchHandler
-from ..table.constants import ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
+from ..table.constants import (
+    CREATED_BY_COLUMN_NAME,
+    LAST_MODIFIED_BY_COLUMN_NAME,
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+)
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
@@ -177,9 +182,14 @@ class RowM2MChangeTracker:
             )
 
     def track_m2m_created_for_new_row(
-        self, row: GeneratedTableModel, field: "Field", new_values: Iterable[int]
+        self,
+        row: GeneratedTableModel,
+        field: "Field",
+        new_values: Iterable[Union[int, Model]],
     ):
         field_type = field_type_registry.get_by_model(field)
+        if new_values and isinstance(new_values[0], Model):
+            new_values = [v.id for v in new_values]
         if field_type.is_many_to_many_field:
             self._created_m2m_rels[field_type.type][field][row] = set(new_values)
 
@@ -234,7 +244,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     def prepare_rows_in_bulk(
         self,
         fields: Dict[int, Dict[str, Any]],
-        rows: List[Dict[str, Any]],
+        row_values: List[Dict[str, Any]],
         generate_error_report: bool = False,
     ) -> Tuple[List[Dict[str, Any]], Dict[int, Dict[str, Any]]]:
         """
@@ -255,12 +265,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         prepared_values_by_field = defaultdict(dict)
 
         # organize values by field name
-        for index, row in enumerate(rows):
+        for index, row_value in enumerate(row_values):
             for field_id, field in fields.items():
                 field_name = field["name"]
                 field_ids[field_name] = field_id
-                if field_name in row:
-                    prepared_values_by_field[field_name][index] = row[field_name]
+                if field_name in row_value:
+                    prepared_values_by_field[field_name][index] = row_value[field_name]
 
         # bulk-prepare values per field
         for field_name, batch_values in prepared_values_by_field.items():
@@ -275,12 +285,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         # replace original values to keep ordering
         prepared_rows = []
         failing_rows = {}
-        for index, row in enumerate(rows):
-            new_values = deepcopy(row)
+        for index, row_value in enumerate(row_values):
+            new_values = deepcopy(row_value)
             row_errors = {}
             for field_id, field in fields.items():
                 field_name = field["name"]
-                if field_name in row:
+                if field_name in row_value:
                     prepared_value = prepared_values_by_field[field_name][index]
                     if isinstance(prepared_value, Exception):
                         row_errors[field_name] = [prepared_value]
@@ -302,13 +312,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: A list containing the field ids as integers.
         """
 
-        field_pattern = re.compile("^field_([0-9]+)$")
-        # @TODO improve this function
-        return [
-            int(re.sub("[^0-9]", "", str(key)))
-            for key in keys
-            if str(key).isnumeric() or field_pattern.match(str(key))
-        ]
+        ids = [get_field_id_from_field_key(v) for v in keys]
+        return [_id for _id in ids if _id is not None]
 
     def extract_field_ids_from_dict(self, values: Dict[str, Any]) -> List[int]:
         """
@@ -759,16 +764,30 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             prepared_values, model
         )
         row_values["order"] = self.get_unique_orders_before_row(before, model)[0]
+
+        if getattr(model, CREATED_BY_COLUMN_NAME, None):
+            row_values[CREATED_BY_COLUMN_NAME] = user if user and user.id else None
+
+        if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+            row_values[LAST_MODIFIED_BY_COLUMN_NAME] = (
+                user if user and user.id else None
+            )
+
         instance = model.objects.create(**row_values)
         rows_created_counter.add(1)
 
         m2m_change_tracker = RowM2MChangeTracker()
-        for name, value in manytomany_values.items():
-            field_object = model.get_field_object(name)
-            m2m_change_tracker.track_m2m_created_for_new_row(
-                instance, field_object["field"], value
+        for field_name, value in manytomany_values.items():
+            m2m_objects, _ = self._prepare_m2m_field_related_objects(
+                instance, field_name, value
             )
-            getattr(instance, name).set(value)
+            field_object = model.get_field_object(field_name)
+            m2m_change_tracker.track_m2m_created_for_new_row(
+                instance,
+                field_object["field"],
+                value,
+            )
+            getattr(instance, field_name).through.objects.bulk_create(m2m_objects)
 
         fields = []
         update_collector = FieldUpdateCollector(table, starting_row_ids=[instance.id])
@@ -785,16 +804,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 field, [instance], update_collector, field_cache
             )
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_created(
                 dependant_field,
                 instance,
@@ -811,7 +832,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(fields)
+        ViewHandler().field_value_updated(fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         rows_created.send(
@@ -956,10 +977,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         for name, value in manytomany_values.items():
             field = updated_fields_by_name[name]
+            value = [v if not hasattr(v, "id") else v.id for v in value]
             m2m_change_tracker.track_m2m_update_for_field_and_row(
                 field, name, row, value
             )
             getattr(row, name).set(value)
+
+        if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+            setattr(row, LAST_MODIFIED_BY_COLUMN_NAME, user if user.id else None)
 
         row.save()
         rows_updated_counter.add(1)
@@ -971,16 +996,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
         field_cache = FieldCache()
         field_cache.cache_model(model)
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_updated(
                 dependant_field,
                 row,
@@ -996,7 +1023,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         rows_updated.send(
@@ -1074,6 +1101,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         ):
             row_values, manytomany_values = self.extract_manytomany_values(row, model)
             row_values["order"] = unique_orders[index]
+
+            if getattr(model, CREATED_BY_COLUMN_NAME, None):
+                row_values[CREATED_BY_COLUMN_NAME] = user if user.id else None
+
+            if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+                row_values[LAST_MODIFIED_BY_COLUMN_NAME] = user if user.id else None
+
             instance = model(**row_values)
 
             relations = {
@@ -1082,6 +1116,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 if value and len(value) > 0
             }
             rows_relationships.append((instance, relations))
+            # This is a hack to make `BaserowExpressionField.pre_save` (called
+            # by bulk_create immediately below) being able to access the
+            # relationships values, so the formula can be correctly computed
+            # when saving the row, before the many to many relationships are
+            # saved.
+            instance._m2m_values = relations
 
         inserted_rows = model.objects.bulk_create(
             [row for (row, _) in rows_relationships]
@@ -1094,42 +1134,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         for index, row in enumerate(inserted_rows):
             _, manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
-                through = getattr(model, field_name).through
-                through_fields = through._meta.get_fields()
-                value_column = None
-                row_column = None
-
-                model_field = model._meta.get_field(field_name)
-                is_referencing_the_same_table = (
-                    model_field.model == model_field.related_model
+                m2m_objects, _ = self._prepare_m2m_field_related_objects(
+                    row, field_name, value
                 )
-
-                # Figure out which field in the many to many through table holds the row
-                # value and which one contains the value.
-                for field in through_fields:
-                    if type(field) is not ForeignKey:
-                        continue
-
-                    if is_referencing_the_same_table:
-                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
-                        # columns for self-referencing many_to_many relations.
-                        row_column = field.get_attname_column()[1]
-                        value_column = row_column.replace("from", "to")
-                        break
-                    elif field.remote_field.model == model:
-                        row_column = field.get_attname_column()[1]
-                    else:
-                        value_column = field.get_attname_column()[1]
-
-                for i in value:
-                    many_to_many[field_name].append(
-                        getattr(model, field_name).through(
-                            **{
-                                row_column: row.id,
-                                value_column: i,
-                            }
-                        )
-                    )
+                many_to_many[field_name].extend(m2m_objects)
 
                 field_object = model.get_field_object(field_name)
                 m2m_change_tracker.track_m2m_created_for_new_row(
@@ -1155,16 +1163,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 field, inserted_rows, update_collector, field_cache
             )
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_created(
                 dependant_field,
                 inserted_rows,
@@ -1177,7 +1187,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         from baserow.contrib.database.views.handler import ViewHandler
 
         updated_fields = [o["field"] for o in model._field_objects.values()]
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         if not skip_search_update:
             SearchHandler.field_value_updated_or_created(table)
 
@@ -1211,6 +1221,58 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if generate_error_report:
             return inserted_rows, report
         return rows_to_return
+
+    def _prepare_m2m_field_related_objects(
+        self, row: GeneratedTableModel, field_name: str, value: List[Any]
+    ) -> Tuple[List[Type[Model]], str]:
+        """
+        Prepares the many to many related objects for a given row and field
+        name, taking into account whether the field is self-referencing or not.
+
+        :param row: The row instance for which the related objects must be
+            prepared.
+        :param field_name: The name of the field for which the related objects
+            must be prepared.
+        :param value: The value of the field.
+        :return: A list of related objects and a string indicating the column
+            name of the row in the through table.
+        """
+
+        model = row._meta.model
+        through = getattr(model, field_name).through
+        through_fields = through._meta.get_fields()
+        value_column = None
+        row_column = None
+
+        model_field = model._meta.get_field(field_name)
+        is_referencing_the_same_table = model_field.model == model_field.related_model
+
+        # Figure out which field in the many to many through table holds the row
+        # value and which one contains the value.
+        for field in through_fields:
+            if type(field) is not ForeignKey:
+                continue
+
+            if is_referencing_the_same_table:
+                # django creates 'from_tableXmodel' and 'to_tableXmodel'
+                # columns for self-referencing many_to_many relations.
+                row_column = field.get_attname_column()[1]
+                value_column = row_column.replace("from", "to")
+                break
+            elif field.remote_field.model == model:
+                row_column = field.get_attname_column()[1]
+            else:
+                value_column = field.get_attname_column()[1]
+
+        return [
+            through(
+                **{
+                    row_column: row.id,
+                    value_column: v.id if hasattr(v, "id") else v,
+                }
+            )
+            for v in value
+        ], row_column
 
     def validate_rows(
         self,
@@ -1576,6 +1638,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             updated_field_ids=updated_field_ids,
         )
 
+        field_objects_to_always_update = model.get_field_objects_to_always_update()
         rows_relationships = []
         for obj in rows_to_update:
             # The `updated_on` field is not updated with `bulk_update`,
@@ -1583,6 +1646,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             obj.updated_on = model._meta.get_field("updated_on").pre_save(
                 obj, add=False
             )
+            # Add "always update" fields like last_modified or last modified by fields
+            # to the updated fields list so that formulas referencing them will
+            # be updated correctly.
+            for field_object in field_objects_to_always_update:
+                updated_field_ids.add(field_object["field"].id)
+
             if table.needs_background_update_column_added:
                 setattr(obj, ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, True)
 
@@ -1594,12 +1663,20 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             for name, value in row_values.items():
                 setattr(obj, name, value)
 
+            if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+                setattr(obj, LAST_MODIFIED_BY_COLUMN_NAME, user if user.id else None)
+
             relations = {
                 field_name: value
                 for field_name, value in manytomany_values.items()
                 if value or isinstance(value, list)
             }
             rows_relationships.append(relations)
+            # This is a hack to make `BaserowExpressionField.pre_save` (called
+            # immediately below here) being able to access the relationships
+            # values, so the formula can be correctly computed when saving the
+            # row, before the many to many relationships are saved.
+            obj._m2m_values = relations
 
             fields_with_pre_save = model.fields_requiring_refresh_after_update()
             for field_name in fields_with_pre_save:
@@ -1610,7 +1687,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 )
 
         many_to_many = defaultdict(list)
-        row_column_name = None
+        row_column_names: Dict[str, str] = {}
         row_ids_change_m2m_per_field = defaultdict(set)
 
         # This update can remove link row connections with other rows. We need to keep
@@ -1623,36 +1700,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         for index, row in enumerate(rows_to_update):
             manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
-                through = getattr(model, field_name).through
-                through_fields = through._meta.get_fields()
-                value_column = None
-                row_column = None
-
-                model_field = model._meta.get_field(field_name)
-                is_referencing_the_same_table = (
-                    model_field.model == model_field.related_model
-                )
-
-                # Figure out which field in the many to many through table holds the row
-                # value and which one contains the value.
-                for field in through_fields:
-                    if type(field) is not ForeignKey:
-                        continue
-
-                    row_ids_change_m2m_per_field[field_name].add(row.id)
-
-                    if is_referencing_the_same_table:
-                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
-                        # columns for self-referencing many_to_many relations.
-                        row_column = field.get_attname_column()[1]
-                        row_column_name = row_column
-                        value_column = row_column.replace("from", "to")
-                        break
-                    elif field.remote_field.model == model:
-                        row_column = field.get_attname_column()[1]
-                        row_column_name = row_column
-                    else:
-                        value_column = field.get_attname_column()[1]
+                row_ids_change_m2m_per_field[field_name].add(row.id)
 
                 # If this m2m field is a link row we need to find out all connections
                 # which will be removed by this update. This is so we can update
@@ -1663,24 +1711,22 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                     field, field_name, row, value
                 )
 
+                m2m_objects, row_column_name = self._prepare_m2m_field_related_objects(
+                    row, field_name, value
+                )
+                row_column_names[field_name] = row_column_name
+
                 if len(value) == 0:
                     many_to_many[field_name].append(None)
                 else:
-                    for i in value:
-                        many_to_many[field_name].append(
-                            getattr(model, field_name).through(
-                                **{
-                                    row_column: row.id,
-                                    value_column: i,
-                                }
-                            )
-                        )
+                    many_to_many[field_name].extend(m2m_objects)
 
         # The many to many relations need to be updated first because they need to
         # exist when the rows are updated in bulk. Otherwise, the formula and lookup
         # fields can't see the relations.
         for field_name, values in many_to_many.items():
             through = getattr(model, field_name).through
+            row_column_name = row_column_names[field_name]
             filters = {
                 f"{row_column_name}__in": row_ids_change_m2m_per_field[field_name]
             }
@@ -1689,6 +1735,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             through.objects.bulk_create([v for v in values if v is not None])
 
         bulk_update_fields = ["updated_on"]
+
+        # Add always update fields to update also fields that are trashed
+        for field_object in field_objects_to_always_update:
+            bulk_update_fields.append(field_object["name"])
+
+        if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+            bulk_update_fields.append(LAST_MODIFIED_BY_COLUMN_NAME)
+
         if table.needs_background_update_column_added:
             bulk_update_fields.append(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME)
         for field in model._field_objects.values():
@@ -1713,16 +1767,19 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
         field_cache = FieldCache()
         field_cache.cache_model(model)
+
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_updated(
                 dependant_field,
                 rows_to_update,
@@ -1734,7 +1791,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         updated_rows_to_return = list(
@@ -1854,16 +1911,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field = field_object["field"]
             updated_fields.append(field)
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_moved(
                 dependant_field,
                 row,
@@ -1875,7 +1934,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
 
         rows_updated.send(
             self,
@@ -1964,16 +2023,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field = field_object["field"]
             updated_fields.append(field)
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_deleted(
                 dependant_field,
                 row,
@@ -1985,7 +2046,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
 
         rows_deleted.send(
             self,
@@ -2061,16 +2122,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         update_collector = FieldUpdateCollector(table, starting_row_ids=row_ids)
         field_cache = FieldCache()
         field_cache.cache_model(model)
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_deleted(
                 dependant_field,
                 rows,
@@ -2082,7 +2145,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
 
         rows_deleted.send(
             self,

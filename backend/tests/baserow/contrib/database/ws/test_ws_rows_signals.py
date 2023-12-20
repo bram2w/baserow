@@ -80,7 +80,7 @@ def test_populates_with_row_id_metadata():
         type = "row_id"
 
         def generate_metadata_for_rows(
-            self, table, row_ids: List[int]
+            self, user, table, row_ids: List[int]
         ) -> Dict[int, Any]:
             return {row_id: row_id for row_id in row_ids}
 
@@ -265,6 +265,7 @@ def test_rows_history_updated(mock_broadcast_channel_group, data_fixture):
                 "metadata": {},
             },
             None,
+            None,
         ),
         call.delay(
             f"table-{table.id}-row-{row1.id}",
@@ -285,6 +286,7 @@ def test_rows_history_updated(mock_broadcast_channel_group, data_fixture):
                 "row_id": row1.id,
             },
             None,
+            None,
         ),
         call.delay(
             f"table-{table.id}-row-{row2.id}",
@@ -304,6 +306,7 @@ def test_rows_history_updated(mock_broadcast_channel_group, data_fixture):
                 "table_id": table.id,
                 "row_id": row2.id,
             },
+            None,
             None,
         ),
     ]

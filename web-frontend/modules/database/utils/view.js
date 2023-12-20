@@ -425,6 +425,19 @@ export function newFieldMatchesActiveSearchTerm(
   return false
 }
 
+export function getGroupBy(rootGetters, viewId) {
+  if (rootGetters['page/view/public/getIsPublic']) {
+    const view = rootGetters['view/get'](viewId)
+    return view.group_bys
+      .map((groupBy) => {
+        return `${groupBy.order === 'DESC' ? '-' : ''}field_${groupBy.field}`
+      })
+      .join(',')
+  } else {
+    return ''
+  }
+}
+
 export function getOrderBy(rootGetters, viewId) {
   if (rootGetters['page/view/public/getIsPublic']) {
     const view = rootGetters['view/get'](viewId)
@@ -500,4 +513,33 @@ export function fitInCookie(name, list) {
     }
   }
   return result
+}
+
+/**
+ * Return the view that has been visited most recently or the first
+ * available one that is capable of displaying the provided row data if required.
+ * If no view is available that can display the row data, return undefined.
+ */
+export function getDefaultView(app, store, workspaceId, showRowModal) {
+  // Put the most recently visited one first in the list.
+  const defaultView = store.getters['view/default']
+  const allViews = store.getters['view/getAllOrdered']
+  const views = defaultView ? [defaultView, ...allViews] : allViews
+
+  return views.find((view) => {
+    const viewType = app.$registry.get('view', view.type)
+    if (viewType.isDeactivated(workspaceId)) {
+      return false
+    }
+    // Ensure that the view can display the row data if required.
+    return showRowModal ? viewType.canShowRowModal() : true
+  })
+}
+
+/*
+ * Extracts the metadata from the provided data to populate the row.
+ */
+export function extractRowMetadata(data, rowId) {
+  const metadata = data.row_metadata || {}
+  return metadata[rowId] || {}
 }

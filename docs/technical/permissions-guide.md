@@ -154,7 +154,6 @@ CoreHandler().filter_queryset(
     # CreateRowDatabaseTable is an `OperationType` class and `.type` is its name.
     ListTablesDatabaseTableOperationType.type,  
     queryset,
-    context=database, 
     group=group
 )
 ```
@@ -222,7 +221,7 @@ class OwnedTablePermissionManagerType(PermissionManagerType):
     def get_permissions_object(self, actor, group=None):
         ...
 
-    def filter_queryset(self, actor, operation_name, queryset, group=None, context=None)
+    def filter_queryset(self, actor, operation_name, queryset, group=None)
         ...
 ```
 

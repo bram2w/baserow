@@ -1411,3 +1411,28 @@ def test_duplicate_application_export_serialized_raises_operationalerror(
     ):
         with pytest.raises(OperationalError) as exc:
             CoreHandler().duplicate_application(user, database)
+
+
+@pytest.mark.django_db
+def test_get_user_email_mapping(data_fixture):
+    workspace = data_fixture.create_workspace()
+    user_in_workspace = data_fixture.create_user()
+    user2_in_workspace = data_fixture.create_user()
+    user_outside_workspace = data_fixture.create_user()
+    data_fixture.create_user_workspace(user=user_in_workspace, workspace=workspace)
+    data_fixture.create_user_workspace(user=user2_in_workspace, workspace=workspace)
+
+    mapping = CoreHandler.get_user_email_mapping(workspace.id, only_emails=[])
+
+    assert mapping == {
+        f"{user_in_workspace.email}": user_in_workspace,
+        f"{user2_in_workspace.email}": user2_in_workspace,
+    }
+
+    mapping = CoreHandler.get_user_email_mapping(
+        workspace.id, only_emails=[user_in_workspace.email]
+    )
+
+    assert mapping == {
+        f"{user_in_workspace.email}": user_in_workspace,
+    }

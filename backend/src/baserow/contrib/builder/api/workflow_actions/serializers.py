@@ -4,11 +4,14 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.polymorphic import PolymorphicSerializer
+from baserow.api.services.serializers import ServiceSerializer
 from baserow.api.workflow_actions.serializers import WorkflowActionSerializer
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.contrib.builder.workflow_actions.registries import (
     builder_workflow_action_type_registry,
 )
+from baserow.core.services.registries import service_type_registry
 
 
 class BuilderWorkflowActionSerializer(WorkflowActionSerializer):
@@ -24,7 +27,7 @@ class BuilderWorkflowActionSerializer(WorkflowActionSerializer):
 
     class Meta:
         model = BuilderWorkflowAction
-        fields = ("id", "element_id", "type", "event")
+        fields = ("id", "order", "element_id", "type", "event")
 
         extra_kwargs = {
             "id": {"read_only": True},
@@ -59,3 +62,24 @@ class UpdateBuilderWorkflowActionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuilderWorkflowAction
         fields = ("type",)
+
+
+class PolymorphicServiceSerializer(PolymorphicSerializer):
+    base_class = ServiceSerializer
+    registry = service_type_registry
+
+
+class PolymorphicServiceRequestSerializer(PolymorphicSerializer):
+    base_class = serializers.Serializer
+    registry = service_type_registry
+
+
+class OrderWorkflowActionsSerializer(serializers.Serializer):
+    workflow_action_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="The ids of the workflow actions in the order they are supposed to be "
+        "set in",
+    )
+    element_id = serializers.IntegerField(
+        required=False, help_text="The element the workflow actions belong to"
+    )

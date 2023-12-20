@@ -149,7 +149,6 @@ class TablesView(APIView):
             ListTablesDatabaseTableOperationType.type,
             tables,
             workspace=database.workspace,
-            context=database,
         )
 
         serializer = TableSerializer(tables, many=True)

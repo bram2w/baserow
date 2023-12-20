@@ -24,6 +24,7 @@ from baserow.core.db import (
     MultiFieldPrefetchQuerysetMixin,
     QuerySet,
     specific_iterator,
+    specific_queryset,
 )
 from baserow.core.models import Settings, Workspace
 
@@ -200,20 +201,23 @@ def test_specific_iterator_with_prefetch_related(
     filter_2 = data_fixture.create_view_filter(view=gallery_view)
     filter_3 = data_fixture.create_view_filter(view=gallery_view)
 
-    base_queryset = View.objects.filter(
-        id__in=[
-            grid_view.id,
-            gallery_view.id,
-        ]
-    ).prefetch_related("viewfilter_set")
+    base_queryset = (
+        View.objects.filter(
+            id__in=[
+                grid_view.id,
+                gallery_view.id,
+            ]
+        )
+        .order_by("id")
+        .prefetch_related("viewfilter_set")
+    )
 
     with django_assert_num_queries(4):
         specific_objects = list(specific_iterator(base_queryset))
         all_1 = specific_objects[0].viewfilter_set.all()
-        assert all_1[0].id == filter_1.id
+        assert [f.id for f in all_1] == [filter_1.id]
         all_2 = specific_objects[1].viewfilter_set.all()
-        assert all_2[0].id == filter_2.id
-        assert all_2[1].id == filter_3.id
+        assert [f.id for f in all_2] == [filter_2.id, filter_3.id]
 
 
 @pytest.mark.django_db
@@ -288,6 +292,145 @@ def test_specific_iterator_per_content_type_with_nested_prefetch(
         list(specific_objects[1].table.field_set.all())
         list(specific_objects[2].table.field_set.all())
         list(specific_objects[3].table.field_set.all())
+
+
+@pytest.mark.django_db
+def test_specific_iterator_with_list(data_fixture, django_assert_num_queries):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field()
+    data_fixture.create_text_field()
+    grid_view_1 = data_fixture.create_grid_view(table=table)
+    grid_view_2 = data_fixture.create_grid_view(table=table)
+    gallery_view_1 = data_fixture.create_gallery_view(table=table)
+    gallery_view_2 = data_fixture.create_gallery_view(table=table)
+
+    views = list(
+        View.objects.filter(
+            id__in=[
+                grid_view_1.id,
+                grid_view_2.id,
+                gallery_view_1.id,
+                gallery_view_2.id,
+            ]
+        ).order_by("id")
+    )
+
+    with django_assert_num_queries(2):
+        specific_objects = list(specific_iterator(views, base_model=View))
+
+        assert isinstance(specific_objects[0], GridView)
+        assert specific_objects[0].id == grid_view_1.id
+
+        assert isinstance(specific_objects[1], GridView)
+        assert specific_objects[1].id == grid_view_2.id
+
+        assert isinstance(specific_objects[2], GalleryView)
+        assert specific_objects[2].id == gallery_view_1.id
+
+        assert isinstance(specific_objects[3], GalleryView)
+        assert specific_objects[3].id == gallery_view_2.id
+
+
+@pytest.mark.django_db
+def test_specific_iterator_with_list_without_providing_base_model(
+    data_fixture, django_assert_num_queries
+):
+    with pytest.raises(ValueError):
+        list(specific_iterator([]))
+
+
+@pytest.mark.django_db
+def test_specific_iterator_with_list_with_select_related_keys(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field()
+    data_fixture.create_text_field()
+    grid_view_1 = data_fixture.create_grid_view(table=table)
+    grid_view_2 = data_fixture.create_grid_view(table=table)
+    gallery_view_1 = data_fixture.create_gallery_view(table=table)
+    gallery_view_2 = data_fixture.create_gallery_view(table=table)
+
+    views = list(
+        View.objects.filter(
+            id__in=[
+                grid_view_1.id,
+                grid_view_2.id,
+                gallery_view_1.id,
+                gallery_view_2.id,
+            ]
+        ).select_related("content_type")
+    )
+
+    with django_assert_num_queries(2):
+        specific_objects = list(
+            specific_iterator(views, base_model=View, select_related=["content_type"])
+        )
+
+        str(specific_objects[0].content_type.id)
+        str(specific_objects[1].content_type.id)
+        str(specific_objects[2].content_type.id)
+        str(specific_objects[3].content_type.id)
+
+
+@pytest.mark.django_db
+def test_specific_queryset(data_fixture, django_assert_num_queries):
+    text_field_1 = data_fixture.create_text_field()
+    text_field_2 = data_fixture.create_text_field()
+
+    long_text_field_1 = data_fixture.create_long_text_field()
+    long_text_field_2 = data_fixture.create_long_text_field()
+
+    queryset = Field.objects.all()
+    queryset = specific_queryset(queryset)
+    queryset = queryset.filter(
+        id__in=[
+            text_field_1.id,
+            text_field_2.id,
+            long_text_field_1.id,
+            long_text_field_2.id,
+        ]
+    ).order_by("id")
+
+    with django_assert_num_queries(3):
+        specific_objects = list(queryset)
+
+        assert isinstance(specific_objects[0], TextField)
+        assert specific_objects[0].id == text_field_1.id
+
+        assert isinstance(specific_objects[1], TextField)
+        assert specific_objects[1].id == text_field_2.id
+
+        assert isinstance(specific_objects[2], LongTextField)
+        assert specific_objects[2].id == long_text_field_1.id
+
+        assert isinstance(specific_objects[3], LongTextField)
+        assert specific_objects[3].id == long_text_field_2.id
+
+
+@pytest.mark.django_db
+def test_specific_queryset_with_select_related(data_fixture, django_assert_num_queries):
+    grid_view = data_fixture.create_grid_view()
+    gallery_view = data_fixture.create_gallery_view()
+    data_fixture.create_view_filter(view=grid_view)
+    data_fixture.create_view_filter(view=gallery_view)
+    data_fixture.create_view_filter(view=gallery_view)
+
+    base_queryset = (
+        specific_queryset(View.objects.all())
+        .filter(
+            id__in=[
+                grid_view.id,
+                gallery_view.id,
+            ]
+        )
+        .select_related("content_type")
+    )
+
+    with django_assert_num_queries(3):
+        specific_objects = list(base_queryset)
+        assert isinstance(specific_objects[0].content_type, ContentType)
+        assert isinstance(specific_objects[1].content_type, ContentType)
 
 
 @pytest.mark.django_db

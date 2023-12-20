@@ -24,13 +24,26 @@
     },
     "builderSettingTypes": {
         "integrationsName": "Integrationen",
-        "themeName": "Theme"
+        "themeName": "Theme",
+        "domainsName": "Domänen",
+        "userSourcesName": "Benutzer"
     },
     "elementType": {
         "paragraphDescription": "Einzeiliger Text",
         "heading": "Überschrift",
         "headingDescription": "Titel der Seitenüberschrift",
-        "paragraph": "Paragraph"
+        "paragraph": "Paragraph",
+        "table": "Tabelle",
+        "formContainer": "Formular",
+        "inputText": "Texteingabe",
+        "inputTextDescription": "Ein Texteingabe-Feld",
+        "image": "Bild",
+        "tableDescription": "Ein Tabellen-Element",
+        "columnDescription": "Spalten-Container",
+        "column": "Spalten",
+        "imageDescription": "Bild anzeigen",
+        "buttonDescription": "Ein Button-Element",
+        "linkDescription": "Ein Link zu einer Seite/URL"
     },
     "addElementButton": {
         "label": "Element"
@@ -46,7 +59,8 @@
         "labelSettings": "Seiteneinstellungen"
     },
     "elementsContext": {
-        "searchPlaceholder": "Elemente suchen"
+        "searchPlaceholder": "Elemente suchen",
+        "noElements": "Keine Elemente gefunden"
     },
     "addElementModal": {
         "title": "Neues Element hinzufügen",
@@ -82,5 +96,71 @@
         "textTitle": "Text",
         "textPlaceholder": "Text eingeben...",
         "textError": "Der Wert ist ungültig."
+    },
+    "dataProviderType": {
+        "currentRecord": "Datenquelle",
+        "pageParameter": "Parameter",
+        "dataSource": "Daten",
+        "formData": "Formulardaten"
+    },
+    "pageErrors": {
+        "errorStartingSlash": "Ein Pfad muss mit '/' beginnen",
+        "errorUniquePathParams": "Pfad-Parameter müssen eindeutig sein.",
+        "errorPathNotUnique": "Es existiert bereits ein Pfad mit diesem Namen",
+        "errorValidPathCharacters": "Der Pfad enthält ungültige Zeichen",
+        "errorNameNotUnique": "Es existiert bereits eine Seite mit diesem Namen"
+    },
+    "publishActionModal": {
+        "title": "Veröffentlichen",
+        "publish": "Veröffentlichen",
+        "publishSucceedDescription": "Die Seite wurde erfolgreich veröffentlicht.",
+        "publishSucceedTitle": "Seite veröffentlicht",
+        "description": "Schalten Sie Ihre Anwendung live, indem Sie sie in einer der Domänen veröffentlichen. Beachten Sie, dass Ihre Anwendung mehrere Domänen haben kann, auf welchen jeweils eine andere Version der Anwendung läuft.",
+        "publishFailedTitle": "Veröffentlichung der Seite fehlgeschlagen",
+        "openInNewTab": "In neuem Tab öffnen",
+        "noDomain": "Sie benötigen mindestens eine Domäne, um Ihre Anwendung zu veröffentlichen.",
+        "publishFailedDescription": "Die Veröffentlichung der Seite ist fehlgeschlagen. Bitte versuchen Sie es später erneut.",
+        "importingState": "Importiere"
+    },
+    "pageActionTypes": {
+        "publish": "Veröffentlichen",
+        "preview": "Vorschau"
+    },
+    "domainSettings": {
+        "noDomainMessage": "Sie haben noch keine Domäne mit dieser Anwendung verknüpft. Sie müssen eine Domäne hinzufügen, um Ihre Anwendung veröffentlichen zu können. Sie können verschiedene Versionen Ihrer Anwendung für jede hier aufgeführte Domäne veröffentlichen.",
+        "addDomain": "Domäne hinzufügen",
+        "titleOverview": "Domänen",
+        "titleAddDomain": "Domäne hinzufügen"
+    },
+    "domainCard": {
+        "detailLabel": "Details anzeigen",
+        "refresh": "Einstellungen neu laden"
+    },
+    "customDomainForm": {
+        "domainNameLabel": "Domänen-Name"
+    },
+    "subDomainDetails": {
+        "text": "Die DNS-Einstellungen der Domäne sind bereits konfiguriert und überprüft worden. Es funktioniert, ohne dass zusätzliche Änderungen vorgenommen werden müssen."
+    },
+    "domainTypes": {
+        "subDomain": "Subdomain von {domain}",
+        "customName": "Benutzerdefinierte Domäne"
+    },
+    "domainForm": {
+        "notUniqueDomain": "Die angegebene Domäne wird bereits verwendet",
+        "invalidDomain": "Der angegebene Name der Domäne ist ungültig"
+    },
+    "formDataProviderType": {
+        "nodeMissing": "Fehlt"
+    },
+    "lastPublishedDomainDate": {
+        "lastPublished": "Zuletzt veröffentlicht:",
+        "neverPublished": "nie"
+    },
+    "subDomainForm": {
+        "domainNameLabel": "Domänen-Name"
+    },
+    "dnsStatus": {
+        "description": "Rufe die DNS-Einstellungen deiner Domäne auf und mache folgende Änderungen"
     }
 }

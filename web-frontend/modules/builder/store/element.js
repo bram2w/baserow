@@ -23,6 +23,7 @@ const updateContext = {
   updateTimeout: null,
   promiseResolve: null,
   lastUpdatedValues: null,
+  valuesToUpdate: {},
 }
 
 const mutations = {
@@ -66,15 +67,29 @@ const actions = {
   },
   forceCreate({ commit }, { page, element }) {
     commit('ADD_ITEM', { page, element })
+
+    const elementType = this.$registry.get('element', element.type)
+    elementType.afterCreate(element, page)
   },
   forceUpdate({ commit }, { page, element, values }) {
     commit('UPDATE_ITEM', { page, element, values })
+    const elementType = this.$registry.get('element', element.type)
+    elementType.afterUpdate(element, page)
   },
   forceDelete({ commit, getters }, { page, elementId }) {
+    const elementsOfPage = getters.getElements(page)
+    const elementIndex = elementsOfPage.findIndex(
+      (element) => element.id === elementId
+    )
+    const elementToDelete = elementsOfPage[elementIndex]
+
     if (getters.getSelected.id === elementId) {
       commit('SELECT_ITEM', { element: null })
     }
     commit('DELETE_ITEM', { page, elementId })
+
+    const elementType = this.$registry.get('element', elementToDelete.type)
+    elementType.afterDelete(elementToDelete, page)
   },
   forceMove(
     { commit, getters },
@@ -157,24 +172,33 @@ const actions = {
   async debouncedUpdateSelected({ dispatch, getters }, { page, values }) {
     const element = getters.getSelected
     const elementType = this.$registry.get('element', element.type)
+
     const oldValues = {}
-    const newValues = {}
     Object.keys(values).forEach((name) => {
       if (Object.prototype.hasOwnProperty.call(element, name)) {
         oldValues[name] = element[name]
-        newValues[name] = values[name]
+        // Accumulate the changed values to send all the ongoing changes with the
+        // final request
+        updateContext.valuesToUpdate[name] = values[name]
       }
     })
 
-    await dispatch('forceUpdate', { page, element, values: newValues })
+    await dispatch('forceUpdate', {
+      page,
+      element,
+      values: updateContext.valuesToUpdate,
+    })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
+        const toUpdate = updateContext.valuesToUpdate
+        updateContext.valuesToUpdate = {}
         try {
           await ElementService(this.$client).update(
             element.id,
-            elementType.prepareValuesForRequest(values)
+            elementType.prepareValuesForRequest(toUpdate)
           )
+          updateContext.lastUpdatedValues = null
           resolve()
         } catch (error) {
           // Revert to old values on error
@@ -183,9 +207,9 @@ const actions = {
             element,
             values: updateContext.lastUpdatedValues,
           })
+          updateContext.lastUpdatedValues = null
           reject(error)
         }
-        updateContext.lastUpdatedValues = null
       }
 
       if (updateContext.promiseResolve) {
@@ -282,7 +306,7 @@ const actions = {
       throw error
     }
   },
-  async duplicate({ dispatch }, { page, elementId }) {
+  async duplicate({ dispatch, getters }, { page, elementId }) {
     const {
       data: { elements, workflow_actions: workflowActions },
     } = await ElementService(this.$client).duplicate(elementId)
@@ -299,6 +323,14 @@ const actions = {
     )
 
     await Promise.all(elementPromises.concat(workflowActionPromises))
+
+    const elementToDuplicate = getters.getElementById(page, elementId)
+    const elementToSelect = elements.find(
+      ({ parent_element_id: parentId }) =>
+        parentId === elementToDuplicate.parent_element_id
+    )
+
+    dispatch('select', { page, element: elementToSelect })
 
     return elements
   },

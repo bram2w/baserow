@@ -49,7 +49,9 @@
         <Tab :title="$t('action.edit')">
           <UpdateWebhook
             :webhook="webhook"
+            :database="database"
             :table="table"
+            :fields="fields"
             @updated="$emit('updated', $event)"
             @deleted="$emit('deleted', $event)"
           />
@@ -80,8 +82,16 @@ export default {
       type: Object,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
   },

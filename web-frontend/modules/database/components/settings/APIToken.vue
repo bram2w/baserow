@@ -61,37 +61,42 @@
               </a>
             </div>
             <ul class="context__menu">
-              <li>
-                <nuxt-link :to="{ name: 'database-api-docs' }">
-                  <i class="context__menu-icon iconoir-book"></i>
+              <li class="context__menu-item">
+                <nuxt-link
+                  class="context__menu-item-link"
+                  :to="{ name: 'database-api-docs' }"
+                >
+                  <i class="context__menu-item-icon iconoir-book"></i>
                   {{ $t('apiToken.viewAPIDocs') }}
                 </nuxt-link>
               </li>
-              <li>
+              <li class="context__menu-item">
                 <a
+                  class="context__menu-item-link"
                   :class="{
-                    'context__menu-item--loading': rotateLoading,
+                    'context__menu-item-link--loading': rotateLoading,
                   }"
                   @click="rotateKey(token)"
                 >
-                  <i class="context__menu-icon iconoir-refresh-double"></i>
+                  <i class="context__menu-item-icon iconoir-refresh-double"></i>
                   {{ $t('apiToken.generateNewToken') }}
                 </a>
               </li>
-              <li>
-                <a @click="enableRename()">
-                  <i class="context__menu-icon iconoir-edit-pencil"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" @click="enableRename()">
+                  <i class="context__menu-item-icon iconoir-edit-pencil"></i>
                   {{ $t('action.rename') }}
                 </a>
               </li>
-              <li>
+              <li class="context__menu-item">
                 <a
                   :class="{
-                    'context__menu-item--loading': deleteLoading,
+                    'context__menu-item-link--loading': deleteLoading,
                   }"
+                  class="context__menu-item-link"
                   @click.prevent="deleteToken(token)"
                 >
-                  <i class="context__menu-icon iconoir-bin"></i>
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   {{ $t('action.delete') }}
                 </a>
               </li>
@@ -117,10 +122,9 @@
           :key="operation"
           class="api-token__permission"
         >
-          {{ operationName }}
+          <span>{{ operationName }}</span>
           <SwitchInput
             :value="isActive(operation)"
-            :large="true"
             @input="toggle(operation, $event)"
           ></SwitchInput>
         </div>
@@ -140,7 +144,6 @@
             >
               <SwitchInput
                 :value="isDatabaseActive(database, operation)"
-                :large="true"
                 @input="toggleDatabase(database, databases, operation, $event)"
               ></SwitchInput>
             </div>

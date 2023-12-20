@@ -8,7 +8,7 @@
         :value="filter.field"
         :disabled="disableFilter"
         :fixed-items="true"
-        class="dropdown--tiny"
+        small
         @input="$emit('updateFilter', { field: $event })"
       >
         <DropdownItem
@@ -25,7 +25,7 @@
         :disabled="disableFilter"
         :value="filter.type"
         :fixed-items="true"
-        class="dropdown--tiny"
+        small
         @input="$emit('updateFilter', { type: $event })"
       >
         <DropdownItem
@@ -74,9 +74,11 @@
 
 <script>
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
+import viewFilterTypes from '@baserow/modules/database/mixins/viewFilterTypes'
 
 export default {
   name: 'ViewFieldConditionItem',
+  mixins: [viewFilterTypes],
   props: {
     filter: {
       type: Object,
@@ -98,11 +100,6 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
-    },
-  },
-  computed: {
-    filterTypes() {
-      return this.$registry.getAll('viewFilter')
     },
   },
   methods: {
@@ -127,9 +124,10 @@ export default {
     },
     fieldIsCompatible(filterType, fieldId) {
       const field = this.fields.find(({ id }) => id === fieldId)
-      return this.$registry
-        .get('viewFilter', filterType)
-        .fieldIsCompatible(field)
+      if (!(filterType in this.filterTypes)) {
+        return false
+      }
+      return this.filterTypes[filterType].fieldIsCompatible(field)
     },
   },
 }

@@ -1,0 +1,16 @@
+.user-source-settings__user-source {
+  display: flex;
+  padding: 10px 0;
+  gap: 10px;
+}
+
+.user-source-settings__loader {
+  @include loading();
+
+  margin: auto;
+}
+
+.user-source_settings__user-source-actions {
+  display: flex;
+  align-items: center;
+}

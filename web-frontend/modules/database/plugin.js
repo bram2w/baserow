@@ -16,16 +16,21 @@ import {
   BooleanFieldType,
   DateFieldType,
   LastModifiedFieldType,
+  LastModifiedByFieldType,
   FileFieldType,
   SingleSelectFieldType,
   MultipleSelectFieldType,
   PhoneNumberFieldType,
   CreatedOnFieldType,
+  CreatedByFieldType,
+  DurationFieldType,
   FormulaFieldType,
   CountFieldType,
   RollupFieldType,
   LookupFieldType,
   MultipleCollaboratorsFieldType,
+  UUIDFieldType,
+  AutonumberFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -74,6 +79,8 @@ import {
   LinkRowNotContainsFilterType,
   ContainsWordViewFilterType,
   DoesntContainWordViewFilterType,
+  UserIsFilterType,
+  UserIsNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -121,6 +128,7 @@ import {
   BaserowEncodeUri,
   BaserowEncodeUriComponent,
   BaserowEqual,
+  BaserowHasOption,
   BaserowField,
   BaserowSearch,
   BaserowGreaterThan,
@@ -213,6 +221,7 @@ import {
   BaserowFormulaInvalidType,
   BaserowFormulaNumberType,
   BaserowFormulaSingleSelectType,
+  BaserowFormulaMultipleSelectType,
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
   BaserowFormulaFileType,
@@ -240,7 +249,10 @@ import {
 import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
 import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
-import { CollaboratorAddedToRowNotificationType } from '@baserow/modules/database/notificationTypes'
+import {
+  CollaboratorAddedToRowNotificationType,
+  FormSubmittedNotificationType,
+} from '@baserow/modules/database/notificationTypes'
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -416,6 +428,8 @@ export default (context) => {
   )
   app.$registry.register('viewFilter', new EmptyViewFilterType(context))
   app.$registry.register('viewFilter', new NotEmptyViewFilterType(context))
+  app.$registry.register('viewFilter', new UserIsFilterType(context))
+  app.$registry.register('viewFilter', new UserIsNotFilterType(context))
 
   app.$registry.register(
     'viewOwnershipType',
@@ -430,7 +444,10 @@ export default (context) => {
   app.$registry.register('field', new BooleanFieldType(context))
   app.$registry.register('field', new DateFieldType(context))
   app.$registry.register('field', new LastModifiedFieldType(context))
+  app.$registry.register('field', new LastModifiedByFieldType(context))
   app.$registry.register('field', new CreatedOnFieldType(context))
+  app.$registry.register('field', new CreatedByFieldType(context))
+  app.$registry.register('field', new DurationFieldType(context))
   app.$registry.register('field', new URLFieldType(context))
   app.$registry.register('field', new EmailFieldType(context))
   app.$registry.register('field', new FileFieldType(context))
@@ -442,6 +459,8 @@ export default (context) => {
   app.$registry.register('field', new RollupFieldType(context))
   app.$registry.register('field', new LookupFieldType(context))
   app.$registry.register('field', new MultipleCollaboratorsFieldType(context))
+  app.$registry.register('field', new UUIDFieldType(context))
+  app.$registry.register('field', new AutonumberFieldType(context))
 
   app.$registry.register('importer', new CSVImporterType(context))
   app.$registry.register('importer', new PasteImporterType(context))
@@ -485,6 +504,7 @@ export default (context) => {
   // Boolean functions
   app.$registry.register('formula_function', new BaserowIf(context))
   app.$registry.register('formula_function', new BaserowEqual(context))
+  app.$registry.register('formula_function', new BaserowHasOption(context))
   app.$registry.register('formula_function', new BaserowIsBlank(context))
   app.$registry.register('formula_function', new BaserowIsNull(context))
   app.$registry.register('formula_function', new BaserowNot(context))
@@ -600,6 +620,10 @@ export default (context) => {
     'formula_type',
     new BaserowFormulaSingleSelectType(context)
   )
+  app.$registry.register(
+    'formula_type',
+    new BaserowFormulaMultipleSelectType(context)
+  )
   app.$registry.register('formula_type', new BaserowFormulaLinkType(context))
   app.$registry.register('formula_type', new BaserowFormulaFileType(context))
 
@@ -680,6 +704,10 @@ export default (context) => {
   app.$registry.register(
     'notification',
     new CollaboratorAddedToRowNotificationType(context)
+  )
+  app.$registry.register(
+    'notification',
+    new FormSubmittedNotificationType(context)
   )
 
   app.$registry.register(

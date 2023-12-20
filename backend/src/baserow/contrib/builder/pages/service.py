@@ -152,7 +152,6 @@ class PageService:
             OrderPagesBuilderOperationType.type,
             all_pages,
             workspace=builder.workspace,
-            context=builder,
         )
 
         full_order = self.handler.order_pages(builder, order, user_pages)

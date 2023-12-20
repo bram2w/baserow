@@ -219,7 +219,6 @@ def workspace_restored(sender, workspace_user, user, **kwargs):
         ListApplicationsWorkspaceOperationType.type,
         applications_qs,
         workspace=workspace_user.workspace,
-        context=workspace_user.workspace,
     )
     applications_qs = specific_iterator(applications_qs)
     applications = [

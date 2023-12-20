@@ -27,7 +27,7 @@ export default {
   name: 'GridViewRowAdd',
   mixins: [gridViewHelpers],
   props: {
-    fields: {
+    visibleFields: {
       type: Array,
       required: true,
     },
@@ -38,7 +38,7 @@ export default {
   },
   computed: {
     width() {
-      let width = this.fields.reduce(
+      let width = this.visibleFields.reduce(
         (value, field) => this.getFieldWidth(field.id) + value,
         0
       )

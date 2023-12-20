@@ -1,8 +1,15 @@
-from typing import TYPE_CHECKING, List, Optional, cast
+from collections import defaultdict
+from typing import Any, Dict, List, Optional
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db import IntegrityError
 from django.db.models import QuerySet
 
+from baserow.contrib.builder.constants import IMPORT_SERIALIZED_IMPORTING
+from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.types import ElementDictSubClass
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.constants import (
     ILLEGAL_PATH_SAMPLE_CHARACTER,
@@ -20,12 +27,12 @@ from baserow.contrib.builder.pages.exceptions import (
 )
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.types import PagePathParams
+from baserow.contrib.builder.types import PageDict
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
 from baserow.core.exceptions import IdDoesNotExist
-from baserow.core.registries import application_type_registry
-from baserow.core.utils import ChildProgressBuilder, find_unused_name
-
-if TYPE_CHECKING:
-    from baserow.contrib.builder.application_types import BuilderApplicationType
+from baserow.core.utils import ChildProgressBuilder, MirrorDict, find_unused_name
 
 
 class PageHandler:
@@ -177,11 +184,8 @@ class PageHandler:
         progress.increment(by=start_progress)
 
         builder = page.builder
-        builder_application_type = cast(
-            "BuilderApplicationType", application_type_registry.get_by_model(builder)
-        )
 
-        [exported_page] = builder_application_type.export_pages_serialized([page])
+        exported_page = self.export_page(page)
 
         # Set a unique name for the page to import back as a new one.
         exported_page["name"] = self.find_unused_page_name(builder, page.name)
@@ -190,13 +194,14 @@ class PageHandler:
 
         progress.increment(by=export_progress)
 
-        [new_page_clone] = builder_application_type.import_pages_serialized(
+        id_mapping = defaultdict(lambda: MirrorDict())
+        id_mapping["builder_pages"] = MirrorDict()
+
+        new_page_clone = self.import_page(
             builder,
-            [exported_page],
-            progress_builder=progress.create_child_builder(
-                represents_progress=import_progress
-            ),
-            id_mapping={},
+            exported_page,
+            progress=progress.create_child_builder(represents_progress=import_progress),
+            id_mapping=id_mapping,
         )
 
         return new_page_clone
@@ -331,3 +336,309 @@ class PageHandler:
         """
 
         return PATH_PARAM_REGEX.sub(ILLEGAL_PATH_SAMPLE_CHARACTER, path)
+
+    def export_page(
+        self,
+        page: Page,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> List[PageDict]:
+        """
+        Serializes the given page.
+
+        :param page: The instance to serialize.
+        :param files_zip: A zip file to store files in necessary.
+        :param storage: Storage to use.
+        :return: The serialized version.
+        """
+
+        # Get serialized version of all elements of the current page
+        serialized_elements = [
+            ElementHandler().export_element(e, files_zip=files_zip, storage=storage)
+            for e in ElementHandler().get_elements(page=page)
+        ]
+
+        # Get serialized versions of all workflow actions of the current page
+        serialized_workflow_actions = [
+            BuilderWorkflowActionHandler().export_workflow_action(
+                wa, files_zip=files_zip, storage=storage
+            )
+            for wa in BuilderWorkflowActionHandler().get_workflow_actions(page=page)
+        ]
+
+        # Get serialized version of all data_sources for the current page
+        serialized_data_sources = [
+            DataSourceHandler().export_data_source(
+                ds, files_zip=files_zip, storage=storage
+            )
+            for ds in DataSourceHandler().get_data_sources(page=page)
+        ]
+
+        return PageDict(
+            id=page.id,
+            name=page.name,
+            order=page.order,
+            path=page.path,
+            path_params=page.path_params,
+            elements=serialized_elements,
+            data_sources=serialized_data_sources,
+            workflow_actions=serialized_workflow_actions,
+        )
+
+    def _ops_count_for_import_page(
+        self,
+        serialized_pages: List[Dict[str, Any]],
+    ) -> int:
+        """
+        Count number of steps for the operation. Used to track task progress.
+        """
+
+        return (
+            len(serialized_pages["elements"])
+            + len(serialized_pages["data_sources"])
+            + len(serialized_pages["workflow_actions"])
+            + 1
+        )
+
+    def import_pages(
+        self,
+        builder: Builder,
+        serialized_pages: List[Dict[str, Any]],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Import multiple pages at once. Especially useful when we have dependencies
+        between element of the page. Page are imported first then other part of
+        the page.
+
+        :param builder: The builder instance the new page should belong to.
+        :param serialized_pages: The serialized version of the pages.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the newly created instances.
+        """
+
+        child_total = sum(self._ops_count_for_import_page(p) for p in serialized_pages)
+        progress = ChildProgressBuilder.build(progress, child_total=child_total)
+
+        imported_pages = []
+        for serialized_page in serialized_pages:
+            page_instance = self.import_page_only(
+                builder,
+                serialized_page,
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+                progress=progress,
+            )
+            imported_pages.append([page_instance, serialized_page])
+
+        for page_instance, serialized_page in imported_pages:
+            self.import_data_sources(
+                page_instance,
+                serialized_page["data_sources"],
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+                progress=progress,
+            )
+
+        for page_instance, serialized_page in imported_pages:
+            self.import_elements(
+                page_instance,
+                serialized_page["elements"],
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+                progress=progress,
+            )
+
+        for page_instance, serialized_page in imported_pages:
+            self.import_workflow_actions(
+                page_instance,
+                serialized_page["workflow_actions"],
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+                progress=progress,
+            )
+
+        return [i[0] for i in imported_pages]
+
+    def import_page(
+        self,
+        builder: Builder,
+        serialized_page: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Creates an instance using the serialized version previously exported with
+        `.export_page'.
+
+        :param builder: The builder instance the new page should belong to.
+        :param serialized_page: The serialized version of the page.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the newly created instance.
+        """
+
+        return self.import_pages(
+            builder,
+            [serialized_page],
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            progress=progress,
+        )[0]
+
+    def import_page_only(
+        self,
+        builder: Builder,
+        serialized_page: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress: Optional[ChildProgressBuilder] = None,
+    ):
+        if "builder_pages" not in id_mapping:
+            id_mapping["builder_pages"] = {}
+
+        page_instance = Page.objects.create(
+            builder=builder,
+            name=serialized_page["name"],
+            order=serialized_page["order"],
+            path=serialized_page["path"],
+            path_params=serialized_page["path_params"],
+        )
+
+        id_mapping["builder_pages"][serialized_page["id"]] = page_instance.id
+
+        progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+        return page_instance
+
+    def import_data_sources(
+        self,
+        page: Page,
+        serialized_data_sources: List[Dict],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Import all page data sources.
+
+        :param page: the page the elements should belong to.
+        :param serialized_data_sources: the list of serialized elements.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the newly created instance list.
+        """
+
+        for serialized_data_source in serialized_data_sources:
+            DataSourceHandler().import_data_source(
+                page,
+                serialized_data_source,
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+            )
+            progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+    def import_elements(
+        self,
+        page: Page,
+        serialized_elements: List[ElementDictSubClass],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Import all page elements, dealing with the potential incorrect order regarding
+        element hierarchy: the parents need to be imported first.
+
+        :param page: the page the elements should belong to.
+        :param serialized_elements: the list of serialized elements.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the newly created instance list.
+        """
+
+        # For element we can have a hierarchy and we can have a parent element that is
+        # needs to be created before the child element.
+        # That why we are iterating until all elements are created.
+        imported_elements = []
+
+        # True if we have imported at least one element on last iteration
+        as_imported = True
+
+        while as_imported:
+            as_imported = False
+
+            for serialized_element in serialized_elements:
+                parent_element_id = serialized_element["parent_element_id"]
+                # check that the element has not already been imported in a
+                # previous pass or if the parent doesn't exit yet.
+                if serialized_element["id"] not in id_mapping.get(
+                    "builder_page_elements", {}
+                ) and (
+                    parent_element_id is None
+                    or parent_element_id in id_mapping.get("builder_page_elements", {})
+                ):
+                    imported_elements.append(
+                        ElementHandler().import_element(
+                            page,
+                            serialized_element,
+                            id_mapping,
+                            files_zip=files_zip,
+                            storage=storage,
+                        )
+                    )
+                    as_imported = True
+                    if progress:
+                        progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+        return imported_elements
+
+    def import_workflow_actions(
+        self,
+        page: Page,
+        serialized_workflow_actions: List[Dict],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Import all page workflow_actions.
+
+        :param page: the page the elements should belong to.
+        :param serialized_data_sources: the list of serialized elements.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the newly created instance list.
+        """
+
+        for serialized_workflow_action in serialized_workflow_actions:
+            BuilderWorkflowActionHandler().import_workflow_action(
+                page, serialized_workflow_action, id_mapping
+            )
+            progress.increment(state=IMPORT_SERIALIZED_IMPORTING)

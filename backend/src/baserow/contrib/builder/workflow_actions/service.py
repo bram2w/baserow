@@ -1,26 +1,40 @@
-from typing import List
+from typing import Any, List
 
 from django.contrib.auth.models import AbstractUser
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
+from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.workflow_actions.exceptions import (
+    BuilderWorkflowActionCannotBeDispatched,
+)
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
 from baserow.contrib.builder.workflow_actions.models import (
     BuilderWorkflowAction,
+    BuilderWorkflowServiceAction,
     WorkflowAction,
 )
 from baserow.contrib.builder.workflow_actions.operations import (
     CreateBuilderWorkflowActionOperationType,
     DeleteBuilderWorkflowActionOperationType,
+    DispatchBuilderWorkflowActionOperationType,
     ListBuilderWorkflowActionsPageOperationType,
+    OrderBuilderWorkflowActionOperationType,
     ReadBuilderWorkflowActionOperationType,
     UpdateBuilderWorkflowActionOperationType,
+)
+from baserow.contrib.builder.workflow_actions.registries import (
+    builder_workflow_action_type_registry,
 )
 from baserow.contrib.builder.workflow_actions.signals import (
     workflow_action_created,
     workflow_action_deleted,
     workflow_action_updated,
+    workflow_actions_reordered,
 )
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     BuilderWorkflowActionType,
@@ -80,7 +94,6 @@ class BuilderWorkflowActionService:
             ListBuilderWorkflowActionsPageOperationType.type,
             BuilderWorkflowAction.objects.all(),
             workspace=page.builder.workspace,
-            context=page,
         )
 
         return self.handler.get_workflow_actions(
@@ -111,8 +124,10 @@ class BuilderWorkflowActionService:
             context=page,
         )
 
+        prepared_values = workflow_action_type.prepare_values(kwargs, user)
+
         new_workflow_action = self.handler.create_workflow_action(
-            workflow_action_type, page=page, **kwargs
+            workflow_action_type, page=page, **prepared_values
         )
 
         workflow_action_created.send(
@@ -143,7 +158,40 @@ class BuilderWorkflowActionService:
             context=workflow_action,
         )
 
-        workflow_action = self.handler.update_workflow_action(workflow_action, **kwargs)
+        has_type_changed = (
+            "type" in kwargs and kwargs["type"] != workflow_action.get_type().type
+        )
+
+        if has_type_changed:
+            workflow_action_type = builder_workflow_action_type_registry.get(
+                kwargs["type"]
+            )
+        else:
+            workflow_action_type = workflow_action.get_type()
+
+        if has_type_changed:
+            # When a workflow action's type changes, due our polymorphism, we need
+            # to delete the existing action and create a new one of the new type.
+            self.handler.delete_workflow_action(workflow_action)
+            # We call `prepare_values` with the PATCHed payload, and then manually
+            # add `page`, `element`, `order` & `event` data from the *previous*
+            # workflow action as 1) they'll be the same and 2) they aren't present
+            # in the payload.
+            prepared_values = workflow_action_type.prepare_values(kwargs, user)
+            prepared_values["page"] = workflow_action.page
+            prepared_values["element"] = workflow_action.element
+            prepared_values["order"] = workflow_action.order
+            prepared_values["event"] = workflow_action.event
+            workflow_action = self.handler.create_workflow_action(
+                workflow_action_type, **prepared_values
+            )
+        else:
+            prepared_values = workflow_action_type.prepare_values(
+                kwargs, user, workflow_action
+            )
+            workflow_action = self.handler.update_workflow_action(
+                workflow_action, **prepared_values
+            )
 
         workflow_action_updated.send(self, workflow_action=workflow_action, user=user)
 
@@ -173,3 +221,78 @@ class BuilderWorkflowActionService:
         workflow_action_deleted.send(
             self, workflow_action_id=workflow_action.id, page=page, user=user
         )
+
+    def order_workflow_actions(
+        self,
+        user: AbstractUser,
+        page: Page,
+        order: List[int],
+        element: Element = None,
+    ) -> List[int]:
+        """
+        Assigns a new order to the workflow actions in a builder application.
+
+        :param user: The user trying to order the domains
+        :param page: The page that the workflow actions belong to
+        :param order: The new order of the workflow actions
+        :param element: The element the page belongs to
+        :return: The new order of the workflow actions
+        """
+
+        CoreHandler().check_permissions(
+            user,
+            OrderBuilderWorkflowActionOperationType.type,
+            workspace=page.builder.workspace,
+            context=page,
+        )
+
+        all_workflow_actions = BuilderWorkflowAction.objects.filter(
+            page=page, element=element
+        )
+
+        user_workflow_actions = CoreHandler().filter_queryset(
+            user,
+            OrderBuilderWorkflowActionOperationType.type,
+            all_workflow_actions,
+            workspace=page.builder.workspace,
+        )
+
+        full_order = self.handler.order_workflow_actions(
+            page, order, base_qs=user_workflow_actions, element=element
+        )
+
+        workflow_actions_reordered.send(self, order=full_order, user=user)
+
+        return full_order
+
+    def dispatch_action(
+        self,
+        user,
+        workflow_action: BuilderWorkflowServiceAction,
+        dispatch_context: BuilderDispatchContext,
+    ) -> Any:
+        """
+        Dispatch the service related to the given workflow_action if the user
+        has the permission.
+
+        :param user: The current user.
+        :param workflow_action: The workflow action's service to be dispatched.
+        :param dispatch_context: The context used for the dispatch.
+        :return: The result of dispatching the action mapped by workflow_action ID.
+        :raises BuilderWorkflowActionCannotBeDispatched: If a `workflow_action` is
+            provided that does not implement `BuilderWorkflowServiceAction`.
+        """
+
+        if not issubclass(workflow_action.__class__, BuilderWorkflowServiceAction):
+            raise BuilderWorkflowActionCannotBeDispatched(
+                f"WorkflowAction {workflow_action.id} is not meant to be dispatched."
+            )
+
+        CoreHandler().check_permissions(
+            user,
+            DispatchBuilderWorkflowActionOperationType.type,
+            workspace=workflow_action.page.builder.workspace,
+            context=workflow_action,
+        )
+
+        return self.handler.dispatch_workflow_action(workflow_action, dispatch_context)

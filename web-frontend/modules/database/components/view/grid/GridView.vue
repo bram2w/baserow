@@ -15,14 +15,16 @@
     <GridViewSection
       ref="left"
       class="grid-view__left"
-      :fields="leftFields"
+      :visible-fields="leftFields"
+      :all-fields-in-table="fields"
       :decorations-by-place="decorationsByPlace"
       :database="database"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
-      :include-row-details="true"
-      :include-grid-view-identifier-dropdown="true"
+      :include-row-details="!viewHasGroupBys"
+      :include-grid-view-identifier-dropdown="!viewHasGroupBys"
+      :include-group-by="true"
       :read-only="
         readOnly ||
         !$hasPermission(
@@ -54,42 +56,54 @@
       @edit-modal="openRowEditModal($event)"
       @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, 0)"
-    >
-      <template #foot>
-        <div class="grid-view__foot-info">
-          {{ $tc('gridView.rowCount', count, { count }) }}
-        </div>
-      </template>
-    </GridViewSection>
+      @cell-selected="cellSelected"
+    ></GridViewSection>
     <GridViewRowsAddContext ref="rowsAddContext" @add-rows="addRows" />
     <div
       ref="divider"
       class="grid-view__divider"
       :style="{ left: leftWidth + 'px' }"
     ></div>
-    <GridViewFieldWidthHandle
-      v-if="canFitInTwoColumns"
+    <GridViewWidthHandle
+      v-if="primaryFieldIsSticky"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
-      :database="database"
-      :grid="view"
-      :field="leftFields[0]"
       :width="leftFieldsWidth"
-      :read-only="
-        readOnly ||
-        !$hasPermission('database.table.move_row', table, database.workspace.id)
+      @move="moveFieldWidth(leftFields[0], $event)"
+      @update="
+        updateFieldWidth(leftFields[0], view, database, readOnly, $event)
       "
-      :store-prefix="storePrefix"
-    ></GridViewFieldWidthHandle>
+    ></GridViewWidthHandle>
+    <GridViewWidthHandle
+      v-else-if="viewHasGroupBys && leftFields.length === 0"
+      class="grid-view__divider-width"
+      :style="{ left: leftWidth + 'px' }"
+      :width="activeGroupBys[activeGroupBys.length - 1].width"
+      @move="
+        moveGroupWidth(activeGroupBys[activeGroupBys.length - 1], view, $event)
+      "
+      @update="
+        updateGroupWidth(
+          activeGroupBys[activeGroupBys.length - 1],
+          view,
+          database,
+          readOnly,
+          $event
+        )
+      "
+    ></GridViewWidthHandle>
     <GridViewSection
       ref="right"
       class="grid-view__right"
-      :fields="visibleFields"
+      :visible-fields="rightVisibleFields"
+      :all-fields-in-table="fields"
       :decorations-by-place="decorationsByPlace"
       :database="database"
-      :can-fit-in-two-columns="canFitInTwoColumns"
+      :primary-field-is-sticky="primaryFieldIsSticky"
       :table="table"
       :view="view"
+      :include-row-details="viewHasGroupBys"
+      :include-grid-view-identifier-dropdown="viewHasGroupBys"
       :include-add-field="true"
       :can-order-fields="true"
       :read-only="
@@ -112,6 +126,7 @@
       @update="updateValue"
       @paste="multiplePasteFromCell"
       @edit="editValue"
+      @row-dragging="rowDragStart"
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
@@ -122,14 +137,15 @@
       @edit-modal="openRowEditModal($event)"
       @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, $event.pixelX)"
-    >
-    </GridViewSection>
+      @cell-selected="cellSelected"
+    ></GridViewSection>
     <GridViewRowDragging
       ref="rowDragging"
       :table="table"
       :view="view"
       :fields="allVisibleFields"
       :store-prefix="storePrefix"
+      :offset="activeGroupByWidth"
       vertical="getVerticalScrollbarElement"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewRowDragging>
@@ -139,9 +155,12 @@
       :max-height-if-outside-viewport="true"
     >
       <ul v-show="isMultiSelectActive" class="context__menu">
-        <li>
-          <a @click=";[copySelection(), $refs.rowContext.hide()]">
-            <i class="context__menu-icon iconoir-copy"></i>
+        <li class="context__menu-item">
+          <a
+            class="context__menu-item-link"
+            @click=";[copySelection($event), $refs.rowContext.hide()]"
+          >
+            <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridView.copyCells') }}
           </a>
         </li>
@@ -154,12 +173,14 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <a
-            :class="{ 'context__menu-item--loading': deletingRow }"
+            class="context__menu-item-link"
+            :class="{ 'context__menu-item-link--loading': deletingRow }"
             @click.stop="deleteRowsFromMultipleCellSelection()"
           >
-            <i class="context__menu-icon iconoir-bin"></i>
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRows') }}
           </a>
         </li>
@@ -167,9 +188,10 @@
       <ul v-show="!isMultiSelectActive" class="context__menu">
         <li>
           <a
+            class="context__menu-item-link"
             @click=";[selectRow($event, selectedRow), $refs.rowContext.hide()]"
           >
-            <i class="context__menu-icon iconoir-check-circle"></i>
+            <i class="context__menu-item-icon iconoir-check-circle"></i>
             {{ $t('gridView.selectRow') }}
           </a>
         </li>
@@ -182,9 +204,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="addRowAboveSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-arrow-up"></i>
+          <a
+            class="context__menu-item-link"
+            @click="addRowAboveSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
@@ -197,9 +223,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="addRowBelowSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-arrow-down"></i>
+          <a
+            class="context__menu-item-link"
+            @click="addRowBelowSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
@@ -212,21 +242,34 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="duplicateSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-copy"></i>
+          <a
+            class="context__menu-item-link"
+            @click="duplicateSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridView.duplicateRow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
-          <a @click="copyLinkToSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-link"></i>
+        <li v-if="!readOnly" class="context__menu-item">
+          <a
+            class="context__menu-item-link"
+            @click="copyLinkToSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-link"></i>
             {{ $t('gridView.copyRowURL') }}
           </a>
         </li>
-        <li v-if="selectedRow !== null && !selectedRow._.loading">
-          <a @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]">
-            <i class="context__menu-icon iconoir-expand"></i>
+        <li
+          v-if="selectedRow !== null && !selectedRow._.loading"
+          class="context__menu-item"
+        >
+          <a
+            class="context__menu-item-link"
+            @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]"
+          >
+            <i class="context__menu-item-icon iconoir-expand"></i>
             {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
@@ -239,9 +282,10 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="deleteRow(selectedRow)">
-            <i class="context__menu-icon iconoir-bin"></i>
+          <a class="context__menu-item-link" @click="deleteRow(selectedRow)">
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRow') }}
           </a>
         </li>
@@ -297,7 +341,7 @@ import ResizeObserver from 'resize-observer-polyfill'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
-import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
@@ -320,7 +364,7 @@ export default {
   components: {
     GridViewRowsAddContext,
     GridViewSection,
-    GridViewFieldWidthHandle,
+    GridViewWidthHandle,
     GridViewRowDragging,
     RowEditModal,
   },
@@ -368,14 +412,19 @@ export default {
     ...mapGetters({
       row: 'rowModalNavigation/getRow',
     }),
+    /**
+     * Returns all visible fields no matter in what section they
+     * belong.
+     */
     allVisibleFields() {
-      return this.leftFields.concat(this.visibleFields)
+      return this.leftFields.concat(this.rightVisibleFields)
     },
     /**
-     * Returns only the visible fields in the correct order. Primary must always be
+     * Returns only the visible fields in the correct order that are in
+     * the right section of the grid. Primary must always be
      * first if in that list.
      */
-    visibleFields() {
+    rightVisibleFields() {
       const fieldOptions = this.fieldOptions
       return this.rightFields
         .filter(filterVisibleFieldsFunction(fieldOptions))
@@ -390,15 +439,21 @@ export default {
         .filter(filterHiddenFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
+    viewHasGroupBys() {
+      return this.activeGroupBys.length > 0
+    },
+    primaryFieldIsSticky() {
+      return this.canFitInTwoColumns && !this.viewHasGroupBys
+    },
     leftFields() {
-      if (this.canFitInTwoColumns) {
+      if (this.primaryFieldIsSticky) {
         return this.fields.filter((field) => field.primary)
       } else {
         return []
       }
     },
     rightFields() {
-      if (this.canFitInTwoColumns) {
+      if (this.primaryFieldIsSticky) {
         return this.fields.filter((field) => !field.primary)
       } else {
         return this.fields
@@ -411,7 +466,12 @@ export default {
       )
     },
     leftWidth() {
-      return this.leftFieldsWidth + this.gridViewRowDetailsWidth
+      return (
+        this.leftFieldsWidth +
+        (this.viewHasGroupBys ? 0 : this.gridViewRowDetailsWidth) +
+        // 100 must be replaced with the dynamic width
+        this.activeGroupByWidth
+      )
     },
     activeSearchTerm() {
       return this.$store.getters[
@@ -460,7 +520,6 @@ export default {
       ...(this.$options.computed || {}),
       ...mapGetters({
         allRows: this.$options.propsData.storePrefix + 'view/grid/getAllRows',
-        count: this.$options.propsData.storePrefix + 'view/grid/getCount',
         isMultiSelectActive:
           this.$options.propsData.storePrefix + 'view/grid/isMultiSelectActive',
       }),
@@ -565,7 +624,7 @@ export default {
 
       if (scrollDirection !== 'vertical') {
         const fieldPrimary = field.primary
-        if (elementLeft < 0 && (!this.canFitInTwoColumns || !fieldPrimary)) {
+        if (elementLeft < 0 && (!this.primaryFieldIsSticky || !fieldPrimary)) {
           // If the field isn't visible in the viewport we need to scroll left in order
           // to show it.
           this.horizontalScroll(
@@ -574,7 +633,7 @@ export default {
           this.$refs.scrollbars.updateHorizontal()
         } else if (
           elementRight > horizontalContainerWidth &&
-          (!this.canFitInTwoColumns || !fieldPrimary)
+          (!this.primaryFieldIsSticky || !fieldPrimary)
         ) {
           // If the field isn't visible in the viewport we need to scroll right in order
           // to show it.
@@ -628,10 +687,13 @@ export default {
       const filterIndex = this.view.filters.findIndex((filter) => {
         return filter.field === field.id
       })
+      const groupIndex = this.view.group_bys.findIndex((group) => {
+        return group.field === field.id
+      })
       const sortIndex = this.view.sortings.findIndex((sort) => {
         return sort.field === field.id
       })
-      if (filterIndex > -1 || sortIndex > -1) {
+      if (filterIndex > -1 || groupIndex > -1 || sortIndex > -1) {
         this.$emit('refresh')
       }
     },
@@ -777,7 +839,7 @@ export default {
           rowHeadIndex: rowIndex,
           rowTailIndex: rowIndex,
           fieldHeadIndex: 0,
-          fieldTailIndex: this.visibleFields.length,
+          fieldTailIndex: this.allVisibleFields.length - 1,
         }
       )
     },
@@ -1049,6 +1111,14 @@ export default {
       this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
         rowId: nextRowId,
         fieldId: nextFieldId,
+        fields: this.fields,
+      })
+    },
+    cellSelected({ fieldId, rowId }) {
+      this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
+        rowId,
+        fieldId,
+        fields: this.fields,
       })
     },
     /**
@@ -1061,6 +1131,13 @@ export default {
         this.storePrefix + 'view/grid/visibleByScrollTop',
         this.$refs.right.$refs.body.scrollTop
       )
+      // The grid view store keeps a copy of the group bys that must only be updated
+      // after the refresh of the page. This is because the group by depends on the rows
+      // being sorted, and this will only be the case after a refresh.
+      await this.$store.dispatch(
+        this.storePrefix + 'view/grid/updateActiveGroupBys',
+        clone(this.view.group_bys)
+      )
       this.$nextTick(() => {
         this.fieldsUpdated()
       })
@@ -1070,8 +1147,7 @@ export default {
         this.storePrefix + 'view/grid/multiSelectShiftClick',
         {
           rowId: row.id,
-          fieldIndex:
-            this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+          fieldIndex: this.allVisibleFields.findIndex((f) => f.id === field.id),
         }
       )
     },
@@ -1081,8 +1157,9 @@ export default {
      * selected cell.
      */
     multiSelectStart({ event, row, field }) {
-      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
-      if (this.canFitInTwoColumns) fieldIndex += 1
+      const fieldIndex = this.allVisibleFields.findIndex(
+        (f) => f.id === field.id
+      )
 
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectStart', {
         rowId: row.id,
@@ -1095,8 +1172,9 @@ export default {
      * with the last cell hovered over.
      */
     multiSelectHold({ event, row, field }) {
-      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
-      if (this.canFitInTwoColumns) fieldIndex += 1
+      const fieldIndex = this.allVisibleFields.findIndex(
+        (f) => f.id === field.id
+      )
 
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectHold', {
         rowId: row.id,
@@ -1186,20 +1264,18 @@ export default {
           scrollDirection = 'vertical'
         }
 
-        const fieldId =
-          this.$store.getters[this.storePrefix + 'view/grid/getFieldIdByIndex'](
-            fieldIndex
-          )
+        const fieldId = this.$store.getters[
+          this.storePrefix + 'view/grid/getFieldIdByIndex'
+        ](fieldIndex, this.fields)
         if (fieldId === -1) {
           return
         }
         const field = this.$store.getters['field/get'](fieldId)
         const verticalContainer = this.$refs.right.$refs.body
         const horizontalContainer = this.$refs.right.$el
-        const visibleFieldOptions =
-          this.$store.getters[
-            this.storePrefix + 'view/grid/getOrderedVisibleFieldOptions'
-          ]
+        const visibleFieldOptions = this.$store.getters[
+          this.storePrefix + 'view/grid/getOrderedVisibleFieldOptions'
+        ](this.fields)
         let elementRight = -horizontalContainer.scrollLeft
         for (let i = 0; i < visibleFieldOptions.length; i++) {
           const fieldOption = visibleFieldOptions[i]
@@ -1238,6 +1314,7 @@ export default {
             this.storePrefix + 'view/grid/setSelectedCellCancelledMultiSelect',
             {
               direction: arrowShiftKeysMapping[key],
+              fields: this.fields,
             }
           )
         }
@@ -1280,8 +1357,9 @@ export default {
       const rowIndex = this.$store.getters[
         this.storePrefix + 'view/grid/getRowIndexById'
       ](row.id)
-      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
-      if (this.canFitInTwoColumns) fieldIndex += 1
+      const fieldIndex = this.allVisibleFields.findIndex(
+        (f) => f.id === field.id
+      )
       await this.pasteData(textData, jsonData, rowIndex, fieldIndex)
     },
     /**
@@ -1319,6 +1397,19 @@ export default {
         )
       ) {
         return
+      }
+
+      // The backend will fail hard if it tries to update more rows than the limit, so
+      // we're slicing the data here.
+      const pageSizeLimit = this.$config.BASEROW_ROW_PAGE_SIZE_LIMIT
+      if (textData.length > pageSizeLimit) {
+        this.$store.dispatch('toast/info', {
+          title: this.$t('gridView.tooManyItemsTitle'),
+          message: this.$t('gridView.tooManyItemsDescription', {
+            limit: pageSizeLimit,
+          }),
+        })
+        textData = textData.slice(0, pageSizeLimit)
       }
 
       this.$store.dispatch('toast/setPasting', true)

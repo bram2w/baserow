@@ -28,14 +28,14 @@ def test_list_views_ownership_type(
     )
     table_1 = data_fixture.create_database_table(user=user, database=database)
     view_1 = data_fixture.create_grid_view(
-        table=table_1, order=1, ownership_type="collaborative", created_by=user
+        table=table_1, order=1, ownership_type="collaborative", owned_by=user
     )
     view_2 = data_fixture.create_grid_view(
-        table=table_1, order=3, ownership_type="personal", created_by=user
+        table=table_1, order=3, ownership_type="personal", owned_by=user
     )
     # view belongs to another user
     view_3 = data_fixture.create_grid_view(
-        table=table_1, order=3, ownership_type="personal", created_by=user2
+        table=table_1, order=3, ownership_type="personal", owned_by=user2
     )
     alternative_per_workspace_license_service.restrict_user_premium_to(
         user, workspace.id

@@ -25,18 +25,21 @@
       @error="formHasError = $event"
     />
     <div class="actions">
-      <a @click="hideForm">
-        <i class="iconoir-nav-arrow-left margin-right-1"></i>
+      <Button
+        type="link"
+        prepend-icon="iconoir-nav-arrow-left"
+        @click="hideForm"
+      >
         {{ $t('action.back') }}
-      </a>
-      <button
-        class="button button--large"
+      </Button>
+      <Button
         :disabled="createLoading || formHasError"
-        :class="{ 'button--loading': createLoading }"
+        size="large"
+        :loading="createLoading"
         @click="onSubmit"
       >
-        {{ $t('domainSettings.addDomain') }}
-      </button>
+        {{ $t('action.create') }}
+      </Button>
     </div>
   </div>
 </template>

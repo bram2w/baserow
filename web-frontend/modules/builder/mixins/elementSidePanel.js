@@ -3,7 +3,6 @@ import _ from 'lodash'
 
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import BigNumber from 'bignumber.js'
 
 export default {
   inject: ['builder', 'page'],
@@ -45,9 +44,8 @@ export default {
         )
       )
 
-      if (newValues.order) {
-        newValues.order = new BigNumber(newValues.order)
-      }
+      // We never want to update the order this way
+      delete differences.order
 
       if (Object.keys(differences).length > 0) {
         try {

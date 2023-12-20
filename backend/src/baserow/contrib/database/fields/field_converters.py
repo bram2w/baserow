@@ -10,6 +10,7 @@ from baserow.contrib.database.db.schema import (
 )
 
 from .models import (
+    AutonumberField,
     FileField,
     FormulaField,
     LinkRowField,
@@ -49,6 +50,15 @@ class FormulaFieldConverter(RecreateFieldConverter):
 
     def is_applicable(self, from_model, from_field, to_field):
         return isinstance(to_field, FormulaField)
+
+
+class AutonumberFieldConverter(RecreateFieldConverter):
+    type = "autonumber"
+
+    def is_applicable(self, from_model, from_field, to_field):
+        from_autonumber = isinstance(from_field, AutonumberField)
+        to_autonumber = isinstance(to_field, AutonumberField)
+        return to_autonumber and not from_autonumber
 
 
 class LinkRowFieldConverter(RecreateFieldConverter):

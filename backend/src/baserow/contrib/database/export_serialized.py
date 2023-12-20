@@ -15,12 +15,21 @@ class DatabaseExportSerializedStructure:
         }
 
     @staticmethod
-    def row(id, order, created_on, updated_on):
+    def row(id, order, created_on, updated_on, created_by=None, last_modified_by=None):
+        optional = {}
+
+        if created_by:
+            optional["created_by"] = created_by.email
+
+        if last_modified_by:
+            optional["last_modified_by"] = last_modified_by.email
+
         return {
             "id": id,
             "order": order,
             "created_on": created_on,
             "updated_on": updated_on,
+            **optional,
         }
 
     @staticmethod

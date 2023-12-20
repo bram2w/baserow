@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug causing comments not syncing in row edit modal on navigation.",
+    "issue_number": 2144,
+    "bullet_points": [],
+    "created_at": "2023-12-12"
+}

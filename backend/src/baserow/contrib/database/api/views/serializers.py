@@ -1,5 +1,6 @@
 import json
-from typing import Any, Dict, Optional, Type
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Type
 
 from django.utils.functional import lazy
 
@@ -15,7 +16,9 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.views.exceptions import ViewOwnershipTypeDoesNotExist
 from baserow.contrib.database.views.models import (
     OWNERSHIP_TYPE_COLLABORATIVE,
     View,
@@ -233,30 +236,53 @@ class UpdateViewSortSerializer(serializers.ModelSerializer):
     class Meta(CreateViewFilterSerializer.Meta):
         model = ViewSort
         fields = ("field", "order")
-        extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
+        extra_kwargs = {
+            "field": {"required": False},
+            "order": {"required": False},
+            "width": {"required": False},
+        }
 
 
 class ViewGroupBySerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewGroupBy
-        fields = ("id", "view", "field", "order")
+        fields = (
+            "id",
+            "view",
+            "field",
+            "order",
+            "width",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
 
 class CreateViewGroupBySerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewGroupBy
-        fields = ("field", "order")
+        fields = (
+            "field",
+            "order",
+            "width",
+        )
         extra_kwargs = {
             "order": {"default": ViewGroupBy._meta.get_field("order").default},
+            "width": {"default": ViewGroupBy._meta.get_field("width").default},
         }
 
 
 class UpdateViewGroupBySerializer(serializers.ModelSerializer):
     class Meta(CreateViewFilterSerializer.Meta):
         model = ViewGroupBy
-        fields = ("field", "order")
-        extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
+        fields = (
+            "field",
+            "order",
+            "width",
+        )
+        extra_kwargs = {
+            "field": {"required": False},
+            "order": {"required": False},
+            "width": {"required": False},
+        }
 
 
 class ViewDecorationSerializer(serializers.ModelSerializer):
@@ -355,7 +381,7 @@ class ViewSerializer(serializers.ModelSerializer):
     )
     show_logo = serializers.BooleanField(required=False)
     ownership_type = serializers.CharField()
-    created_by_id = serializers.IntegerField(required=False)
+    owned_by_id = serializers.IntegerField(required=False)
 
     class Meta:
         model = View
@@ -376,14 +402,14 @@ class ViewSerializer(serializers.ModelSerializer):
             "public_view_has_password",
             "show_logo",
             "ownership_type",
-            "created_by_id",
+            "owned_by_id",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
             "public_view_has_password": {"read_only": True},
             "ownership_type": {"read_only": True},
-            "created_by_id": {"read_only": True},
+            "owned_by_id": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):
@@ -447,20 +473,43 @@ class UpdateViewSerializer(serializers.ModelSerializer):
         "password from the view and make it publicly accessible again.",
     )
 
-    def to_representation(self, data):
-        representation = super().to_representation(data)
-        public_view_password = representation.pop("public_view_password", None)
-        if public_view_password is not None:
-            # Pass a differently named attribute down to the handler, so it knows
-            # the difference between the user setting a new raw password and/or
-            # someone directly changing the literal hashed and salted password value.
-            representation["raw_public_view_password"] = public_view_password
-        return representation
+    def to_internal_value(self, data):
+        internal_value = super().to_internal_value(data)
+
+        # Store the hashed password in the database if provided. An empty string
+        # means that the password protection is disabled.
+        raw_public_view_password = internal_value.pop("public_view_password", None)
+        if raw_public_view_password is not None or "public" in data:
+            internal_value["public_view_password"] = (
+                View.make_password(raw_public_view_password)
+                if raw_public_view_password
+                else ""  # nosec b105
+            )
+
+        return internal_value
+
+    def validate_ownership_type(self, value):
+        try:
+            view_ownership_type_registry.get(value)
+        except ViewOwnershipTypeDoesNotExist:
+            allowed_ownerships = ",".join(
+                "'%s'" % v for v in view_ownership_type_registry.get_types()
+            )
+            raise serializers.ValidationError(
+                f"Ownership type must be one of the above: {allowed_ownerships}."
+            )
+        return value
 
     class Meta:
         ref_name = "view_update"
         model = View
-        fields = ("name", "filter_type", "filters_disabled", "public_view_password")
+        fields = (
+            "name",
+            "filter_type",
+            "filters_disabled",
+            "public_view_password",
+            "ownership_type",
+        )
         extra_kwargs = {
             "name": {"required": False},
             "filter_type": {"required": False},
@@ -498,7 +547,13 @@ class PublicViewGroupBySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ViewGroupBy
-        fields = ("id", "view", "field", "order")
+        fields = (
+            "id",
+            "view",
+            "field",
+            "order",
+            "width",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
 
@@ -690,3 +745,53 @@ def validate_api_grouped_filters(
         raise exception_to_raise(detail)
 
     return serializer.validated_data
+
+
+def serialize_group_by_metadata(
+    group_by_metadata: Dict[Field, List[Dict[str, Any]]]
+) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Serializes the structure generated by the `get_group_by_metadata_in_rows`
+    ViewHandler method. The structure looks like:
+
+    ```
+    {
+        field_instance: [
+            {"count": 1, "field_{id}": Decimal('1.00')}
+        ]
+    }
+    ```
+
+    The key of the dict, and the `field_{id}` will be replaced with serialized values
+    that can be used as API response.
+
+    :param group_by_metadata: The object that must be serialized
+    :return: The serialized object.
+    """
+
+    serializer_mapping = {}
+
+    for field in group_by_metadata.keys():
+        field_type = field_type_registry.get_by_model(field.specific_class)
+        field_name = field.db_column
+        field_serializer = field_type.get_group_by_serializer_field(field)
+        serializer_mapping[field_name] = field_serializer
+
+    serialized_data = defaultdict(list)
+
+    for field, data in group_by_metadata.items():
+        for entry in data:
+            serialized_entry = {"count": entry["count"]}
+            for key, value in entry.items():
+                if key in serializer_mapping:
+                    # This is the same behavior as a normal serializer, so that's
+                    # what we need in the frontend to compare the two values.
+                    if value is None:
+                        serialized_entry[key] = None
+                    else:
+                        serialized_entry[key] = serializer_mapping[
+                            key
+                        ].to_representation(value)
+            serialized_data[field.db_column].append(serialized_entry)
+
+    return serialized_data

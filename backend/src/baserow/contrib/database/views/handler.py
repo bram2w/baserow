@@ -38,6 +38,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.views.exceptions import ViewOwnershipTypeDoesNotExist
 from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
@@ -87,7 +88,9 @@ from baserow.contrib.database.views.view_filter_groups import (
     construct_filter_builder_from_grouped_api_filters,
 )
 from baserow.core.db import specific_iterator
+from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
@@ -97,6 +100,8 @@ from baserow.core.utils import (
     find_unused_name,
     get_model_reference_field_name,
     set_allowed_attrs,
+    set_allowed_m2m_fields,
+    split_attrs_and_m2m_fields,
 )
 
 from .exceptions import (
@@ -140,6 +145,7 @@ from .registries import (
     view_type_registry,
 )
 from .signals import (
+    form_submitted,
     view_created,
     view_decoration_created,
     view_decoration_deleted,
@@ -271,7 +277,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         view_type = view_type_registry.get_by_model(view)
-        if not view_type.can_sort:
+        if not view_type.can_sort and not view_type.can_group_by:
             return
 
         try:
@@ -505,7 +511,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             views,
             table.database.workspace,
-            context=table,
             allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
@@ -530,7 +535,76 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if limit:
             views = views[:limit]
 
-        views = specific_iterator(views)
+        views = specific_iterator(
+            views,
+            per_content_type_queryset_hook=(
+                lambda model, queryset: view_type_registry.get_by_model(
+                    model
+                ).enhance_queryset(queryset)
+            ),
+        )
+        return views
+
+    def list_workspace_views(
+        self,
+        user: AbstractUser,
+        workspace: Workspace,
+        filters: bool = False,
+        sortings: bool = False,
+        decorations: bool = False,
+        group_bys: bool = False,
+        limit: int = None,
+        specific: bool = True,
+        base_queryset: QuerySet = None,
+    ) -> Iterable[View]:
+        """
+        Lists available views for a user/workspace combination.
+
+        :user: The user on whose behalf we want to return views.
+        :workspace: The workspace for which the views should be returned.
+        :filters: If filters should be prefetched.
+        :sortings: If sorts should be prefetched.
+        :decorations: If view decorations should be prefetched.
+        :limit: To limit the number of returned views.
+        :specific: set `True` to return specific instances.
+        :base_queryset: specify a base queryset to use.
+        :return: Iterator over returned views.
+        """
+
+        views = base_queryset if base_queryset else View.objects.all()
+
+        views = views.filter(table__database__workspace=workspace)
+
+        views = views.select_related(
+            "table", "table__database", "table__database__workspace"
+        )
+
+        if filters:
+            views = views.prefetch_related("viewfilter_set", "filter_groups")
+
+        if sortings:
+            views = views.prefetch_related("viewsort_set")
+
+        if decorations:
+            views = views.prefetch_related("viewdecoration_set")
+
+        if group_bys:
+            views = views.prefetch_related("viewgroupby_set")
+
+        if limit:
+            views = views[:limit]
+
+        views = CoreHandler().filter_queryset(
+            user,
+            ListViewsOperationType.type,
+            views,
+            workspace,
+        )
+
+        if specific:
+            views = views.select_related("content_type")
+            return specific_iterator(views)
+
         return views
 
     def get_view_as_user(
@@ -689,7 +763,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         last_order = model_class.get_last_order(table)
 
         instance = model_class.objects.create(
-            table=table, order=last_order, created_by=user, **view_values
+            table=table, order=last_order, owned_by=user, **view_values
         )
 
         if instance.public:
@@ -825,6 +899,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             user, UpdateViewOperationType.type, workspace=workspace, context=view
         )
 
+        old_view = deepcopy(view)
+
         view_type = view_type_registry.get_by_model(view)
         view_type.before_view_update(data, view, user)
 
@@ -837,13 +913,34 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             "show_logo",
         ] + view_type.allowed_fields
 
-        changed_allowed_keys = extract_allowed(view_values, allowed_fields).keys()
+        changed_allowed_keys = set(extract_allowed(view_values, allowed_fields).keys())
         original_view_values = self._get_prepared_values_for_data(
             view_type, view, changed_allowed_keys
         )
 
+        ownership_type_key = "ownership_type"
+        new_ownership_type = view_values.get(ownership_type_key, None)
+        original_ownership_type = getattr(view, ownership_type_key)
+        if (
+            new_ownership_type is not None
+            and new_ownership_type != original_ownership_type
+        ):
+            try:
+                ownership_type = view_ownership_type_registry.get(new_ownership_type)
+            except ViewOwnershipTypeDoesNotExist:
+                raise PermissionDenied()
+
+            view = ownership_type.change_ownership_type(user, view)
+
+            # Add the change of ownership type to the tracked changes for undo/redo
+            original_view_values[ownership_type_key] = original_ownership_type
+            changed_allowed_keys.add(ownership_type_key)
+
         previous_public_value = view.public
-        view = set_allowed_attrs(view_values, allowed_fields, view)
+        allowed_attrs, allowed_m2m_fields = split_attrs_and_m2m_fields(
+            allowed_fields, view
+        )
+        view = set_allowed_attrs(view_values, allowed_attrs, view)
         if previous_public_value != view.public:
             CoreHandler().check_permissions(
                 user,
@@ -851,7 +948,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 workspace=workspace,
                 context=view,
             )
+
         view.save()
+        view = set_allowed_m2m_fields(view_values, allowed_m2m_fields, view)
 
         new_view_values = self._get_prepared_values_for_data(
             view_type, view, changed_allowed_keys
@@ -860,7 +959,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if "filters_disabled" in view_values:
             view_type.after_filter_update(view)
 
-        view_updated.send(self, view=view, user=user)
+        view_updated.send(self, view=view, user=user, old_view=old_view)
 
         return UpdatedViewWithChangedAttributes(
             updated_view_instance=view,
@@ -899,7 +998,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             all_views,
             workspace=workspace,
-            context=table,
         )
 
         view_ids = user_views.values_list("id", flat=True)
@@ -943,7 +1041,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             queryset,
             table.database.workspace,
-            context=table,
         )
 
         order = queryset.values_list("id", flat=True)
@@ -1129,6 +1226,18 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         view_field_options_updated.send(self, view=view, user=user)
+
+    def after_field_moved_between_tables(self, field: Field, original_table_id: int):
+        """
+        This method is called to properly update the view field options when a field
+        is moved between tables.
+
+        :param field: The new field object.
+        :param original_table_id: The id of the table where the field was moved from.
+        """
+
+        for view_type in view_type_registry.get_all():
+            view_type.after_field_moved_between_tables(field, original_table_id)
 
     def field_type_changed(self, field: Field):
         """
@@ -2012,6 +2121,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view: View,
         field: Field,
         order: str,
+        width: int,
         primary_key: Optional[int] = None,
     ) -> ViewGroupBy:
         """
@@ -2065,7 +2175,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             )
 
         view_group_by = ViewGroupBy.objects.create(
-            pk=primary_key, view=view, field=field, order=order
+            pk=primary_key, view=view, field=field, order=order, width=width
         )
 
         view_group_by_created.send(self, view_group_by=view_group_by, user=user)
@@ -2078,6 +2188,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_group_by: ViewGroupBy,
         field: Optional[Field] = None,
         order: Optional[str] = None,
+        width: Optional[int] = None,
     ) -> ViewGroupBy:
         """
         Updates the values of an existing view group_by.
@@ -2086,6 +2197,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param view_group_by: The view group by that needs to be updated.
         :param field: The field that must be grouped on.
         :param order: Indicates the group by order direction.
+        :param width: The visual width of the group by.
         :raises ViewGroupByDoesNotExist: When the view used by the filter is trashed.
         :raises ViewGroupByFieldNotSupported: When the field does not support grouping.
         :raises FieldNotInTable:  When the provided field does not belong to the
@@ -2101,6 +2213,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         workspace = view_group_by.view.table.database.workspace
         field = field if field is not None else view_group_by.field
         order = order if order is not None else view_group_by.order
+        width = width if width is not None else view_group_by.width
 
         CoreHandler().check_permissions(
             user, ReadFieldOperationType.type, workspace=workspace, context=field
@@ -2144,6 +2257,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         view_group_by.field = field
         view_group_by.order = order
+        view_group_by.width = width
         view_group_by.save()
 
         view_group_by_updated.send(self, view_group_by=view_group_by, user=user)
@@ -2815,11 +2929,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user, UpdateViewSlugOperationType.type, workspace=workspace, context=view
         )
+        old_view = deepcopy(view)
 
         view.slug = slug
         view.save()
 
-        view_updated.send(self, view=view, user=user)
+        view_updated.send(self, view=view, user=user, old_view=old_view)
 
         return view
 
@@ -2944,7 +3059,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             raise ValidationError(field_errors)
 
         allowed_values = extract_allowed(values, allowed_field_names)
-        return RowHandler().force_create_row(user, table, allowed_values, model)
+        created_row = RowHandler().force_create_row(user, table, allowed_values, model)
+        form_submitted.send(
+            self, form=form, row=created_row, values=allowed_values, user=user
+        )
+        return created_row
 
     def get_public_views_row_checker(
         self,
@@ -3087,6 +3206,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         search: str = None,
         search_mode: Optional[SearchModes] = None,
         order_by: str = None,
+        group_by: str = None,
         include_fields: str = None,
         exclude_fields: str = None,
         filter_type: str = None,
@@ -3107,6 +3227,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param search: A string to search for in the rows.
         :param search_mode: The type of search to perform.
         :param order_by: A string to order the rows by.
+        :param group_by: A string group the rows by.
         :param include_fields: A comma separated list of field_ids to include.
         :param exclude_fields: A comma separated list of field_ids to exclude.
         :param filter_type: The type of filter to apply.
@@ -3150,7 +3271,19 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         queryset = table_model.objects.all().enhance_by_fields()
         queryset = self.apply_filters(view, queryset)
 
-        if order_by:
+        if view_type.can_group_by:
+            # If both the group by and order by string is set, then we must merge the
+            # two so that it will be sorted the right way because the grouping is
+            # basically just sorting for the backend. However, the group by will take
+            # precedence.
+            if group_by is not None and order_by is not None:
+                order_by = f"{group_by},{order_by}"
+            # If only the group_by is set, then we can simply replace the order_by
+            # because that must be applied to the queryset.
+            elif group_by is not None:
+                order_by = group_by
+
+        if order_by is not None:
             queryset = queryset.order_by_fields_string(
                 order_by, False, publicly_visible_field_ids
             )
@@ -3185,6 +3318,90 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         return queryset, field_ids, publicly_visible_field_options
+
+    def get_group_by_metadata_in_rows(
+        self,
+        fields: List[Field],
+        rows: List["GeneratedTableModel"],
+        base_queryset: QuerySet,
+    ) -> Dict[Field, QuerySet]:
+        """
+        This method calculates the count of each unique value within the provided rows,
+        grouped accordingly.
+
+        :param fields: A list of the fields of the group bys in the right order.
+        :param rows: The rows of the paginated query set. The unique values will be
+            extracted from here.
+        :param base_queryset: The base_queryset before the pagination was applied.
+            This is needed because the rows that must be counted can be outside of
+            the paginated range.
+        :return: A dictionary where the key is the grouped by field, and the value a
+            queryset containing the count per field.
+        :raises ValueError: if a field is provided that cannot be grouped by.
+        """
+
+        qs_per_level = defaultdict(lambda: Q())
+        unique_value_per_level = defaultdict(set)
+        annotations = {}
+
+        for row in rows:
+            all_values = tuple()
+            all_filters = {}
+
+            for level, field in enumerate(fields):
+                field_name = field.db_column
+                field_type = field_type_registry.get_by_model(field.specific_class)
+
+                if not field_type.check_can_group_by(field):
+                    raise ValueError(f"Can't group by {field_name}.")
+
+                value = getattr(row, field_name)
+
+                unique_value = field_type.get_group_by_field_unique_value(
+                    field, field_name, value
+                )
+                all_values += (unique_value,)
+
+                if all_values not in unique_value_per_level[level]:
+                    (
+                        filters,
+                        annotations,
+                    ) = field_type.get_group_by_field_filters_and_annotations(
+                        field, field_name, base_queryset, unique_value
+                    )
+
+                    all_filters.update(**filters)
+                    annotations.update(**annotations)
+                    qs_per_level[level] |= Q(**all_filters)
+                    unique_value_per_level[level].add(all_values)
+
+        by_level = {}
+        for level, q in qs_per_level.items():
+            field_names = []
+
+            for field in fields[: level + 1]:
+                field_name = field.db_column
+                field_names.append(field_name)
+
+            # Wrap the queryset to avoid conflicts with annotations, orders, joins,
+            # etc that can have an impact on the count.
+            queryset = base_queryset.model.objects.filter(
+                id__in=base_queryset.clear_multi_field_prefetch().values("id")
+            ).values()
+
+            if len(annotations) > 0:
+                queryset = queryset.annotate(**annotations)
+
+            queryset = (
+                queryset.filter(q)
+                .values(*field_names)
+                .annotate(count=Count("id"))
+                .order_by()
+            )
+
+            by_level[fields[level]] = queryset
+
+        return by_level
 
     def _get_prepared_values_for_data(
         self, view_type: ViewType, view: View, changed_allowed_keys: Iterable[str]

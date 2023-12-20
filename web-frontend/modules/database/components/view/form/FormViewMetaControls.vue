@@ -1,5 +1,25 @@
 <template>
   <div class="form-view__meta-controls">
+    <div
+      v-if="
+        !readOnly &&
+        $hasPermission(
+          'database.table.view.update',
+          view,
+          database.workspace.id
+        )
+      "
+      class="control form-view__control-notification-on-submit"
+    >
+      <SwitchInput
+        class=""
+        :value="view.receive_notification_on_submit"
+        @input="
+          $emit('updated-form', { receive_notification_on_submit: $event })
+        "
+      ></SwitchInput>
+      {{ $t('formSidebar.notifyUserOnSubmit') }}
+    </div>
     <div class="control">
       <label class="control__label">When the form is submitted</label>
       <div class="control__elements">
@@ -100,6 +120,10 @@ export default {
   name: 'FormViewMetaControls',
   props: {
     view: {
+      type: Object,
+      required: true,
+    },
+    database: {
       type: Object,
       required: true,
     },

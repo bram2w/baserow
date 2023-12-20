@@ -60,7 +60,6 @@ class BuilderSerializer(ApplicationSerializer):
                 ListPagesBuilderOperationType.type,
                 pages,
                 workspace=instance.workspace,
-                context=instance,
                 allow_if_template=True,
             )
 

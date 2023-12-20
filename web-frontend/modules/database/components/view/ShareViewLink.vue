@@ -63,20 +63,18 @@
           <div class="view-sharing__option">
             <SwitchInput
               :value="view.public_view_has_password"
-              :large="true"
               @input="toggleShareViewPassword"
             >
+              <i
+                class="view-sharing__option-icon"
+                :class="[
+                  view.public_view_has_password
+                    ? 'iconoir-lock'
+                    : 'iconoir-globe',
+                ]"
+              ></i>
+              <span>{{ $t(optionPasswordText) }}</span>
             </SwitchInput>
-
-            <i
-              class="view-sharing__option-icon"
-              :class="[
-                view.public_view_has_password
-                  ? 'iconoir-lock'
-                  : 'iconoir-globe',
-              ]"
-            ></i>
-            <span>{{ $t(optionPasswordText) }}</span>
 
             <a
               v-if="view.public_view_has_password"

@@ -153,6 +153,7 @@ def test_create_row(send_mock, data_fixture):
     assert not getattr(row_1, f"field_9999", None)
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_1.needs_background_update
+    assert row_1.last_modified_by == user
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["rows"][0].id == row_1.id
@@ -168,6 +169,7 @@ def test_create_row(send_mock, data_fixture):
     row_1.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
+    assert row_2.last_modified_by == user
 
     row_3 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
@@ -546,7 +548,7 @@ def test_get_adjacent_row_performance_many_fields(data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
-def test_update_row(send_mock, data_fixture):
+def test_update_row_by_id(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
@@ -611,6 +613,27 @@ def test_update_row(send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
+
+
+@pytest.mark.django_db
+def test_update_row_last_modified_by(data_fixture):
+    workspace = data_fixture.create_workspace()
+    database = data_fixture.create_database_application(workspace=workspace)
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    data_fixture.create_user_workspace(user=user, workspace=workspace)
+    data_fixture.create_user_workspace(user=user_2, workspace=workspace)
+    table = data_fixture.create_database_table(name="Car", user=user, database=database)
+    name_field = data_fixture.create_text_field(table=table, name="Name")
+    model = table.get_model()
+    row = model.objects.create(
+        **{f"field_{name_field.id}": "Test", "last_modified_by": user}
+    )
+
+    handler = RowHandler()
+    updated_row = handler.update_row(user_2, table, row, {"Name": "Test 2"})
+
+    assert updated_row.last_modified_by == user_2
 
 
 @pytest.mark.django_db
@@ -726,6 +749,26 @@ def test_create_rows_created_on_and_last_modified(data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_rows_last_modified_by(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(table=table, name="Name")
+    handler = RowHandler()
+
+    rows = handler.create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{name_field.id}": "Test"},
+            {f"field_{name_field.id}": "Test 2"},
+        ],
+    )
+
+    assert rows[0].last_modified_by == user
+    assert rows[1].last_modified_by == user
+
+
+@pytest.mark.django_db
 def test_update_rows_created_on_and_last_modified(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -744,6 +787,53 @@ def test_update_rows_created_on_and_last_modified(data_fixture):
         row = result.updated_rows[0]
         assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
         assert row.updated_on == datetime(2020, 1, 2, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.django_db
+def test_update_rows_last_modified_by(data_fixture):
+    workspace = data_fixture.create_workspace()
+    database = data_fixture.create_database_application(workspace=workspace)
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    data_fixture.create_user_workspace(user=user, workspace=workspace)
+    data_fixture.create_user_workspace(user=user_2, workspace=workspace)
+    data_fixture.create_user_workspace(user=user_3, workspace=workspace)
+    table = data_fixture.create_database_table(name="Car", user=user, database=database)
+    name_field = data_fixture.create_text_field(table=table, name="Name")
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{f"field_{name_field.id}": "Test", "last_modified_by": user}
+    )
+    row_2 = model.objects.create(
+        **{f"field_{name_field.id}": "Test", "last_modified_by": user_2}
+    )
+    row_3 = model.objects.create(
+        **{f"field_{name_field.id}": "Test", "last_modified_by": user_2}
+    )
+
+    handler = RowHandler()
+    handler.update_rows(
+        user_3,
+        table,
+        [
+            {
+                "id": row.id,
+                f"field_{name_field.id}": "Test 2",
+            },
+            {
+                "id": row_2.id,
+                f"field_{name_field.id}": "Test 2",
+            },
+        ],
+    )
+
+    updated_rows = model.objects.all()
+
+    assert updated_rows[0].last_modified_by == user_3
+    assert updated_rows[1].last_modified_by == user_3
+    assert updated_rows[2].last_modified_by == user_2
 
 
 @pytest.mark.django_db
@@ -869,14 +959,19 @@ def test_import_rows(
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 @patch("baserow.contrib.database.rows.signals.before_rows_update.send")
 def test_move_row(before_send_mock, send_mock, data_fixture):
+    workspace = data_fixture.create_workspace()
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    table = data_fixture.create_database_table(name="Car", user=user)
+    original_creator = data_fixture.create_user()
+    data_fixture.create_user_workspace(workspace=workspace, user=user)
+    data_fixture.create_user_workspace(workspace=workspace, user=original_creator)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(name="Car", user=user, database=database)
 
     handler = RowHandler()
-    row_1 = handler.create_row(user=user, table=table)
-    row_2 = handler.create_row(user=user, table=table)
-    row_3 = handler.create_row(user=user, table=table)
+    row_1 = handler.create_row(user=original_creator, table=table)
+    row_2 = handler.create_row(user=original_creator, table=table)
+    row_3 = handler.create_row(user=original_creator, table=table)
 
     with pytest.raises(UserNotInWorkspace):
         handler.move_row_by_id(user=user_2, table=table, row_id=row_1.id)
@@ -891,6 +986,9 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     assert row_1.order == Decimal("4.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
     assert row_3.order == Decimal("3.00000000000000000000")
+    assert row_1.last_modified_by == original_creator
+    assert row_2.last_modified_by == original_creator
+    assert row_3.last_modified_by == original_creator
 
     before_send_mock.assert_called_once()
     assert before_send_mock.call_args[1]["rows"][0].id == row_1.id
@@ -923,14 +1021,19 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
 @patch("baserow.contrib.database.rows.signals.rows_deleted.send")
 @patch("baserow.contrib.database.rows.signals.before_rows_delete.send")
 def test_delete_row(before_send_mock, send_mock, data_fixture):
+    workspace = data_fixture.create_workspace()
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    table = data_fixture.create_database_table(name="Car", user=user)
+    original_creator = data_fixture.create_user()
+    data_fixture.create_user_workspace(workspace=workspace, user=user)
+    data_fixture.create_user_workspace(workspace=workspace, user=original_creator)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(name="Car", user=user, database=database)
     data_fixture.create_text_field(table=table, name="Name", text_default="Test")
 
     handler = RowHandler()
     model = table.get_model()
-    row = handler.create_row(user=user, table=table)
+    row = handler.create_row(user=original_creator, table=table)
     handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInWorkspace):
@@ -945,6 +1048,7 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     assert model.trash.all().count() == 1
     row.refresh_from_db()
     assert row.trashed
+    assert row.last_modified_by == original_creator
 
     before_send_mock.assert_called_once()
     assert before_send_mock.call_args[1]["rows"]
@@ -958,6 +1062,35 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.rows_deleted.send")
+@patch("baserow.contrib.database.rows.signals.before_rows_delete.send")
+def test_delete_rows_preserves_last_modified_by(
+    before_rows_delete_mock, rows_deleted_mock, data_fixture
+):
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user()
+    original_creator = data_fixture.create_user()
+    data_fixture.create_user_workspace(workspace=workspace, user=user)
+    data_fixture.create_user_workspace(workspace=workspace, user=original_creator)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(name="Car", user=user, database=database)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    row = handler.create_row(user=original_creator, table=table)
+    row2 = handler.create_row(user=original_creator, table=table)
+
+    handler.delete_rows(user=user, table=table, row_ids=[row.id, row2.id])
+    row.refresh_from_db()
+    row2.refresh_from_db()
+
+    assert row.trashed
+    assert row2.trashed
+    assert row.last_modified_by == original_creator
+    assert row2.last_modified_by == original_creator
 
 
 @pytest.mark.django_db

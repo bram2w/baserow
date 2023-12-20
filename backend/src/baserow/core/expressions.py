@@ -1,4 +1,4 @@
-from django.db.models import DateTimeField, Expression, Value
+from django.db.models import DateTimeField, Expression, Func, Value
 
 
 class Timezone(Expression):
@@ -44,3 +44,30 @@ class Timezone(Expression):
         params.extend(field_params)
         params.extend(timezone_params)
         return f"{field_sql} at time zone {timezone_sql}", params
+
+
+class DateTrunc(Func):
+    """
+    Source: https://gist.github.com/vdboor/f3ebe5e20c0882d39053
+
+    To support using DATE_TRUNC('text', "field") in SQL
+
+    Example::
+
+        order_totals = (orders
+            .annotate(
+                period=DateTrunc('month', 'date_placed'),
+            )
+            .values("period")  # Needs to be in between for a correct GROUP_BY
+            .order_by('period')
+            .annotate(
+                order_count=Count('id'),
+                shipping_excl_tax=Sum('shipping_excl_tax'),
+                shipping_incl_tax=Sum('shipping_incl_tax'),
+            ))
+    """
+
+    function = "DATE_TRUNC"
+
+    def __init__(self, trunc_type, field_expression, **extra):
+        super(DateTrunc, self).__init__(Value(trunc_type), field_expression, **extra)

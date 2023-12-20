@@ -185,7 +185,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.21.2
+    image: baserow/backend:1.22.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -198,7 +198,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.21.2
+    image: baserow/web-frontend:1.22.0
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -224,13 +224,14 @@ services:
       BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
       BASEROW_ROW_PAGE_SIZE_LIMIT:
       BASEROW_BUILDER_DOMAINS:
+      BASEROW_FRONTEND_SAME_SITE_COOKIE:
     depends_on:
       - backend
     networks:
       local:
 
   celery:
-    image: baserow/backend:1.21.2
+    image: baserow/backend:1.22.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -247,7 +248,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.21.2
+    image: baserow/backend:1.22.0
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -264,7 +265,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.21.2
+    image: baserow/backend:1.22.0
     restart: unless-stopped
     command: celery-beat
     environment:

@@ -8,7 +8,7 @@
           v-model="values.name"
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
-          class="input input--large"
+          class="input"
           :disabled="loading"
           @blur="$v.values.name.$touch()"
         />
@@ -25,7 +25,7 @@
           v-model="values.username"
           :class="{ 'input--error': fieldHasErrors('username') }"
           type="text"
-          class="input input--large"
+          class="input"
           :disabled="loading"
           @blur="$v.values.username.$touch()"
         />

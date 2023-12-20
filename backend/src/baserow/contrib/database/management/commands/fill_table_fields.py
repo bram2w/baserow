@@ -62,10 +62,11 @@ def fill_table_fields(limit, table):
         for f in all_kwargs_per_type.items()
         if f[0] not in ["link_row", "count", "rollup", "lookup"]
     ]
-    for _ in range(limit):
-        # This is a helper cli command, randomness is not being used for any security
-        # or crypto related reasons.
-        field_type_name, all_kwargs = random.choice(allowed_field_list)  # nosec
+    # This is a helper cli command, randomness is not being used for any security
+    # or crypto related reasons.
+    random.shuffle(allowed_field_list)  # nosec
+    for i in range(limit):
+        field_type_name, all_kwargs = allowed_field_list[i % len(allowed_field_list)]
         # These two kwarg types depend on another field existing, which it might
         # not as we are picking randomly.
         allowed_kwargs_list = [

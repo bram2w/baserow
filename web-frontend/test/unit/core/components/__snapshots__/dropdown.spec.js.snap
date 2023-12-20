@@ -55,7 +55,7 @@ exports[`Dropdown component Test slots 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -75,9 +75,12 @@ exports[`Dropdown component With items 1`] = `
   <a
     class="dropdown__selected"
   >
-    
-        action.makeChoice
-       
+    <span
+      class="dropdown__selected-placeholder"
+    >
+      action.makeChoice
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -130,7 +133,7 @@ exports[`Dropdown component With items 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -212,7 +215,7 @@ exports[`Dropdown component With items 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -241,7 +244,7 @@ exports[`Dropdown component With items 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -270,7 +273,7 @@ exports[`Dropdown component With items 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -301,7 +304,7 @@ exports[`Dropdown component With items 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -336,7 +339,7 @@ exports[`Dropdown component With items 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -402,7 +405,7 @@ exports[`Dropdown component With items 3`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -431,7 +434,7 @@ exports[`Dropdown component With items 3`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -451,9 +454,12 @@ exports[`Dropdown component basics 1`] = `
   <a
     class="dropdown__selected"
   >
-    
-        action.makeChoice
-       
+    <span
+      class="dropdown__selected-placeholder"
+    >
+      action.makeChoice
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -497,9 +503,12 @@ exports[`Dropdown component basics 2`] = `
   <a
     class="dropdown__selected"
   >
-    
-        action.makeChoice
-       
+    <span
+      class="dropdown__selected-placeholder"
+    >
+      action.makeChoice
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -530,9 +539,12 @@ exports[`Dropdown component basics 3`] = `
   <a
     class="dropdown__selected"
   >
-    
-        action.makeChoice
-       
+    <span
+      class="dropdown__selected-placeholder"
+    >
+      action.makeChoice
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -638,7 +650,7 @@ exports[`Dropdown component change value prop 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -667,7 +679,7 @@ exports[`Dropdown component change value prop 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -749,7 +761,7 @@ exports[`Dropdown component test focus 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -831,7 +843,7 @@ exports[`Dropdown component test focus 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -913,7 +925,7 @@ exports[`Dropdown component test interactions 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -942,7 +954,7 @@ exports[`Dropdown component test interactions 1`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>
@@ -1024,7 +1036,7 @@ exports[`Dropdown component test interactions 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
        
@@ -1053,7 +1065,7 @@ exports[`Dropdown component test interactions 2`] = `
         </a>
          
         <i
-          class="select__item-active-icon iconoir-check-circle"
+          class="select__item-active-icon iconoir-check"
         />
       </li>
     </ul>

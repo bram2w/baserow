@@ -21,6 +21,7 @@ from .template import TemplateFixtures
 from .token import TokenFixtures
 from .user import UserFixtures
 from .user_file import UserFileFixtures
+from .user_source import UserSourceFixtures
 from .view import ViewFixtures
 from .webhook import TableWebhookFixture
 from .workflow_action import WorkflowActionFixture
@@ -53,6 +54,7 @@ class Fixtures(
     DataSourceFixtures,
     NotificationsFixture,
     WorkflowActionFixture,
+    UserSourceFixtures,
 ):
     def __init__(self, fake=None):
         self.fake = fake

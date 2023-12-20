@@ -11,6 +11,7 @@ from PIL import Image
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.user_files.handler import UserFileHandler
 
@@ -604,3 +605,102 @@ def test_massive_textfield_get_search_expression(
     assert qs.exists()
     matching_row = qs.get()
     assert matching_row.id == row.id
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db(transaction=True)
+def test_last_modified_by_field_get_search_expression(
+    data_fixture, enable_singleton_testing
+):
+    with transaction.atomic():
+        user_adam = data_fixture.create_user(
+            email="user1@baserow.io", first_name="Adam"
+        )
+        user_john_smith = data_fixture.create_user(
+            email="user2@baserow.io", first_name="John Smith"
+        )
+        user_mary_black = data_fixture.create_user(
+            email="user3@baserow.io", first_name="Mary Black"
+        )
+
+        database = data_fixture.create_database_application(user=user_adam)
+        data_fixture.create_user_workspace(
+            workspace=database.workspace, user=user_john_smith
+        )
+        data_fixture.create_user_workspace(
+            workspace=database.workspace, user=user_mary_black
+        )
+        table = data_fixture.create_database_table(
+            name="Search table", database=database
+        )
+        grid_view = data_fixture.create_grid_view(table=table)
+        field = data_fixture.create_last_modified_by_field(
+            user=user_adam, table=table, name="Last modified by"
+        )
+        model = table.get_model()
+
+        row1 = model.objects.create(last_modified_by=user_mary_black)
+        row2 = model.objects.create(last_modified_by=user_john_smith)
+        row3 = model.objects.create(last_modified_by=user_adam)
+        row4 = model.objects.create(last_modified_by=user_mary_black)
+        row5 = model.objects.create(last_modified_by=None)
+
+        SearchHandler.field_value_updated_or_created(table)
+
+    model = table.get_model()
+    qs = model.objects.all().pg_search("Mary")
+    assert qs.exists()
+    matching_rows = list(qs)
+    assert len(matching_rows) == 2
+    assert matching_rows[0].id == row1.id
+    assert matching_rows[1].id == row4.id
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db(transaction=True)
+def test_duration_field_get_search_expression(data_fixture, enable_singleton_testing):
+    with transaction.atomic():
+        user = data_fixture.create_user()
+        database = data_fixture.create_database_application(user=user)
+        table = TableHandler().create_table_and_fields(
+            user=user,
+            database=database,
+            name=data_fixture.fake.name(),
+            fields=[
+                ("Duration", "duration", {"duration_format": "h:mm:ss.sss"}),
+            ],
+        )
+        field = table.field_set.get(name="Duration")
+        row = RowHandler().create_row(
+            user=user, table=table, values={f"field_{field.id}": "1:53:46.789"}
+        )
+
+    model = table.get_model()
+    qs = model.objects.all().pg_search("53")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("1")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("46")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("789")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("1:53:46.789")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    # Searching the number of seconds doesn't work
+    qs = model.objects.all().pg_search(f"{83 * 60}")
+    assert not qs.exists()

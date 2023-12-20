@@ -23,11 +23,13 @@ export class WebhookEventType extends Registerable {
   /**
    * Should return an object containing an example of the webhook event type payload.
    */
-  getExamplePayload(table, rowExample) {
+  getExamplePayload(database, table, rowExample) {
     return {
       table_id: table.id,
-      event_type: this.getType(),
+      database_id: table.database_id,
+      workspace_id: database.workspace.id,
       event_id: '00000000-0000-0000-0000-000000000000',
+      event_type: this.getType(),
     }
   }
 }
@@ -42,8 +44,8 @@ export class RowsCreatedWebhookEventType extends WebhookEventType {
     return i18n.t('webhook.eventType.rowsCreated')
   }
 
-  getExamplePayload(table, rowExample) {
-    const payload = super.getExamplePayload(table, rowExample)
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
     payload.items = [rowExample]
     return payload
   }
@@ -59,8 +61,8 @@ export class RowsUpdatedWebhookEventType extends WebhookEventType {
     return i18n.t('webhook.eventType.rowsUpdated')
   }
 
-  getExamplePayload(table, rowExample) {
-    const payload = super.getExamplePayload(table, rowExample)
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
     payload.items = [rowExample]
     payload.old_items = [rowExample]
     return payload
@@ -77,8 +79,8 @@ export class RowsDeletedWebhookEventType extends WebhookEventType {
     return i18n.t('webhook.eventType.rowsDeleted')
   }
 
-  getExamplePayload(table, rowExample) {
-    const payload = super.getExamplePayload(table, rowExample)
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
     payload.row_ids = [rowExample.id]
     return payload
   }

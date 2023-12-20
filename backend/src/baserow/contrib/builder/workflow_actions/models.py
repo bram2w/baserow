@@ -3,19 +3,23 @@ from django.db import models
 
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
-from baserow.contrib.builder.workflow_actions.registries import (
-    builder_workflow_action_type_registry,
-)
 from baserow.core.formula.field import FormulaField
+from baserow.core.mixins import OrderableMixin
 from baserow.core.registry import ModelRegistryMixin
+from baserow.core.services.models import Service
 from baserow.core.workflow_actions.models import WorkflowAction
 
 
 class EventTypes(models.TextChoices):
     CLICK = "click"
+    SUBMIT = "submit"
 
 
-class BuilderWorkflowAction(WorkflowAction):
+class BuilderWorkflowAction(
+    WorkflowAction,
+    OrderableMixin,
+):
+    order = models.PositiveIntegerField()
     content_type = models.ForeignKey(
         ContentType,
         verbose_name="content type",
@@ -34,10 +38,24 @@ class BuilderWorkflowAction(WorkflowAction):
 
     @staticmethod
     def get_type_registry() -> ModelRegistryMixin:
+        from baserow.contrib.builder.workflow_actions.registries import (
+            builder_workflow_action_type_registry,
+        )
+
         return builder_workflow_action_type_registry
 
     def get_parent(self):
         return self.page
+
+    @classmethod
+    def get_last_order_element_scope(cls, element: Element):
+        queryset = BuilderWorkflowAction.objects.filter(element=element)
+        return cls.get_highest_order_of_queryset(queryset) + 1
+
+    @classmethod
+    def get_last_order_page_scope(cls, page: Page):
+        queryset = BuilderWorkflowAction.objects.filter(page=page, element=None)
+        return cls.get_highest_order_of_queryset(queryset) + 1
 
 
 class NotificationWorkflowAction(BuilderWorkflowAction):
@@ -47,3 +65,22 @@ class NotificationWorkflowAction(BuilderWorkflowAction):
 
 class OpenPageWorkflowAction(BuilderWorkflowAction):
     url = FormulaField(default="")
+
+
+class BuilderWorkflowServiceAction(BuilderWorkflowAction):
+    service = models.ForeignKey(
+        Service,
+        help_text="The service which this action is associated with.",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class LocalBaserowCreateRowWorkflowAction(BuilderWorkflowServiceAction):
+    ...
+
+
+class LocalBaserowUpdateRowWorkflowAction(BuilderWorkflowServiceAction):
+    ...

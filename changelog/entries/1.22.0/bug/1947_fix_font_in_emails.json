@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fixed incorrect font in emails by introducing fallback.",
+  "issue_number": 1947,
+  "bullet_points": [],
+  "created_at": "2023-10-30"
+}

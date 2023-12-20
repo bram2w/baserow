@@ -242,6 +242,7 @@ def validate_body_custom_fields(
     type_attribute_name="type",
     partial=False,
     allow_empty_type=False,
+    return_validated=False,
 ):
     """
     This decorator can validate the request data dynamically using the generated
@@ -293,6 +294,7 @@ def validate_body_custom_fields(
                 type_attribute_name=type_attribute_name,
                 partial=partial,
                 allow_empty_type=allow_empty_type,
+                return_validated=return_validated,
             )
             return func(*args, **kwargs)
 

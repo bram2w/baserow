@@ -44,6 +44,7 @@ from baserow.contrib.database.fields.operations import (
     CreateFieldOperationType,
     DeleteFieldOperationType,
     DuplicateFieldOperationType,
+    ListFieldsOperationType,
     ReadFieldOperationType,
     UpdateFieldOperationType,
 )
@@ -187,6 +188,44 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
         return field
+
+    def list_workspace_fields(
+        self,
+        user: AbstractUser,
+        workspace,
+        base_queryset=None,
+        include_trashed=False,
+        specific: bool = True,
+    ) -> Iterable[Table]:
+        """
+        Lists available fields for a user/workspace combination.
+
+        :user: The user on whose behalf we want to return fields.
+        :workspace: The workspace for which the fields should be returned.
+        :base_queryset: specify a base queryset to use.
+        :return: Iterator over returned fields.
+        """
+
+        field_qs = base_queryset if base_queryset else Field.objects.all()
+
+        field_qs = field_qs.filter(table__database__workspace=workspace).select_related(
+            "table", "table__database", "table__database__workspace"
+        )
+
+        if not include_trashed:
+            field_qs = field_qs.filter(table__database__workspace__trashed=False)
+
+        filtered_qs = CoreHandler().filter_queryset(
+            user,
+            ListFieldsOperationType.type,
+            field_qs,
+            workspace=workspace,
+        )
+
+        if specific:
+            return specific_iterator(filtered_qs.select_related("content_type"))
+        else:
+            return filtered_qs
 
     def get_fields(
         self,
@@ -361,7 +400,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             dependant_field,
             dependant_field_type,
             via_path_to_starting_table,
-        ) in instance.dependant_fields_with_types(
+        ) in instance.all_dependant_fields_with_types(
             field_cache=field_cache, associated_relation_changed=True
         ):
             dependant_field_type.field_dependency_created(
@@ -610,8 +649,11 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             dependant_field,
             dependant_field_type,
             via_path_to_starting_table,
-        ) in dependants_broken_due_to_type_change + field.dependant_fields_with_types(
-            field_cache=field_cache, associated_relation_changed=True
+        ) in (
+            dependants_broken_due_to_type_change
+            + field.all_dependant_fields_with_types(
+                field_cache=field_cache, associated_relation_changed=True
+            )
         ):
             dependant_field_type.field_dependency_updated(
                 dependant_field,
@@ -700,7 +742,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         )
         progress.increment()
 
-        if duplicate_data and not field_type.read_only:
+        if duplicate_data and field_type.keep_data_on_duplication:
             FieldDataBackupHandler.duplicate_field_data(field, new_field)
         progress.increment()
 
@@ -765,7 +807,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         if field_cache is None:
             field_cache = FieldCache()
 
-        dependant_fields = field.dependant_fields_with_types(
+        dependant_fields = field.all_dependant_fields_with_types(
             field_cache=field_cache, associated_relation_changed=True
         )
 
@@ -1014,7 +1056,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 dependant_field,
                 dependant_field_type,
                 via_path_to_starting_table,
-            ) in field.dependant_fields_with_types(
+            ) in field.all_dependant_fields_with_types(
                 field_cache, associated_relation_changed=True
             ):
                 dependant_field_type.field_dependency_created(
@@ -1078,6 +1120,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # its old model cache as this will not happen automatically.
         invalidate_table_in_model_cache(original_table_id)
         SearchHandler.after_field_moved_between_tables(field_to_move, original_table_id)
+        ViewHandler().after_field_moved_between_tables(field_to_move, original_table_id)
 
     def get_unique_row_values(
         self, field: Field, limit: int, split_comma_separated: bool = False

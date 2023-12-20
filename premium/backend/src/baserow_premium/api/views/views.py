@@ -95,7 +95,6 @@ class PremiumViewAttributesView(APIView):
             )
 
         serializer = view_type_registry.get_serializer(
-            view,
-            ViewSerializer,
+            view, ViewSerializer, context={"user": request.user}
         )
         return Response(serializer.data)

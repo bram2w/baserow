@@ -3182,7 +3182,6 @@ def test_empty_filter_type(data_fixture):
     populated_date_interval_formula_field = data_fixture.create_formula_field(
         table=table, formula="date_interval('1 year')"
     )
-
     multiple_select_field = data_fixture.create_multiple_select_field(table=table)
     option_2 = data_fixture.create_select_option(field=multiple_select_field)
     option_3 = data_fixture.create_select_option(field=multiple_select_field)
@@ -3337,7 +3336,6 @@ def test_not_empty_filter_type(data_fixture):
     populated_date_interval_formula_field = data_fixture.create_formula_field(
         table=table, formula="date_interval('1 year')"
     )
-
     multiple_select_field = data_fixture.create_multiple_select_field(table=table)
     option_2 = data_fixture.create_select_option(field=multiple_select_field)
     option_3 = data_fixture.create_select_option(field=multiple_select_field)
@@ -6216,3 +6214,103 @@ def test_date_after_days_ago_filter_type(data_fixture):
         filter.save()
         rows = apply_filter()
         assert rows == []
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db
+def test_user_is_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    last_modified_by_field = data_fixture.create_last_modified_by_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"last_modified_by": user,
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"last_modified_by": user2,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"last_modified_by": None,
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_by_field,
+        type="user_is",
+        value=user.id,
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db
+def test_user_is_not_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    last_modified_by_field = data_fixture.create_last_modified_by_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"last_modified_by": user,
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"last_modified_by": user2,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"last_modified_by": None,
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_by_field,
+        type="user_is_not",
+        value=user.id,
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db
+def test_user_is_filter_type_export_import(data_fixture):
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    view_filter_type = view_filter_type_registry.get("user_is")
+    assert (
+        view_filter_type.get_export_serialized_value(
+            f"{user.id}", {"workspace_id": workspace.id}
+        )
+        == f"{user.email}"
+    )
+    id_mapping = {"workspace_id": workspace.id}
+    assert view_filter_type.set_import_serialized_value(user.email, id_mapping) == str(
+        user.id
+    )
+    assert view_filter_type.set_import_serialized_value(user.email, {}) == ""
+    assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
+    assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""

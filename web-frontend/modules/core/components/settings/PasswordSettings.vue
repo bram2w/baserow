@@ -2,12 +2,8 @@
   <div>
     <h2 class="box__title">{{ $t('passwordSettings.title') }}</h2>
     <Error :error="error"></Error>
-    <Alert
-      v-if="success"
-      type="success"
-      icon="iconoir-check"
-      :title="$t('passwordSettings.changedTitle')"
-    >
+    <Alert v-if="success" type="success">
+      <template #title>{{ $t('passwordSettings.changedTitle') }}</template>
       <p>{{ $t('passwordSettings.changedDescription') }}</p>
     </Alert>
     <form v-if="!success" @submit.prevent="changePassword">
@@ -20,7 +16,7 @@
             v-model="account.oldPassword"
             :class="{ 'input--error': $v.account.oldPassword.$error }"
             type="password"
-            class="input input--large"
+            class="input"
             @blur="$v.account.oldPassword.$touch()"
           />
           <div v-if="$v.account.oldPassword.$error" class="error">
@@ -48,7 +44,7 @@
             v-model="account.passwordConfirm"
             :class="{ 'input--error': $v.account.passwordConfirm.$error }"
             type="password"
-            class="input input--large"
+            class="input"
             @blur="$v.account.passwordConfirm.$touch()"
           />
           <div v-if="$v.account.passwordConfirm.$error" class="error">

@@ -25,6 +25,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.table.constants import (
+    LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
 from baserow.contrib.database.table.exceptions import (
@@ -138,6 +139,8 @@ def test_create_example_table(data_fixture):
     model = table.get_model(attribute_names=True)
 
     assert model.objects.count() == 2
+    assert model.objects.all()[0].last_modified_by == user
+    assert model.objects.all()[1].last_modified_by == user
 
 
 @pytest.mark.django_db(transaction=True)
@@ -621,10 +624,13 @@ def test_counting_many_rows_in_many_tables(data_fixture):
 
 @pytest.mark.django_db
 def test_get_total_row_count_of_workspace(data_fixture):
-    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
-    table_not_in_workspace = data_fixture.create_database_table()
+
+    user2 = data_fixture.create_user()
+    table_not_in_workspace = data_fixture.create_database_table(user2)
 
     assert TableHandler.get_total_row_count_of_workspace(workspace.id) == 0
 
@@ -680,6 +686,38 @@ def test_duplicate_interesting_table(data_fixture):
 
 
 @pytest.mark.django_db()
+def test_duplicate_table_after_link_row_field_moved_to_another_table(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    _, table_b, link_field = data_fixture.create_two_linked_tables(
+        user=user, database=database
+    )
+    table_c = data_fixture.create_database_table(user=user, database=database)
+
+    grid_view = data_fixture.create_grid_view(table=table_b)
+
+    assert grid_view.get_field_options().count() == 2
+
+    FieldHandler().update_field(
+        user,
+        link_field,
+        name=link_field.name,
+        new_type_name="link_row",
+        link_row_table_id=table_c.id,
+        link_row_table=table_c,
+        has_related_field=True,
+    )
+
+    # the field option should be removed from the grid view
+    assert grid_view.get_field_options().count() == 1
+
+    try:
+        TableHandler().duplicate_table(user, table_b)
+    except Exception as exc:
+        pytest.fail("Duplicating table failed: %s" % exc)
+
+
+@pytest.mark.django_db()
 def test_create_needs_background_update_column(data_fixture):
     system_updated_on_columns = [
         ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
@@ -702,3 +740,24 @@ def test_create_needs_background_update_column(data_fixture):
     model = table.get_model()
     for system_updated_on_column in system_updated_on_columns:
         model._meta.get_field(system_updated_on_column)
+
+
+@pytest.mark.django_db()
+def test_create_last_modified_by_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(
+        user,
+        last_modified_by_column_added=False,
+    )
+    model = table.get_model()
+
+    with pytest.raises(FieldDoesNotExist):
+        model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
+
+    TableHandler().create_created_by_and_last_modified_by_fields(table)
+
+    table.refresh_from_db()
+    assert table.last_modified_by_column_added
+
+    model = table.get_model()
+    model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)

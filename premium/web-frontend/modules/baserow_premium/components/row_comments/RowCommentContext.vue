@@ -6,15 +6,23 @@
   >
     <div>
       <ul class="context__menu">
-        <li class="edit">
-          <a :class="{ disabled: !canEdit }" @click.prevent="editComment">
-            <i class="context__menu-icon iconoir-edit-pencil"></i>
+        <li class="context__menu-item edit">
+          <a
+            class="context__menu-item-link"
+            :class="{ disabled: !canEdit }"
+            @click.prevent="editComment"
+          >
+            <i class="context__menu-item-icon iconoir-edit-pencil"></i>
             <span> {{ $t('rowCommentContext.edit') }} </span>
           </a>
         </li>
-        <li class="delete">
-          <a :class="{ disabled: !canDelete }" @click.prevent="deleteComment">
-            <i class="context__menu-icon iconoir-bin"></i>
+        <li class="context__menu-item context__menu-item--with-separator">
+          <a
+            class="context__menu-item-link context__menu-item-link--delete"
+            :class="{ disabled: !canDelete }"
+            @click.prevent="deleteComment"
+          >
+            <i class="context__menu-item-icon iconoir-bin"></i>
             <span> {{ $t('rowCommentContext.delete') }} </span>
           </a>
         </li>

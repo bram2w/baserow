@@ -4,7 +4,8 @@
         "no": "no",
         "wrong": "Something went wrong",
         "none": "None",
-        "free": "Free"
+        "free": "Free",
+        "comingSoon": "Coming soon..."
     },
     "action": {
         "upload": "Upload",
@@ -89,7 +90,10 @@
         "boolean": "Boolean",
         "date": "Date",
         "lastModified": "Last modified",
+        "lastModifiedBy": "Last modified by",
         "createdOn": "Created on",
+        "createdBy": "Created by",
+        "duration": "Duration",
         "url": "URL",
         "email": "Email",
         "file": "File",
@@ -103,7 +107,13 @@
         "multipleCollaborators": "Collaborators",
         "defaultFormViewComponent": "Default",
         "linkRowSingle": "Single",
-        "linkRowMultiple": "Multiple"
+        "linkRowMultiple": "Multiple",
+        "uuid": "UUID",
+        "multipleSelectDropdown": "Dropdown",
+        "multipleSelectCheckboxes": "Checkboxes",
+        "singleSelectDropdown": "Dropdown",
+        "singleSelectRadios": "Radios",
+        "autonumber": "Autonumber"
     },
     "fieldErrors": {
         "invalidNumber": "Invalid number",
@@ -111,7 +121,9 @@
         "invalidUrl": "Invalid URL",
         "max254Chars": "Max 254 chars",
         "invalidEmail": "Invalid email",
-        "invalidPhoneNumber": "Invalid Phone Number"
+        "invalidPhoneNumber": "Invalid Phone Number",
+        "invalidDuration": "Invalid format ({durationFormat}).",
+        "overflowDuration": "Value is too large."
     },
     "fieldDocs": {
         "readOnly": "This is a read only field.",
@@ -129,7 +141,10 @@
         "dateResponse": "The response will be a datetime in ISO format.",
         "dateTimeResponse": "The response will be a date in ISO format.",
         "lastModifiedReadOnly": "The last modified field is a read only field.",
+        "lastModifiedBy": "The last modified by field is a read only field.",
         "createdOnReadOnly": "The created on field is a read only field.",
+        "createdBy": "The created by field is a read only field showing the user that created the row.",
+        "duration": "Accepts a time-based duration as a string in the format {format} or as a number representing the total number of seconds.",
         "url": "Accepts a string that must be a URL.",
         "email": "Accepts a string that must be an email address.",
         "file": "Accepts an array of objects containing at least the name of the user file. You can use the \"File uploads\" endpoints to upload the file. The response of those calls can be provided directly as object here. The endpoints can be found in the left sidebar.",
@@ -140,7 +155,9 @@
         "count": "A read-only field connected to a link to table field which returns the number of relations.",
         "rollup": "A read-only field connected to a link to table field which returns rolls up the values from the chosen lookup field in the linked table.",
         "lookup": "A read-only field connected to a link to table field which returns an array of values and row ids from the chosen lookup field in the linked table.",
-        "multipleCollaborators": "Accepts an array of objects where each object contains a user's id."
+        "multipleCollaborators": "Accepts an array of objects where each object contains a user's id.",
+        "uuid": "A read-only unique and persistent uuid.",
+        "autonumber": "A read-only field that automatically increments a number for each new row."
     },
     "viewFilter": {
         "contains": "contains",
@@ -288,7 +305,9 @@
         "lastAdminTitle": "Can't remove last workspace admin",
         "lastAdminMessage": "A workspace has to have at least one admin.",
         "adminAlreadyExistsTitle": "Can't use that username",
-        "adminAlreadyExistsDescription": "That username can't be used because it already exists."
+        "adminAlreadyExistsDescription": "That username can't be used because it already exists.",
+        "cannotCreateFieldTypeTitle": "Can't create field",
+        "cannotCreateFieldTypeDescription": "The requested field type cannot be created at the moment. It might be just a temporary problem with older tables. Please try again later."
     },
     "importerType": {
         "csv": "Import a CSV file",
@@ -433,7 +452,8 @@
         "getImageWidthDescription": "Returns the image width from a single file returned from the index function.",
         "getImageHeightDescription": "Returns the image height from a single file returned from the index function.",
         "getIsImageDescription": "Returns if the single file returned from the index function is an image or not.",
-        "indexDescription": "Returns the file from a file field at the position provided by the second argument."
+        "indexDescription": "Returns the file from a file field at the position provided by the second argument.",
+        "hasOptionDescription": "Returns true if the first argument is a multiple select field or a lookup to a single select field and the second argument is one of the options."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"

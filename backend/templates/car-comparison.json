@@ -1,0 +1,3155 @@
+{
+    "baserow_template_version": 1,
+    "name": "Car Comparison",
+    "icon": "iconoir-car",
+    "keywords": [
+        "car",
+        "vendors",
+        "comparison",
+        "threshold values",
+        "weighted values",
+        "criteria",
+        "auto",
+        "automobile",
+        "vehicle"
+    ],
+    "categories": [
+        "Local Business",
+        "Personal"
+    ],
+    "export": [
+        {
+            "id": 71127,
+            "name": "Car Comparison",
+            "order": 1,
+            "type": "database",
+            "tables": [
+                {
+                    "id": 190381,
+                    "name": "Criteria",
+                    "order": 1,
+                    "fields": [
+                        {
+                            "id": 1280968,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 1280969,
+                            "type": "number",
+                            "name": "Threshold low",
+                            "order": 1,
+                            "primary": false,
+                            "number_decimal_places": 1,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1280970,
+                            "type": "number",
+                            "name": "Threshold high",
+                            "order": 2,
+                            "primary": false,
+                            "number_decimal_places": 1,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1280999,
+                            "type": "text",
+                            "name": "Tag low",
+                            "order": 3,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 1281002,
+                            "type": "text",
+                            "name": "Tag high",
+                            "order": 4,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 1281108,
+                            "type": "link_row",
+                            "name": "Cars",
+                            "order": 6,
+                            "primary": false,
+                            "link_row_table_id": 190118,
+                            "link_row_related_field_id": 1281109,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 1282771,
+                            "type": "text",
+                            "name": "Tag medium",
+                            "order": 7,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 1283996,
+                            "type": "single_select",
+                            "name": "Preferred value",
+                            "order": 8,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 1003041,
+                                    "value": "low",
+                                    "color": "darker-brown",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 1003042,
+                                    "value": "high",
+                                    "color": "cyan",
+                                    "order": 1
+                                }
+                            ]
+                        },
+                        {
+                            "id": 1283997,
+                            "type": "number",
+                            "name": "Importance",
+                            "order": 9,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1284001,
+                            "type": "formula",
+                            "name": "Value low",
+                            "order": 10,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "if(totext(field('Preferred value')) = 'low',3,1)",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284002,
+                            "type": "formula",
+                            "name": "Value high",
+                            "order": 11,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "if(totext(field('Preferred value')) = 'high',3,1)",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284003,
+                            "type": "formula",
+                            "name": "Value medium",
+                            "order": 12,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "tonumber('2')",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1397325,
+                            "type": "text",
+                            "name": "Unit",
+                            "order": 13,
+                            "primary": false,
+                            "text_default": ""
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 309338,
+                            "type": "grid",
+                            "name": "All criteria",
+                            "order": 1,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111289,
+                                    "field_id": 1283997,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "group_bys": [],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 1975041,
+                                    "field_id": 1280968,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980542,
+                                    "field_id": 1283996,
+                                    "width": 159,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 2149963,
+                                    "field_id": 1397325,
+                                    "width": 163,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980543,
+                                    "field_id": 1283997,
+                                    "width": 135,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1975039,
+                                    "field_id": 1280969,
+                                    "width": 152,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1975064,
+                                    "field_id": 1280999,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980550,
+                                    "field_id": 1284001,
+                                    "width": 128,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1975040,
+                                    "field_id": 1280970,
+                                    "width": 164,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1975098,
+                                    "field_id": 1281002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980568,
+                                    "field_id": 1284002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1978344,
+                                    "field_id": 1282771,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980569,
+                                    "field_id": 1284003,
+                                    "width": 151,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1975362,
+                                    "field_id": 1281108,
+                                    "width": 388,
+                                    "hidden": false,
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310323,
+                            "type": "grid",
+                            "name": "Important criteria",
+                            "order": 2,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 133086,
+                                    "field_id": 1283997,
+                                    "type": "higher_than",
+                                    "value": "2",
+                                    "group": null
+                                }
+                            ],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111290,
+                                    "field_id": 1283997,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "group_bys": [],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 1981402,
+                                    "field_id": 1280968,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981409,
+                                    "field_id": 1283996,
+                                    "width": 159,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981410,
+                                    "field_id": 1283997,
+                                    "width": 135,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981403,
+                                    "field_id": 1280969,
+                                    "width": 152,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981405,
+                                    "field_id": 1280999,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981411,
+                                    "field_id": 1284001,
+                                    "width": 128,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981404,
+                                    "field_id": 1280970,
+                                    "width": 164,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981406,
+                                    "field_id": 1281002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981412,
+                                    "field_id": 1284002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981408,
+                                    "field_id": 1282771,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981413,
+                                    "field_id": 1284003,
+                                    "width": 151,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981407,
+                                    "field_id": 1281108,
+                                    "width": 388,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310324,
+                            "type": "grid",
+                            "name": "Criteria with preferred low value",
+                            "order": 3,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 133087,
+                                    "field_id": 1283996,
+                                    "type": "single_select_equal",
+                                    "value": "1003041",
+                                    "group": null
+                                }
+                            ],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111291,
+                                    "field_id": 1283997,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "group_bys": [],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 1981414,
+                                    "field_id": 1280968,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981421,
+                                    "field_id": 1283996,
+                                    "width": 159,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981422,
+                                    "field_id": 1283997,
+                                    "width": 135,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981415,
+                                    "field_id": 1280969,
+                                    "width": 152,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981417,
+                                    "field_id": 1280999,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981423,
+                                    "field_id": 1284001,
+                                    "width": 128,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981416,
+                                    "field_id": 1280970,
+                                    "width": 164,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981418,
+                                    "field_id": 1281002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981424,
+                                    "field_id": 1284002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981420,
+                                    "field_id": 1282771,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981425,
+                                    "field_id": 1284003,
+                                    "width": 151,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981419,
+                                    "field_id": 1281108,
+                                    "width": 388,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310325,
+                            "type": "grid",
+                            "name": "Criteria with preferred high value",
+                            "order": 4,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 133088,
+                                    "field_id": 1283996,
+                                    "type": "single_select_equal",
+                                    "value": "1003042",
+                                    "group": null
+                                }
+                            ],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111292,
+                                    "field_id": 1283997,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "group_bys": [],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 1981426,
+                                    "field_id": 1280968,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981433,
+                                    "field_id": 1283996,
+                                    "width": 159,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981434,
+                                    "field_id": 1283997,
+                                    "width": 135,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981427,
+                                    "field_id": 1280969,
+                                    "width": 152,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981429,
+                                    "field_id": 1280999,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981435,
+                                    "field_id": 1284001,
+                                    "width": 128,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981428,
+                                    "field_id": 1280970,
+                                    "width": 164,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981430,
+                                    "field_id": 1281002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981436,
+                                    "field_id": 1284002,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981432,
+                                    "field_id": 1282771,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981437,
+                                    "field_id": 1284003,
+                                    "width": 151,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981431,
+                                    "field_id": 1281108,
+                                    "width": 388,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310646,
+                            "type": "kanban",
+                            "name": "Criteria by preferred value",
+                            "order": 5,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 1283996,
+                            "field_options": [
+                                {
+                                    "id": 129431,
+                                    "field_id": 1280968,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129432,
+                                    "field_id": 1280969,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129433,
+                                    "field_id": 1280970,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129434,
+                                    "field_id": 1280999,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129435,
+                                    "field_id": 1281002,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129436,
+                                    "field_id": 1281108,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129437,
+                                    "field_id": 1282771,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129438,
+                                    "field_id": 1283996,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129439,
+                                    "field_id": 1283997,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129440,
+                                    "field_id": 1284001,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129441,
+                                    "field_id": 1284002,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129442,
+                                    "field_id": 1284003,
+                                    "hidden": true,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310395,
+                            "type": "form",
+                            "name": "Add new criterion",
+                            "order": 6,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "public": false,
+                            "title": "Add a new criterion",
+                            "description": "This forms adds a new criterion that can be used to compare cars with each other.",
+                            "cover_image": null,
+                            "logo_image": null,
+                            "submit_text": "Submit",
+                            "submit_action": "MESSAGE",
+                            "submit_action_message": "Thank you for adding this criterium",
+                            "submit_action_redirect_url": "",
+                            "field_options": [
+                                {
+                                    "id": 230906,
+                                    "field_id": 1280968,
+                                    "name": "",
+                                    "description": "The criterium's name.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 0,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230913,
+                                    "field_id": 1283996,
+                                    "name": "",
+                                    "description": "indicating if either a high or a low value is desired for the criterion.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 1,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230914,
+                                    "field_id": 1283997,
+                                    "name": "",
+                                    "description": "A number without unit indicating the weight of the criterion. The higher the number, the more important you find the criterion.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 2,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230907,
+                                    "field_id": 1280969,
+                                    "name": "",
+                                    "description": "A number indicating the maximum value for a criterion to be considered low.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 3,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230909,
+                                    "field_id": 1280999,
+                                    "name": "",
+                                    "description": "A description for cars where the criterion is considered low.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 4,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230908,
+                                    "field_id": 1280970,
+                                    "name": "",
+                                    "description": "A number indicating the minimum value for a criterion to be considered high.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 5,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230910,
+                                    "field_id": 1281002,
+                                    "name": "",
+                                    "description": "A description for cars where the criterion is considered high.",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 6,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230912,
+                                    "field_id": 1282771,
+                                    "name": "",
+                                    "description": "A description for cars where the criterion is between the low and high threshold",
+                                    "enabled": true,
+                                    "required": true,
+                                    "order": 7,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230911,
+                                    "field_id": 1281108,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 8,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230915,
+                                    "field_id": 1284001,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 9,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230916,
+                                    "field_id": 1284002,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 10,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                },
+                                {
+                                    "id": 230917,
+                                    "field_id": 1284003,
+                                    "name": "",
+                                    "description": "",
+                                    "enabled": false,
+                                    "required": true,
+                                    "order": 11,
+                                    "show_when_matching_conditions": false,
+                                    "condition_type": "AND",
+                                    "conditions": [],
+                                    "field_component": "default"
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "created_on": "2023-08-22T13:08:53.737664+00:00",
+                            "updated_on": "2023-10-03T07:11:45.419213+00:00",
+                            "field_1280968": "Price",
+                            "field_1280969": "30000.0",
+                            "field_1280970": "100000.0",
+                            "field_1280999": "Cheap car",
+                            "field_1281002": "Expensive car",
+                            "field_1281108": [
+                                1,
+                                2,
+                                4,
+                                3,
+                                5,
+                                6,
+                                7,
+                                8,
+                                9,
+                                10
+                            ],
+                            "field_1282771": "Normal budget",
+                            "field_1283996": 1003041,
+                            "field_1283997": "2",
+                            "field_1284001": null,
+                            "field_1284002": null,
+                            "field_1284003": null,
+                            "field_1397325": "US Dollars (USD)"
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2023-08-22T13:08:53.737703+00:00",
+                            "updated_on": "2023-10-03T07:13:01.212082+00:00",
+                            "field_1280968": "Powerful engine",
+                            "field_1280969": "200.0",
+                            "field_1280970": "300.0",
+                            "field_1280999": "Pony car",
+                            "field_1281002": "Real stallion",
+                            "field_1281108": [
+                                1,
+                                3,
+                                2,
+                                4,
+                                5,
+                                6,
+                                7,
+                                8,
+                                9,
+                                10
+                            ],
+                            "field_1282771": "Medium power",
+                            "field_1283996": 1003042,
+                            "field_1283997": "1",
+                            "field_1284001": null,
+                            "field_1284002": null,
+                            "field_1284003": null,
+                            "field_1397325": "Horsepower (HP)"
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2023-08-23T13:20:25.272972+00:00",
+                            "updated_on": "2023-10-03T07:11:38.100606+00:00",
+                            "field_1280968": "Fuel consumption",
+                            "field_1280969": "3.5",
+                            "field_1280970": "5.0",
+                            "field_1280999": "Energy efficient",
+                            "field_1281002": "Serious consumption",
+                            "field_1281108": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                                6,
+                                7,
+                                8,
+                                9,
+                                10
+                            ],
+                            "field_1282771": "Moderate consumption",
+                            "field_1283996": 1003041,
+                            "field_1283997": "3",
+                            "field_1284001": null,
+                            "field_1284002": null,
+                            "field_1284003": null,
+                            "field_1397325": "Miles per gallon (MPG)"
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2023-08-23T13:20:34.246623+00:00",
+                            "updated_on": "2023-10-03T07:14:17.832365+00:00",
+                            "field_1280968": "Capacity",
+                            "field_1280969": "20.0",
+                            "field_1280970": "25.0",
+                            "field_1280999": "Small car",
+                            "field_1281002": "Space for the entire family",
+                            "field_1281108": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                                6,
+                                7,
+                                8,
+                                9,
+                                10
+                            ],
+                            "field_1282771": "Average capacity",
+                            "field_1283996": 1003042,
+                            "field_1283997": "2",
+                            "field_1284001": null,
+                            "field_1284002": null,
+                            "field_1284003": null,
+                            "field_1397325": "Square feet (ft2)"
+                        },
+                        {
+                            "id": 6,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2023-08-24T14:11:29.781602+00:00",
+                            "updated_on": "2023-10-03T07:13:17.647402+00:00",
+                            "field_1280968": "Distance",
+                            "field_1280969": "300.0",
+                            "field_1280970": "450.0",
+                            "field_1280999": "City area only",
+                            "field_1281002": "Through the state",
+                            "field_1281108": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5,
+                                6,
+                                7,
+                                8,
+                                9,
+                                10
+                            ],
+                            "field_1282771": "Medium distance",
+                            "field_1283996": 1003042,
+                            "field_1283997": "2",
+                            "field_1284001": null,
+                            "field_1284002": null,
+                            "field_1284003": null,
+                            "field_1397325": "Miles (Mi)"
+                        }
+                    ]
+                },
+                {
+                    "id": 190118,
+                    "name": "Cars",
+                    "order": 2,
+                    "fields": [
+                        {
+                            "id": 1279277,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 1279278,
+                            "type": "text",
+                            "name": "Year",
+                            "order": 1,
+                            "primary": false,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 1279279,
+                            "type": "file",
+                            "name": "Picture",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 1279328,
+                            "type": "number",
+                            "name": "Starting price (USD)",
+                            "order": 3,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1279329,
+                            "type": "number",
+                            "name": "Horsepower",
+                            "order": 4,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1279330,
+                            "type": "number",
+                            "name": "MPG city",
+                            "order": 5,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1279331,
+                            "type": "number",
+                            "name": "MPG highway",
+                            "order": 6,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1279332,
+                            "type": "number",
+                            "name": "Seats",
+                            "order": 7,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1279333,
+                            "type": "number",
+                            "name": "Trunk (cubic feet)",
+                            "order": 8,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1280432,
+                            "type": "single_select",
+                            "name": "Transmission",
+                            "order": 11,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 1001987,
+                                    "value": "Automatic",
+                                    "color": "light-green",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 1001988,
+                                    "value": "Manual",
+                                    "color": "light-cyan",
+                                    "order": 1
+                                }
+                            ]
+                        },
+                        {
+                            "id": 1280433,
+                            "type": "single_select",
+                            "name": "Fuel type",
+                            "order": 12,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 1001991,
+                                    "value": "Gasoline",
+                                    "color": "light-red",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 1001992,
+                                    "value": "Diesel",
+                                    "color": "red",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 1003452,
+                                    "value": "Electric",
+                                    "color": "darker-orange",
+                                    "order": 2
+                                }
+                            ]
+                        },
+                        {
+                            "id": 1280436,
+                            "type": "formula",
+                            "name": "Average MPG",
+                            "order": 13,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 1,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "(field('MPG city') + field('MPG highway'))/2",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1281109,
+                            "type": "link_row",
+                            "name": "Criteria",
+                            "order": 18,
+                            "primary": false,
+                            "link_row_table_id": 190381,
+                            "link_row_related_field_id": 1281108,
+                            "has_related_field": true
+                        },
+                        {
+                            "id": 1282323,
+                            "type": "formula",
+                            "name": "Price category",
+                            "order": 20,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "filter(if(field('Starting price (USD)') < lookup('Criteria','Threshold low'),lookup('Criteria','Tag low'),if(field('Starting price (USD)') >= lookup('Criteria','Threshold high'),lookup('Criteria','Tag high'), lookup('Criteria','Tag medium'))), lookup('Criteria','Name') = 'Price')",
+                            "formula_type": "array"
+                        },
+                        {
+                            "id": 1282740,
+                            "type": "formula",
+                            "name": "Horsepower category",
+                            "order": 21,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "filter(if(field('Horsepower') < lookup('Criteria','Threshold low'),lookup('Criteria','Tag low'),if(field('Horsepower') >= lookup('Criteria','Threshold high'),lookup('Criteria','Tag high'), lookup('Criteria','Tag medium'))), lookup('Criteria','Name') = 'Powerful engine')",
+                            "formula_type": "array"
+                        },
+                        {
+                            "id": 1282851,
+                            "type": "formula",
+                            "name": "Fuel consumption category",
+                            "order": 22,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "filter(if(field('Average GPM') < lookup('Criteria','Threshold low'),lookup('Criteria','Tag low'),if(field('Average GPM') >= lookup('Criteria','Threshold high'),lookup('Criteria','Tag high'), lookup('Criteria','Tag medium'))), lookup('Criteria','Name') = 'Fuel consumption')",
+                            "formula_type": "array"
+                        },
+                        {
+                            "id": 1284025,
+                            "type": "formula",
+                            "name": "Total score",
+                            "order": 23,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "field('Price score') + field('Horsepower score') + field('Fuel consumption score') + field('Distance score')",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284036,
+                            "type": "formula",
+                            "name": "Price score",
+                            "order": 24,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "sum(filter(if(field('Starting price (USD)') < lookup('Criteria','Threshold low'),lookup('Criteria','Value low') * lookup('Criteria','Importance'),if(field('Starting price (USD)') >= lookup('Criteria','Threshold high'),lookup('Criteria','Value high') * lookup('Criteria','Importance'), lookup('Criteria','Value medium') * lookup('Criteria','Importance'))), lookup('Criteria','Name') = 'Price'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284047,
+                            "type": "formula",
+                            "name": "Horsepower score",
+                            "order": 25,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "sum(filter(if(field('Horsepower') < lookup('Criteria','Threshold low'),lookup('Criteria','Value low') * lookup('Criteria','Importance'),if(field('Horsepower') >= lookup('Criteria','Threshold high'),lookup('Criteria','Value high') * lookup('Criteria','Importance'), lookup('Criteria','Value medium') * lookup('Criteria','Importance'))), lookup('Criteria','Name') = 'Powerfull engine'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284048,
+                            "type": "formula",
+                            "name": "Fuel consumption score",
+                            "order": 26,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "sum(filter(if(field('Average GPM') < lookup('Criteria','Threshold low'),lookup('Criteria','Value low') * lookup('Criteria','Importance'),if(field('Average GPM') >= lookup('Criteria','Threshold high'), lookup('Criteria','Value high') * lookup('Criteria','Importance'), lookup('Criteria','Value medium') * lookup('Criteria','Importance'))), lookup('Criteria','Name') = 'Fuel consumption'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284166,
+                            "type": "formula",
+                            "name": "Average score",
+                            "order": 27,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 2,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "field('Total score') / count(field('Criteria'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284389,
+                            "type": "formula",
+                            "name": "Calculated space",
+                            "order": 28,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "field('Seats') * 2 + field('Trunk (cubic feet)')",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284394,
+                            "type": "formula",
+                            "name": "Capacity category",
+                            "order": 29,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "filter(if(field('Calculated space') < lookup('Criteria','Threshold low'),lookup('Criteria','Tag low'),if(field('Calculated space') >= lookup('Criteria','Threshold high'),lookup('Criteria','Tag high'), lookup('Criteria','Tag medium'))), lookup('Criteria','Name') = 'Capacity')",
+                            "formula_type": "array"
+                        },
+                        {
+                            "id": 1284395,
+                            "type": "formula",
+                            "name": "Capacity score",
+                            "order": 30,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "sum(filter(if(field('Calculated space') < lookup('Criteria','Threshold low'),lookup('Criteria','Value low') * lookup('Criteria','Importance'),if(field('Calculated space') >= lookup('Criteria','Threshold high'),lookup('Criteria','Value high') * lookup('Criteria','Importance'), lookup('Criteria','Value medium') * lookup('Criteria','Importance'))), lookup('Criteria','Name') = 'Capacity'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284542,
+                            "type": "number",
+                            "name": "Tank capacity (gallons)",
+                            "order": 31,
+                            "primary": false,
+                            "number_decimal_places": 0,
+                            "number_negative": false
+                        },
+                        {
+                            "id": 1284546,
+                            "type": "formula",
+                            "name": "Distance (miles)",
+                            "order": 32,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 1,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "field('Average MPG') * field('Tank capacity (gallons)')",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284601,
+                            "type": "formula",
+                            "name": "Average GPM",
+                            "order": 33,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 1,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "(1 / field('Average MPG')) * 100",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284672,
+                            "type": "formula",
+                            "name": "Distance score",
+                            "order": 34,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "number_decimal_places": 0,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "sum(filter(if(field('Distance (miles)') < lookup('Criteria','Threshold low'),lookup('Criteria','Value low') * lookup('Criteria','Importance'),if(field('Distance (miles)') >= lookup('Criteria','Threshold high'), lookup('Criteria','Value high') * lookup('Criteria','Importance'), lookup('Criteria','Value medium') * lookup('Criteria','Importance'))), lookup('Criteria','Name') = 'Distance'))",
+                            "formula_type": "number"
+                        },
+                        {
+                            "id": 1284673,
+                            "type": "formula",
+                            "name": "Distance category",
+                            "order": 35,
+                            "primary": false,
+                            "date_include_time": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "number_decimal_places": null,
+                            "date_show_tzinfo": null,
+                            "date_force_timezone": null,
+                            "error": null,
+                            "nullable": false,
+                            "date_format": null,
+                            "formula": "filter(if(field('Distance (miles)') < lookup('Criteria','Threshold low'),lookup('Criteria','Tag low'),if(field('Distance (miles)') >= lookup('Criteria','Threshold high'),lookup('Criteria','Tag high'), lookup('Criteria','Tag medium'))), lookup('Criteria','Name') = 'Distance')",
+                            "formula_type": "array"
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 308864,
+                            "type": "grid",
+                            "name": "All cars",
+                            "order": 1,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111296,
+                                    "field_id": 1284025,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "group_bys": [],
+                            "decorations": [],
+                            "public": false,
+                            "row_identifier_type": "id",
+                            "field_options": [
+                                {
+                                    "id": 1972265,
+                                    "field_id": 1279277,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972263,
+                                    "field_id": 1279278,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 1,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972264,
+                                    "field_id": 1279279,
+                                    "width": 106,
+                                    "hidden": false,
+                                    "order": 2,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1975297,
+                                    "field_id": 1281109,
+                                    "width": 381,
+                                    "hidden": false,
+                                    "order": 3,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972302,
+                                    "field_id": 1279328,
+                                    "width": 186,
+                                    "hidden": false,
+                                    "order": 4,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1977717,
+                                    "field_id": 1282323,
+                                    "width": 161,
+                                    "hidden": false,
+                                    "order": 5,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980597,
+                                    "field_id": 1284036,
+                                    "width": 129,
+                                    "hidden": false,
+                                    "order": 6,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972303,
+                                    "field_id": 1279329,
+                                    "width": 138,
+                                    "hidden": false,
+                                    "order": 7,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1978316,
+                                    "field_id": 1282740,
+                                    "width": 194,
+                                    "hidden": false,
+                                    "order": 8,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980610,
+                                    "field_id": 1284047,
+                                    "width": 174,
+                                    "hidden": false,
+                                    "order": 9,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972304,
+                                    "field_id": 1279330,
+                                    "width": 122,
+                                    "hidden": false,
+                                    "order": 10,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972305,
+                                    "field_id": 1279331,
+                                    "width": 146,
+                                    "hidden": false,
+                                    "order": 11,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1974297,
+                                    "field_id": 1280436,
+                                    "width": 166,
+                                    "hidden": false,
+                                    "order": 12,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981530,
+                                    "field_id": 1284601,
+                                    "width": 148,
+                                    "hidden": false,
+                                    "order": 13,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1978492,
+                                    "field_id": 1282851,
+                                    "width": 239,
+                                    "hidden": false,
+                                    "order": 14,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980611,
+                                    "field_id": 1284048,
+                                    "width": 214,
+                                    "hidden": false,
+                                    "order": 15,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981476,
+                                    "field_id": 1284542,
+                                    "width": 207,
+                                    "hidden": false,
+                                    "order": 16,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981482,
+                                    "field_id": 1284546,
+                                    "width": 162,
+                                    "hidden": false,
+                                    "order": 17,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981607,
+                                    "field_id": 1284673,
+                                    "width": 174,
+                                    "hidden": false,
+                                    "order": 18,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981606,
+                                    "field_id": 1284672,
+                                    "width": 156,
+                                    "hidden": false,
+                                    "order": 19,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972306,
+                                    "field_id": 1279332,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 20,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1972307,
+                                    "field_id": 1279333,
+                                    "width": 172,
+                                    "hidden": false,
+                                    "order": 21,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981233,
+                                    "field_id": 1284389,
+                                    "width": 168,
+                                    "hidden": false,
+                                    "order": 22,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981244,
+                                    "field_id": 1284394,
+                                    "width": 163,
+                                    "hidden": false,
+                                    "order": 23,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1981245,
+                                    "field_id": 1284395,
+                                    "width": 153,
+                                    "hidden": false,
+                                    "order": 24,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1974294,
+                                    "field_id": 1280432,
+                                    "width": 144,
+                                    "hidden": false,
+                                    "order": 25,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1974295,
+                                    "field_id": 1280433,
+                                    "width": 125,
+                                    "hidden": false,
+                                    "order": 26,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980596,
+                                    "field_id": 1284025,
+                                    "width": 141,
+                                    "hidden": false,
+                                    "order": 27,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                },
+                                {
+                                    "id": 1980954,
+                                    "field_id": 1284166,
+                                    "width": 157,
+                                    "hidden": false,
+                                    "order": 28,
+                                    "aggregation_type": "",
+                                    "aggregation_raw_type": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310362,
+                            "type": "gallery",
+                            "name": "Gallery: all cars with tags",
+                            "order": 2,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111297,
+                                    "field_id": 1284025,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 1279279,
+                            "field_options": [
+                                {
+                                    "id": 212325,
+                                    "field_id": 1279277,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212326,
+                                    "field_id": 1279278,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212327,
+                                    "field_id": 1279279,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212328,
+                                    "field_id": 1279328,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212329,
+                                    "field_id": 1279329,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212330,
+                                    "field_id": 1279330,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212331,
+                                    "field_id": 1279331,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212332,
+                                    "field_id": 1279332,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212333,
+                                    "field_id": 1279333,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212334,
+                                    "field_id": 1280432,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212335,
+                                    "field_id": 1280433,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212336,
+                                    "field_id": 1280436,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212337,
+                                    "field_id": 1281109,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212338,
+                                    "field_id": 1282323,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212339,
+                                    "field_id": 1282740,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212340,
+                                    "field_id": 1282851,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212341,
+                                    "field_id": 1284025,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212342,
+                                    "field_id": 1284036,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212343,
+                                    "field_id": 1284047,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212344,
+                                    "field_id": 1284048,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212345,
+                                    "field_id": 1284166,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212346,
+                                    "field_id": 1284389,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212347,
+                                    "field_id": 1284394,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212348,
+                                    "field_id": 1284395,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212349,
+                                    "field_id": 1284542,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212350,
+                                    "field_id": 1284546,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212351,
+                                    "field_id": 1284601,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212352,
+                                    "field_id": 1284672,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212353,
+                                    "field_id": 1284673,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310648,
+                            "type": "gallery",
+                            "name": "Gallery: all cars with characteristics",
+                            "order": 3,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [
+                                {
+                                    "id": 111381,
+                                    "field_id": 1284025,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "decorations": [],
+                            "public": false,
+                            "card_cover_image_field_id": 1279279,
+                            "field_options": [
+                                {
+                                    "id": 212676,
+                                    "field_id": 1279277,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212677,
+                                    "field_id": 1279278,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212678,
+                                    "field_id": 1279279,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212679,
+                                    "field_id": 1279328,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212680,
+                                    "field_id": 1279329,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212681,
+                                    "field_id": 1279330,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212682,
+                                    "field_id": 1279331,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212683,
+                                    "field_id": 1279332,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212684,
+                                    "field_id": 1279333,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212685,
+                                    "field_id": 1280432,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212686,
+                                    "field_id": 1280433,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212687,
+                                    "field_id": 1280436,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212688,
+                                    "field_id": 1281109,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212689,
+                                    "field_id": 1282323,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212690,
+                                    "field_id": 1282740,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212691,
+                                    "field_id": 1282851,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212692,
+                                    "field_id": 1284025,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212693,
+                                    "field_id": 1284036,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212694,
+                                    "field_id": 1284047,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212695,
+                                    "field_id": 1284048,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212696,
+                                    "field_id": 1284166,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212697,
+                                    "field_id": 1284389,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212698,
+                                    "field_id": 1284394,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212699,
+                                    "field_id": 1284395,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212700,
+                                    "field_id": 1284542,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212701,
+                                    "field_id": 1284546,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212702,
+                                    "field_id": 1284601,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212703,
+                                    "field_id": 1284672,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 212704,
+                                    "field_id": 1284673,
+                                    "hidden": true,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310651,
+                            "type": "kanban",
+                            "name": "Cars by transmission",
+                            "order": 4,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 1280432,
+                            "card_cover_image_field_id": 1279279,
+                            "field_options": [
+                                {
+                                    "id": 129443,
+                                    "field_id": 1279277,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129444,
+                                    "field_id": 1279278,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129445,
+                                    "field_id": 1279279,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129446,
+                                    "field_id": 1279328,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129447,
+                                    "field_id": 1279329,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129448,
+                                    "field_id": 1279330,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129449,
+                                    "field_id": 1279331,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129450,
+                                    "field_id": 1279332,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129451,
+                                    "field_id": 1279333,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129452,
+                                    "field_id": 1280432,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129453,
+                                    "field_id": 1280433,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129454,
+                                    "field_id": 1280436,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129455,
+                                    "field_id": 1281109,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129456,
+                                    "field_id": 1282323,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129457,
+                                    "field_id": 1282740,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129458,
+                                    "field_id": 1282851,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129459,
+                                    "field_id": 1284025,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129460,
+                                    "field_id": 1284036,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129461,
+                                    "field_id": 1284047,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129462,
+                                    "field_id": 1284048,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129463,
+                                    "field_id": 1284166,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129464,
+                                    "field_id": 1284389,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129465,
+                                    "field_id": 1284394,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129466,
+                                    "field_id": 1284395,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129467,
+                                    "field_id": 1284542,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129468,
+                                    "field_id": 1284546,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129469,
+                                    "field_id": 1284601,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129470,
+                                    "field_id": 1284672,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129471,
+                                    "field_id": 1284673,
+                                    "hidden": true,
+                                    "order": 32767
+                                }
+                            ]
+                        },
+                        {
+                            "id": 310652,
+                            "type": "kanban",
+                            "name": "Cars by fuel type",
+                            "order": 5,
+                            "ownership_type": "collaborative",
+                            "owned_by": "frederik.duchi@howest.be",
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "filter_groups": [],
+                            "sortings": [],
+                            "decorations": [],
+                            "public": false,
+                            "single_select_field_id": 1280433,
+                            "card_cover_image_field_id": 1279279,
+                            "field_options": [
+                                {
+                                    "id": 129472,
+                                    "field_id": 1279277,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129473,
+                                    "field_id": 1279278,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129474,
+                                    "field_id": 1279279,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129475,
+                                    "field_id": 1279328,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129476,
+                                    "field_id": 1279329,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129477,
+                                    "field_id": 1279330,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129478,
+                                    "field_id": 1279331,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129479,
+                                    "field_id": 1279332,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129480,
+                                    "field_id": 1279333,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129481,
+                                    "field_id": 1280432,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129482,
+                                    "field_id": 1280433,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129483,
+                                    "field_id": 1280436,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129484,
+                                    "field_id": 1281109,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129485,
+                                    "field_id": 1282323,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129486,
+                                    "field_id": 1282740,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129487,
+                                    "field_id": 1282851,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129488,
+                                    "field_id": 1284025,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129489,
+                                    "field_id": 1284036,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129490,
+                                    "field_id": 1284047,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129491,
+                                    "field_id": 1284048,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129492,
+                                    "field_id": 1284166,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129493,
+                                    "field_id": 1284389,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129494,
+                                    "field_id": 1284394,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129495,
+                                    "field_id": 1284395,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129496,
+                                    "field_id": 1284542,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129497,
+                                    "field_id": 1284546,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129498,
+                                    "field_id": 1284601,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129499,
+                                    "field_id": 1284672,
+                                    "hidden": true,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 129500,
+                                    "field_id": 1284673,
+                                    "hidden": true,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "created_on": "2023-08-21T12:07:08.291840+00:00",
+                            "updated_on": "2023-08-24T14:47:16.606109+00:00",
+                            "field_1279277": "Alfa Romeo Spider",
+                            "field_1279278": "1994",
+                            "field_1279279": [
+                                {
+                                    "name": "KH9FDcv0NUyjDDIAatfggYxyN1X39IiQ_d46a6377cb30a295a731b386eca6fdd4ccfd2b8008175edb2d2b8a94d926ba2d.jpg",
+                                    "visible_name": "alfa.jpg",
+                                    "original_name": "KH9FDcv0NUyjDDIAatfggYxyN1X39IiQ_d46a6377cb30a295a731b386eca6fdd4ccfd2b8008175edb2d2b8a94d926ba2d.jpg"
+                                }
+                            ],
+                            "field_1279328": "22590",
+                            "field_1279329": "190",
+                            "field_1279330": "16",
+                            "field_1279331": "19",
+                            "field_1279332": "2",
+                            "field_1279333": "3",
+                            "field_1280432": 1001988,
+                            "field_1280433": 1001992,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                5,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "12",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "created_on": "2023-08-21T12:07:08.291914+00:00",
+                            "updated_on": "2023-08-24T14:47:22.931994+00:00",
+                            "field_1279277": "Aston Martin V12 Vanquish",
+                            "field_1279278": "2006",
+                            "field_1279279": [
+                                {
+                                    "name": "GP8KjVrCoFfyibBoQ3K07NfIpUYiqLmV_98354121315cd6bebde2d48f0d9c5eeedd9290db279789e0958abf6f216098c0.jpg",
+                                    "visible_name": "aston.jpg",
+                                    "original_name": "GP8KjVrCoFfyibBoQ3K07NfIpUYiqLmV_98354121315cd6bebde2d48f0d9c5eeedd9290db279789e0958abf6f216098c0.jpg"
+                                }
+                            ],
+                            "field_1279328": "260000",
+                            "field_1279329": "520",
+                            "field_1279330": "11",
+                            "field_1279331": "17",
+                            "field_1279332": "4",
+                            "field_1279333": "8",
+                            "field_1280432": 1001987,
+                            "field_1280433": 1001991,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "22",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "created_on": "2023-08-21T12:49:46.442859+00:00",
+                            "updated_on": "2023-08-24T14:47:23.631009+00:00",
+                            "field_1279277": "BMW X5",
+                            "field_1279278": "2024",
+                            "field_1279279": [
+                                {
+                                    "name": "D7Al3RdgTRZqXbuIAofVeSvIKVTd58FI_3dfde822d34d456d06d29d038713d56d72244830d7142ec10145cb7511eb7ebd.jpg",
+                                    "visible_name": "bmw.jpg",
+                                    "original_name": "D7Al3RdgTRZqXbuIAofVeSvIKVTd58FI_3dfde822d34d456d06d29d038713d56d72244830d7142ec10145cb7511eb7ebd.jpg"
+                                }
+                            ],
+                            "field_1279328": "65200",
+                            "field_1279329": "375",
+                            "field_1279330": "23",
+                            "field_1279331": "27",
+                            "field_1279332": "5",
+                            "field_1279333": "18",
+                            "field_1280432": 1001988,
+                            "field_1280433": 1001992,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                2,
+                                3,
+                                1,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "22",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "created_on": "2023-08-21T12:49:58.880315+00:00",
+                            "updated_on": "2023-08-24T14:47:24.088866+00:00",
+                            "field_1279277": "Chevrolet Monte Carlo",
+                            "field_1279278": "2007",
+                            "field_1279279": [
+                                {
+                                    "name": "i0Gg05L96X0VL7AZLiaZkEUQTdGNx3FB_198b44c00cd4d70c63e1e882965b5c0139be7b1297b2475800cce3c17ade1015.jpg",
+                                    "visible_name": "chev.jpg",
+                                    "original_name": "i0Gg05L96X0VL7AZLiaZkEUQTdGNx3FB_198b44c00cd4d70c63e1e882965b5c0139be7b1297b2475800cce3c17ade1015.jpg"
+                                }
+                            ],
+                            "field_1279328": "21015",
+                            "field_1279329": "211",
+                            "field_1279330": "21",
+                            "field_1279331": "31",
+                            "field_1279332": "5",
+                            "field_1279333": "16",
+                            "field_1280432": 1001987,
+                            "field_1280433": 1001991,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "17",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "created_on": "2023-08-24T11:28:40.844950+00:00",
+                            "updated_on": "2023-08-24T14:47:24.520718+00:00",
+                            "field_1279277": "Daewoo Nubira",
+                            "field_1279278": "2002",
+                            "field_1279279": [
+                                {
+                                    "name": "a8rtpHj6o0Tt2Bdkl4gmbYCDfKlQn1It_1cfd8dad58110dba88fa347a30156240aed269b293ce25ffd13a64673e38dbd7.jpg",
+                                    "visible_name": "daewoo.jpg",
+                                    "original_name": "a8rtpHj6o0Tt2Bdkl4gmbYCDfKlQn1It_1cfd8dad58110dba88fa347a30156240aed269b293ce25ffd13a64673e38dbd7.jpg"
+                                }
+                            ],
+                            "field_1279328": "11699",
+                            "field_1279329": "129",
+                            "field_1279330": "22",
+                            "field_1279331": "31",
+                            "field_1279332": "5",
+                            "field_1279333": "13",
+                            "field_1280432": 1001987,
+                            "field_1280433": 1001992,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "14",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "created_on": "2023-08-24T11:28:51.024365+00:00",
+                            "updated_on": "2023-08-24T14:47:24.917692+00:00",
+                            "field_1279277": "Ferrari Roma",
+                            "field_1279278": "2023",
+                            "field_1279279": [
+                                {
+                                    "name": "ppG7dUAv1lzvmI48SAfoKYLjbbxh9tgu_62de8eb5c8a550fd2f9a16a6adb70a8baf69d6bfff3c98ddb26a934dd322c9b6.jpg",
+                                    "visible_name": "ferrari.jpg",
+                                    "original_name": "ppG7dUAv1lzvmI48SAfoKYLjbbxh9tgu_62de8eb5c8a550fd2f9a16a6adb70a8baf69d6bfff3c98ddb26a934dd322c9b6.jpg"
+                                }
+                            ],
+                            "field_1279328": "243360",
+                            "field_1279329": "611",
+                            "field_1279330": "17",
+                            "field_1279331": "22",
+                            "field_1279332": "4",
+                            "field_1279333": "10",
+                            "field_1280432": 1001988,
+                            "field_1280433": 1001991,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "21",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 7,
+                            "order": "7.00000000000000000000",
+                            "created_on": "2023-08-24T11:28:56.236637+00:00",
+                            "updated_on": "2023-08-24T14:47:25.355933+00:00",
+                            "field_1279277": "Jeep Wrangler",
+                            "field_1279278": "2024",
+                            "field_1279279": [
+                                {
+                                    "name": "nZZKKRhRW9Jiw8kygmNvnbqbejU74wBe_5b52404d3a942cdf7f3415dfdf6b808eca7164f6f526e41031e166fa5d6c8e58.jpg",
+                                    "visible_name": "jeep.jpg",
+                                    "original_name": "nZZKKRhRW9Jiw8kygmNvnbqbejU74wBe_5b52404d3a942cdf7f3415dfdf6b808eca7164f6f526e41031e166fa5d6c8e58.jpg"
+                                }
+                            ],
+                            "field_1279328": "31895",
+                            "field_1279329": "285",
+                            "field_1279330": "17",
+                            "field_1279331": "25",
+                            "field_1279332": "4",
+                            "field_1279333": "20",
+                            "field_1280432": 1001988,
+                            "field_1280433": 1001992,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "18",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 8,
+                            "order": "8.00000000000000000000",
+                            "created_on": "2023-08-24T11:29:03.065737+00:00",
+                            "updated_on": "2023-08-24T14:47:25.710466+00:00",
+                            "field_1279277": "Land Rover Discovery",
+                            "field_1279278": "2024",
+                            "field_1279279": [
+                                {
+                                    "name": "K5pKCfpySvqGKPhdJbXFQLGsz8C5wmp6_161d576c45e0f5494ca64ca6d7d0122217a4725e94c035bd7173f65a39e46948.jpg",
+                                    "visible_name": "landrover.jpg",
+                                    "original_name": "K5pKCfpySvqGKPhdJbXFQLGsz8C5wmp6_161d576c45e0f5494ca64ca6d7d0122217a4725e94c035bd7173f65a39e46948.jpg"
+                                }
+                            ],
+                            "field_1279328": "59900",
+                            "field_1279329": "296",
+                            "field_1279330": "19",
+                            "field_1279331": "22",
+                            "field_1279332": "7",
+                            "field_1279333": "20",
+                            "field_1280432": 1001987,
+                            "field_1280433": 1001991,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                3,
+                                4,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "24",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 9,
+                            "order": "9.00000000000000000000",
+                            "created_on": "2023-08-24T11:33:58.003524+00:00",
+                            "updated_on": "2023-08-24T14:47:26.164122+00:00",
+                            "field_1279277": "Polestar 1",
+                            "field_1279278": "2021",
+                            "field_1279279": [
+                                {
+                                    "name": "CnuqOL2B9znJuIpXXgAqndeiIqGV7blW_4d3297a79e260986ade01129bf4dc028d9183a2daf2497723c13631d06774fa4.jpg",
+                                    "visible_name": "polestar.jpg",
+                                    "original_name": "CnuqOL2B9znJuIpXXgAqndeiIqGV7blW_4d3297a79e260986ade01129bf4dc028d9183a2daf2497723c13631d06774fa4.jpg"
+                                }
+                            ],
+                            "field_1279328": "155000",
+                            "field_1279329": "619",
+                            "field_1279330": "396",
+                            "field_1279331": "396",
+                            "field_1279332": "4",
+                            "field_1279333": "4",
+                            "field_1280432": 1001987,
+                            "field_1280433": 1003452,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                4,
+                                3,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "1",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        },
+                        {
+                            "id": 10,
+                            "order": "10.00000000000000000000",
+                            "created_on": "2023-08-24T11:34:04.420786+00:00",
+                            "updated_on": "2023-08-24T14:47:26.701147+00:00",
+                            "field_1279277": "Tesla Model S",
+                            "field_1279278": "2023",
+                            "field_1279279": [
+                                {
+                                    "name": "XdBpEdT5PWTfY2F3FqLk26ogBGcgFcY3_f526243f89ab8b24a59790ef5b00ba9e32520b753efbfa75f1c7f4b81f712c9e.jpg",
+                                    "visible_name": "tesla.jpg",
+                                    "original_name": "XdBpEdT5PWTfY2F3FqLk26ogBGcgFcY3_f526243f89ab8b24a59790ef5b00ba9e32520b753efbfa75f1c7f4b81f712c9e.jpg"
+                                }
+                            ],
+                            "field_1279328": "108490",
+                            "field_1279329": "1020",
+                            "field_1279330": "52",
+                            "field_1279331": "52",
+                            "field_1279332": "5",
+                            "field_1279333": "12",
+                            "field_1280432": 1001987,
+                            "field_1280433": 1003452,
+                            "field_1280436": null,
+                            "field_1281109": [
+                                1,
+                                2,
+                                4,
+                                3,
+                                6
+                            ],
+                            "field_1282323": null,
+                            "field_1282740": null,
+                            "field_1282851": null,
+                            "field_1284025": null,
+                            "field_1284036": null,
+                            "field_1284047": null,
+                            "field_1284048": null,
+                            "field_1284166": null,
+                            "field_1284389": null,
+                            "field_1284394": null,
+                            "field_1284395": null,
+                            "field_1284542": "1",
+                            "field_1284546": null,
+                            "field_1284601": null,
+                            "field_1284672": null,
+                            "field_1284673": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

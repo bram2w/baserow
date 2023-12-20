@@ -1,6 +1,6 @@
 <template>
   <div
-    class="dropdown"
+    class="dropdown dropdown--small"
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,

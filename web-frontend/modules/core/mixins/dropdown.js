@@ -45,6 +45,11 @@ export default {
       required: false,
       default: false,
     },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     tabindex: {
       type: Number,
       required: false,
@@ -57,6 +62,14 @@ export default {
      * it afterwards has no point.
      */
     fixedItems: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    /**
+     * Apply max width to the dropdown items container.
+     */
+    maxWidth: {
       type: Boolean,
       required: false,
       default: false,

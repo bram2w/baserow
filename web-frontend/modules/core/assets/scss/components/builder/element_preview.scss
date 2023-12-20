@@ -9,11 +9,11 @@
 }
 
 .element-preview__insert {
-  @include center-text(26px, 10px);
-
   display: block;
+  line-height: 0px;
+  padding: 8px;
   border-radius: 100%;
-  border: solid 1px $color-neutral-300;
+  border: solid 1px $color-neutral-400;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16);
   color: $color-neutral-900;
   background-color: $white;
@@ -27,6 +27,7 @@
   &--bottom {
     @include absolute(-13px, auto, auto, 50%);
 
+    font-size: 11px;
     margin-left: -12px;
     z-index: 2;
   }
@@ -40,21 +41,19 @@
 .element-preview {
   position: relative;
 
-  .element-preview__insert {
-    display: none;
-  }
-
+  .element-preview__insert,
   .element-preview__menu {
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0s linear 200ms, opacity 0s linear 200ms;
   }
 
   &:hover {
-    .element-preview__insert {
-      display: block;
-    }
-
-    .element-preview__menu {
-      display: flex;
+    & > .element-preview__insert,
+    & > .element-preview__menu {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s;
     }
   }
 
@@ -71,10 +70,6 @@
       content: '';
       border: solid 1px $color-primary-500;
       pointer-events: none;
-    }
-
-    .element-preview__insert {
-      display: block;
     }
   }
 }
@@ -123,7 +118,7 @@
 
   &.disabled {
     cursor: inherit;
-    color: $color-neutral-300;
+    color: $color-neutral-400;
 
     &:hover {
       background-color: $white;

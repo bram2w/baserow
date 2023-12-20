@@ -1,7 +1,9 @@
 import _ from 'lodash'
+import { resolveColor } from '@baserow/modules/core/utils/colors'
+import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
-  inject: ['page'],
+  inject: ['builder', 'page'],
   props: {
     element: {
       type: Object,
@@ -14,6 +16,9 @@ export default {
     },
   },
   computed: {
+    colorVariables() {
+      return themeToColorVariables(this.builder.theme)
+    },
     component() {
       const elementType = this.$registry.get('element', this.element.type)
       const componentName =
@@ -41,15 +46,19 @@ export default {
             parentElementType.childStylesForbidden
           )
     },
-    baseStyles() {
+    /**
+     * Computes an object containing all the style properties that must be set on
+     * the element wrapper.
+     */
+    wrapperStyles() {
       const stylesAllowed = this.allowedStyles
 
       const styles = {
         style_padding_top: {
-          'padding-top': `${this.element.style_padding_top || 0}px`,
+          '--padding-top': `${this.element.style_padding_top || 0}px`,
         },
         style_padding_bottom: {
-          'padding-bottom': `${this.element.style_padding_bottom || 0}px`,
+          '--padding-bottom': `${this.element.style_padding_bottom || 0}px`,
         },
       }
 
@@ -60,5 +69,8 @@ export default {
         return acc
       }, {})
     },
+  },
+  methods: {
+    resolveColor,
   },
 }

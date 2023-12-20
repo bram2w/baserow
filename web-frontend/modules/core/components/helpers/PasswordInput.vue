@@ -31,7 +31,7 @@ modules/core/validators.js
     <input
       :class="{ 'input--error': validationState.$error }"
       type="password"
-      class="input input--large"
+      class="input"
       :autocomplete="autocomplete"
       :value="value"
       :placeholder="placeholder"

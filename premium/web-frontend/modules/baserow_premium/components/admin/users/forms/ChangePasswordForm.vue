@@ -20,7 +20,7 @@
           v-model="values.passwordConfirm"
           :class="{ 'input--error': fieldHasErrors('passwordConfirm') }"
           type="password"
-          class="input input--large"
+          class="input"
           @blur="$v.values.passwordConfirm.$touch()"
         />
         <div v-if="fieldHasErrors('passwordConfirm')" class="error">

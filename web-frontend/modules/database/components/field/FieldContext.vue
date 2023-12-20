@@ -14,10 +14,11 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
         <a
           ref="updateFieldContextLink"
-          class="grid-view__description-options"
+          class="context__menu-item-link grid-view__description-options"
           @click="
             $refs.updateFieldContext.toggle(
               $refs.updateFieldContextLink,
@@ -27,7 +28,7 @@
             )
           "
         >
-          <i class="context__menu-icon iconoir-edit-pencil"></i>
+          <i class="context__menu-item-icon iconoir-edit-pencil"></i>
           {{ $t('fieldContext.editField') }}
         </a>
         <UpdateFieldContext
@@ -48,12 +49,14 @@
             database.workspace.id
           )
         "
+        class="context__menu-item context__menu-item--with-separator"
       >
         <a
-          :class="{ 'context__menu-item--loading': deleteLoading }"
+          :class="{ 'context__menu-item-link--loading': deleteLoading }"
+          class="context__menu-item-link context__menu-item-link--delete"
           @click="deleteField()"
         >
-          <i class="context__menu-icon iconoir-bin"></i>
+          <i class="context__menu-item-icon iconoir-bin"></i>
           {{ $t('fieldContext.deleteField') }}
         </a>
       </li>

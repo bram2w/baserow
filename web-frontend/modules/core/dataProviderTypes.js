@@ -1,18 +1,11 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import { getIconForType } from '@baserow/modules/core/utils/icon'
 
 /**
  * A data provider gets data from the application context and populate the context for
  * the formula resolver.
  */
 export class DataProviderType extends Registerable {
-  DATA_TYPE_TO_ICON_MAP = {
-    string: 'iconoir-text',
-    number: 'baserow-icon-hashtag',
-    boolean: 'baserow-icon-circle-checked',
-  }
-
-  UNKNOWN_DATA_TYPE_ICON = 'iconoir-question-mark'
-
   get name() {
     throw new Error('`name` must be set on the dataProviderType.')
   }
@@ -51,12 +44,12 @@ export class DataProviderType extends Registerable {
     )
   }
 
-  static getAllBackendContext(dataProviders, applicationContext) {
+  static getAllDispatchContext(dataProviders, applicationContext) {
     return Object.fromEntries(
       Object.values(dataProviders).map((dataProvider) => {
         return [
           dataProvider.type,
-          dataProvider.getBackendContext(applicationContext),
+          dataProvider.getDispatchContext(applicationContext),
         ]
       })
     )
@@ -68,7 +61,7 @@ export class DataProviderType extends Registerable {
    * @param {Object} applicationContext the application context.
    * @returns An object if the dataProvider wants to send something to the backend.
    */
-  getBackendContext(applicationContext) {
+  getDispatchContext(applicationContext) {
     return null
   }
 
@@ -93,7 +86,7 @@ export class DataProviderType extends Registerable {
   /**
    * Return the schema of the data provided by this data provider
    * @param {Object} applicationContext the application context.
-   * @returns {{$schema: string}}
+   * @returns {{type: string, properties: object}}
    */
   getDataSchema(applicationContext) {
     throw new Error('.getDataSchema() must be set on the dataProviderType.')
@@ -137,12 +130,14 @@ export class DataProviderType extends Registerable {
   _toNode(applicationContext, pathParts, content, schema) {
     const identifier = pathParts.at(-1)
     const name = this.getPathTitle(applicationContext, pathParts)
+    const order = schema?.order || null
 
     if (schema === null) {
       return {
         name,
+        order,
         type: null,
-        icon: this.UNKNOWN_DATA_TYPE_ICON,
+        icon: this.getIconForNode(null),
         identifier,
       }
     }
@@ -151,7 +146,7 @@ export class DataProviderType extends Registerable {
       return {
         name,
         identifier,
-        icon: this.getIconForType(schema.type),
+        icon: this.getIconForNode(schema),
         nodes: (content || []).map((item, index) =>
           this._toNode(
             applicationContext,
@@ -167,7 +162,8 @@ export class DataProviderType extends Registerable {
       return {
         name,
         identifier,
-        icon: this.getIconForType(schema.type),
+        order,
+        icon: this.getIconForNode(schema),
         nodes: Object.entries(schema.properties).map(
           ([identifier, subSchema]) =>
             this._toNode(
@@ -182,8 +178,9 @@ export class DataProviderType extends Registerable {
 
     return {
       name,
+      order,
       type: schema.type,
-      icon: this.getIconForType(schema.type),
+      icon: this.getIconForNode(schema),
       value: content,
       identifier,
     }
@@ -191,12 +188,16 @@ export class DataProviderType extends Registerable {
 
   /**
    * This function gives you the icon that can be used by the data explorer given
-   * the type of the data.
+   * the type of the data. It allows to customize the way type icons are selected.
    * @param type - The type of the data
    * @returns {*|string} - The corresponding icon
    */
-  getIconForType(type) {
-    return this.DATA_TYPE_TO_ICON_MAP[type] || this.UNKNOWN_DATA_TYPE_ICON
+  getIconForNode(schema) {
+    if (schema) {
+      return getIconForType(schema.type)
+    } else {
+      return getIconForType(null)
+    }
   }
 
   /**
@@ -230,8 +231,7 @@ export class DataProviderType extends Registerable {
    * ID to reference an item, but we want to show the name of the item to the user
    * instead.
    * @param {Object} applicationContext the application context.
-   * @param {String} part - raw path part as used by the formula
-   * @param {String} position - index of the part in the path
+   * @param {Array<string>} pathParts - the path
    * @returns {Array<String>} - modified path part as it should be displayed to the user
    */
   getPathTitle(applicationContext, pathParts) {

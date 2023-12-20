@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -5,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.test import override_settings
 
 import pytest
+from pytest_unordered import unordered
+from pytz import UTC
 
 from baserow.contrib.database.fields.exceptions import (
     FieldNotInTable,
@@ -12,6 +15,7 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 from baserow.contrib.database.table.handler import TableHandler
@@ -66,6 +70,7 @@ from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.db import get_collation_name
 from baserow.core.exceptions import PermissionDenied, UserNotInWorkspace
 from baserow.core.trash.handler import TrashHandler
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.fixture(autouse=True)
@@ -150,7 +155,7 @@ def test_create_grid_view(send_mock, data_fixture):
     assert grid.name == "Test grid"
     assert grid.order == 1
     assert grid.table == table
-    assert grid.created_by == user
+    assert grid.owned_by == user
     assert grid.filter_type == "AND"
     assert not grid.filters_disabled
 
@@ -1575,10 +1580,12 @@ def test_submit_form_view(send_mock, data_fixture):
     assert len(all) == 2
     assert getattr(all[0], f"field_{text_field.id}") == "Text value"
     assert getattr(all[0], f"field_{number_field.id}") is None
+    assert all[0].last_modified_by is None
     assert not getattr(all[0], f"field_{boolean_field.id}")
     assert getattr(all[1], f"field_{text_field.id}") == "Another value"
     assert getattr(all[1], f"field_{number_field.id}") == 10
     assert not getattr(all[1], f"field_{boolean_field.id}")
+    assert all[1].last_modified_by == user
 
 
 @pytest.mark.django_db
@@ -1960,7 +1967,7 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
     )
     model = table.get_model()
-    num_queries = 7
+    num_queries = 8
     with django_assert_num_queries(num_queries):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
@@ -2205,6 +2212,51 @@ def test_get_public_rows_queryset_and_field_ids_view_order_by(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_view_group_by(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+    field_2 = data_fixture.create_number_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    row_1 = model.objects.create(**{f"field_{field.id}": 1, f"field_{field_2.id}": 4})
+    row_2 = model.objects.create(**{f"field_{field.id}": 2, f"field_{field_2.id}": 3})
+    row_3 = model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": 2})
+    row_4 = model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": 1})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, group_by=f"-field_{field.id}"
+    )
+
+    assert queryset.count() == 4
+    assert list(queryset.values_list("pk", flat=True)) == [
+        row_3.id,
+        row_4.id,
+        row_2.id,
+        row_1.id,
+    ]
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, group_by=f"field_{field.id}", order_by=f"field_{field_2.id}"
+    )
+
+    assert queryset.count() == 4
+    assert list(queryset.values_list("pk", flat=True)) == [
+        row_1.id,
+        row_2.id,
+        row_4.id,
+        row_3.id,
+    ]
+
+
+@pytest.mark.django_db
 def test_get_public_rows_queryset_and_field_ids_include_exclude_fields(data_fixture):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
@@ -2386,9 +2438,10 @@ def test_create_view_ownership_type(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.view_ownership
-def test_update_view_ownership_type(data_fixture):
+def test_update_view_ownership_type_non_existing(data_fixture):
     """
-    Updating view.ownership_type is currently not allowed.
+    Updating view.ownership_type to a non-existing ownership type is currently
+    not allowed.
     """
 
     user = data_fixture.create_user()
@@ -2396,7 +2449,10 @@ def test_update_view_ownership_type(data_fixture):
     form = data_fixture.create_form_view(table=table)
     handler = ViewHandler()
 
-    handler.update_view(user=user, view=form, ownership_type="new_ownership_type")
+    with pytest.raises(PermissionDenied):
+        handler.update_view(
+            user=user, view=form, ownership_type="non_existing_ownership_type"
+        )
 
     form.refresh_from_db()
     assert form.ownership_type == OWNERSHIP_TYPE_COLLABORATIVE
@@ -3184,29 +3240,49 @@ def test_create_group_by(send_mock, data_fixture):
 
     with pytest.raises(UserNotInWorkspace):
         handler.create_group_by(
-            user=user_2, view=grid_view, field=text_field, order="ASC"
+            user=user_2,
+            view=grid_view,
+            field=text_field,
+            order="ASC",
+            width=150,
         )
 
     grid_view_type = view_type_registry.get("grid")
     grid_view_type.can_group_by = False
     with pytest.raises(ViewGroupByNotSupported):
         handler.create_group_by(
-            user=user, view=grid_view, field=text_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=text_field,
+            order="ASC",
+            width=150,
         )
     grid_view_type.can_group_by = True
 
     with pytest.raises(ViewGroupByFieldNotSupported):
         handler.create_group_by(
-            user=user, view=grid_view, field=link_row_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=link_row_field,
+            order="ASC",
+            width=150,
         )
 
     with pytest.raises(FieldNotInTable):
         handler.create_group_by(
-            user=user, view=grid_view, field=other_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=other_field,
+            order="ASC",
+            width=150,
         )
 
     view_group_by = handler.create_group_by(
-        user=user, view=grid_view, field=text_field, order="ASC"
+        user=user,
+        view=grid_view,
+        field=text_field,
+        order="ASC",
+        width=150,
     )
 
     send_mock.assert_called_once()
@@ -3220,18 +3296,24 @@ def test_create_group_by(send_mock, data_fixture):
     assert view_group_by.view_id == grid_view.id
     assert view_group_by.field_id == text_field.id
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 150
 
     with pytest.raises(ViewGroupByFieldAlreadyExist):
         handler.create_group_by(
-            user=user, view=grid_view, field=text_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=text_field,
+            order="ASC",
+            width=150,
         )
 
     view_group_by_2 = handler.create_group_by(
-        user=user, view=grid_view, field=text_field_2, order="DESC"
+        user=user, view=grid_view, field=text_field_2, order="DESC", width=120
     )
     assert view_group_by_2.view_id == grid_view.id
     assert view_group_by_2.field_id == text_field_2.id
     assert view_group_by_2.order == "DESC"
+    assert view_group_by_2.width == 120
     assert ViewGroupBy.objects.all().count() == 2
 
 
@@ -3267,19 +3349,25 @@ def test_update_group_by(send_mock, data_fixture):
         )
 
     updated_group_by = handler.update_group_by(
-        user=user, view_group_by=view_group_by, order="DESC"
+        user=user, view_group_by=view_group_by, order="DESC", width=250
     )
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view_group_by"].id == updated_group_by.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert updated_group_by.order == "DESC"
+    assert updated_group_by.width == 250
     assert updated_group_by.field_id == long_text_field.id
     assert updated_group_by.view_id == grid_view.id
 
     updated_group_by = handler.update_group_by(
-        user=user, view_group_by=updated_group_by, order="ASC", field=text_field
+        user=user,
+        view_group_by=updated_group_by,
+        order="ASC",
+        width=300,
+        field=text_field,
     )
     assert updated_group_by.order == "ASC"
+    assert updated_group_by.width == 300
     assert updated_group_by.field_id == text_field.id
     assert updated_group_by.view_id == grid_view.id
 
@@ -3748,3 +3836,359 @@ def test_filter_builder_is_created_correctly_with_filter_groups(data_fixture):
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     row_ids = [row.id for row in rows]
     assert row_ids == [row_1.id, row_5.id, row_6.id]
+
+
+@pytest.mark.django_db
+def test_get_group_by_metadata_in_rows(data_fixture):
+    table = data_fixture.create_database_table()
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+
+    model = table.get_model()
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 20,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 20,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 20,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 30,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 40,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+
+    queryset = model.objects.all()
+    rows = list(queryset)
+
+    handler = ViewHandler()
+    counts = handler.get_group_by_metadata_in_rows(
+        [text_field, number_field], rows, queryset
+    )
+
+    # Resolve the queryset, so that we can do a comparison.
+    for c in counts.keys():
+        counts[c] = list(counts[c])
+
+    assert counts == {
+        text_field: unordered(
+            [
+                {f"field_{text_field.id}": "Green", "count": 6},
+                {f"field_{text_field.id}": "Orange", "count": 3},
+            ]
+        ),
+        number_field: unordered(
+            [
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": Decimal("10"),
+                    "count": 3,
+                },
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": Decimal("20"),
+                    "count": 3,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": Decimal("10"),
+                    "count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": Decimal("30"),
+                    "count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": Decimal("40"),
+                    "count": 1,
+                },
+            ]
+        ),
+    }
+
+
+@pytest.mark.django_db
+def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
+    table, *_ = setup_interesting_test_table(data_fixture)
+    model = table.get_model()
+    queryset = model.objects.all()
+    rows = list(queryset)
+    handler = ViewHandler()
+    all_fields = list(table.field_set.all())
+    fields_to_group_by = [
+        field
+        for field in all_fields
+        if field_type_registry.get_by_model(field.specific).check_can_group_by(field)
+    ]
+
+    actual_result_per_field_name = {}
+
+    for field in fields_to_group_by:
+        counts = handler.get_group_by_metadata_in_rows([field], rows, queryset)
+        results = list(counts[field])
+        # rename the `field_{id}` to the field name, so that we can do a look
+        # comparison.
+        for result in results:
+            result[f"field_{field.name}"] = result.pop(f"field_{field.id}")
+        actual_result_per_field_name[field.name] = list(counts[field])
+
+    select_select_options = Field.objects.get(name="single_select").select_options.all()
+    multiple_select_options = Field.objects.get(
+        name="multiple_select"
+    ).select_options.all()
+
+    assert actual_result_per_field_name == {
+        "text": [{"field_text": "text", "count": 1}, {"field_text": None, "count": 1}],
+        "long_text": [
+            {"field_long_text": "long_text", "count": 1},
+            {"field_long_text": None, "count": 1},
+        ],
+        "url": [
+            {"field_url": "", "count": 1},
+            {"field_url": "https://www.google.com", "count": 1},
+        ],
+        "email": [
+            {"field_email": "", "count": 1},
+            {"field_email": "test@example.com", "count": 1},
+        ],
+        "negative_int": [
+            {"field_negative_int": Decimal("-1"), "count": 1},
+            {"field_negative_int": None, "count": 1},
+        ],
+        "positive_int": [
+            {"field_positive_int": Decimal("1"), "count": 1},
+            {"field_positive_int": None, "count": 1},
+        ],
+        "negative_decimal": [
+            {"field_negative_decimal": Decimal("-1.2"), "count": 1},
+            {"field_negative_decimal": None, "count": 1},
+        ],
+        "positive_decimal": [
+            {"field_positive_decimal": Decimal("1.2"), "count": 1},
+            {"field_positive_decimal": None, "count": 1},
+        ],
+        "rating": [{"field_rating": 0, "count": 1}, {"field_rating": 3, "count": 1}],
+        "boolean": [
+            {"field_boolean": False, "count": 1},
+            {"field_boolean": True, "count": 1},
+        ],
+        "datetime_us": [
+            {
+                "field_datetime_us": datetime.datetime(2020, 2, 1, 1, 23, tzinfo=UTC),
+                "count": 1,
+            },
+            {"field_datetime_us": None, "count": 1},
+        ],
+        "date_us": [
+            {"field_date_us": datetime.date(2020, 2, 1), "count": 1},
+            {"field_date_us": None, "count": 1},
+        ],
+        "datetime_eu": [
+            {
+                "field_datetime_eu": datetime.datetime(2020, 2, 1, 1, 23, tzinfo=UTC),
+                "count": 1,
+            },
+            {"field_datetime_eu": None, "count": 1},
+        ],
+        "date_eu": [
+            {"field_date_eu": datetime.date(2020, 2, 1), "count": 1},
+            {"field_date_eu": None, "count": 1},
+        ],
+        "datetime_eu_tzone_visible": [
+            {
+                "field_datetime_eu_tzone_visible": datetime.datetime(
+                    2020, 2, 1, 1, 23, tzinfo=UTC
+                ),
+                "count": 1,
+            },
+            {"field_datetime_eu_tzone_visible": None, "count": 1},
+        ],
+        "datetime_eu_tzone_hidden": [
+            {
+                "field_datetime_eu_tzone_hidden": datetime.datetime(
+                    2020, 2, 1, 1, 23, tzinfo=UTC
+                ),
+                "count": 1,
+            },
+            {"field_datetime_eu_tzone_hidden": None, "count": 1},
+        ],
+        "last_modified_datetime_us": [
+            {
+                "field_last_modified_datetime_us": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "last_modified_date_us": [
+            {
+                "field_last_modified_date_us": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "last_modified_datetime_eu": [
+            {
+                "field_last_modified_datetime_eu": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "last_modified_date_eu": [
+            {
+                "field_last_modified_date_eu": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "last_modified_datetime_eu_tzone": [
+            {
+                "field_last_modified_datetime_eu_tzone": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "created_on_datetime_us": [
+            {
+                "field_created_on_datetime_us": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "created_on_date_us": [
+            {
+                "field_created_on_date_us": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "created_on_datetime_eu": [
+            {
+                "field_created_on_datetime_eu": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "created_on_date_eu": [
+            {
+                "field_created_on_date_eu": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "created_on_datetime_eu_tzone": [
+            {
+                "field_created_on_datetime_eu_tzone": datetime.datetime(
+                    2021, 1, 2, 12, 0, tzinfo=UTC
+                ),
+                "count": 2,
+            }
+        ],
+        "single_select": [
+            {"field_single_select": select_select_options[0].id, "count": 1},
+            {"field_single_select": None, "count": 1},
+        ],
+        "multiple_select": [
+            {"field_multiple_select": [], "count": 1},
+            {
+                "field_multiple_select": [
+                    multiple_select_options[1].id,
+                    multiple_select_options[0].id,
+                    multiple_select_options[2].id,
+                ],
+                "count": 1,
+            },
+        ],
+        "phone_number": [
+            {"field_phone_number": "", "count": 1},
+            {"field_phone_number": "+4412345678", "count": 1},
+        ],
+        "formula_text": [{"field_formula_text": "test FORMULA", "count": 2}],
+        "formula_int": [{"field_formula_int": Decimal("1"), "count": 2}],
+        "formula_bool": [{"field_formula_bool": True, "count": 2}],
+        "formula_decimal": [
+            {"field_formula_decimal": Decimal("33.3333333333"), "count": 2}
+        ],
+        "formula_dateinterval": [{"field_formula_dateinterval": "1 day", "count": 2}],
+        "formula_date": [{"field_formula_date": datetime.date(2020, 1, 1), "count": 2}],
+        "formula_email": [
+            {"field_formula_email": "", "count": 1},
+            {"field_formula_email": "test@example.com", "count": 1},
+        ],
+        "count": [
+            {"field_count": Decimal("0"), "count": 1},
+            {"field_count": Decimal("3"), "count": 1},
+        ],
+        "rollup": [
+            {"field_rollup": Decimal("-122.222"), "count": 1},
+            {"field_rollup": Decimal("0.000"), "count": 1},
+        ],
+    }

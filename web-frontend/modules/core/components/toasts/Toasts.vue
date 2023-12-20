@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="toast__top-right">
+    <div class="toasts__container-top">
       <PermissionsUpdatedToast v-if="permissionsUpdated" />
       <ConnectingToast v-if="connecting"></ConnectingToast>
       <UserSessionExpiredToast
@@ -14,10 +14,18 @@
       <Toast
         v-for="toast in normalToasts"
         :key="toast.id"
-        :toast="toast"
-      ></Toast>
+        :type="toast.type"
+        :icon="toastIcon(toast.type)"
+        close-button
+        @close="closeToast(toast)"
+      >
+        <template #title>{{ toast.title }}</template>
+        <span>{{ toast.message }}</span>
+      </Toast>
     </div>
-    <div class="toast__bottom-right">
+
+    <div class="toasts__container-bottom">
+      <!-- Bottom toasts-->
       <UndoRedoToast
         v-if="undoRedoIsNotHidden"
         :state="undoRedoState"
@@ -97,6 +105,25 @@ export default {
       if (!value) {
         this.$store.dispatch('toast/userLoggedOut')
       }
+    },
+  },
+  methods: {
+    toastIcon(toastType) {
+      switch (toastType) {
+        case 'warning':
+          return 'iconoir-warning-circle'
+        case 'success':
+          return 'iconoir-check-circle'
+        case 'info-primary':
+          return 'iconoir-info-empty'
+        case 'error':
+          return 'iconoir-warning-triangle'
+        default:
+          return 'iconoir-info-empty'
+      }
+    },
+    closeToast(toast) {
+      this.$store.dispatch('toast/remove', toast)
     },
   },
 }

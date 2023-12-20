@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.shortcuts import reverse
 
 import pytest
+from pytest_unordered import unordered
 from rest_framework import serializers
 from rest_framework.fields import Field
 from rest_framework.status import (
@@ -207,6 +208,262 @@ def test_list_rows(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_rows_with_group_by(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower", number_decimal_places=1
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+    grid = data_fixture.create_grid_view(table=table)
+    data_fixture.create_view_group_by(view=grid, field=text_field)
+    data_fixture.create_view_group_by(view=grid, field=number_field)
+    data_fixture.create_view_group_by(view=grid, field=boolean_field)
+
+    model = grid.table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 20,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_5 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 20,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_6 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 20,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_7 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_8 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 30,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_9 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 40,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+
+    assert response_json["group_by_metadata"] == {
+        f"field_{text_field.id}": unordered(
+            [
+                {f"field_{text_field.id}": "Green", "count": 6},
+                {f"field_{text_field.id}": "Orange", "count": 3},
+            ]
+        ),
+        f"field_{number_field.id}": unordered(
+            [
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": "10.0",
+                    f"count": 3,
+                },
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": "20.0",
+                    f"count": 3,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": "10.0",
+                    f"count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": "30.0",
+                    f"count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": "40.0",
+                    f"count": 1,
+                },
+            ]
+        ),
+        f"field_{boolean_field.id}": unordered(
+            [
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": "10.0",
+                    f"field_{boolean_field.id}": True,
+                    f"count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": "10.0",
+                    f"field_{boolean_field.id}": True,
+                    f"count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": "20.0",
+                    f"field_{boolean_field.id}": True,
+                    f"count": 3,
+                },
+                {
+                    f"field_{text_field.id}": "Green",
+                    f"field_{number_field.id}": "10.0",
+                    f"field_{boolean_field.id}": False,
+                    f"count": 2,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": "30.0",
+                    f"field_{boolean_field.id}": True,
+                    f"count": 1,
+                },
+                {
+                    f"field_{text_field.id}": "Orange",
+                    f"field_{number_field.id}": "40.0",
+                    f"field_{boolean_field.id}": True,
+                    f"count": 1,
+                },
+            ]
+        ),
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_with_group_by_with_filter(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+    grid = data_fixture.create_grid_view(table=table)
+    data_fixture.create_view_group_by(view=grid, field=text_field)
+    data_fixture.create_view_filter(
+        view=grid, field=boolean_field, type="boolean", value="false"
+    )
+
+    model = grid.table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_5 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_6 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_7 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    row_8 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    row_9 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{boolean_field.id}": True,
+        }
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+
+    assert response_json["group_by_metadata"] == {
+        f"field_{text_field.id}": unordered(
+            [
+                {f"field_{text_field.id}": "Green", "count": 2},
+                {f"field_{text_field.id}": "Orange", "count": 1},
+            ]
+        )
+    }
+
+
+@pytest.mark.django_db
 def test_list_rows_include_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -263,7 +520,7 @@ def test_list_rows_include_row_metadata(api_client, data_fixture):
         type = "test_example_row_metadata"
 
         def generate_metadata_for_rows(
-            self, table, row_ids: List[int]
+            self, user, table, row_ids: List[int]
         ) -> Dict[int, Any]:
             return {row_id: row_id for row_id in row_ids}
 
@@ -1135,7 +1392,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(2221),
-        "version": 13,
+        "version": 9,
     }
 
     update_value_of_table1(row2, 10000)
@@ -1149,13 +1406,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(2221),
-        "version": 13,
+        "version": 9,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 14
+        == 10
     )
 
     check_table_2_aggregation_values(
@@ -1183,7 +1440,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 15
+        == 11
     )
 
     check_table_2_aggregation_values(
@@ -1199,7 +1456,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22001),
-        "version": 15,
+        "version": 11,
     }
 
     # Restore delete row
@@ -1220,7 +1477,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 17
+        == 12
     )
 
     check_table_2_aggregation_values(
@@ -1232,7 +1489,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 17,
+        "version": 12,
     }
 
     # Update number field
@@ -1251,7 +1508,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 18
+        == 13
     )
 
     check_table_2_aggregation_values(
@@ -1262,7 +1519,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
 
     # Delete number field
@@ -1279,13 +1536,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 19
+        == 14
     )
 
     check_table_2_aggregation_values({}, "after field deletion")
@@ -1295,13 +1552,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 19
+        == 14
     )
 
     # Restore deleted field
@@ -1331,13 +1588,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 19
+        == 14
     )
 
 
@@ -1848,6 +2105,7 @@ def test_get_public_grid_view(api_client, data_fixture):
                     "id": visible_group_by.id,
                     "order": "DESC",
                     "view": grid_view.slug,
+                    "width": 200,
                 }
             ],
             "table": {
@@ -2271,6 +2529,103 @@ def test_list_rows_public_with_query_param_order(api_client, data_fixture):
     )
     response = api_client.get(
         f"{url}?order_by=field_{link_row_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE"
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_group_by(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    public_field_2 = data_fixture.create_text_field(table=table, name="public2")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, public_field_2, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(grid_view, link_row_field, hidden=False)
+
+    first_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": "b", "public2": "2", "hidden": "y"},
+        user_field_names=True,
+    )
+    second_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": "a", "public2": "2", "hidden": "y"},
+        user_field_names=True,
+    )
+    third_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": "b", "public2": "1", "hidden": "z"},
+        user_field_names=True,
+    )
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?group_by=field_{public_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 3
+    assert response_json["results"][0]["id"] == second_row.id
+    assert response_json["results"][1]["id"] == first_row.id
+    assert response_json["results"][2]["id"] == third_row.id
+    assert response_json["group_by_metadata"] == {
+        f"field_{public_field.id}": unordered(
+            [
+                {"count": 1, f"field_{public_field.id}": "a"},
+                {"count": 2, f"field_{public_field.id}": "b"},
+            ]
+        )
+    }
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?group_by=-field_{public_field.id}&sort_by=field{public_field_2.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 3
+    assert response_json["results"][0]["id"] == first_row.id
+    assert response_json["results"][1]["id"] == third_row.id
+    assert response_json["results"][2]["id"] == second_row.id
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?group_by=field_{hidden_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_FOUND"
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?group_by=field_{link_row_field.id}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST

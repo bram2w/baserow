@@ -26,6 +26,25 @@
           </p>
         </div>
         <div class="margin-bottom-3">
+          <div class="control">
+            <div class="control__elements">
+              <textarea
+                ref="input"
+                type="text"
+                class="input field-long-text"
+                placeholder="Enter something here"
+              />
+            </div>
+          </div>
+
+          <FormInput
+            v-model="input"
+            disabled
+            placeholder="Enter something here"
+            label="Small text field"
+            value="This is the value"
+            icon-right="iconoir-clock"
+          />
           <FormInput
             v-model="input"
             label="Small text field"
@@ -57,7 +76,7 @@
             v-model="input"
             label="Icon text field"
             placeholder="Enter something here"
-            icon-right="clock"
+            icon-right="iconoi-clock"
           />
           <FormInput
             v-model="input"
@@ -90,27 +109,30 @@
             v-model="input"
             label="Large text field"
             placeholder="Enter something here"
-            large
           />
           <FormInput
             v-model="input"
             label="Large password field"
             placeholder="Enter something here"
             type="password"
-            large
           />
           <FormInput
             v-model="input"
             label="Large icon field"
             placeholder="Enter something here"
-            large
             icon-right="iconoir-clock"
           />
           <FormInput
             v-model="input"
             label="Large icon field left"
             placeholder="Enter something here"
-            large
+            icon-left="iconoir-search"
+          />
+          <FormInput
+            v-model="input"
+            small
+            label="Reduced height field"
+            placeholder="Enter something here"
             icon-left="iconoir-search"
           />
           <FormInput
@@ -118,17 +140,33 @@
             horizontal
             label="Horizontal Large icon field left"
             placeholder="Enter something here"
-            large
             icon-left="iconoir-search"
           />
-          <FormInput
-            v-model="input"
-            horizontal-variable
-            label="Horizontal Large icon field left"
-            placeholder="Enter something here"
-            large
-            icon-left="iconoir-search"
-          />
+
+          <div class="control">
+            <label class="control__label">Native input</label>
+            <div class="control__elements">
+              <input
+                ref="name"
+                type="text"
+                class="input"
+                placeholder="Native input"
+              />
+            </div>
+          </div>
+
+          <div class="control">
+            <label class="control__label">Native input reduced height</label>
+            <div class="control__elements">
+              <input
+                ref="name"
+                type="text"
+                class="input input--small"
+                placeholder="Native input reduced height"
+              />
+            </div>
+          </div>
+
           <div class="control">
             <label class="control__label">Checkbox field</label>
             <div class="control__elements">
@@ -229,16 +267,19 @@
             <div class="control__elements">
               value: {{ switchValue }}
               <br />
-              <br />
               <SwitchInput v-model="switchValue"></SwitchInput>
               <SwitchInput v-model="switchValue">With text</SwitchInput>
               <SwitchInput v-model="switchUnknown">With text</SwitchInput>
-              <SwitchInput v-model="switchValue" :large="true"></SwitchInput>
-              <SwitchInput v-model="switchValue" :large="true">
-                With text
+              <SwitchInput v-model="switchUnknown" large>With text</SwitchInput>
+              <SwitchInput v-model="switchValue" large></SwitchInput>
+              <SwitchInput v-model="switchValue" large>
+                Large with text
               </SwitchInput>
-              <SwitchInput v-model="switchUnknown" :large="true">
-                With text
+              <SwitchInput v-model="switchUnknown" disabled>
+                Disabled
+              </SwitchInput>
+              <SwitchInput v-model="switchUnknown" disabled large>
+                Large disabled
               </SwitchInput>
             </div>
           </div>
@@ -250,6 +291,87 @@
               <br />
               <div style="width: 200px">
                 <Dropdown v-model="dropdown">
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown small</label>
+            <div class="control__elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" small>
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown disabled</label>
+            <div class="control__elements">
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" disabled>
                   <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
                   <DropdownItem
                     name="Choice 2"
@@ -409,18 +531,90 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="pencil"
+                    icon="iconoir-edit-pencil"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
                     value="choice-3"
-                    icon="database"
+                    icon="iconoir-db"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 4"
                     value="choice-4"
-                    icon="times"
+                    icon="iconoir-cancel"
                     :disabled="true"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown tiny</label>
+            <div class="control__elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px">
+                <Dropdown
+                  v-model="dropdown"
+                  :show-search="false"
+                  class="dropdown--tiny"
+                >
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown error</label>
+            <div class="control__elements">
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" class="dropdown--error">
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
                   ></DropdownItem>
                 </Dropdown>
               </div>
@@ -444,148 +638,103 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <Alert
-            title="Toast message"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
+          <Alert type="success" close-button>
+            <template #title>Toast message</template>
             <p>
               Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
               elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
               ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
               viverra urna. Praesent.
             </p>
-          </Alert>
-          <Alert title="Toast message" close-button>
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
-              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
-              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
-              lacinia, sagittis quam sed, pellentesque orci. Aenean non
-              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
-              felis euismod.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="success"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="warning"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="error"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-
-          <Alert
-            title="Toast message"
-            simple
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert title="Toast message" simple>
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="success"
-            simple
-            icon="iconoir-warning-triangle"
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="warning"
-            simple
-            shadow
-            icon="iconoir-warning-triangle"
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="error"
-            simple
-            shadow
-            icon="iconoir-warning-triangle"
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-
-          <Alert
-            simple
-            type="primary"
-            icon="iconoir-warning-triangle"
-            title="Workspace invitation"
-          >
-            <p>Lorem ipsum dolor sit amet bla</p>
-            <p>Hello Mat, please join this workspace</p>
-            <div class="margin-top-1">
-              <a class="button button--error dashboard__alert-button">Reject</a>
-              <a class="button button--success dashboard__alert-button"
-                >Accept</a
+            <template #actions>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--normal"
               >
-            </div>
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="warning" close-button>
+            <template #title>Toast message</template>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+            <template #actions>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--normal"
+              >
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="info-primary" close-button>
+            <template #title>Toast message</template>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+            <template #actions>
+              <Button type="primary" size="small"> Accept </Button>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--normal"
+              >
+                Cancel
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="info-neutral" close-button>
+            <template #title>Toast message</template>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+            <template #actions>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--normal"
+              >
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="error" close-button>
+            <template #title>Alert title</template>
+            <template #actions>
+              <button
+                class="alert__actions-button-text alert__actions-button-text--normal alert__actions-button-text--loading"
+              >
+                Cancel
+              </button>
+            </template>
+          </Alert>
+
+          <Alert>
+            <template #title>Alert title</template>
           </Alert>
         </div>
         <div
@@ -602,18 +751,35 @@
           <Button size="tiny" append-icon="baserow-icon-lock-open"
             >button</Button
           >
-          <Button size="tiny" type="link" prepend-icon="arrow-left">
-            button
-          </Button>
           <Button size="tiny" type="ghost">button.button-ghost</Button>
-          <Button size="tiny" type="link">button.button-link</Button>
           <Button size="tiny" icon="iconoir-verified-user"></Button>
           <Button
             size="tiny"
             icon="iconoir-verified-user"
             type="ghost"
           ></Button>
-          <Button size="tiny" icon="iconoir-verified-user" type="link"></Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Small size</h3>
+          <Button size="small">button</Button>
+          <Button size="small" disabled>button[disabled]</Button>
+          <Button size="small" type="primary">button.button-success</Button>
+          <Button size="small" type="success">button.button-success</Button>
+          <Button size="small" type="warning">button.button-warning</Button>
+          <Button size="small" type="error">button.button-error</Button>
+          <Button size="small" append-icon="baserow-icon-lock-open"
+            >button</Button
+          >
+          <Button size="small" type="ghost">button.button-ghost</Button>
+          <Button size="small" icon="iconoir-verified-user"></Button>
+          <Button
+            size="small"
+            icon="iconoir-verified-user"
+            type="ghost"
+          ></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -628,35 +794,27 @@
           <Button tag="a" type="warning">a.button.button-warning</Button>
           <Button tag="a" type="error">a.button.button-error</Button>
           <Button tag="a" append-icon="baserow-icon-lock-open">a.button</Button>
-          <Button tag="a" type="link" prepend-icon="iconoir-nav-arrow-left"
-            >a.button</Button
-          >
           <Button tag="a" type="ghost">a.button.button-ghost</Button>
-          <Button tag="a" type="link">a.button.button-link</Button>
           <Button tag="a" icon="iconoir-verified-user"></Button>
           <Button tag="a" icon="iconoir-verified-user" type="ghost"></Button>
-          <Button tag="a" icon="iconoir-verified-user" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
           :style="{ backgroundColor: 'white', padding: '5px' }"
         >
           <h3>Normal button</h3>
-          <Button>button.button</Button>
+          <Button append-icon="iconoir-plus">button.button</Button>
           <Button disabled>button[disabled]</Button>
           <Button type="success">button.button-success</Button>
           <Button type="warning">button.button-warning</Button>
           <Button type="error">button.button-error</Button>
-          <Button append-icon="lbaserow-icon-lock-open">button</Button>
-          <Button type="link" prepend-icon="arrow-left">button</Button>
+          <Button append-icon="baserow-icon-lock-open">button</Button>
           <Button type="ghost">button.button-ghost</Button>
-          <Button type="link">button.button-link</Button>
           <Button icon="iconoir-verified-user"></Button>
           <Button icon="iconoir-verified-user" type="ghost"></Button>
           <Button type="light">button.light</Button>
           <Button type="light" active>button.light.active</Button>
           <Button type="light" icon="iconoir-bin"></Button>
-          <Button type="link" icon="iconoir-bin"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -674,19 +832,25 @@
           >
           <Button size="large" prepend-icon="arrow-left">button</Button>
           <Button size="large" type="ghost">button.button-ghost</Button>
-          <Button size="large" type="link">button.button-link</Button>
           <Button size="large" icon="iconoir-verified-user"></Button>
           <Button
             size="large"
             icon="iconoir-verified-user"
             type="ghost"
           ></Button>
-          <Button
-            size="large"
-            icon="iconoir-verified-user"
-            type="link"
-          ></Button>
         </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Overflow button</h3>
+          <Button overflow>Overflow</Button>
+
+          <button class="button button--large button--error button--overflow">
+            Remove
+          </button>
+        </div>
+
         <div
           class="margin-bottom-3"
           :style="{ backgroundColor: 'white', padding: '5px' }"
@@ -694,18 +858,48 @@
           <h3>Loading</h3>
           <Button size="tiny" loading>Loading</Button>
           <Button loading>Loading</Button>
+          <Button disabled loading>Disabled & loading</Button>
+          <Button type="success" loading>Success loading</Button>
           <Button append-icon="search" loading>Loading</Button>
-          <Button type="link" loading>Loading</Button>
+
           <Button size="large" loading>Loading</Button>
           <Button size="large" type="ghost" loading>Loading</Button>
           <Button size="large" icon="iconoir-verified-user" loading></Button>
           <Button type="light" loading>button.light.loading</Button>
-          <Button type="link" loading>button.link.loading</Button>
+
           <Button type="light" active loading>
             button.light.active.loading
           </Button>
-          <Button type="link" icon="iconoir-bin" loading />
         </div>
+
+        <div
+          class="margin-bottom-3"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Link button</h3>
+          <Button type="link" prepend-icon="iconoir-nav-arrow-left"
+            >button.link.loading</Button
+          >
+          <Button type="link">button.link</Button>
+          <Button type="link" loading>button.link.loading</Button>
+          <Button type="link" prepend-icon="iconoir-bin" disabled
+            >button.link.disabled</Button
+          >
+          <Button tag="a" icon="iconoir-verified-user" type="link"
+            >button.link.atag</Button
+          >
+          <Button type="link" size="tiny" prepend-icon="iconoir-nav-arrow-left"
+            >button.link.tiny</Button
+          >
+          <Button
+            type="link"
+            size="tiny"
+            loading
+            prepend-icon="iconoir-nav-arrow-left"
+            >button.link.tiny.loading.icon</Button
+          >
+        </div>
+
         <div
           class="margin-bottom-3"
           style="background-color: #ffffff; padding: 20px"
@@ -789,21 +983,24 @@
           <div class="context">
             <div class="context__menu-title">Vehicles</div>
             <ul class="context__menu">
-              <li>
-                <a href="#">
-                  <i class="context__menu-icon iconoir-edit-pencil"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" href="#">
+                  <i class="context__menu-item-icon iconoir-edit-pencil"></i>
                   Rename database
                 </a>
               </li>
-              <li>
-                <a href="#">
-                  <i class="context__menu-icon iconoir-bin"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" href="#">
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   Delete table
                 </a>
               </li>
-              <li>
-                <a href="#" class="context__menu-item--loading">
-                  <i class="context__menu-icon iconoir-bin"></i>
+              <li class="context__menu-item">
+                <a
+                  class="context__menu-item-link context__menu-item-link--loading"
+                  href="#"
+                >
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   Loading
                 </a>
               </li>
@@ -812,20 +1009,35 @@
           <div class="context" style="max-width: 264px">
             <div class="context__menu-title">Workspace permissions</div>
             <ul class="context__menu context__menu--can-be-active">
-              <li>
-                <a href="#" class="context__menu-item-with-desc active">
+              <li class="context__menu-item">
+                <a
+                  href="#"
+                  class="context__menu-item-link context__menu-item-link--with-desc active"
+                >
                   <span class="context__menu-item-title">Admin</span>
                   <div class="context__menu-item-description">
                     Description of what an admin can or can’t do on the
                     workspace.
                   </div>
-                  <i class="context__menu-active-icon iconoir-check-circle"></i>
+                  <i class="context__menu-active-icon iconoir-check"></i>
                 </a>
               </li>
-              <li>
+              <li class="context__menu-item">
                 <a
                   href="#"
-                  class="context__menu-item-with-desc context__menu-item--loading"
+                  class="context__menu-item-link context__menu-item-link--with-desc disabled"
+                >
+                  <span class="context__menu-item-title">Admin</span>
+                  <div class="context__menu-item-description">
+                    Description of what an admin can or can’t do on the
+                    workspace.
+                  </div>
+                </a>
+              </li>
+              <li class="context__menu-item">
+                <a
+                  href="#"
+                  class="context__menu-item-link context__menu-item-link--with-desc context__menu-item-link--loading"
                 >
                   <span class="context__menu-item-title">Builder</span>
                   <div class="context__menu-item-description">
@@ -834,8 +1046,13 @@
                   </div>
                 </a>
               </li>
-              <li>
-                <a class="color-error" href="#"> Remove from workspace </a>
+              <li class="context__menu-item context__menu-item--with-separator">
+                <a
+                  class="context__menu-item-link context__menu-item-link--delete"
+                  href="#"
+                >
+                  Remove from workspace
+                </a>
               </li>
             </ul>
           </div>
@@ -852,8 +1069,8 @@
               <li class="select__item active">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">Workspace name 1</div>
-                  <i class="select__item-active-icon iconoir-check-circle"></i>
                 </a>
+                <i class="select__item-active-icon iconoir-check"></i>
                 <a href="#" class="select__item-options">
                   <i class="baserow-icon-more-vertical"></i>
                 </a>
@@ -876,7 +1093,7 @@
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <div class="select__item-name">roup name 4</div>
+                  <div class="select__item-name">Workspace name 4</div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="baserow-icon-more-vertical"></i>
@@ -1170,7 +1387,7 @@
         </div>
         <div class="margin-bottom-3">
           <Button
-            append-icon="pencil"
+            append-icon="iconoir-edit-pencil"
             @click="$refs.context1.toggle($event.target)"
           >
             Toggle context
@@ -1178,54 +1395,67 @@
           <Context ref="context1">
             <div class="context__menu-title">Vehicles</div>
             <ul class="context__menu">
-              <li>
-                <a href="#">
-                  <i class="context__menu-icon iconoir-edit-pencil"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" href="#">
+                  <i class="context__menu-item-icon iconoir-edit-pencil"></i>
                   This does nothing
                 </a>
               </li>
-              <li>
-                <a @click="$refs.context2.toggle($event.target)">
+              <li class="context__menu-item">
+                <a
+                  class="context__menu-item-link"
+                  @click="$refs.context2.toggle($event.target)"
+                >
                   Open another context
                 </a>
                 <Context ref="context2">
                   <div class="context__menu-title">Open modal</div>
                   <ul class="context__menu">
-                    <li>
-                      <a @click="$refs.modal1.show()">
-                        <i class="context__menu-icon iconoir-edit-pencil"></i>
+                    <li class="context__menu-item">
+                      <a
+                        class="context__menu-item-link"
+                        @click="$refs.modal1.show()"
+                      >
+                        <i
+                          class="context__menu-item-icon iconoir-edit-pencil"
+                        ></i>
                         Click to open modal
                       </a>
                     </li>
                     <Modal ref="modal1">
                       <h2 class="box__title">Modal inside a context</h2>
                       <Button
-                        icon="pencil"
+                        icon="iconoir-edit-pencil"
                         @click="$refs.context3.toggle($event.target)"
                         >Toggle context</Button
                       >
                       <Context ref="context3">
                         <div class="context__menu-title">Vehicles</div>
                         <ul class="context__menu">
-                          <li>
-                            <a href="#">
+                          <li class="context__menu-item">
+                            <a class="context__menu-item-link" href="#">
                               <i
-                                class="context__menu-icon iconoir-edit-pencil"
+                                class="context__menu-item-icon iconoir-edit-pencil"
                               ></i>
                               This does nothing
                             </a>
                           </li>
-                          <li>
-                            <a @click="$refs.context4.toggle($event.target)">
+                          <li class="context__menu-item">
+                            <a
+                              class="context__menu-item-link"
+                              @click="$refs.context4.toggle($event.target)"
+                            >
                               Open another context
                             </a>
                             <Context ref="context4">
                               <div class="context__menu-title">End!</div>
                             </Context>
                           </li>
-                          <li>
-                            <a href="#">
-                              <i class="context__menu-icon iconoir-bin"></i>
+                          <li class="context__menu-item">
+                            <a class="context__menu-item-link" href="#">
+                              <i
+                                class="context__menu-item-icon iconoir-bin"
+                              ></i>
                               This does nothing
                             </a>
                           </li>
@@ -1237,7 +1467,7 @@
               </li>
               <li>
                 <a href="#">
-                  <i class="context__menu-icon iconoir-bin"></i>
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   This does nothing
                 </a>
               </li>
@@ -1606,7 +1836,7 @@
                   <input
                     type="text"
                     placeholder="Find member..."
-                    class="input input--large"
+                    class="input"
                   />
                   <i class="iconoir-search"></i>
                 </div>
@@ -1623,10 +1853,7 @@
                       class="data-table__table-cell data-table__table-cell--sticky-left data-table__table-cell--header"
                     >
                       <div class="data-table__table-cell-head">
-                        <Checkbox
-                          v-model="checkbox"
-                          class="checkbox--small"
-                        ></Checkbox>
+                        <Checkbox v-model="checkbox"></Checkbox>
                       </div>
                     </th>
                     <th
@@ -1684,10 +1911,7 @@
                       class="data-table__table-cell data-table__table-cell--sticky-left"
                     >
                       <div class="data-table__table-cell-content">
-                        <Checkbox
-                          v-model="checkbox"
-                          class="checkbox--small"
-                        ></Checkbox>
+                        <Checkbox v-model="checkbox"></Checkbox>
                       </div>
                     </td>
                     <td class="data-table__table-cell">
@@ -1882,6 +2106,14 @@
               'background-color': resolveColor(color, colorVariables),
             }"
           ></div>
+        </div>
+        <div class="margin-bottom-3">
+          <h2>Call to action</h2>
+          <CallToAction> My call to action. Click me! </CallToAction>
+          <br />
+          <CallToAction icon="baserow-icon-plus">
+            Call to action with an icon
+          </CallToAction>
         </div>
         <br /><br /><br />
         <br /><br /><br />

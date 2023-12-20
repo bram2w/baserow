@@ -103,7 +103,15 @@
         "rollup": "Rollup",
         "linkRowMultiple": "Meerdere",
         "defaultFormViewComponent": "Standaard",
-        "linkRowSingle": "Enkel"
+        "linkRowSingle": "Enkel",
+        "multipleSelectDropdown": "Dropdown",
+        "uuid": "UUID",
+        "singleSelectDropdown": "Dropdown",
+        "autonumber": "Autonummer",
+        "createdBy": "Gemaakt door",
+        "singleSelectRadios": "Radio's",
+        "lastModifiedBy": "Laatst gewijzigd door",
+        "multipleSelectCheckboxes": "Selectievakjes"
     },
     "fieldErrors": {
         "invalidNumber": "Ongeldig nummer",
@@ -140,7 +148,11 @@
         "lookup": "Een alleen-lezen veld verbonden met een link-rij veld dat een array van waarden en rij ids van het gekozen lookup-veld in de gelinkte tabel retourneert.",
         "multipleCollaborators": "Accepteert een array van objecten waarbij elk object een gebruikers-ID bevat.",
         "rollup": "Een alleen-lezen veld dat is verbonden met een link naar een tabel veld dat de waardes oprolt van het gekozen lookup veld in de gekoppelde tabel.",
-        "count": "Een alleen-lezen veld dat is verbonden met een link naar een tabel veld dat het aantal relaties retourneert."
+        "count": "Een alleen-lezen veld dat is verbonden met een link naar een tabel veld dat het aantal relaties retourneert.",
+        "lastModifiedBy": "Het 'laatst gewijzigd door' veld is een alleen-lezen veld.",
+        "autonumber": "Een alleen-lezen veld dat automatisch een getal verhoogt voor elke nieuwe rij.",
+        "uuid": "Een alleen-lezen uniek en blijvende uuid.",
+        "createdBy": "Het aangemaakt door veld is een alleen-lezen veld dat de gebruiker toont die de rij heeft aangemaakt."
     },
     "viewFilter": {
         "contains": "bevat",
@@ -290,7 +302,9 @@
         "notificationDoesNotExistDescription": "De actie kan niet worden voltooid omdat de gerelateerde niet meer bestaat.",
         "notificationDoesNotExistTitle": "Melding bestaat niet.",
         "adminAlreadyExistsDescription": "De gebruikersnaam kan niet worden gebruikt omdat hij al bestaat.",
-        "adminAlreadyExistsTitle": "Kan die gebruikersnaam niet gebruiken"
+        "adminAlreadyExistsTitle": "Kan die gebruikersnaam niet gebruiken",
+        "cannotCreateFieldTypeDescription": "Het gevraagde veldtype kan momenteel niet worden aangemaakt. Het kan een tijdelijk probleem zijn met oudere tabellen. Probeer het later nog eens.",
+        "cannotCreateFieldTypeTitle": "Kan veld niet maken"
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",
@@ -437,7 +451,8 @@
         "getFileCountDescription": "Retourneert het aantal bestanden in het bestandsveld waarnaar wordt verwezen",
         "encodeUriDescription": "Retourneert een gecodeerde URI-tekenreeks van het opgegeven argument.",
         "getIsImageDescription": "Geeft als resultaat of het enkele bestand dat is geretourneerd door de indexfunctie een afbeelding is of niet.",
-        "getFileMimeTypeDescription": "Retourneert het mime-type van een bestand dat is geretourneerd met de indexfunctie."
+        "getFileMimeTypeDescription": "Retourneert het mime-type van een bestand dat is geretourneerd met de indexfunctie.",
+        "hasOptionDescription": "Geeft true terug als het eerste argument een meervoudig selectie veld is of een lookup naar een enkelvoudige selectie veld en het tweede argument een van de opties is."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

@@ -11,9 +11,9 @@ from rest_framework.status import HTTP_302_FOUND
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from baserow.api.user.jwt import get_user_from_token
+from baserow.core.auth_provider.types import UserInfo
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Settings, WorkspaceUser
-from baserow_enterprise.auth_provider.handler import UserInfo
 from baserow_enterprise.sso.exceptions import AuthFlowError
 
 GET_USER_INFO = (

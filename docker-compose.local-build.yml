@@ -142,6 +142,7 @@ x-backend-variables: &backend-variables
   BASEROW_USE_PG_FULLTEXT_SEARCH:
   BASEROW_AUTO_VACUUM:
   BASEROW_BUILDER_DOMAINS:
+  BASEROW_FRONTEND_SAME_SITE_COOKIE:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
@@ -210,6 +211,7 @@ services:
       BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
       BASEROW_ROW_PAGE_SIZE_LIMIT:
       BASEROW_BUILDER_DOMAINS:
+      BASEROW_FRONTEND_SAME_SITE_COOKIE:
     depends_on:
       - backend
     networks:

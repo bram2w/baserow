@@ -45,6 +45,7 @@ from baserow.contrib.database.api.views.grid.serializers import (
 )
 from baserow.contrib.database.api.views.serializers import (
     FieldOptionsField,
+    serialize_group_by_metadata,
     validate_api_grouped_filters,
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
@@ -60,6 +61,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.exceptions import (
@@ -79,6 +81,7 @@ from baserow.contrib.database.views.registries import (
 from baserow.contrib.database.views.signals import view_loaded
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
+from baserow.core.utils import split_comma_separated_string
 
 from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .schemas import (
@@ -302,6 +305,19 @@ class GridViewView(APIView):
 
         response = paginator.get_paginated_response(serializer.data)
 
+        if view_type.can_group_by and view.viewgroupby_set.all():
+            group_by_fields = [
+                model._field_objects[group_by.field_id]["field"]
+                for group_by in view.viewgroupby_set.all()
+            ]
+            group_by_metadata = view_handler.get_group_by_metadata_in_rows(
+                group_by_fields, page, queryset
+            )
+            serialized_group_by_metadata = serialize_group_by_metadata(
+                group_by_metadata
+            )
+            response.data.update(group_by_metadata=serialized_group_by_metadata)
+
         if field_options:
             context = {"fields": [o["field"] for o in model._field_objects.values()]}
             serializer_class = view_type.get_field_options_serializer_class(
@@ -311,7 +327,7 @@ class GridViewView(APIView):
 
         if row_metadata:
             row_metadata = row_metadata_registry.generate_and_merge_metadata_for_rows(
-                view.table, (row.id for row in page)
+                request.user, view.table, (row.id for row in page)
             )
             response.data.update(row_metadata=row_metadata)
 
@@ -673,6 +689,15 @@ class PublicGridViewRowsView(APIView):
                 "descending (Z-A).",
             ),
             OpenApiParameter(
+                name="group_by",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Optionally the rows can be grouped by provided field ids "
+                "separated by comma. By default no groups are applied. This doesn't "
+                "actually responds with the rows groups, this is just what's needed "
+                "for the Baserow group by feature.",
+            ),
+            OpenApiParameter(
                 name="filters",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
@@ -823,6 +848,7 @@ class PublicGridViewRowsView(APIView):
         search = query_params.get("search")
         search_mode = query_params.get("search_mode")
         order_by = request.GET.get("order_by")
+        group_by = request.GET.get("group_by")
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
         filter_type = (
@@ -859,6 +885,7 @@ class PublicGridViewRowsView(APIView):
             search=search,
             search_mode=search_mode,
             order_by=order_by,
+            group_by=group_by,
             include_fields=include_fields,
             exclude_fields=exclude_fields,
             filter_type=filter_type,
@@ -889,5 +916,23 @@ class PublicGridViewRowsView(APIView):
                 create_if_missing=False
             )
             response.data.update(**serializer_class(view, context=context).data)
+
+        if group_by:
+            group_by_fields = [
+                # We can safely do this without having to check whether the
+                # `group_by` input is valid because this has already been validated
+                # by the `get_public_rows_queryset_and_field_ids`.
+                model._field_objects[get_field_id_from_field_key(field_string, False)][
+                    "field"
+                ]
+                for field_string in split_comma_separated_string(group_by)
+            ]
+            group_by_metadata = view_handler.get_group_by_metadata_in_rows(
+                group_by_fields, page, queryset
+            )
+            serialized_group_by_metadata = serialize_group_by_metadata(
+                group_by_metadata
+            )
+            response.data.update(group_by_metadata=serialized_group_by_metadata)
 
         return response

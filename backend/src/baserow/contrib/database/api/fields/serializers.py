@@ -1,3 +1,6 @@
+from datetime import timedelta
+from typing import Optional
+
 from django.core.exceptions import ValidationError
 from django.utils.functional import lazy
 
@@ -7,8 +10,13 @@ from rest_framework import serializers
 
 from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
 from baserow.api.user_files.validators import user_file_name_validator
+from baserow.contrib.database.fields.constants import (
+    BASEROW_BOOLEAN_FIELD_FALSE_VALUES,
+    BASEROW_BOOLEAN_FIELD_TRUE_VALUES,
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils.duration import prepare_duration_value_for_db
 
 
 class FieldSerializer(serializers.ModelSerializer):
@@ -251,3 +259,32 @@ class IntegerOrStringField(serializers.Field):
 
     def to_representation(self, value):
         return value
+
+
+class BaserowBooleanField(serializers.BooleanField):
+    """
+    A Baserow specific `BooleanField` that extends the `TRUE_VALUES` and
+    `FALSE_VALUES` in DRF so that we support "checked" and "unchecked".
+    """
+
+    TRUE_VALUES = BASEROW_BOOLEAN_FIELD_TRUE_VALUES
+    FALSE_VALUES = BASEROW_BOOLEAN_FIELD_FALSE_VALUES
+
+
+@extend_schema_field(OpenApiTypes.FLOAT)
+class DurationFieldSerializer(serializers.Field):
+    """
+    A serializer field that accept a float or a string and return a timedelta.
+    """
+
+    def __init__(self, duration_format, **kwargs):
+        self.duration_format = duration_format
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data) -> Optional[timedelta]:
+        return prepare_duration_value_for_db(
+            data, self.duration_format, serializers.ValidationError
+        )
+
+    def to_representation(self, value):
+        return value.total_seconds()

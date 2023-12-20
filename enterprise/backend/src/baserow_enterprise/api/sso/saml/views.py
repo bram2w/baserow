@@ -21,6 +21,7 @@ from baserow.api.decorators import (
 )
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.schemas import get_error_schema
+from baserow.core.auth_provider.exceptions import DifferentAuthProvider
 from baserow.core.exceptions import WorkspaceInvitationEmailMismatch
 from baserow.core.user.exceptions import DeactivatedUserException, DisabledSignupError
 from baserow_enterprise.api.sso.saml.errors import ERROR_SAML_INVALID_LOGIN_REQUEST
@@ -33,7 +34,6 @@ from baserow_enterprise.api.sso.utils import (
     redirect_user_on_success,
     urlencode_query_params,
 )
-from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
 from baserow_enterprise.sso.saml.exceptions import (
     InvalidSamlConfiguration,
     InvalidSamlRequest,

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add is, is not, empty, not empty filters for last modified by field",
+    "issue_number": 2109,
+    "bullet_points": [],
+    "created_at": "2023-11-22"
+}

@@ -40,7 +40,7 @@ class FunctionsUsedVisitor(
     BaserowFormulaASTVisitor[Any, Set[BaserowFunctionDefinition]]
 ):
     def visit_field_reference(self, field_reference: BaserowFieldReference):
-        return set()
+        return {field_reference}
 
     def visit_string_literal(
         self, string_literal: BaserowStringLiteral

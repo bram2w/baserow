@@ -1,5 +1,6 @@
 import pytest
 from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
+from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import ViewHandler
@@ -334,7 +335,7 @@ def test_create_view_personal_ownership_type(
     )
 
     grid = GridView.objects.all().first()
-    assert grid.created_by == user
+    assert grid.owned_by == user
     assert grid.ownership_type == "personal"
 
 
@@ -400,7 +401,7 @@ def test_duplicate_view_personal_ownership_type(
 
     duplicated_view = handler.duplicate_view(user, view)
     assert duplicated_view.ownership_type == "personal"
-    assert duplicated_view.created_by == user
+    assert duplicated_view.owned_by == user
 
     with pytest.raises(PermissionDenied):
         handler.get_view_as_user(user2, duplicated_view.id)
@@ -728,20 +729,177 @@ def test_update_view_slug_personal_ownership_type(
     alternative_per_workspace_license_service.restrict_user_premium_to(
         user2, workspace.id
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.view_ownership
+def test_update_view_ownership_type_no_premium(
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
+):
+    """A test to make sure it shouldn't be possible to update view `ownership_type`
+    if User doesn't have premium features enabled.
+    """
+
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    initial_owner_of_the_view = premium_data_fixture.create_user(workspace=workspace)
+    user_without_premium = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(
+        user=initial_owner_of_the_view,
+        database=database,
+    )
+    handler = ViewHandler()
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        initial_owner_of_the_view, workspace.id
+    )
+
     view = handler.create_view(
-        user=user,
+        user=initial_owner_of_the_view,
         table=table,
         type_name="form",
         name="Form",
-        ownership_type="personal",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    assert view.owned_by == initial_owner_of_the_view
+
+    # The other user shouldn't be able to change the ownership type of the view,
+    # since he doesn't have PREMIUM enabled:
+    with pytest.raises(PermissionDenied):
+        handler.update_view(
+            user=user_without_premium,
+            view=view,
+            ownership_type=OWNERSHIP_TYPE_PERSONAL,
+        )
+
+    # New User should only be able to view / update the view, since initially it
+    # was set as being `collaborative`:
+    handler.get_view_as_user(user_without_premium, view.id)
+    NEW_NAME = "Not my view"
+    result = handler.update_view(
+        user=user_without_premium,
+        view=view,
+        name=NEW_NAME,
+    )
+    assert result.updated_view_instance.name == NEW_NAME
+
+
+@pytest.mark.django_db
+@pytest.mark.view_ownership
+def test_update_view_ownership_type_owner_changed(
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
+):
+    """Tests if view owner (`owned_by` attribute) is updated when `ownership_type`
+    for the view is changed.
+    """
+
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    initial_owner_of_the_view = premium_data_fixture.create_user(workspace=workspace)
+    new_owner_of_the_view = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(
+        user=initial_owner_of_the_view,
+        database=database,
+    )
+    handler = ViewHandler()
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        initial_owner_of_the_view, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        new_owner_of_the_view, workspace.id
     )
 
-    handler.update_view_slug(user, view, "new-slug")
-    view.refresh_from_db()
-    assert view.slug == "new-slug"
+    view = handler.create_view(
+        user=initial_owner_of_the_view,
+        table=table,
+        type_name="form",
+        name="Form",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    assert view.owned_by == initial_owner_of_the_view
+
+    handler.update_view(
+        user=new_owner_of_the_view, view=view, ownership_type=OWNERSHIP_TYPE_PERSONAL
+    )
+    assert view.owned_by == new_owner_of_the_view
+
+    # Old (initial) user should loose the access to the view:
+    with pytest.raises(PermissionDenied):
+        handler.get_view_as_user(initial_owner_of_the_view, view.id)
 
     with pytest.raises(PermissionDenied):
-        handler.update_view_slug(user2, view, "new-slug")
+        handler.update_view(
+            user=initial_owner_of_the_view,
+            view=view,
+            name="Not my view anymore",
+        )
+
+    # New user is the only one that still has access to the view:
+    handler.get_view_as_user(new_owner_of_the_view, view.id)
+    new_view_name = "My new view name"
+    result = handler.update_view(
+        user=new_owner_of_the_view, view=view, name=new_view_name
+    )
+    updated_view = result.updated_view_instance
+    assert updated_view.name == new_view_name
+
+
+@pytest.mark.django_db
+@pytest.mark.view_ownership
+def test_update_view_ownership_type_valid_type_string(
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
+):
+    """Tests if view ownership type can only be changed to one of the allowed
+    view types (personal or collaborative).
+    """
+
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    initial_owner_of_the_view = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(
+        user=initial_owner_of_the_view,
+        database=database,
+    )
+    handler = ViewHandler()
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        initial_owner_of_the_view, workspace.id
+    )
+
+    view = handler.create_view(
+        user=initial_owner_of_the_view,
+        table=table,
+        type_name="form",
+        name="Form",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+
+    # Update the view from being collaborative to being personal and then back
+    # to being collaborative again, all should be good:
+    handler.update_view(
+        user=initial_owner_of_the_view,
+        view=view,
+        ownership_type=OWNERSHIP_TYPE_PERSONAL,
+    )
+    view.refresh_from_db()
+    assert view.owned_by == initial_owner_of_the_view
+    assert view.ownership_type == OWNERSHIP_TYPE_PERSONAL
+
+    handler.update_view(
+        user=initial_owner_of_the_view,
+        view=view,
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    view.refresh_from_db()
+    assert view.owned_by == initial_owner_of_the_view
+    assert view.ownership_type == OWNERSHIP_TYPE_COLLABORATIVE
+
+    # Attempt to update the view to non existent ownership option:
+    with pytest.raises(PermissionDenied):
+        handler.update_view(
+            user=initial_owner_of_the_view, view=view, ownership_type="non existent"
+        )
+    view.refresh_from_db()
+    assert view.owned_by == initial_owner_of_the_view
+    assert view.ownership_type == OWNERSHIP_TYPE_COLLABORATIVE
 
 
 @pytest.mark.django_db
@@ -796,19 +954,19 @@ def test_order_views_personal_ownership_type(
         user2, workspace.id
     )
     grid_1 = data_fixture.create_grid_view(
-        table=table, user=user, created_by=user, order=1, ownership_type="collaborative"
+        table=table, user=user, owned_by=user, order=1, ownership_type="collaborative"
     )
     grid_2 = data_fixture.create_grid_view(
-        table=table, user=user, created_by=user, order=2, ownership_type="collaborative"
+        table=table, user=user, owned_by=user, order=2, ownership_type="collaborative"
     )
     grid_3 = data_fixture.create_grid_view(
-        table=table, user=user, created_by=user, order=3, ownership_type="collaborative"
+        table=table, user=user, owned_by=user, order=3, ownership_type="collaborative"
     )
     personal_grid = data_fixture.create_grid_view(
-        table=table, user=user, created_by=user, order=2, ownership_type="personal"
+        table=table, user=user, owned_by=user, order=2, ownership_type="personal"
     )
     personal_grid_2 = data_fixture.create_grid_view(
-        table=table, user=user, created_by=user, order=3, ownership_type="personal"
+        table=table, user=user, owned_by=user, order=3, ownership_type="personal"
     )
 
     handler.order_views(

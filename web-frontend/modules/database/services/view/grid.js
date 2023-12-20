@@ -13,6 +13,7 @@ export default (client) => {
       searchMode = '',
       publicUrl = false,
       publicAuthToken = null,
+      groupBy = '',
       orderBy = '',
       filters = {},
       includeFields = [],
@@ -43,6 +44,10 @@ export default (client) => {
         if (searchMode) {
           params.append('search_mode', searchMode)
         }
+      }
+
+      if (groupBy) {
+        params.append('group_by', groupBy)
       }
 
       if (orderBy) {

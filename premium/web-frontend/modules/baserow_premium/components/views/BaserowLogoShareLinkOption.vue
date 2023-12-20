@@ -6,17 +6,16 @@
     @click="click"
   >
     <SwitchInput
-      large
       :value="!view.show_logo"
       :disabled="!hasPremiumFeatures"
       @input="update"
+    >
+      <img src="@baserow/modules/core/static/img/baserow-icon.svg" />
+      <span>
+        {{ $t('shareLinkOptions.baserowLogo.label') }}
+      </span>
+      <i v-if="!hasPremiumFeatures" class="deactivated-label iconoir-lock"></i
     ></SwitchInput>
-
-    <img src="@baserow/modules/core/static/img/baserow-icon.svg" />
-    <span>
-      {{ $t('shareLinkOptions.baserowLogo.label') }}
-    </span>
-    <i v-if="!hasPremiumFeatures" class="deactivated-label iconoir-lock"></i>
 
     <PremiumModal
       v-if="!hasPremiumFeatures"

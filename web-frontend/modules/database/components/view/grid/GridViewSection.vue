@@ -11,18 +11,35 @@
       },
     }"
   >
+    <div
+      v-for="({ left }, index) in groupByDividers"
+      :key="'group-by-divider-' + index"
+      class="grid-view__group-by-divider"
+      :style="{ left: left + 'px' }"
+    ></div>
+    <GridViewWidthHandle
+      v-for="({ groupBy, left }, index) in groupByDividers"
+      :key="'group-by-width-' + index"
+      class="grid-view__head-group-width-handle"
+      :style="{ left: left + 'px' }"
+      :width="groupBy.width"
+      @move="moveGroupWidth(groupBy, view, $event)"
+      @update="updateGroupWidth(groupBy, view, database, readOnly, $event)"
+    ></GridViewWidthHandle>
     <div class="grid-view__inner" :style="{ 'min-width': width + 'px' }">
       <GridViewHead
         :database="database"
         :table="table"
         :view="view"
-        :fields="fields"
+        :all-fields-in-table="allFieldsInTable"
+        :visible-fields="visibleFields"
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
         :include-add-field="includeAddField"
         :include-grid-view-identifier-dropdown="
           includeGridViewIdentifierDropdown
         "
+        :include-group-by="includeGroupBy"
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @field-created="$emit('field-created', $event)"
@@ -48,20 +65,32 @@
       >
         <div class="grid-view__body-inner">
           <GridViewPlaceholder
-            :fields="fields"
+            :visible-fields="visibleFields"
+            :view="view"
             :include-row-details="includeRowDetails"
+            :include-group-by="includeGroupBy"
             :store-prefix="storePrefix"
           ></GridViewPlaceholder>
+          <GridViewGroups
+            v-if="includeGroupBy && activeGroupBys.length > 0"
+            :all-fields-in-table="allFieldsInTable"
+            :group-by-value-sets="groupByValueSets"
+            :store-prefix="storePrefix"
+          ></GridViewGroups>
           <GridViewRows
+            v-if="includeRowDetails || visibleFields.length > 0"
             ref="rows"
             :view="view"
-            :fields="fieldsToRender"
+            :rendered-fields="fieldsToRender"
+            :visible-fields="visibleFields"
+            :all-fields-in-table="allFieldsInTable"
             :workspace-id="database.workspace.id"
-            :all-fields="fields"
             :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
-            :can-fit-in-two-columns="canFitInTwoColumns"
+            :primary-field-is-sticky="primaryFieldIsSticky"
             :include-row-details="includeRowDetails"
+            :include-group-by="includeGroupBy"
+            :rows-at-end-of-groups="rowsAtEndOfGroups"
             :read-only="readOnly"
             :store-prefix="storePrefix"
             v-on="$listeners"
@@ -69,24 +98,28 @@
           <GridViewRowAdd
             v-if="
               !readOnly &&
+              (includeRowDetails || visibleFields.length > 0) &&
               $hasPermission(
                 'database.table.create_row',
                 table,
                 database.workspace.id
               )
             "
-            :fields="fields"
+            :visible-fields="visibleFields"
             :include-row-details="includeRowDetails"
             :store-prefix="storePrefix"
             v-on="$listeners"
           ></GridViewRowAdd>
+          <div v-else class="grid-view__row-placeholder"></div>
         </div>
       </div>
       <div class="grid-view__foot">
-        <slot name="foot"></slot>
+        <div v-if="includeRowDetails" class="grid-view__foot-info">
+          {{ $tc('gridView.rowCount', count, { count }) }}
+        </div>
         <template v-if="!publicGrid">
           <div
-            v-for="field in fields"
+            v-for="field in visibleFields"
             :key="field.id"
             :style="{ width: getFieldWidth(field.id) + 'px' }"
           >
@@ -121,21 +154,26 @@ import ResizeObserver from 'resize-observer-polyfill'
 
 import GridViewHead from '@baserow/modules/database/components/view/grid/GridViewHead'
 import GridViewPlaceholder from '@baserow/modules/database/components/view/grid/GridViewPlaceholder'
+import GridViewGroups from '@baserow/modules/database/components/view/grid/GridViewGroups'
 import GridViewRows from '@baserow/modules/database/components/view/grid/GridViewRows'
 import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridViewRowAdd'
 import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import GridViewFieldFooter from '@baserow/modules/database/components/view/grid/GridViewFieldFooter'
+import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
+import { fieldValuesAreEqualInObjects } from '@baserow/modules/database/utils/groupBy'
 
 export default {
   name: 'GridViewSection',
   components: {
     GridViewHead,
     GridViewPlaceholder,
+    GridViewGroups,
     GridViewRows,
     GridViewRowAdd,
     GridViewFieldDragging,
     GridViewFieldFooter,
+    GridViewWidthHandle,
   },
   mixins: [gridViewHelpers],
   provide() {
@@ -144,7 +182,11 @@ export default {
     }
   },
   props: {
-    fields: {
+    visibleFields: {
+      type: Array,
+      required: true,
+    },
+    allFieldsInTable: {
       type: Array,
       required: true,
     },
@@ -174,6 +216,11 @@ export default {
       required: false,
       default: () => false,
     },
+    includeGroupBy: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
     includeAddField: {
       type: Boolean,
       required: false,
@@ -189,7 +236,7 @@ export default {
       required: false,
       default: () => false,
     },
-    canFitInTwoColumns: {
+    primaryFieldIsSticky: {
       type: Boolean,
       required: false,
       default: () => true,
@@ -203,7 +250,7 @@ export default {
     return {
       // Render the first 20 fields by default so that there's at least some data when
       // the page is server side rendered.
-      fieldsToRender: this.fields.slice(0, 20),
+      fieldsToRender: this.visibleFields.slice(0, 20),
       // Indicates the offset
       fieldsLeftOffset: 0,
     }
@@ -214,7 +261,7 @@ export default {
      * given options.
      */
     width() {
-      let width = Object.values(this.fields).reduce(
+      let width = Object.values(this.visibleFields).reduce(
         (value, field) => this.getFieldWidth(field.id) + value,
         0
       )
@@ -231,12 +278,161 @@ export default {
       return width
     },
     draggingFields() {
-      return this.fields.filter((f) => !f.primary)
+      return this.visibleFields.filter((f) => !f.primary)
     },
     draggingOffset() {
-      return this.fields
+      let offset = this.visibleFields
         .filter((f) => f.primary)
         .reduce((sum, f) => sum + this.getFieldWidth(f.id), 0)
+
+      if (this.includeRowDetails) {
+        offset += this.gridViewRowDetailsWidth
+      }
+
+      return offset
+    },
+    groupByDividers() {
+      if (!this.includeGroupBy) {
+        return []
+      }
+
+      let last = 0
+      const dividers = this.activeGroupBys
+        .filter((groupBy, index) => index < this.activeGroupBys.length - 1)
+        .map((groupBy) => {
+          last += groupBy.width
+          return { groupBy, left: last }
+        })
+
+      return dividers
+    },
+    /**
+     * Computes an object that can be used by the `GridViewGroups` and `GridViewRows`
+     * components to correctly visualize the groups. Even though both components need
+     * different data, we're computing it in the same function because having only one
+     * loop is more efficient.
+     *
+     * groupBySets:
+     *
+     * Every entry in the array represents a group, and contains a list of spans, which
+     * are essentially a row span of the rows in that group.
+     *
+     * [
+     *   {
+     *     "groupBy": object,
+     *     "groupSpans": [
+     *       {
+     *         "rowSpan": 10,
+     *         "value": any,
+     *       },
+     *       ...
+     *     ]
+     *   },
+     *   ...
+     * ]
+     *
+     * rowsAtEndOfGroups:
+     *
+     * Indicates whether the row is the start or end of the last group. This is needed
+     * to add a visual divider
+     *
+     * [1, 2]
+     *
+     */
+    groupBySetsAndRowsAtEndOfGroups() {
+      const groupBys = this.activeGroupBys
+      const metadata = this.groupByMetadata
+      const rows = this.allRows
+      const rowsAtEndOfGroups = new Set()
+
+      const groupBySets = groupBys.map((groupBy, groupByIndex) => {
+        const groupSpans = []
+        let lastGroup = null
+        const field = this.allFieldsInTable.find((f) => f.id === groupBy.field)
+        const fieldType = this.$registry.get('field', field.type)
+
+        rows.forEach((row, index) => {
+          const previousRow = rows[index - 1]
+          const nextRow = rows[index + 1]
+
+          /**
+           * Helper function that checks whether the value is the same for both rows in
+           * this group, but also the previous ones. This is needed because we need to
+           * start a new group if the previous value doesn't match.
+           */
+          const checkIfInSameGroup = (row1, row2) => {
+            if (row1 === undefined || row2 === undefined) {
+              return false
+            }
+
+            return !groupBys.slice(0, groupByIndex + 1).some((groupBy) => {
+              return !fieldType.isEqual(
+                field,
+                row1[`field_${groupBy.field}`],
+                row2[`field_${groupBy.field}`]
+              )
+            })
+          }
+
+          if (!checkIfInSameGroup(previousRow, row)) {
+            // The group by metadata is a dict where the key is equal to the group by,
+            // and the value an array containing the count for each unique value
+            // combination. Below we're looking through the entries to find the
+            // matching count for the row values.
+            const count =
+              (metadata[`field_${groupBy.field}`] || []).find((entry) => {
+                const groupByFields = groupBys
+                  .slice(0, groupByIndex + 1)
+                  .map((groupBy) => {
+                    return this.allFieldsInTable.find(
+                      (f) => f.id === groupBy.field
+                    )
+                  })
+                return fieldValuesAreEqualInObjects(
+                  groupByFields,
+                  this.$registry,
+                  entry,
+                  row,
+                  true
+                )
+              })?.count || -1
+
+            // If the start of a group, then create a new span object in the last.
+            lastGroup = {
+              rowSpan: 1,
+              value: row[`field_${groupBy.field}`],
+              count,
+            }
+          } else {
+            // If the value hasn't changed, it means that this row falls within the
+            // already started group, to we have to increase the row span.
+            lastGroup.rowSpan += 1
+          }
+
+          if (!checkIfInSameGroup(row, nextRow)) {
+            // If the group ends, it must be added to the array.
+            groupSpans.push(lastGroup)
+            lastGroup = null
+
+            // If we're at the last group, we want to store whether the row is last so
+            // that we can visually show divider. This is only needed for the last group
+            // because that's where the divider must match the one with the group.
+            if (groupByIndex === groupBys.length - 1) {
+              rowsAtEndOfGroups.add(row.id)
+            }
+          }
+        })
+
+        return { groupBy, groupSpans }
+      })
+
+      return { groupBySets, rowsAtEndOfGroups }
+    },
+    groupByValueSets() {
+      return this.groupBySetsAndRowsAtEndOfGroups.groupBySets
+    },
+    rowsAtEndOfGroups() {
+      return this.groupBySetsAndRowsAtEndOfGroups.rowsAtEndOfGroups
     },
   },
   watch: {
@@ -246,7 +442,7 @@ export default {
         this.updateVisibleFieldsInRow()
       },
     },
-    fields: {
+    visibleFields: {
       deep: true,
       handler() {
         this.updateVisibleFieldsInRow()
@@ -260,6 +456,10 @@ export default {
         isMultiSelectHolding:
           this.$options.propsData.storePrefix +
           'view/grid/isMultiSelectHolding',
+        count: this.$options.propsData.storePrefix + 'view/grid/getCount',
+        allRows: this.$options.propsData.storePrefix + 'view/grid/getAllRows',
+        groupByMetadata:
+          this.$options.propsData.storePrefix + 'view/grid/getGroupByMetadata',
       }),
     }
   },
@@ -332,7 +532,7 @@ export default {
 
       // Create an array containing the fields that are currently visible in the
       // viewport and must be rendered.
-      const fieldsToRender = this.fields.filter((field) => {
+      const fieldsToRender = this.visibleFields.filter((field) => {
         const width = this.getFieldWidth(field.id)
         const right = left + width
         const visible = right >= viewportStart && left <= viewportEnd

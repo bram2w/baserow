@@ -1,75 +1,35 @@
 from typing import Any, Dict, Optional
 
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+
 from rest_framework import serializers
 
-from baserow.core.auth_provider.handler import PasswordProviderHandler
-from baserow.core.auth_provider.validators import validate_domain
-from baserow.core.registry import (
-    APIUrlsInstanceMixin,
-    CustomFieldsInstanceMixin,
-    ImportExportMixin,
-    Instance,
-    MapAPIExceptionsInstanceMixin,
-    ModelInstanceMixin,
+from baserow.core.action.registries import action_type_registry
+from baserow.core.auth_provider.exceptions import (
+    CannotDisableLastAuthProvider,
+    DifferentAuthProvider,
 )
-from baserow.core.utils import set_allowed_attrs
+from baserow.core.auth_provider.handler import PasswordProviderHandler
+from baserow.core.auth_provider.models import (
+    AuthProviderModel,
+    PasswordAuthProviderModel,
+)
+from baserow.core.auth_provider.registries import BaseAuthProviderType
+from baserow.core.auth_provider.types import AuthProviderModelSubClass, UserInfo
+from baserow.core.auth_provider.validators import validate_domain
+from baserow.core.handler import CoreHandler
+from baserow.core.user.exceptions import UserNotFound
 
-from .models import PasswordAuthProviderModel
 
+class AuthProviderType(BaseAuthProviderType):
+    """
+    Base auth provider type class for Baserow auth providers.
+    """
 
-class AuthProviderType(
-    MapAPIExceptionsInstanceMixin,
-    APIUrlsInstanceMixin,
-    CustomFieldsInstanceMixin,
-    ModelInstanceMixin,
-    ImportExportMixin,
-    Instance,
-):
-    def get_login_options(self, **kwargs) -> Optional[Dict[str, Any]]:
-        """
-        Returns a dictionary containing the login options for this Baserow instance
-        to populate the login page accordingly.
-        """
-
-        raise NotImplementedError()
-
-    def can_create_new_providers(self) -> bool:
-        """
-        Returns True if it's possible to create an authentication provider of this type.
-        """
-
-        return True
-
-    def can_delete_existing_providers(self) -> bool:
-        """
-        Returns True if it's possible to delete an authentication provider of this type.
-        """
-
-        return True
-
-    def before_create(self, user, **values):
-        """
-        This hook is called before the authentication provider is created.
-
-        :param user: The user that is creating the authentication provider.
-        :param values: The values that are used to create the authentication provider.
-        """
-
-        pass
-
-    def create(self, **kwargs):
-        """
-        Creates a new authentication provider instance of the provided type. The
-        authentication provider is not saved to the database. The caller is
-        responsible for saving the instance.
-
-        :param handler: The handler that is used to manage the authentication providers.
-        :return: The created authentication provider instance.
-        """
-
-        return self.model_class.objects.create(**kwargs)
-
-    def before_update(self, user, provider, **values):
+    def before_update(
+        self, user: AbstractUser, auth_provider: AuthProviderModelSubClass, **values
+    ):
         """
         This hook is called before the authentication provider is updated.
 
@@ -78,22 +38,21 @@ class AuthProviderType(
         :param values: The values that are used to update the authentication provider.
         """
 
-        pass
+        super().before_update(user, auth_provider, **values)
 
-    def update(self, provider, **values):
-        """
-        Updates the authentication provider instance of the provided type.
+        enabled_next = values.get("enabled", None)
+        if enabled_next is False:
+            another_enabled = (
+                AuthProviderModel.objects.filter(enabled=True)
+                .exclude(id=auth_provider.id)
+                .exists()
+            )
+            if not another_enabled:
+                raise CannotDisableLastAuthProvider()
 
-        :param provider: The authentication provider that is being updated.
-        :param values: The values that are used to update the authentication provider.
-        :return: The updated authentication provider instance.
-        """
-
-        set_allowed_attrs(values, self.allowed_fields, provider)
-        provider.save()
-        return provider
-
-    def before_delete(self, user, provider):
+    def before_delete(
+        self, user: AbstractUser, auth_provider: AuthProviderModelSubClass
+    ):
         """
         This hook is called before the authentication provider is deleted.
 
@@ -101,30 +60,111 @@ class AuthProviderType(
         :param provider: The authentication provider that is being deleted.
         """
 
-        pass
+        super().before_delete(user, auth_provider)
 
-    def delete(self, provider):
+        another_enabled = (
+            AuthProviderModel.objects.filter(enabled=True)
+            .exclude(id=auth_provider.id)
+            .exists()
+        )
+        if not another_enabled:
+            raise CannotDisableLastAuthProvider()
+
+    def get_or_create_user_and_sign_in(
+        self, auth_provider: AuthProviderModelSubClass, user_info: UserInfo
+    ) -> [AbstractUser, bool]:
         """
-        Deletes the authentication provider instance of the provided type.
+        Gets from the database if present or creates a user if not, based on the
+        user info that was received from the identity provider.
 
-        :param provider: The authentication provider that is being deleted.
+        :param auth_provider: The authentication provider that was used to
+            authenticate the user.
+        :param user_info: A dataclass containing the user info that can be sent
+            to the UserHandler().create_user() method.
+        :raises DeactivatedUserException: If the user exists but has been
+            disabled from an admin.
+        :return: The user that was created or retrieved and a boolean flag set
+            to True if the user has been created, False otherwise.
         """
 
-        provider.delete()
+        try:
+            user = self.get_user_and_sign_in(auth_provider, user_info)
+            created = False
+        except UserNotFound:
+            user = self.create_user(auth_provider, user_info)
+            created = True
 
-    def list_providers(self, base_queryset=None):
+        return user, created
+
+    def get_user_and_sign_in(
+        self, auth_provider: AuthProviderModelSubClass, user_info: UserInfo
+    ) -> AbstractUser:
         """
-        Returns a queryset containing all the authentication providers of this type.
+        Returns the user according to the given user_info.
 
-        :param base_queryset: The base queryset that can be used to filter the
+        :param auth_provider: The authentication provider that was used to
+            authenticate the user.
+        :param user_info: The user info to use to get the user.
+        :raises DeactivatedUserException: If the user exists but has been
+            disabled from an admin.
+        :raises DifferentAuthProvider: If the user exists but has been
+            created using a different auth provider.
+        :return: a user instance.
         """
 
-        if base_queryset is None:
-            base_queryset = self.model_class.objects
+        from baserow.core.actions import AcceptWorkspaceInvitationActionType
+        from baserow.core.user.actions import SignInUserActionType
+        from baserow.core.user.handler import UserHandler
 
-        return base_queryset.all()
+        user = UserHandler().get_active_user(email=user_info.email)
 
-    def export_serialized(self):
+        is_original_provider_check_needed = (
+            not settings.BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT
+        )
+        if (
+            is_original_provider_check_needed
+            and not auth_provider.users.filter(id=user.id).exists()
+        ):
+            raise DifferentAuthProvider()
+
+        action_type_registry.get(SignInUserActionType.type).do(user, auth_provider)
+
+        if user_info.workspace_invitation_token:
+            core_handler = CoreHandler()
+            invitation = core_handler.get_workspace_invitation_by_token(
+                user_info.workspace_invitation_token
+            )
+            action_type_registry.get(AcceptWorkspaceInvitationActionType.type).do(
+                user, invitation
+            )
+
+        return user
+
+    def create_user(
+        self, auth_provider: AuthProviderModelSubClass, user_info: UserInfo
+    ) -> AbstractUser:
+        """
+        Creates the user according to the given user_info.
+
+        :param auth_provider: The authentication provider that was used to
+            authenticate the user.
+        :param user_info: A dataclass containing the user info that can be sent
+            to the UserHandler().create_user() method.
+        :return: a user instance.
+        """
+
+        from baserow.core.user.actions import CreateUserActionType
+
+        return action_type_registry.get(CreateUserActionType.type).do(
+            name=user_info.name,
+            email=user_info.email,
+            password=None,
+            language=user_info.language,
+            workspace_invitation_token=user_info.workspace_invitation_token,
+            auth_provider=auth_provider,
+        )
+
+    def export_serialized(self) -> Dict[str, Any]:
         """
         Returns the serialized data for this authentication provider type.
         """
@@ -175,7 +215,7 @@ class PasswordAuthProviderType(AuthProviderType):
             return None
         return {"type": self.type}
 
-    def can_create_new_providers(self):
+    def can_create_new_providers(self, **kwargs):
         return False
 
     def can_delete_existing_providers(self):

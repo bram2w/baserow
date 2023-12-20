@@ -6,18 +6,22 @@
   flex-direction: column;
 }
 
+.select__search-icon {
+  color: $palette-neutral-600;
+  padding: 0 10px;
+  font-size: 16px;
+
+  .select__search:focus-within & {
+    color: $palette-blue-500;
+  }
+}
+
 .select__search {
   flex: 0 0;
   position: relative;
-  border-bottom: 1px solid $color-neutral-200;
+  border-bottom: 1px solid $palette-neutral-200;
 
   @include flex-align-items();
-}
-
-.select__search-icon {
-  color: $color-neutral-300;
-  padding: 0 12px;
-  font-size: 18px;
 }
 
 .select__search-input {
@@ -25,10 +29,13 @@
   width: 100%;
   border: none;
   padding: 0 12px 0 0;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
 
-  @include fixed-height(36px, 14px);
+  @include rounded($rounded);
+  @include fixed-height(36px, 12px);
+
+  &::placeholder {
+    color: $palette-neutral-700;
+  }
 }
 
 .select__items {
@@ -46,7 +53,7 @@
   &::after {
     content: '';
     display: block;
-    height: 10px;
+    height: 4px;
     width: 100%;
   }
 
@@ -66,7 +73,7 @@
   padding: 20px 10px;
   white-space: normal;
   text-align: center;
-  color: $color-neutral-500;
+  color: $palette-neutral-700;
 }
 
 .select__items-loading {
@@ -87,47 +94,40 @@
   color: $color-neutral-600;
   margin: 10px 0 10px 10px;
   font-size: 14px;
-
-  li:first-child & {
-    margin-top: 0;
-  }
-}
-
-%select__item-size {
-  @include fixed-height(32px, 14px);
 }
 
 .select__item-active-icon {
   text-align: center;
-  color: $palette-green-600;
+  color: $palette-neutral-1200;
   position: absolute;
   top: 8px;
   right: 5px;
   font-size: 17px;
   display: none;
+
+  .select__item.disabled &,
+  .select__item-link:active & {
+    color: $palette-neutral-400;
+  }
 }
 
 .select__item {
   position: relative;
-  margin: 0 8px 4px 8px;
-  padding: 0 32px 0 10px;
+  margin: 0 4px 3px 4px;
   user-select: none;
   @include rounded($rounded);
-
-  &.select__item--has-notification {
-    padding-right: 48px;
-  }
 
   &:last-child {
     margin-bottom: 0;
   }
 
-  &:hover {
-    background-color: $color-neutral-100;
+  &:hover,
+  &.hover {
+    background-color: $palette-neutral-100;
   }
 
   &--selected {
-    background-color: $color-primary-100;
+    background-color: $palette-neutral-100;
   }
 
   &--indented {
@@ -141,8 +141,8 @@
     @include absolute(9px, 9px, auto, auto);
   }
 
-  &.active {
-    background-color: $color-primary-100;
+  &.active:not(.select__item--loading) {
+    background-color: rgba($palette-neutral-1300, 0.04);
 
     .select__item-active-icon {
       display: block;
@@ -157,6 +157,7 @@
 
   &.disabled {
     background-color: transparent;
+    cursor: not-allowed;
 
     &:hover {
       background-color: transparent;
@@ -166,14 +167,19 @@
 
 .select__item-link {
   display: block;
-  color: $color-neutral-900;
+  color: $palette-neutral-1300;
+  padding: 8px 32px 8px 10px;
+
+  .select__item--has-notification & {
+    padding-right: 48px;
+  }
 
   &:hover {
     text-decoration: none;
   }
 
   .select__item.disabled & {
-    color: $color-neutral-400;
+    color: $palette-neutral-700;
 
     &:hover {
       cursor: inherit;
@@ -184,12 +190,14 @@
 .select__item-name {
   display: flex;
   align-items: center;
+  font-weight: 500;
+  line-height: 15px;
+  gap: 6px;
 
   @extend %ellipsis;
-  @extend %select__item-size;
 
-  span:first-child {
-    @extend %ellipsis;
+  .select__item-link:active & {
+    color: $palette-neutral-900;
   }
 }
 
@@ -198,39 +206,39 @@
 }
 
 .select__item-icon {
-  margin-right: 6px;
   font-size: 16px;
+
+  .select__item.disabled &,
+  .select__item-link:active & {
+    color: $palette-neutral-900;
+  }
 }
 
 .select__item-image {
   max-width: 15px;
   max-height: 15px;
-  margin-right: 6px;
 }
 
 .select__item-description {
-  font-size: 11px;
-  margin-right: -32px;
-  line-height: 140%;
-  color: $color-neutral-600;
-  padding-bottom: 6px;
-  padding-right: 10px;
+  font-size: 12px;
+  color: $palette-neutral-900;
   white-space: normal;
+  line-height: 18px;
+  font-weight: 400;
+  padding-top: 6px;
 }
 
 .select__item-options {
-  @extend %select__item-size;
-
   display: none;
   text-align: center;
   width: 32px;
-  color: $color-neutral-600;
+  color: $palette-neutral-800;
   font-size: 17px;
 
-  @include absolute(2px, 0, auto, auto);
+  @include absolute(5px, 0, auto, auto);
 
   &:hover {
-    color: $color-neutral-800;
+    color: $palette-neutral-1200;
   }
 
   :not(.select__item--loading):not(.select__item--no-options):hover > & {
@@ -245,41 +253,43 @@
 
 .select__footer {
   flex: 0 0;
-  border-top: 1px solid $color-neutral-200;
+  border-top: 1px solid $palette-neutral-200;
+  padding: 4px 4px 0 4px;
 }
 
 .select__footer-button {
   position: relative;
   display: block;
-  padding: 0 12px;
-  color: $color-neutral-600;
+  padding: 0 10px;
+  color: $palette-neutral-1300;
   user-select: none;
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
+  margin-bottom: 4px;
 
+  @include rounded($rounded);
   @include fixed-height(36px, 14px);
   @include flex-align-items(6px);
 
   &:hover {
-    background-color: $color-neutral-100;
+    background-color: rgba($palette-neutral-1300, 0.04);
     text-decoration: none;
   }
 
   &.button--loading {
-    background-color: $color-neutral-200;
+    background-color: $palette-neutral-400;
   }
 }
 
 .select__footer-create {
   display: flex;
   flex-wrap: wrap;
-  padding: 8px 12px 4px 12px;
 }
 
 .select__footer-create-link {
   position: relative;
-  width: calc(50% - 10px);
-  color: $color-neutral-900;
+  width: 50%;
+  color: $palette-neutral-1300;
   padding: 0 10px;
   margin-bottom: 4px;
   min-width: 0;
@@ -295,28 +305,23 @@
     padding-left: 6px;
   }
 
-  &:nth-child(2n + 1) {
-    margin-right: 20px;
-  }
-
   &:hover {
     text-decoration: none;
   }
 
   &:not(.select__footer-create-link--disabled):hover {
     text-decoration: none;
-    background-color: $color-neutral-100;
+    background-color: rgba($palette-neutral-1300, 0.04);
   }
 }
 
 .select__footer-create-link-icon {
-  color: $color-neutral-600;
+  color: $palette-neutral-800;
   font-size: 14px;
   margin-left: auto;
-}
 
-.select__footer-create-icon {
-  color: $color-neutral-600;
-  margin-right: 4px;
-  font-size: 14px;
+  .select__footer-create-link:not(.select__footer-create-link--disabled):hover
+    & {
+    color: $palette-neutral-1300;
+  }
 }

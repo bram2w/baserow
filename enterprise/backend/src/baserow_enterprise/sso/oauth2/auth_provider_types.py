@@ -15,8 +15,8 @@ from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 from baserow.api.utils import ExceptionMappingType
 from baserow.core.auth_provider.auth_provider_types import AuthProviderType
 from baserow.core.auth_provider.models import AuthProviderModel
+from baserow.core.auth_provider.types import UserInfo
 from baserow_enterprise.api.sso.oauth2.errors import ERROR_INVALID_PROVIDER_URL
-from baserow_enterprise.auth_provider.handler import UserInfo
 from baserow_enterprise.sso.exceptions import AuthFlowError, InvalidProviderUrl
 from baserow_enterprise.sso.utils import is_sso_feature_active
 

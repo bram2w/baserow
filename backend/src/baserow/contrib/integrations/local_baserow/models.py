@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import F, OrderBy
 
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import (
     FILTER_TYPES,
@@ -32,8 +33,25 @@ class LocalBaserowIntegration(Integration):
 
 
 class LocalBaserowTableService(Service):
-    view = models.ForeignKey(View, null=True, default=None, on_delete=models.SET_NULL)
     table = models.ForeignKey(Table, null=True, default=None, on_delete=models.SET_NULL)
+
+    class Meta:
+        abstract = True
+
+
+class LocalBaserowViewService(LocalBaserowTableService):
+    view = models.ForeignKey(View, null=True, default=None, on_delete=models.SET_NULL)
+
+    class Meta:
+        abstract = True
+
+
+class LocalBaserowFilterableServiceMixin(models.Model):
+    """
+    A mixin which can be applied to LocalBaserow services to denote that they're
+    filterable, and allows them to control their and/or filter operator type.
+    """
+
     filter_type = models.CharField(
         max_length=3,
         choices=FILTER_TYPES,
@@ -46,15 +64,27 @@ class LocalBaserowTableService(Service):
         abstract = True
 
 
-class LocalBaserowListRows(LocalBaserowTableService, SearchableServiceMixin):
+class LocalBaserowListRows(
+    LocalBaserowViewService, LocalBaserowFilterableServiceMixin, SearchableServiceMixin
+):
     """
     A model for the local baserow list rows service configuration data.
     """
 
 
-class LocalBaserowGetRow(LocalBaserowTableService, SearchableServiceMixin):
+class LocalBaserowGetRow(
+    LocalBaserowViewService, LocalBaserowFilterableServiceMixin, SearchableServiceMixin
+):
     """
     A model for the local baserow get row service configuration data.
+    """
+
+    row_id = FormulaField()
+
+
+class LocalBaserowUpsertRow(LocalBaserowTableService):
+    """
+    A model for the local baserow upsert row service configuration data.
     """
 
     row_id = FormulaField()
@@ -150,3 +180,36 @@ class LocalBaserowTableServiceSort(ServiceSort):
             field_order_by = field_expr.desc(nulls_last=True)
 
         return field_order_by
+
+
+class LocalBaserowTableServiceFieldMappingManager(models.Manager):
+    """
+    Manager for the `LocalBaserowTableServiceFieldMapping` model.
+    Ensures that we exclude mappings with trashed fields.
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().filter(field__trashed=False)
+
+
+class LocalBaserowTableServiceFieldMapping(models.Model):
+    """
+    Responsible for mapping a `LocalBaserowTableService` subclass's field
+    to a specific value, or formula.
+    """
+
+    objects_and_trash = models.Manager()
+    objects = LocalBaserowTableServiceFieldMappingManager()
+
+    field = models.ForeignKey(
+        Field,
+        on_delete=models.CASCADE,
+        help_text="The Baserow field that this mapping relates to.",
+    )
+    value = FormulaField(default="", help_text="The field mapping's value.")
+    service = models.ForeignKey(
+        Service,
+        related_name="field_mappings",
+        on_delete=models.CASCADE,
+        help_text="The LocalBaserow Service that this field mapping relates to.",
+    )

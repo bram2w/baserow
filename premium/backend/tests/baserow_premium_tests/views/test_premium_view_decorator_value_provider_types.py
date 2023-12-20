@@ -479,7 +479,7 @@ def test_color_filters_cannot_reference_non_existing_groups(
     ]
 
 
-def test_conditional_color_value_provider_type_map_filter_from_config(data_fixture):
+def test_conditional_color_value_provider_type_map_filter_from_config():
     color_conf = {
         "colors": [
             {

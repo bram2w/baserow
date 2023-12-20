@@ -8,36 +8,24 @@
         "localBaserowGetRow": "Get a row",
         "localBaserowListRows": "List rows"
     },
+    "userSourceType": {
+        "localBaserow": "Baserow table authentication"
+    },
     "localBaserowForm": {
         "user": "User",
         "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow workspace."
     },
     "localBaserowGetRowForm": {
-        "tableFieldLabel": "Table",
-        "tableFieldPlaceHolder": "Select a table",
-        "viewFieldLabel": "View",
-        "filterTabTitle": "Filters",
-        "sortTabTitle": "Sorts",
-        "searchTabTitle": "Search",
-        "viewFieldPlaceHolder": "Select a view",
-        "databaseFieldLabel": "Database",
-        "viewFieldLabel": "View",
-        "filterTabTitle": "Filters",
-        "searchTabTitle": "Search",
-        "viewFieldPlaceHolder": "Select a view",
         "rowFieldLabel": "Row ID",
         "invalidFormula": "The formula is invalid",
         "rowFieldPlaceHolder": "Select a row ID",
         "searchFieldPlaceHolder": "Enter a search term...",
         "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
+        "filterTabTitle": "Filters",
+        "searchTabTitle": "Search",
         "noTableChosenForSorting": "Choose a table to begin using data source sorts."
     },
     "localBaserowListRowsForm": {
-        "databaseFieldLabel": "Database",
-        "tableFieldLabel": "Table",
-        "tableFieldPlaceHolder": "Select a table",
-        "viewFieldLabel": "View",
-        "viewFieldPlaceHolder": "Select a view",
         "filterTabTitle": "Filters",
         "sortTabTitle": "Sorts",
         "searchTabTitle": "Search",
@@ -65,5 +53,11 @@
     "dataProviderType": {
         "dataSource": "Data source",
         "pageParameter": "Parameter"
+    },
+    "localBaserowTableSelector": {
+        "viewFieldLabel": "View",
+        "tableFieldLabel": "Table",
+        "chooseNoView": "Not selected",
+        "databaseFieldLabel": "Database"
     }
 }

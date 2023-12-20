@@ -36,6 +36,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.rowDoesNotExistTitle'),
         app.i18n.t('clientHandler.rowDoesNotExistDescription')
       ),
+      ERROR_CANNOT_CREATE_FIELD_TYPE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.cannotCreateFieldTypeTitle'),
+        app.i18n.t('clientHandler.cannotCreateFieldTypeDescription')
+      ),
       ERROR_NOTIFICATION_DOES_NOT_EXIST: new ResponseErrorMessage(
         app.i18n.t('clientHandler.notificationDoesNotExistTitle'),
         app.i18n.t('clientHandler.notificationDoesNotExistDescription')

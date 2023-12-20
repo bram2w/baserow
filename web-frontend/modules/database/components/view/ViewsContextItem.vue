@@ -22,6 +22,10 @@
         </div>
       </div>
     </a>
+    <i
+      v-if="view._.selected"
+      class="select__item-active-icon iconoir-check"
+    ></i>
     <component
       :is="deactivatedClickModal"
       v-if="deactivatedClickModal !== null"

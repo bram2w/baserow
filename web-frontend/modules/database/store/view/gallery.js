@@ -2,8 +2,9 @@ import bufferedRows from '@baserow/modules/database/store/view/bufferedRows'
 import fieldOptions from '@baserow/modules/database/store/view/fieldOptions'
 import GalleryService from '@baserow/modules/database/services/view/gallery'
 
-export function populateRow(row) {
+export function populateRow(row, metadata = {}) {
   row._ = {
+    metadata,
     dragging: false,
   }
   return row

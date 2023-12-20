@@ -1,11 +1,9 @@
 <template>
   <div>
-    <div @click="() => $refs.modal.show()">
-      <a>
-        <i class="context__menu-icon iconoir-community"></i
-        >{{ $t('memberRolesDatabaseContexItem.label') }}</a
-      >
-    </div>
+    <a class="context__menu-item-link" @click="() => $refs.modal.show()">
+      <i class="context__menu-item-icon iconoir-community"></i
+      >{{ $t('memberRolesDatabaseContexItem.label') }}</a
+    >
     <MemberRolesModal ref="modal" :database="application" />
   </div>
 </template>

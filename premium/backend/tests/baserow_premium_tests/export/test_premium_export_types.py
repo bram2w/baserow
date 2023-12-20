@@ -31,7 +31,7 @@ def test_can_export_every_interesting_different_field_to_json(
         premium_data_fixture,
         storage_mock,
         {"exporter_type": "json"},
-        user_kwargs={"has_active_premium_license": True},
+        user_kwargs={"has_active_premium_license": True, "email": "user@example.com"},
     )
     assert (
         contents
@@ -64,6 +64,13 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_datetime_eu": "02/01/2021 12:00",
     "created_on_date_eu": "02/01/2021",
     "created_on_datetime_eu_tzone": "02/01/2021 13:00",
+    "last_modified_by": "user@example.com",
+    "created_by": "user@example.com",
+    "duration_hm": "",
+    "duration_hms": "",
+    "duration_hms_s": "",
+    "duration_hms_ss": "",
+    "duration_hms_sss": "",
     "link_row": [],
     "self_link_row": [],
     "link_row_without_related": [],
@@ -89,9 +96,12 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_link_url_only": {
         "url": "https://google.com"
     },
+    "formula_multipleselect": [],
     "count": 0,
     "rollup": "0.000",
-    "lookup": []
+    "lookup": [],
+    "uuid": "00000000-0000-4000-8000-000000000001",
+    "autonumber": 1
 },
 {
     "id": 2,
@@ -121,6 +131,13 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_datetime_eu": "02/01/2021 12:00",
     "created_on_date_eu": "02/01/2021",
     "created_on_datetime_eu_tzone": "02/01/2021 13:00",
+    "last_modified_by": "user@example.com",
+    "created_by": "user@example.com",
+    "duration_hm": "1:01",
+    "duration_hms": "1:01:06",
+    "duration_hms_s": "1:01:06.6",
+    "duration_hms_ss": "1:01:06.66",
+    "duration_hms_sss": "1:01:06.666",
     "link_row": [
         "linked_row_1",
         "linked_row_2",
@@ -183,13 +200,20 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_link_url_only": {
         "url": "https://google.com"
     },
+    "formula_multipleselect": [
+        "D",
+        "C",
+        "E"
+    ],
     "count": 3,
     "rollup": "-122.222",
     "lookup": [
         "linked_row_1",
         "linked_row_2",
         ""
-    ]
+    ],
+    "uuid": "00000000-0000-4000-8000-000000000002",
+    "autonumber": 2
 }
 ]
 """
@@ -265,9 +289,9 @@ def test_can_export_every_interesting_different_field_to_xml(
         premium_data_fixture,
         storage_mock,
         {"exporter_type": "xml"},
-        user_kwargs={"has_active_premium_license": True},
+        user_kwargs={"has_active_premium_license": True, "email": "user@example.com"},
     )
-    expected_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
+    expected_xml = """<?xml version="1.0" encoding="utf-8" ?>
 <rows>
    <row>
       <id>1</id>
@@ -297,6 +321,13 @@ def test_can_export_every_interesting_different_field_to_xml(
       <created-on-datetime-eu>02/01/2021 12:00</created-on-datetime-eu>
       <created-on-date-eu>02/01/2021</created-on-date-eu>
       <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
+      <last-modified-by>user@example.com</last-modified-by>
+      <created-by>user@example.com</created-by>
+      <duration-hm/>
+      <duration-hms/>
+      <duration-hms-s/>
+      <duration-hms-ss/>
+      <duration-hms-sss/>
       <link-row/>
       <self-link-row/>
       <link-row-without-related/>
@@ -322,9 +353,12 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-link-url-only>
          <url>https://google.com</url>
       </formula-link-url-only>
+      <formula-multipleselect/>
       <count>0</count>
       <rollup>0.000</rollup>
       <lookup/>
+      <uuid>00000000-0000-4000-8000-000000000001</uuid>
+      <autonumber>1</autonumber>
    </row>
    <row>
       <id>2</id>
@@ -354,6 +388,13 @@ def test_can_export_every_interesting_different_field_to_xml(
       <created-on-datetime-eu>02/01/2021 12:00</created-on-datetime-eu>
       <created-on-date-eu>02/01/2021</created-on-date-eu>
       <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
+      <last-modified-by>user@example.com</last-modified-by>
+      <created-by>user@example.com</created-by>
+      <duration-hm>1:01</duration-hm>
+      <duration-hms>1:01:06</duration-hms>
+      <duration-hms-s>1:01:06.6</duration-hms-s>
+      <duration-hms-ss>1:01:06.66</duration-hms-ss>
+      <duration-hms-sss>1:01:06.666</duration-hms-sss>
       <link-row>
          <item>linked_row_1</item>
          <item>linked_row_2</item>
@@ -416,6 +457,11 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-link-url-only>
          <url>https://google.com</url>
       </formula-link-url-only>
+      <formula-multipleselect>
+            <item>D</item>
+            <item>C</item>
+            <item>E</item>
+      </formula-multipleselect>
       <count>3</count>
       <rollup>-122.222</rollup>
       <lookup>
@@ -423,6 +469,8 @@ def test_can_export_every_interesting_different_field_to_xml(
          <item>linked_row_2</item>
          <item/>
       </lookup>
+      <uuid>00000000-0000-4000-8000-000000000002</uuid>
+      <autonumber>2</autonumber>
    </row>
 </rows>
 """

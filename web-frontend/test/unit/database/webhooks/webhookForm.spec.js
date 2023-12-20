@@ -13,7 +13,13 @@ describe('Webhook form Input Tests', () => {
   })
 
   function mountWebhookForm() {
-    return testApp.mount(WebhookForm, { propsData: { table: { id: 1 } } })
+    return testApp.mount(WebhookForm, {
+      propsData: {
+        table: { id: 1 },
+        database: { id: 2, workspace: { id: 3 } },
+        fields: [{ id: 1, name: 'Name', type: 'text' }],
+      },
+    })
   }
 
   async function changeURL(wrapper, urlValue) {

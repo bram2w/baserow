@@ -20,12 +20,16 @@ from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
 )
 from baserow.contrib.database.fields.field_types import (
+    AutonumberFieldType,
     BooleanFieldType,
+    CreatedByFieldType,
     CreatedOnFieldType,
     DateFieldType,
+    DurationFieldType,
     EmailFieldType,
     FileFieldType,
     FormulaFieldType,
+    LastModifiedByFieldType,
     LastModifiedFieldType,
     LinkRowFieldType,
     LongTextFieldType,
@@ -37,6 +41,7 @@ from baserow.contrib.database.fields.field_types import (
     SingleSelectFieldType,
     TextFieldType,
     URLFieldType,
+    UUIDFieldType,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -85,6 +90,9 @@ class EqualViewFilterType(ViewFilterType):
         RatingFieldType.type,
         EmailFieldType.type,
         PhoneNumberFieldType.type,
+        UUIDFieldType.type,
+        AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
@@ -101,7 +109,7 @@ class EqualViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
             return self.default_filter_on_exception()
@@ -213,6 +221,7 @@ class ContainsViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         MultipleSelectFieldType.type,
         NumberFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
@@ -309,6 +318,8 @@ class HigherThanViewFilterType(ViewFilterType):
     compatible_field_types = [
         NumberFieldType.type,
         RatingFieldType.type,
+        AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -327,7 +338,7 @@ class HigherThanViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{f"{field_name}__gt": value})
         except Exception:
             return self.default_filter_on_exception()
@@ -344,6 +355,7 @@ class IsEvenAndWholeViewFilterType(ViewFilterType):
     type = "is_even_and_whole"
     compatible_field_types = [
         NumberFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -367,6 +379,8 @@ class LowerThanViewFilterType(ViewFilterType):
     compatible_field_types = [
         NumberFieldType.type,
         RatingFieldType.type,
+        AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -385,7 +399,7 @@ class LowerThanViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{f"{field_name}__lt": value})
         except Exception:
             return self.default_filter_on_exception()
@@ -1081,7 +1095,7 @@ class BooleanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         # noinspection PyBroadException
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
             return Q()
@@ -1295,6 +1309,68 @@ class MultipleCollaboratorsHasNotViewFilterType(
     type = "multiple_collaborators_has_not"
 
 
+class UserIsViewFilterType(ViewFilterType):
+    """
+    The user is filter accepts the ID of the user to filter for
+    and filters the rows where the field has the provided user.
+    """
+
+    type = "user_is"
+    compatible_field_types = [CreatedByFieldType.type, LastModifiedByFieldType.type]
+
+    USER_KEY = f"users"
+
+    def get_filter(self, field_name, value, model_field, field):
+        if not value:
+            return Q()
+        value = value.strip()
+        return Q(**{f"{field_name}__id": int(value)})
+
+    def get_export_serialized_value(self, value, id_mapping):
+        if self.USER_KEY not in id_mapping:
+            workspace_id = id_mapping.get("workspace_id", None)
+            if workspace_id is None:
+                return value
+
+            id_mapping[self.USER_KEY] = defaultdict(list)
+
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
+            ).select_related("user")
+
+            for workspaceuser in workspaceusers_from_workspace:
+                id_mapping[self.USER_KEY][
+                    str(workspaceuser.user.id)
+                ] = workspaceuser.user.email
+
+        return id_mapping[self.USER_KEY].get(value, "")
+
+    def set_import_serialized_value(self, value, id_mapping):
+        workspace_id = id_mapping.get("workspace_id", None)
+        if workspace_id is None:
+            return ""
+
+        if self.USER_KEY not in id_mapping:
+            id_mapping[self.USER_KEY] = defaultdict(list)
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
+            ).select_related("user")
+            for workspaceuser in workspaceusers_from_workspace:
+                id_mapping[self.USER_KEY][str(workspaceuser.user.email)] = str(
+                    workspaceuser.user.id
+                )
+        return id_mapping[self.USER_KEY].get(value, "")
+
+
+class UserIsNotViewFilterType(NotViewFilterTypeMixin, UserIsViewFilterType):
+    """
+    The user is not filter accepts the ID of the user to filter for
+    and filters the rows where the field does not have the provided user.
+    """
+
+    type = "user_is_not"
+
+
 class EmptyViewFilterType(ViewFilterType):
     """
     The empty filter checks if the field value is empty, this can be '', null,
@@ -1319,6 +1395,7 @@ class EmptyViewFilterType(ViewFilterType):
         PhoneNumberFieldType.type,
         MultipleSelectFieldType.type,
         MultipleCollaboratorsFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,

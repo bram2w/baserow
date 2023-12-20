@@ -15,7 +15,7 @@
           v-model="airtableUrl"
           :class="{ 'input--error': $v.airtableUrl.$error }"
           type="text"
-          class="input input--large"
+          class="input"
           :placeholder="$t('importFromAirtable.airtableShareLinkPaste')"
           @blur="$v.airtableUrl.$touch()"
         />
@@ -126,12 +126,12 @@ export default {
       }
       return translations[state]
     },
-    openDatabase() {
+    async openDatabase() {
       const application = this.$store.getters['application/get'](
         this.job.database.id
       )
       const type = this.$registry.get('application', application.type)
-      if (type.select(application, this)) {
+      if (await type.select(application, this)) {
         this.$emit('hidden')
       }
     },

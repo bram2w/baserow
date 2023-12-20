@@ -613,6 +613,40 @@ def test_patch_view_field_options_as_template(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
+@override_settings(PERMISSION_MANAGERS=["basic"])
+@pytest.mark.django_db
+def test_patch_view_validate_ownerhip_type_invalid_type(api_client, data_fixture):
+    """A test to make sure that if an invalid `ownership_type` string is passed
+    when updating the view, the `ownership_type` is not updated and this results
+    in status 400 error with an error message.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(
+        user=user,
+        table=table,
+    )
+
+    previous_ownership_type = view.ownership_type
+    data = {"ownership_type": "NON_EXISTENT"}
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": view.id}),
+        data,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_data = response.json()
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    view.refresh_from_db()
+    assert view.ownership_type == previous_ownership_type
+    assert (
+        response_data["detail"]["ownership_type"][0]["error"]
+        == "Ownership type must be one of the above: 'collaborative','personal'."
+    )
+
+
 @pytest.mark.django_db
 def test_rotate_slug(api_client, data_fixture):
     class UnShareableViewType(GridViewType):

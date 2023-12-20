@@ -3,12 +3,10 @@ import pytest
 from baserow.contrib.builder.application_types import BuilderApplicationType
 from baserow.contrib.builder.elements.models import (
     ColumnElement,
-    Element,
     HeadingElement,
     ParagraphElement,
     TableElement,
 )
-from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.workflow_actions.handler import (
@@ -56,6 +54,10 @@ def test_builder_application_export(data_fixture):
         application=builder, authorized_user=user, name="test"
     )
 
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=builder, user=user, integration=integration
+    )
+
     datasource1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page1, user=user, name="source 1", integration=integration
     )
@@ -93,6 +95,7 @@ def test_builder_application_export(data_fixture):
                 "workflow_actions": [
                     {
                         "id": workflow_action_1.id,
+                        "order": 0,
                         "type": "notification",
                         "element_id": element1.id,
                         "event": EventTypes.CLICK.value,
@@ -125,8 +128,15 @@ def test_builder_application_export(data_fixture):
                         "order": str(element1.order),
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "style_background_color": "#ffffffff",
+                        "style_border_bottom_color": "border",
+                        "style_border_bottom_size": 0,
+                        "style_border_top_color": "border",
+                        "style_border_top_size": 0,
+                        "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_background": "none",
                         "value": element1.value,
                         "level": element1.level,
                     },
@@ -136,8 +146,15 @@ def test_builder_application_export(data_fixture):
                         "order": str(element2.order),
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "style_background_color": "#ffffffff",
+                        "style_border_bottom_color": "border",
+                        "style_border_bottom_size": 0,
+                        "style_border_top_color": "border",
+                        "style_border_top_size": 0,
+                        "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_background": "none",
                         "value": element2.value,
                     },
                     {
@@ -145,8 +162,15 @@ def test_builder_application_export(data_fixture):
                         "type": "column",
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "style_background_color": "#ffffffff",
+                        "style_border_bottom_color": "border",
+                        "style_border_bottom_size": 0,
+                        "style_border_top_color": "border",
+                        "style_border_top_size": 0,
+                        "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_background": "none",
                         "order": str(element_container.order),
                         "column_amount": 3,
                         "column_gap": 50,
@@ -157,8 +181,15 @@ def test_builder_application_export(data_fixture):
                         "type": "paragraph",
                         "parent_element_id": element_container.id,
                         "place_in_container": "0",
+                        "style_background_color": "#ffffffff",
+                        "style_border_bottom_color": "border",
+                        "style_border_bottom_size": 0,
+                        "style_border_top_color": "border",
+                        "style_border_top_size": 0,
+                        "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_background": "none",
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
                     },
@@ -210,8 +241,15 @@ def test_builder_application_export(data_fixture):
                         "order": str(element3.order),
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "style_background_color": "#ffffffff",
+                        "style_border_bottom_color": "border",
+                        "style_border_bottom_size": 0,
+                        "style_border_top_color": "border",
+                        "style_border_top_size": 0,
+                        "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_background": "none",
                         "value": element3.value,
                         "level": element3.level,
                     },
@@ -221,12 +259,19 @@ def test_builder_application_export(data_fixture):
                         "order": str(element4.order),
                         "parent_element_id": None,
                         "place_in_container": None,
-                        "items_per_page": 42,
+                        "style_background_color": "#ffffffff",
+                        "style_border_bottom_color": "border",
+                        "style_border_bottom_size": 0,
+                        "style_border_top_color": "border",
+                        "style_border_top_size": 0,
+                        "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_background": "none",
+                        "items_per_page": 42,
                         "data_source_id": element4.data_source.id,
                         "fields": [
-                            {"name": f.name, "value": f.value}
+                            {"name": f.name, "type": f.type, "config": f.config}
                             for f in element4.fields.all()
                         ],
                     },
@@ -235,22 +280,35 @@ def test_builder_application_export(data_fixture):
         ],
         "integrations": [
             {
-                "authorized_user_username": user.username,
+                "authorized_user": user.username,
                 "id": integration.id,
                 "name": "test",
                 "order": "1.00000000000000000000",
                 "type": "local_baserow",
             },
         ],
+        "user_sources": [
+            {
+                "email_field_id": None,
+                "id": user_source.id,
+                "integration_id": integration.id,
+                "name": "",
+                "name_field_id": None,
+                "order": "1.00000000000000000000",
+                "table_id": None,
+                "type": "local_baserow",
+            },
+        ],
         "theme": {
-            "heading_1_color": "#000000ff",
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
             "heading_1_font_size": 24,
-            "heading_2_color": "#000000ff",
+            "heading_1_color": "#070810ff",
             "heading_2_font_size": 20,
-            "heading_3_color": "#000000ff",
+            "heading_2_color": "#070810ff",
             "heading_3_font_size": 16,
-            "primary_color": "#000000ff",
-            "secondary_color": "#000000ff",
+            "heading_3_color": "#070810ff",
         },
         "id": builder.id,
         "name": builder.name,
@@ -272,11 +330,12 @@ IMPORT_REFERENCE = {
             "workflow_actions": [
                 {
                     "id": 123,
+                    "order": 1,
                     "page_id": 999,
                     "element_id": 998,
                     "type": "notification",
-                    "description": "hello",
-                    "title": "there",
+                    "description": "'hello'",
+                    "title": "'there'",
                 }
             ],
             "elements": [
@@ -285,8 +344,15 @@ IMPORT_REFERENCE = {
                     "type": "heading",
                     "parent_element_id": None,
                     "place_in_container": None,
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "order": 1,
-                    "value": "foo",
+                    "value": "'foo'",
                     "level": 2,
                 },
                 {
@@ -294,6 +360,13 @@ IMPORT_REFERENCE = {
                     "type": "paragraph",
                     "parent_element_id": None,
                     "place_in_container": None,
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "order": 2,
                     "value": "",
                 },
@@ -302,12 +375,30 @@ IMPORT_REFERENCE = {
                     "type": "table",
                     "parent_element_id": None,
                     "place_in_container": None,
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "items_per_page": 42,
                     "order": 2.5,
                     "data_source_id": 5,
                     "fields": [
-                        {"name": "F 1", "value": "get('test1')"},
-                        {"name": "F 2", "value": "get('test2')"},
+                        {
+                            "name": "F 1",
+                            "type": "text",
+                            "config": {"value": "get('current_record.field_25')"},
+                        },
+                        {
+                            "name": "F 2",
+                            "type": "link",
+                            "config": {
+                                "url": "get('current_record.field_25')",
+                                "link_name": "'Test'",
+                            },
+                        },
                     ],
                 },
                 {
@@ -315,16 +406,30 @@ IMPORT_REFERENCE = {
                     "type": "paragraph",
                     "parent_element_id": 500,
                     "place_in_container": "1",
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "style_padding_top": 10,
                     "style_padding_bottom": 10,
                     "order": 1.5,
-                    "value": "test",
+                    "value": "'test'",
                 },
                 {
                     "id": 500,
                     "type": "column",
                     "parent_element_id": None,
                     "place_in_container": None,
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "style_padding_top": 10,
                     "style_padding_bottom": 10,
                     "order": 3,
@@ -337,10 +442,17 @@ IMPORT_REFERENCE = {
                     "type": "paragraph",
                     "parent_element_id": 500,
                     "place_in_container": "0",
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "style_padding_top": 10,
                     "style_padding_bottom": 10,
                     "order": 1,
-                    "value": "test",
+                    "value": "'test'",
                 },
             ],
             "data_sources": [
@@ -378,6 +490,13 @@ IMPORT_REFERENCE = {
                     "type": "heading",
                     "parent_element_id": None,
                     "place_in_container": None,
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
                     "order": 1,
                     "value": "",
                     "level": 1,
@@ -416,22 +535,35 @@ IMPORT_REFERENCE = {
     ],
     "integrations": [
         {
-            "authorized_user_username": "test@baserow.io",
+            "authorized_user": "test@baserow.io",
             "id": 42,
             "name": "test",
             "order": "1.00000000000000000000",
             "type": "local_baserow",
         },
     ],
+    "user_sources": [
+        {
+            "email_field_id": None,
+            "id": 42,
+            "integration_id": 42,
+            "name": "My user source",
+            "name_field_id": None,
+            "order": "1.00000000000000000000",
+            "table_id": None,
+            "type": "local_baserow",
+        },
+    ],
     "theme": {
-        "heading_1_color": "#f00000ff",
+        "primary_color": "#ccccccff",
+        "secondary_color": "#ccccccff",
+        "border_color": "#ccccccff",
         "heading_1_font_size": 25,
-        "heading_2_color": "#f00000ff",
+        "heading_1_color": "#ccccccff",
         "heading_2_font_size": 21,
-        "heading_3_color": "#f00000ff",
+        "heading_2_color": "#ccccccff",
         "heading_3_font_size": 17,
-        "primary_color": "#f00000ff",
-        "secondary_color": "#f00000ff",
+        "heading_3_color": "#ccccccff",
     },
     "id": 999,
     "name": "Holly Sherman",
@@ -457,6 +589,8 @@ def test_builder_application_import(data_fixture):
     first_integration = builder.integrations.first().specific
     assert first_integration.authorized_user.id == user.id
 
+    assert builder.user_sources.count() == 1
+
     [page1, page2] = builder.page_set.all()
 
     assert page1.element_set.count() == 6
@@ -470,14 +604,14 @@ def test_builder_application_import(data_fixture):
     assert first_data_source.service.integration.id == first_integration.id
 
     theme_config_block = builder.mainthemeconfigblock
-    assert theme_config_block.heading_1_color == "#f00000ff"
+    assert theme_config_block.heading_1_color == "#ccccccff"
     assert theme_config_block.heading_1_font_size == 25
-    assert theme_config_block.heading_2_color == "#f00000ff"
+    assert theme_config_block.heading_2_color == "#ccccccff"
     assert theme_config_block.heading_2_font_size == 21
-    assert theme_config_block.heading_3_color == "#f00000ff"
+    assert theme_config_block.heading_3_color == "#ccccccff"
     assert theme_config_block.heading_3_font_size == 17
-    assert theme_config_block.primary_color == "#f00000ff"
-    assert theme_config_block.secondary_color == "#f00000ff"
+    assert theme_config_block.primary_color == "#ccccccff"
+    assert theme_config_block.secondary_color == "#ccccccff"
 
     [
         element1,
@@ -505,8 +639,8 @@ def test_builder_application_import(data_fixture):
     [workflow_action] = BuilderWorkflowActionHandler().get_workflow_actions(page1)
 
     assert workflow_action.element_id == element1.id
-    assert workflow_action.description == "hello"
-    assert workflow_action.title == "there"
+    assert workflow_action.description == "'hello'"
+    assert workflow_action.title == "'there'"
 
 
 @pytest.mark.django_db
@@ -520,81 +654,3 @@ def test_delete_builder_application_with_published_builder(data_fixture):
     TrashHandler.permanently_delete(builder)
 
     assert Builder.objects.count() == 0
-
-
-@pytest.mark.django_db
-def test_import_element(data_fixture):
-    element = data_fixture.create_builder_paragraph_element(value="test")
-    element_type = element_type_registry.get_by_model(element)
-    element_serialized = element_type.export_serialized(element)
-    serialized_page = {
-        "_object": element.page,
-        "_element_objects": [],
-        "elements": [element_serialized],
-    }
-
-    element_imported = BuilderApplicationType().import_element(
-        element_serialized,
-        serialized_page,
-        {"builder_page_elements": {}},
-    )
-
-    assert element_imported.id != element.id
-    assert element_imported.specific.value == element.value
-
-
-@pytest.mark.django_db
-def test_import_element_has_to_import_parent_first(data_fixture):
-    page = data_fixture.create_builder_page()
-    parent = data_fixture.create_builder_column_element(page=page, column_amount=15)
-    element = data_fixture.create_builder_paragraph_element(
-        page=page, parent_element=parent
-    )
-    parent_serialized = element_type_registry.get_by_model(parent).export_serialized(
-        parent
-    )
-    element_serialized = element_type_registry.get_by_model(element).export_serialized(
-        element
-    )
-    serialized_page = {
-        "_object": page,
-        "_element_objects": [],
-        "elements": [parent_serialized, element_serialized],
-    }
-
-    element_imported = BuilderApplicationType().import_element(
-        element_serialized,
-        serialized_page,
-        {"builder_page_elements": {}},
-    )
-
-    assert element_imported.id != element.id
-    assert element_imported.specific.value == element.value
-
-    parent_imported = Element.objects.get(id=element_imported.parent_element_id)
-
-    assert parent_imported.id != parent.id
-    assert parent_imported.specific.column_amount == parent.column_amount
-
-
-@pytest.mark.django_db
-def test_import_element_has_to_instance_already_created(data_fixture):
-    element = data_fixture.create_builder_paragraph_element()
-    element_imported = data_fixture.create_builder_paragraph_element()
-    element_serialized = element_type_registry.get_by_model(element).export_serialized(
-        element
-    )
-    serialized_page = {
-        "_object": element_imported.page,
-        "_element_objects": [element_imported],
-        "elements": [element_serialized],
-    }
-
-    element_returned = BuilderApplicationType().import_element(
-        element_serialized,
-        serialized_page,
-        {"builder_page_elements": {element.id: element_imported.id}},
-    )
-
-    assert element_returned is element_imported
-    assert Element.objects.count() == 2

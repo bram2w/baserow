@@ -51,6 +51,7 @@ import toastStore from '@baserow/modules/core/store/toast'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
+import userSourceStore from '@baserow/modules/core/store/userSource'
 import notificationStore from '@baserow/modules/core/store/notification'
 
 import en from '@baserow/modules/core/locales/en.json'
@@ -140,9 +141,11 @@ export default (context, inject) => {
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
   store.registerModule('integration', integrationStore)
+  store.registerModule('userSource', userSourceStore)
 
   registry.registerNamespace('integration')
   registry.registerNamespace('service')
+  registry.registerNamespace('userSource')
   store.registerModule('notification', notificationStore)
 
   registry.register('authProvider', new PasswordAuthProviderType(context))

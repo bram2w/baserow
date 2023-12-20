@@ -13,7 +13,7 @@ export const setToken = (
   $cookies.set(key, token, {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
-    sameSite: 'lax',
+    sameSite: $config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
     secure,
   })
 }

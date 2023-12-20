@@ -82,21 +82,18 @@
       </TableForm>
 
       <Error :error="error"></Error>
-      <Alert
-        v-if="errorReport.length > 0 && error.visible"
-        :title="$t('importFileModal.reportTitleFailure')"
-        type="warning"
-        icon="iconoir-warning-triangle"
-      >
-        {{ $t('importFileModal.reportMessage') }}
-        {{ errorReport.join(', ') }}
+      <Alert v-if="errorReport.length > 0 && error.visible" type="warning">
+        <template #title>{{
+          $t('importFileModal.reportTitleFailure')
+        }}</template>
+
+        {{ $t('importFileModal.reportMessage') }} {{ errorReport.join(', ') }}
       </Alert>
-      <Alert
-        v-if="errorReport.length > 0 && !error.visible"
-        :title="$t('importFileModal.reportTitleSuccess')"
-        type="warning"
-        icon="iconoir-warning-triangle"
-      >
+      <Alert v-if="errorReport.length > 0 && !error.visible" type="warning">
+        <template #title>
+          {{ $t('importFileModal.reportTitleSuccess') }}</template
+        >
+
         {{ $t('importFileModal.reportMessage') }}
         {{ errorReport.join(', ') }}
       </Alert>
@@ -133,7 +130,7 @@
         <div class="align-right">
           <button
             v-if="dataLoaded && !(jobIsFinished || importInProgress)"
-            class="button button--large button--ghost"
+            class="button button--large button--ghost margin-right-1"
             @click=";[(importer = ''), reset()]"
           >
             <i class="button__icon iconoir-arrow-left"></i>
@@ -214,6 +211,7 @@
 </template>
 
 <script>
+import VueRouter from 'vue-router'
 import { clone } from '@baserow/modules/core/utils/object'
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
@@ -605,15 +603,28 @@ export default {
       }
       return translations[jobState]
     },
-    openTable() {
+    async openTable() {
       // Redirect to the newly created table.
-      this.$nuxt.$router.push({
-        name: 'database-table',
-        params: {
-          databaseId: this.database.id,
-          tableId: this.job.table_id,
-        },
-      })
+      try {
+        await this.$nuxt.$router.push({
+          name: 'database-table',
+          params: {
+            databaseId: this.database.id,
+            tableId: this.job.table_id,
+          },
+        })
+      } catch (error) {
+        // When redirecting to the `database-table`, it can happen that it redirects
+        // to another view. For some reason, this is causing the router throw an
+        // error. In our case, it's perfectly fine, so we're suppressing this error
+        // here. More information:
+        // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
+        // error-redirected-from-login-to-via-a
+        const { isNavigationFailure, NavigationFailureType } = VueRouter
+        if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
+          throw error
+        }
+      }
       this.hide()
     },
     async onJobDone() {
@@ -629,7 +640,7 @@ export default {
         })
 
         if (this.errorReport.length === 0) {
-          this.openTable()
+          await this.openTable()
         }
       } else {
         this.$bus.$emit('table-refresh', {

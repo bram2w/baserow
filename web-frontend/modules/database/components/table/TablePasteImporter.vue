@@ -10,7 +10,7 @@
       <div class="control__elements">
         <textarea
           type="text"
-          class="input input--large textarea--modal"
+          class="input textarea--modal"
           @input="changed($event.target.value)"
         ></textarea>
         <div v-if="$v.content.$error" class="error">
@@ -28,12 +28,8 @@
         }}</Checkbox>
       </div>
     </div>
-    <Alert
-      v-if="error !== ''"
-      type="error"
-      icon="iconoir-warning-triangle"
-      :title="$t('common.wrong')"
-    >
+    <Alert v-if="error !== ''" type="error">
+      <template #title> {{ $t('common.wrong') }} </template>
       {{ error }}
     </Alert>
   </div>

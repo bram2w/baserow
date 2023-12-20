@@ -66,7 +66,8 @@
         "createTable": "Ajouter une table"
     },
     "sidebarItem": {
-        "exportTable": "Exporter la table"
+        "exportTable": "Exporter la table",
+        "webhooks": "Webhooks"
     },
     "apiToken": {
         "create": "créer",
@@ -456,7 +457,9 @@
         "deleteView": "Supprimer la vue",
         "webhooks": "Webhooks",
         "duplicateView": "Dupliquer la vue",
-        "importFile": "Importer un fichier"
+        "importFile": "Importer un fichier",
+        "toPersonal": "Vers Personnelle",
+        "toCollaborative": "Vers Collaborative"
     },
     "deleteViewModal": {
         "title": "Supprimer la vue {name}",
@@ -500,7 +503,9 @@
         "hiddenRowsInsertedMessage": "{number} nouvelles lignes ont été ajoutées, mais ne sont pas visibles en raison des filtres actifs.",
         "copiedRowURLMessage": "L'URL de la ligne {id} a été copiée.",
         "copiedRowURL": "URL de la ligne copiée",
-        "copyRowURL": "Copier l'URL de la ligne"
+        "copyRowURL": "Copier l'URL de la ligne",
+        "tooManyItemsTitle": "Trop d'éléments",
+        "tooManyItemsDescription": "Il n'est pas possible de mettre à jour plus de {limit} lignes à la fois, c'est pourquoi seule la première a été mise à jour."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -821,5 +826,9 @@
     },
     "viewFieldConditionsForm": {
         "addCondition": "Ajouter une condition"
+    },
+    "formSubmittedNotification": {
+        "title": "{formName} a été soumis dans la table {tableName} :",
+        "moreValues": "0 | et 1 champ supplémentaire. | et {count} champs supplémentaires."
     }
 }

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix shift arrow selection on grid view when primary key field option is not first",
+    "issue_number": 1998,
+    "bullet_points": [],
+    "created_at": "2023-09-29"
+}

@@ -2,8 +2,8 @@
   <div :class="classes" class="image_element">
     <img
       class="image_element__img"
-      :alt="element.alt_text || $t('imageElement.emptyState')"
-      :src="imageSource"
+      :alt="resolvedAltText || $t('imageElement.emptyState')"
+      :src="resolvedURL"
     />
   </div>
 </template>
@@ -11,6 +11,7 @@
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import { IMAGE_SOURCE_TYPES } from '@baserow/modules/builder/enums'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'ImageElement',
@@ -34,6 +35,20 @@ export default {
       return this.element.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD
         ? this.element.image_file?.url
         : this.element.image_url
+    },
+    resolvedAltText() {
+      try {
+        return ensureString(this.resolveFormula(this.element.alt_text))
+      } catch {
+        return ''
+      }
+    },
+    resolvedURL() {
+      try {
+        return ensureString(this.resolveFormula(this.element.image_url))
+      } catch {
+        return ''
+      }
     },
     classes() {
       return {

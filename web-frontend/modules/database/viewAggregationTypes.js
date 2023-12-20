@@ -127,6 +127,7 @@ export class EmptyCountViewAggregationType extends ViewAggregationType {
       'single_select',
       'multiple_select',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -171,6 +172,7 @@ export class NotEmptyCountViewAggregationType extends ViewAggregationType {
       'single_select',
       'multiple_select',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -280,6 +282,7 @@ export class EmptyPercentageViewAggregationType extends ViewAggregationType {
       'single_select',
       'multiple_select',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -336,6 +339,7 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
       'single_select',
       'multiple_select',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -448,6 +452,7 @@ export class UniqueCountViewAggregationType extends ViewAggregationType {
       'date',
       'single_select',
       'phone_number',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -474,14 +479,23 @@ export class MinViewAggregationType extends ViewAggregationType {
 
   getCompatibleFieldTypes() {
     return [
+      'autonumber',
       'number',
       'rating',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
 
   getComponent() {
     return GenericViewAggregation
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (isNaN(value) || value === null) {
+      return null
+    }
+    return fieldType.toHumanReadableString(field, value)
   }
 }
 
@@ -497,14 +511,23 @@ export class MaxViewAggregationType extends ViewAggregationType {
 
   getCompatibleFieldTypes() {
     return [
+      'autonumber',
       'number',
       'rating',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
 
   getComponent() {
     return GenericViewAggregation
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (isNaN(value) || value === null) {
+      return null
+    }
+    return fieldType.toHumanReadableString(field, value)
   }
 }
 
@@ -602,12 +625,20 @@ export class SumViewAggregationType extends ViewAggregationType {
     return [
       'number',
       'rating',
+      'duration',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
 
   getComponent() {
     return GenericViewAggregation
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (isNaN(value) || value === null) {
+      return null
+    }
+    return fieldType.toHumanReadableString(field, value)
   }
 }
 export class AverageViewAggregationType extends ViewAggregationType {

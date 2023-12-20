@@ -1,8 +1,21 @@
 <template>
   <div class="grid-view__head">
     <div
+      v-for="groupBy in includeGroupBy ? activeGroupBys : []"
+      :key="'field-group-' + groupBy.field"
+      class="grid-view__head-group"
+      :style="{ width: groupBy.width + 'px' }"
+      :set="(field = $options.methods.getField(allFieldsInTable, groupBy))"
+    >
+      <div class="grid-view__group-cell">
+        <div class="grid-view__group-name">
+          {{ field.name }}
+        </div>
+      </div>
+    </div>
+    <div
       v-if="includeRowDetails"
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       :style="{ width: gridViewRowDetailsWidth + 'px' }"
     >
       <GridViewRowIdentifierDropdown
@@ -19,7 +32,7 @@
       ></GridViewRowIdentifierDropdown>
     </div>
     <GridViewFieldType
-      v-for="field in fields"
+      v-for="field in visibleFields"
       :key="'field-type-' + field.id"
       :database="database"
       :table="table"
@@ -80,7 +93,7 @@ export default {
   },
   mixins: [gridViewHelpers],
   props: {
-    fields: {
+    visibleFields: {
       type: Array,
       required: true,
     },
@@ -96,12 +109,21 @@ export default {
       type: Object,
       required: true,
     },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
     includeFieldWidthHandles: {
       type: Boolean,
       required: false,
       default: () => false,
     },
     includeRowDetails: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    includeGroupBy: {
       type: Boolean,
       required: false,
       default: () => false,
@@ -161,6 +183,10 @@ export default {
     },
     onShownCreateFieldContext() {
       this.$refs.createFieldContext.showFieldTypesDropdown(this.$el)
+    },
+    getField(allFieldsInTable, groupBy) {
+      const field = allFieldsInTable.find((f) => f.id === groupBy.field)
+      return field
     },
   },
 }

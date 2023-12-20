@@ -200,12 +200,14 @@ class ElementView(APIView):
         element_type = type_from_data_or_registry(
             request.data, element_type_registry, element
         )
+
         data = validate_data_custom_fields(
             element_type.type,
             element_type_registry,
             request.data,
             base_serializer_class=UpdateElementSerializer,
             partial=True,
+            return_validated=True,
         )
 
         element_updated = ElementService().update_element(request.user, element, **data)

@@ -35,7 +35,7 @@ class EqualToViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
             pass

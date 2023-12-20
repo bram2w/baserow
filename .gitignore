@@ -138,3 +138,7 @@ field-diagrams/
 # actually a node module and so we ignore it.
 premium/web-frontend/package.json
 .local/
+
+# Storybook
+web-frontend/.nuxt-storybook/
+web-frontend/storybook-static

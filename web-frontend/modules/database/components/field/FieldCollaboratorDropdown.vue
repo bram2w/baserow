@@ -4,6 +4,7 @@
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--small': small,
     }"
     :tabindex="realTabindex"
     @contextmenu.stop
@@ -15,7 +16,7 @@
       class="select-options__dropdown-selected dropdown__selected"
       @click="show()"
     >
-      <div v-if="hasValue()" class="select-options__dropdown-option">
+      <div v-if="hasValue()">
         {{ selectedName }}
       </div>
       <i

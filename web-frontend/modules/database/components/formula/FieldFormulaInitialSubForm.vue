@@ -9,7 +9,7 @@
           ref="formulaInput"
           :value="formula"
           type="text"
-          class="input input--monospace"
+          class="input input--small input--monospace"
           :placeholder="
             $t('fieldFormulaInitialSubForm.formulaInputPlaceholder')
           "

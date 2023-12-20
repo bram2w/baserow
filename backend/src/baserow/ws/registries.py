@@ -78,7 +78,9 @@ class PageType(Instance):
 
         return None
 
-    def broadcast(self, payload, ignore_web_socket_id=None, **kwargs):
+    def broadcast(
+        self, payload, ignore_web_socket_id=None, exclude_user_ids=None, **kwargs
+    ):
         """
         Broadcasts a payload to everyone within the group.
 
@@ -88,12 +90,18 @@ class PageType(Instance):
         :param ignore_web_socket_id: If provided then the payload will not be broad
             casted to that web socket id. This is often the sender.
         :type ignore_web_socket_id: Optional[str]
+        :param exclude_user_ids: A list of User ids which should be excluded from
+            receiving the message.
+        :type exclude_user_ids: Optional[list]
         :param kwargs: The additional parameters including their provided values.
         :type kwargs: dict
         """
 
         broadcast_to_channel_group.delay(
-            self.get_group_name(**kwargs), payload, ignore_web_socket_id
+            self.get_group_name(**kwargs),
+            payload,
+            ignore_web_socket_id,
+            exclude_user_ids,
         )
 
 

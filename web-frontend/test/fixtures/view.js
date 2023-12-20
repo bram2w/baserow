@@ -51,6 +51,7 @@ export function createGridView(
     viewId = 1,
     filters = [],
     sortings = [],
+    groupBys = [],
     decorations = [],
     publicView = false,
   }
@@ -74,6 +75,7 @@ export function createGridView(
     row_identifier_type: 'id',
     filters,
     sortings,
+    group_bys: groupBys,
     decorations,
   }
   mock.onGet(`/database/views/table/${tableId}/`).reply(200, [gridView])

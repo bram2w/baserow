@@ -8,13 +8,23 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from baserow.contrib.builder.workflow_actions.workflow_action_types import (
-    NotificationWorkflowActionType,
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
 )
+from baserow.contrib.builder.workflow_actions.models import EventTypes
+from baserow.contrib.builder.workflow_actions.workflow_action_types import (
+    CreateRowWorkflowActionType,
+    NotificationWorkflowActionType,
+    UpdateRowWorkflowActionType,
+)
+from baserow.contrib.integrations.local_baserow.service_types import (
+    LocalBaserowUpsertRowServiceType,
+)
+from baserow.core.formula.serializers import FormulaSerializerField
 
 
 @pytest.mark.django_db
-def test_create_workflow_action(api_client, data_fixture):
+def test_create_notification_workflow_action(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     element = data_fixture.create_builder_button_element(page=page)
@@ -144,3 +154,442 @@ def test_patch_workflow_actions(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["description"] == "'hello'"
+
+
+class PublicTestWorkflowActionType(NotificationWorkflowActionType):
+    type = "test_workflow_action"
+
+    public_serializer_field_names = ["test"]
+    public_serializer_field_overrides = {
+        "test": FormulaSerializerField(
+            required=False,
+            allow_blank=True,
+            default="",
+        ),
+    }
+
+
+@pytest.mark.django_db
+def test_public_workflow_actions_view(
+    api_client, data_fixture, mutable_builder_workflow_action_registry
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+
+    mutable_builder_workflow_action_registry.unregister(
+        NotificationWorkflowActionType().type
+    )
+    mutable_builder_workflow_action_registry.register(PublicTestWorkflowActionType())
+
+    workflow_action = BuilderWorkflowActionHandler().create_workflow_action(
+        PublicTestWorkflowActionType(), test="hello", page=page
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert "test" not in response.json()
+
+    url = reverse(
+        "api:builder:domains:list_workflow_actions",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    [workflow_action_in_response] = response.json()
+    assert "test" in workflow_action_in_response
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=page, element=element, order=1
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=page, element=element, order=2
+    )
+
+    order = [workflow_action_two.id, workflow_action_one.id]
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": order, "element_id": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    workflow_action_one.refresh_from_db()
+    workflow_action_two.refresh_from_db()
+
+    assert workflow_action_one.order > workflow_action_two.order
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_page_does_not_exist(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": 99999},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_workflow_action_does_not_exist(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": [9999]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_workflow_action_not_in_element(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=page, element=element, order=1
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=page, order=2
+    )
+
+    order = [workflow_action_two.id, workflow_action_one.id]
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": order, "element_id": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_create_create_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_type = CreateRowWorkflowActionType.type
+
+    url = reverse("api:builder:workflow_action:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {
+            "type": workflow_action_type,
+            "event": "click",
+            "element_id": element.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == workflow_action_type
+    assert response_json["element_id"] == element.id
+
+    workflow_action = CreateRowWorkflowActionType.model_class.objects.get(
+        pk=response_json["id"]
+    )
+    assert response_json["service"] == {
+        "id": workflow_action.service_id,
+        "integration_id": None,
+        "row_id": "",
+        "type": LocalBaserowUpsertRowServiceType.type,
+        "schema": None,
+        "table_id": None,
+        "field_mappings": [],
+    }
+
+
+@pytest.mark.django_db
+def test_update_create_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Animal", "text"),
+        ],
+        rows=[],
+    )
+    field = table.field_set.get(name="Animal")
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK, user=user
+    )
+    service = workflow_action.service
+    service_type = service.get_type()
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.patch(
+        url,
+        {
+            "service": {
+                "table_id": table.id,
+                "type": service_type.type,
+                "integration_id": workflow_action.service.integration_id,
+                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    service.refresh_from_db()
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == workflow_action.id
+    assert response_json["element_id"] == workflow_action.element_id
+    assert response_json["service"]["table_id"] == service.table_id
+    assert response_json["service"]["integration_id"] == service.integration_id
+    assert response_json["service"]["field_mappings"] == [
+        {"field_id": field.id, "value": "'Pony'"}
+    ]
+
+
+@pytest.mark.django_db
+def test_create_update_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_type = UpdateRowWorkflowActionType.type
+
+    url = reverse("api:builder:workflow_action:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {
+            "type": workflow_action_type,
+            "event": "click",
+            "element_id": element.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == workflow_action_type
+    assert response_json["element_id"] == element.id
+
+    workflow_action = UpdateRowWorkflowActionType.model_class.objects.get(
+        pk=response_json["id"]
+    )
+    assert response_json["service"] == {
+        "id": workflow_action.service_id,
+        "integration_id": None,
+        "type": LocalBaserowUpsertRowServiceType.type,
+        "schema": None,
+        "row_id": "",
+        "table_id": None,
+        "field_mappings": [],
+    }
+
+
+@pytest.mark.django_db
+def test_update_update_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Animal", "text"),
+        ],
+        rows=[
+            ["Badger"],
+        ],
+    )
+    model = table.get_model()
+    first_row = model.objects.get()
+    field = table.field_set.get(name="Animal")
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_update_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK, user=user
+    )
+    service = workflow_action.service
+    service_type = service.get_type()
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.patch(
+        url,
+        {
+            "service": {
+                "id": workflow_action.service_id,
+                "table_id": table.id,
+                "row_id": first_row.id,
+                "type": service_type.type,
+                "integration_id": workflow_action.service.integration_id,
+                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+            },
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    service.refresh_from_db()
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == workflow_action.id
+    assert response_json["element_id"] == workflow_action.element_id
+
+    assert response_json["service"]["table_id"] == table.id
+    assert response_json["service"]["row_id"] == str(first_row.id)
+    assert (
+        response_json["service"]["integration_id"]
+        == workflow_action.service.integration_id
+    )
+    assert response_json["service"]["field_mappings"] == [
+        {"field_id": field.id, "value": "'Pony'"}
+    ]
+
+
+@pytest.mark.django_db
+def test_dispatch_local_baserow_create_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Animal", "text"),
+            ("Color", "text"),
+        ],
+        rows=[],
+    )
+    color_field = table.field_set.get(name="Color")
+    animal_field = table.field_set.get(name="Animal")
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK, user=user
+    )
+    service = workflow_action.service.specific
+    service.table = table
+    service.field_mappings.create(field=color_field, value="'Brown'")
+    service.field_mappings.create(field=animal_field, value="'Horse'")
+    service.save()
+
+    url = reverse(
+        "api:builder:workflow_action:dispatch",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[color_field.db_column] == "Brown"
+    assert response_json[animal_field.db_column] == "Horse"
+
+
+@pytest.mark.django_db
+def test_dispatch_local_baserow_update_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Animal", "text"),
+            ("Color", "text"),
+        ],
+        rows=[["Horse", "Brown"]],
+    )
+    model = table.get_model()
+    first_row = model.objects.all()[0]
+    color_field = table.field_set.get(name="Color")
+    animal_field = table.field_set.get(name="Animal")
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_update_row_workflow_action(
+        page=page,
+        element=element,
+        event=EventTypes.CLICK,
+        user=user,
+    )
+    service = workflow_action.service.specific
+    service.table = table
+    service.row_id = f"'{first_row.id}'"
+    service.field_mappings.create(field=color_field, value="'Blue'")
+    service.field_mappings.create(field=animal_field, value="'Horse'")
+    service.save()
+
+    url = reverse(
+        "api:builder:workflow_action:dispatch",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["id"] == first_row.id
+    assert response_json[color_field.db_column] == "Blue"
+    assert response_json[animal_field.db_column] == "Horse"

@@ -8,6 +8,7 @@ from django.utils.datetime_safe import datetime
 
 import pytest
 from freezegun import freeze_time
+from pytest_unordered import unordered
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -90,30 +91,34 @@ def test_admin_can_see_admin_users_endpoint(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": staff_user.first_name,
                 "username": staff_user.email,
-                "groups": [  # GroupDeprecation
-                    {
-                        "id": workspace_user_is_admin_of.id,
-                        "name": workspace_user_is_admin_of.name,
-                        "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
-                    },
-                    {
-                        "id": workspace_user_is_not_admin_of.id,
-                        "name": workspace_user_is_not_admin_of.name,
-                        "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
-                    },
-                ],
-                "workspaces": [
-                    {
-                        "id": workspace_user_is_admin_of.id,
-                        "name": workspace_user_is_admin_of.name,
-                        "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
-                    },
-                    {
-                        "id": workspace_user_is_not_admin_of.id,
-                        "name": workspace_user_is_not_admin_of.name,
-                        "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
-                    },
-                ],
+                "groups": unordered(
+                    [  # GroupDeprecation
+                        {
+                            "id": workspace_user_is_admin_of.id,
+                            "name": workspace_user_is_admin_of.name,
+                            "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
+                        },
+                        {
+                            "id": workspace_user_is_not_admin_of.id,
+                            "name": workspace_user_is_not_admin_of.name,
+                            "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
+                        },
+                    ]
+                ),
+                "workspaces": unordered(
+                    [
+                        {
+                            "id": workspace_user_is_admin_of.id,
+                            "name": workspace_user_is_admin_of.name,
+                            "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
+                        },
+                        {
+                            "id": workspace_user_is_not_admin_of.id,
+                            "name": workspace_user_is_not_admin_of.name,
+                            "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
+                        },
+                    ]
+                ),
                 "id": staff_user.id,
                 "is_staff": True,
                 "is_active": True,

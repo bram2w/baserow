@@ -7,7 +7,7 @@
           v-model="values.name"
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
-          class="input"
+          class="input input--small"
           :placeholder="$t('fieldForm.name')"
           @blur="$v.values.name.$touch()"
           @input="isPrefilledWithSuggestedFieldName = false"
@@ -51,6 +51,7 @@
           v-model="values.type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
           :fixed-items="true"
+          small
           @hide="$v.values.type.$touch()"
         >
           <DropdownItem

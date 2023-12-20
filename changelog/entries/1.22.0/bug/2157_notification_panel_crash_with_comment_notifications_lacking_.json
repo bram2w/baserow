@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix bug causing the notification panel to crash with comment notifications lacking user sender",
+    "issue_number": 2157,
+    "bullet_points": [],
+    "created_at": "2023-12-14"
+}

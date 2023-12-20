@@ -1,19 +1,18 @@
 <template>
   <form @submit.prevent="submit" @input="$emit('formchange')">
     <div v-if="!isDeprecated">
-      <Alert
-        v-if="!values.active"
-        simple
-        type="primary"
-        icon="iconoir-warning-triangle"
-        :title="$t('webhookForm.deactivated.title')"
-      >
+      <Alert v-if="!values.active" type="info-primary">
+        <template #title> {{ $t('webhookForm.deactivated.title') }} </template>
         <p>{{ $t('webhookForm.deactivated.content') }}</p>
-        <a
-          class="button button--ghost margin-top-1"
-          @click="values.active = true"
-          >{{ $t('webhookForm.deactivated.activate') }}</a
-        >
+
+        <template #actions>
+          <button
+            class="alert__actions-button-text"
+            @click="values.active = true"
+          >
+            {{ $t('webhookForm.deactivated.activate') }}
+          </button>
+        </template>
       </Alert>
       <div class="row">
         <div class="col col-12">
@@ -24,7 +23,7 @@
             <div class="control__elements">
               <input
                 v-model="values.name"
-                class="input"
+                class="input input--small"
                 :class="{ 'input--error': fieldHasErrors('name') }"
                 @blur="$v.values.name.$touch()"
               />
@@ -52,7 +51,7 @@
               {{ $t('webhookForm.inputLabels.requestMethod') }}
             </div>
             <div class="control__elements">
-              <Dropdown v-model="values.request_method">
+              <Dropdown v-model="values.request_method" small>
                 <DropdownItem name="GET" value="GET"></DropdownItem>
                 <DropdownItem name="POST" value="POST"></DropdownItem>
                 <DropdownItem name="PATCH" value="PATCH"></DropdownItem>
@@ -71,7 +70,7 @@
               <input
                 v-model="values.url"
                 :placeholder="$t('webhookForm.inputLabels.url')"
-                class="input"
+                class="input input--small"
                 :class="{ 'input--error': fieldHasErrors('url') }"
                 @blur="$v.values.url.$touch()"
               />
@@ -145,7 +144,7 @@
             <div class="webhook__header-row">
               <input
                 v-model="header.name"
-                class="input webhook__header-key"
+                class="input input--small webhook__header-key"
                 :class="{
                   'input--error':
                     !lastHeader(index) && $v.headers.$each[index].name.$error,
@@ -160,7 +159,7 @@
               />
               <input
                 v-model="header.value"
-                class="input webhook__header-value"
+                class="input input--small webhook__header-value"
                 :class="{
                   'input--error':
                     !lastHeader(index) && $v.headers.$each[index].value.$error,
@@ -197,6 +196,7 @@
               <Dropdown
                 v-model="exampleWebhookEventType"
                 class="dropdown--floating-left"
+                small
               >
                 <DropdownItem
                   v-for="webhookEvent in webhookEventTypes"
@@ -221,29 +221,25 @@
       <TestWebhookModal ref="testModal" />
     </div>
     <div v-else>
-      <div class="alert alert--error alert--has-icon">
-        <div class="alert__icon">
-          <i class="iconoir-warning-triangle"></i>
-        </div>
-        <div class="alert__title">
-          {{ $t('webhookForm.deprecatedEventType.title') }}
-        </div>
-        <p class="alert__content">
-          {{ $t('webhookForm.deprecatedEventType.description') }}
+      <Alert type="error">
+        <template #title>
+          {{ $t('webhookForm.deprecatedEventType.title') }}</template
+        >
+        <p>{{ $t('webhookForm.deprecatedEventType.description') }}</p>
+        <template #actions>
           <button
-            class="button webhook__convert"
+            class="alert__actions-button-text"
             @click="convertFromDeprecated"
           >
             {{ $t('webhookForm.deprecatedEventType.convert') }}
           </button>
-        </p>
-      </div>
+        </template>
+      </Alert>
     </div>
   </form>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { required, maxLength } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
@@ -262,8 +258,16 @@ export default {
   },
   mixins: [form, error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
   },
@@ -325,11 +329,12 @@ export default {
         'webhookEvent',
         this.exampleWebhookEventType
       )
-      return webhookEvent.getExamplePayload(this.table, rowExample)
+      return webhookEvent.getExamplePayload(
+        this.database,
+        this.table,
+        rowExample
+      )
     },
-    ...mapGetters({
-      fields: 'field/getAll',
-    }),
   },
   created() {
     const keys = Object.keys(this.webhookEventTypes)

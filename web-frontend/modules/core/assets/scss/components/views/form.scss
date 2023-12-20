@@ -63,7 +63,7 @@
 
 .form-view__sidebar-fields-item {
   position: relative;
-  border: solid 1px $color-neutral-300;
+  border: solid 1px $color-neutral-400;
   background-color: $white;
   padding: 0 30px 0 12px;
 
@@ -114,6 +114,12 @@
   color: $color-neutral-900;
 }
 
+.form-view__control-notification-on-submit {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .form-view__sidebar-prefill-or-hide-link {
   padding: 0 30px 30px 30px;
 }
@@ -147,7 +153,7 @@
   line-height: 48px;
   padding: 0 40px;
   background-color: $color-neutral-100;
-  border: 2px dashed $color-neutral-300;
+  border: 2px dashed $color-neutral-400;
   font-size: 13px;
   font-weight: 600;
   color: $color-neutral-600;

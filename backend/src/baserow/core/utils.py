@@ -8,15 +8,15 @@ import os
 import random
 import re
 import string
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from decimal import Decimal
 from fractions import Fraction
 from itertools import islice
 from numbers import Number
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from django.db import transaction
-from django.db.models import ForeignKey
+from django.db.models import ForeignKey, ManyToManyField, Model
 from django.db.models.fields import NOT_PROVIDED
 from django.db.transaction import get_connection
 
@@ -41,6 +41,43 @@ RE_PROP_NAME = re.compile(
     # Or match "" as the space between consecutive dots or empty brackets.
     + r"(?=(?:\.|\[\])(?:\.|\[\]|$))"
 )
+
+
+def split_attrs_and_m2m_fields(
+    field_names: List[str], instance: Type[Model]
+) -> Tuple[List[str], List[str]]:
+    """
+    Separates the provided field names into attributes and m2m fields. The attributes
+    can be set directly on the instance using set_allowed_attrs while the m2m fields
+    need to be set using the set_allowed_m2m_fields function.
+    """
+
+    attrs, m2m_fields = [], []
+    for field_name in field_names:
+        field = instance._meta.get_field(field_name)
+        if isinstance(field, ManyToManyField):
+            m2m_fields.append(field_name)
+        else:
+            attrs.append(field_name)
+    return attrs, m2m_fields
+
+
+def set_allowed_m2m_fields(values, allowed_fields, instance):
+    """
+    Sets the attributes of the instance with the values of the key names that are in the
+    allowed_fields. The other keys are ignored. This function is specifically for
+    ManyToManyFields.
+
+    Notice that this function will make a update query to the database for each
+    ManyToManyField that needs to be updated. This is because the ManyToManyField
+    cannot be updated directly on the instance.
+    """
+
+    for field in allowed_fields:
+        if field in values:
+            getattr(instance, field).set(values[field])
+
+    return instance
 
 
 def extract_allowed(values, allowed_fields):
@@ -711,7 +748,19 @@ class Progress:
             "Downloading files."
         """
 
-        self.progress += by
+        self.set_progress(self.progress + by, state)
+
+    def set_progress(self, progress: int, state: Optional[str] = None):
+        """
+        Manually set the progress value.
+
+        :param progress: What the new process should be. If the total is
+            `100` and we set the progress to `50`, it will be 50%.
+        :param state: A descriptive name of the state. This could for example be
+            "Downloading files."
+        """
+
+        self.progress = progress
 
         if self.parent is not None:
             if self.progress >= self.total:
@@ -722,7 +771,7 @@ class Progress:
                 )
             diff = new_parent_progress - self.last_parent_progress
             self.last_parent_progress = new_parent_progress
-            if diff > 0:
+            if diff != 0:
                 self.parent.increment(diff, state)
 
         percentage = math.ceil(Decimal(self.progress) / self.total * 100)
@@ -786,22 +835,25 @@ class ChildProgressBuilder:
             return Progress(child_total)
 
 
-class MirrorDict(dict):
+class MirrorDict(defaultdict):
     """
-    This dict will always return the same value as the key. It can be used to
-    replicate non existing mapping that must return the same values
+    This dict will return the same value as the key when the value is missing.
+    It can be used to replicate non existing mapping that must return the same values.
 
     d = MirrorDict()
     d['test'] == 'test'
     d[1] == 1
     d.get('test') == 'test'
+
+    d['test'] = 'foo'
+    d['test'] == 'foo'
     """
 
-    def __getitem__(self, key):
+    def __missing__(self, key):
         return key
 
     def get(self, key, default=None):
-        return key
+        return self[key]
 
 
 def atomic_if_not_already():
