@@ -1,8 +1,3 @@
-import {
-  featureFlagIsEnabled,
-  getFeatureFlags,
-} from '../modules/core/utils/env'
-
 export default function (
   base = '@',
   premiumBase = '@/../premium/web-frontend',
@@ -25,18 +20,13 @@ export default function (
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
     base + '/modules/integrations/module.js',
+    base + '/modules/builder/module.js',
   ]
   if (!process.env.BASEROW_OSS_ONLY) {
     baseModules.push(
       premiumBase + '/modules/baserow_premium/module.js',
       enterpriseBase + '/modules/baserow_enterprise/module.js'
     )
-  }
-
-  const featureFlags = getFeatureFlags()
-
-  if (featureFlagIsEnabled(featureFlags, 'builder')) {
-    baseModules.push(base + '/modules/builder/module.js')
   }
 
   const modules = baseModules.concat(additionalModules)
