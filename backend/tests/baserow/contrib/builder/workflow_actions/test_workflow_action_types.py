@@ -153,11 +153,13 @@ def test_upsert_row_workflow_action_prepare_values_with_instance(
 ):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
+    workspace = page.builder.workspace
     element = data_fixture.create_builder_button_element(page=page)
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder
     )
-    table = data_fixture.create_database_table()
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
     workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
         page=page, element=element, event=EventTypes.CLICK, user=user
     )
