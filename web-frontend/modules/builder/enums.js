@@ -91,6 +91,12 @@ export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
   FormDataProviderType.getType(),
 ]
 
+export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
+  CurrentRecordDataProviderType.getType(),
+  PageParameterDataProviderType.getType(),
+  DataSourceDataProviderType.getType(),
+]
+
 /**
  * A list of all the data provider that can be used to configure data sources.
  *

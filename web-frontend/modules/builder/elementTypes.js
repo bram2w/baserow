@@ -28,6 +28,8 @@ import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
+import DropdownElement from '@baserow/modules/builder/components/elements/components/DropdownElement.vue'
+import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -593,6 +595,43 @@ export class TableElementType extends ElementType {
         )
       }
     }
+  }
+}
+
+export class DropdownElementType extends FormElementType {
+  static getType() {
+    return 'dropdown'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.dropdown')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.dropdownDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-list-select'
+  }
+
+  get component() {
+    return DropdownElement
+  }
+
+  get generalFormComponent() {
+    return DropdownElementForm
+  }
+
+  get formDataType() {
+    return 'string'
+  }
+
+  getInitialFormDataValue(element, applicationContext) {
+    return this.resolveFormula(element.default_value, {
+      element,
+      ...applicationContext,
+    })
   }
 }
 

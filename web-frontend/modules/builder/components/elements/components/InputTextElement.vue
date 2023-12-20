@@ -1,7 +1,7 @@
 <template>
   <div>
     <label v-if="element.label" class="control__label">
-      {{ resolvedLabelValue }}
+      {{ resolvedLabel }}
     </label>
     <input
       type="text"
@@ -34,34 +34,19 @@ export default {
     },
   },
   computed: {
-    resolvedLabelValue() {
-      try {
-        return this.resolveFormula(this.element.label)
-      } catch (e) {
-        return ''
-      }
+    resolvedLabel() {
+      return this.resolveFormula(this.element.label)
     },
     resolvedDefaultValue() {
-      try {
-        return this.resolveFormula(this.element.default_value)
-      } catch (e) {
-        return ''
-      }
+      return this.resolveFormula(this.element.default_value)
     },
     resolvedPlaceholder() {
-      try {
-        return this.resolveFormula(this.element.placeholder)
-      } catch (e) {
-        return ''
-      }
+      return this.resolveFormula(this.element.placeholder)
     },
   },
   watch: {
-    resolvedDefaultValue: {
-      handler(value) {
-        this.setFormData(value)
-      },
-      immediate: true,
+    'element.default_value'(value) {
+      this.setFormData(this.resolveFormula(value))
     },
   },
 }

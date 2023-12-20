@@ -549,3 +549,30 @@ class FormContainerElement(ContainerElement):
     """
 
     submit_button_label = FormulaField(default="")
+
+
+class DropdownElement(Element):
+    label = FormulaField(
+        default="",
+        help_text="The text label for this dropdown",
+    )
+    default_value = FormulaField(
+        default="", help_text="This dropdowns input's default value."
+    )
+    required = models.BooleanField(
+        default=False, help_text="Whether this drodpown is a required field."
+    )
+    placeholder = FormulaField(
+        default="",
+        help_text="The placeholder text which should be applied to the element.",
+    )
+
+
+class DropdownElementOption(models.Model):
+    value = models.TextField(
+        blank=True, default="", help_text="The value of the option"
+    )
+    name = models.TextField(
+        blank=True, default="", help_text="The display name of the option"
+    )
+    dropdown = models.ForeignKey(DropdownElement, on_delete=models.CASCADE)
