@@ -3,9 +3,16 @@ from collections import defaultdict
 import pytest
 from rest_framework.exceptions import ValidationError
 
-from baserow.contrib.builder.elements.element_types import InputTextElementType
+from baserow.contrib.builder.elements.element_types import (
+    DropdownElementType,
+    InputTextElementType,
+)
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.models import InputTextElement, LinkElement
+from baserow.contrib.builder.elements.models import (
+    DropdownElementOption,
+    InputTextElement,
+    LinkElement,
+)
 from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
@@ -127,3 +134,31 @@ def test_input_text_element_import_export_formula(data_fixture):
     assert imported_element.label == expected_formula
     assert imported_element.default_value == expected_formula
     assert imported_element.placeholder == expected_formula
+
+
+@pytest.mark.django_db
+def test_dropdown_element_import_serialized(data_fixture):
+    parent = data_fixture.create_builder_page()
+    dropdown_element = data_fixture.create_builder_dropdown_element(
+        page=parent, label="'test'"
+    )
+    DropdownElementOption.objects.create(
+        dropdown=dropdown_element, value="hello", name="there"
+    )
+    serialized_values = DropdownElementType().export_serialized(dropdown_element)
+    id_mapping = {}
+
+    dropdown_element_imported = DropdownElementType().import_serialized(
+        parent, serialized_values, id_mapping
+    )
+
+    assert dropdown_element.id != dropdown_element_imported.id
+    assert dropdown_element.label == dropdown_element_imported.label
+
+    options = dropdown_element_imported.dropdownelementoption_set.all()
+
+    assert DropdownElementOption.objects.count() == 2
+    assert len(options) == 1
+    assert options[0].value == "hello"
+    assert options[0].name == "there"
+    assert options[0].dropdown_id == dropdown_element_imported.id

@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
@@ -17,6 +18,8 @@ from baserow.contrib.builder.elements.models import (
     CollectionField,
     ColumnElement,
     ContainerElement,
+    DropdownElement,
+    DropdownElementOption,
     Element,
     FormContainerElement,
     HeadingElement,
@@ -38,6 +41,7 @@ from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.formula.types import BaserowFormula
+from baserow.core.registry import T
 
 from .registries import collection_field_type_registry
 
@@ -931,9 +935,6 @@ class FormContainerElementType(ContainerElementType):
 
         return child_types_allowed
 
-    def get_sample_params(self) -> Dict[str, Any]:
-        return {"submit_button_label": "'hello'"}
-
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
         if serialized_copy["submit_button_label"]:
@@ -942,3 +943,154 @@ class FormContainerElementType(ContainerElementType):
             )
 
         return super().import_serialized(page, serialized_copy, id_mapping)
+
+
+class DropdownElementType(FormElementType):
+    type = "dropdown"
+    model_class = DropdownElement
+    allowed_fields = ["label", "default_value", "required", "placeholder"]
+    serializer_field_names = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "options",
+    ]
+    request_serializer_field_names = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "options",
+    ]
+
+    class SerializedDict(ElementDict):
+        label: BaserowFormula
+        required: bool
+        placeholder: BaserowFormula
+        default_value: BaserowFormula
+        options: List
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "label": FormulaSerializerField(
+                help_text=DropdownElement._meta.get_field("label").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "default_value": FormulaSerializerField(
+                help_text=DropdownElement._meta.get_field("default_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "required": serializers.BooleanField(
+                help_text=DropdownElement._meta.get_field("required").help_text,
+                default=False,
+                required=False,
+            ),
+            "placeholder": serializers.CharField(
+                help_text=DropdownElement._meta.get_field("placeholder").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "options": DropdownOptionSerializer(
+                source="dropdownelementoption_set", many=True, required=False
+            ),
+        }
+
+        return overrides
+
+    @property
+    def request_serializer_field_overrides(self):
+        return {
+            **self.serializer_field_overrides,
+            "options": DropdownOptionSerializer(many=True, required=False),
+        }
+
+    def serialize_property(self, element: DropdownElement, prop_name: str):
+        if prop_name == "options":
+            return [
+                self.serialize_option(option)
+                for option in element.dropdownelementoption_set.all()
+            ]
+
+        return super().serialize_property(element, prop_name)
+
+    def deserialize_property(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+    ) -> Any:
+        if prop_name == "default_value":
+            return import_formula(value, id_mapping)
+
+        if prop_name == "placeholder":
+            return import_formula(value, id_mapping)
+
+        return super().deserialize_property(prop_name, value, id_mapping)
+
+    def import_serialized(
+        self,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        **kwargs,
+    ) -> T:
+        dropdown_element = super().import_serialized(
+            parent, serialized_values, id_mapping
+        )
+
+        options = []
+        for option in serialized_values.get("options", []):
+            option["dropdown_id"] = dropdown_element.id
+            option_deserialized = self.deserialize_option(option)
+            options.append(option_deserialized)
+
+        DropdownElementOption.objects.bulk_create(options)
+
+        return dropdown_element
+
+    def create_instance_from_serialized(self, serialized_values: Dict[str, Any]) -> T:
+        serialized_values.pop("options", None)
+        return super().create_instance_from_serialized(serialized_values)
+
+    def serialize_option(self, option: DropdownElementOption) -> Dict:
+        return {
+            "value": option.value,
+            "name": option.name,
+            "dropdown_id": option.dropdown_id,
+        }
+
+    def deserialize_option(self, value: Dict):
+        return DropdownElementOption(**value)
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {
+            "label": "'test'",
+            "default_value": "'option 1'",
+            "required": False,
+            "placeholder": "'some placeholder'",
+        }
+
+    def after_create(self, instance: DropdownElement, values: Dict):
+        options = values.get("options", [])
+
+        DropdownElementOption.objects.bulk_create(
+            [DropdownElementOption(dropdown=instance, **option) for option in options]
+        )
+
+    def after_update(self, instance: DropdownElement, values: Dict):
+        options = values.get("options", None)
+
+        if options is not None:
+            DropdownElementOption.objects.filter(dropdown=instance).delete()
+            DropdownElementOption.objects.bulk_create(
+                [
+                    DropdownElementOption(dropdown=instance, **option)
+                    for option in options
+                ]
+            )

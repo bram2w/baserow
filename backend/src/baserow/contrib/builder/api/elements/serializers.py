@@ -10,7 +10,11 @@ from rest_framework.exceptions import ValidationError
 from baserow.contrib.builder.api.workflow_actions.serializers import (
     BuilderWorkflowActionSerializer,
 )
-from baserow.contrib.builder.elements.models import CollectionField, Element
+from baserow.contrib.builder.elements.models import (
+    CollectionField,
+    DropdownElementOption,
+    Element,
+)
 from baserow.contrib.builder.elements.registries import (
     collection_field_type_registry,
     element_type_registry,
@@ -273,3 +277,9 @@ class UpdateCollectionFieldSerializer(serializers.ModelSerializer):
     )
 
     value = FormulaSerializerField(allow_blank=True)
+
+
+class DropdownOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DropdownElementOption
+        fields = ["id", "value", "name"]

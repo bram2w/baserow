@@ -4,6 +4,7 @@ from baserow.contrib.builder.elements.models import (
     ButtonElement,
     CollectionField,
     ColumnElement,
+    DropdownElement,
     FormContainerElement,
     HeadingElement,
     ImageElement,
@@ -84,6 +85,10 @@ class ElementFixtures:
         element = self.create_builder_element(
             FormContainerElement, user, page, **kwargs
         )
+        return element
+
+    def create_builder_dropdown_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(DropdownElement, user, page, **kwargs)
         return element
 
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):

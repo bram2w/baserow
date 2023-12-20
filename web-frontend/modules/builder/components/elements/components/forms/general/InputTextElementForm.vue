@@ -2,25 +2,25 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.label"
-      :label="$t('inputTextElementForm.labelTitle')"
-      :placeholder="$t('inputTextElementForm.labelPlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
+      :label="$t('generalForm.labelTitle')"
+      :placeholder="$t('generalForm.labelPlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
-      :label="$t('inputTextElementForm.valueTitle')"
-      :placeholder="$t('inputTextElementForm.valuePlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
+      :label="$t('generalForm.valueTitle')"
+      :placeholder="$t('generalForm.valuePlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.placeholder"
-      :label="$t('inputTextElementForm.placeholderTitle')"
-      :placeholder="$t('inputTextElementForm.placeholderPlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
+      :label="$t('generalForm.placeholderTitle')"
+      :placeholder="$t('generalForm.placeholderPlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <FormElement class="control">
       <label class="control__label">
-        {{ $t('inputTextElementForm.requiredTitle') }}
+        {{ $t('generalForm.requiredTitle') }}
       </label>
       <div class="control__elements">
         <Checkbox v-model="values.required"></Checkbox>
@@ -32,11 +32,7 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import {
-  CurrentRecordDataProviderType,
-  DataSourceDataProviderType,
-  PageParameterDataProviderType,
-} from '@baserow/modules/builder/dataProviderTypes'
+import { DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'InputTextElementForm',
@@ -53,13 +49,8 @@ export default {
     }
   },
   computed: {
-    dataProvidersAllowed() {
-      return [
-        CurrentRecordDataProviderType.getType(),
-        PageParameterDataProviderType.getType(),
-        DataSourceDataProviderType.getType(),
-      ]
-    },
+    DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS: () =>
+      DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
   },
   methods: {
     emitChange(newValues) {
