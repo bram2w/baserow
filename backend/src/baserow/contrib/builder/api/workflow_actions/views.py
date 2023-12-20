@@ -8,12 +8,15 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body, validate_body_custom_fields
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body,
+    validate_body_custom_fields,
+)
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
     DiscriminatorCustomFieldsMappingSerializer,
-    map_exceptions,
     type_from_data_or_registry,
     validate_data_custom_fields,
 )

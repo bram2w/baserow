@@ -33,9 +33,9 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
-from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.table.service import TableService
+from baserow.contrib.database.views.service import ViewService
 from baserow.contrib.integrations.local_baserow.api.serializers import (
     LocalBaserowTableServiceFieldMappingSerializer,
     LocalBaserowTableServiceFilterSerializer,
@@ -345,7 +345,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             table_id = values.pop("table_id")
             if table_id is not None:
                 try:
-                    table = TableHandler().get_table(table_id)
+                    table = TableService().get_table(user, table_id)
                 except TableDoesNotExist:
                     raise DRFValidationError(
                         f"The table with ID {table_id} does not exist."
@@ -458,7 +458,7 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         if "view_id" in values:
             view_id = values.pop("view_id")
             if view_id is not None:
-                view = ViewHandler().get_view(view_id)
+                view = ViewService().get_view(user, view_id)
 
                 # Check that the view table_id match the given table
                 if "table" in values and view.table_id != values["table"].id:
