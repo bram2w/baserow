@@ -8,7 +8,7 @@ import it from './locales/it.json'
 import es from './locales/es.json'
 import pl from './locales/pl.json'
 
-export default function BuilderModule(options) {
+export default function IntegrationModule(options) {
   // Add the plugin to register the builder application.
   this.appendPlugin({
     src: path.resolve(__dirname, 'plugin.js'),

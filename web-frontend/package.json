@@ -15,6 +15,7 @@
     "start": "nuxt start --hostname 0.0.0.0",
     "eslint": "eslint -c .eslintrc.js --ext .js,.vue . ../premium/web-frontend ../enterprise/web-frontend",
     "lint": "yarn eslint && yarn stylelint",
+    "fix": "yarn prettier **/*.js **/*.vue **/*.scss -w && yarn eslint fix",
     "stylelint": "stylelint **/*.scss ../premium/web-frontend/modules/**/*.scss ../enterprise/web-frontend/modules/**/*.scss --syntax scss",
     "test-core": "jest --verbose false --config jest.config.js",
     "test-premium": "jest --verbose false --config ../premium/web-frontend/jest.config.js",

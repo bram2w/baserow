@@ -4,6 +4,7 @@
 
 ### Bug fixes
 * Fix bug causing Baserow to use empty jwt secret by default when running baserow from docker compose. [#2160](https://gitlab.com/baserow/baserow/-/issues/2160)
+* Fixed incorrect handling of row moved warning.
 
 
 ## Released 1.22.0

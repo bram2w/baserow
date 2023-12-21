@@ -3,6 +3,7 @@
     class="element-preview"
     :class="{
       'element-preview--active': isSelected,
+      'element-preview--parent-of-selected': isParentOfSelectedElement,
       'element-preview--in-error': inError,
     }"
     @click.stop="actionSelectElement({ element })"
@@ -17,9 +18,11 @@
       :placements="placements"
       :placements-disabled="placementsDisabled"
       :is-duplicating="isDuplicating"
+      :has-parent="!!parentElement"
       @delete="deleteElement"
       @move="$emit('move', $event)"
       @duplicate="duplicateElement"
+      @select-parent="actionSelectElement({ element: parentElement })"
     />
 
     <PageRootElement
@@ -104,7 +107,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ elementSelected: 'element/getSelected' }),
+    ...mapGetters({
+      elementSelected: 'element/getSelected',
+      elementAncestors: 'element/getAncestors',
+    }),
     PLACEMENTS: () => PLACEMENTS,
     elementTypesAllowed() {
       return this.parentElementType?.childElementTypes || null
@@ -112,10 +118,24 @@ export default {
     isSelected() {
       return this.element.id === this.elementSelected?.id
     },
+    selectedElementAncestorIds() {
+      if (!this.elementSelected) {
+        return []
+      }
+      return this.elementAncestors(this.page, this.elementSelected).map(
+        ({ id }) => id
+      )
+    },
+    isParentOfSelectedElement() {
+      return this.selectedElementAncestorIds.includes(this.element.id)
+    },
     elementType() {
       return this.$registry.get('element', this.element.type)
     },
     parentElement() {
+      if (!this.element.parent_element_id) {
+        return null
+      }
       return this.$store.getters['element/getElementById'](
         this.page,
         this.element.parent_element_id

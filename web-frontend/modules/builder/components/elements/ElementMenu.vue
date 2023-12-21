@@ -10,6 +10,16 @@
       </span>
     </a>
     <a
+      v-if="hasParent"
+      class="element-preview__menu-item"
+      @click.stop="$emit('select-parent')"
+    >
+      <i class="iconoir-scale-frame-enlarge"></i>
+      <span class="element-preview__menu-item-description">
+        {{ $t('elementMenu.selectParent') }}
+      </span>
+    </a>
+    <a
       v-if="isPlacementVisible(PLACEMENTS.LEFT)"
       class="element-preview__menu-item"
       :class="{ disabled: isPlacementDisabled(PLACEMENTS.LEFT) }"
@@ -92,6 +102,11 @@ export default {
   name: 'ElementMenu',
   props: {
     isDuplicating: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    hasParent: {
       type: Boolean,
       required: false,
       default: false,

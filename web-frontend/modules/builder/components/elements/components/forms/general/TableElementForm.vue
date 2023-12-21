@@ -38,93 +38,100 @@
       <label class="control__label">
         {{ $t('tableElementForm.fields') }}
       </label>
-      <div v-if="values.data_source_id">
-        <Expandable
-          v-for="(field, index) in values.fields"
-          :key="field.id"
-          v-sortable="{
-            id: field.id,
-            update: orderFields,
-            handle: '[data-sortable-handle]',
-          }"
-          class="table-element-form__field"
-        >
-          <template #header="{ toggle, expanded }">
-            <div class="table-element-form__field-header" @click.stop="toggle">
+      <template v-if="values.data_source_id">
+        <div>
+          <Expandable
+            v-for="(field, index) in values.fields"
+            :key="field.id"
+            v-sortable="{
+              id: field.id,
+              update: orderFields,
+              handle: '[data-sortable-handle]',
+            }"
+            class="table-element-form__field"
+          >
+            <template #header="{ toggle, expanded }">
               <div
-                class="table-element-form__field-handle"
-                data-sortable-handle
-              />
-              <div class="table-element-form__field-name">{{ field.name }}</div>
-              <i
-                class="fas"
-                :class="
-                  expanded
-                    ? 'iconoir-nav-arrow-down'
-                    : 'iconoir-nav-arrow-right'
-                "
-              />
-            </div>
-          </template>
-          <template #default>
-            <FormInput
-              v-model="field.name"
-              class="table-element-form__field-label"
-              label="Name"
-              horizontal
-              :error="
-                !$v.values.fields.$each[index].name.required
-                  ? $t('error.requiredField')
-                  : !$v.values.fields.$each[index].name.maxLength
-                  ? $t('error.maxLength', { max: 255 })
-                  : ''
-              "
-            >
-              <template v-if="values.fields.length > 1" #after-input>
-                <Button
-                  icon="iconoir-bin"
-                  type="light"
-                  @click="removeField(field)"
+                class="table-element-form__field-header"
+                @click.stop="toggle"
+              >
+                <div
+                  class="table-element-form__field-handle"
+                  data-sortable-handle
                 />
-              </template>
-            </FormInput>
-            <FormElement class="control control--horizontal">
-              <label class="control__label">
-                {{ $t('tableElementForm.fieldType') }}
-              </label>
-              <div class="control__elements">
-                <Dropdown
-                  :value="field.type"
-                  :show-search="false"
-                  @input="changeFieldType(field, $event)"
-                >
-                  <DropdownItem
-                    v-for="collectionType in orderedCollectionTypes"
-                    :key="collectionType.getType()"
-                    :name="collectionType.name"
-                    :value="collectionType.getType()"
-                  />
-                </Dropdown>
+                <div class="table-element-form__field-name">
+                  {{ field.name }}
+                </div>
+                <i
+                  class="fas"
+                  :class="
+                    expanded
+                      ? 'iconoir-nav-arrow-down'
+                      : 'iconoir-nav-arrow-right'
+                  "
+                />
               </div>
-            </FormElement>
-            <component
-              :is="collectionTypes[field.type].formComponent"
-              :element="element"
-              :default-values="field"
-              @values-changed="updateField(field, $event)"
-            />
-          </template>
-        </Expandable>
-      </div>
+            </template>
+            <template #default>
+              <FormInput
+                v-model="field.name"
+                class="table-element-form__field-label"
+                label="Name"
+                horizontal
+                :error="
+                  !$v.values.fields.$each[index].name.required
+                    ? $t('error.requiredField')
+                    : !$v.values.fields.$each[index].name.maxLength
+                    ? $t('error.maxLength', { max: 255 })
+                    : ''
+                "
+              >
+                <template v-if="values.fields.length > 1" #after-input>
+                  <Button
+                    icon="iconoir-bin"
+                    type="light"
+                    @click="removeField(field)"
+                  />
+                </template>
+              </FormInput>
+              <FormElement class="control control--horizontal">
+                <label class="control__label">
+                  {{ $t('tableElementForm.fieldType') }}
+                </label>
+                <div class="control__elements">
+                  <Dropdown
+                    :value="field.type"
+                    :show-search="false"
+                    @input="changeFieldType(field, $event)"
+                  >
+                    <DropdownItem
+                      v-for="collectionType in orderedCollectionTypes"
+                      :key="collectionType.getType()"
+                      :name="collectionType.name"
+                      :value="collectionType.getType()"
+                    />
+                  </Dropdown>
+                </div>
+              </FormElement>
+              <component
+                :is="collectionTypes[field.type].formComponent"
+                :element="element"
+                :default-values="field"
+                @values-changed="updateField(field, $event)"
+              />
+            </template>
+          </Expandable>
+        </div>
+        <Button
+          prepend-icon="baserow-icon-plus"
+          type="link"
+          size="tiny"
+          @click="addField"
+        >
+          {{ $t('tableElementForm.addField') }}
+        </Button>
+      </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
-      <Button
-        prepend-icon="baserow-icon-plus"
-        type="link"
-        size="tiny"
-        @click="addField"
-      >
-        {{ $t('tableElementForm.addField') }}
-      </Button>
     </FormElement>
   </form>
 </template>
