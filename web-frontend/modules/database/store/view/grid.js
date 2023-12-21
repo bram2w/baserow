@@ -1766,10 +1766,12 @@ export const actions = {
     if (isSingleRowInsertion) {
       // When a single row is inserted we don't want to deal with filters, sorts and
       // search just yet. Therefore it is okay to just insert the row into the buffer.
-      await dispatch('updateGroupByMetadataCount', {
+      commit('UPDATE_GROUP_BY_METADATA_COUNT', {
         fields,
+        registry: this.$registry,
         row: rowsPopulated[0],
         increase: true,
+        decrease: false,
       })
       commit('INSERT_NEW_ROWS_IN_BUFFER_AT_INDEX', {
         rows: rowsPopulated,
@@ -1854,9 +1856,11 @@ export const actions = {
       })
     } catch (error) {
       if (isSingleRowInsertion) {
-        await dispatch('updateGroupByMetadataCount', {
+        commit('UPDATE_GROUP_BY_METADATA_COUNT', {
           fields,
+          registry: this.$registry,
           row: rowsPopulated[0],
+          increase: false,
           decrease: true,
         })
         commit('DELETE_ROW_IN_BUFFER', rowsPopulated[0])
@@ -1907,10 +1911,12 @@ export const actions = {
     }
 
     // Update the group by metadata if needed.
-    await dispatch('updateGroupByMetadataCount', {
+    commit('UPDATE_GROUP_BY_METADATA_COUNT', {
       fields,
+      registry: this.$registry,
       row,
       increase: true,
+      decrease: false,
     })
 
     // Now that we know that the row applies to the filters, which means it belongs
@@ -2055,19 +2061,23 @@ export const actions = {
         // If the row exists in the buffer, we can visually show to the user that
         // the values have changed, without immediately reflecting the change in
         // the buffer.
-        await dispatch('updateGroupByMetadataCount', {
+        commit('UPDATE_GROUP_BY_METADATA_COUNT', {
           fields,
+          registry: this.$registry,
           row,
+          increase: false,
           decrease: true,
         })
         commit('UPDATE_ROW_VALUES', {
           row,
           values: { ...values },
         })
-        await dispatch('updateGroupByMetadataCount', {
+        commit('UPDATE_GROUP_BY_METADATA_COUNT', {
           fields,
+          registry: this.$registry,
           row,
           increase: true,
+          decrease: false,
         })
         await dispatch('onRowChange', { view, row, fields })
       } else {
@@ -2404,15 +2414,19 @@ export const actions = {
     } else if (oldRowExists && newRowExists) {
       // Instead of implementing a metadata updated mutation, we can easily just
       // call the deleted and created mutation because that will have the same effect.
-      await dispatch('updateGroupByMetadataCount', {
+      commit('UPDATE_GROUP_BY_METADATA_COUNT', {
         fields,
+        registry: this.$registry,
         row: oldRow,
+        increase: false,
         decrease: true,
       })
-      await dispatch('updateGroupByMetadataCount', {
+      commit('UPDATE_GROUP_BY_METADATA_COUNT', {
         fields,
+        registry: this.$registry,
         row: newRow,
         increase: true,
+        decrease: false,
       })
 
       // If the new order already exists in the buffer and is not the row that has
@@ -2608,9 +2622,11 @@ export const actions = {
     }
 
     // Decrease the count in the group by metadata if an entry exists.
-    await dispatch('updateGroupByMetadataCount', {
+    commit('UPDATE_GROUP_BY_METADATA_COUNT', {
       fields,
+      registry: this.$registry,
       row,
+      increase: false,
       decrease: true,
     })
 
@@ -2851,29 +2867,6 @@ export const actions = {
       textData: data,
       rowIndex: minRowIndex,
       fieldIndex: minFieldIndex,
-    })
-  },
-  /**
-   * Increases or decreases the count value of the group by entries if the row
-   * values match the group by values.
-   */
-  updateGroupByMetadataCount(
-    { commit, getters },
-    { fields, row, increase = false, decrease = false }
-  ) {
-    if (increase && decrease) {
-      throw new Error("The group count can't be increased and decreased.")
-    }
-    if (!increase && !decrease) {
-      throw new Error('The group count must be increased or decreased.')
-    }
-
-    commit('UPDATE_GROUP_BY_METADATA_COUNT', {
-      fields,
-      registry: this.$registry,
-      row,
-      increase,
-      decrease,
     })
   },
 }
