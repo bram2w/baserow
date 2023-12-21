@@ -72,6 +72,18 @@
       pointer-events: none;
     }
   }
+
+  &.element-preview--parent-of-selected {
+    cursor: inherit;
+
+    &::before {
+      @include absolute(0, 0, 0, 0);
+
+      content: '';
+      border: solid 1px $palette-neutral-300;
+      pointer-events: none;
+    }
+  }
 }
 
 .element-preview__menu-item-description {

@@ -98,7 +98,8 @@
         "moveUp": "Move up",
         "moveDown": "Move down",
         "moveLeft": "Move left",
-        "moveRight": "Move right"
+        "moveRight": "Move right",
+        "selectParent": "Select parent"
     },
     "duplicatePageJobType": {
         "duplicating": "Duplicating",
