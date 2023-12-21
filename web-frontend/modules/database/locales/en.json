@@ -736,7 +736,7 @@
   },
   "snapshotsModal": {
     "title": "snapshots",
-    "description": "Snapshots are a full copy of your database of the moment when they were created. A duplication of that data will be created when restoring. Snapshots are automatically deleted after one year.",
+    "description": "Snapshots are a full copy of your {applicationTypeName} of the moment when they were created. A duplication of that data will be created when restoring. Snapshots are automatically deleted after one year.",
     "descriptionLimits": "You can have a maximum of {n} snapshots per workspace. | You can have a maximum of {n} snapshot per workspace. | You can have a maximum of {n} snapshots per workspace.",
     "createLabel": "Create a new snapshot",
     "create": "Create snapshot",

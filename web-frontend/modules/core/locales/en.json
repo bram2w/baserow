@@ -583,6 +583,7 @@
         "errorInvalidFormula": "The formula is invalid."
     },
     "dataExplorer": {
-        "emptyText": "No data found"
+        "noMatchingNodesText": "No matching data providers were found.",
+        "noProvidersText": "No data providers were found. To get started you can, for example, add a data source or page parameter."
     }
 }
