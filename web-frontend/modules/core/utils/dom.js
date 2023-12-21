@@ -124,3 +124,33 @@ export const doesAncestorMatchPredicate = (node, predicate, stop) => {
   }
   return false
 }
+
+/**
+ * Checks a given predicate on all intermediate DOM elements between a descendant and its ancestor.
+ *
+ * @param {HTMLElement} ancestor - The ancestor DOM element.
+ * @param {HTMLElement} descendant - The descendant DOM element. The function assumes that
+ *                                   this is a descendant of the ancestor element.
+ * @param {Function} predicate - A function that takes a DOM element as an argument and returns
+ *                               a boolean. This function is called on each intermediate element
+ *                               between the descendant and the ancestor.
+ * @returns {boolean} - Returns true if the predicate returns true for at least one intermediate
+ *                      element between the descendant and ancestor. Otherwise, returns false.
+ *
+ * @example
+ * // Example usage
+ * const ancestorElement = document.getElementById('parent');
+ * const descendantElement = document.getElementById('child');
+ * const result = checkIntermediateElements(ancestorElement, descendantElement, (el) => {
+ *   return el.tagName === 'DIV';
+ * });
+ * console.log(result); // Outputs true if any intermediate element is a <div>, otherwise false.
+ */
+export const checkIntermediateElements = (ancestor, descendant, predicate) => {
+  for (let el = descendant; el && el !== ancestor; el = el.parentElement) {
+    if (predicate(el)) {
+      return true
+    }
+  }
+  return false
+}
