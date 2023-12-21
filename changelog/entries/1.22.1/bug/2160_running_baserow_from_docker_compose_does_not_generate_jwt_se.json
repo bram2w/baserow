@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix bug causing Baserow to use empty jwt secret by default when running baserow from docker compose.",
+    "issue_number": 2160,
+    "bullet_points": [],
+    "created_at": "2023-12-20"
+}

@@ -32,7 +32,10 @@
         >
         </RootNode>
         <div v-if="matchingNodes.length === 0" class="context__description">
-          {{ $t('dataExplorer.emptyText') }}
+          <span v-if="isSearching">{{
+            $t('dataExplorer.noMatchingNodesText')
+          }}</span>
+          <span v-else>{{ $t('dataExplorer.noProvidersText') }}</span>
         </div>
       </template>
     </div>

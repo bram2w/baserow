@@ -67,6 +67,6 @@ export class SubmitEvent extends Event {
   }
 
   get label() {
-    return this.$i18n.t('eventTypes.submitLabel')
+    return this.i18n.t('eventTypes.submitLabel')
   }
 }

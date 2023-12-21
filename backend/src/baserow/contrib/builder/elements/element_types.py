@@ -47,6 +47,9 @@ from .registries import collection_field_type_registry
 
 
 class ContainerElementType(ElementType, ABC):
+    # Container element types are imported first.
+    import_element_priority = 2
+
     @property
     def child_types_allowed(self) -> List[str]:
         """
@@ -303,7 +306,8 @@ class CollectionElementType(ElementType, ABC):
 
 
 class FormElementType(ElementType):
-    pass
+    # Form element types are imported second, after containers.
+    import_element_priority = 1
 
 
 class ColumnElementType(ContainerElementType):
