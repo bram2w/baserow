@@ -375,6 +375,20 @@ const getters = {
       .getElementsOrdered(page)
       .filter((e) => e.parent_element_id === element.id)
   },
+  getAncestors: (state, getters) => (page, element) => {
+    const getElementAncestors = (element) => {
+      if (element.parent_element_id === null) {
+        return []
+      } else {
+        const parentElement = getters.getElementById(
+          page,
+          element.parent_element_id
+        )
+        return [...getElementAncestors(parentElement), parentElement]
+      }
+    }
+    return getElementAncestors(element)
+  },
   getSiblings: (state, getters) => (page, element) => {
     return getters
       .getElementsOrdered(page)
