@@ -4,7 +4,11 @@
       {{ application.name }} {{ $t('snapshotsModal.title') }}
     </h2>
     <p>
-      {{ $t('snapshotsModal.description') }}
+      {{
+        $t('snapshotsModal.description', {
+          applicationTypeName: applicationTypeName,
+        })
+      }}
       <span v-if="maxSnapshots >= 0">{{
         $tc('snapshotsModal.descriptionLimits', maxSnapshots)
       }}</span>
@@ -91,6 +95,12 @@ export default {
     }
   },
   computed: {
+    applicationTypeName() {
+      return this.$registry
+        .get('application', this.application.type)
+        .getName()
+        .toLowerCase()
+    },
     maxSnapshots() {
       return parseInt(this.$config.BASEROW_MAX_SNAPSHOTS_PER_GROUP)
     },
