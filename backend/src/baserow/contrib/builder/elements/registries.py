@@ -33,6 +33,11 @@ class ElementType(
     parent_property_name = "page"
     id_mapping_name = "builder_page_elements"
 
+    # The order in which this element type is imported in `import_elements`.
+    # By default, the priority is `0`, the lowest value. If this property is
+    # not overridden, then the instance is imported last.
+    import_element_priority = 0
+
     def prepare_value_for_db(self, values: Dict, instance: Optional[Element] = None):
         """
         This function allows you to hook into the moment an element is created or

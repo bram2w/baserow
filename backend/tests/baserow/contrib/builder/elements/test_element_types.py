@@ -4,12 +4,15 @@ import pytest
 from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.elements.element_types import (
+    ContainerElementType,
     DropdownElementType,
+    FormElementType,
     InputTextElementType,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     DropdownElementOption,
+    HeadingElement,
     InputTextElement,
     LinkElement,
 )
@@ -17,6 +20,7 @@ from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
 )
+from baserow.contrib.builder.pages.service import PageService
 from baserow.core.utils import MirrorDict
 
 
@@ -162,3 +166,52 @@ def test_dropdown_element_import_serialized(data_fixture):
     assert options[0].value == "hello"
     assert options[0].name == "there"
     assert options[0].dropdown_id == dropdown_element_imported.id
+
+
+def test_element_type_import_element_priority():
+    element_types = element_type_registry.get_all()
+    container_element_types = [
+        element_type
+        for element_type in element_types
+        if isinstance(element_type, ContainerElementType)
+    ]
+    form_element_types = [
+        element_type
+        for element_type in element_types
+        if isinstance(element_type, FormElementType)
+    ]
+    other_element_types = [
+        element_type
+        for element_type in element_types
+        if not isinstance(element_type, ContainerElementType)
+        and not isinstance(element_type, FormElementType)
+    ]
+    manual_ordering = container_element_types + form_element_types + other_element_types
+    expected_ordering = sorted(
+        element_types,
+        key=lambda element_type: element_type.import_element_priority,
+        reverse=True,
+    )
+    assert manual_ordering == expected_ordering, (
+        "The element types ordering are expected to be: "
+        "containers first, then form elements, then everything else."
+    )
+
+
+@pytest.mark.django_db
+def test_page_with_element_using_form_data_has_dependencies_import_first(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    form_container = data_fixture.create_builder_form_container_element(page=page)
+    form_input = data_fixture.create_builder_input_text_element(
+        page=page, parent_element=form_container
+    )
+    data_fixture.create_builder_heading_element(
+        page=page, value=f"get('form_data.{form_input.id}')"
+    )
+
+    page_clone = PageService().duplicate_page(user, page)
+
+    form_input_clone = InputTextElement.objects.get(page=page_clone)
+    heading_clone = HeadingElement.objects.get(page=page_clone)
+    assert heading_clone.value == f"get('form_data.{form_input_clone.id}')"

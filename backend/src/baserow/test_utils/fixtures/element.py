@@ -8,6 +8,7 @@ from baserow.contrib.builder.elements.models import (
     FormContainerElement,
     HeadingElement,
     ImageElement,
+    InputTextElement,
     LinkElement,
     ParagraphElement,
     TableElement,
@@ -33,6 +34,10 @@ class ElementFixtures:
 
     def create_builder_link_element(self, user=None, page=None, **kwargs):
         element = self.create_builder_element(LinkElement, user, page, **kwargs)
+        return element
+
+    def create_builder_input_text_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(InputTextElement, user, page, **kwargs)
         return element
 
     def create_builder_table_element(self, user=None, page=None, **kwargs):

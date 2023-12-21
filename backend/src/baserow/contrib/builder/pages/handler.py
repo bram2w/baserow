@@ -9,6 +9,7 @@ from django.db.models import QuerySet
 from baserow.contrib.builder.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.types import ElementDictSubClass
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.constants import (
@@ -586,15 +587,28 @@ class PageHandler:
         imported_elements = []
 
         # True if we have imported at least one element on last iteration
-        as_imported = True
+        was_imported = True
 
-        while as_imported:
-            as_imported = False
+        # Sort the serialized elements so that we import:
+        # Containers first
+        # Form elements second
+        # Everything else after that.
+        def element_priority_sort(element_to_sort):
+            return element_type_registry.get(
+                element_to_sort["type"]
+            ).import_element_priority
 
-            for serialized_element in serialized_elements:
+        prioritized_elements = sorted(
+            serialized_elements, key=element_priority_sort, reverse=True
+        )
+
+        while was_imported:
+            was_imported = False
+
+            for serialized_element in prioritized_elements:
                 parent_element_id = serialized_element["parent_element_id"]
                 # check that the element has not already been imported in a
-                # previous pass or if the parent doesn't exit yet.
+                # previous pass or if the parent doesn't exist yet.
                 if serialized_element["id"] not in id_mapping.get(
                     "builder_page_elements", {}
                 ) and (
@@ -610,7 +624,7 @@ class PageHandler:
                             storage=storage,
                         )
                     )
-                    as_imported = True
+                    was_imported = True
                     if progress:
                         progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
@@ -629,7 +643,7 @@ class PageHandler:
         Import all page workflow_actions.
 
         :param page: the page the elements should belong to.
-        :param serialized_data_sources: the list of serialized elements.
+        :param serialized_workflow_actions: the list of serialized actions.
         :param id_mapping: A map of old->new id per data type
             when we have foreign keys that need to be migrated.
         :param files_zip: Contains files to import if any.
