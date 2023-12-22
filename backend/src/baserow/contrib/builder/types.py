@@ -19,6 +19,12 @@ class ElementDict(TypedDict):
     style_border_bottom_color: str
     style_border_bottom_size: int
     style_padding_bottom: int
+    style_border_left_color: str
+    style_border_left_size: int
+    style_padding_left: int
+    style_border_right_color: str
+    style_border_right_size: int
+    style_padding_right: int
     style_background: str
     style_background_color: str
     style_width: str

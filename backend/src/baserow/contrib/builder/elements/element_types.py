@@ -398,6 +398,7 @@ class HeadingElementType(ElementType):
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
+        font_color: str
         level: int
 
     @property
@@ -416,6 +417,12 @@ class HeadingElementType(ElementType):
                 min_value=1,
                 max_value=6,
                 default=1,
+            ),
+            "font_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                allow_blank=True,
+                help_text="Heading font color.",
             ),
         }
 
@@ -500,6 +507,7 @@ class LinkElementType(ElementType):
         "target",
         "width",
         "alignment",
+        "button_color",
     ]
     allowed_fields = [
         "value",
@@ -512,6 +520,7 @@ class LinkElementType(ElementType):
         "target",
         "width",
         "alignment",
+        "button_color",
     ]
 
     class SerializedDict(ElementDict):
@@ -524,6 +533,7 @@ class LinkElementType(ElementType):
         target: str
         width: str
         alignment: str
+        button_color: str
 
     def deserialize_property(
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
@@ -599,6 +609,12 @@ class LinkElementType(ElementType):
                 choices=HorizontalAlignments.choices,
                 help_text=LinkElement._meta.get_field("alignment").help_text,
                 required=False,
+            ),
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
             ),
         }
         return overrides
@@ -846,13 +862,14 @@ class InputTextElementType(InputElementType):
 class ButtonElementType(ElementType):
     type = "button"
     model_class = ButtonElement
-    allowed_fields = ["value", "alignment", "width"]
-    serializer_field_names = ["value", "alignment", "width"]
+    allowed_fields = ["value", "alignment", "width", "button_color"]
+    serializer_field_names = ["value", "alignment", "width", "button_color"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
         width: str
         alignment: str
+        button_color: str
 
     @property
     def serializer_field_overrides(self):
@@ -875,6 +892,12 @@ class ButtonElementType(ElementType):
                 help_text=ButtonElement._meta.get_field("alignment").help_text,
                 required=False,
             ),
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
+            ),
         }
 
         return overrides
@@ -896,6 +919,29 @@ class TableElementType(CollectionElementType):
     type = "table"
     model_class = TableElement
 
+    class SerializedDict(CollectionElementType.SerializedDict):
+        button_color: str
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + ["button_color"]
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + ["button_color"]
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
+            ),
+        }
+
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"data_source_id": None}
 
@@ -903,11 +949,12 @@ class TableElementType(CollectionElementType):
 class FormContainerElementType(ContainerElementType):
     type = "form_container"
     model_class = FormContainerElement
-    allowed_fields = ["submit_button_label"]
-    serializer_field_names = ["submit_button_label"]
+    allowed_fields = ["submit_button_label", "button_color"]
+    serializer_field_names = ["submit_button_label", "button_color"]
 
     class SerializedDict(ElementDict):
         submit_button_label: BaserowFormula
+        button_color: str
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"submit_button_label": "'Submit'"}
@@ -916,7 +963,7 @@ class FormContainerElementType(ContainerElementType):
     def serializer_field_overrides(self):
         from baserow.core.formula.serializers import FormulaSerializerField
 
-        overrides = {
+        return {
             "submit_button_label": FormulaSerializerField(
                 help_text=FormContainerElement._meta.get_field(
                     "submit_button_label"
@@ -924,10 +971,14 @@ class FormContainerElementType(ContainerElementType):
                 required=False,
                 allow_blank=True,
                 default="",
-            )
+            ),
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
+            ),
         }
-
-        return overrides
 
     @property
     def child_types_allowed(self) -> List[str]:

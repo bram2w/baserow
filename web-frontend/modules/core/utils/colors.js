@@ -260,6 +260,9 @@ export const conversionsMap = {
 }
 
 export function isColorVariable(value) {
+  if (!value) {
+    return false
+  }
   return value.substring(0, 1) !== '#'
 }
 

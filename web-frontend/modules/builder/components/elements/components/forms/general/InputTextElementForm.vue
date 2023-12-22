@@ -32,12 +32,12 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import { DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS } from '@baserow/modules/builder/enums'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'InputTextElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
+  mixins: [elementForm],
   data() {
     return {
       values: {
@@ -47,10 +47,6 @@ export default {
         placeholder: '',
       },
     }
-  },
-  computed: {
-    DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS: () =>
-      DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
   },
   methods: {
     emitChange(newValues) {

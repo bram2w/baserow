@@ -1,5 +1,11 @@
 <template>
-  <div class="link-element" :class="classes">
+  <div
+    class="link-element"
+    :class="classes"
+    :style="{
+      '--button-color': resolveColor(element.button_color, colorVariables),
+    }"
+  >
     <a
       :class="{
         'link-element__link': element.variant !== 'button',

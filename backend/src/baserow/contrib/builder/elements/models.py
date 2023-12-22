@@ -109,7 +109,7 @@ class Element(
         default=0, help_text="Pixel height of the top border."
     )
     style_padding_top = models.PositiveIntegerField(
-        default=10, help_text="Padding height of the top border."
+        default=10, help_text="Padding size of the top border."
     )
 
     style_border_bottom_color = models.CharField(
@@ -122,7 +122,33 @@ class Element(
         default=0, help_text="Pixel height of the bottom border."
     )
     style_padding_bottom = models.PositiveIntegerField(
-        default=10, help_text="Padding height of the bottom border."
+        default=10, help_text="Padding size of the bottom border."
+    )
+
+    style_border_left_color = models.CharField(
+        max_length=20,
+        default="border",
+        blank=True,
+        help_text="Left border color",
+    )
+    style_border_left_size = models.PositiveIntegerField(
+        default=0, help_text="Pixel height of the left border."
+    )
+    style_padding_left = models.PositiveIntegerField(
+        default=20, help_text="Padding size of the left border."
+    )
+
+    style_border_right_color = models.CharField(
+        max_length=20,
+        default="border",
+        blank=True,
+        help_text="Right border color",
+    )
+    style_border_right_size = models.PositiveIntegerField(
+        default=0, help_text="Pixel height of the right border."
+    )
+    style_padding_right = models.PositiveIntegerField(
+        default=20, help_text="Padding size of the right border."
     )
 
     style_background = models.CharField(
@@ -281,7 +307,7 @@ class ColumnElement(ContainerElement):
         ],
     )
     column_gap = models.IntegerField(
-        default=30,
+        default=20,
         help_text="The amount of space between the columns.",
         validators=[
             MinValueValidator(0, message="Value cannot be less than 0."),
@@ -391,6 +417,12 @@ class LinkElement(Element):
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
+    button_color = models.CharField(
+        max_length=20,
+        default="primary",
+        blank=True,
+        help_text="The color of the button",
+    )
 
 
 class ImageElement(Element):
@@ -479,6 +511,12 @@ class ButtonElement(Element):
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
+    button_color = models.CharField(
+        max_length=20,
+        default="primary",
+        blank=True,
+        help_text="The color of the button",
+    )
 
 
 class CollectionField(models.Model):
@@ -542,6 +580,13 @@ class TableElement(CollectionElement):
     A table element
     """
 
+    button_color = models.CharField(
+        max_length=20,
+        default="primary",
+        blank=True,
+        help_text="The color of the button",
+    )
+
 
 class FormContainerElement(ContainerElement):
     """
@@ -549,6 +594,13 @@ class FormContainerElement(ContainerElement):
     """
 
     submit_button_label = FormulaField(default="")
+
+    button_color = models.CharField(
+        max_length=20,
+        default="primary",
+        blank=True,
+        help_text="The color of the button",
+    )
 
 
 class DropdownElement(Element):

@@ -6,27 +6,28 @@
       :label="$t('formContainerElementForm.submitButtonLabel')"
       :placeholder="$t('formContainerElementForm.submitButtonPlaceholder')"
     />
+    <ColorInputGroup
+      v-model="values.button_color"
+      :label="$t('formContainerElementForm.buttonColor')"
+      :color-variables="colorVariables"
+    />
   </form>
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'FormContainerElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
+  mixins: [elementForm],
   data() {
     return {
       values: {
         submit_button_label: '',
       },
     }
-  },
-  computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
 }
 </script>
