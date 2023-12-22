@@ -272,21 +272,10 @@ export class FormElementType extends ElementType {
   }
 
   generateFromDataName(element, applicationContext) {
-    return `${this.name} ${this.getElementPosition(
-      element,
-      applicationContext
-    )}`
-  }
-
-  getElementPosition(element, applicationContext) {
-    const elements = this.app.store.getters['element/getElementsOrdered'](
-      applicationContext.page
-    )
-    const elementsOfSameType = elements.filter(
-      ({ type }) => type === element.type
-    )
-
-    return elementsOfSameType.findIndex(({ id }) => id === element.id) + 1
+    const elementPosition = this.app.store.getters[
+      'element/getElementPosition'
+    ](applicationContext.page, element, true)
+    return `${this.name} ${elementPosition}`
   }
 
   afterCreate(element, page) {
