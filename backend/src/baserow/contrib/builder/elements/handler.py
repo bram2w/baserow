@@ -396,6 +396,32 @@ class ElementHandler:
         element_type = element_type_registry.get_by_model(element)
 
         serialized = element_type.export_serialized(element)
+
+        next_element = (
+            element.page.element_set.filter(
+                parent_element_id=element.parent_element_id,
+                place_in_container=element.place_in_container,
+                order__gt=element.order,
+            )
+            .exclude(id=element.id)
+            .first()
+        )
+
+        if next_element:
+            # The duplicated element will be inserted right after the current one
+            serialized["order"] = Element.get_unique_order_before_element(
+                next_element,
+                element.parent_element_id,
+                element.place_in_container,
+            )
+        else:
+            # The duplicated element will be inserted at the end of the page
+            serialized["order"] = Element.get_last_order(
+                element.page,
+                element.parent_element_id,
+                element.place_in_container,
+            )
+
         element_duplicated = element_type.import_serialized(
             element.page, serialized, id_mapping
         )
