@@ -25,11 +25,11 @@
       @select-parent="actionSelectElement({ element: parentElement })"
     />
 
-    <PageRootElement
+    <PageElement
       v-if="isRootElement"
       :element="element"
       :mode="mode"
-    ></PageRootElement>
+    ></PageElement>
     <PageElement v-else :element="element" :mode="mode" />
 
     <InsertElementButton
@@ -58,7 +58,6 @@ import { PLACEMENTS } from '@baserow/modules/builder/enums'
 import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { mapActions, mapGetters } from 'vuex'
-import PageRootElement from '@baserow/modules/builder/components/page/PageRootElement'
 import { checkIntermediateElements } from '@baserow/modules/core/utils/dom'
 
 export default {
@@ -68,7 +67,6 @@ export default {
     ElementMenu,
     InsertElementButton,
     PageElement,
-    PageRootElement,
   },
   inject: ['builder', 'page', 'mode'],
   props: {

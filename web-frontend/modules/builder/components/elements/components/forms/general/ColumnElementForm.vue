@@ -48,13 +48,14 @@ import form from '@baserow/modules/core/mixins/form'
 import { VERTICAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
 import VerticalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/VerticalAlignmentSelector'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'ColumnElementForm',
   components: {
     VerticalAlignmentSelector,
   },
-  mixins: [form],
+  mixins: [elementForm],
   data() {
     return {
       values: {

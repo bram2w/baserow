@@ -1,6 +1,8 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
+import { resolveColor } from '@baserow/modules/core/utils/colors'
+import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
   inject: ['builder', 'page', 'mode'],
@@ -53,6 +55,9 @@ export default {
         },
       }
     },
+    colorVariables() {
+      return themeToColorVariables(this.builder.theme)
+    },
   },
   methods: {
     resolveFormula(formula) {
@@ -93,5 +98,7 @@ export default {
     fireSubmitEvent() {
       this.fireEvent(SubmitEvent)
     },
+
+    resolveColor,
   },
 }

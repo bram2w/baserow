@@ -1,19 +1,11 @@
-.color-input {
-  display: flex;
-  align-items: center;
-}
-
 .color-input__preview {
+  display: block;
   width: 40px;
   height: 20px;
   border-radius: 2px;
-  box-shadow: 0 0 1px 0 rgba($black, 0.16);
+  box-shadow: 1px 1px 1px 1px rgba($black, 0.2);
 
   &:hover {
-    box-shadow: 0 0 2px 0 rgba($black, 0.16);
+    box-shadow: 1px 1px 1px 0 rgba($black, 0.2);
   }
-}
-
-.color-input__label {
-  margin-left: 10px;
 }

@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div
+    :style="{
+      '--button-color': resolveColor(element.button_color, colorVariables),
+    }"
+  >
     <div v-if="mode === 'editing' && children.length === 0">
       <AddElementZone @add-element="showAddElementModal"></AddElementZone>
       <AddElementModal

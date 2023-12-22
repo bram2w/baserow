@@ -62,13 +62,14 @@ export class ElementType extends Registerable {
 
   get stylesAll() {
     return [
-      'style_border_top_color',
-      'style_border_top_size',
       'style_padding_top',
-      'style_border_bottom_color',
-      'style_border_bottom_size',
       'style_padding_bottom',
-      'style_padding_bottom',
+      'style_padding_left',
+      'style_padding_right',
+      'style_border_top',
+      'style_border_bottom',
+      'style_border_left',
+      'style_border_right',
       'style_background',
       'style_background_color',
       'style_width',
@@ -218,15 +219,7 @@ export class ColumnElementType extends ContainerElementType {
   }
 
   get childStylesForbidden() {
-    return [
-      'style_border_top_color',
-      'style_border_top_size',
-      'style_border_bottom_color',
-      'style_border_bottom_size',
-      'style_background',
-      'style_background_color',
-      'style_width',
-    ]
+    return ['style_width']
   }
 
   get defaultPlaceInContainer() {
@@ -655,5 +648,9 @@ export class FormContainerElementType extends ContainerElementType {
 
   get events() {
     return [SubmitEvent]
+  }
+
+  get childStylesForbidden() {
+    return ['style_width']
   }
 }

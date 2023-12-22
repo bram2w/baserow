@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageRootElement
+    <PageElement
       v-for="element in elements"
       :key="element.id"
       :element="element"
@@ -10,10 +10,10 @@
 </template>
 
 <script>
-import PageRootElement from '@baserow/modules/builder/components/page/PageRootElement'
+import PageElement from '@baserow/modules/builder/components/page/PageElement'
 
 export default {
-  components: { PageRootElement },
+  components: { PageElement },
   inject: ['builder', 'mode'],
   props: {
     page: {

@@ -113,21 +113,22 @@
     <FormElement v-if="values.variant === 'button'" class="control">
       <WidthSelector v-model="values.width" />
     </FormElement>
+    <ColorInputGroup
+      v-model="values.button_color"
+      :label="$t('linkElementForm.buttonColor')"
+      :color-variables="colorVariables"
+    />
   </form>
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import {
-  DATA_PROVIDERS_ALLOWED_ELEMENTS,
-  HORIZONTAL_ALIGNMENTS,
-  WIDTHS,
-} from '@baserow/modules/builder/enums'
+import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
 import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
 import { PageParameterDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'LinkElementForm',
@@ -136,8 +137,7 @@ export default {
     ApplicationBuilderFormulaInputGroup,
     HorizontalAlignmentSelector,
   },
-  mixins: [form],
-  inject: ['builder', 'page'],
+  mixins: [elementForm],
   data() {
     let navigateTo = ''
     if (this.defaultValues.navigation_type === 'page') {
@@ -164,7 +164,6 @@ export default {
     }
   },
   computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
     DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS() {
       const PROVIDERS_TO_REMOVE = [
         new PageParameterDataProviderType().getType(),

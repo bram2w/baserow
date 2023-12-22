@@ -33,6 +33,7 @@
           <input
             ref="base_url"
             class="form-input__input"
+            :class="{ 'remove-number-input-controls': true }"
             :value="fromValue(value)"
             :disabled="disabled"
             :type="type"

@@ -46,7 +46,6 @@
     <FormElement
       v-if="values.image_source_type === IMAGE_SOURCE_TYPES.URL"
       class="control"
-      :error="fieldHasErrors('image_url')"
     >
       <div class="control__elements">
         <div class="control__description">
@@ -54,7 +53,6 @@
         </div>
         <ApplicationBuilderFormulaInputGroup
           v-model="values.image_url"
-          :class="{ 'input--error': fieldHasErrors('image_url') }"
           :placeholder="$t('elementForms.urlInputPlaceholder')"
           :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
         />
@@ -82,9 +80,7 @@
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
 import {
-  DATA_PROVIDERS_ALLOWED_ELEMENTS,
   HORIZONTAL_ALIGNMENTS,
   IMAGE_SOURCE_TYPES,
 } from '@baserow/modules/builder/enums'
@@ -93,6 +89,7 @@ import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModa
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'ImageElementForm',
@@ -101,7 +98,7 @@ export default {
     HorizontalAlignmentSelector,
     UserFilesModal,
   },
-  mixins: [form],
+  mixins: [elementForm],
   data() {
     return {
       values: {
@@ -120,7 +117,6 @@ export default {
     IMAGE_FILE_TYPES() {
       return IMAGE_FILE_TYPES
     },
-    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
   methods: {
     openFileUploadModal() {

@@ -12,20 +12,21 @@
     <FormElement class="control">
       <WidthSelector v-model="values.width" />
     </FormElement>
+    <ColorInputGroup
+      v-model="values.button_color"
+      :label="$t('buttonElementForm.buttonColor')"
+      :color-variables="colorVariables"
+    />
   </form>
 </template>
 
 <script>
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
-import form from '@baserow/modules/core/mixins/form'
-import {
-  DATA_PROVIDERS_ALLOWED_ELEMENTS,
-  HORIZONTAL_ALIGNMENTS,
-  WIDTHS,
-} from '@baserow/modules/builder/enums'
+import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
 import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-
 import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
+import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'ButtonElementForm',
@@ -34,7 +35,7 @@ export default {
     ApplicationBuilderFormulaInputGroup,
     HorizontalAlignmentsSelector,
   },
-  mixins: [form],
+  mixins: [elementForm],
   data() {
     return {
       values: {
@@ -45,7 +46,9 @@ export default {
     }
   },
   computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
+    colorVariables() {
+      return themeToColorVariables(this.builder.theme)
+    },
   },
 }
 </script>
