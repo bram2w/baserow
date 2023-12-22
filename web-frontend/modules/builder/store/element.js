@@ -344,6 +344,24 @@ const actions = {
   },
 }
 
+/** Recursively order the elements from up to down and left to right */
+const orderElements = (elements, parentElementId = null) => {
+  return elements
+    .filter(
+      ({ parent_element_id: curentParentElementId }) =>
+        curentParentElementId === parentElementId
+    )
+    .sort((a, b) => {
+      if (a.place_in_container !== b.place_in_container) {
+        return a.place_in_container > b.place_in_container ? 1 : -1
+      }
+
+      return a.order.gt(b.order) ? 1 : -1
+    })
+    .map((element) => [element, ...orderElements(elements, element.id)])
+    .flat()
+}
+
 const getters = {
   getElements: (state) => (page) => {
     return page.elements.map((element) => ({
@@ -355,15 +373,7 @@ const getters = {
     return getters.getElements(page).find((e) => e.id === id)
   },
   getElementsOrdered: (state, getters) => (page) => {
-    return [...getters.getElements(page)].sort((a, b) => {
-      if (a.parent_element_id !== b.parent_element_id) {
-        return a.parent_element_id > b.parent_element_id ? 1 : -1
-      }
-      if (a.place_in_container !== b.place_in_container) {
-        return a.place_in_container > b.place_in_container ? 1 : -1
-      }
-      return a.order.gt(b.order) ? 1 : -1
-    })
+    return orderElements(getters.getElements(page))
   },
   getRootElements: (state, getters) => (page) => {
     return getters
@@ -394,6 +404,18 @@ const getters = {
       .getElementsOrdered(page)
       .filter((e) => e.parent_element_id === element.parent_element_id)
   },
+  getElementPosition:
+    (state, getters) =>
+    (page, element, sameType = false) => {
+      const elements = getters.getElementsOrdered(page)
+
+      return (
+        (sameType
+          ? elements.filter(({ type }) => type === element.type)
+          : elements
+        ).findIndex(({ id }) => id === element.id) + 1
+      )
+    },
   getElementsInPlace:
     (state, getters) => (page, parentId, placeInContainer) => {
       return getters
