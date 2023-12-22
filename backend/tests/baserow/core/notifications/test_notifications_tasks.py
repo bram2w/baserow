@@ -1,10 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 from django.test import override_settings
 
 import pytest
-import pytz
 from celery.exceptions import Retry
 from freezegun import freeze_time
 from loguru import logger
@@ -49,7 +48,7 @@ def test_daily_report_is_sent_at_correct_time_according_to_user_timezone(
         assert user_1.profile.last_notifications_email_sent_at is None
 
         res = send_daily_notifications_email_to_users(
-            datetime(2023, 8, 4, 11, 0, tzinfo=pytz.UTC)
+            datetime(2023, 8, 4, 11, 0, tzinfo=timezone.utc)
         )
 
         assert res.users_with_notifications == []
@@ -64,7 +63,7 @@ def test_daily_report_is_sent_at_correct_time_according_to_user_timezone(
         assert res.users_with_notifications == [user_1]
         user_1.refresh_from_db()
         assert user_1.profile.last_notifications_email_sent_at == datetime(
-            2023, 8, 4, 12, 0, 0, tzinfo=pytz.UTC
+            2023, 8, 4, 12, 0, 0, tzinfo=timezone.utc
         )
         assert len(res.users_with_notifications[0].unsent_email_notifications) == 1
         assert res.remaining_users_to_notify_count == 0
@@ -108,7 +107,7 @@ def test_daily_report_is_sent_at_correct_time_according_to_user_timezone(
         assert res.users_with_notifications == [user_2]
         user_2.refresh_from_db()
         assert user_2.profile.last_notifications_email_sent_at == datetime(
-            2023, 8, 4, 10, 0, 0, tzinfo=pytz.UTC
+            2023, 8, 4, 10, 0, 0, tzinfo=timezone.utc
         )
 
         mock_get_mail_connection.assert_called_once_with(fail_silently=False)
@@ -173,7 +172,7 @@ def test_weekly_report_is_sent_at_correct_date_and_time_according_to_user_timezo
         assert user_1.profile.last_notifications_email_sent_at is None
 
         res = send_weekly_notifications_email_to_users(
-            datetime(2023, 7, 4, 12, 0, tzinfo=pytz.UTC)
+            datetime(2023, 7, 4, 12, 0, tzinfo=timezone.utc)
         )
 
         assert res.users_with_notifications == []
@@ -188,7 +187,7 @@ def test_weekly_report_is_sent_at_correct_date_and_time_according_to_user_timezo
         assert res.users_with_notifications == [user_1]
         user_1.refresh_from_db()
         assert user_1.profile.last_notifications_email_sent_at == datetime(
-            2023, 8, 4, 12, 0, 0, tzinfo=pytz.UTC
+            2023, 8, 4, 12, 0, 0, tzinfo=timezone.utc
         )
         assert len(res.users_with_notifications[0].unsent_email_notifications) == 1
         assert res.remaining_users_to_notify_count == 0
@@ -232,7 +231,7 @@ def test_weekly_report_is_sent_at_correct_date_and_time_according_to_user_timezo
         assert res.users_with_notifications == [user_2]
         user_2.refresh_from_db()
         assert user_2.profile.last_notifications_email_sent_at == datetime(
-            2023, 8, 4, 10, 0, 0, tzinfo=pytz.UTC
+            2023, 8, 4, 10, 0, 0, tzinfo=timezone.utc
         )
 
         mock_get_mail_connection.assert_called_once_with(fail_silently=False)

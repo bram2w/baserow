@@ -1,13 +1,13 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-import pytz
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.schedules import crontab
 from celery_singleton import DuplicateTaskError, Singleton
@@ -15,6 +15,7 @@ from loguru import logger
 
 from baserow.api.notifications.serializers import NotificationRecipientSerializer
 from baserow.config.celery import app
+from baserow.core.datetime import get_timezones
 from baserow.core.models import UserProfile
 from baserow.ws.tasks import broadcast_to_users
 
@@ -143,12 +144,12 @@ def filter_timezones_matching_hour_and_day(now, hour_of_day, day_of_week=None):
     """
 
     def is_matching_time(now, tz):
-        time_in_tz = now.astimezone(pytz.timezone(tz))
+        time_in_tz = now.astimezone(ZoneInfo(tz))
         return time_in_tz.hour == hour_of_day and (
             day_of_week is None or time_in_tz.weekday() == day_of_week
         )
 
-    matching_timezones = [tz for tz in pytz.all_timezones if is_matching_time(now, tz)]
+    matching_timezones = [tz for tz in get_timezones() if is_matching_time(now, tz)]
 
     if matching_timezones:
         msg = "Timezones where time match settings: %02d:00" % hour_of_day

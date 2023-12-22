@@ -1,7 +1,7 @@
 import json
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO, IOBase
 from typing import Dict, List, Optional, Tuple, Union
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 from django.core.files.storage import Storage
 
 import requests
-from pytz import UTC
 from requests import Response
 
 from baserow.contrib.database.airtable.constants import (
@@ -262,7 +261,7 @@ class AirtableHandler:
         if created_on:
             created_on = (
                 datetime.strptime(created_on, "%Y-%m-%dT%H:%M:%S.%fZ")
-                .replace(tzinfo=UTC)
+                .replace(tzinfo=timezone.utc)
                 .isoformat()
             )
 

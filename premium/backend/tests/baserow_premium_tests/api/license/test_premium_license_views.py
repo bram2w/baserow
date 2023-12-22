@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from django.shortcuts import reverse
 from django.test.utils import override_settings
-from django.utils.timezone import datetime, make_aware, utc
 
 import pytest
 import responses
@@ -84,7 +85,9 @@ def test_admin_list_licenses(api_client, data_fixture, django_assert_num_queries
 
     license_2 = License.objects.create(
         license=VALID_TWO_SEAT_LICENSE.decode(),
-        last_check=make_aware(datetime(2021, 8, 29, 19, 52, 57, 842696), utc),
+        last_check=datetime(2021, 8, 29, 19, 52, 57, 842696).replace(
+            tzinfo=timezone.utc
+        ),
     )
     LicenseUser.objects.create(license=license_2, user=user_2)
     LicenseUser.objects.create(license=license_2, user=user_3)

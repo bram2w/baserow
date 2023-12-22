@@ -314,6 +314,7 @@ def construct_aggregate_wrapper_queryset(
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .values("id")
         .annotate(**{result_key: expr_with_metadata.expression})
+        .order_by()
         .values(result_key)
     )
 

@@ -1,8 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from freezegun import freeze_time
-from pytz import timezone
 
 from baserow.contrib.database.models import Database
 from baserow.core.models import Workspace, WorkspaceUser
@@ -13,15 +12,15 @@ def test_created_and_updated_on_mixin():
     with freeze_time("2020-01-01 12:00"):
         workspace = Workspace.objects.create(name="Workspace")
 
-    assert workspace.created_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
-    assert workspace.updated_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+    assert workspace.created_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone.utc)
+    assert workspace.updated_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone.utc)
 
     with freeze_time("2020-01-02 12:00"):
         workspace.name = "Workspace2"
         workspace.save()
 
-    assert workspace.created_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
-    assert workspace.updated_on == datetime(2020, 1, 2, 12, 00, tzinfo=timezone("UTC"))
+    assert workspace.created_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone.utc)
+    assert workspace.updated_on == datetime(2020, 1, 2, 12, 00, tzinfo=timezone.utc)
 
 
 @pytest.mark.django_db

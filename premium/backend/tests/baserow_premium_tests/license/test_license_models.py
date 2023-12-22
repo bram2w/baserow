@@ -1,7 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from django.test.utils import override_settings
-from django.utils.timezone import make_aware, utc
 
 import pytest
 from baserow_premium.license.models import License
@@ -40,16 +39,16 @@ VALID_TWO_SEAT_LICENSE = (
 def test_premium_license_model_properties():
     license = License(license=VALID_ONE_SEAT_LICENSE.decode())
     assert license.license_id == "1"
-    assert license.valid_from == make_aware(
-        datetime(2021, 8, 29, 19, 52, 57, 842696), utc
+    assert license.valid_from == datetime(2021, 8, 29, 19, 52, 57, 842696).replace(
+        tzinfo=timezone.utc
     )
-    assert license.valid_through == make_aware(
-        datetime(2021, 9, 29, 19, 52, 57, 842696), utc
+    assert license.valid_through == datetime(2021, 9, 29, 19, 52, 57, 842696).replace(
+        tzinfo=timezone.utc
     )
     assert license.product_code == "premium"
     assert license.seats == 1
-    assert license.issued_on == make_aware(
-        datetime(2021, 8, 29, 19, 52, 57, 842696), utc
+    assert license.issued_on == datetime(2021, 8, 29, 19, 52, 57, 842696).replace(
+        tzinfo=timezone.utc
     )
     assert license.issued_to_email == "bram@baserow.io"
     assert license.issued_to_name == "Bram"

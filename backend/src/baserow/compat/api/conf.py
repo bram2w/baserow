@@ -1,11 +1,9 @@
-from datetime import datetime
-
-from pytz import timezone
+from datetime import datetime, timezone
 
 from baserow.compat.api.utils import prefix_schema_description_deprecated
 
 # When will `Group` be removed in favor of `Workspace`?
-deprecation_tz = timezone("UTC")
+deprecation_tz = timezone.utc
 GROUP_DEPRECATION = datetime(2024, 2, 1, tzinfo=deprecation_tz)
 
 # Deprecation warnings prefixed to the group endpoint descriptions.

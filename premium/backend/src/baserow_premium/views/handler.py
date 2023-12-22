@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import date, datetime
 from typing import Dict, List, Optional, Tuple, Union
+from zoneinfo import ZoneInfo
 
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
@@ -8,7 +9,6 @@ from django.utils.timezone import utc
 
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
 from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
-from dateutil.tz import gettz
 
 from baserow.contrib.database.fields.models import Field, SingleSelectField
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -199,7 +199,7 @@ def get_rows_grouped_by_date_field(
     if getattr(date_field, "date_include_time", False):
         field_timezone = getattr(date_field, "date_force_timezone", "UTC")
         target_timezone = field_timezone or user_timezone
-        target_timezone_info = gettz(target_timezone)
+        target_timezone_info = ZoneInfo(target_timezone) if target_timezone else None
         from_timestamp = from_timestamp.astimezone(tz=target_timezone_info)
         to_timestamp = to_timestamp.astimezone(tz=target_timezone_info)
     else:

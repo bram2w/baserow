@@ -1,3 +1,5 @@
+import datetime as datetime_module
+import zoneinfo
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -8,7 +10,6 @@ from django.db.models import DateField, DateTimeField, IntegerField, Q
 from django.db.models.expressions import F, Func
 from django.db.models.functions import Extract, Length, Mod, TruncDate
 
-import pytz
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 
@@ -56,6 +57,7 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaDateIntervalType,
     BaserowFormulaSingleFileType,
 )
+from baserow.core.datetime import get_timezones
 from baserow.core.models import WorkspaceUser
 
 from .registries import ViewFilterType
@@ -417,7 +419,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
         return filter_value == DATE_FILTER_EMPTY_VALUE
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         """
         Parses the provided filter value and returns a date or datetime object
@@ -438,7 +440,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
         except ValueError:
             datetime_value = parser.isoparse(filter_value)
             if datetime_value.tzinfo is None:
-                return timezone.localize(datetime_value)
+                return datetime_value.replace(tzinfo=timezone)
             return datetime_value.astimezone(timezone)
 
     def get_filter_query_dict(
@@ -467,7 +469,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
             except ValueError:
                 # the separator was included multiple times, we don't know what to do
                 return None, None
-        elif filter_value in pytz.all_timezones:
+        elif filter_value in get_timezones():
             # only a timezone value was provided with no filter value
             return filter_value, None
         else:
@@ -476,7 +478,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
 
     def split_timezone_and_filter_value(
         self, field, filter_value, separator=DATE_FILTER_TIMEZONE_SEPARATOR
-    ) -> Tuple[pytz.BaseTzInfo, str]:
+    ) -> Tuple[zoneinfo.ZoneInfo, str]:
         """
         Splits the timezone and the value from the provided value. If the value
         does not contain a timezone then the default timezone will be used.
@@ -496,9 +498,9 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
         )
 
         python_timezone = (
-            pytz.timezone(user_timezone_str)
+            zoneinfo.ZoneInfo(user_timezone_str)
             if user_timezone_str is not None
-            else pytz.UTC
+            else datetime_module.timezone.utc
         )
 
         validated_filter_value = (
@@ -537,7 +539,7 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
             OverflowError,
             ValueError,
             parser.ParserError,
-            pytz.UnknownTimeZoneError,
+            zoneinfo.ZoneInfoNotFoundError,
         ):
             return Q(pk__in=[])
 
@@ -656,7 +658,7 @@ class DateEqualsDayOfMonthViewFilterType(TimezoneAwareDateViewFilterType):
             if day_of_month < 1 or day_of_month > 31:
                 raise ValueError
 
-        except (ValueError, pytz.UnknownTimeZoneError):
+        except (ValueError, zoneinfo.ZoneInfoNotFoundError):
             return Q(pk__in=[])
 
         if field.date_include_time:  # filter on a datetime field
@@ -684,7 +686,7 @@ class DateEqualsTodayViewFilterType(
     type = "date_equals_today"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         return datetime.now(tz=timezone).date()
 
@@ -704,7 +706,7 @@ class DateBeforeTodayViewFilterType(
     type = "date_before_today"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         return (datetime.now(tz=timezone) - timedelta(days=1)).date()
 
@@ -724,7 +726,7 @@ class DateAfterTodayViewFilterType(
     type = "date_after_today"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         return (datetime.now(tz=timezone) + timedelta(days=1)).date()
 
@@ -745,7 +747,7 @@ class DateEqualsCurrentWeekViewFilterType(
     type = "date_equals_week"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         return datetime.now(tz=timezone).date()
 
@@ -770,7 +772,7 @@ class DateEqualsCurrentMonthViewFilterType(
     type = "date_equals_month"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         return datetime.now(tz=timezone).date()
 
@@ -794,7 +796,7 @@ class DateEqualsCurrentYearViewFilterType(
     type = "date_equals_year"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         return datetime.now(tz=timezone).date()
 
@@ -834,7 +836,7 @@ class DateIsWithinXDaysViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_within_days"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         """
         Zero days means today, one day means today and tomorrow, and so on.
@@ -863,7 +865,7 @@ class DateIsWithinXWeeksViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_within_weeks"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         """
         Since zero weeks can be confusing, we raise an error if the number of
@@ -895,7 +897,7 @@ class DateIsWithinXMonthsViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_within_months"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         """
         Since zero months can be confusing, we raise an error if the number of
@@ -929,7 +931,7 @@ class DateEqualsDaysAgoViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_equals_days_ago"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         filter_date = datetime.now(tz=timezone) - timedelta(days=int(filter_value))
         return filter_date.date()
@@ -952,7 +954,7 @@ class DateEqualsMonthsAgoViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_equals_months_ago"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         filter_date = datetime.now(tz=timezone) + relativedelta(
             months=-int(filter_value)
@@ -980,7 +982,7 @@ class DateEqualsYearsAgoViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_equals_years_ago"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         filter_date = datetime.now(tz=timezone) + relativedelta(
             years=-int(filter_value)
@@ -1014,7 +1016,7 @@ class DateAfterDaysAgoViewFilterType(TimezoneAwareDateViewFilterType):
         return super().is_empty_filter(filter_value) or filter_value == "0"
 
     def get_filter_date(
-        self, filter_value: str, timezone: pytz.BaseTzInfo
+        self, filter_value: str, timezone: datetime_module.tzinfo
     ) -> Union[datetime, date]:
         # Calculate and return the date `filter_value` days ago in the given timezone
         filter_date = datetime.now(tz=timezone) - timedelta(days=int(filter_value))

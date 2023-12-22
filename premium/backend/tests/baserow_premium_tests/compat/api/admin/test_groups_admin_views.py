@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from django.shortcuts import reverse
 from django.test.utils import override_settings
-from django.utils.timezone import datetime, make_aware, utc
 
 import pytest
 from rest_framework.status import (
@@ -25,7 +26,7 @@ def test_list_admin_workspaces(
     test if the functionality works in a basic form.
     """
 
-    created = make_aware(datetime(2020, 4, 10, 0, 0, 0), utc)
+    created = datetime(2020, 4, 10, 0, 0, 0).replace(tzinfo=timezone.utc)
     staff_user, staff_token = premium_data_fixture.create_user_and_token(
         is_staff=True, has_active_premium_license=True
     )

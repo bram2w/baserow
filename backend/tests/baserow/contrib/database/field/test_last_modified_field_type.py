@@ -1,11 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 
 from django.core.exceptions import ValidationError
 
 import pytest
 from freezegun import freeze_time
-from pytz import timezone
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import LastModifiedField
@@ -180,10 +179,10 @@ def test_import_export_last_modified_field(data_fixture):
         )
 
     assert getattr(row, f"field_{last_modified_field.id}") == datetime(
-        2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+        2020, 1, 1, 12, 00, tzinfo=timezone.utc
     )
     assert getattr(row, f"field_{last_modified_field_2.id}") == datetime(
-        2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+        2020, 1, 1, 12, 00, tzinfo=timezone.utc
     )
 
     core_handler = CoreHandler()
@@ -197,7 +196,7 @@ def test_import_export_last_modified_field(data_fixture):
     # will use that value.
     exported_applications[0]["tables"][0]["rows"][0][
         f"field_{last_modified_field_2.id}"
-    ] = datetime(2021, 1, 1, 12, 00, tzinfo=timezone("UTC")).isoformat()
+    ] = datetime(2021, 1, 1, 12, 00, tzinfo=timezone.utc).isoformat()
 
     with freeze_time("2020-01-02 12:00"):
         (
@@ -217,10 +216,10 @@ def test_import_export_last_modified_field(data_fixture):
     assert imported_row.id == row.id
     assert getattr(
         imported_row, f"field_{imported_last_modified_field.id}"
-    ) == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+    ) == datetime(2020, 1, 1, 12, 00, tzinfo=timezone.utc)
     assert getattr(
         imported_row, f"field_{imported_last_modified_field_2.id}"
-    ) == datetime(2021, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+    ) == datetime(2021, 1, 1, 12, 00, tzinfo=timezone.utc)
 
 
 @pytest.mark.django_db

@@ -1,9 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 
 import pytest
-import pytz
 from freezegun import freeze_time
 
 from baserow.contrib.database.fields.field_types import FormulaFieldType
@@ -42,10 +41,10 @@ def test_run_periodic_fields_updates(data_fixture):
         row_2 = table_model_2.objects.create()
 
     assert getattr(row, f"field_{formula_field.id}") == datetime(
-        2023, 2, 27, 9, 55, 0, tzinfo=pytz.UTC
+        2023, 2, 27, 9, 55, 0, tzinfo=timezone.utc
     )
     assert getattr(row_2, f"field_{formula_field_2.id}") == datetime(
-        2023, 2, 27, 9, 55, 0, tzinfo=pytz.UTC
+        2023, 2, 27, 9, 55, 0, tzinfo=timezone.utc
     )
 
     # the now field is updated to the current time by default
@@ -56,8 +55,8 @@ def test_run_periodic_fields_updates(data_fixture):
     workspace.refresh_from_db()
     workspace_2.refresh_from_db()
 
-    assert workspace.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
-    assert workspace_2.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+    assert workspace.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
+    assert workspace_2.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
 
     # the task can be run without updating the now field
     with freeze_time("2023-02-27 10:15"):
@@ -66,8 +65,8 @@ def test_run_periodic_fields_updates(data_fixture):
     workspace.refresh_from_db()
     workspace_2.refresh_from_db()
 
-    assert workspace.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
-    assert workspace_2.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+    assert workspace.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
+    assert workspace_2.now == datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
 
 
 @pytest.mark.django_db
@@ -85,7 +84,7 @@ def test_run_periodic_field_type_update_per_workspace(data_fixture):
     row = table_model.objects.create()
 
     assert getattr(row, f"field_{field.id}") == datetime(
-        2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC
+        2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc
     )
 
     with freeze_time("2023-02-27 10:30"):
@@ -93,7 +92,7 @@ def test_run_periodic_field_type_update_per_workspace(data_fixture):
 
         row.refresh_from_db()
         assert getattr(row, f"field_{field.id}") == datetime(
-            2023, 2, 27, 10, 30, 0, tzinfo=pytz.UTC
+            2023, 2, 27, 10, 30, 0, tzinfo=timezone.utc
         )
 
 
@@ -118,13 +117,13 @@ def test_run_field_type_updates_dependant_fields(data_fixture):
     row = table_model.objects.create()
 
     assert getattr(row, f"field_{field.id}") == datetime(
-        2023, 2, 27, 10, 15, 0, tzinfo=pytz.UTC
+        2023, 2, 27, 10, 15, 0, tzinfo=timezone.utc
     )
     assert getattr(row, f"field_{dependant.id}") == datetime(
-        2023, 2, 27, 10, 15, 0, tzinfo=pytz.UTC
+        2023, 2, 27, 10, 15, 0, tzinfo=timezone.utc
     )
     assert getattr(row, f"field_{dependant_2.id}") == datetime(
-        2023, 2, 27, 10, 15, 0, tzinfo=pytz.UTC
+        2023, 2, 27, 10, 15, 0, tzinfo=timezone.utc
     )
 
     with freeze_time("2023-02-27 10:45"):
@@ -132,13 +131,13 @@ def test_run_field_type_updates_dependant_fields(data_fixture):
 
         row.refresh_from_db()
         assert getattr(row, f"field_{field.id}") == datetime(
-            2023, 2, 27, 10, 45, 0, tzinfo=pytz.UTC
+            2023, 2, 27, 10, 45, 0, tzinfo=timezone.utc
         )
         assert getattr(row, f"field_{dependant.id}") == datetime(
-            2023, 2, 27, 10, 45, 0, tzinfo=pytz.UTC
+            2023, 2, 27, 10, 45, 0, tzinfo=timezone.utc
         )
         assert getattr(row, f"field_{dependant_2.id}") == datetime(
-            2023, 2, 27, 10, 45, 0, tzinfo=pytz.UTC
+            2023, 2, 27, 10, 45, 0, tzinfo=timezone.utc
         )
 
 
@@ -155,7 +154,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture):
         return table.get_model(), formula_field
 
     # when the workspace is created the now field is set to the current time
-    now = timezone.now()
+    now = django_timezone.now()
     workspace_updated_most_recently = data_fixture.create_workspace(user=user)
     workspace_updated_most_recently.now = now
     workspace_updated_most_recently.save()
@@ -164,7 +163,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture):
     )
     row = table_model.objects.create()
 
-    a_day_ago = timezone.now() - timezone.timedelta(days=1)
+    a_day_ago = django_timezone.now() - django_timezone.timedelta(days=1)
     workspace_that_should_be_updated_first_this_time = data_fixture.create_workspace(
         user=user
     )
@@ -209,7 +208,7 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
         return table.get_model(), formula_field
 
     # when the workspace is created the now field is set to the current time
-    now = timezone.now()
+    now = django_timezone.now()
     second_updated_workspace = data_fixture.create_workspace(user=user)
     second_updated_workspace.now = now
     second_updated_workspace.save()
@@ -218,7 +217,7 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
     )
     row = table_model.objects.create()
 
-    a_day_ago = timezone.now() - timezone.timedelta(days=1)
+    a_day_ago = django_timezone.now() - django_timezone.timedelta(days=1)
     first_updated_workspace = data_fixture.create_workspace(user=user)
     first_updated_workspace.now = a_day_ago
     first_updated_workspace.save()
@@ -287,7 +286,7 @@ def test_run_periodic_field_type_doesnt_update_trashed_table(data_fixture):
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
 
     with freeze_time(original_datetime):
         field = data_fixture.create_formula_field(
@@ -318,7 +317,7 @@ def test_run_periodic_field_type_doesnt_update_trashed_database(data_fixture):
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
 
     with freeze_time(original_datetime):
         field = data_fixture.create_formula_field(
@@ -349,7 +348,7 @@ def test_run_periodic_field_type_doesnt_update_trashed_workspace(data_fixture):
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc)
 
     with freeze_time(original_datetime):
         field = data_fixture.create_formula_field(

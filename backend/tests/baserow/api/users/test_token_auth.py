@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -6,7 +6,6 @@ from django.shortcuts import reverse
 
 import pytest
 from freezegun import freeze_time
-from pytz import timezone
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -109,13 +108,13 @@ def test_token_auth(api_client, data_fixture):
             assert plugin_mock.called
 
     user.refresh_from_db()
-    assert user.last_login == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+    assert user.last_login == datetime(2020, 1, 1, 12, 00, tzinfo=timezone.utc)
 
     logs = UserLogEntry.objects.all()
     assert len(logs) == 1
     assert logs[0].actor_id == user.id
     assert logs[0].action == "SIGNED_IN"
-    assert logs[0].timestamp == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+    assert logs[0].timestamp == datetime(2020, 1, 1, 12, 00, tzinfo=timezone.utc)
 
     with freeze_time("2020-01-02 12:00"):
         response = api_client.post(
@@ -134,7 +133,7 @@ def test_token_auth(api_client, data_fixture):
         assert response_json["user"]["is_staff"] is False
 
     user.refresh_from_db()
-    assert user.last_login == datetime(2020, 1, 2, 12, 0, tzinfo=timezone("UTC"))
+    assert user.last_login == datetime(2020, 1, 2, 12, 0, tzinfo=timezone.utc)
 
     data_fixture.create_user(
         email="test2@test.nl", password="password", first_name="Test1", is_active=False
@@ -460,7 +459,7 @@ def test_token_blacklist(api_client, data_fixture):
 
         token = BlacklistedToken.objects.all().first()
         assert token.hashed_token == generate_hash(refresh_token)
-        assert token.expires_at == datetime(2020, 1, 8, 12, 00, tzinfo=timezone("UTC"))
+        assert token.expires_at == datetime(2020, 1, 8, 12, 00, tzinfo=timezone.utc)
 
         response = api_client.post(
             reverse("api:user:token_refresh"),

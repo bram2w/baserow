@@ -1,9 +1,9 @@
+from datetime import timezone
 from unittest.mock import patch
 
 from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import make_aware, utc
 
 import pytest
 from freezegun import freeze_time
@@ -232,7 +232,7 @@ def test_exporting_csv_writes_file_to_storage(
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with patch("baserow.contrib.database.export.handler.default_storage", new=storage):
-        run_time = make_aware(parse_datetime("2020-02-01 01:00"), timezone=utc)
+        run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         # DRF uses some custom internal date time formatting, use the field itself
         # so the test doesn't break if we set a different default timezone format etc
         expected_created_at = DateTimeField().to_representation(run_time)
@@ -351,7 +351,7 @@ def test_exporting_csv_table_writes_file_to_storage(
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with patch("baserow.contrib.database.export.handler.default_storage", new=storage):
-        run_time = make_aware(parse_datetime("2020-02-01 01:00"), timezone=utc)
+        run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         # DRF uses some custom internal date time formatting, use the field itself
         # so the test doesn't break if we set a different default timezone format etc
         expected_created_at = DateTimeField().to_representation(run_time)
