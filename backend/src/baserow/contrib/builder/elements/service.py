@@ -271,9 +271,16 @@ class ElementService:
             context=page,
         )
 
-        elements_and_workflow_actions_duplicated = self.handler.duplicate_element(
-            element
-        )
+        try:
+            elements_and_workflow_actions_duplicated = self.handler.duplicate_element(
+                element
+            )
+        except CannotCalculateIntermediateOrder:
+            self.recalculate_full_orders(user, element.page)
+            element.refresh_from_db()
+            elements_and_workflow_actions_duplicated = self.handler.duplicate_element(
+                element
+            )
 
         elements_created.send(
             self,

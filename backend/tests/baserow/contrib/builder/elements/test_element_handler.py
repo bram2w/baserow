@@ -373,6 +373,7 @@ def test_duplicate_element_single_element(data_fixture):
     assert element.id != element_duplicated.id
     assert element.value == element_duplicated.value
     assert element.page_id == element_duplicated.page_id
+    assert element.order < element_duplicated.order
 
 
 @pytest.mark.django_db
