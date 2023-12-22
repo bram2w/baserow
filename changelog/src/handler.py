@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONDecodeError
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -165,7 +165,7 @@ class ChangelogHandler:
     def move_entries_to_release_folder(
         self, name: Union[str, None] = None
     ) -> Optional[str]:
-        release_name = name or datetime.utcnow().strftime("%Y_%m_%d")
+        release_name = name or datetime.now(tz=timezone.utc).strftime("%Y_%m_%d")
 
         try:
             os.rename(
@@ -242,7 +242,7 @@ class ChangelogHandler:
                 0,
                 {
                     "name": name,
-                    "created_at": datetime.utcnow().strftime("%Y-%m-%d"),
+                    "created_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
                 },
             )
 

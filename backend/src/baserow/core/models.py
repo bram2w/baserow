@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -7,8 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q, UniqueConstraint
-from django.utils import timezone
-from django.utils.timezone import make_aware
+from django.utils import timezone as django_timezone
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -188,7 +187,7 @@ class UserProfile(models.Model):
         if not self.last_password_change:
             return False
 
-        iat = make_aware(datetime.utcfromtimestamp(iat))
+        iat = datetime.utcfromtimestamp(iat).replace(tzinfo=timezone.utc)
         # We have to remove the milliseconds because the `iat` doesn't have
         # milliseconds in the timestamp, so that can result in the
         # `last_password_change` being higher, while it was actually done before the
@@ -219,7 +218,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
         return None
 
     def refresh_now(self):
-        self.now = timezone.now()
+        self.now = django_timezone.now()
         self.save(update_fields=["now"])
 
     def get_now_or_set_if_null(self):

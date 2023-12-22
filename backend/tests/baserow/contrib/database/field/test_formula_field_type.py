@@ -1156,9 +1156,10 @@ def test_inserting_a_row_with_lookup_field_immediately_populates_it_with_empty_l
     )
     model_with_lookup = table_a.get_model()
     inserted_row = model_with_lookup.objects.create()
+    inserted_row.refresh_from_db()
     default_empty_value_for_lookup = getattr(inserted_row, f"field_{lookup.id}")
     assert default_empty_value_for_lookup is not None
-    assert default_empty_value_for_lookup == "[]"
+    assert default_empty_value_for_lookup == []
 
 
 @pytest.mark.django_db

@@ -1,9 +1,9 @@
+from datetime import timezone
 from io import BytesIO
 from unittest.mock import patch
 
 from django.test.utils import override_settings
 from django.utils.dateparse import parse_date, parse_datetime
-from django.utils.timezone import make_aware, utc
 
 import pytest
 from baserow_premium.license.exceptions import FeaturesNotAvailableError
@@ -14,7 +14,7 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 def _parse_datetime(datetime):
-    return make_aware(parse_datetime(datetime), timezone=utc)
+    return parse_datetime(datetime).replace(tzinfo=timezone.utc)
 
 
 def _parse_date(date):

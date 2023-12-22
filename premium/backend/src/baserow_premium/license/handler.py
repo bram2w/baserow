@@ -2,6 +2,7 @@ import base64
 import binascii
 import hashlib
 import json
+from datetime import timezone
 from os.path import dirname, join
 from typing import Any, Dict, List, Optional, Union
 
@@ -10,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import DatabaseError, transaction
 from django.db.models import Q
-from django.utils.timezone import make_aware, now, utc
+from django.utils.timezone import now
 
 import requests
 from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
@@ -465,10 +466,12 @@ class LicenseHandler:
         # if needed. We also need the `valid_through` date to check if the license
         # has expired.
         decoded_license_payload = cls.decode_license(license_payload)
-        valid_through = make_aware(
-            parser.parse(decoded_license_payload["valid_through"]), utc
+        valid_through = parser.parse(decoded_license_payload["valid_through"]).replace(
+            tzinfo=timezone.utc
         )
-        issued_on = make_aware(parser.parse(decoded_license_payload["issued_on"]), utc)
+        issued_on = parser.parse(decoded_license_payload["issued_on"]).replace(
+            tzinfo=timezone.utc
+        )
 
         if valid_through < now():
             raise LicenseHasExpiredError(

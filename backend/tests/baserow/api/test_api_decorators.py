@@ -1,10 +1,11 @@
 import json
+import zoneinfo
+from datetime import timezone
 from unittest.mock import MagicMock
 
 from django.db import OperationalError
 
 import pytest
-import pytz
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.parsers import JSONParser
@@ -552,7 +553,7 @@ def test_accept_timezone():
 
     @accept_timezone()
     def test_1(self, request, now):
-        assert now.tzinfo == pytz.utc
+        assert now.tzinfo == timezone.utc
 
     test_1(None, request)
 
@@ -565,6 +566,6 @@ def test_accept_timezone():
 
     @accept_timezone()
     def test_1(self, request, now):
-        assert now.tzinfo == pytz.timezone("Etc/GMT+2")
+        assert now.tzinfo == zoneinfo.ZoneInfo("Etc/GMT+2")
 
     test_1(None, request)

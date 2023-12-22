@@ -1,6 +1,5 @@
+from datetime import tzinfo
 from typing import Any, Dict, Tuple, Union
-
-from pytz import BaseTzInfo
 
 from baserow.contrib.database.fields.models import Field
 from baserow.core.registry import Instance, Registry
@@ -8,7 +7,7 @@ from baserow.core.registry import Instance, Registry
 
 class AirtableColumnType(Instance):
     def to_baserow_field(
-        self, raw_airtable_table: dict, raw_airtable_column: dict, timezone: BaseTzInfo
+        self, raw_airtable_table: dict, raw_airtable_column: dict, timezone: tzinfo
     ) -> Union[Field, None]:
         """
         Converts the raw Airtable column to a Baserow field object. It should be

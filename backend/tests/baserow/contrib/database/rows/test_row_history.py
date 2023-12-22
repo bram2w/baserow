@@ -1,7 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
-import pytz
 from freezegun import freeze_time
 
 from baserow.contrib.database.rows.actions import UpdateRowsActionType
@@ -61,7 +60,7 @@ def test_update_rows_insert_multiple_entries_in_row_history(data_fixture):
             "user_name": user.first_name,
             "table_id": table.id,
             "row_id": row_one.id,
-            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=pytz.UTC),
+            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=timezone.utc),
             "action_type": "update_rows",
             "before_values": {f"field_{name_field.id}": "Original 1"},
             "after_values": {f"field_{name_field.id}": "New 1"},
@@ -77,7 +76,7 @@ def test_update_rows_insert_multiple_entries_in_row_history(data_fixture):
             "user_name": user.first_name,
             "table_id": table.id,
             "row_id": row_two.id,
-            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=pytz.UTC),
+            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=timezone.utc),
             "action_type": "update_rows",
             "before_values": {f"field_{name_field.id}": "Original 2"},
             "after_values": {f"field_{name_field.id}": "New 2"},
@@ -143,7 +142,7 @@ def test_history_handler_only_save_changed_fields(data_fixture):
             "user_name": user.first_name,
             "table_id": table.id,
             "row_id": row.id,
-            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=pytz.UTC),
+            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=timezone.utc),
             "action_type": "update_rows",
             "before_values": {
                 f"field_{name_field.id}": "Original 1",
@@ -213,7 +212,7 @@ def test_update_rows_action_doesnt_insert_entries_if_row_doesnt_change(data_fixt
             "user_name": user.first_name,
             "table_id": table.id,
             "row_id": row_one.id,
-            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=pytz.UTC),
+            "action_timestamp": datetime(2021, 1, 1, 12, 0, tzinfo=timezone.utc),
             "action_type": "update_rows",
             "before_values": {f"field_{name_field.id}": "Original 1"},
             "after_values": {f"field_{name_field.id}": "New 1"},
@@ -255,7 +254,7 @@ def test_row_history_handler_list_history_filters_with_registry(data_fixture):
         "fields_metadata": {},
         "before_values": {},
         "after_values": {},
-        "action_timestamp": datetime(2021, 1, 3, 23, 59, tzinfo=pytz.UTC),
+        "action_timestamp": datetime(2021, 1, 3, 23, 59, tzinfo=timezone.utc),
     }
     entries = [RowHistory(**common_params, user_id=i) for i in range(0, 10)]
     RowHistory.objects.bulk_create(entries)
@@ -289,9 +288,9 @@ def test_row_history_handler_delete_entries_older_than(data_fixture):
     table = data_fixture.create_database_table(
         name="Test", user=user, database=database
     )
-    before_retention_period = datetime(2021, 1, 3, 23, 59, tzinfo=pytz.UTC)
-    after_retention_period = datetime(2021, 1, 4, 0, 1, tzinfo=pytz.UTC)
-    cutoff = datetime(2021, 1, 4, 0, 0, tzinfo=pytz.UTC)
+    before_retention_period = datetime(2021, 1, 3, 23, 59, tzinfo=timezone.utc)
+    after_retention_period = datetime(2021, 1, 4, 0, 1, tzinfo=timezone.utc)
+    cutoff = datetime(2021, 1, 4, 0, 0, tzinfo=timezone.utc)
     common_params = {
         "table": table,
         "row_id": 999,

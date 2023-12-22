@@ -1,9 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 from unittest.mock import patch
 
 from django.test.utils import override_settings
-from django.utils.timezone import make_aware
 
 import pytest
 from freezegun import freeze_time
@@ -211,14 +210,15 @@ def test_audit_log_export_filters_work_correctly(
     assert job_type.get_filtered_queryset(job).count() == 0
     job.filter_action_type = None
 
-    job.filter_from_timestamp = make_aware(
-        datetime.strptime("2023-01-01 12:00:05", "%Y-%m-%d %H:%M:%S")
-    )
+    job.filter_from_timestamp = datetime.strptime(
+        "2023-01-01 12:00:05", "%Y-%m-%d %H:%M:%S"
+    ).replace(tzinfo=timezone.utc)
     assert job_type.get_filtered_queryset(job).count() == 1
 
-    job.filter_to_timestamp = make_aware(
-        datetime.strptime("2023-01-01 12:00:08", "%Y-%m-%d %H:%M:%S")
-    )
+    job.filter_to_timestamp = datetime.strptime(
+        "2023-01-01 12:00:08", "%Y-%m-%d %H:%M:%S"
+    ).replace(tzinfo=timezone.utc)
+
     assert job_type.get_filtered_queryset(job).count() == 0
 
 

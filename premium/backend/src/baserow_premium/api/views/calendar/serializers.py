@@ -1,7 +1,6 @@
 from django.conf import settings
 
 from baserow_premium.views.models import CalendarViewFieldOptions
-from pytz import all_timezones
 from rest_framework import serializers
 
 from baserow.contrib.database.api.rows.serializers import (
@@ -9,6 +8,7 @@ from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class,
 )
 from baserow.contrib.database.search.handler import ALL_SEARCH_MODES
+from baserow.core.datetime import get_timezones
 
 
 class CalendarViewFieldOptionsSerializer(serializers.ModelSerializer):
@@ -22,7 +22,7 @@ class ListCalendarRowsQueryParamsSerializer(serializers.Serializer):
     to_timestamp = serializers.DateTimeField(required=True)
     offset = serializers.IntegerField(default=0, min_value=0)
     limit = serializers.IntegerField(default=40, min_value=1, max_value=100)
-    user_timezone = serializers.ChoiceField(choices=all_timezones, required=False)
+    user_timezone = serializers.ChoiceField(choices=get_timezones(), required=False)
     search = serializers.CharField(required=False, allow_blank=True, default=None)
     search_mode = serializers.ChoiceField(
         required=False,

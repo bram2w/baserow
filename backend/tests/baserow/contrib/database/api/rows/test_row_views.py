@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from django.shortcuts import reverse
@@ -7,7 +7,6 @@ from django.test import override_settings
 
 import pytest
 from freezegun import freeze_time
-from pytz import UTC
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -2450,7 +2449,7 @@ def test_list_row_history_for_different_fields(data_fixture, api_client):
         original_name="test.txt",
         is_image=True,
     )
-    file1.uploaded_at = datetime(2021, 1, 1, 12, 30, tzinfo=UTC)
+    file1.uploaded_at = datetime(2021, 1, 1, 12, 30, tzinfo=timezone.utc)
     file1.save()
     file2 = data_fixture.create_user_file(
         original_name="test2.txt",

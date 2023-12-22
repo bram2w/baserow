@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from time import time
 from unittest.mock import MagicMock, patch
@@ -8,7 +8,6 @@ from django.core.cache import caches
 from django.db import connection, models
 from django.db.models import Field
 from django.test.utils import override_settings
-from django.utils.timezone import make_aware, utc
 
 import pytest
 from cachalot.settings import cachalot_settings
@@ -320,7 +319,7 @@ def test_search_all_fields_queryset(data_fixture, search_mode):
         price="10000",
         description="This is the fastest car there is.",
         date="0005-05-05",
-        datetime=make_aware(datetime(4006, 7, 8, 0, 0, 0), utc),
+        datetime=datetime(4006, 7, 8, 0, 0, 0).replace(tzinfo=timezone.utc),
         file=[{"visible_name": "test_file.png"}],
         select=option_a,
         phonenumber="99999",
@@ -331,7 +330,7 @@ def test_search_all_fields_queryset(data_fixture, search_mode):
         price="20500",
         description="This is the most expensive car we have.",
         date="2005-05-05",
-        datetime=make_aware(datetime(5, 5, 5, 0, 49, 0), utc),
+        datetime=datetime(5, 5, 5, 0, 49, 0).replace(tzinfo=timezone.utc),
         file=[{"visible_name": "other_file.png"}],
         select=option_b,
         phonenumber="--++999999",
@@ -342,7 +341,7 @@ def test_search_all_fields_queryset(data_fixture, search_mode):
         price="2050",
         description="The oldest car that we have.",
         date="9999-05-05",
-        datetime=make_aware(datetime(5, 5, 5, 9, 49, 0), utc),
+        datetime=datetime(5, 5, 5, 9, 49, 0).replace(tzinfo=timezone.utc),
         file=[],
         phonenumber="",
     )
@@ -817,15 +816,15 @@ def test_filter_by_fields_object_with_created_on_queryset(data_fixture):
     model = table.get_model()
 
     row_1 = model.objects.create()
-    row_1.created_on = datetime(2021, 1, 1, 12, 0, 0, tzinfo=utc)
+    row_1.created_on = datetime(2021, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
     row_1.save()
 
     row_2 = model.objects.create()
-    row_2.created_on = datetime(2021, 1, 2, 12, 0, 0, tzinfo=utc)
+    row_2.created_on = datetime(2021, 1, 2, 12, 0, 0, tzinfo=timezone.utc)
     row_2.save()
 
     row_3 = model.objects.create()
-    row_3.created_on = datetime(2021, 1, 3, 12, 0, 0, tzinfo=utc)
+    row_3.created_on = datetime(2021, 1, 3, 12, 0, 0, tzinfo=timezone.utc)
     row_3.save()
 
     print(row_1.created_on)
@@ -853,13 +852,13 @@ def test_filter_by_fields_object_with_updated_on_queryset(data_fixture):
     row_3 = model.objects.create()
 
     model.objects.filter(id=row_1.id).update(
-        updated_on=datetime(2021, 1, 1, 12, 0, 0, tzinfo=utc)
+        updated_on=datetime(2021, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
     )
     model.objects.filter(id=row_2.id).update(
-        updated_on=datetime(2021, 1, 2, 12, 0, 0, tzinfo=utc)
+        updated_on=datetime(2021, 1, 2, 12, 0, 0, tzinfo=timezone.utc)
     )
     model.objects.filter(id=row_3.id).update(
-        updated_on=datetime(2021, 1, 3, 12, 0, 0, tzinfo=utc)
+        updated_on=datetime(2021, 1, 3, 12, 0, 0, tzinfo=timezone.utc)
     )
 
     results = model.objects.all().filter_by_fields_object(

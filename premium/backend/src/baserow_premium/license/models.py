@@ -1,7 +1,9 @@
+from datetime import timezone
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.functional import cached_property
-from django.utils.timezone import make_aware, now, utc
+from django.utils.timezone import now
 
 from dateutil import parser
 
@@ -45,11 +47,11 @@ class License(models.Model):
 
     @property
     def valid_from(self):
-        return make_aware(parser.parse(self.payload["valid_from"]), utc)
+        return parser.parse(self.payload["valid_from"]).replace(tzinfo=timezone.utc)
 
     @property
     def valid_through(self):
-        return make_aware(parser.parse(self.payload["valid_through"]), utc)
+        return parser.parse(self.payload["valid_through"]).replace(tzinfo=timezone.utc)
 
     @property
     def is_active(self):
@@ -83,7 +85,7 @@ class License(models.Model):
 
     @property
     def issued_on(self):
-        return make_aware(parser.parse(self.payload["issued_on"]), utc)
+        return parser.parse(self.payload["issued_on"]).replace(tzinfo=timezone.utc)
 
     @property
     def issued_to_email(self):

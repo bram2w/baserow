@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -8,7 +8,6 @@ from django.db import models
 import pytest
 from freezegun import freeze_time
 from pyinstrument import Profiler
-from pytz import UTC
 
 from baserow.contrib.database.api.utils import (
     extract_field_ids_from_string,
@@ -744,8 +743,8 @@ def test_create_rows_created_on_and_last_modified(data_fixture):
     with freeze_time("2020-01-01 12:00"):
         rows = handler.create_rows(user=user, table=table, rows_values=[{}])
         row = rows[0]
-        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
-        assert row.updated_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=timezone.utc)
+        assert row.updated_on == datetime(2020, 1, 1, 12, 0, tzinfo=timezone.utc)
 
 
 @pytest.mark.django_db
@@ -785,8 +784,8 @@ def test_update_rows_created_on_and_last_modified(data_fixture):
             [{"id": row.id, f"field_" f"{field.id}": "Test"}],
         )
         row = result.updated_rows[0]
-        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
-        assert row.updated_on == datetime(2020, 1, 2, 12, 0, tzinfo=UTC)
+        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=timezone.utc)
+        assert row.updated_on == datetime(2020, 1, 2, 12, 0, tzinfo=timezone.utc)
 
 
 @pytest.mark.django_db

@@ -1,6 +1,6 @@
 import abc
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Union
 
 GITLAB_URL = os.environ.get("GITLAB_URL", "https://gitlab.com/baserow/baserow")
@@ -27,7 +27,7 @@ class ChangelogEntry(abc.ABC):
             "message": message,
             "issue_number": issue_number,
             "bullet_points": bullet_points,
-            "created_at": datetime.utcnow().strftime("%Y-%m-%d"),
+            "created_at": datetime.now(tz=timezone).strftime("%Y-%m-%d"),
         }
 
     @staticmethod

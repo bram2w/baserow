@@ -3,12 +3,13 @@ import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from itertools import cycle
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -33,13 +34,10 @@ from django.db.models import (
     Window,
 )
 from django.db.models.functions import Coalesce, RowNumber
-from django.utils.timezone import make_aware
 
-import pytz
 from dateutil import parser
 from dateutil.parser import ParserError
 from loguru import logger
-from pytz import timezone
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
@@ -924,8 +922,6 @@ class DateFieldType(FieldType):
         if not value:
             return value
 
-        utc = timezone("UTC")
-
         if isinstance(value, str):
             try:
                 # Try first to parse isodate
@@ -945,10 +941,10 @@ class DateFieldType(FieldType):
                     ) from exc
 
         if isinstance(value, date) and not isinstance(value, datetime):
-            value = make_aware(datetime(value.year, value.month, value.day), utc)
+            value = datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
 
         if isinstance(value, datetime):
-            value = value.astimezone(utc)
+            value = value.astimezone(timezone.utc)
             return value if instance.date_include_time else value.date()
 
         raise ValidationError(
@@ -962,7 +958,7 @@ class DateFieldType(FieldType):
 
         field = field_object["field"]
         if isinstance(value, datetime) and field.date_force_timezone is not None:
-            value = value.astimezone(pytz.timezone(field.date_force_timezone))
+            value = value.astimezone(ZoneInfo(field.date_force_timezone))
 
         return value.strftime(field.get_python_format())
 
@@ -988,7 +984,7 @@ class DateFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         if instance.date_include_time:
-            return make_aware(fake.date_time())
+            return fake.date_time().replace(tzinfo=timezone.utc)
         else:
             return fake.date_object()
 

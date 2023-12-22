@@ -1,10 +1,10 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from django.test.utils import override_settings
 
 import pytest
 from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
-from pytz import timezone
 
 from baserow.core.models import UserLogEntry
 
@@ -12,7 +12,7 @@ from baserow.core.models import UserLogEntry
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_get_new_user_counts(premium_data_fixture):
-    tz = timezone("UTC")
+    tz = timezone.utc
 
     premium_data_fixture.create_user(date_joined=datetime(2020, 12, 30, tzinfo=tz))
     premium_data_fixture.create_user(date_joined=datetime(2021, 1, 1, tzinfo=tz))
@@ -75,7 +75,7 @@ def test_get_new_user_counts(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_get_active_user_counts(premium_data_fixture):
-    tz = timezone("UTC")
+    tz = timezone.utc
 
     user_1 = premium_data_fixture.create_user()
     user_2 = premium_data_fixture.create_user()
@@ -193,8 +193,8 @@ def test_get_active_user_counts(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_get_new_users_per_day(premium_data_fixture):
-    utc = timezone("UTC")
-    gmt3 = timezone("Etc/GMT+3")
+    utc = timezone.utc
+    gmt3 = ZoneInfo("Etc/GMT+3")
 
     premium_data_fixture.create_user(
         date_joined=datetime(2020, 12, 29, 12, 1, tzinfo=utc)
@@ -249,8 +249,8 @@ def test_get_new_users_per_day(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_get_active_users_per_day(premium_data_fixture):
-    utc = timezone("UTC")
-    gmt3 = timezone("Etc/GMT+3")
+    utc = timezone.utc
+    gmt3 = ZoneInfo("Etc/GMT+3")
 
     user_1 = premium_data_fixture.create_user()
     user_2 = premium_data_fixture.create_user()
