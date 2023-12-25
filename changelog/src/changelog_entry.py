@@ -27,7 +27,7 @@ class ChangelogEntry(abc.ABC):
             "message": message,
             "issue_number": issue_number,
             "bullet_points": bullet_points,
-            "created_at": datetime.now(tz=timezone).strftime("%Y-%m-%d"),
+            "created_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
         }
 
     @staticmethod
