@@ -1,8 +1,3 @@
-import {
-  featureFlagIsEnabled,
-  getFeatureFlags,
-} from '@baserow/modules/core/utils/env'
-
 /**
  * Generates a UUID version 4 (UUID v4) string.
  *
@@ -184,14 +179,7 @@ export const isSubstringOfStrings = (strings, searchTerm) => {
 }
 
 export function collatedStringCompare(stringA, stringB, order) {
-  const featureFlags = getFeatureFlags()
-  if (featureFlagIsEnabled(featureFlags, 'collation')) {
-    return order === 'ASC'
-      ? stringA.localeCompare(stringB, 'en')
-      : stringB.localeCompare(stringA, 'en')
-  } else {
-    return order === 'ASC'
-      ? stringA.localeCompare(stringB)
-      : stringB.localeCompare(stringA)
-  }
+  return order === 'ASC'
+    ? stringA.localeCompare(stringB, 'en')
+    : stringB.localeCompare(stringA, 'en')
 }

@@ -1423,7 +1423,9 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
         value = getattr(row, field.db_column)
-        return value
+        if value is None:
+            return None
+        return collate_expression(Value(value.first_name))
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         return Subquery(
@@ -1626,7 +1628,9 @@ class CreatedByFieldType(ReadOnlyFieldType):
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
         value = getattr(row, field.db_column)
-        return value
+        if value is None:
+            return None
+        return collate_expression(Value(value.first_name))
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         return Subquery(
@@ -3598,7 +3602,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         """
 
         name = f"{field_name}__value"
-        order = collate_expression(F(name))
+        order = F(name)
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -4033,7 +4037,7 @@ class MultipleSelectFieldType(
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(StringAgg(f"{field_name}__value", ","), Value(""))
         annotation = {sort_column_name: query}
-        order = collate_expression(F(sort_column_name))
+        order = F(sort_column_name)
 
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
@@ -4093,7 +4097,7 @@ class MultipleSelectFieldType(
         return set(value1) == set(value2)
 
 
-class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
+class PhoneNumberFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     """
     A simple wrapper around a TextField which ensures any entered data is a
     simple phone number.
@@ -4135,6 +4139,10 @@ class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
 
 class FormulaFieldType(ReadOnlyFieldType):
@@ -5486,7 +5494,7 @@ class MultipleCollaboratorsFieldType(
         query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
         annotation = {sort_column_name: query}
 
-        order = collate_expression(F(sort_column_name))
+        order = F(sort_column_name)
 
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
