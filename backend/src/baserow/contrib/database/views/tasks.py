@@ -8,6 +8,7 @@ from celery_singleton import DuplicateTaskError, Singleton
 from loguru import logger
 
 from baserow.config.celery import app
+from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler, ViewIndexingHandler
 from baserow.contrib.database.views.models import View
 
@@ -40,6 +41,9 @@ def update_view_index(view_id: int):
             ),
         )
         ViewIndexingHandler.update_index(view)
+    except ViewDoesNotExist:
+        # can be ignored, the view doesn't exist anymore
+        pass
     finally:
         # check for any pending view index updates and schedule them out of this
         # singleton task to avoid concurrency issues
