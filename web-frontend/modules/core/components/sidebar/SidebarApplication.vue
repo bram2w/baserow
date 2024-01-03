@@ -108,6 +108,7 @@
           ></SnapshotsModal>
           <li
             v-if="
+              applicationType.supportsTrash() &&
               $hasPermission(
                 'application.read_trash',
                 application,
@@ -202,6 +203,9 @@ export default {
           []
         )
         .filter((component) => component !== null)
+    },
+    applicationType() {
+      return this.$registry.get('application', this.application.type)
     },
   },
   methods: {

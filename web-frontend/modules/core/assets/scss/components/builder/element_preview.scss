@@ -8,6 +8,13 @@
   @include rounded($rounded);
 }
 
+.element-preview__insert,
+.element-preview__menu {
+  opacity: 0;
+  visibility: hidden;
+  transition: visibility 0s linear 200ms, opacity 0s linear 200ms;
+}
+
 .element-preview__insert {
   display: block;
   line-height: 0px;
@@ -29,7 +36,7 @@
 
     font-size: 11px;
     margin-left: -12px;
-    z-index: 2;
+    z-index: 1;
   }
 
   &--bottom {
@@ -40,13 +47,6 @@
 
 .element-preview {
   position: relative;
-
-  .element-preview__insert,
-  .element-preview__menu {
-    opacity: 0;
-    visibility: hidden;
-    transition: visibility 0s linear 200ms, opacity 0s linear 200ms;
-  }
 
   &:hover {
     & > .element-preview__insert,
@@ -97,6 +97,10 @@
   padding: 0 4px;
   white-space: nowrap;
   @include rounded($rounded);
+
+  .element-preview--first-element & {
+    top: 30px;
+  }
 }
 
 .element-preview__menu-item {
