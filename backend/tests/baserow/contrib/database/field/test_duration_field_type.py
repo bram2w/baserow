@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -538,3 +539,48 @@ def test_duration_field_view_aggregations(data_fixture):
 
     result = ViewHandler().get_field_aggregations(user, view, [(field, "unique_count")])
     assert result[field.db_column] == 3
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_get_group_by_metadata_in_rows_with_duration_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_duration_field(table=table, duration_format="h:mm:ss")
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {field.db_column: 1},
+            {field.db_column: 60},
+            {field.db_column: 60},
+            {field.db_column: 600},
+            {field.db_column: "1:0:0"},
+            {field.db_column: 3600},
+            {field.db_column: None},
+        ],
+    )
+
+    model = table.get_model()
+    queryset = model.objects.all().enhance_by_fields()
+    rows = list(queryset)
+
+    handler = ViewHandler()
+    counts = handler.get_group_by_metadata_in_rows([field], rows, queryset)
+
+    # Resolve the queryset, so that we can do a comparison.
+    for c in counts.keys():
+        counts[c] = list(counts[c])
+
+    assert counts == {
+        field: unordered(
+            [
+                {"count": 1, field.db_column: None},
+                {"count": 1, field.db_column: timedelta(seconds=1)},
+                {"count": 2, field.db_column: timedelta(seconds=60)},
+                {"count": 1, field.db_column: timedelta(seconds=600)},
+                {"count": 2, field.db_column: timedelta(seconds=3600)},
+            ]
+        )
+    }

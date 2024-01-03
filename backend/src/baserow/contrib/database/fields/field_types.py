@@ -1685,6 +1685,7 @@ class DurationFieldType(FieldType):
     model_class = DurationField
     allowed_fields = ["duration_format"]
     serializer_field_names = ["duration_format"]
+    _can_group_by = True
 
     def get_model_field(self, instance, **kwargs):
         return DurationModelField(instance.duration_format, null=True)
