@@ -1,20 +1,18 @@
 <template>
   <div ref="cell" class="grid-view__cell">
-    <div class="grid-field-text">
+    <div class="grid-field-button">
       <a
-        v-if="selected && isValid(value)"
+        v-if="isValid(value)"
+        class="button button--tiny button--ghost"
         :href="value && value.url"
         target="_blank"
         rel="nofollow noopener noreferrer"
       >
         {{ getLabelOrURL(value) }}
       </a>
-      <u v-else-if="isValid(value)">
+      <a v-else class="button button--tiny button--ghost disabled">
         {{ getLabelOrURL(value) }}
-      </u>
-      <span v-else>
-        {{ getLabelOrURL(value) }}
-      </span>
+      </a>
     </div>
   </div>
 </template>
@@ -24,7 +22,7 @@ import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
 import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
-  name: 'GridViewFieldLinkURL',
+  name: 'GridViewFieldButton',
   mixins: [gridField, gridFieldInput, linkURLField],
 }
 </script>

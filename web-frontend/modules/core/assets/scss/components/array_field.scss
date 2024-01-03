@@ -13,6 +13,11 @@
   @include fixed-height(22px, 13px);
 }
 
+.array-field__item--button {
+  background-color: inherit;
+  margin: 3px 0;
+}
+
 .array-field__name {
   @extend %ellipsis;
 

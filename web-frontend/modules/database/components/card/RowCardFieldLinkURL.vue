@@ -8,31 +8,19 @@
       class="forced-pointer-events-auto"
       @mousedown.stop
     >
-      {{ $options.methods.getLabelOrUrl(props.value) }}
+      {{ $options.methods.getLabelOrURL(props.value) }}
     </a>
     <template v-else>
-      {{ $options.methods.getLabelOrUrl(props.value) }}
+      {{ $options.methods.getLabelOrURL(props.value) }}
     </template>
   </div>
 </template>
 
 <script>
-import { isValidURL } from '@baserow/modules/core/utils/string'
+import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
   name: 'RowCardFieldLink',
-  methods: {
-    isValidURL,
-    isValid(value) {
-      return isValidURL(value?.url)
-    },
-    getLabelOrUrl(value) {
-      if (!value) {
-        return ''
-      } else {
-        return value.label ? value.label : value.url
-      }
-    },
-  },
+  mixins: [linkURLField],
   height: 16,
 }
 </script>
