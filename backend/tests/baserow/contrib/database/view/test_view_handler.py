@@ -1,5 +1,5 @@
 import datetime
-from datetime import timezone
+from datetime import timedelta, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -3997,7 +3997,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         name="multiple_select"
     ).select_options.all()
 
-    assert actual_result_per_field_name == {
+    expected_result = {
         "text": [{"field_text": "text", "count": 1}, {"field_text": None, "count": 1}],
         "long_text": [
             {"field_long_text": "long_text", "count": 1},
@@ -4195,4 +4195,28 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
             {"field_rollup": Decimal("-122.222"), "count": 1},
             {"field_rollup": Decimal("0.000"), "count": 1},
         ],
+        "duration_hm": [
+            {"count": 1, "field_duration_hm": timedelta(seconds=3660)},
+            {"count": 1, "field_duration_hm": None},
+        ],
+        "duration_hms": [
+            {"count": 1, "field_duration_hms": timedelta(seconds=3666)},
+            {"count": 1, "field_duration_hms": None},
+        ],
+        "duration_hms_s": [
+            {"count": 1, "field_duration_hms_s": timedelta(seconds=3666.6)},
+            {"count": 1, "field_duration_hms_s": None},
+        ],
+        "duration_hms_ss": [
+            {"count": 1, "field_duration_hms_ss": timedelta(seconds=3666.66)},
+            {"count": 1, "field_duration_hms_ss": None},
+        ],
+        "duration_hms_sss": [
+            {"count": 1, "field_duration_hms_sss": timedelta(seconds=3666.666)},
+            {"count": 1, "field_duration_hms_sss": None},
+        ],
     }
+
+    for field_name, expected in expected_result.items():
+        actual = actual_result_per_field_name[field_name]
+        assert actual == unordered(expected), f"{field_name}: {actual} != {expected}"

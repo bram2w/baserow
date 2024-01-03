@@ -217,4 +217,24 @@ def test_serialize_group_by_metadata_on_all_fields_in_interesting_table(data_fix
             {"count": 1, "field_rollup": "-122.222"},
             {"count": 1, "field_rollup": "0.000"},
         ],
+        "duration_hm": [
+            {"count": 1, "field_duration_hm": 3660.0},
+            {"count": 1, "field_duration_hm": None},
+        ],
+        "duration_hms": [
+            {"count": 1, "field_duration_hms": 3666.0},
+            {"count": 1, "field_duration_hms": None},
+        ],
+        "duration_hms_s": [
+            {"count": 1, "field_duration_hms_s": 3666.6},
+            {"count": 1, "field_duration_hms_s": None},
+        ],
+        "duration_hms_ss": [
+            {"count": 1, "field_duration_hms_ss": 3666.66},
+            {"count": 1, "field_duration_hms_ss": None},
+        ],
+        "duration_hms_sss": [
+            {"count": 1, "field_duration_hms_sss": 3666.666},
+            {"count": 1, "field_duration_hms_sss": None},
+        ],
     }

@@ -2376,6 +2376,10 @@ export class DurationFieldType extends FieldType {
     }
     return DurationFieldType.parseInputValue(field, clipboardData)
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class URLFieldType extends FieldType {
