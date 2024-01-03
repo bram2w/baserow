@@ -2829,7 +2829,9 @@ export class SingleSelectFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name].value
       const stringB = b[name] === null ? '' : '' + b[name].value
 
-      return collatedStringCompare(stringA, stringB, order)
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 
@@ -3053,7 +3055,9 @@ export class MultipleSelectFieldType extends FieldType {
       const stringB =
         valuesB.length > 0 ? valuesB.map((obj) => obj.value).join('') : ''
 
-      return collatedStringCompare(stringA, stringB, order)
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 
@@ -3709,7 +3713,9 @@ export class MultipleCollaboratorsFieldType extends FieldType {
         stringB = valuesB.map((obj) => obj.name).join('')
       }
 
-      return collatedStringCompare(stringA, stringB, order)
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 

@@ -418,9 +418,6 @@ def get_collation_name() -> Optional[str]:
     can be used, None otherwise.
     """
 
-    if "collation" not in settings.FEATURE_FLAGS:
-        return None
-
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT collname FROM pg_collation where collname = %s AND collencoding = -1",

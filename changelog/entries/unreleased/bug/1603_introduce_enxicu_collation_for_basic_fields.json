@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Introduce en-x-icu collation for basic fields",
+    "issue_number": 1603,
+    "bullet_points": [],
+    "created_at": "2023-12-25"
+}
