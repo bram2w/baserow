@@ -62,6 +62,7 @@ class AirtableHandler:
 
         :param share_id: The Airtable share id of the page that must be fetched. Note
             that the base must be shared publicly. The id stars with `shr`.
+        :raises AirtableShareIsNotABase: When the URL doesn't point to a shared base.
         :return: The request ID, initial data and the cookies of the response.
         """
 
@@ -75,7 +76,10 @@ class AirtableHandler:
 
         decoded_content = remove_invalid_surrogate_characters(response.content)
 
-        request_id = re.search('requestId: "(.*)",', decoded_content).group(1)
+        request_id_re = re.search('requestId: "(.*)",', decoded_content)
+        if request_id_re is None:
+            raise AirtableShareIsNotABase("The `shared_id` is not a valid base link.")
+        request_id = request_id_re.group(1)
         raw_init_data = re.search("window.initData = (.*);\n", decoded_content).group(1)
         init_data = json.loads(raw_init_data)
         cookies = response.cookies.get_dict()
