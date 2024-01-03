@@ -49,6 +49,22 @@ def test_fetch_publicly_shared_base():
 
 @pytest.mark.django_db
 @responses.activate
+def test_fetch_publicly_shared_base_not_base_request_id_missing():
+    share_id = "appZkaH3aWX3ZjT3b"
+    responses.add(
+        responses.GET,
+        f"https://airtable.com/{share_id}",
+        status=200,
+        body="not a base",
+        headers={"Set-Cookie": "brw=test;"},
+    )
+
+    with pytest.raises(AirtableShareIsNotABase):
+        AirtableHandler.fetch_publicly_shared_base(share_id)
+
+
+@pytest.mark.django_db
+@responses.activate
 def test_fetch_table():
     base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
     path = os.path.join(base_path, "airtable_base.html")
