@@ -1,5 +1,5 @@
 <template>
-  <div class="element-preview__menu">
+  <div class="element-preview__menu" @click.stop>
     <span v-if="isDuplicating" class="element-preview__menu-item disabled">
       <div class="loading"></div>
     </span>
@@ -12,7 +12,7 @@
     <a
       v-if="hasParent"
       class="element-preview__menu-item"
-      @click.stop="$emit('select-parent')"
+      @click="$emit('select-parent')"
     >
       <i class="iconoir-scale-frame-enlarge"></i>
       <span class="element-preview__menu-item-description">

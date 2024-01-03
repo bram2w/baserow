@@ -5,6 +5,7 @@
       'element-preview--active': isSelected,
       'element-preview--parent-of-selected': isParentOfSelectedElement,
       'element-preview--in-error': inError,
+      'element-preview--first-element': isFirstElement,
     }"
     @click="onSelect"
   >

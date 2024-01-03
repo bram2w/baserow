@@ -22,6 +22,10 @@ export class BuilderApplicationType extends ApplicationType {
     return i18n.t('applicationType.builderDefaultName')
   }
 
+  supportsTrash() {
+    return false
+  }
+
   getApplicationFormComponent() {
     return BuilderForm
   }

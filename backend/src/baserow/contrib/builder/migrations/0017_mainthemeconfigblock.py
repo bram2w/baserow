@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
                     "builder",
                     baserow.core.fields.AutoOneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="mainthemeconfigblock",
+                        related_name="%(class)s",
                         to="builder.builder",
                     ),
                 ),
