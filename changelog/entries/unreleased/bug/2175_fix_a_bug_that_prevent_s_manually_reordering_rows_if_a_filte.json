@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug that prevent s manually reordering rows if a filter is applied on a hidden field.",
+    "issue_number": 2175,
+    "bullet_points": [],
+    "created_at": "2024-01-02"
+}
