@@ -8,7 +8,7 @@ import {
 import {
   featureFlagIsEnabled,
   getFeatureFlags,
-} from '../modules/core/utils/env'
+} from '@baserow/modules/core/utils/env'
 
 /**
  * Replace the official Nuxt `createRouter` function. If the request hostname is equal
