@@ -33,7 +33,11 @@ export default {
       type: Object,
       required: true,
     },
-    fields: {
+    allVisibleFields: {
+      type: Array,
+      required: true,
+    },
+    allFieldsInTable: {
       type: Array,
       required: true,
     },
@@ -72,7 +76,7 @@ export default {
   computed: {
     width() {
       return (
-        this.fields.reduce(
+        this.allVisibleFields.reduce(
           (value, field) => this.getFieldWidth(field.id) + value,
           0
         ) + this.gridViewRowDetailsWidth
@@ -248,7 +252,7 @@ export default {
         await this.$store.dispatch(this.storePrefix + 'view/grid/moveRow', {
           table: this.table,
           grid: this.view,
-          fields: this.fields,
+          fields: this.allFieldsInTable,
           getScrollTop,
           row: this.row,
           before: this.targetRow,
