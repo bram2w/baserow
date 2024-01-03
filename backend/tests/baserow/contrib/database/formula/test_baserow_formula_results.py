@@ -331,7 +331,7 @@ VALID_FORMULA_TESTS = [
         {"url": "https://www.google.com", "label": "Google"},
     ),
     (
-        "button('https://www.google.com', 'Google') = link('https://www.google.com')",
+        "link('https://www.google.com', 'Google') = link('https://www.google.com')",
         False,
     ),
     (

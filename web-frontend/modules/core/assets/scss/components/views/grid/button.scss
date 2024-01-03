@@ -1,0 +1,18 @@
+.grid-field-button {
+  @extend %ellipsis;
+
+  height: 32px;
+  line-height: 26px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+
+  & .button {
+    @extend %ellipsis;
+
+    display: inline-block;
+    max-width: 90%;
+  }
+}

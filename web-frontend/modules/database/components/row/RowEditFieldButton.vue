@@ -2,35 +2,32 @@
   <div class="control__elements">
     <a
       v-if="isValidLinkURL"
+      class="button button--tiny button--ghost"
       :href="copy && copy.url"
       target="_blank"
       rel="nofollow noopener noreferrer"
     >
       {{ labelOrURL }}
     </a>
-    <span v-else>
+    <a v-else class="button button--tiny button--ghost disabled">
       {{ labelOrURL }}
-    </span>
+    </a>
   </div>
 </template>
 
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 import rowEditFieldInput from '@baserow/modules/database/mixins/rowEditFieldInput'
-import { isValidURL } from '@baserow/modules/core/utils/string'
+import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 
 export default {
-  mixins: [rowEditField, rowEditFieldInput],
+  mixins: [rowEditField, rowEditFieldInput, linkURLField],
   computed: {
     isValidLinkURL() {
-      return this.copy && isValidURL(this.copy.url)
+      return this.copy && this.isValid(this.copy)
     },
     labelOrURL() {
-      if (!this.copy) {
-        return ''
-      } else {
-        return this.copy.label ? this.copy.label : this.copy.url
-      }
+      return this.getLabelOrURL(this.copy)
     },
   },
 }

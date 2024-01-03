@@ -56,6 +56,7 @@ from django.db.models.functions.datetime import TimezoneMixin
 from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
 from baserow.contrib.database.formula.ast.function import (
     BaserowFunctionDefinition,
+    NumOfArgsBetween,
     NumOfArgsGreaterThan,
     OneArgumentBaserowFunction,
     ThreeArgumentBaserowFunction,
@@ -101,6 +102,7 @@ from baserow.contrib.database.formula.types.formula_type import (
 from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaArrayType,
     BaserowFormulaBooleanType,
+    BaserowFormulaButtonType,
     BaserowFormulaCharType,
     BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
@@ -2937,21 +2939,36 @@ class BaserowRegexReplace(ThreeArgumentBaserowFunction):
         )
 
 
-class BaserowLink(OneArgumentBaserowFunction):
+class BaserowLink(BaserowFunctionDefinition):
     type = "link"
-    arg_type = [BaserowFormulaTextType]
+    num_args = NumOfArgsBetween(1, 2, inclusive=True)
+    try_coerce_nullable_args_to_not_null = False
 
-    def type_function(
+    @property
+    def arg_types(self) -> BaserowArgumentTypeChecker:
+        return lambda _, _2: [BaserowFormulaTextType]
+
+    def type_function_given_valid_args(
         self,
-        func_call: BaserowFunctionCall[UnTyped],
-        arg: BaserowExpression[BaserowFormulaValidType],
+        args: List[BaserowExpression[BaserowFormulaValidType]],
+        expression: "BaserowFunctionCall[UnTyped]",
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(
-            BaserowFormulaLinkType(nullable=arg.expression_type.nullable)
+        typed_args = [BaserowToText()(a) for a in args]
+        return expression.with_args(typed_args).with_valid_type(
+            BaserowFormulaLinkType(nullable=args[0].expression_type.nullable)
         )
 
-    def to_django_expression(self, arg: Expression) -> Expression:
-        return JSONObject(url=arg)
+    def to_django_expression_given_args(
+        self, expr_args: List[WrappedExpressionWithMetadata], *args, **kwargs
+    ) -> WrappedExpressionWithMetadata:
+        url_kwargs = {"url": expr_args[0].expression}
+        if len(expr_args) > 1:
+            url_kwargs["label"] = expr_args[1].expression
+        expr = JSONObject(**url_kwargs)
+        return WrappedExpressionWithMetadata.from_args(
+            ExpressionWrapper(expr, output_field=JSONField()),
+            expr_args,
+        )
 
 
 class BaserowButton(TwoArgumentBaserowFunction):
@@ -2966,7 +2983,7 @@ class BaserowButton(TwoArgumentBaserowFunction):
         arg2: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
         return func_call.with_valid_type(
-            BaserowFormulaLinkType(nullable=arg1.expression_type.nullable)
+            BaserowFormulaButtonType(nullable=arg1.expression_type.nullable)
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:

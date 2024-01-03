@@ -1,21 +1,18 @@
 <template functional>
-  <div class="array-field__item">
+  <div class="array-field__item array-field__item--button">
     <a
-      v-if="props.selected && $options.methods.isValid(props.value)"
+      v-if="$options.methods.isValid(props.value)"
+      class="button button--tiny button--ghost forced-pointer-events-auto"
       :href="props.value && props.value.url"
       target="_blank"
       rel="nofollow noopener noreferrer"
-      class="forced-pointer-events-auto"
       @mousedown.stop
     >
       {{ $options.methods.getLabelOrURL(props.value) }}
     </a>
-    <u v-else-if="$options.methods.isValid(props.value)">
+    <a v-else class="button button--tiny button--ghost disabled">
       {{ $options.methods.getLabelOrURL(props.value) }}
-    </u>
-    <template v-else>
-      {{ $options.methods.getLabelOrURL(props.value) }}
-    </template>
+    </a>
   </div>
 </template>
 
