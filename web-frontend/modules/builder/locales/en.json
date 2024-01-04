@@ -85,7 +85,9 @@
         "formContainer": "Form",
         "formContainerDescription": "A form element",
         "dropdown": "Dropdown",
-        "dropdownDescription": "Dropdown element"
+        "dropdownDescription": "Dropdown element",
+        "checkbox": "Checkbox",
+        "checkboxDescription": "Checkbox element"
     },
     "addElementButton": {
         "label": "Element"
@@ -430,5 +432,10 @@
         "rowIdPlaceholder": "Select a row ID",
         "fieldMappingPlaceholder": "Choose a field value",
         "noTableSelectedMessage": "Choose a table to begin configuring your fields."
+    },
+    "checkboxElementForm": {
+      "labelTitle": "Label",
+      "valueTitle": "Default value",
+      "requiredTitle": "Required"
     }
 }

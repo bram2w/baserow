@@ -1,0 +1,15 @@
+.checkbox-element {
+  font-size: 14px;
+}
+
+.checkbox-element__input {
+  cursor: pointer;
+  transform: scale(1.4);
+  margin-right: 10px;
+}
+
+.checkbox-element__label {
+  cursor: pointer;
+  color: $black;
+  user-select: none;
+}

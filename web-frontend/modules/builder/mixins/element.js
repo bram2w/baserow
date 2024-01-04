@@ -21,7 +21,7 @@ export default {
     elementType() {
       return this.$registry.get('element', this.element.type)
     },
-    isEditable() {
+    isEditMode() {
       return this.mode === 'editing'
     },
     applicationContext() {
