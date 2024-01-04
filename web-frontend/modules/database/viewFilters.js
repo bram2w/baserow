@@ -10,7 +10,7 @@ import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFi
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import ViewFilterTypeNumberWithTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeNumberWithTimeZone'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
-import { trueString } from '@baserow/modules/database/utils/constants'
+import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
   splitTimezoneAndFilterValue,
   DATE_FILTER_TIMEZONE_VALUE_SEPARATOR,
@@ -1718,14 +1718,14 @@ export class BooleanViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    filterValue = trueString.includes(
+    filterValue = trueValues.includes(
       filterValue.toString().toLowerCase().trim()
     )
 
     if (rowValue === null) {
       rowValue = false
     } else {
-      rowValue = trueString.includes(rowValue.toString().toLowerCase().trim())
+      rowValue = trueValues.includes(rowValue.toString().toLowerCase().trim())
     }
     return filterValue ? rowValue : !rowValue
   }

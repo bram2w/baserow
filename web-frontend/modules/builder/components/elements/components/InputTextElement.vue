@@ -6,7 +6,7 @@
     <input
       type="text"
       class="input-element"
-      :readonly="isEditable"
+      :readonly="isEditMode"
       :value="resolvedDefaultValue"
       :required="element.required"
       :placeholder="resolvedPlaceholder"

@@ -16,6 +16,7 @@ import {
   ELEMENT_EVENTS,
   PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS,
 } from '@baserow/modules/builder/enums'
+import { ensureBoolean } from '@baserow/modules/core/utils/validator'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -30,6 +31,8 @@ import FormContainerElement from '@baserow/modules/builder/components/elements/c
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
 import DropdownElement from '@baserow/modules/builder/components/elements/components/DropdownElement.vue'
 import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
+import CheckboxElement from '@baserow/modules/builder/components/elements/components/CheckboxElement.vue'
+import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -652,5 +655,48 @@ export class FormContainerElementType extends ContainerElementType {
 
   get childStylesForbidden() {
     return ['style_width']
+  }
+}
+
+export class CheckboxElementType extends FormElementType {
+  getType() {
+    return 'checkbox'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.checkbox')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.checkboxDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-check'
+  }
+
+  get component() {
+    return CheckboxElement
+  }
+
+  get generalFormComponent() {
+    return CheckboxElementForm
+  }
+
+  get formDataType() {
+    return 'boolean'
+  }
+
+  getInitialFormDataValue(element, applicationContext) {
+    try {
+      return ensureBoolean(
+        this.resolveFormula(element.default_value, {
+          element,
+          ...applicationContext,
+        })
+      )
+    } catch {
+      return false
+    }
   }
 }

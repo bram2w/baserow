@@ -15,6 +15,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     WIDTHS,
     ButtonElement,
+    CheckboxElement,
     CollectionField,
     ColumnElement,
     ContainerElement,
@@ -998,6 +999,64 @@ class FormContainerElementType(ContainerElementType):
             )
 
         return super().import_serialized(page, serialized_copy, id_mapping)
+
+
+class CheckboxElementType(InputElementType):
+    type = "checkbox"
+    model_class = CheckboxElement
+    allowed_fields = ["label", "default_value", "required"]
+    serializer_field_names = ["label", "default_value", "required"]
+
+    class SerializedDict(ElementDict):
+        label: BaserowFormula
+        required: bool
+        default_value: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "label": FormulaSerializerField(
+                help_text=CheckboxElement._meta.get_field("label").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "default_value": FormulaSerializerField(
+                help_text=CheckboxElement._meta.get_field("default_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "required": serializers.BooleanField(
+                help_text=CheckboxElement._meta.get_field("required").help_text,
+                default=False,
+                required=False,
+            ),
+        }
+
+        return overrides
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["label"]:
+            serialized_copy["label"] = import_formula(
+                serialized_copy["label"], id_mapping
+            )
+        if serialized_copy["default_value"]:
+            serialized_copy["default_value"] = import_formula(
+                serialized_copy["default_value"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return {
+            "label": "",
+            "required": False,
+            "default_value": "",
+        }
 
 
 class DropdownElementType(FormElementType):

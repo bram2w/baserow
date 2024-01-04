@@ -628,3 +628,18 @@ class DropdownElementOption(models.Model):
         blank=True, default="", help_text="The display name of the option"
     )
     dropdown = models.ForeignKey(DropdownElement, on_delete=models.CASCADE)
+
+
+class CheckboxElement(InputElement):
+    """
+    A checkbox element.
+    """
+
+    label = FormulaField(
+        default="",
+        help_text="The text label for this input",
+    )
+    default_value = FormulaField(default="", help_text="The input's default value.")
+    required = models.BooleanField(
+        default=False, help_text="Whether this input is a required field."
+    )

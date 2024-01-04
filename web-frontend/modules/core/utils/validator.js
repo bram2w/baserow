@@ -1,3 +1,5 @@
+import { trueValues, falseValues } from '@baserow/modules/core/utils/constants'
+
 /**
  * Ensures that the value is an integer or can be converted to an integer.
  * @param {number|string} value - The value to ensure as an integer.
@@ -17,7 +19,7 @@ export const ensureInteger = (value) => {
 }
 
 /**
- * Ensures that the value is a string or convert it.
+ * Ensures that the value is a string or try to convert it.
  * @param {*} value - The value to ensure as a string.
  * @returns {string} The value as a string.
  */
@@ -26,4 +28,18 @@ export const ensureString = (value) => {
     return ''
   }
   return `${value}`
+}
+
+/**
+ * Ensures that the value is a boolean or convert it.
+ * @param {*} value - The value to ensure as a boolean.
+ * @returns {boolean} The value as a boolean.
+ */
+export const ensureBoolean = (value) => {
+  if (trueValues.includes(value)) {
+    return true
+  } else if (falseValues.includes(value)) {
+    return false
+  }
+  throw new Error('Value is not a valid boolean or convertible to a boolean.')
 }

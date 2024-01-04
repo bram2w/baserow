@@ -122,7 +122,7 @@ import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/v
 import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
 import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
 
-import { trueString } from '@baserow/modules/database/utils/constants'
+import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
   getDateMomentFormat,
   getFieldTimezone,
@@ -1541,7 +1541,7 @@ export class BooleanFieldType extends FieldType {
       clipboardData = ''
     }
     const value = clipboardData.toLowerCase().trim()
-    return trueString.includes(value)
+    return trueValues.includes(value)
   }
 
   getDocsDataType(field) {
