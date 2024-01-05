@@ -667,6 +667,39 @@ def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture)
 
 
 @pytest.mark.django_db
+def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("Email", "text"),
+        ],
+        rows=[
+            ["Ada Lovelace", "ada@baserow.io"],
+            ["Blaise Pascal", "blaise@baserow.io"],
+        ],
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration, table=table, row_id=""
+    )
+    service_type = service.get_type()
+
+    dispatch_context = FakeDispatchContext()
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    assert dispatch_data["data"].id == rows[0].id
+
+
+@pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_filters(
     data_fixture,
 ):
