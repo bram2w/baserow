@@ -673,6 +673,7 @@ class LocalBaserowListRowsUserServiceType(
 class LocalBaserowGetRowUserServiceType(
     LocalBaserowViewServiceType,
     LocalBaserowTableServiceFilterableMixin,
+    LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
 ):
     """
@@ -811,6 +812,10 @@ class LocalBaserowGetRowUserServiceType(
 
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
 
+        # Ignore validation for empty formulas
+        if not service.row_id:
+            return resolved_values
+
         try:
             resolved_values["row_id"] = ensure_integer(
                 resolve_formula(
@@ -869,6 +874,19 @@ class LocalBaserowGetRowUserServiceType(
 
         # Find the `filters` applicable to this Service's View.
         queryset = self.get_dispatch_filters(service, queryset, model)
+
+        # Find sorts applicable to this service.
+        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
+        if view_sorts is not None:
+            queryset = queryset.order_by(*view_sorts)
+
+        # If no row id is provided return the first item from the queryset
+        # This is useful when we want to use filters to specifically choose one
+        # row by setting the right condition
+        if "row_id" not in resolved_values:
+            if not queryset.exists():
+                raise DoesNotExist()
+            return {"data": queryset.first(), "baserow_table_model": model}
 
         try:
             row = queryset.get(pk=resolved_values["row_id"])

@@ -18,6 +18,7 @@
             small-label
             :label="$t('localBaserowGetRowForm.rowFieldLabel')"
             :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
+            :help-text="$t('localBaserowGetRowForm.rowFieldHelpText')"
             :data-providers-allowed="DATA_PROVIDERS_ALLOWED_DATA_SOURCES"
           />
         </div>

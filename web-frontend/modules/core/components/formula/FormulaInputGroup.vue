@@ -16,6 +16,7 @@
         :application-context="applicationContext"
         @input="$emit('input', $event)"
       />
+      <p v-if="helpText">{{ helpText }}</p>
     </div>
   </FormElement>
 </template>
@@ -35,6 +36,11 @@ export default {
       default: '',
     },
     placeholder: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    helpText: {
       type: String,
       required: false,
       default: '',
