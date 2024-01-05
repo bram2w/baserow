@@ -139,8 +139,12 @@ export default {
     row: {
       deep: true,
       handler(row) {
-        if (row !== null && this.$refs.rowEditModal) {
-          this.populateAndEditRow(row)
+        if (this.$refs.rowEditModal) {
+          if (row !== null) {
+            this.populateAndEditRow(row)
+          } else {
+            this.$refs.rowEditModal.hide()
+          }
         }
       },
     },
