@@ -496,8 +496,12 @@ export default {
     row: {
       deep: true,
       handler(newRow, prevRow) {
-        if (newRow !== null && this.$refs.rowEditModal) {
-          this.populateAndEditRow(newRow)
+        if (this.$refs.rowEditModal) {
+          if (newRow !== null) {
+            this.populateAndEditRow(newRow)
+          } else {
+            this.$refs.rowEditModal.hide()
+          }
         }
         // `refreshRow` doesn't immediately hide a row not matching filters if a
         // user open the modal for that row to solve
