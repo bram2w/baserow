@@ -1,7 +1,7 @@
 <template>
   <div class="badge" :class="classes">
     <i v-if="indicator" class="badge__indicator"></i>
-    <slot />
+    <span class="badge__label"><slot /></span>
   </div>
 </template>
 

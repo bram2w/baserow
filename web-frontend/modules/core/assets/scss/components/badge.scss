@@ -6,7 +6,13 @@
   gap: 6px;
   font-size: 11px;
   height: 24px;
+  max-width: 100%;
+
   @include rounded($rounded);
+}
+
+.badge__label {
+  @extend %ellipsis;
 }
 
 @include badge-color('cyan');
@@ -38,6 +44,7 @@
   width: 5px;
   height: 5px;
   @include rounded($rounded-3xl);
+  flex-shrink: 0;
 }
 
 .badge--bold {
