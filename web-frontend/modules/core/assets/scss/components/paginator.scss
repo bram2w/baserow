@@ -1,60 +1,68 @@
 .paginator {
-  display: flex;
-  align-items: center;
-}
+  @include flex-align-items();
 
-.paginator__name {
-  margin-right: 14px;
-}
-
-.paginator__group {
-  display: flex;
-  border: solid 1px $color-neutral-400;
-  overflow: hidden;
-  background-color: $white;
-  @include rounded($rounded);
-
-  > * {
-    @include fixed-height(24px, 12px);
-
-    &:not(:last-child) {
-      border-right: solid 1px $color-neutral-400;
-    }
-  }
+  font-size: 12px;
+  color: $palette-neutral-900;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .paginator__button {
+  color: $palette-neutral-900;
+  width: 24px;
+  height: 24px;
+  justify-content: center;
+  background: $white;
+  border: 1px solid $palette-neutral-400;
+  font-size: 14px;
+
   @include flex-align-items();
+  @include add-elevation($elevation-low);
+  @include rounded($rounded-md);
 
-  color: $color-neutral-900;
-  padding: 0 10px;
-
-  &:hover {
-    background-color: $color-neutral-100;
-  }
-
-  &.paginator__button--disabled {
-    cursor: initial;
-    background-color: $color-neutral-100;
+  &:hover:not(.paginator__button--disabled) {
+    color: $palette-neutral-1200;
   }
 }
 
-.paginator__page-input {
-  border: 0;
-  border-radius: 0;
-  width: 40px;
+.paginator__content {
+  display: flex;
   text-align: center;
-  -moz-appearance: textfield;
+  align-items: center;
+}
 
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
+.paginator__button--disabled {
+  cursor: initial;
+  background-color: $palette-neutral-100;
+  color: $palette-neutral-700;
 }
 
 .paginator__count {
   padding: 0 10px;
   color: $color-neutral-500;
   border-right: solid 1px $color-neutral-400;
+}
+
+.paginator__current-page {
+  font-weight: bold;
+}
+
+.paginator__content-text {
+  text-transform: capitalize;
+}
+
+.paginator__content-current-page {
+  font-weight: bold;
+}
+
+.paginator__content-input {
+  border: 1px solid $palette-neutral-400;
+  height: 24px;
+  padding: 2px 8px;
+  font-size: 12px;
+  text-align: center;
+  margin: 0 6px;
+
+  @include rounded($rounded-md);
+  @include add-elevation($elevation-low);
 }

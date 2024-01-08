@@ -210,7 +210,7 @@ export default {
     return {
       loading: false,
       page: 1,
-      totalPages: null,
+      totalPages: 0,
       searchQuery: false,
       rows: [],
       columnSorts: this.defaultColumnSorts,
@@ -265,7 +265,7 @@ export default {
       return this.columnSorts.findIndex((c) => c.key === column.key)
     },
     async doSearch(searchQuery) {
-      this.totalPages = null
+      this.totalPages = 0
       this.searchQuery = searchQuery
       await this.fetch(1)
     },
