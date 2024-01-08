@@ -1,43 +1,42 @@
 <template>
   <div class="paginator">
-    <div class="paginator__name">{{ $t('paginator.page') }}</div>
-    <div class="paginator__group">
-      <a
-        class="paginator__button"
-        :class="{
-          'paginator__button--disabled': page === 1,
-        }"
-        @click="changePage(page - 1)"
-      >
-        <i class="iconoir-nav-arrow-left"></i>
-      </a>
+    <!-- <div class="paginator__name"></div> -->
+
+    <a
+      class="paginator__button"
+      :class="{
+        'paginator__button--disabled': page === 1,
+      }"
+      @click="changePage(page - 1)"
+    >
+      <i class="iconoir-nav-arrow-left"></i>
+    </a>
+
+    <div class="paginator__content">
+      <span>{{ $t('paginator.page') }}</span>
       <input
-        v-model.number="textInputPage"
-        class="input paginator__page-input"
-        type="number"
-        @keypress.enter="changePage(textInputPage)"
+        type="text"
+        class="paginator__content-input"
+        required
+        :size="totalPages.toString().length"
+        :value="page"
+        @change="changePage(parseInt($event.target.value))"
       />
-      <div class="paginator__count">
-        {{ $t('paginator.of', { pages: totalPages }) }}
-      </div>
-      <a
-        class="paginator__button"
-        :class="{
-          'paginator__button--disabled': page === totalPages,
-        }"
-        @click="changePage(page + 1)"
-      >
-        <i class="iconoir-nav-arrow-right"></i>
-      </a>
+      <span>{{ $t('paginator.of', { pages: totalPages }) }}</span>
     </div>
+
+    <a
+      class="paginator__button"
+      :class="{
+        'paginator__button--disabled': page === totalPages,
+      }"
+      @click="changePage(page + 1)"
+    >
+      <i class="iconoir-nav-arrow-right"></i>
+    </a>
   </div>
 </template>
 <script>
-/**
- * Shows pagination buttons and the current page. Emits a `change-page` event when the
- * user attempts to change the page. If this event is successfully completed it is up
- * the parent component to update the provided page prop to show the new current page.
- */
 export default {
   name: 'Paginator',
   props: {
@@ -46,6 +45,8 @@ export default {
      */
     totalPages: {
       required: true,
+      type: Number,
+      default: 0,
       validator: (prop) => typeof prop === 'number' || prop === null,
     },
     /**
@@ -54,33 +55,13 @@ export default {
     page: {
       required: true,
       type: Number,
-    },
-  },
-  data() {
-    return {
-      textInputPage: 1,
-    }
-  },
-  watch: {
-    page(newPage) {
-      this.textInputPage = newPage
+      default: 0,
     },
   },
   methods: {
-    invalidNewPage(newPage) {
-      return (
-        typeof newPage !== 'number' ||
-        (this.totalPages !== null &&
-          this.totalPages !== 0 &&
-          (newPage > this.totalPages || newPage < 1))
-      )
-    },
     changePage(newPage) {
-      if (this.invalidNewPage(newPage)) {
-        this.textInputPage = this.page
-        return
-      }
-      this.$emit('change-page', newPage)
+      if (newPage <= this.totalPages && newPage > 0)
+        this.$emit('change-page', newPage)
     },
   },
 }

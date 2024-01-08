@@ -1,6 +1,6 @@
 {
     "paginator": {
-        "page": "page",
+        "page": "Page",
         "of": "of {pages}"
     },
     "copied": {

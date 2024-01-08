@@ -96,7 +96,7 @@ export default {
       search: '',
       visibleSearch: '',
       page: 1,
-      totalPages: null,
+      totalPages: 0,
       lastHoveredRow: null,
       addRowHover: false,
       searchDebounce: null,
@@ -234,7 +234,7 @@ export default {
     doSearch(query, immediate) {
       const search = () => {
         this.search = query
-        this.totalPages = null
+        this.totalPages = 0
         return this.fetch(1)
       }
       if (this.searchDebounce) {
