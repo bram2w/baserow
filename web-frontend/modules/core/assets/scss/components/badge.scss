@@ -43,8 +43,9 @@
 .badge__indicator {
   width: 5px;
   height: 5px;
-  @include rounded($rounded-3xl);
   flex-shrink: 0;
+
+  @include rounded($rounded-3xl);
 }
 
 .badge--bold {
