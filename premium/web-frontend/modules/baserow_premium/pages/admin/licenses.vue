@@ -100,13 +100,6 @@
                 license.license_id
               }}</span>
             </div>
-            <!-- <div
-              class="license-plan margin-right-1"
-              :class="getLicenseType(license).getLicenseBadgeColor()"
-            >
-             
-            </div> -->
-
             <Badge :color="getLicenseType(license).getLicenseBadgeColor()" bold>
               {{ getLicenseType(license).getName() }}</Badge
             >
