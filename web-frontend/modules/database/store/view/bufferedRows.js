@@ -2,6 +2,7 @@ import Vue from 'vue'
 import axios from 'axios'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { clone } from '@baserow/modules/core/utils/object'
+import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
 import {
   calculateSingleRowSearchMatches,
   extractRowMetadata,
@@ -11,7 +12,11 @@ import {
   matchSearchFilters,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
-import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import {
+  extractRowReadOnlyValues,
+  prepareNewOldAndUpdateRequestValues,
+  prepareRowForRequest,
+} from '@baserow/modules/database/utils/row'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 /**
@@ -47,6 +52,7 @@ import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/sea
  */
 export default ({ service, customPopulateRow }) => {
   let lastRequestController = null
+  const updateRowQueue = new GroupTaskQueue()
 
   const populateRow = (row, metadata = {}) => {
     if (customPopulateRow) {
@@ -673,39 +679,21 @@ export default ({ service, customPopulateRow }) => {
       { commit, dispatch },
       { table, view, row, field, fields, value, oldValue }
     ) {
-      const fieldType = this.$registry.get('field', field._.type.type)
-      const newValues = {}
-      const newValuesForUpdate = {}
-      const oldValues = {}
-      const fieldName = `field_${field.id}`
-      newValues[fieldName] = value
-      newValuesForUpdate[fieldName] = fieldType.prepareValueForUpdate(
-        field,
-        value
-      )
-      oldValues[fieldName] = oldValue
-
-      fields.forEach((fieldToCall) => {
-        const fieldType = this.$registry.get('field', fieldToCall._.type.type)
-        const fieldToCallName = `field_${fieldToCall.id}`
-        const currentFieldValue = row[fieldToCallName]
-        const optimisticFieldValue = fieldType.onRowChange(
+      const { newRowValues, oldRowValues, updateRequestValues } =
+        prepareNewOldAndUpdateRequestValues(
           row,
-          fieldToCall,
-          currentFieldValue
+          fields,
+          field,
+          value,
+          oldValue,
+          this.$registry
         )
-
-        if (currentFieldValue !== optimisticFieldValue) {
-          newValues[fieldToCallName] = optimisticFieldValue
-          oldValues[fieldToCallName] = currentFieldValue
-        }
-      })
 
       await dispatch('afterExistingRowUpdated', {
         view,
         fields,
         row,
-        values: newValues,
+        values: newRowValues,
       })
       // There is a chance that the row is not in the buffer, but it does exist in
       // the view. In that case, the `afterExistingRowUpdated` action has not done
@@ -713,26 +701,36 @@ export default ({ service, customPopulateRow }) => {
       // modal, but then it won't be updated, so we have to update it forcefully.
       commit('UPDATE_ROW_VALUES', {
         row,
-        values: { ...newValues },
+        values: { ...newRowValues },
       })
 
       try {
-        const { data } = await RowService(this.$client).update(
-          table.id,
-          row.id,
-          newValuesForUpdate
-        )
-        commit('UPDATE_ROW', { row, values: data })
+        // Add the update actual update function to the queue so that the same row
+        // will never be updated concurrency, and so that the value won't be
+        // updated if the row hasn't been created yet.
+        await updateRowQueue.add(async () => {
+          const { data } = await RowService(this.$client).update(
+            table.id,
+            row.id,
+            updateRequestValues
+          )
+          const readOnlyData = extractRowReadOnlyValues(
+            data,
+            fields,
+            this.$registry
+          )
+          commit('UPDATE_ROW', { row, values: readOnlyData })
+        }, row.id)
       } catch (error) {
         dispatch('afterExistingRowUpdated', {
           view,
           fields,
           row,
-          values: oldValues,
+          values: oldRowValues,
         })
         commit('UPDATE_ROW_VALUES', {
           row,
-          values: { ...oldValues },
+          values: { ...oldRowValues },
         })
         dispatch('fetchAllFieldAggregationData', { view })
         throw error
