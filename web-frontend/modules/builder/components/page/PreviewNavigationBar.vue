@@ -3,19 +3,19 @@
     <div />
     <div class="preview-navigation-bar__address-bar">
       <template v-for="pathPart in splitPath">
-        <input
+        <PreviewNavigationBarInput
           v-if="pathPart.type === 'variable'"
           :key="pathPart.key"
-          class="preview-navigation-bar__address-bar-parameter"
-          :class="`preview-navigation-bar__address-bar-parameter--${
+          :class="`preview-navigation-bar__address-bar-parameter-input--${
             paramTypeMap[pathPart.value]
           }`"
-          :value="pageParameters[pathPart.value]"
-          @input="
+          :validation-fn="pathPart.validationFn"
+          :default-value="pageParameters[pathPart.value]"
+          @change="
             actionSetParameter({
               page,
               name: pathPart.value,
-              value: $event.target.value,
+              value: $event,
             })
           "
         />
@@ -33,10 +33,13 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
 import { splitPath } from '@baserow/modules/builder/utils/path'
+import PreviewNavigationBarInput from '@baserow/modules/builder/components/page/PreviewNavigationBarInput'
+import { mapActions } from 'vuex'
+import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 
 export default {
+  components: { PreviewNavigationBarInput },
   props: {
     page: {
       type: Object,
@@ -50,7 +53,14 @@ export default {
     splitPath() {
       return splitPath(this.page.path).map((pathPart, index) => ({
         ...pathPart,
-        key: `${pathPart.value}-${index}`,
+        key:
+          pathPart.type === 'variable'
+            ? `${this.paramTypeMap[pathPart.value]}-${pathPart.value}-${index}`
+            : `${pathPart.value}-${index}`,
+        validationFn:
+          PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[
+            this.paramTypeMap[pathPart.value]
+          ],
       }))
     },
     paramTypeMap() {

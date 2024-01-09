@@ -1,6 +1,6 @@
 import {
-  ensureInteger,
-  ensureString,
+  ensureNonEmptyString,
+  ensurePositiveInteger,
 } from '@baserow/modules/core/utils/validator'
 import {
   DataSourceDataProviderType,
@@ -16,8 +16,8 @@ export const PLACEMENTS = {
   RIGHT: 'right',
 }
 export const PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS = {
-  numeric: ensureInteger,
-  text: ensureString,
+  numeric: ensurePositiveInteger,
+  text: ensureNonEmptyString,
 }
 
 export const IMAGE_SOURCE_TYPES = {

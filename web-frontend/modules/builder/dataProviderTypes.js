@@ -1,6 +1,7 @@
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 
 import _ from 'lodash'
+import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
 
 export class DataSourceDataProviderType extends DataProviderType {
   constructor(...args) {
@@ -141,7 +142,7 @@ export class PageParameterDataProviderType extends DataProviderType {
           this.app.store.dispatch('pageParameter/setParameter', {
             page,
             name,
-            value: type === 'numeric' ? 1 : 'test',
+            value: defaultValueForParameterType(type),
           })
         )
       )
