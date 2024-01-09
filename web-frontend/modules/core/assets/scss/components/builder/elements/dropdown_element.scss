@@ -1,0 +1,26 @@
+.dropdown-element {
+  border: 1px solid $black;
+  border-radius: 0;
+
+  .dropdown__selected {
+    border: none;
+    height: auto;
+    line-height: 1;
+  }
+
+  .dropdown__items {
+    border-radius: 0;
+  }
+
+  .select__item {
+    border-radius: 0;
+  }
+
+  .select__items {
+    border: 1px solid $palette-neutral-800;
+  }
+
+  .dropdown__toggle-icon {
+    color: $black;
+  }
+}
