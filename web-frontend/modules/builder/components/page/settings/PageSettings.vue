@@ -29,6 +29,7 @@
 import error from '@baserow/modules/core/mixins/error'
 import PageSettingsForm from '@baserow/modules/builder/components/page/settings/PageSettingsForm'
 import { mapActions } from 'vuex'
+import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
 
 export default {
   name: 'PageSettings',
@@ -63,6 +64,15 @@ export default {
             path_params: pathPrams,
           },
         })
+        await Promise.all(
+          pathPrams.map(({ name, type }) =>
+            this.$store.dispatch('pageParameter/setParameter', {
+              page: this.page,
+              name,
+              value: defaultValueForParameterType(type),
+            })
+          )
+        )
         this.success = true
       } catch (error) {
         this.handleError(error)
