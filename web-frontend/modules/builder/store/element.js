@@ -234,6 +234,15 @@ const actions = {
     )
     const elementToDelete = elementsOfPage[elementIndex]
 
+    const descendants = getters.getDescendants(page, elementToDelete)
+
+    // First delete all children
+    await Promise.all(
+      descendants.map((descendant) =>
+        dispatch('forceDelete', { page, elementId: descendant.id })
+      )
+    )
+
     await dispatch('forceDelete', { page, elementId })
 
     try {
@@ -243,6 +252,12 @@ const actions = {
         page,
         element: elementToDelete,
       })
+      // Then restore all children
+      await Promise.all(
+        descendants.map((descendant) =>
+          dispatch('forceCreate', { page, element: descendant })
+        )
+      )
       throw error
     }
   },
@@ -384,6 +399,12 @@ const getters = {
     return getters
       .getElementsOrdered(page)
       .filter((e) => e.parent_element_id === element.id)
+  },
+  getDescendants: (state, getters) => (page, element) => {
+    return getters
+      .getChildren(page, element)
+      .map((child) => [...getters.getChildren(page, child), child])
+      .flat()
   },
   getAncestors: (state, getters) => (page, element) => {
     const getElementAncestors = (element) => {
