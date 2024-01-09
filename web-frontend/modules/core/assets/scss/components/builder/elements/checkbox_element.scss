@@ -1,15 +1,33 @@
 .checkbox-element {
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .checkbox-element__input {
   cursor: pointer;
-  transform: scale(1.4);
-  margin-right: 10px;
+  appearance: none;
+  margin: 0;
+  height: 16px;
+  width: 16px;
+  border: 1px solid $black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.checkbox-element__input:checked::before {
+  content: '';
+  width: 0.67em;
+  height: 0.67em;
+  background-color: $black;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 
 .checkbox-element__label {
   cursor: pointer;
   color: $black;
   user-select: none;
+  padding-bottom: 2px;
 }

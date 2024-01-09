@@ -5,6 +5,7 @@
     </label>
     <Dropdown
       v-model="itemSelected"
+      class="dropdown-element"
       :placeholder="placeholderResolved"
       :show-search="false"
       :disabled="mode === 'editing'"
