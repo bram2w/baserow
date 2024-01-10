@@ -1,9 +1,11 @@
 import { firstBy } from 'thenby'
 import BigNumber from 'bignumber.js'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
-import { escapeRegExp } from '@baserow/modules/core/utils/string'
+import { escapeRegExp, isSecureURL } from '@baserow/modules/core/utils/string'
 import { SearchModes } from '@baserow/modules/database/utils/search'
 import { convertStringToMatchBackendTsvectorData } from '@baserow/modules/database/search/regexes'
+
+export const DEFAULT_VIEW_ID_COOKIE_NAME = 'defaultViewId'
 
 /**
  * Generates a sort function based on the provided sortings.
@@ -499,23 +501,6 @@ export function utf8ByteSize(str) {
 }
 
 /**
- * Limit the size of a cookie's value by removing elements from an array
- * until it fits within the maximum allowed cookie size.
- */
-export function fitInCookie(name, list) {
-  const result = []
-  for (let i = list.length - 1; i >= 0; i--) {
-    result.unshift(list[i])
-    const serialized = encodeURIComponent(JSON.stringify(result))
-    if (utf8ByteSize(serialized) > 4096) {
-      result.shift() // Remove the last added item as it caused the size to exceed the limit
-      break
-    }
-  }
-  return result
-}
-
-/**
  * Return the view that has been visited most recently or the first
  * available one that is capable of displaying the provided row data if required.
  * If no view is available that can display the row data, return undefined.
@@ -542,4 +527,132 @@ export function getDefaultView(app, store, workspaceId, showRowModal) {
 export function extractRowMetadata(data, rowId) {
   const metadata = data.row_metadata || {}
   return metadata[rowId] || {}
+}
+
+/**
+ * Limit the size of a cookie's value by removing elements from an array
+ * until it fits within the maximum allowed cookie size. The array is
+ * assumed to be ordered by least important to most important, so the first
+ * elements are removed first.
+ *
+ * @param {Array} arrayOfValues - The array of values to encode.
+ * @param {Function} encodingFunc - The function to use to encode the array.
+ * @param {Number} maxLength - The maximum allowed length of the encoded value string.
+ * @returns {String} - The serialized value to save in the cookie with the
+ * max number of elements that fit in, or an empty string if none fit.
+ */
+export function fitInCookieEncoded(
+  arrayOfValues,
+  encodingFunc,
+  maxLength = 2048
+) {
+  for (let i = 0, l = arrayOfValues.length; i < l; i++) {
+    const encoded = encodingFunc(arrayOfValues.slice(i))
+    // The encoded URI will be serialized when saved in the cookie, so we
+    // need to encode it first to get the correct byte size.
+    const serialized = encodeURIComponent(encoded)
+    if (utf8ByteSize(serialized) < maxLength) {
+      return encoded
+    }
+  }
+  return ''
+}
+
+export function decodeDefaultViewIdPerTable(value) {
+  // backward compatibility, we used to store the array of default views
+  // with a slightly different format
+  if (Array.isArray(value)) {
+    return value.map((item) => ({
+      tableId: item.table_id,
+      viewId: item.id,
+    }))
+  }
+
+  const data = []
+  for (const item of value.split(',')) {
+    const [tableId, viewId] = item.split(':')
+    if (tableId !== undefined && viewId !== undefined) {
+      data.push({ tableId: parseInt(tableId), viewId: parseInt(viewId) })
+    }
+  }
+  return data
+}
+
+export function encodeDefaultViewIdPerTable(data) {
+  return data.map(({ tableId, viewId }) => `${tableId}:${viewId}`).join(',')
+}
+
+/**
+ * Reads the default view for table from cookies.
+ *
+ * @param {Object} cookies - The cookies object.
+ * @param {Number} tableId - The id of the table.
+ * @param {String} cookieName - The name of the cookie.
+ * @returns {Number|null} - The id of the default view for the table, or null if there
+ * is no default view for the table.
+ */
+export function readDefaultViewIdFromCookie(
+  cookies,
+  tableId,
+  cookieName = DEFAULT_VIEW_ID_COOKIE_NAME
+) {
+  try {
+    const cookieValue = cookies.get(cookieName) || ''
+    const defaultViews = decodeDefaultViewIdPerTable(cookieValue)
+    const defaultView = defaultViews.find((view) => view.tableId === tableId)
+    return defaultView ? defaultView.viewId : null
+  } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Updates the default view for table in cookies (if it exists) or creates a new one if
+ * it doesn't. The entry will be placed at the end of the list as the most recently
+ * visited view. If the entire list does not fit in the cookie, the oldest entries (the
+ * first ones) will be removed.
+ *
+ * @param {Object} cookies - The cookies object.
+ * @param {Object} view - The view object.
+ * @param {Object} config - The config object.
+ * @param {String} cookieName - The name of the cookie.
+ */
+export function saveDefaultViewIdInCookie(
+  cookies,
+  view,
+  config,
+  cookieName = DEFAULT_VIEW_ID_COOKIE_NAME
+) {
+  const cookieValue = cookies.get(cookieName) || ''
+  let defaultViews = decodeDefaultViewIdPerTable(cookieValue)
+
+  function createEntry(view) {
+    return { tableId: view.table_id, viewId: view.id }
+  }
+
+  try {
+    const index = defaultViews.findIndex((obj) => obj.tableId === view.table_id)
+
+    if (index !== -1) {
+      const existingView = defaultViews.splice(index, 1)[0]
+      existingView.viewId = view.id
+      defaultViews.push(existingView)
+    } else if (view.id !== view.slug) {
+      defaultViews.push(createEntry(view))
+    }
+  } catch (error) {
+    defaultViews = [createEntry(view)]
+  } finally {
+    const fittedListEncoded = fitInCookieEncoded(
+      defaultViews,
+      encodeDefaultViewIdPerTable
+    )
+    const secure = isSecureURL(config.PUBLIC_WEB_FRONTEND_URL)
+    cookies.set(cookieName, fittedListEncoded, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      sameSite: config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
+      secure,
+    })
+  }
 }
