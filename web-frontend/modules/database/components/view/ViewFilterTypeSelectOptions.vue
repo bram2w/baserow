@@ -4,7 +4,7 @@
     :options="field.select_options"
     :disabled="disabled"
     :fixed-items="true"
-    class="dropdown--floating filters__value-dropdown"
+    class="dropdown--floating dropdown--small filters__value-dropdown"
     small
     @input="input"
   ></FieldSelectOptionsDropdown>
