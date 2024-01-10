@@ -13,6 +13,9 @@ from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
 from baserow.contrib.builder.workflow_actions.models import EventTypes
+from baserow.core.action.models import Action
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import CreateApplicationActionType
 from baserow.core.db import specific_iterator
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
@@ -693,3 +696,18 @@ def test_delete_builder_application_with_published_builder(data_fixture):
     TrashHandler.permanently_delete(builder)
 
     assert Builder.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_builder_application_creation_does_not_register_an_action(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    assert Action.objects.count() == 0
+    action_type_registry.get_by_type(CreateApplicationActionType).do(
+        user,
+        workspace,
+        BuilderApplicationType.type,
+        name="No actions please",
+        init_with_data=False,
+    )
+    assert Action.objects.count() == 0

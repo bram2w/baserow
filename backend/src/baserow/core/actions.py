@@ -402,17 +402,21 @@ class CreateApplicationActionType(UndoableActionType):
             application.specific_class
         )
 
-        params = cls.Params(
-            workspace.id,
-            workspace.name,
-            application_type.type,
-            application.id,
-            application.name,
-            init_with_data,
-        )
-        cls.register_action(
-            user, params, scope=cls.scope(workspace.id), workspace=workspace
-        )
+        # Only register an action if this application type supports actions.
+        # At the moment, the builder application doesn't use actions and need
+        # to bypass registering.
+        if application_type.supports_actions:
+            params = cls.Params(
+                workspace.id,
+                workspace.name,
+                application_type.type,
+                application.id,
+                application.name,
+                init_with_data,
+            )
+            cls.register_action(
+                user, params, scope=cls.scope(workspace.id), workspace=workspace
+            )
 
         return application
 
