@@ -50,12 +50,10 @@ import {
   DataSourcesPageHeaderItemType,
   ElementsPageHeaderItemType,
   SettingsPageHeaderItemType,
-  VariablesPageHeaderItemType,
 } from '@baserow/modules/builder/pageHeaderItemTypes'
 import {
   EventsPageSidePanelType,
   GeneralPageSidePanelType,
-  VisibilityPageSidePanelType,
   StylePageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
 import {
@@ -184,18 +182,10 @@ export default (context) => {
   )
   app.$registry.register(
     'pageHeaderItem',
-    new VariablesPageHeaderItemType(context)
-  )
-  app.$registry.register(
-    'pageHeaderItem',
     new SettingsPageHeaderItemType(context)
   )
   app.$registry.register('pageSidePanel', new GeneralPageSidePanelType(context))
   app.$registry.register('pageSidePanel', new StylePageSidePanelType(context))
-  app.$registry.register(
-    'pageSidePanel',
-    new VisibilityPageSidePanelType(context)
-  )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
 
   app.$registry.register('domain', new CustomDomainType(context))
