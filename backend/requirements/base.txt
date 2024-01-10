@@ -65,7 +65,9 @@ celery-redbeat==2.0.0
 celery-singleton==0.3.1
     # via -r base.in
 certifi==2023.7.22
-    # via requests
+    # via
+    #   requests
+    #   sentry-sdk
 cffi==1.15.1
     # via cryptography
 channels[daphne]==4.0.0
@@ -423,6 +425,8 @@ rsa==4.9
     # via google-auth
 s3transfer==0.6.0
     # via boto3
+sentry-sdk==1.39.1
+    # via -r base.in
 service-identity==21.1.0
     # via
     #   -r base.in
@@ -474,6 +478,7 @@ urllib3==1.26.12
     #   advocate
     #   botocore
     #   requests
+    #   sentry-sdk
 uvicorn[standard]==0.24.0
     # via -r base.in
 uvloop==0.17.0
