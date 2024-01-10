@@ -7,9 +7,13 @@ from django.core.files.storage import FileSystemStorage
 import pytest
 from freezegun import freeze_time
 
+from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.fields.models import FormulaField, TextField
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.action.models import Action
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import CreateApplicationActionType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Template
 from baserow.core.registries import ImportExportConfig, application_type_registry
@@ -172,3 +176,18 @@ def test_install_template_sets_last_modified_by_none(
     table_model = template_example_table.get_model()
     assert table_model.objects.all()[0].last_modified_by is None
     assert table_model.objects.all()[1].last_modified_by is None
+
+
+@pytest.mark.django_db
+def test_database_application_creation_does_register_an_action(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    assert Action.objects.count() == 0
+    action_type_registry.get_by_type(CreateApplicationActionType).do(
+        user,
+        workspace,
+        DatabaseApplicationType.type,
+        name="Actions please",
+        init_with_data=False,
+    )
+    assert Action.objects.count() == 1

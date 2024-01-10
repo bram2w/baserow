@@ -247,6 +247,8 @@ class ApplicationType(
     instance_serializer_class = None
     """This serializer that is used to serialize the instance model."""
 
+    supports_actions = True
+
     supports_snapshots = True
 
     supports_integrations = False
