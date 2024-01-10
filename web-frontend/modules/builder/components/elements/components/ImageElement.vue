@@ -3,7 +3,7 @@
     <img
       class="image_element__img"
       :alt="resolvedAltText || $t('imageElement.emptyState')"
-      :src="resolvedURL"
+      :src="imageSource"
     />
   </div>
 </template>
@@ -34,7 +34,7 @@ export default {
     imageSource() {
       return this.element.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD
         ? this.element.image_file?.url
-        : this.element.image_url
+        : this.resolvedURL
     },
     resolvedAltText() {
       try {
