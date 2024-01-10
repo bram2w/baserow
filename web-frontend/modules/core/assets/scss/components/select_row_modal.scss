@@ -74,6 +74,8 @@
   position: relative;
   z-index: 1;
   border: 0;
+  width: 100%;
+  border-top-right-radius: $rounded-md;
 
   @include fixed-height(44px, 14px);
 }

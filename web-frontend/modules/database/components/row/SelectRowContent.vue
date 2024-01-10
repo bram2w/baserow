@@ -9,7 +9,7 @@
           v-model="visibleSearch"
           type="text"
           :placeholder="$t('selectRowContent.search')"
-          class="input select-row-modal__search-input"
+          class="select-row-modal__search-input"
           @input="doSearch(visibleSearch, false)"
           @keypress.enter="doSearch(visibleSearch, true)"
         />

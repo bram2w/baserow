@@ -100,7 +100,7 @@
 }
 
 .modal__actions {
-  @include absolute(20px, 20px, auto, auto);
+  @include absolute(10px, 20px, auto, auto);
 
   display: flex;
   flex-direction: row-reverse;
