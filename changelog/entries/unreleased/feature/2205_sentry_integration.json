@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Implement Sentry integration (FE/BE) via environment variables.",
+    "issue_number": 2205,
+    "bullet_points": [],
+    "created_at": "2024-01-09"
+}

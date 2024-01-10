@@ -28,10 +28,23 @@ export default function (
       enterpriseBase + '/modules/baserow_enterprise/module.js'
     )
   }
+  baseModules.push('@nuxtjs/sentry')
 
   const modules = baseModules.concat(additionalModules)
   return {
     modules,
+    sentry: {
+      clientIntegrations: {
+        Dedupe: {},
+        ExtraErrorData: {},
+        RewriteFrames: {},
+        ReportingObserver: null,
+      },
+      clientConfig: {
+        attachProps: true,
+        logErrors: true,
+      },
+    },
     build: {
       extend(config, ctx) {
         config.node = { fs: 'empty' }
