@@ -253,12 +253,18 @@ export default {
     },
     row: {
       deep: true,
-      handler(row) {
+      handler(row, oldRow) {
         if (this.$refs.rowEditModal) {
-          if (row !== null) {
+          if (
+            (oldRow === null && row !== null) ||
+            (oldRow && row && oldRow.id !== row.id)
+          ) {
             this.populateAndEditRow(row)
-          } else {
-            this.$refs.rowEditModal.hide()
+          } else if (oldRow !== null && row === null) {
+            // Pass emit=false as argument into the hide function because that will
+            // prevent emitting another `hidden` event of the `RowEditModal` which can
+            // result in the route changing twice.
+            this.$refs.rowEditModal.hide(false)
           }
         }
       },

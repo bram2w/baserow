@@ -497,10 +497,16 @@ export default {
       deep: true,
       handler(newRow, prevRow) {
         if (this.$refs.rowEditModal) {
-          if (newRow !== null) {
+          if (
+            (prevRow === null && newRow !== null) ||
+            (prevRow && newRow && prevRow.id !== newRow.id)
+          ) {
             this.populateAndEditRow(newRow)
-          } else {
-            this.$refs.rowEditModal.hide()
+          } else if (prevRow !== null && newRow === null) {
+            // Pass emit=false as argument into the hide function because that will
+            // prevent emitting another `hidden` event of the `RowEditModal` which can
+            // result in the route changing twice.
+            this.$refs.rowEditModal.hide(false)
           }
         }
         // `refreshRow` doesn't immediately hide a row not matching filters if a
