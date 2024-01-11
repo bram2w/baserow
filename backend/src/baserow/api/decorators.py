@@ -1,10 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.db import OperationalError
-from django.utils import timezone
 
-from pytz import timezone as pytz_timezone
-from pytz.exceptions import UnknownTimeZoneError
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 
@@ -349,9 +347,8 @@ def allowed_includes(*allowed):
 def accept_timezone():
     """
     This view decorator optionally accepts a timezone GET parameter. If provided, then
-    the timezone is parsed via the pytz package and a now date is calculated with
-    that timezone. A list of supported timezones can be found on
-    https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568.
+    the timezone is parsed via zoneinfo and a now date is calculated with
+    that timezone.
 
     class SomeView(View):
         @accept_timezone()
@@ -359,7 +356,7 @@ def accept_timezone():
             print(now.tzinfo)
 
     HTTP /some-view/?timezone=Etc/GMT-1
-    >>> <StaticTzInfo 'Etc/GMT-1'>
+    >>> <ZoneInfo 'Etc/GMT-1'>
     """
 
     def validate_decorator(func):
@@ -370,18 +367,15 @@ def accept_timezone():
 
             try:
                 kwargs["now"] = (
-                    datetime.utcnow().astimezone(pytz_timezone(timezone_string))
+                    datetime.now(tz=timezone.utc).astimezone(ZoneInfo(timezone_string))
                     if timezone_string
-                    else timezone.now()
+                    else datetime.now(tz=timezone.utc)
                 )
-            except UnknownTimeZoneError:
+            except ZoneInfoNotFoundError:
                 exc = APIException(
                     {
                         "error": "UNKNOWN_TIME_ZONE_ERROR",
-                        "detail": f"The timezone {timezone_string} is not supported. A "
-                        f"list of support timezones can be found on "
-                        f"https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3e"
-                        f"ec7568.",
+                        "detail": f"The timezone {timezone_string} is not supported.",
                     }
                 )
                 exc.status_code = status.HTTP_400_BAD_REQUEST

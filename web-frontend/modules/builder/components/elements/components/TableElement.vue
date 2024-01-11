@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div
+    :style="{
+      '--button-color': resolveColor(element.button_color, colorVariables),
+    }"
+  >
     <BaserowTable :fields="element.fields" :rows="rows">
       <template #cell-content="{ field, value }">
         <component

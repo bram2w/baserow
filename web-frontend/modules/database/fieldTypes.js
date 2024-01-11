@@ -122,7 +122,7 @@ import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/v
 import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
 import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
 
-import { trueString } from '@baserow/modules/database/utils/constants'
+import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
   getDateMomentFormat,
   getFieldTimezone,
@@ -1541,7 +1541,7 @@ export class BooleanFieldType extends FieldType {
       clipboardData = ''
     }
     const value = clipboardData.toLowerCase().trim()
-    return trueString.includes(value)
+    return trueValues.includes(value)
   }
 
   getDocsDataType(field) {
@@ -2376,6 +2376,10 @@ export class DurationFieldType extends FieldType {
     }
     return DurationFieldType.parseInputValue(field, clipboardData)
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class URLFieldType extends FieldType {
@@ -2825,7 +2829,9 @@ export class SingleSelectFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name].value
       const stringB = b[name] === null ? '' : '' + b[name].value
 
-      return collatedStringCompare(stringA, stringB, order)
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 
@@ -3049,7 +3055,9 @@ export class MultipleSelectFieldType extends FieldType {
       const stringB =
         valuesB.length > 0 ? valuesB.map((obj) => obj.value).join('') : ''
 
-      return collatedStringCompare(stringA, stringB, order)
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 
@@ -3705,7 +3713,9 @@ export class MultipleCollaboratorsFieldType extends FieldType {
         stringB = valuesB.map((obj) => obj.name).join('')
       }
 
-      return collatedStringCompare(stringA, stringB, order)
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 

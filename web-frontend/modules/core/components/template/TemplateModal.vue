@@ -14,9 +14,11 @@
         :selected-template="selectedTemplate"
         @selected="selectTemplate"
       >
-        <a class="modal__close" @click="hide()">
-          <i class="iconoir-cancel"></i>
-        </a>
+        <div class="modal__actions">
+          <a class="modal__close" @click="hide()">
+            <i class="iconoir-cancel"></i>
+          </a>
+        </div>
       </TemplateCategories>
       <TemplatePreview
         :template="selectedTemplate"

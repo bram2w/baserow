@@ -7,37 +7,24 @@
         target="_blank"
         rel="nofollow noopener noreferrer"
       >
-        {{ getLabelOrUrl(value) }}
+        {{ getLabelOrURL(value) }}
       </a>
       <u v-else-if="isValid(value)">
-        {{ getLabelOrUrl(value) }}
+        {{ getLabelOrURL(value) }}
       </u>
       <span v-else>
-        {{ getLabelOrUrl(value) }}
+        {{ getLabelOrURL(value) }}
       </span>
     </div>
   </div>
 </template>
 
 <script>
-import { isValidURL } from '@baserow/modules/core/utils/string'
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
+import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
   name: 'GridViewFieldLinkURL',
-  mixins: [gridField, gridFieldInput],
-  methods: {
-    isValidURL,
-    isValid(value) {
-      return isValidURL(value?.url)
-    },
-    getLabelOrUrl(value) {
-      if (!value) {
-        return ''
-      } else {
-        return value.label ? value.label : value.url
-      }
-    },
-  },
+  mixins: [gridField, gridFieldInput, linkURLField],
 }
 </script>

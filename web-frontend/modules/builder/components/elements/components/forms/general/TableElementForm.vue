@@ -133,12 +133,15 @@
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
     </FormElement>
+    <ColorInputGroup
+      v-model="values.button_color"
+      :label="$t('tableElementForm.buttonColor')"
+      :color-variables="colorVariables"
+    />
   </form>
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import {
   getNextAvailableNameInSequence,
@@ -152,12 +155,12 @@ import {
   maxValue,
 } from 'vuelidate/lib/validators'
 import { mapGetters } from 'vuex'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'TableElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
-  inject: ['page'],
+  mixins: [elementForm],
   data() {
     return {
       allowedValues: ['data_source_id', 'fields', 'items_per_page'],
@@ -205,9 +208,6 @@ export default {
     },
     collectionTypes() {
       return this.$registry.getAll('collectionField')
-    },
-    DATA_PROVIDERS_ALLOWED_ELEMENTS() {
-      return DATA_PROVIDERS_ALLOWED_ELEMENTS
     },
     ...mapGetters({
       element: 'element/getSelected',

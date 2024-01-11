@@ -1,12 +1,30 @@
 .element__wrapper {
-  padding: var(--padding-top, 0) 0 var(--padding-bottom, 0) 0;
+  background-color: var(--background-color, $black);
+  border-top: var(--border-top, none);
+  border-bottom: var(--border-bottom, none);
+  border-left: var(--border-left, none);
+  border-right: var(--border-right, none);
+  margin: 0 auto;
+  max-width: $builder-page-max-width;
 
-  &--normal-width {
-    margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
-    max-width: $builder-page-max-width;
+  &--full-width {
+    max-width: 100%;
   }
+
+  &--medium-width {
+    max-width: 960px;
+  }
+
+  &--small-width {
+    max-width: 680px;
+  }
+}
+
+.element__inner-wrapper {
+  padding: var(--padding-top, 0) var(--padding-right, 0)
+    var(--padding-bottom, 0) var(--padding-left, 0);
+  margin: 0 auto;
+  max-width: $builder-page-max-width;
 
   &--full-width {
     max-width: 100%;
@@ -22,7 +40,7 @@
 }
 
 .element {
-  // this is a placeholder, the class will be added to every element component.
+  // Placeholder for element styles
 }
 
 .element--no-value {

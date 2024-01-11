@@ -1,10 +1,10 @@
+from datetime import timezone
 from unittest.mock import patch
 
 from django.core.files.storage import FileSystemStorage
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import make_aware, utc
 
 import pytest
 from freezegun import freeze_time
@@ -75,7 +75,7 @@ def test_exporting_json_writes_file_to_storage(
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with patch("baserow.contrib.database.export.handler.default_storage", new=storage):
-        run_time = make_aware(parse_datetime("2020-02-01 01:00"), timezone=utc)
+        run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
             with django_capture_on_commit_callbacks(execute=True):
@@ -228,7 +228,7 @@ def test_exporting_xml_writes_file_to_storage(
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with patch("baserow.contrib.database.export.handler.default_storage", new=storage):
-        run_time = make_aware(parse_datetime("2020-02-01 01:00"), timezone=utc)
+        run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         with freeze_time(run_time):
             expected_created_at = DateTimeField().to_representation(run_time)
             with django_capture_on_commit_callbacks(execute=True):

@@ -667,6 +667,39 @@ def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture)
 
 
 @pytest.mark.django_db
+def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("Email", "text"),
+        ],
+        rows=[
+            ["Ada Lovelace", "ada@baserow.io"],
+            ["Blaise Pascal", "blaise@baserow.io"],
+        ],
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration, table=table, row_id=""
+    )
+    service_type = service.get_type()
+
+    dispatch_context = FakeDispatchContext()
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    assert dispatch_data["data"].id == rows[0].id
+
+
+@pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_filters(
     data_fixture,
 ):
@@ -1864,8 +1897,9 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
         service_type.dispatch_data(service, {}, dispatch_context)
 
     assert exc.value.args[0] == (
-        f"The result of the `{single_field.db_column}` formula "
-        "must be compatible for the single_select field type."
+        "The result value of the formula is not valid for the "
+        f"field `{single_field.name} ({single_field.db_column})`: "
+        "The provided select option value '99999999999' is not a valid select option."
     )
 
 

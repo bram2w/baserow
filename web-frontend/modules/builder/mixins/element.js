@@ -1,6 +1,8 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
+import { resolveColor } from '@baserow/modules/core/utils/colors'
+import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
   inject: ['builder', 'page', 'mode'],
@@ -19,7 +21,7 @@ export default {
     elementType() {
       return this.$registry.get('element', this.element.type)
     },
-    isEditable() {
+    isEditMode() {
       return this.mode === 'editing'
     },
     applicationContext() {
@@ -52,6 +54,9 @@ export default {
           return this.$registry.get('runtimeFormulaFunction', name)
         },
       }
+    },
+    colorVariables() {
+      return themeToColorVariables(this.builder.theme)
     },
   },
   methods: {
@@ -93,5 +98,7 @@ export default {
     fireSubmitEvent() {
       this.fireEvent(SubmitEvent)
     },
+
+    resolveColor,
   },
 }

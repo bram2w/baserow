@@ -5,8 +5,9 @@
       'element-preview--active': isSelected,
       'element-preview--parent-of-selected': isParentOfSelectedElement,
       'element-preview--in-error': inError,
+      'element-preview--first-element': isFirstElement,
     }"
-    @click.stop="actionSelectElement({ element })"
+    @click="onSelect"
   >
     <InsertElementButton
       v-if="isSelected"
@@ -25,11 +26,11 @@
       @select-parent="actionSelectElement({ element: parentElement })"
     />
 
-    <PageRootElement
+    <PageElement
       v-if="isRootElement"
       :element="element"
       :mode="mode"
-    ></PageRootElement>
+    ></PageElement>
     <PageElement v-else :element="element" :mode="mode" />
 
     <InsertElementButton
@@ -58,7 +59,7 @@ import { PLACEMENTS } from '@baserow/modules/builder/enums'
 import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { mapActions, mapGetters } from 'vuex'
-import PageRootElement from '@baserow/modules/builder/components/page/PageRootElement'
+import { checkIntermediateElements } from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'ElementPreview',
@@ -67,7 +68,6 @@ export default {
     ElementMenu,
     InsertElementButton,
     PageElement,
-    PageRootElement,
   },
   inject: ['builder', 'page', 'mode'],
   props: {
@@ -172,6 +172,18 @@ export default {
       actionDeleteElement: 'element/delete',
       actionSelectElement: 'element/select',
     }),
+    onSelect($event) {
+      // Here we check that the event has been emitted for this particular element
+      // If we found an intermediate DOM element with the class `element-preview`
+      // It means it hasn't been originated by this element so we don't select it.
+      if (
+        !checkIntermediateElements(this.$el, $event.target, (el) => {
+          return el.classList.contains('element-preview')
+        })
+      ) {
+        this.actionSelectElement({ element: this.element })
+      }
+    },
     showAddElementModal(placement) {
       this.$refs.addElementModal.show({
         placeInContainer: this.element.place_in_container,

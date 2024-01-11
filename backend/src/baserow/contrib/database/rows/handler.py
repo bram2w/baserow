@@ -689,6 +689,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         model: Optional[Type[GeneratedTableModel]] = None,
         before_row: Optional[GeneratedTableModel] = None,
         user_field_names: bool = False,
+        values_already_prepared: bool = False,
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
@@ -704,6 +705,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             instance.
         :param user_field_names: Whether or not the values are keyed by the internal
             Baserow field name (field_1,field_2 etc) or by the user field names.
+        :param values_already_prepared: True if the values are already prepared from
+            a previous step.
         :return: The created row instance.
         """
 
@@ -718,7 +721,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         return self.force_create_row(
-            user, table, values, model, before_row, user_field_names
+            user,
+            table,
+            values,
+            model,
+            before_row,
+            user_field_names,
+            values_already_prepared=values_already_prepared,
         )
 
     def force_create_row(
@@ -729,6 +738,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         model: Optional[Type[GeneratedTableModel]] = None,
         before: Optional[GeneratedTableModel] = None,
         user_field_names: bool = False,
+        values_already_prepared: bool = False,
     ):
         """
         Creates a new row for a given table with the provided values.
@@ -744,6 +754,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             instance.
         :param user_field_names: Whether or not the values are keyed by the internal
             Baserow field name (field_1,field_2 etc) or by the user field names.
+        :param values_already_prepared: True if the values are already prepared from
+            a previous step.
         :return: The created row instance.
         :rtype: Model
         """
@@ -759,7 +771,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 model._field_objects, values
             )
 
-        prepared_values = self.prepare_values(model._field_objects, values)
+        if not values_already_prepared:
+            prepared_values = self.prepare_values(model._field_objects, values)
+        else:
+            prepared_values = values
+
         row_values, manytomany_values = self.extract_manytomany_values(
             prepared_values, model
         )
@@ -886,6 +902,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         row_id: int,
         values: Dict[str, Any],
         model: Optional[Type[GeneratedTableModel]] = None,
+        values_already_prepared: bool = False,
     ) -> GeneratedTableModelForUpdate:
         """
         Updates one or more values of the provided row_id.
@@ -896,6 +913,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param values: The values that must be updated. The keys must be the field ids.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
+        :param values_already_prepared: True if the values are already prepared from
+            a previous step.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         """
@@ -907,7 +926,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             row = self.get_row_for_update(
                 user, table, row_id, enhance_by_fields=True, model=model
             )
-            return self.update_row(user, table, row, values, model=model)
+            return self.update_row(
+                user,
+                table,
+                row,
+                values,
+                model=model,
+                values_already_prepared=values_already_prepared,
+            )
 
     def update_row(
         self,
@@ -916,6 +942,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         row: GeneratedTableModelForUpdate,
         values: Dict[str, Any],
         model: Optional[Type[GeneratedTableModel]] = None,
+        values_already_prepared: bool = False,
     ) -> GeneratedTableModelForUpdate:
         """
         Updates one or more values of the provided row_id.
@@ -926,6 +953,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param values: The values that must be updated. The keys must be the field ids.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
+        :param values_already_prepared: True if the values are already prepared from
+            a previous step.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         """
@@ -961,7 +990,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         before_rows_values = serialize_rows_for_response(rows, model)
-        prepared_values = self.prepare_values(model._field_objects, values)
+
+        if not values_already_prepared:
+            prepared_values = self.prepare_values(model._field_objects, values)
+        else:
+            prepared_values = values
+
         row_values, manytomany_values = self.extract_manytomany_values(
             prepared_values, model
         )

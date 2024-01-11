@@ -10,24 +10,19 @@
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
-
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'ParagraphElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
+  mixins: [elementForm],
   data() {
     return {
       values: {
         value: '',
       },
     }
-  },
-  computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
 }
 </script>

@@ -31,6 +31,14 @@ export class ApplicationType extends Registerable {
   }
 
   /**
+   * Returns whether the application type supports trash feature.
+   * @returns true if tso.
+   */
+  supportsTrash() {
+    return true
+  }
+
+  /**
    * The form component that will be rendered when creating a new instance of
    * this application. By default the ApplicationForm component is returned, but
    * this only contains a name field. If custom fields are required upon

@@ -214,6 +214,7 @@ import {
 import {
   BaserowFormulaArrayType,
   BaserowFormulaBooleanType,
+  BaserowFormulaButtonType,
   BaserowFormulaCharType,
   BaserowFormulaLinkType,
   BaserowFormulaDateIntervalType,
@@ -624,6 +625,7 @@ export default (context) => {
     'formula_type',
     new BaserowFormulaMultipleSelectType(context)
   )
+  app.$registry.register('formula_type', new BaserowFormulaButtonType(context))
   app.$registry.register('formula_type', new BaserowFormulaLinkType(context))
   app.$registry.register('formula_type', new BaserowFormulaFileType(context))
 

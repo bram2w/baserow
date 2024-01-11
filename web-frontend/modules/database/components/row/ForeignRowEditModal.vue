@@ -21,6 +21,10 @@ import FieldService from '@baserow/modules/database/services/field'
 import RowService from '@baserow/modules/database/services/row'
 import { populateField } from '@baserow/modules/database/store/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import {
+  extractRowReadOnlyValues,
+  prepareNewOldAndUpdateRequestValues,
+} from '@baserow/modules/database/utils/row'
 
 /**
  * This component can open the row edit modal having the fields of that table in the
@@ -130,43 +134,21 @@ export default {
      * edited in a real-time manner.
      */
     async update({ field, row, value, oldValue, table }) {
-      // Get the field type (f. ex. DateFieldType, URLFieldType) and old / new
-      // values(s) for the field that's being updated and prepare them for update:
-      const fieldType = this.$registry.get('field', field._.type.type)
-      const newValues = { id: row.id }
-      const newValuesForUpdate = {}
-      const oldValues = { id: row.id }
-      const fieldName = `field_${field.id}`
-      newValues[fieldName] = value
-      newValuesForUpdate[fieldName] = fieldType.prepareValueForUpdate(
-        field,
-        value
-      )
-      oldValues[fieldName] = oldValue
-
-      // Loop through all of the fields in the ForeignRowEditModal and try
-      // to determine the changed value, and, if it changed, add it to the newValues
-      // dict. Also add the `old` (current) field value to the oldValues dict
-      // to be able to restore it if something fails:
-      this.fields.forEach((fieldToCall) => {
-        const fieldType = this.$registry.get('field', fieldToCall._.type.type)
-        const fieldToCallName = `field_${fieldToCall.id}`
-        const currentFieldValue = row[fieldToCallName]
-        const optimisticFieldValue = fieldType.onRowChange(
+      const { newRowValues, oldRowValues, updateRequestValues } =
+        prepareNewOldAndUpdateRequestValues(
           row,
-          fieldToCall,
-          currentFieldValue
+          this.fields,
+          field,
+          value,
+          oldValue,
+          this.$registry
         )
 
-        if (currentFieldValue !== optimisticFieldValue) {
-          newValues[fieldToCallName] = optimisticFieldValue
-          oldValues[fieldToCallName] = currentFieldValue
-        }
-      })
+      console.log(newRowValues)
 
       this.$store.dispatch('rowModal/updated', {
         tableId: this.tableId,
-        values: newValues,
+        values: newRowValues,
       })
 
       // Attempt to call the `rowModal/updated` action in the store which is
@@ -176,18 +158,23 @@ export default {
         const { data } = await RowService(this.$client).update(
           table.id,
           row.id,
-          newValuesForUpdate
+          updateRequestValues
+        )
+        const readOnlyData = extractRowReadOnlyValues(
+          data,
+          this.fields,
+          this.$registry
         )
         this.$store.dispatch('rowModal/updated', {
           tableId: this.tableId,
-          values: data,
+          values: readOnlyData,
         })
         this.$emit('refresh-row')
         // In case the above fails, previous row values should be restored:
       } catch (error) {
         this.$store.dispatch('rowModal/updated', {
           tableId: this.tableId,
-          values: oldValues,
+          values: oldRowValues,
         })
         notifyIf(error, 'row')
       }

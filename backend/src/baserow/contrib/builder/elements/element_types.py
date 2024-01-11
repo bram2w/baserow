@@ -15,6 +15,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     WIDTHS,
     ButtonElement,
+    CheckboxElement,
     CollectionField,
     ColumnElement,
     ContainerElement,
@@ -398,6 +399,7 @@ class HeadingElementType(ElementType):
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
+        font_color: str
         level: int
 
     @property
@@ -416,6 +418,12 @@ class HeadingElementType(ElementType):
                 min_value=1,
                 max_value=6,
                 default=1,
+            ),
+            "font_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                allow_blank=True,
+                help_text="Heading font color.",
             ),
         }
 
@@ -500,6 +508,7 @@ class LinkElementType(ElementType):
         "target",
         "width",
         "alignment",
+        "button_color",
     ]
     allowed_fields = [
         "value",
@@ -512,6 +521,7 @@ class LinkElementType(ElementType):
         "target",
         "width",
         "alignment",
+        "button_color",
     ]
 
     class SerializedDict(ElementDict):
@@ -524,6 +534,7 @@ class LinkElementType(ElementType):
         target: str
         width: str
         alignment: str
+        button_color: str
 
     def deserialize_property(
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
@@ -599,6 +610,12 @@ class LinkElementType(ElementType):
                 choices=HorizontalAlignments.choices,
                 help_text=LinkElement._meta.get_field("alignment").help_text,
                 required=False,
+            ),
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
             ),
         }
         return overrides
@@ -775,14 +792,30 @@ class InputElementType(FormElementType, abc.ABC):
 class InputTextElementType(InputElementType):
     type = "input_text"
     model_class = InputTextElement
-    allowed_fields = ["label", "default_value", "required", "placeholder"]
-    serializer_field_names = ["label", "default_value", "required", "placeholder"]
+    allowed_fields = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "is_multiline",
+        "rows",
+    ]
+    serializer_field_names = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "is_multiline",
+        "rows",
+    ]
 
     class SerializedDict(ElementDict):
         label: BaserowFormula
         required: bool
         placeholder: str
         default_value: BaserowFormula
+        is_multiline: bool
+        rows: int
 
     @property
     def serializer_field_overrides(self):
@@ -806,12 +839,23 @@ class InputTextElementType(InputElementType):
                 default=False,
                 required=False,
             ),
-            "placeholder": serializers.CharField(
-                default="",
-                allow_blank=True,
-                required=False,
+            "placeholder": FormulaSerializerField(
                 help_text=InputTextElement._meta.get_field("placeholder").help_text,
-                max_length=InputTextElement._meta.get_field("placeholder").max_length,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "is_multiline": serializers.BooleanField(
+                help_text=InputTextElement._meta.get_field("is_multiline").help_text,
+                required=False,
+                default=False,
+            ),
+            "rows": serializers.IntegerField(
+                help_text=InputTextElement._meta.get_field("rows").help_text,
+                required=False,
+                default=3,
+                min_value=1,
+                max_value=100,
             ),
         }
 
@@ -840,19 +884,22 @@ class InputTextElementType(InputElementType):
             "required": False,
             "placeholder": "",
             "default_value": "'Corporis perspiciatis'",
+            "is_multiline": False,
+            "rows": 1,
         }
 
 
 class ButtonElementType(ElementType):
     type = "button"
     model_class = ButtonElement
-    allowed_fields = ["value", "alignment", "width"]
-    serializer_field_names = ["value", "alignment", "width"]
+    allowed_fields = ["value", "alignment", "width", "button_color"]
+    serializer_field_names = ["value", "alignment", "width", "button_color"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
         width: str
         alignment: str
+        button_color: str
 
     @property
     def serializer_field_overrides(self):
@@ -875,6 +922,12 @@ class ButtonElementType(ElementType):
                 help_text=ButtonElement._meta.get_field("alignment").help_text,
                 required=False,
             ),
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
+            ),
         }
 
         return overrides
@@ -896,6 +949,29 @@ class TableElementType(CollectionElementType):
     type = "table"
     model_class = TableElement
 
+    class SerializedDict(CollectionElementType.SerializedDict):
+        button_color: str
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + ["button_color"]
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + ["button_color"]
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
+            ),
+        }
+
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"data_source_id": None}
 
@@ -903,11 +979,12 @@ class TableElementType(CollectionElementType):
 class FormContainerElementType(ContainerElementType):
     type = "form_container"
     model_class = FormContainerElement
-    allowed_fields = ["submit_button_label"]
-    serializer_field_names = ["submit_button_label"]
+    allowed_fields = ["submit_button_label", "button_color"]
+    serializer_field_names = ["submit_button_label", "button_color"]
 
     class SerializedDict(ElementDict):
         submit_button_label: BaserowFormula
+        button_color: str
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"submit_button_label": "'Submit'"}
@@ -916,7 +993,7 @@ class FormContainerElementType(ContainerElementType):
     def serializer_field_overrides(self):
         from baserow.core.formula.serializers import FormulaSerializerField
 
-        overrides = {
+        return {
             "submit_button_label": FormulaSerializerField(
                 help_text=FormContainerElement._meta.get_field(
                     "submit_button_label"
@@ -924,10 +1001,14 @@ class FormContainerElementType(ContainerElementType):
                 required=False,
                 allow_blank=True,
                 default="",
-            )
+            ),
+            "button_color": serializers.CharField(
+                max_length=20,
+                required=False,
+                default="primary",
+                help_text="Button color.",
+            ),
         }
-
-        return overrides
 
     @property
     def child_types_allowed(self) -> List[str]:
@@ -947,6 +1028,64 @@ class FormContainerElementType(ContainerElementType):
             )
 
         return super().import_serialized(page, serialized_copy, id_mapping)
+
+
+class CheckboxElementType(InputElementType):
+    type = "checkbox"
+    model_class = CheckboxElement
+    allowed_fields = ["label", "default_value", "required"]
+    serializer_field_names = ["label", "default_value", "required"]
+
+    class SerializedDict(ElementDict):
+        label: BaserowFormula
+        required: bool
+        default_value: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "label": FormulaSerializerField(
+                help_text=CheckboxElement._meta.get_field("label").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "default_value": FormulaSerializerField(
+                help_text=CheckboxElement._meta.get_field("default_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "required": serializers.BooleanField(
+                help_text=CheckboxElement._meta.get_field("required").help_text,
+                default=False,
+                required=False,
+            ),
+        }
+
+        return overrides
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["label"]:
+            serialized_copy["label"] = import_formula(
+                serialized_copy["label"], id_mapping
+            )
+        if serialized_copy["default_value"]:
+            serialized_copy["default_value"] = import_formula(
+                serialized_copy["default_value"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return {
+            "label": "",
+            "required": False,
+            "default_value": "",
+        }
 
 
 class DropdownElementType(FormElementType):

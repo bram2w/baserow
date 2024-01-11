@@ -2,7 +2,7 @@ import json
 import os
 import uuid
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import timedelta, timezone
 from decimal import Decimal
 from ipaddress import ip_network
 from socket import AF_INET, AF_INET6, IPPROTO_TCP, SOCK_STREAM
@@ -13,7 +13,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
 from django.utils.dateparse import parse_date, parse_datetime
-from django.utils.timezone import make_aware, utc
 
 import psycopg2
 from freezegun import freeze_time
@@ -34,7 +33,7 @@ User = get_user_model()
 
 
 def _parse_datetime(datetime):
-    return make_aware(parse_datetime(datetime), timezone=utc)
+    return parse_datetime(datetime).replace(tzinfo=timezone.utc)
 
 
 def _parse_date(date):

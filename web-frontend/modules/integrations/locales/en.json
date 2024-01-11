@@ -19,6 +19,7 @@
         "rowFieldLabel": "Row ID",
         "invalidFormula": "The formula is invalid",
         "rowFieldPlaceHolder": "Select a row ID",
+        "rowFieldHelpText": "Leave this value empty to return the first row.",
         "searchFieldPlaceHolder": "Enter a search term...",
         "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
         "filterTabTitle": "Filters",

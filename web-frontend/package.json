@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "1.22.1",
+  "version": "1.22.2",
   "private": true,
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
@@ -15,7 +15,7 @@
     "start": "nuxt start --hostname 0.0.0.0",
     "eslint": "eslint -c .eslintrc.js --ext .js,.vue . ../premium/web-frontend ../enterprise/web-frontend",
     "lint": "yarn eslint && yarn stylelint",
-    "fix": "yarn prettier **/*.js **/*.vue **/*.scss -w && yarn eslint fix",
+    "fix": "yarn prettier **/*.js **/*.vue **/*.scss -w && yarn eslint --fix && yarn stylelint --fix",
     "stylelint": "stylelint **/*.scss ../premium/web-frontend/modules/**/*.scss ../enterprise/web-frontend/modules/**/*.scss --syntax scss",
     "test-core": "jest --verbose false --config jest.config.js",
     "test-premium": "jest --verbose false --config ../premium/web-frontend/jest.config.js",
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@nuxtjs/i18n": "7.3.1",
+    "@nuxtjs/sentry": "7.1.11",
     "@storybook/core-client": "6.5.9",
     "@tiptap/core": "^2.0.3",
     "@tiptap/extension-document": "^2.0.3",

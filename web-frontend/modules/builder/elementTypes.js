@@ -16,6 +16,7 @@ import {
   ELEMENT_EVENTS,
   PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS,
 } from '@baserow/modules/builder/enums'
+import { ensureBoolean } from '@baserow/modules/core/utils/validator'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -30,6 +31,8 @@ import FormContainerElement from '@baserow/modules/builder/components/elements/c
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
 import DropdownElement from '@baserow/modules/builder/components/elements/components/DropdownElement.vue'
 import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
+import CheckboxElement from '@baserow/modules/builder/components/elements/components/CheckboxElement.vue'
+import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -62,13 +65,14 @@ export class ElementType extends Registerable {
 
   get stylesAll() {
     return [
-      'style_border_top_color',
-      'style_border_top_size',
       'style_padding_top',
-      'style_border_bottom_color',
-      'style_border_bottom_size',
       'style_padding_bottom',
-      'style_padding_bottom',
+      'style_padding_left',
+      'style_padding_right',
+      'style_border_top',
+      'style_border_bottom',
+      'style_border_left',
+      'style_border_right',
       'style_background',
       'style_background_color',
       'style_width',
@@ -218,15 +222,7 @@ export class ColumnElementType extends ContainerElementType {
   }
 
   get childStylesForbidden() {
-    return [
-      'style_border_top_color',
-      'style_border_top_size',
-      'style_border_bottom_color',
-      'style_border_bottom_size',
-      'style_background',
-      'style_background_color',
-      'style_width',
-    ]
+    return ['style_width']
   }
 
   get defaultPlaceInContainer() {
@@ -272,21 +268,10 @@ export class FormElementType extends ElementType {
   }
 
   generateFromDataName(element, applicationContext) {
-    return `${this.name} ${this.getElementPosition(
-      element,
-      applicationContext
-    )}`
-  }
-
-  getElementPosition(element, applicationContext) {
-    const elements = this.app.store.getters['element/getElementsOrdered'](
-      applicationContext.page
-    )
-    const elementsOfSameType = elements.filter(
-      ({ type }) => type === element.type
-    )
-
-    return elementsOfSameType.findIndex(({ id }) => id === element.id) + 1
+    const elementPosition = this.app.store.getters[
+      'element/getElementPosition'
+    ](applicationContext.page, element, true)
+    return `${this.name} ${elementPosition}`
   }
 
   afterCreate(element, page) {
@@ -666,5 +651,52 @@ export class FormContainerElementType extends ContainerElementType {
 
   get events() {
     return [SubmitEvent]
+  }
+
+  get childStylesForbidden() {
+    return ['style_width']
+  }
+}
+
+export class CheckboxElementType extends FormElementType {
+  getType() {
+    return 'checkbox'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.checkbox')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.checkboxDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-check'
+  }
+
+  get component() {
+    return CheckboxElement
+  }
+
+  get generalFormComponent() {
+    return CheckboxElementForm
+  }
+
+  get formDataType() {
+    return 'boolean'
+  }
+
+  getInitialFormDataValue(element, applicationContext) {
+    try {
+      return ensureBoolean(
+        this.resolveFormula(element.default_value, {
+          element,
+          ...applicationContext,
+        })
+      )
+    } catch {
+      return false
+    }
   }
 }

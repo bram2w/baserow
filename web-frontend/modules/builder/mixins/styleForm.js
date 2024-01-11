@@ -1,7 +1,10 @@
 import _ from 'lodash'
 import form from '@baserow/modules/core/mixins/form'
-import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
+
+const borderNames = ['top', 'bottom', 'left', 'right']
+
+const borderStyleNames = borderNames.map((pos) => `style_border_${pos}`)
 
 export default {
   inject: ['builder'],
@@ -23,13 +26,24 @@ export default {
       allowedValues,
       values: this.getValuesFromElement(allowedValues),
       boxStyles: Object.fromEntries(
-        ['top', 'bottom'].map((pos) => [pos, this.getBoxStyleValue(pos)])
+        borderNames.map((pos) => [pos, this.getBoxStyleValue(pos)])
       ),
     }
   },
   computed: {
     colorVariables() {
       return themeToColorVariables(this.builder.theme)
+    },
+    allowedStyles() {
+      return this.getAllowedStyles()
+    },
+    borders() {
+      return [
+        { name: 'top', label: this.$t('defaultStyleForm.boxTop') },
+        { name: 'bottom', label: this.$t('defaultStyleForm.boxBottom') },
+        { name: 'left', label: this.$t('defaultStyleForm.boxLeft') },
+        { name: 'right', label: this.$t('defaultStyleForm.boxRight') },
+      ]
     },
   },
   watch: {
@@ -43,9 +57,8 @@ export default {
     },
   },
   methods: {
-    resolveColor,
     isStyleAllowed(style) {
-      return this.allowedValues.includes(style)
+      return this.allowedStyles.includes(style)
     },
     getBoxStyleValue(pos) {
       return {
@@ -61,20 +74,33 @@ export default {
         this.values[`style_border_${pos}_size`] = newValue.border_size
       }
     },
-    getAllowedValues() {
+    getAllowedStyles() {
       const elementType = this.$registry.get('element', this.element.type)
       const parentElementType = this.parentElement
         ? this.$registry.get('element', this.parentElement?.type)
-        : null
+        : []
 
-      if (!parentElementType) {
-        return elementType.styles
+      let styles = elementType.styles
+
+      if (parentElementType) {
+        styles = _.difference(
+          elementType.styles,
+          parentElementType.childStylesForbidden
+        )
       }
 
-      return _.difference(
-        elementType.styles,
-        parentElementType.childStylesForbidden
-      )
+      return styles
+    },
+    getAllowedValues() {
+      // Rewrite border style names
+      return this.getAllowedStyles()
+        .map((style) => {
+          if (borderStyleNames.includes(style)) {
+            return [`${style}_color`, `${style}_size`]
+          }
+          return style
+        })
+        .flat()
     },
     getValuesFromElement(allowedValues) {
       return allowedValues.reduce((obj, value) => {

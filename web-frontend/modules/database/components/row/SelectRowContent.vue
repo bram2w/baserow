@@ -9,7 +9,7 @@
           v-model="visibleSearch"
           type="text"
           :placeholder="$t('selectRowContent.search')"
-          class="input select-row-modal__search-input"
+          class="select-row-modal__search-input"
           @input="doSearch(visibleSearch, false)"
           @keypress.enter="doSearch(visibleSearch, true)"
         />
@@ -96,7 +96,7 @@ export default {
       search: '',
       visibleSearch: '',
       page: 1,
-      totalPages: null,
+      totalPages: 0,
       lastHoveredRow: null,
       addRowHover: false,
       searchDebounce: null,
@@ -234,7 +234,7 @@ export default {
     doSearch(query, immediate) {
       const search = () => {
         this.search = query
-        this.totalPages = null
+        this.totalPages = 0
         return this.fetch(1)
       }
       if (this.searchDebounce) {

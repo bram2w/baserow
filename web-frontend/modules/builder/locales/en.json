@@ -85,7 +85,9 @@
         "formContainer": "Form",
         "formContainerDescription": "A form element",
         "dropdown": "Dropdown",
-        "dropdownDescription": "Dropdown element"
+        "dropdownDescription": "Dropdown element",
+        "checkbox": "Checkbox",
+        "checkboxDescription": "Checkbox element"
     },
     "addElementButton": {
         "label": "Element"
@@ -153,6 +155,11 @@
         "placeholderPlaceholder": "Enter a placeholder (optional)",
         "requiredTitle": "Required"
     },
+    "inputTextElementForm": {
+      "multilineTitle": "Multiline",
+      "rowsTitle": "Number of lines",
+      "rowsPlaceholder": "Enter the number of rows of this input"
+    },
     "imageElementForm": {
         "fileLabel": "Image file",
         "invalidUrlError": "URL is invalid",
@@ -214,23 +221,24 @@
         "noValue": "Unnamed..."
     },
     "linkElementForm": {
-        "text": "Text",
-        "textPlaceholder": "Enter text...",
-        "navigateTo": "Navigate to",
-        "navigateToNotSet": "No destination",
-        "navigateToCustom": "Custom URL",
-        "url": "Destination URL",
-        "urlPlaceholder": "Enter an URL...",
-        "variant": "Variant",
-        "variantLink": "Link",
-        "variantButton": "Button",
-        "target": "Open in...",
-        "targetSelf": "Same tab",
-        "targetNewTab": "New tab",
-        "paramPlaceholder": "Enter a value...",
-        "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
-        "paramsInErrorButton": "Update parameters",
-        "pageParameterTypeError": "Invalid type"
+      "text": "Text",
+      "textPlaceholder": "Enter text...",
+      "navigateTo": "Navigate to",
+      "navigateToNotSet": "No destination",
+      "navigateToCustom": "Custom URL",
+      "url": "Destination URL",
+      "urlPlaceholder": "Enter an URL...",
+      "variant": "Variant",
+      "variantLink": "Link",
+      "variantButton": "Button",
+      "target": "Open in...",
+      "targetSelf": "Same tab",
+      "targetNewTab": "New tab",
+      "paramPlaceholder": "Enter a value...",
+      "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
+      "paramsInErrorButton": "Update parameters",
+      "pageParameterTypeError": "Invalid type",
+      "buttonColor": "Button color"
     },
     "widthSelector": {
         "width": "Width",
@@ -302,16 +310,17 @@
         "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
     },
     "defaultStyleForm": {
-        "boxTop": "Top",
-        "boxBottom": "Bottom",
-        "backgroundLabel": "Background",
-        "backgroundColor": "Background color",
-        "widthLabel": "Width"
+      "boxTop": "Top",
+      "boxBottom": "Bottom",
+      "boxLeft": "Left",
+      "boxRight": "Right",
+      "backgroundLabel": "Background",
+      "backgroundColor": "Background color",
+      "widthLabel": "Width"
     },
     "styleBoxForm": {
         "borderLabel": "Border",
-        "paddingLabel": "Padding",
-        "error": "The value must be an integer between 0 and 200."
+        "paddingLabel": "Padding"
     },
     "mainThemeConfigBlock": {
       "colorsLabel": "Colors",
@@ -322,8 +331,9 @@
       "headingValue": "Heading <h{i}>"
     },
     "buttonElementForm": {
-        "valueLabel": "Text",
-        "valuePlaceholder": "Enter text..."
+      "valueLabel": "Text",
+      "valuePlaceholder": "Enter text...",
+      "buttonColor": "Button color"
     },
     "buttonElement": {
         "noValue": "Unnamed..."
@@ -348,7 +358,8 @@
       "fieldDefaultName": "Column",
       "fieldType": "Type",
       "itemsPerPagePlaceholder": "Enter value...",
-      "selectSourceFirst": "Choose a list data source to begin configuring your fields."
+      "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
+      "buttonColor": "Button color"
     },
     "tableElement": {
       "empty": "No items have been found.",
@@ -389,7 +400,8 @@
       "fieldValueLabel": "Url",
       "fieldValuePlaceholder": "Enter value...",
       "fieldLinkNameLabel": "Link text",
-      "fieldLinkNamePlaceholder": "Enter value..."
+      "fieldLinkNamePlaceholder": "Enter value...",
+      "buttonColor": "Button color"
     },
     "linkField": {
       "details": "Details"
@@ -405,8 +417,9 @@
       "integrationFieldLabel": "Integration"
     },
     "formContainerElementForm": {
-        "submitButtonLabel": "Submit button",
-        "submitButtonPlaceholder": "Enter value..."
+      "submitButtonLabel": "Submit button",
+      "submitButtonPlaceholder": "Enter value...",
+      "buttonColor": "Button color"
     },
     "dropdownOptionSelector": {
         "label": "Options",
@@ -424,5 +437,10 @@
         "rowIdPlaceholder": "Select a row ID",
         "fieldMappingPlaceholder": "Choose a field value",
         "noTableSelectedMessage": "Choose a table to begin configuring your fields."
+    },
+    "checkboxElementForm": {
+      "labelTitle": "Label",
+      "valueTitle": "Default value",
+      "requiredTitle": "Required"
     }
 }

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from django.shortcuts import reverse
@@ -6,7 +6,6 @@ from django.shortcuts import reverse
 import pytest
 from faker import Faker
 from freezegun import freeze_time
-from pytz import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -349,7 +348,7 @@ def test_date_field_type(api_client, data_fixture):
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
         {
             f"field_{date_field_id}": "2020-04-01 12:00",
-            f"field_{date_time_field_id}": "2020-04-01",
+            f"field_{date_time_field_id}": "2020-04-44",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -379,7 +378,7 @@ def test_date_field_type(api_client, data_fixture):
     model = table.get_model(attribute_names=True)
     row = model.objects.all().last()
     assert row.date == date(2020, 4, 1)
-    assert row.datetime == datetime(2020, 4, 1, 14, 30, 20, tzinfo=timezone("UTC"))
+    assert row.datetime == datetime(2020, 4, 1, 14, 30, 20, tzinfo=timezone.utc)
 
     url = reverse("api:database:fields:item", kwargs={"field_id": date_time_field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
@@ -1310,7 +1309,18 @@ def test_multiple_select_field_type(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {f"field_{field_1_id}": "Nothing"},
+        {f"field_{field_1_id}": {}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"][f"field_{field_1_id}"][0]["code"] == "not_a_list"
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_1_id}": "MissingOption"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1318,8 +1328,9 @@ def test_multiple_select_field_type(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
-        response_json["detail"][f"field_{field_1_id}"]["non_field_errors"][0]["code"]
-        == "not_a_list"
+        response_json["detail"]
+        == "The provided select option value 'MissingOption' is not a valid select "
+        "option."
     )
 
     response = api_client.post(

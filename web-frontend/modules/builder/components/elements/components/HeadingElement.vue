@@ -5,6 +5,7 @@
     :class="{ 'element--no-value': !resolvedValue }"
     :style="{
       '--color': resolveColor(element.font_color, headingColorVariables),
+      '--font-size': `${builder.theme[`heading_${element.level}_font_size`]}px`,
     }"
   >
     {{ resolvedValue || $t('headingElement.noValue') }}

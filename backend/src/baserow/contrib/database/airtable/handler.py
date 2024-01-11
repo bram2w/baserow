@@ -1,7 +1,7 @@
 import json
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO, IOBase
 from typing import Dict, List, Optional, Tuple, Union
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 from django.core.files.storage import Storage
 
 import requests
-from pytz import UTC
 from requests import Response
 
 from baserow.contrib.database.airtable.constants import (
@@ -63,6 +62,7 @@ class AirtableHandler:
 
         :param share_id: The Airtable share id of the page that must be fetched. Note
             that the base must be shared publicly. The id stars with `shr`.
+        :raises AirtableShareIsNotABase: When the URL doesn't point to a shared base.
         :return: The request ID, initial data and the cookies of the response.
         """
 
@@ -76,7 +76,10 @@ class AirtableHandler:
 
         decoded_content = remove_invalid_surrogate_characters(response.content)
 
-        request_id = re.search('requestId: "(.*)",', decoded_content).group(1)
+        request_id_re = re.search('requestId: "(.*)",', decoded_content)
+        if request_id_re is None:
+            raise AirtableShareIsNotABase("The `shared_id` is not a valid base link.")
+        request_id = request_id_re.group(1)
         raw_init_data = re.search("window.initData = (.*);\n", decoded_content).group(1)
         init_data = json.loads(raw_init_data)
         cookies = response.cookies.get_dict()
@@ -262,7 +265,7 @@ class AirtableHandler:
         if created_on:
             created_on = (
                 datetime.strptime(created_on, "%Y-%m-%dT%H:%M:%S.%fZ")
-                .replace(tzinfo=UTC)
+                .replace(tzinfo=timezone.utc)
                 .isoformat()
             )
 

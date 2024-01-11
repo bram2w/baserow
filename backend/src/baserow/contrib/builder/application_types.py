@@ -28,6 +28,7 @@ from baserow.core.utils import ChildProgressBuilder
 class BuilderApplicationType(ApplicationType):
     type = "builder"
     model_class = Builder
+    supports_actions = False
     supports_integrations = True
     supports_user_sources = True
 

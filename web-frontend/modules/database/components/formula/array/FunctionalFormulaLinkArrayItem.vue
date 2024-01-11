@@ -8,33 +8,21 @@
       class="forced-pointer-events-auto"
       @mousedown.stop
     >
-      {{ $options.methods.getLabelOrUrl(props.value) }}
+      {{ $options.methods.getLabelOrURL(props.value) }}
     </a>
     <u v-else-if="$options.methods.isValid(props.value)">
-      {{ $options.methods.getLabelOrUrl(props.value) }}
+      {{ $options.methods.getLabelOrURL(props.value) }}
     </u>
     <template v-else>
-      {{ $options.methods.getLabelOrUrl(props.value) }}
+      {{ $options.methods.getLabelOrURL(props.value) }}
     </template>
   </div>
 </template>
 
 <script>
-import { isValidURL } from '@baserow/modules/core/utils/string'
+import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
   name: 'FunctionalFormulaLinkArrayItem',
-  methods: {
-    isValidURL,
-    isValid(value) {
-      return isValidURL(value?.url)
-    },
-    getLabelOrUrl(value) {
-      if (!value) {
-        return ''
-      } else {
-        return value.label ? value.label : value.url
-      }
-    },
-  },
+  mixins: [linkURLField],
 }
 </script>

@@ -4,6 +4,7 @@ import pytest
 from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.elements.element_types import (
+    CheckboxElementType,
     ContainerElementType,
     DropdownElementType,
     FormElementType,
@@ -11,6 +12,7 @@ from baserow.contrib.builder.elements.element_types import (
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
+    CheckboxElement,
     DropdownElementOption,
     HeadingElement,
     InputTextElement,
@@ -215,3 +217,27 @@ def test_page_with_element_using_form_data_has_dependencies_import_first(data_fi
     form_input_clone = InputTextElement.objects.get(page=page_clone)
     heading_clone = HeadingElement.objects.get(page=page_clone)
     assert heading_clone.value == f"get('form_data.{form_input_clone.id}')"
+
+
+@pytest.mark.django_db
+def test_checkbox_element_import_export_formula(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = CheckboxElementType()
+
+    exported_input_element = data_fixture.create_builder_element(
+        CheckboxElement,
+        label=f"get('data_source.{data_source_1.id}.field_1')",
+        default_value=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_input_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.label == expected_formula
+    assert imported_element.default_value == expected_formula

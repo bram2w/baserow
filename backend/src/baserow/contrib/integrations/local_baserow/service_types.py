@@ -673,6 +673,7 @@ class LocalBaserowListRowsUserServiceType(
 class LocalBaserowGetRowUserServiceType(
     LocalBaserowViewServiceType,
     LocalBaserowTableServiceFilterableMixin,
+    LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
 ):
     """
@@ -811,6 +812,10 @@ class LocalBaserowGetRowUserServiceType(
 
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
 
+        # Ignore validation for empty formulas
+        if not service.row_id:
+            return resolved_values
+
         try:
             resolved_values["row_id"] = ensure_integer(
                 resolve_formula(
@@ -869,6 +874,19 @@ class LocalBaserowGetRowUserServiceType(
 
         # Find the `filters` applicable to this Service's View.
         queryset = self.get_dispatch_filters(service, queryset, model)
+
+        # Find sorts applicable to this service.
+        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
+        if view_sorts is not None:
+            queryset = queryset.order_by(*view_sorts)
+
+        # If no row id is provided return the first item from the queryset
+        # This is useful when we want to use filters to specifically choose one
+        # row by setting the right condition
+        if "row_id" not in resolved_values:
+            if not queryset.exists():
+                raise DoesNotExist()
+            return {"data": queryset.first(), "baserow_table_model": model}
 
         try:
             row = queryset.get(pk=resolved_values["row_id"])
@@ -1139,11 +1157,11 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 field_values[field.db_column] = field_type.prepare_value_for_db(
                     field.specific, resolved_value
                 )
-            except ValidationError:
+            except ValidationError as exc:
                 raise ServiceImproperlyConfigured(
-                    f"The result of the `{field.db_column}` formula must be "
-                    f"compatible for the {field_type.type} field type."
-                )
+                    "The result value of the formula is not valid for the "
+                    f"field `{field.name} ({field.db_column})`: {exc.message}"
+                ) from exc
 
         if resolved_values["row_id"]:
             row = RowHandler().update_row_by_id(
@@ -1151,12 +1169,14 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 table,
                 row_id=resolved_values["row_id"],
                 values=field_values,
+                values_already_prepared=True,
             )
         else:
             row = RowHandler().create_row(
                 user=integration.authorized_user,
                 table=table,
                 values=field_values,
+                values_already_prepared=True,
             )
 
         return {"data": row, "baserow_table_model": table.get_model()}

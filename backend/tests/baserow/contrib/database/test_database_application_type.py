@@ -1,16 +1,19 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.core.files.storage import FileSystemStorage
 
 import pytest
 from freezegun import freeze_time
-from pytz import UTC
 
+from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.fields.models import FormulaField, TextField
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.action.models import Action
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import CreateApplicationActionType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Template
 from baserow.core.registries import ImportExportConfig, application_type_registry
@@ -40,8 +43,8 @@ def test_import_export_database(data_fixture):
     )
     model.objects.create(**{f"field_{text_field.id}": "Test 2"})
     model.objects.filter(id=row.id).update(
-        created_on=datetime(2021, 1, 1, 12, 30, tzinfo=UTC),
-        updated_on=datetime(2021, 1, 2, 13, 30, tzinfo=UTC),
+        created_on=datetime(2021, 1, 1, 12, 30, tzinfo=timezone.utc),
+        updated_on=datetime(2021, 1, 2, 13, 30, tzinfo=timezone.utc),
     )
     row.refresh_from_db()
 
@@ -100,8 +103,8 @@ def test_import_export_database(data_fixture):
     # same.
     assert imported_row.id == row.id
     assert imported_row.order == row.order
-    assert imported_row.created_on == datetime(2021, 1, 1, 12, 30, tzinfo=UTC)
-    assert imported_row.updated_on == datetime(2021, 1, 2, 13, 30, tzinfo=UTC)
+    assert imported_row.created_on == datetime(2021, 1, 1, 12, 30, tzinfo=timezone.utc)
+    assert imported_row.updated_on == datetime(2021, 1, 2, 13, 30, tzinfo=timezone.utc)
     assert imported_row.last_modified_by == row.last_modified_by
     assert getattr(
         imported_row, f'field_{id_mapping["database_fields"][text_field.id]}'
@@ -117,8 +120,8 @@ def test_import_export_database(data_fixture):
 
     # Because the created on and updated on were not provided, we expect these values
     # to be equal to "now", which was frozen by freezegun during the import.
-    assert imported_row_2.created_on == datetime(2022, 1, 1, 12, 0, tzinfo=UTC)
-    assert imported_row_2.updated_on == datetime(2022, 1, 1, 12, 0, tzinfo=UTC)
+    assert imported_row_2.created_on == datetime(2022, 1, 1, 12, 0, tzinfo=timezone.utc)
+    assert imported_row_2.updated_on == datetime(2022, 1, 1, 12, 0, tzinfo=timezone.utc)
 
     # It must still be possible to create a new row in the imported table
     row_3 = imported_model.objects.create()
@@ -173,3 +176,18 @@ def test_install_template_sets_last_modified_by_none(
     table_model = template_example_table.get_model()
     assert table_model.objects.all()[0].last_modified_by is None
     assert table_model.objects.all()[1].last_modified_by is None
+
+
+@pytest.mark.django_db
+def test_database_application_creation_does_register_an_action(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    assert Action.objects.count() == 0
+    action_type_registry.get_by_type(CreateApplicationActionType).do(
+        user,
+        workspace,
+        DatabaseApplicationType.type,
+        name="Actions please",
+        init_with_data=False,
+    )
+    assert Action.objects.count() == 1

@@ -1,12 +1,11 @@
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
 from django.core.exceptions import ValidationError
 
 from loguru import logger
-from pytz import UTC
 
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.fields.models import (
@@ -210,7 +209,7 @@ class DateAirtableColumnType(AirtableColumnType):
 
         try:
             value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ").replace(
-                tzinfo=UTC
+                tzinfo=timezone.utc
             )
         except ValueError:
             tb = traceback.format_exc()
@@ -278,7 +277,7 @@ class FormulaAirtableColumnType(AirtableColumnType):
             # we must use the value as provided here.
             return (
                 datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-                .replace(tzinfo=UTC)
+                .replace(tzinfo=timezone.utc)
                 .isoformat()
             )
 

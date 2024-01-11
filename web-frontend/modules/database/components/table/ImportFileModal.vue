@@ -19,9 +19,11 @@
                 })
           }}
         </h2>
-        <a v-if="isTableCreation" class="modal__close" @click="hide()">
-          <i class="iconoir-cancel"></i>
-        </a>
+        <div class="modal__actions">
+          <a v-if="isTableCreation" class="modal__close" @click="hide()">
+            <i class="iconoir-cancel"></i>
+          </a>
+        </div>
       </div>
 
       <div v-if="!dataLoaded" class="control">
@@ -203,9 +205,11 @@
           </div>
         </div>
       </div>
-      <a class="modal__close" @click="hide()">
-        <i class="iconoir-cancel"></i>
-      </a>
+      <div class="modal__actions">
+        <a class="modal__close" @click="hide()">
+          <i class="iconoir-cancel"></i>
+        </a>
+      </div>
     </template>
   </Modal>
 </template>

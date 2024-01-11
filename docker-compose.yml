@@ -160,6 +160,9 @@ x-backend-variables: &backend-variables
   BASEROW_USE_PG_FULLTEXT_SEARCH:
   BASEROW_AUTO_VACUUM:
   BASEROW_BUILDER_DOMAINS:
+  SENTRY_DSN:
+  SENTRY_BACKEND_DSN:
+
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
@@ -185,7 +188,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.22.1
+    image: baserow/backend:1.22.2
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -198,7 +201,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.22.1
+    image: baserow/web-frontend:1.22.2
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -225,13 +228,14 @@ services:
       BASEROW_ROW_PAGE_SIZE_LIMIT:
       BASEROW_BUILDER_DOMAINS:
       BASEROW_FRONTEND_SAME_SITE_COOKIE:
+      SENTRY_DSN:
     depends_on:
       - backend
     networks:
       local:
 
   celery:
-    image: baserow/backend:1.22.1
+    image: baserow/backend:1.22.2
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -248,7 +252,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.22.1
+    image: baserow/backend:1.22.2
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -265,7 +269,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.22.1
+    image: baserow/backend:1.22.2
     restart: unless-stopped
     command: celery-beat
     environment:

@@ -63,6 +63,11 @@ export default function CoreModule(options) {
   }
 
   this.options.publicRuntimeConfig = {
+    sentry: {
+      config: {
+        environment: process.env.SENTRY_ENVIRONMENT || '',
+      },
+    },
     BASEROW_DISABLE_PUBLIC_URL_CHECK:
       process.env.BASEROW_DISABLE_PUBLIC_URL_CHECK ?? false,
     PUBLIC_BACKEND_URL:
@@ -99,6 +104,22 @@ export default function CoreModule(options) {
     BASEROW_FRONTEND_SAME_SITE_COOKIE:
       process.env.BASEROW_FRONTEND_SAME_SITE_COOKIE ?? 'lax',
   }
+
+  this.requireModule([
+    '@nuxtjs/sentry',
+    {
+      clientIntegrations: {
+        Dedupe: {},
+        ExtraErrorData: {},
+        RewriteFrames: {},
+        ReportingObserver: null,
+      },
+      clientConfig: {
+        attachProps: true,
+        logErrors: true,
+      },
+    },
+  ])
 
   const locales = [
     { code: 'en', name: 'English', file: 'en.json' },

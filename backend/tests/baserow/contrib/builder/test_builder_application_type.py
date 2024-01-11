@@ -13,6 +13,9 @@ from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
 from baserow.contrib.builder.workflow_actions.models import EventTypes
+from baserow.core.action.models import Action
+from baserow.core.action.registries import action_type_registry
+from baserow.core.actions import CreateApplicationActionType
 from baserow.core.db import specific_iterator
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
@@ -128,14 +131,21 @@ def test_builder_application_export(data_fixture):
                         "order": str(element1.order),
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "font_color": "default",
                         "style_background_color": "#ffffffff",
                         "style_border_bottom_color": "border",
                         "style_border_bottom_size": 0,
                         "style_border_top_color": "border",
                         "style_border_top_size": 0,
+                        "style_border_left_color": "border",
+                        "style_border_left_size": 0,
+                        "style_border_right_color": "border",
+                        "style_border_right_size": 0,
                         "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_padding_left": 20,
+                        "style_padding_right": 20,
                         "style_background": "none",
                         "value": element1.value,
                         "level": element1.level,
@@ -151,9 +161,15 @@ def test_builder_application_export(data_fixture):
                         "style_border_bottom_size": 0,
                         "style_border_top_color": "border",
                         "style_border_top_size": 0,
+                        "style_border_left_color": "border",
+                        "style_border_left_size": 0,
+                        "style_border_right_color": "border",
+                        "style_border_right_size": 0,
                         "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_padding_left": 20,
+                        "style_padding_right": 20,
                         "style_background": "none",
                         "value": element2.value,
                     },
@@ -167,9 +183,15 @@ def test_builder_application_export(data_fixture):
                         "style_border_bottom_size": 0,
                         "style_border_top_color": "border",
                         "style_border_top_size": 0,
+                        "style_border_left_color": "border",
+                        "style_border_left_size": 0,
+                        "style_border_right_color": "border",
+                        "style_border_right_size": 0,
                         "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_padding_left": 20,
+                        "style_padding_right": 20,
                         "style_background": "none",
                         "order": str(element_container.order),
                         "column_amount": 3,
@@ -186,9 +208,15 @@ def test_builder_application_export(data_fixture):
                         "style_border_bottom_size": 0,
                         "style_border_top_color": "border",
                         "style_border_top_size": 0,
+                        "style_border_left_color": "border",
+                        "style_border_left_size": 0,
+                        "style_border_right_color": "border",
+                        "style_border_right_size": 0,
                         "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_padding_left": 20,
+                        "style_padding_right": 20,
                         "style_background": "none",
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
@@ -241,14 +269,21 @@ def test_builder_application_export(data_fixture):
                         "order": str(element3.order),
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "font_color": "default",
                         "style_background_color": "#ffffffff",
                         "style_border_bottom_color": "border",
                         "style_border_bottom_size": 0,
                         "style_border_top_color": "border",
                         "style_border_top_size": 0,
+                        "style_border_left_color": "border",
+                        "style_border_left_size": 0,
+                        "style_border_right_color": "border",
+                        "style_border_right_size": 0,
                         "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_padding_left": 20,
+                        "style_padding_right": 20,
                         "style_background": "none",
                         "value": element3.value,
                         "level": element3.level,
@@ -257,6 +292,7 @@ def test_builder_application_export(data_fixture):
                         "id": element4.id,
                         "type": "table",
                         "order": str(element4.order),
+                        "button_color": "primary",
                         "parent_element_id": None,
                         "place_in_container": None,
                         "style_background_color": "#ffffffff",
@@ -264,9 +300,15 @@ def test_builder_application_export(data_fixture):
                         "style_border_bottom_size": 0,
                         "style_border_top_color": "border",
                         "style_border_top_size": 0,
+                        "style_border_left_color": "border",
+                        "style_border_left_size": 0,
+                        "style_border_right_color": "border",
+                        "style_border_right_size": 0,
                         "style_width": "normal",
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
+                        "style_padding_left": 20,
+                        "style_padding_right": 20,
                         "style_background": "none",
                         "items_per_page": 42,
                         "data_source_id": element4.data_source.id,
@@ -654,3 +696,18 @@ def test_delete_builder_application_with_published_builder(data_fixture):
     TrashHandler.permanently_delete(builder)
 
     assert Builder.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_builder_application_creation_does_not_register_an_action(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    assert Action.objects.count() == 0
+    action_type_registry.get_by_type(CreateApplicationActionType).do(
+        user,
+        workspace,
+        BuilderApplicationType.type,
+        name="No actions please",
+        init_with_data=False,
+    )
+    assert Action.objects.count() == 0

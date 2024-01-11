@@ -13,7 +13,9 @@ from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
 import posthog
+import sentry_sdk
 from corsheaders.defaults import default_headers
+from sentry_sdk.integrations.django import DjangoIntegration
 
 from baserow.cachalot_patch import patch_cachalot_for_baserow
 from baserow.config.settings.utils import (
@@ -480,7 +482,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.22.1",
+    "VERSION": "1.22.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -1209,3 +1211,15 @@ for plugin in [*BASEROW_BUILT_IN_PLUGINS, *BASEROW_BACKEND_PLUGIN_NAMES]:
     except ImportError as e:
         print("Could not import %s", plugin)
         print(e)
+
+
+SENTRY_BACKEND_DSN = os.getenv("SENTRY_BACKEND_DSN")
+SENTRY_DSN = os.getenv("SENTRY_DSN") or SENTRY_BACKEND_DSN
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration(signals_spans=False, middleware_spans=False)],
+        send_default_pii=False,
+        environment=os.getenv("SENTRY_ENVIRONMENT", ""),
+    )

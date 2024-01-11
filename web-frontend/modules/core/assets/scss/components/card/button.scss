@@ -1,0 +1,18 @@
+.card-button {
+  @extend %ellipsis;
+
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  width: 100%;
+  font-size: 13px;
+  min-width: 1px;
+  line-height: 24px;
+  height: 26px;
+
+  & .button {
+    @extend %ellipsis;
+
+    display: inline-block;
+  }
+}

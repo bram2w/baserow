@@ -57,6 +57,25 @@ class NumOfArgsGreaterThan(ArgCountSpecifier):
         return self.count < num_args
 
 
+class NumOfArgsBetween(ArgCountSpecifier):
+    def __init__(self, min_count, max_count, inclusive=True):
+        self.min_count = min_count
+        self.max_count = max_count
+        self.inclusive = inclusive
+
+    def __str__(self):
+        return (
+            f"more than {self.min_count} and less than {self.max_count} "
+            f"(inclusive={self.inclusive}) arguments"
+        )
+
+    def test(self, num_args):
+        if self.inclusive:
+            return self.min_count <= num_args <= self.max_count
+        else:
+            return self.min_count < num_args < self.max_count
+
+
 class ZeroArgumentBaserowFunction(BaserowFunctionDefinition):
     """
     A helper sub type of a BaserowFunctionDefinition that lets the
@@ -314,6 +333,7 @@ def construct_aggregate_wrapper_queryset(
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .values("id")
         .annotate(**{result_key: expr_with_metadata.expression})
+        .order_by()
         .values(result_key)
     )
 

@@ -390,8 +390,8 @@ def test_run_file_import_task_for_special_fields(data_fixture, patch_filefield_s
         [
             "seven",
             1,
-            "bug",
-            "bug",
+            {"val": "bug"},
+            {"val": "bug"},
             1.4,
             "bug",
         ],

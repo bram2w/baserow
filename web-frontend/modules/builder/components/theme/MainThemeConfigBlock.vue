@@ -22,38 +22,18 @@
           ></i>
         </a>
         <div v-show="!isClosed('colors')">
-          <div class="control">
-            <div class="control__elements">
-              <div class="color-input">
-                <a
-                  ref="primaryColor"
-                  class="color-input__preview"
-                  :style="{ 'background-color': builder.theme.primary_color }"
-                  @click="openColorPicker($refs.primaryColor, 'primary_color')"
-                ></a>
-                <div class="color-input__label">
-                  {{ $t('mainThemeConfigBlock.primaryColor') }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <div class="control__elements">
-              <div class="color-input">
-                <a
-                  ref="secondaryColor"
-                  class="color-input__preview"
-                  :style="{ 'background-color': builder.theme.secondary_color }"
-                  @click="
-                    openColorPicker($refs.secondaryColor, 'secondary_color')
-                  "
-                ></a>
-                <div class="color-input__label">
-                  {{ $t('mainThemeConfigBlock.secondaryColor') }}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ColorInputGroup
+            :value="builder.theme.primary_color"
+            label-after
+            :label="$t('mainThemeConfigBlock.primaryColor')"
+            @input="setPropertyInStore('primary_color', $event)"
+          />
+          <ColorInputGroup
+            :value="builder.theme.secondary_color"
+            label-after
+            :label="$t('mainThemeConfigBlock.secondaryColor')"
+            @input="setPropertyInStore('secondary_color', $event)"
+          />
         </div>
       </div>
     </div>
@@ -88,21 +68,10 @@
               {{ $t('mainThemeConfigBlock.headingLabel', { i }) }}
             </div>
             <div class="control__elements control__elements--flex">
-              <div class="color-input">
-                <a
-                  ref="headingColor"
-                  class="color-input__preview"
-                  :style="{
-                    'background-color': builder.theme[`heading_${i}_color`],
-                  }"
-                  @click="
-                    openColorPicker(
-                      $refs.headingColor[i - 1],
-                      `heading_${i}_color`
-                    )
-                  "
-                ></a>
-              </div>
+              <ColorInput
+                :value="builder.theme[`heading_${i}_color`]"
+                @input="setPropertyInStore(`heading_${i}_color`, $event)"
+              />
               <div class="input__with-icon">
                 <input
                   type="number"

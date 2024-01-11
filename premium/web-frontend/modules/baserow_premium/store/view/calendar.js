@@ -2,6 +2,7 @@ import Vue from 'vue'
 import _ from 'lodash'
 import moment from '@baserow/modules/core/moment'
 import { clone } from '@baserow/modules/core/utils/object'
+import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
 import ViewService from '@baserow/modules/database/services/view'
 import CalendarService from '@baserow_premium/services/views/calendar'
 import {
@@ -15,7 +16,11 @@ import {
   getMonthlyTimestamps,
   getUserTimeZone,
 } from '@baserow/modules/core/utils/date'
-import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import {
+  extractRowReadOnlyValues,
+  prepareNewOldAndUpdateRequestValues,
+  prepareRowForRequest,
+} from '@baserow/modules/database/utils/row'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 export function populateRow(row, metadata = {}) {
@@ -41,6 +46,8 @@ export function populateDateStack(stack, data) {
   })
   return stack
 }
+
+const updateRowQueue = new GroupTaskQueue()
 
 export const state = () => ({
   loading: false,
@@ -708,39 +715,22 @@ export const actions = {
     { commit, dispatch },
     { view, table, row, field, fields, value, oldValue }
   ) {
-    const fieldType = this.$registry.get('field', field._.type.type)
-    const newValues = {}
-    const newValuesForUpdate = {}
-    const oldValues = {}
-    const fieldName = `field_${field.id}`
-    newValues[fieldName] = value
-    newValuesForUpdate[fieldName] = fieldType.prepareValueForUpdate(
-      field,
-      value
-    )
-    oldValues[fieldName] = oldValue
-
-    fields.forEach((fieldToCall) => {
-      const fieldType = this.$registry.get('field', fieldToCall._.type.type)
-      const fieldToCallName = `field_${fieldToCall.id}`
-      const currentFieldValue = row[fieldToCallName]
-      const optimisticFieldValue = fieldType.onRowChange(
+    const { newRowValues, oldRowValues, updateRequestValues } =
+      prepareNewOldAndUpdateRequestValues(
         row,
-        fieldToCall,
-        currentFieldValue
+        fields,
+        field,
+        value,
+        oldValue,
+        this.$registry
       )
 
-      if (currentFieldValue !== optimisticFieldValue) {
-        newValues[fieldToCallName] = optimisticFieldValue
-        oldValues[fieldToCallName] = currentFieldValue
-      }
-    })
     dispatch('updateSearchMatchesForRow', { row, fields })
 
     await dispatch('updatedExistingRow', {
       view,
       row,
-      values: newValues,
+      values: newRowValues,
       fields,
     })
     // There is a chance that the row is not in the buffer, but it does exist in
@@ -749,26 +739,36 @@ export const actions = {
     // modal, but then it won't be updated, so we have to update it forcefully.
     commit('UPDATE_ROW_VALUES', {
       row,
-      values: { ...newValues },
+      values: { ...newRowValues },
     })
 
     try {
-      const { data } = await RowService(this.$client).update(
-        table.id,
-        row.id,
-        newValuesForUpdate
-      )
-      commit('UPDATE_ROW', { row, values: data })
+      // Add the update actual update function to the queue so that the same row
+      // will never be updated concurrency, and so that the value won't be
+      // updated if the row hasn't been created yet.
+      await updateRowQueue.add(async () => {
+        const { data } = await RowService(this.$client).update(
+          table.id,
+          row.id,
+          updateRequestValues
+        )
+        const readOnlyData = extractRowReadOnlyValues(
+          data,
+          fields,
+          this.$registry
+        )
+        commit('UPDATE_ROW', { row, values: readOnlyData })
+      }, row.id)
     } catch (error) {
       await dispatch('updatedExistingRow', {
         view,
         row,
-        values: oldValues,
+        values: oldRowValues,
         fields,
       })
       commit('UPDATE_ROW_VALUES', {
         row,
-        values: { ...oldValues },
+        values: { ...oldRowValues },
       })
       throw error
     }

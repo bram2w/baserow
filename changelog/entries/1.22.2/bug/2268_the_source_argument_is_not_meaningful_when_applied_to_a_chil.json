@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix bug where the `source` argument was passed to the child serializer when user_field_names=True.",
+    "issue_number": 2268,
+    "bullet_points": [],
+    "created_at": "2024-01-11"
+}

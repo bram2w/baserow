@@ -3,12 +3,13 @@ import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from itertools import cycle
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
+from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -33,13 +34,10 @@ from django.db.models import (
     Window,
 )
 from django.db.models.functions import Coalesce, RowNumber
-from django.utils.timezone import make_aware
 
-import pytz
 from dateutil import parser
 from dateutil.parser import ParserError
 from loguru import logger
-from pytz import timezone
 from rest_framework import serializers
 
 from baserow.contrib.database.api.fields.errors import (
@@ -65,6 +63,7 @@ from baserow.contrib.database.api.fields.serializers import (
     FileFieldResponseSerializer,
     IntegerOrStringField,
     LinkRowValueSerializer,
+    ListOrStringField,
     MustBeEmptyField,
     SelectOptionSerializer,
 )
@@ -924,8 +923,6 @@ class DateFieldType(FieldType):
         if not value:
             return value
 
-        utc = timezone("UTC")
-
         if isinstance(value, str):
             try:
                 # Try first to parse isodate
@@ -945,10 +942,10 @@ class DateFieldType(FieldType):
                     ) from exc
 
         if isinstance(value, date) and not isinstance(value, datetime):
-            value = make_aware(datetime(value.year, value.month, value.day), utc)
+            value = datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
 
         if isinstance(value, datetime):
-            value = value.astimezone(utc)
+            value = value.astimezone(timezone.utc)
             return value if instance.date_include_time else value.date()
 
         raise ValidationError(
@@ -962,7 +959,7 @@ class DateFieldType(FieldType):
 
         field = field_object["field"]
         if isinstance(value, datetime) and field.date_force_timezone is not None:
-            value = value.astimezone(pytz.timezone(field.date_force_timezone))
+            value = value.astimezone(ZoneInfo(field.date_force_timezone))
 
         return value.strftime(field.get_python_format())
 
@@ -988,7 +985,7 @@ class DateFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         if instance.date_include_time:
-            return make_aware(fake.date_time())
+            return fake.date_time().replace(tzinfo=timezone.utc)
         else:
             return fake.date_object()
 
@@ -1427,7 +1424,9 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
         value = getattr(row, field.db_column)
-        return value
+        if value is None:
+            return None
+        return collate_expression(Value(value.first_name))
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         return Subquery(
@@ -1630,7 +1629,9 @@ class CreatedByFieldType(ReadOnlyFieldType):
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
         value = getattr(row, field.db_column)
-        return value
+        if value is None:
+            return None
+        return collate_expression(Value(value.first_name))
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         return Subquery(
@@ -1689,6 +1690,7 @@ class DurationFieldType(FieldType):
     model_class = DurationField
     allowed_fields = ["duration_format"]
     serializer_field_names = ["duration_format"]
+    _can_group_by = True
 
     def get_model_field(self, instance, **kwargs):
         return DurationModelField(instance.duration_format, null=True)
@@ -2241,7 +2243,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         representing the related row ids.
         """
 
-        return serializers.ListField(
+        return ListOrStringField(
             **{
                 "child": IntegerOrStringField(min_value=0),
                 "required": False,
@@ -2264,8 +2266,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
     def get_serializer_help_text(self, instance):
         return (
             "This field accepts an `array` containing the ids or the names of the "
-            "related rows. In case of names, if the name is not found, this name "
-            "is ignored. A name is the value of the primary key of the related row."
+            "related rows. "
+            "A name is the value of the primary key of the related row. "
+            "This field also accepts a string with names separated by a comma. "
             "The response contains a list of objects containing the `id` and "
             "the primary field's `value` as a string for display purposes."
         )
@@ -3602,7 +3605,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         """
 
         name = f"{field_name}__value"
-        order = collate_expression(F(name))
+        order = F(name)
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -3688,6 +3691,7 @@ class MultipleSelectFieldType(
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
+        source = kwargs.pop("source", None)
         field_serializer = IntegerOrStringField(
             **{
                 "required": required,
@@ -3695,8 +3699,8 @@ class MultipleSelectFieldType(
                 **kwargs,
             },
         )
-        return serializers.ListSerializer(
-            child=field_serializer, required=required, **kwargs
+        return ListOrStringField(
+            child=field_serializer, required=required, source=source, **kwargs
         )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> str:
@@ -3859,8 +3863,12 @@ class MultipleSelectFieldType(
         return (
             "This field accepts a list of `integer` each of which representing the "
             "chosen select option id related to the field. Available ids can be found"
-            "when getting or listing the field. The response represents chosen field, "
-            "but also the value and color is exposed."
+            "when getting or listing the field. "
+            "You can also send a list of option names in which case the option are "
+            "searched by name. The first one that matches is used. "
+            "This field also accepts a string with names separated by a comma. "
+            "The response represents chosen field, but also the value and "
+            "color is exposed."
         )
 
     def random_value(self, instance, fake, cache):
@@ -4037,7 +4045,7 @@ class MultipleSelectFieldType(
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(StringAgg(f"{field_name}__value", ","), Value(""))
         annotation = {sort_column_name: query}
-        order = collate_expression(F(sort_column_name))
+        order = F(sort_column_name)
 
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
@@ -4097,7 +4105,7 @@ class MultipleSelectFieldType(
         return set(value1) == set(value2)
 
 
-class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
+class PhoneNumberFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     """
     A simple wrapper around a TextField which ensures any entered data is a
     simple phone number.
@@ -4139,6 +4147,10 @@ class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
 
 class FormulaFieldType(ReadOnlyFieldType):
@@ -5490,7 +5502,7 @@ class MultipleCollaboratorsFieldType(
         query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
         annotation = {sort_column_name: query}
 
-        order = collate_expression(F(sort_column_name))
+        order = F(sort_column_name)
 
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)

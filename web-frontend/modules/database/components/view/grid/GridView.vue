@@ -143,7 +143,8 @@
       ref="rowDragging"
       :table="table"
       :view="view"
-      :fields="allVisibleFields"
+      :all-visible-fields="allVisibleFields"
+      :all-fields-in-table="fields"
       :store-prefix="storePrefix"
       :offset="activeGroupByWidth"
       vertical="getVerticalScrollbarElement"
@@ -495,8 +496,18 @@ export default {
     row: {
       deep: true,
       handler(newRow, prevRow) {
-        if (newRow !== null && this.$refs.rowEditModal) {
-          this.populateAndEditRow(newRow)
+        if (this.$refs.rowEditModal) {
+          if (
+            (prevRow === null && newRow !== null) ||
+            (prevRow && newRow && prevRow.id !== newRow.id)
+          ) {
+            this.populateAndEditRow(newRow)
+          } else if (prevRow !== null && newRow === null) {
+            // Pass emit=false as argument into the hide function because that will
+            // prevent emitting another `hidden` event of the `RowEditModal` which can
+            // result in the route changing twice.
+            this.$refs.rowEditModal.hide(false)
+          }
         }
         // `refreshRow` doesn't immediately hide a row not matching filters if a
         // user open the modal for that row to solve

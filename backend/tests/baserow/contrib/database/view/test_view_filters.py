@@ -1,17 +1,14 @@
 import random
 from contextlib import contextmanager
-from datetime import date
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 
 from django.db.models import Q
-from django.utils import timezone as django_timezone
-from django.utils.timezone import datetime, make_aware
 
 import pytest
-import pytz
 from freezegun import freeze_time
 from pyinstrument import Profiler
 from pytest_unordered import unordered
-from pytz import timezone
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -1726,21 +1723,20 @@ def test_date_equal_filter_type_with_timezone(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     row = model.objects.create(
         **{
             f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2023, 3, 3, 0, 0, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2023, 3, 3, 0, 0, 0, tzinfo=timezone.utc
             ),
         }
     )
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2019, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 5), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 5, tzinfo=timezone.utc
             ),
         }
     )
@@ -1750,8 +1746,8 @@ def test_date_equal_filter_type_with_timezone(data_fixture):
     model.objects.create(
         **{
             f"field_{date_field.id}": date(2010, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2010, 2, 4, 2, 45, 45), utc
+            f"field_{date_time_field.id}": datetime(
+                2010, 2, 4, 2, 45, 45, tzinfo=timezone.utc
             ),
         }
     )
@@ -1782,21 +1778,20 @@ def test_date_equal_filter_type(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     row = model.objects.create(
         **{
             f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
             ),
         }
     )
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2019, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 5), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 5, tzinfo=timezone.utc
             ),
         }
     )
@@ -1806,8 +1801,8 @@ def test_date_equal_filter_type(data_fixture):
     model.objects.create(
         **{
             f"field_{date_field.id}": date(2010, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2010, 2, 4, 2, 45, 45), utc
+            f"field_{date_time_field.id}": datetime(
+                2010, 2, 4, 2, 45, 45, tzinfo=timezone.utc
             ),
         }
     )
@@ -1901,18 +1896,21 @@ def test_last_modified_date_equal_filter_type(data_fixture):
         table=table, date_include_time=False
     )
     last_modified_field_datetime = data_fixture.create_last_modified_field(
-        table=table, date_include_time=True
+        table=table, date_include_time=True, date_force_timezone="Europe/Athens"
     )
     model = table.get_model()
 
-    with freeze_time("2021-08-04 21:59", tz_offset=+2):
-        row = model.objects.create(**{})
-
-    with freeze_time("2021-08-04 22:01", tz_offset=+2):
+    # 2021-08-04 in Athens
+    with freeze_time("2021-08-04 12:00"):
         row_1 = model.objects.create(**{})
 
-    with freeze_time("2021-08-05 00:01", tz_offset=+2):
-        model.objects.create(**{})
+    # 2021-08-05 in Athens
+    with freeze_time("2021-08-04 22:01"):
+        row_2 = model.objects.create(**{})
+
+    # 2021-08-05 in Athens
+    with freeze_time("2021-08-05 00:01"):
+        row_3 = model.objects.create(**{})
 
     handler = ViewHandler()
     model = table.get_model()
@@ -1921,15 +1919,15 @@ def test_last_modified_date_equal_filter_type(data_fixture):
         view=grid_view,
         field=last_modified_field_datetime,
         type="date_equal",
-        value="2021-08-04",
+        value="2021-08-05",
     )
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert ids == unordered([row.id, row_1.id])
+    assert ids == unordered([row_2.id, row_3.id])
 
     filter.field = last_modified_field_date
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert ids == unordered([row.id, row_1.id])
+    assert ids == unordered([row_3.id])
 
 
 @pytest.mark.django_db
@@ -2862,21 +2860,20 @@ def test_date_not_equal_filter_type(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     row = model.objects.create(
         **{
             f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
             ),
         }
     )
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2019, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 5), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 5, tzinfo=timezone.utc
             ),
         }
     )
@@ -2886,8 +2883,8 @@ def test_date_not_equal_filter_type(data_fixture):
     row_4 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2010, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2010, 2, 4, 2, 45, 45), utc
+            f"field_{date_time_field.id}": datetime(
+                2010, 2, 4, 2, 45, 45, tzinfo=timezone.utc
             ),
         }
     )
@@ -2998,21 +2995,20 @@ def test_date_before_filter_type(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     row = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 7, 5),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2021, 7, 5, 1, 30, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2021, 7, 5, 1, 30, 0, tzinfo=timezone.utc
             ),
         }
     )
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 7, 6),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2021, 7, 6, 1, 30, 5), utc
+            f"field_{date_time_field.id}": datetime(
+                2021, 7, 6, 1, 30, 5, tzinfo=timezone.utc
             ),
         }
     )
@@ -3022,8 +3018,8 @@ def test_date_before_filter_type(data_fixture):
     row_4 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 8, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2021, 8, 1, 2, 45, 45), utc
+            f"field_{date_time_field.id}": datetime(
+                2021, 8, 1, 2, 45, 45, tzinfo=timezone.utc
             ),
         }
     )
@@ -3079,21 +3075,20 @@ def test_date_after_filter_type(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     row = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 7, 5),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2021, 7, 5, 1, 30, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2021, 7, 5, 1, 30, 0, tzinfo=timezone.utc
             ),
         }
     )
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 7, 6),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2021, 7, 6, 2, 40, 5), utc
+            f"field_{date_time_field.id}": datetime(
+                2021, 7, 6, 2, 40, 5, tzinfo=timezone.utc
             ),
         }
     )
@@ -3103,8 +3098,8 @@ def test_date_after_filter_type(data_fixture):
     row_4 = model.objects.create(
         **{
             f"field_{date_field.id}": date(2021, 8, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2021, 8, 1, 2, 45, 45), utc
+            f"field_{date_time_field.id}": datetime(
+                2021, 8, 1, 2, 45, 45, tzinfo=timezone.utc
             ),
         }
     )
@@ -3199,7 +3194,6 @@ def test_empty_filter_type(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     row = model.objects.create(
         **{
@@ -3221,8 +3215,8 @@ def test_empty_filter_type(data_fixture):
             f"field_{integer_field.id}": 10,
             f"field_{decimal_field.id}": 1022,
             f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
             ),
             f"field_{boolean_field.id}": True,
             f"field_{file_field.id}": [{"name": "test_file.png"}],
@@ -3238,8 +3232,8 @@ def test_empty_filter_type(data_fixture):
             f"field_{integer_field.id}": 0,
             f"field_{decimal_field.id}": 0.00,
             f"field_{date_field.id}": date(1970, 1, 1),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(1970, 1, 1, 0, 0, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc
             ),
             f"field_{boolean_field.id}": True,
             f"field_{file_field.id}": [
@@ -3353,7 +3347,6 @@ def test_not_empty_filter_type(data_fixture):
 
     handler = ViewHandler()
     model = table.get_model()
-    utc = timezone("UTC")
 
     model.objects.create(
         **{
@@ -3375,8 +3368,8 @@ def test_not_empty_filter_type(data_fixture):
             f"field_{integer_field.id}": 10,
             f"field_{decimal_field.id}": 1022,
             f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": make_aware(
-                datetime(2020, 6, 17, 1, 30, 0), utc
+            f"field_{date_time_field.id}": datetime(
+                2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
             ),
             f"field_{boolean_field.id}": True,
             f"field_{file_field.id}": [{"name": "test_file.png"}],
@@ -4944,7 +4937,7 @@ def test_link_row_contains_filter_type_created_on_field(data_fixture):
 
     row_handler = RowHandler()
 
-    now = django_timezone.now()
+    now = datetime.now(tz=timezone.utc)
 
     related_primary_created_on_field = data_fixture.create_created_on_field(
         primary=True, table=related_table
@@ -5877,7 +5870,7 @@ def test_date_within_days_view_filter(data_fixture):
             assert get_filtered_row_ids() == [rows[4].id, rows[5].id]
 
         with freeze_time(
-            datetime(2021, 1, 4, 0, 0, 0, tzinfo=pytz.timezone("Pacific/Apia"))
+            datetime(2021, 1, 4, 0, 0, 0, tzinfo=ZoneInfo("Pacific/Apia"))
         ):
             assert get_filtered_row_ids() == [rows[3].id, rows[4].id]
 
@@ -5922,7 +5915,7 @@ def test_date_within_weeks_view_filter(data_fixture):
             ]
 
         with freeze_time(
-            datetime(2021, 1, 8, 0, 0, 0, tzinfo=pytz.timezone("Pacific/Apia"))
+            datetime(2021, 1, 8, 0, 0, 0, tzinfo=ZoneInfo("Pacific/Apia"))
         ):
             assert get_filtered_row_ids() == [
                 rows[2].id,
@@ -5973,7 +5966,7 @@ def test_date_within_months_view_filter(data_fixture):
             ]
 
         with freeze_time(
-            datetime(2021, 1, 8, 0, 0, 0, tzinfo=pytz.timezone("Pacific/Apia"))
+            datetime(2021, 1, 8, 0, 0, 0, tzinfo=ZoneInfo("Pacific/Apia"))
         ):
             assert get_filtered_row_ids() == [
                 rows[2].id,
@@ -5987,9 +5980,9 @@ def test_date_within_months_view_filter(data_fixture):
 @pytest.mark.django_db
 def test_before_or_equal_datetime_view_filter(data_fixture):
     dates = [
-        datetime(2020, 12, 1, 12, 30, 0, 0, tzinfo=pytz.UTC),  # 0
-        datetime(2021, 1, 1, 18, 30, 0, 0, tzinfo=pytz.UTC),  # 1
-        datetime(2021, 1, 2, 3, 30, 0, 0, tzinfo=pytz.UTC),  # 2
+        datetime(2020, 12, 1, 12, 30, 0, 0, tzinfo=timezone.utc),  # 0
+        datetime(2021, 1, 1, 18, 30, 0, 0, tzinfo=timezone.utc),  # 1
+        datetime(2021, 1, 2, 3, 30, 0, 0, tzinfo=timezone.utc),  # 2
     ]
 
     with rows_with_datetimes(data_fixture, dates, "date_before_or_equal") as (
@@ -6055,9 +6048,9 @@ def test_before_or_equal_date_view_filter(data_fixture):
 @pytest.mark.django_db
 def test_after_or_equal_datetime_view_filter(data_fixture):
     dates = [
-        datetime(2020, 12, 1, 12, 30, 0, 0, tzinfo=pytz.UTC),  # 0
-        datetime(2021, 1, 1, 14, 30, 0, 0, tzinfo=pytz.UTC),  # 1
-        datetime(2021, 1, 2, 3, 30, 0, 0, tzinfo=pytz.UTC),  # 2
+        datetime(2020, 12, 1, 12, 30, 0, 0, tzinfo=timezone.utc),  # 0
+        datetime(2021, 1, 1, 14, 30, 0, 0, tzinfo=timezone.utc),  # 1
+        datetime(2021, 1, 2, 3, 30, 0, 0, tzinfo=timezone.utc),  # 2
     ]
 
     with rows_with_datetimes(data_fixture, dates, "date_after_or_equal") as (

@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js'
 
 import { uuid } from '@baserow/modules/core/utils/string'
 import { clone } from '@baserow/modules/core/utils/object'
+import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
 import ViewService from '@baserow/modules/database/services/view'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
@@ -18,7 +19,11 @@ import {
   getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
-import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import {
+  prepareRowForRequest,
+  prepareNewOldAndUpdateRequestValues,
+  extractRowReadOnlyValues,
+} from '@baserow/modules/database/utils/row'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 import { fieldValuesAreEqualInObjects } from '@baserow/modules/database/utils/groupBy'
 
@@ -580,6 +585,8 @@ const fireScrollTop = {
   processing: false,
   distance: 0,
 }
+
+const createAndUpdateRowQueue = new GroupTaskQueue()
 
 // Contains the last row request to be able to cancel it.
 let lastRequest = null
@@ -1826,6 +1833,12 @@ export const actions = {
       return row
     })
 
+    // Lock the newly created rows with their persistent ID, so that if the user
+    // changes the value before the row is created, that request is queued.
+    rowsPopulated.forEach((row) => {
+      createAndUpdateRowQueue.lock(row._.persistentId)
+    })
+
     try {
       const { data } = await RowService(this.$client).batchCreate(
         table.id,
@@ -1877,6 +1890,13 @@ export const actions = {
         }
       }
       throw error
+    } finally {
+      // Release the lock because now the update requests can come through if they
+      // were made. Even if the rows were not created, we have to release the ids to
+      // clear the memory.
+      rowsPopulated.forEach((row) => {
+        createAndUpdateRowQueue.release(row._.persistentId)
+      })
     }
 
     dispatch('fetchByScrollTopDelayed', {
@@ -2100,61 +2120,45 @@ export const actions = {
       }
     }
 
-    const fieldValues = {
-      [`field_${field.id}`]: value,
-    }
-    const valuesBeforeUpdate = {
-      // Store the before value of the field that gets updated in case we need to
-      // rollback changes.
-      [`field_${field.id}`]: oldValue,
-    }
-
-    let fieldsToCallOnRowChange = fields
-
-    // We already added the updated field values to the store
-    // so we can remove the field from our fieldsToCallOnRowChange
-    fieldsToCallOnRowChange = fieldsToCallOnRowChange.filter((el) => {
-      return el.id !== field.id
-    })
-
-    fieldsToCallOnRowChange.forEach((fieldToCall) => {
-      const fieldType = this.$registry.get('field', fieldToCall._.type.type)
-      const fieldID = `field_${fieldToCall.id}`
-      const currentFieldValue = row[fieldID]
-      const optimisticFieldValue = fieldType.onRowChange(
+    const { newRowValues, oldRowValues, updateRequestValues } =
+      prepareNewOldAndUpdateRequestValues(
         row,
-        fieldToCall,
-        currentFieldValue
+        fields,
+        field,
+        value,
+        oldValue,
+        this.$registry
       )
-
-      if (currentFieldValue !== optimisticFieldValue) {
-        fieldValues[fieldID] = optimisticFieldValue
-        valuesBeforeUpdate[fieldID] = currentFieldValue
-      }
-    })
 
     // Update the values before making a request to the backend to make it feel
     // instant for the user.
-    await updateValues(fieldValues)
-
-    const fieldType = this.$registry.get('field', field._.type.type)
-    const newValue = fieldType.prepareValueForUpdate(field, value)
-    const values = {}
-    values[`field_${field.id}`] = newValue
+    await updateValues(newRowValues)
 
     try {
-      const updatedRow = await RowService(this.$client).update(
-        table.id,
-        row.id,
-        values
-      )
-      // Update the remaining values like formula, which depend on the backend.
-      await updateValues(updatedRow.data)
-      dispatch('fetchAllFieldAggregationData', {
-        view,
-      })
+      // Add the update actual update function to the queue so that the same row
+      // will never be updated concurrency, and so that the value won't be
+      // updated if the row hasn't been created yet.
+      await createAndUpdateRowQueue.add(async () => {
+        const updatedRow = await RowService(this.$client).update(
+          table.id,
+          row.id,
+          updateRequestValues
+        )
+        // Extract only the read-only values because we don't want to update the other
+        // values that might have been updated in the meantime.
+        const readOnlyData = extractRowReadOnlyValues(
+          updatedRow.data,
+          fields,
+          this.$registry
+        )
+        // Update the remaining values like formula, which depend on the backend.
+        await updateValues(readOnlyData)
+        dispatch('fetchAllFieldAggregationData', {
+          view,
+        })
+      }, row._.persistentId)
     } catch (error) {
-      await updateValues(valuesBeforeUpdate)
+      await updateValues(oldRowValues)
       throw error
     }
   },

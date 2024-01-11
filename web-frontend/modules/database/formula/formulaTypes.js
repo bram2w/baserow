@@ -9,22 +9,27 @@ import FunctionalGridViewFieldLongText from '@baserow/modules/database/component
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldBlank from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBlank'
 import FunctionalGridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray'
-import FunctionalGridViewFieldLink from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLink'
+import FunctionalGridViewFieldButton from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldButton'
+import FunctionalGridViewFieldLinkURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkURL'
 import GridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/GridViewFieldArray'
 import RowEditFieldSingleSelectReadOnly from '@baserow/modules/database/components/row/RowEditFieldSingleSelectReadOnly'
 import RowEditFieldMultipleSelectReadOnly from '@baserow/modules/database/components/row/RowEditFieldMultipleSelectReadOnly'
 import RowEditFieldArray from '@baserow/modules/database/components/row/RowEditFieldArray'
-import RowEditFieldFormulaLink from '@baserow/modules/database/components/row/RowEditFieldFormulaLink'
+import RowEditFieldLinkURL from '@baserow/modules/database/components/row/RowEditFieldLinkURL'
+import RowEditFieldButton from '@baserow/modules/database/components/row/RowEditFieldButton'
 import FunctionalFormulaArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem'
 import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem'
 import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
 import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
 import FunctionalFormulaMultipleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaMultipleSelectArrayItem'
 import FunctionalFormulaLinkArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaLinkArrayItem'
+import FunctionalFormulaButtonArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaButtonArrayItem'
 import RowCardFieldArray from '@baserow/modules/database/components/card/RowCardFieldArray'
 import RowEditFieldBlank from '@baserow/modules/database/components/row/RowEditFieldBlank'
 import RowCardFieldBlank from '@baserow/modules/database/components/card/RowCardFieldBlank'
-import RowCardFieldLink from '@baserow/modules/database/components/card/RowCardFieldLink'
+import RowCardFieldLinkURL from '@baserow/modules/database/components/card/RowCardFieldLinkURL'
+import RowCardFieldButton from '@baserow/modules/database/components/card/RowCardFieldButton'
+import GridViewFieldButton from '@baserow/modules/database/components/view/grid/fields/GridViewFieldButton.vue'
 import GridViewFieldLinkURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkURL.vue'
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText.vue'
 import RowEditFieldFileReadOnly from '@baserow/modules/database/components/row/RowEditFieldFileReadOnly.vue'
@@ -805,11 +810,11 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
   }
 
   getRowEditFieldComponent(field) {
-    return RowEditFieldFormulaLink
+    return RowEditFieldLinkURL
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldLink
+    return FunctionalGridViewFieldLinkURL
   }
 
   getGridViewFieldComponent() {
@@ -833,7 +838,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
   }
 
   getCardComponent() {
-    return RowCardFieldLink
+    return RowCardFieldLinkURL
   }
 
   prepareValueForCopy(field, value) {
@@ -846,5 +851,31 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
 
   canGroupByInView() {
     return false
+  }
+}
+
+export class BaserowFormulaButtonType extends BaserowFormulaLinkType {
+  static getType() {
+    return 'button'
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldButton
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldButton
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldButton
+  }
+
+  getCardComponent() {
+    return RowCardFieldButton
+  }
+
+  getFunctionalGridViewFieldArrayComponent() {
+    return FunctionalFormulaButtonArrayItem
   }
 }

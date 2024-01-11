@@ -1,8 +1,3 @@
-import {
-  featureFlagIsEnabled,
-  getFeatureFlags,
-} from '../modules/core/utils/env'
-
 export default function (
   base = '@',
   premiumBase = '@/../premium/web-frontend',
@@ -25,6 +20,7 @@ export default function (
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
     base + '/modules/integrations/module.js',
+    base + '/modules/builder/module.js',
   ]
   if (!process.env.BASEROW_OSS_ONLY) {
     baseModules.push(
@@ -32,16 +28,23 @@ export default function (
       enterpriseBase + '/modules/baserow_enterprise/module.js'
     )
   }
-
-  const featureFlags = getFeatureFlags()
-
-  if (featureFlagIsEnabled(featureFlags, 'builder')) {
-    baseModules.push(base + '/modules/builder/module.js')
-  }
+  baseModules.push('@nuxtjs/sentry')
 
   const modules = baseModules.concat(additionalModules)
   return {
     modules,
+    sentry: {
+      clientIntegrations: {
+        Dedupe: {},
+        ExtraErrorData: {},
+        RewriteFrames: {},
+        ReportingObserver: null,
+      },
+      clientConfig: {
+        attachProps: true,
+        logErrors: true,
+      },
+    },
     build: {
       extend(config, ctx) {
         config.node = { fs: 'empty' }

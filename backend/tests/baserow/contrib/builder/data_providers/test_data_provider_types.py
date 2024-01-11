@@ -435,10 +435,9 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
-    with pytest.raises(ServiceImproperlyConfigured):
-        data_source_provider.get_data_chunk(
-            dispatch_context, [data_source.id, fields[1].db_column]
-        )
+    data_source_provider.get_data_chunk(
+        dispatch_context, [data_source.id, fields[1].db_column]
+    ) == "Blue"
 
 
 @pytest.mark.django_db
@@ -510,10 +509,9 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
-    with pytest.raises(ServiceImproperlyConfigured):
-        data_source_provider.get_data_chunk(
-            dispatch_context, [data_source.id, fields[1].db_column]
-        )
+    data_source_provider.get_data_chunk(
+        dispatch_context, [data_source.id, fields[1].db_column]
+    ) == "Blue"
 
 
 @pytest.mark.django_db

@@ -1302,11 +1302,11 @@ export class BaserowLink extends BaserowFunctionDefinition {
   }
 
   getSyntaxUsage() {
-    return ['link(text)']
+    return ['link(text, text)']
   }
 
   getExamples() {
-    return ["link('http://your-text-here.com')"]
+    return ["link('http://your-text-here.com', 'label')"]
   }
 
   getFormulaType() {

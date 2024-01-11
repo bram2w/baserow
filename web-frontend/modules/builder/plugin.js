@@ -36,6 +36,7 @@ import {
   TableElementType,
   FormContainerElementType,
   DropdownElementType,
+  CheckboxElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -49,12 +50,10 @@ import {
   DataSourcesPageHeaderItemType,
   ElementsPageHeaderItemType,
   SettingsPageHeaderItemType,
-  VariablesPageHeaderItemType,
 } from '@baserow/modules/builder/pageHeaderItemTypes'
 import {
   EventsPageSidePanelType,
   GeneralPageSidePanelType,
-  VisibilityPageSidePanelType,
   StylePageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
 import {
@@ -94,6 +93,10 @@ import {
 
 export default (context) => {
   const { store, app, isDev } = context
+
+  if (!app.$featureFlagIsEnabled('builder')) {
+    return
+  }
 
   // Allow locale file hot reloading in dev
   if (isDev && app.i18n) {
@@ -163,6 +166,7 @@ export default (context) => {
   app.$registry.register('element', new TableElementType(context))
   app.$registry.register('element', new FormContainerElementType(context))
   app.$registry.register('element', new DropdownElementType(context))
+  app.$registry.register('element', new CheckboxElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
@@ -178,18 +182,10 @@ export default (context) => {
   )
   app.$registry.register(
     'pageHeaderItem',
-    new VariablesPageHeaderItemType(context)
-  )
-  app.$registry.register(
-    'pageHeaderItem',
     new SettingsPageHeaderItemType(context)
   )
   app.$registry.register('pageSidePanel', new GeneralPageSidePanelType(context))
   app.$registry.register('pageSidePanel', new StylePageSidePanelType(context))
-  app.$registry.register(
-    'pageSidePanel',
-    new VisibilityPageSidePanelType(context)
-  )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
 
   app.$registry.register('domain', new CustomDomainType(context))

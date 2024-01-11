@@ -1,10 +1,9 @@
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 
-import pytz
 from loguru import logger
 
 from baserow.core.models import User, UserProfile
@@ -20,7 +19,7 @@ def send_notifications_to_users_with_frequency(frequency, timestamp):
     if timestamp is not None:
         timestamp = datetime.fromisoformat(timestamp)
         if timestamp.tzinfo is None:
-            timestamp = timestamp.astimezone(pytz.UTC)
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
 
     if frequency == UserProfile.EmailNotificationFrequencyOptions.INSTANT.value:
         return send_instant_notifications_email_to_users()

@@ -1,5 +1,6 @@
 import datetime
 import os
+from datetime import timezone
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -11,7 +12,6 @@ from django.db import connections
 import pytest
 from freezegun import freeze_time
 from itsdangerous.exc import BadSignature, SignatureExpired
-from pytz import timezone
 
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.models import (
@@ -382,7 +382,7 @@ def test_reset_password(data_fixture):
         user = handler.reset_password(token, valid_password)
         assert user.check_password(valid_password)
         assert user.profile.last_password_change == datetime.datetime(
-            2020, 1, 2, 12, 00, tzinfo=timezone("UTC")
+            2020, 1, 2, 12, 00, tzinfo=timezone.utc
         )
 
 
@@ -430,7 +430,7 @@ def test_change_password(data_fixture):
         user = handler.change_password(user, valid_password, valid_new_password)
         assert user.check_password(valid_new_password)
         assert user.profile.last_password_change == datetime.datetime(
-            2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+            2020, 1, 1, 12, 00, tzinfo=timezone.utc
         )
 
 

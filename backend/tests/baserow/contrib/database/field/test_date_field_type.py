@@ -1,11 +1,11 @@
-from datetime import date
+from datetime import date, timezone
+from zoneinfo import ZoneInfo
 
 from django.core.exceptions import ValidationError
-from django.utils.timezone import datetime, make_aware, utc
+from django.utils.timezone import datetime, utc
 
 import pytest
 from pytest_unordered import unordered
-from pytz import timezone
 
 from baserow.contrib.database.fields.deferred_field_fk_updater import (
     DeferredFieldFkUpdater,
@@ -24,20 +24,20 @@ def test_date_field_type_prepare_value(data_fixture):
     d = DateFieldType()
 
     f = data_fixture.create_date_field(date_include_time=True, date_format="ISO")
-    amsterdam = timezone("Europe/Amsterdam")
-    utc = timezone("UTC")
-    expected_date = make_aware(datetime(2020, 4, 10, 0, 0, 0), utc)
-    expected_datetime = make_aware(datetime(2020, 4, 10, 12, 30, 30), utc)
+    amsterdam = ZoneInfo("Europe/Amsterdam")
+    utc = timezone.utc
+    expected_date = datetime(2020, 4, 10, 0, 0, 0, tzinfo=utc)
+    expected_datetime = datetime(2020, 4, 10, 12, 30, 30, tzinfo=utc)
 
     with pytest.raises(ValidationError):
         assert d.prepare_value_for_db(f, "TEST")
 
     assert d.prepare_value_for_db(f, None) is None
 
-    unprepared_datetime = make_aware(datetime(2020, 4, 10, 14, 30, 30), amsterdam)
+    unprepared_datetime = datetime(2020, 4, 10, 14, 30, 30, tzinfo=amsterdam)
     assert d.prepare_value_for_db(f, unprepared_datetime) == expected_datetime
 
-    unprepared_datetime = make_aware(datetime(2020, 4, 10, 12, 30, 30), utc)
+    unprepared_datetime = datetime(2020, 4, 10, 12, 30, 30, tzinfo=utc)
     assert d.prepare_value_for_db(f, unprepared_datetime) == expected_datetime
 
     unprepared_datetime = datetime(2020, 4, 10, 12, 30, 30)
@@ -57,7 +57,7 @@ def test_date_field_type_prepare_value(data_fixture):
     unprepared_datetime = datetime(2020, 4, 10, 14, 30, 30)
     assert d.prepare_value_for_db(f, unprepared_datetime) == expected_date
 
-    unprepared_datetime = make_aware(datetime(2020, 4, 10, 14, 30, 30), amsterdam)
+    unprepared_datetime = datetime(2020, 4, 10, 14, 30, 30, tzinfo=amsterdam)
     assert d.prepare_value_for_db(f, unprepared_datetime) == expected_date
 
     assert d.prepare_value_for_db(f, "2020-04-10") == expected_date
@@ -84,8 +84,8 @@ def test_date_field_type(data_fixture):
     field_handler = FieldHandler()
     row_handler = RowHandler()
 
-    amsterdam = timezone("Europe/Amsterdam")
-    utc = timezone("utc")
+    amsterdam = ZoneInfo("Europe/Amsterdam")
+    utc = timezone.utc
 
     date_field_1 = field_handler.create_field(
         user=user, table=table, type_name="date", name="Date", date_format="ISO"
@@ -122,12 +122,12 @@ def test_date_field_type(data_fixture):
     row = row_handler.create_row(
         user=user,
         table=table,
-        values={"datetime": make_aware(datetime(2020, 4, 1, 12, 30, 30), amsterdam)},
+        values={"datetime": datetime(2020, 4, 1, 12, 30, 30, tzinfo=amsterdam)},
         model=model,
     )
     row.refresh_from_db()
     assert row.date is None
-    assert row.datetime == datetime(2020, 4, 1, 10, 30, 30, tzinfo=timezone("UTC"))
+    assert row.datetime == datetime(2020, 4, 1, 10, 30, 30, tzinfo=timezone.utc)
 
     date_field_1 = field_handler.update_field(
         user=user, field=date_field_1, date_include_time=True
@@ -145,7 +145,7 @@ def test_date_field_type(data_fixture):
 
     assert row_0.date is None
     assert row_0.datetime is None
-    assert row_1.date == datetime(2020, 4, 1, tzinfo=timezone("UTC"))
+    assert row_1.date == datetime(2020, 4, 1, tzinfo=timezone.utc)
     assert row_1.datetime == date(2020, 4, 1)
     assert row_2.date is None
     assert row_2.datetime == date(2020, 4, 1)
@@ -163,7 +163,7 @@ def test_converting_date_field_value(data_fixture):
 
     field_handler = FieldHandler()
     row_handler = RowHandler()
-    utc = timezone("utc")
+    utc = timezone.utc
 
     date_field_eu = data_fixture.create_text_field(table=table)
     date_field_us = data_fixture.create_text_field(table=table)
@@ -525,17 +525,17 @@ def test_negative_date_field_value(data_fixture):
     assert getattr(results[4], f"field_{datetime_field.id}") is None
     assert getattr(results[5], f"field_{date_field.id}") == date(1, 1, 1)
     assert getattr(results[5], f"field_{datetime_field.id}") == (
-        datetime(1, 1, 1, tzinfo=timezone("utc"))
+        datetime(1, 1, 1, tzinfo=timezone.utc)
     )
     assert getattr(results[6], f"field_{date_field.id}") is None
     assert getattr(results[6], f"field_{datetime_field.id}") is None
     assert getattr(results[7], f"field_{date_field.id}") == date(2010, 2, 3)
     assert getattr(results[7], f"field_{datetime_field.id}") == (
-        datetime(2010, 2, 3, 12, 30, 0, tzinfo=timezone("utc"))
+        datetime(2010, 2, 3, 12, 30, 0, tzinfo=timezone.utc)
     )
     assert getattr(results[8], f"field_{date_field.id}") == date(2012, 1, 28)
     assert getattr(results[8], f"field_{datetime_field.id}") == (
-        datetime(2012, 1, 28, 12, 30, 0, tzinfo=timezone("utc"))
+        datetime(2012, 1, 28, 12, 30, 0, tzinfo=timezone.utc)
     )
 
 
@@ -571,9 +571,7 @@ def test_get_set_export_serialized_value_date_field(data_fixture):
     row_2 = model.objects.create(
         **{
             f"field_{date_field.id}": "2010-02-03",
-            f"field_{datetime_field.id}": make_aware(
-                datetime(2010, 2, 3, 12, 30, 0), utc
-            ),
+            f"field_{datetime_field.id}": datetime(2010, 2, 3, 12, 30, 0, tzinfo=utc),
         }
     )
 

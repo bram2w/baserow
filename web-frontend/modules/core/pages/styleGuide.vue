@@ -1536,9 +1536,11 @@
         </div>
         <div class="margin-bottom-3">
           <div class="modal__box">
-            <a class="modal__close">
-              <i class="iconoir-cancel"></i>
-            </a>
+            <div class="modal__actions">
+              <a class="modal__close">
+                <i class="iconoir-cancel"></i>
+              </a>
+            </div>
             <h2 class="box__title">An example modal</h2>
             <p>
               Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
@@ -1584,9 +1586,11 @@
             </div>
           </div>
           <div class="modal__box modal__box--with-sidebar">
-            <a class="modal__close">
-              <i class="iconoir-cancel"></i>
-            </a>
+            <div class="modal__actions">
+              <a class="modal__close">
+                <i class="iconoir-cancel"></i>
+              </a>
+            </div>
             <div
               class="modal__box-sidebar modal__box-sidebar--left modal__box-sidebar--scrollable"
             >
@@ -1952,23 +1956,7 @@
               </table>
             </div>
             <div class="data-table__footer">
-              <div class="paginator">
-                <div class="paginator__name">page</div>
-                <div class="paginator__group">
-                  <a class="paginator__button paginator__button--disabled"
-                    ><i class="iconoir-nav-arrow-left"></i
-                  ></a>
-                  <input
-                    type="number"
-                    class="input paginator__page-input"
-                    value="1"
-                  />
-                  <div class="paginator__count">of 233</div>
-                  <a class="paginator__button"
-                    ><i class="iconoir-nav-arrow-right"></i
-                  ></a>
-                </div>
-              </div>
+              <Paginator :page="1" :total-pages="10"></Paginator>
             </div>
           </div>
         </div>
@@ -2129,6 +2117,7 @@ import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/Aut
 import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
 import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext.vue'
 import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
+import Paginator from '@baserow/modules/core/components/Paginator.vue'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 
 export default {
@@ -2137,6 +2126,7 @@ export default {
     ColorPickerContext,
     Toasts,
     AutoExpandableTextarea,
+    Paginator,
   },
   data() {
     return {

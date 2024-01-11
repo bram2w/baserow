@@ -271,6 +271,10 @@ class BaserowFormulaLinkType(BaserowJSONBObjectBaseType):
         return True
 
 
+class BaserowFormulaButtonType(BaserowFormulaLinkType):
+    type = "button"
+
+
 class BaserowFormulaNumberType(
     BaserowFormulaTypeHasEmptyBaserowExpression, BaserowFormulaValidType
 ):
@@ -1262,6 +1266,7 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaInvalidType,
     BaserowFormulaTextType,
     BaserowFormulaCharType,
+    BaserowFormulaButtonType,
     BaserowFormulaLinkType,
     BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
