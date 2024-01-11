@@ -1536,9 +1536,11 @@
         </div>
         <div class="margin-bottom-3">
           <div class="modal__box">
-            <a class="modal__close">
-              <i class="iconoir-cancel"></i>
-            </a>
+            <div class="modal__actions">
+              <a class="modal__close">
+                <i class="iconoir-cancel"></i>
+              </a>
+            </div>
             <h2 class="box__title">An example modal</h2>
             <p>
               Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
@@ -1584,9 +1586,11 @@
             </div>
           </div>
           <div class="modal__box modal__box--with-sidebar">
-            <a class="modal__close">
-              <i class="iconoir-cancel"></i>
-            </a>
+            <div class="modal__actions">
+              <a class="modal__close">
+                <i class="iconoir-cancel"></i>
+              </a>
+            </div>
             <div
               class="modal__box-sidebar modal__box-sidebar--left modal__box-sidebar--scrollable"
             >
