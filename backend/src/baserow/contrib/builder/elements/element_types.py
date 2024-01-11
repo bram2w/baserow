@@ -792,14 +792,30 @@ class InputElementType(FormElementType, abc.ABC):
 class InputTextElementType(InputElementType):
     type = "input_text"
     model_class = InputTextElement
-    allowed_fields = ["label", "default_value", "required", "placeholder"]
-    serializer_field_names = ["label", "default_value", "required", "placeholder"]
+    allowed_fields = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "is_multiline",
+        "rows",
+    ]
+    serializer_field_names = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "is_multiline",
+        "rows",
+    ]
 
     class SerializedDict(ElementDict):
         label: BaserowFormula
         required: bool
         placeholder: str
         default_value: BaserowFormula
+        is_multiline: bool
+        rows: int
 
     @property
     def serializer_field_overrides(self):
@@ -823,12 +839,23 @@ class InputTextElementType(InputElementType):
                 default=False,
                 required=False,
             ),
-            "placeholder": serializers.CharField(
-                default="",
-                allow_blank=True,
-                required=False,
+            "placeholder": FormulaSerializerField(
                 help_text=InputTextElement._meta.get_field("placeholder").help_text,
-                max_length=InputTextElement._meta.get_field("placeholder").max_length,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "is_multiline": serializers.BooleanField(
+                help_text=InputTextElement._meta.get_field("is_multiline").help_text,
+                required=False,
+                default=False,
+            ),
+            "rows": serializers.IntegerField(
+                help_text=InputTextElement._meta.get_field("rows").help_text,
+                required=False,
+                default=3,
+                min_value=1,
+                max_value=100,
             ),
         }
 
@@ -857,6 +884,8 @@ class InputTextElementType(InputElementType):
             "required": False,
             "placeholder": "",
             "default_value": "'Corporis perspiciatis'",
+            "is_multiline": False,
+            "rows": 1,
         }
 
 

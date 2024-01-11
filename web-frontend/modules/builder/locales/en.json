@@ -155,6 +155,11 @@
         "placeholderPlaceholder": "Enter a placeholder (optional)",
         "requiredTitle": "Required"
     },
+    "inputTextElementForm": {
+      "multilineTitle": "Multiline",
+      "rowsTitle": "Number of lines",
+      "rowsPlaceholder": "Enter the number of rows of this input"
+    },
     "imageElementForm": {
         "fileLabel": "Image file",
         "invalidUrlError": "URL is invalid",
