@@ -487,11 +487,17 @@ class InputTextElement(InputElement):
     required = models.BooleanField(
         default=False, help_text="Whether this text input is a required field."
     )
-    placeholder = models.CharField(
-        blank=True,
+    placeholder = FormulaField(
         default="",
-        max_length=225,
         help_text="The placeholder text which should be applied to the element.",
+    )
+    is_multiline = models.BooleanField(
+        default=False,
+        help_text="Whether this text input is multiline.",
+    )
+    rows = models.PositiveIntegerField(
+        default=3,
+        help_text="Number of rows displayed by the rendered input element",
     )
 
 
