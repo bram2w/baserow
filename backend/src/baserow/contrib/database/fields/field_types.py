@@ -63,6 +63,7 @@ from baserow.contrib.database.api.fields.serializers import (
     FileFieldResponseSerializer,
     IntegerOrStringField,
     LinkRowValueSerializer,
+    ListOrStringField,
     MustBeEmptyField,
     SelectOptionSerializer,
 )
@@ -2242,7 +2243,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         representing the related row ids.
         """
 
-        return serializers.ListField(
+        return ListOrStringField(
             **{
                 "child": IntegerOrStringField(min_value=0),
                 "required": False,
@@ -2265,8 +2266,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
     def get_serializer_help_text(self, instance):
         return (
             "This field accepts an `array` containing the ids or the names of the "
-            "related rows. In case of names, if the name is not found, this name "
-            "is ignored. A name is the value of the primary key of the related row."
+            "related rows. "
+            "A name is the value of the primary key of the related row. "
+            "This field also accepts a string with names separated by a comma. "
             "The response contains a list of objects containing the `id` and "
             "the primary field's `value` as a string for display purposes."
         )
@@ -3696,9 +3698,7 @@ class MultipleSelectFieldType(
                 **kwargs,
             },
         )
-        return serializers.ListSerializer(
-            child=field_serializer, required=required, **kwargs
-        )
+        return ListOrStringField(child=field_serializer, required=required, **kwargs)
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> str:
         related_objects = getattr(row, field.db_column)
@@ -3860,8 +3860,12 @@ class MultipleSelectFieldType(
         return (
             "This field accepts a list of `integer` each of which representing the "
             "chosen select option id related to the field. Available ids can be found"
-            "when getting or listing the field. The response represents chosen field, "
-            "but also the value and color is exposed."
+            "when getting or listing the field. "
+            "You can also send a list of option names in which case the option are "
+            "searched by name. The first one that matches is used. "
+            "This field also accepts a string with names separated by a comma. "
+            "The response represents chosen field, but also the value and "
+            "color is exposed."
         )
 
     def random_value(self, instance, fake, cache):

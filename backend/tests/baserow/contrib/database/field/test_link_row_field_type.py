@@ -743,7 +743,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
         {
-            f"field_{link_row_field.id}": "Random",
+            f"field_{link_row_field.id}": {},
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -753,6 +753,22 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
         response_json["detail"][f"field_{link_row_field.id}"][0]["code"] == "not_a_list"
+    )
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
+        {
+            f"field_{link_row_field.id}": "Random",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]
+        == "The provided text value 'Random' doesn't match any row in the linked table."
     )
 
     response = api_client.post(

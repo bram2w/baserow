@@ -1897,8 +1897,9 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
         service_type.dispatch_data(service, {}, dispatch_context)
 
     assert exc.value.args[0] == (
-        f"The result of the `{single_field.db_column}` formula "
-        "must be compatible for the single_select field type."
+        "The result value of the formula is not valid for the "
+        f"field `{single_field.name} ({single_field.db_column})`: "
+        "The provided select option value '99999999999' is not a valid select option."
     )
 
 

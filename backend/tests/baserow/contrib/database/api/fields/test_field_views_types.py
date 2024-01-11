@@ -1309,7 +1309,18 @@ def test_multiple_select_field_type(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
-        {f"field_{field_1_id}": "Nothing"},
+        {f"field_{field_1_id}": {}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"][f"field_{field_1_id}"][0]["code"] == "not_a_list"
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_1_id}": "MissingOption"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1317,8 +1328,9 @@ def test_multiple_select_field_type(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert (
-        response_json["detail"][f"field_{field_1_id}"]["non_field_errors"][0]["code"]
-        == "not_a_list"
+        response_json["detail"]
+        == "The provided select option value 'MissingOption' is not a valid select "
+        "option."
     )
 
     response = api_client.post(
