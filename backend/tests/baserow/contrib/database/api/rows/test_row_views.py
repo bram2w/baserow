@@ -951,6 +951,16 @@ def test_create_empty_row_for_interesting_fields(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
 
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id})
+        + "?user_field_names=true",
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+
 
 @pytest.mark.django_db
 def test_create_row_with_blank_decimal_field(api_client, data_fixture):
