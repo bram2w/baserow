@@ -155,8 +155,7 @@ The installation methods referred to in the variable descriptions are:
 | Name                      | Description                                                                                               | Defaults               |
 |---------------------------|-----------------------------------------------------------------------------------------------------------|------------------------|
 | SENTRY\_DSN               | If provided, will instantiate Sentry SDK for error monitoring for both Frontend and Backend.              | "" (empty string)      |
-| SENTRY\_BACKEND\_DSN      | If provided, will intiantiate Sentry SDK for the backend with this DSN. It will override SENTRY\_DSN      | "" (empty string)      |
-| SENTRY\_WEB_FRONTEND\_DSN | If provided, will intiantiate Sentry SDK for the web-frontend with this DSN. It will override SENTRY\_DSN | "" (empty string)      |
+| SENTRY\_BACKEND\_DSN      | If provided, will instantiate Sentry SDK for the backend with this DSN. It will override SENTRY\_DSN      | "" (empty string)      |
 
 ### User file upload Configuration
 
