@@ -3691,6 +3691,7 @@ class MultipleSelectFieldType(
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
+        source = kwargs.pop("source", None)
         field_serializer = IntegerOrStringField(
             **{
                 "required": required,
@@ -3698,7 +3699,9 @@ class MultipleSelectFieldType(
                 **kwargs,
             },
         )
-        return ListOrStringField(child=field_serializer, required=required, **kwargs)
+        return ListOrStringField(
+            child=field_serializer, required=required, source=source, **kwargs
+        )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> str:
         related_objects = getattr(row, field.db_column)
