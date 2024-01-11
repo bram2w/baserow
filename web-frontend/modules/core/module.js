@@ -65,8 +65,6 @@ export default function CoreModule(options) {
   this.options.publicRuntimeConfig = {
     sentry: {
       config: {
-        dsn:
-          process.env.SENTRY_WEB_FRONTEND_DSN || process.env.SENTRY_DSN || '',
         environment: process.env.SENTRY_ENVIRONMENT || '',
       },
     },

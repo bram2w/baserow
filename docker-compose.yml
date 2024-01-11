@@ -229,7 +229,6 @@ services:
       BASEROW_BUILDER_DOMAINS:
       BASEROW_FRONTEND_SAME_SITE_COOKIE:
       SENTRY_DSN:
-      SENTRY_WEB_FRONTEND_DSN:
     depends_on:
       - backend
     networks:
