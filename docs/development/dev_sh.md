@@ -62,3 +62,15 @@ chance that your source control directories will have file ownership problems.
 Additionally, it
 is [best practice](https://medium.com/@mccode/processes-in-containers-should-not-run-as-root-2feae3f0df3b)
 to not run Docker containers as the default root user.
+
+### Customizing the default ./dev.sh behavior
+
+It is possible to change the way `./dev.sh` script behaves by using built-in pre and post hooks. To do so, place your code in new local files `.local/pre_devsh_hook.sh` or `.local/post_devsh_hook.sh` depending on your needs. These files will be sourced and executed every time the `./dev.sh` script runs.
+
+Consider the following example to opt-out of some behavior when starting Baserow for development:
+
+```bash
+# inside .local/pre_devsh_hook.sh
+sync_templates=false  # Skips template syncing on startup
+e2e_tests=false  # Won't start end to end tests
+```
