@@ -17,6 +17,7 @@ from baserow.contrib.database.fields.constants import (
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.utils.duration import prepare_duration_value_for_db
+from baserow.core.utils import split_comma_separated_string
 
 
 class FieldSerializer(serializers.ModelSerializer):
@@ -211,6 +212,19 @@ class DuplicateFieldParamsSerializer(serializers.Serializer):
     duplicate_data = serializers.BooleanField(
         default=False, help_text="Indicates whether the data should be duplicated."
     )
+
+
+class ListOrStringField(serializers.ListField):
+    """
+    A serializer field that accept a List or a CSV string that will be converted to
+    an Array.
+    """
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = split_comma_separated_string(data)
+
+        return super().to_internal_value(data)
 
 
 @extend_schema_field(OpenApiTypes.INT)

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Allow string values for link row field and multi select",
+    "issue_number": 2250,
+    "bullet_points": [],
+    "created_at": "2024-01-09"
+}

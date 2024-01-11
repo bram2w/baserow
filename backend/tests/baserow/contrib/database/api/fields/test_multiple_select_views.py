@@ -95,6 +95,135 @@ def test_batch_create_rows_multiple_select_field(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_select
 @pytest.mark.api_rows
+def test_batch_create_rows_multiple_select_field_with_string_as_value(
+    api_client, data_fixture
+):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    select_option_2 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    select_option_3 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 3",
+        color="blue",
+    )
+    multiple_select_field.select_options.set([select_option_1, select_option_2])
+    model = table.get_model()
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {
+        "items": [
+            {
+                f"field_{multiple_select_field.id}": "Option 3",
+            },
+            {
+                f"field_{multiple_select_field.id}": "Option 3,Option 2",
+            },
+            {
+                f"field_{multiple_select_field.id}": "",
+            },
+        ]
+    }
+    expected_response_body = {
+        "items": [
+            {
+                f"id": 1,
+                f"field_{multiple_select_field.id}": [
+                    {"id": select_option_3.id, "color": "blue", "value": "Option 3"}
+                ],
+                "order": "1.00000000000000000000",
+            },
+            {
+                f"id": 2,
+                f"field_{multiple_select_field.id}": [
+                    {"id": select_option_3.id, "color": "blue", "value": "Option 3"},
+                    {"id": select_option_2.id, "color": "blue", "value": "Option 2"},
+                ],
+                "order": "2.00000000000000000000",
+            },
+            {
+                f"id": 3,
+                f"field_{multiple_select_field.id}": [],
+                "order": "3.00000000000000000000",
+            },
+        ]
+    }
+
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == expected_response_body
+    rows = model.objects.all()
+    assert getattr(rows[0], f"field_{multiple_select_field.id}").count() == 1
+    assert getattr(rows[1], f"field_{multiple_select_field.id}").count() == 2
+    assert getattr(rows[2], f"field_{multiple_select_field.id}").count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_select
+@pytest.mark.api_rows
+def test_batch_create_rows_multiple_select_field_with_invalid_string_as_value(
+    api_client, data_fixture
+):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    select_option_2 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    multiple_select_field.select_options.set([select_option_1, select_option_2])
+    model = table.get_model()
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {
+        "items": [
+            {
+                f"field_{multiple_select_field.id}": "Option 4,Option 2",
+            },
+        ]
+    }
+
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_REQUEST_BODY_VALIDATION",
+        "detail": "The provided select option value 'Option 4' is not a valid select option.",
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_select
+@pytest.mark.api_rows
 def test_batch_update_rows_multiple_select_field(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)

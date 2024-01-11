@@ -252,7 +252,7 @@ def get_example_row_serializer_class(example_type="get", user_field_names=False)
         kwargs = {
             "help_text": f"This field represents the `{field_type.type}` field. The "
             f"number in field_{i + 1} is in a normal request or response "
-            f"the id of the field.{optional_user_field_names_info}"
+            f"the id of the field.{optional_user_field_names_info} "
             f"{field_type.get_serializer_help_text(instance)}"
         }
         get_field_method = (

@@ -1157,11 +1157,11 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 field_values[field.db_column] = field_type.prepare_value_for_db(
                     field.specific, resolved_value
                 )
-            except ValidationError:
+            except ValidationError as exc:
                 raise ServiceImproperlyConfigured(
-                    f"The result of the `{field.db_column}` formula must be "
-                    f"compatible for the {field_type.type} field type."
-                )
+                    "The result value of the formula is not valid for the "
+                    f"field `{field.name} ({field.db_column})`: {exc.message}"
+                ) from exc
 
         if resolved_values["row_id"]:
             row = RowHandler().update_row_by_id(
@@ -1169,12 +1169,14 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 table,
                 row_id=resolved_values["row_id"],
                 values=field_values,
+                values_already_prepared=True,
             )
         else:
             row = RowHandler().create_row(
                 user=integration.authorized_user,
                 table=table,
                 values=field_values,
+                values_already_prepared=True,
             )
 
         return {"data": row, "baserow_table_model": table.get_model()}
