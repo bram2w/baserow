@@ -1,5 +1,28 @@
 # Changelog
 
+## Released 1.22.2
+
+### New features
+* Show the button formula as a clickable button. [#2089](https://gitlab.com/baserow/baserow/-/issues/2089)
+* Add group by support for the duration field type [#2191](https://gitlab.com/baserow/baserow/-/issues/2191)
+* Implement Sentry integration (FE/BE) via environment variables. [#2205](https://gitlab.com/baserow/baserow/-/issues/2205)
+* Allow string values for link row field and multi select [#2250](https://gitlab.com/baserow/baserow/-/issues/2250)
+
+### Bug fixes
+* Fixed bug where row was overwritten on update. It now only updates read-only data. [#1405](https://gitlab.com/baserow/baserow/-/issues/1405)
+* Fixed bug where it was not possible to update a row that was still being created. [#1507](https://gitlab.com/baserow/baserow/-/issues/1507)
+* Introduce en-x-icu collation for basic fields [#1603](https://gitlab.com/baserow/baserow/-/issues/1603)
+* Fix bug when clicking browser's back button didn't close Row edit modal. [#2140](https://gitlab.com/baserow/baserow/-/issues/2140)
+* Fix a bug that prevent s manually reordering rows if a filter is applied on a hidden field. [#2175](https://gitlab.com/baserow/baserow/-/issues/2175)
+* Dont propagate ViewDoesNotExist in updating index task [#2202](https://gitlab.com/baserow/baserow/-/issues/2202)
+* Return proper exception when share_id is invalid [#2203](https://gitlab.com/baserow/baserow/-/issues/2203)
+* Fix bug where the `source` argument was passed to the child serializer when user_field_names=True. [#2268](https://gitlab.com/baserow/baserow/-/issues/2268)
+
+### Refactors
+* refactor pagination component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Change cookie values stored for last remembered view ID to shorter ones. [#2105](https://gitlab.com/baserow/baserow/-/issues/2105)
+
+
 ## Released 1.22.1
 
 ### Bug fixes
