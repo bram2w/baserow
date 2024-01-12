@@ -437,7 +437,10 @@ IMPORT_REFERENCE = {
                             "name": "F 2",
                             "type": "link",
                             "config": {
-                                "url": "get('current_record.field_25')",
+                                "page_parameters": [],
+                                "navigation_type": "custom",
+                                "navigate_to_page_id": None,
+                                "navigate_to_url": "get('current_record.field_25')",
                                 "link_name": "'Test'",
                             },
                         },

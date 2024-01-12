@@ -12,16 +12,12 @@ import InputTextElementForm from '@baserow/modules/builder/components/elements/c
 import TableElement from '@baserow/modules/builder/components/elements/components/TableElement.vue'
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm.vue'
 
-import {
-  ELEMENT_EVENTS,
-  PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS,
-} from '@baserow/modules/builder/enums'
+import { ELEMENT_EVENTS } from '@baserow/modules/builder/enums'
 import { ensureBoolean } from '@baserow/modules/core/utils/validator'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
 import DefaultStyleForm from '@baserow/modules/builder/components/elements/components/forms/style/DefaultStyleForm'
-import { compile } from 'path-to-regexp'
 import ButtonElement from '@baserow/modules/builder/components/elements/components/ButtonElement'
 import ButtonElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ButtonElementForm'
 import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
@@ -438,39 +434,6 @@ export class LinkElementType extends ElementType {
     } //
 
     return false
-  }
-
-  static getUrlFromElement(element, builder, resolveFormula) {
-    if (element.navigation_type === 'page') {
-      if (!isNaN(element.navigate_to_page_id)) {
-        const page = builder.pages.find(
-          ({ id }) => id === element.navigate_to_page_id
-        )
-
-        // The builder page list might be empty or the page has been deleted
-        if (!page) {
-          return ''
-        }
-
-        const paramTypeMap = Object.fromEntries(
-          page.path_params.map(({ name, type }) => [name, type])
-        )
-
-        const toPath = compile(page.path, { encode: encodeURIComponent })
-        const pageParams = Object.fromEntries(
-          element.page_parameters.map(({ name, value }) => [
-            name,
-            PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[paramTypeMap[name]](
-              resolveFormula(value)
-            ),
-          ])
-        )
-        return toPath(pageParams)
-      }
-    } else {
-      return resolveFormula(element.navigate_to_url)
-    }
-    return ''
   }
 }
 

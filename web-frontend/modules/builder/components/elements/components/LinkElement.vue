@@ -15,7 +15,7 @@
       }"
       v-bind="extraAttr"
       :target="`_${element.target}`"
-      @click="onClick"
+      @click.prevent="onClick"
     >
       {{ resolvedValue || $t('linkElement.noValue') }}
     </a>
@@ -24,8 +24,8 @@
 
 <script>
 import element from '@baserow/modules/builder/mixins/element'
-import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import { WIDTHS } from '@baserow/modules/builder/enums'
+import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 
 /**
  * @typedef LinkElement
@@ -35,7 +35,7 @@ import { WIDTHS } from '@baserow/modules/builder/enums'
  * @property {string} variant link|button
  * @property {string} navigation_type page|custom
  * @property {string} navigate_to_page_id The page id for `page` navigation type.
- * @property {object} page_parameters the page paramaters
+ * @property {object} page_parameters the page parameters
  * @property {string} navigate_to_url The URL for `custom` navigation type.
  * @property {string} target self|blank
  */
@@ -69,62 +69,44 @@ export default {
     },
     extraAttr() {
       const attr = {}
-      if (this.url) {
-        attr.href = this.url
+      if (this.urlContext.url) {
+        attr.href = this.urlContext.url
       }
-      if (this.isExternalLink) {
+      if (this.urlContext.isExternalLink) {
         attr.rel = 'noopener noreferrer'
       }
       return attr
     },
-    originalUrl() {
+    urlContext() {
       try {
-        return LinkElementType.getUrlFromElement(
+        return resolveElementUrl(
           this.element,
           this.builder,
-          this.resolveFormula
+          this.resolveFormula,
+          this.mode
         )
       } catch (e) {
-        return ''
+        return {
+          url: '',
+          isExternalUrl: false,
+        }
       }
-    },
-    url() {
-      if (
-        this.originalUrl &&
-        this.mode === 'preview' &&
-        (this.element.navigation_type === 'page' ||
-          (this.element.navigation_type === 'custom' &&
-            this.originalUrl.startsWith('/')))
-      ) {
-        // Add prefix in preview mode for page navigation or custom URL starting
-        // with `/`
-        return `/builder/${this.builder.id}/preview${this.originalUrl}`
-      } else {
-        return this.originalUrl
-      }
-    },
-    isExternalLink() {
-      return (
-        this.element.navigation_type === 'custom' &&
-        !this.originalUrl.startsWith('/')
-      )
     },
   },
   methods: {
     onClick(event) {
-      if (this.mode === 'editing') {
-        event.preventDefault()
+      const url = this.urlContext.url
+      if (this.mode === 'editing' || !url) {
         return
       }
-
-      if (!this.url) {
-        event.preventDefault()
-      } else if (
-        this.element.navigation_type === 'page' &&
-        this.element.target !== 'blank'
-      ) {
-        event.preventDefault()
-        this.$router.push(this.url)
+      if (this.element.target !== 'blank') {
+        if (this.element.navigation_type === 'custom') {
+          window.location.href = url
+        } else if (this.element.navigation_type === 'page') {
+          this.$router.push(url)
+        }
+      } else {
+        window.open(url, '_blank')
       }
     },
   },

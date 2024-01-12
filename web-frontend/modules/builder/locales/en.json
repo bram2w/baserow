@@ -220,24 +220,24 @@
     "linkElement": {
         "noValue": "Unnamed..."
     },
+    "linkNavigationSelection": {
+      "navigateTo": "Navigate to",
+      "navigateToCustom": "Custom URL",
+      "paramPlaceholder": "Enter a value...",
+      "urlPlaceholder": "Enter an URL...",
+      "url": "Destination URL",
+      "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
+      "paramsInErrorButton": "Update parameters"
+    },
     "linkElementForm": {
       "text": "Text",
       "textPlaceholder": "Enter text...",
-      "navigateTo": "Navigate to",
-      "navigateToNotSet": "No destination",
-      "navigateToCustom": "Custom URL",
-      "url": "Destination URL",
-      "urlPlaceholder": "Enter an URL...",
       "variant": "Variant",
       "variantLink": "Link",
       "variantButton": "Button",
       "target": "Open in...",
       "targetSelf": "Same tab",
       "targetNewTab": "New tab",
-      "paramPlaceholder": "Enter a value...",
-      "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
-      "paramsInErrorButton": "Update parameters",
-      "pageParameterTypeError": "Invalid type",
       "buttonColor": "Button color"
     },
     "widthSelector": {
