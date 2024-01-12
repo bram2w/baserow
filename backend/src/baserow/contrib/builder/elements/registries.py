@@ -180,6 +180,7 @@ class CollectionFieldType(
             **{
                 key: self.serialize_property(instance.config, key)
                 for key in property_names
+                if key in instance.config
             }
         )
 

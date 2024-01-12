@@ -8,7 +8,7 @@
     />
     <FormElement class="control">
       <label class="control__label">
-        {{ $t('linkElementForm.navigateTo') }}
+        {{ $t('linkNavigationSelection.navigateTo') }}
       </label>
       <div class="control__elements">
         <Dropdown v-model="navigateTo" :show-search="false">
@@ -19,7 +19,9 @@
                 {{ destinationPage.path }}
               </span></template
             >
-            <span v-else>{{ $t('linkElementForm.navigateToCustom') }}</span>
+            <span v-else>{{
+              $t('linkNavigationSelection.navigateToCustom')
+            }}</span>
           </template>
           <DropdownItem
             v-for="pageItem in pages"
@@ -33,7 +35,7 @@
             </span>
           </DropdownItem>
           <DropdownItem
-            :name="$t('linkElementForm.navigateToCustom')"
+            :name="$t('linkNavigationSelection.navigateToCustom')"
             value="custom"
           ></DropdownItem>
         </Dropdown>
@@ -43,8 +45,8 @@
       <ApplicationBuilderFormulaInputGroup
         v-model="values.navigate_to_url"
         :page="page"
-        :label="$t('linkElementForm.url')"
-        :placeholder="$t('linkElementForm.urlPlaceholder')"
+        :label="$t('linkNavigationSelection.url')"
+        :placeholder="$t('linkNavigationSelection.urlPlaceholder')"
         :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       />
     </FormElement>
@@ -52,14 +54,14 @@
       <template v-if="parametersInError">
         <Alert type="error">
           <p>
-            {{ $t('linkElementForm.paramsInErrorDescription') }}
+            {{ $t('linkNavigationSelection.paramsInErrorDescription') }}
           </p>
           <template #actions>
             <button
               class="alert__actions-button-text"
               @click.prevent="updatePageParameters"
             >
-              {{ $t('linkElementForm.paramsInErrorButton') }}
+              {{ $t('linkNavigationSelection.paramsInErrorButton') }}
             </button>
           </template>
         </Alert>
@@ -75,7 +77,7 @@
             :page="page"
             :label="param.name"
             horizontal
-            :placeholder="$t('linkElementForm.paramPlaceholder')"
+            :placeholder="$t('linkNavigationSelection.paramPlaceholder')"
             :data-providers-allowed="DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS"
           />
         </div>

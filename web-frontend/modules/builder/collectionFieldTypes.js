@@ -4,6 +4,7 @@ import LinkField from '@baserow/modules/builder/components/elements/components/c
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
 import LinkFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/LinkFieldForm'
 import { ensureString } from '@baserow/modules/core/utils/validator'
+import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -18,7 +19,7 @@ export class CollectionFieldType extends Registerable {
     return null
   }
 
-  getProps(field, { resolveFormula }) {
+  getProps(field, { resolveFormula, applicationContext }) {
     return {}
   }
 
@@ -44,7 +45,7 @@ export class TextCollectionFieldType extends CollectionFieldType {
     return TextFieldForm
   }
 
-  getProps(field, { resolveFormula }) {
+  getProps(field, { resolveFormula, applicationContext }) {
     return { value: ensureString(resolveFormula(field.value)) }
   }
 
@@ -70,10 +71,23 @@ export class LinkCollectionFieldType extends CollectionFieldType {
     return LinkFieldForm
   }
 
-  getProps(field, { resolveFormula }) {
-    return {
-      url: ensureString(resolveFormula(field.url)),
+  getProps(field, { resolveFormula, applicationContext: { mode, builder } }) {
+    const defaultProps = {
+      url: '',
+      isExternalLink: false,
+      navigationType: field.navigation_type,
       linkName: ensureString(resolveFormula(field.link_name)),
+    }
+    try {
+      const resolvedUrlContext = resolveElementUrl(
+        field,
+        builder,
+        resolveFormula,
+        mode
+      )
+      return { ...defaultProps, ...resolvedUrlContext }
+    } catch (error) {
+      return defaultProps
     }
   }
 

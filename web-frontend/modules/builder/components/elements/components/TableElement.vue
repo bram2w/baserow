@@ -108,6 +108,7 @@ export default {
               fieldType.getProps(field, {
                 resolveFormula: (formula) =>
                   this.resolveRowFormula(formula, rowIndex),
+                applicationContext: this.applicationContext,
               }),
             ]
           })
