@@ -296,6 +296,7 @@
       ref="rowEditModal"
       :database="database"
       :table="table"
+      :view="view"
       :fields="fields"
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"

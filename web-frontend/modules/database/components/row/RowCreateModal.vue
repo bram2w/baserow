@@ -12,6 +12,7 @@
         :hidden="false"
         :read-only="false"
         :row="row"
+        :view="view"
         :table="table"
         :database="database"
         :can-modify-fields="canModifyFields"
@@ -36,6 +37,7 @@
           :read-only="false"
           :row="row"
           :table="table"
+          :view="view"
           :database="database"
           :can-modify-fields="canModifyFields"
           @field-updated="$emit('field-updated', $event)"
@@ -83,6 +85,11 @@ export default {
     table: {
       type: Object,
       required: true,
+    },
+    view: {
+      type: [Object, null],
+      required: false,
+      default: null,
     },
     primaryIsSortable: {
       type: Boolean,

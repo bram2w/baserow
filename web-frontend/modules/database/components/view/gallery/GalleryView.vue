@@ -81,6 +81,7 @@
       ref="rowCreateModal"
       :database="database"
       :table="table"
+      :view="view"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
@@ -99,6 +100,7 @@
       enable-navigation
       :database="database"
       :table="table"
+      :view="view"
       :fields="fields"
       :primary-is-sortable="true"
       :visible-fields="cardFields"

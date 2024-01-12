@@ -70,6 +70,7 @@
       <CreateFieldContext
         ref="createFieldContext"
         :table="table"
+        :view="view"
         @field-created="$emit('field-created', $event)"
         @shown="onShownCreateFieldContext"
       ></CreateFieldContext>

@@ -28,6 +28,7 @@
       <CreateFieldContext
         ref="createFieldContext"
         :table="table"
+        :view="view"
         :forced-type="singleSelectFieldType"
         @field-created="$event.callback()"
       ></CreateFieldContext>

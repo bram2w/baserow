@@ -18,6 +18,7 @@
       ref="context"
       :database="database"
       :table="table"
+      :view="view"
       :field="field"
       @update="$emit('field-updated', $event)"
       @delete="$emit('field-deleted')"
@@ -61,6 +62,10 @@ export default {
     },
     table: {
       type: Object,
+      required: true,
+    },
+    view: {
+      type: [Object, null],
       required: true,
     },
     field: {
