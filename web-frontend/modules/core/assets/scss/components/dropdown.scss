@@ -98,6 +98,8 @@
 }
 
 .dropdown__selected-placeholder {
+  @extend %ellipsis;
+
   color: $palette-neutral-700;
 }
 
