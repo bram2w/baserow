@@ -97,13 +97,27 @@ export class ElementType extends Registerable {
   }
 
   /**
-   * This hook allows you to change the values given by the form of the element before
-   * they are sent to the backend to update the element.
-   *
-   * @param {object} values - The values of the element
-   * @returns {*}
+   * Allow to hook into default values for this element type at element creation.
+   * @param {object} values the current values for the element to create.
+   * @returns an object containing values updated with the default values.
    */
-  prepareValuesForRequest(values) {
+  getDefaultValues(page, values) {
+    // By default if an element is inside a container we apply the
+    // `.getDefaultChildValues()` method of the parent to it.
+    if (values?.parent_element_id) {
+      const parentElement = this.app.store.getters['element/getElementById'](
+        page,
+        values.parent_element_id
+      )
+      const parentElementType = this.app.$registry.get(
+        'element',
+        parentElement.type
+      )
+      return {
+        ...values,
+        ...parentElementType.getDefaultChildValues(page, values),
+      }
+    }
     return values
   }
 
@@ -183,6 +197,17 @@ export class ContainerElementType extends ElementType {
 
   get defaultPlaceInContainer() {
     throw new Error('Not implemented')
+  }
+
+  /**
+   * Returns the default value when creating a child element to this container.
+   * @param {Object} page The current page object
+   * @param {Object} values The values of the to be created element
+   * @returns the default values for this element.
+   */
+  getDefaultChildValues(page, values) {
+    // By default an element inside a container should have no left and right padding
+    return { style_padding_left: 0, style_padding_right: 0 }
   }
 }
 

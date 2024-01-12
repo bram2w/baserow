@@ -135,7 +135,7 @@ const actions = {
       page.id,
       elementTypeName,
       beforeId,
-      elementType.prepareValuesForRequest(configuration)
+      elementType.getDefaultValues(page, configuration)
     )
 
     if (forceCreate) {
@@ -146,7 +146,6 @@ const actions = {
     return element
   },
   async update({ dispatch }, { page, element, values }) {
-    const elementType = this.$registry.get('element', element.type)
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -159,10 +158,7 @@ const actions = {
     await dispatch('forceUpdate', { page, element, values: newValues })
 
     try {
-      await ElementService(this.$client).update(
-        element.id,
-        elementType.prepareValuesForRequest(values)
-      )
+      await ElementService(this.$client).update(element.id, values)
     } catch (error) {
       await dispatch('forceUpdate', { page, element, values: oldValues })
       throw error
@@ -171,7 +167,6 @@ const actions = {
 
   async debouncedUpdateSelected({ dispatch, getters }, { page, values }) {
     const element = getters.getSelected
-    const elementType = this.$registry.get('element', element.type)
 
     const oldValues = {}
     Object.keys(values).forEach((name) => {
@@ -194,10 +189,7 @@ const actions = {
         const toUpdate = updateContext.valuesToUpdate
         updateContext.valuesToUpdate = {}
         try {
-          await ElementService(this.$client).update(
-            element.id,
-            elementType.prepareValuesForRequest(toUpdate)
-          )
+          await ElementService(this.$client).update(element.id, toUpdate)
           updateContext.lastUpdatedValues = null
           resolve()
         } catch (error) {
