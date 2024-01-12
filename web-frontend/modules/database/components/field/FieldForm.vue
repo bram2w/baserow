@@ -74,6 +74,7 @@
         ref="childForm"
         :table="table"
         :field-type="values.type"
+        :view="view"
         :name="values.name"
         :default-values="defaultValues"
         @validate="$v.$touch"
@@ -101,6 +102,10 @@ export default {
   mixins: [form],
   props: {
     table: {
+      type: Object,
+      required: true,
+    },
+    view: {
       type: Object,
       required: true,
     },

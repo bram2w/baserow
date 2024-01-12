@@ -9,5 +9,9 @@ export default {
       required: false,
       default: '',
     },
+    view: {
+      type: Object,
+      required: true,
+    },
   },
 }

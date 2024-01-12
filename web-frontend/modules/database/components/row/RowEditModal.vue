@@ -48,6 +48,7 @@
         :hidden="false"
         :read-only="readOnly"
         :row="row"
+        :view="view"
         :table="table"
         :database="database"
         @field-updated="$emit('field-updated', $event)"
@@ -71,6 +72,7 @@
           :hidden="true"
           :read-only="readOnly"
           :row="row"
+          :view="view"
           :table="table"
           :database="database"
           @field-updated="$emit('field-updated', $event)"
@@ -104,6 +106,7 @@
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
+          :view="view"
           @field-created="$emit('field-created', $event)"
         ></CreateFieldContext>
       </div>
@@ -146,6 +149,11 @@ export default {
     table: {
       type: Object,
       required: true,
+    },
+    view: {
+      type: [Object, null],
+      required: false,
+      default: null,
     },
     fields: {
       type: Array,

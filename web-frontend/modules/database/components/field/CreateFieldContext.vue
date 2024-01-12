@@ -9,6 +9,7 @@
     <FieldForm
       ref="form"
       :table="table"
+      :view="view"
       :forced-type="forcedType"
       @submitted="submit"
       @keydown-enter="$refs.submitButton.focus()"
@@ -39,6 +40,10 @@ export default {
   mixins: [context],
   props: {
     table: {
+      type: Object,
+      required: true,
+    },
+    view: {
       type: Object,
       required: true,
     },
