@@ -75,7 +75,12 @@ export default {
   },
   computed: {
     applications() {
-      return this.$registry.getAll('application')
+      const applications = this.$registry.getAll('application')
+      return Object.fromEntries(
+        Object.entries(applications).filter(([type, application]) =>
+          application.isVisible(applications, this)
+        )
+      )
     },
     canCreateCreateApplication() {
       return this.$hasPermission(
