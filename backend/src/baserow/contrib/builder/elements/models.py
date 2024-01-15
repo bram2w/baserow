@@ -649,3 +649,29 @@ class CheckboxElement(InputElement):
     required = models.BooleanField(
         default=False, help_text="Whether this input is a required field."
     )
+
+
+class IFrameElement(Element):
+    """
+    An element for embedding external resources in the application.
+    """
+
+    class IFRAME_SOURCE_TYPE(models.TextChoices):
+        URL = "url"
+        EMBED = "embed"
+
+    source_type = models.CharField(
+        choices=IFRAME_SOURCE_TYPE.choices,
+        max_length=32,
+        default=IFRAME_SOURCE_TYPE.URL,
+    )
+    url = FormulaField(
+        help_text="A link to the page to embed",
+        blank=True,
+        default="",
+    )
+    embed = FormulaField(help_text="Inline HTML to embed", blank=True, default="")
+    height = models.PositiveIntegerField(
+        help_text="Height in pixels of the iframe",
+        default=300,
+    )

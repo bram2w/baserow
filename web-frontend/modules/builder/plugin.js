@@ -37,6 +37,7 @@ import {
   FormContainerElementType,
   DropdownElementType,
   CheckboxElementType,
+  IFrameElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -167,6 +168,7 @@ export default (context) => {
   app.$registry.register('element', new FormContainerElementType(context))
   app.$registry.register('element', new DropdownElementType(context))
   app.$registry.register('element', new CheckboxElementType(context))
+  app.$registry.register('element', new IFrameElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))

@@ -87,7 +87,9 @@
         "dropdown": "Dropdown",
         "dropdownDescription": "Dropdown element",
         "checkbox": "Checkbox",
-        "checkboxDescription": "Checkbox element"
+        "checkboxDescription": "Checkbox element",
+        "iframe": "IFrame",
+        "iframeDescription": "Inline frame"
     },
     "addElementButton": {
         "label": "Element"
@@ -169,6 +171,17 @@
         "fileSourceTypeURL": "URL",
         "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
         "uploadFileButton": "Upload file"
+    },
+    "iframeElementForm": {
+      "empty": "Empty IFrame...",
+      "sourceTypeLabel": "Source type",
+      "urlLabel": "URL",
+      "urlPlaceholder": "Link to the external resource to be embedded",
+      "urlHelp": "Note: please make sure that you have control over, or trust the url entered.",
+      "embedLabel": "Embed",
+      "embedPlaceholder": "Raw HTML content to be embedded",
+      "heightLabel": "Height (px)",
+      "heightPlaceholder": "Height in pixels"
     },
     "columnElementForm": {
         "columnAmountTitle": "Layout",

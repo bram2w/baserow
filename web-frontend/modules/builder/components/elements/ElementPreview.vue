@@ -10,7 +10,7 @@
     @click="onSelect"
   >
     <InsertElementButton
-      v-if="isSelected"
+      v-show="isSelected"
       class="element-preview__insert element-preview__insert--top"
       @click="showAddElementModal(PLACEMENTS.BEFORE)"
     />
@@ -34,7 +34,7 @@
     <PageElement v-else :element="element" :mode="mode" />
 
     <InsertElementButton
-      v-if="isSelected"
+      v-show="isSelected"
       class="element-preview__insert element-preview__insert--bottom"
       @click="showAddElementModal(PLACEMENTS.AFTER)"
     />

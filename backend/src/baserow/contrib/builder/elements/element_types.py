@@ -25,6 +25,7 @@ from baserow.contrib.builder.elements.models import (
     FormContainerElement,
     HeadingElement,
     HorizontalAlignments,
+    IFrameElement,
     ImageElement,
     InputTextElement,
     LinkElement,
@@ -1237,3 +1238,69 @@ class DropdownElementType(FormElementType):
                     for option in options
                 ]
             )
+
+
+class IFrameElementType(ElementType):
+    type = "iframe"
+    model_class = IFrameElement
+    allowed_fields = ["source_type", "url", "embed", "height"]
+    serializer_field_names = ["source_type", "url", "embed", "height"]
+
+    class SerializedDict(ElementDict):
+        source_type: str
+        url: BaserowFormula
+        embed: BaserowFormula
+        height: int
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "source_type": serializers.ChoiceField(
+                help_text=IFrameElement._meta.get_field("source_type").help_text,
+                required=False,
+                choices=IFrameElement.IFRAME_SOURCE_TYPE.choices,
+                default=IFrameElement.IFRAME_SOURCE_TYPE.URL,
+            ),
+            "url": FormulaSerializerField(
+                help_text=IFrameElement._meta.get_field("url").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "embed": FormulaSerializerField(
+                help_text=IFrameElement._meta.get_field("embed").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "height": serializers.IntegerField(
+                help_text=IFrameElement._meta.get_field("height").help_text,
+                required=False,
+                default=300,
+                min_value=1,
+                max_value=2000,
+            ),
+        }
+
+        return overrides
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["url"]:
+            serialized_copy["url"] = import_formula(serialized_copy["url"], id_mapping)
+        if serialized_copy["embed"]:
+            serialized_copy["embed"] = import_formula(
+                serialized_copy["embed"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return {
+            "source_type": IFrameElement.IFRAME_SOURCE_TYPE.URL,
+            "url": "",
+            "embed": "",
+            "height": 300,
+        }

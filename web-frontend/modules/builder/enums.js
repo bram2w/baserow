@@ -25,6 +25,11 @@ export const IMAGE_SOURCE_TYPES = {
   URL: 'url',
 }
 
+export const IFRAME_SOURCE_TYPES = {
+  URL: 'url',
+  EMBED: 'embed',
+}
+
 export const HORIZONTAL_ALIGNMENTS = {
   LEFT: {
     name: 'horizontalAlignmentSelector.alignmentLeft',
