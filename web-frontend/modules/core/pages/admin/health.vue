@@ -43,6 +43,10 @@
       <div class="admin-health__group">
         <EmailerTester></EmailerTester>
       </div>
+      <div class="admin-health__group">
+        <h2>Error tester</h2>
+        <Button @click="error()">Click to throw error</Button>
+      </div>
     </div>
   </div>
 </template>
@@ -67,6 +71,11 @@ export default {
         camelCaseString = camelCaseString.toString()
       }
       return camelCaseString.replace(/([A-Z])/g, ' $1')
+    },
+    error() {
+      setTimeout(() => {
+        throw new Error('Health check error')
+      }, 1)
     },
   },
 }
