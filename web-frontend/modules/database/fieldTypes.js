@@ -1104,18 +1104,30 @@ export class LinkRowFieldType extends FieldType {
   }
 
   async parseQueryParameter(field, value, { client, slug, publicAuthToken }) {
-    const { data } = await ViewService(client).linkRowFieldLookup(
-      slug,
-      field.field.id,
-      1,
-      value,
-      1,
-      publicAuthToken
-    )
+    const parsedValues = this.app.$papa.stringToArray(value)
+    const items = []
+    const length =
+      field.field_component === DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY
+        ? 1
+        : parsedValues.length
 
-    const item = data.results.find((item) => item.value === value)
+    for (let i = 0; i < length; i++) {
+      const { data } = await ViewService(client).linkRowFieldLookup(
+        slug,
+        field.field.id,
+        1,
+        parsedValues[i],
+        1,
+        publicAuthToken
+      )
+      const item = data.results.find((item) => item.value === parsedValues[i])
 
-    return item ? [item] : this.getEmptyValue()
+      if (item) {
+        items.push(item)
+      }
+    }
+
+    return items.length > 0 ? items : this.getEmptyValue()
   }
 
   getCanImport() {

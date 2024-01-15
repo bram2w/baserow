@@ -14,6 +14,7 @@ import {
   TextFieldType,
   URLFieldType,
 } from '@baserow/modules/database/fieldTypes'
+import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database/constants'
 
 // The `testing_row_data` is not actually part of the field instance, but it
 // contains an example of how the cell value could be in the frontend.
@@ -619,15 +620,56 @@ const queryParametersForParsing = [
 
 const queryParametersAsyncForParsing = [
   {
-    fieldType: new LinkRowFieldType(),
-    data: { results: [{ value: 'test', id: 1 }] },
-    input: { value: 'test', field: { field: { id: 20 } } },
+    FieldType: LinkRowFieldType,
+    data: [
+      { results: [{ value: 'test', id: 1 }] },
+      { results: [{ value: 'test2', id: 2 }] },
+      { results: [{ value: 'test3,test4', id: 3 }] },
+    ],
+    input: {
+      value: 'test,test2',
+      field: {
+        field: { id: 20 },
+        field_component: DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY,
+      },
+    },
     output: [{ id: 1, value: 'test' }],
   },
   {
-    fieldType: new LinkRowFieldType(),
-    data: { results: [{ value: 'some other value', id: 1 }] },
-    input: { value: 'test', field: { field: { id: 20 } } },
+    FieldType: LinkRowFieldType,
+    data: [
+      { results: [{ value: 'test', id: 1 }] },
+      { results: [{ value: 'test2', id: 2 }] },
+      { results: [{ value: 'test3,test4', id: 3 }] },
+    ],
+    input: {
+      value: 'test',
+      field: { field: { id: 20 }, field_component: 'multiple' },
+    },
+    output: [{ id: 1, value: 'test' }],
+  },
+  {
+    FieldType: LinkRowFieldType,
+    data: [
+      { results: [{ value: 'test', id: 1 }] },
+      { results: [{ value: 'test3,test4', id: 3 }] },
+    ],
+    input: {
+      value: 'test,"test3,test4"',
+      field: { field: { id: 20 }, field_component: 'multiple' },
+    },
+    output: [
+      { id: 1, value: 'test' },
+      { id: 3, value: 'test3,test4' },
+    ],
+  },
+  {
+    FieldType: LinkRowFieldType,
+    data: [{ results: [{ value: 'some other value', id: 1 }] }],
+    input: {
+      value: 'test',
+      field: { field: { id: 20 }, field_component: 'multiple' },
+    },
     output: new LinkRowFieldType().getEmptyValue(),
   },
 ]
@@ -700,8 +742,15 @@ describe('FieldType tests', () => {
 
   test.each(queryParametersAsyncForParsing)(
     'Verify that parseQueryParameter for async field types returns the correct output',
-    async ({ data, input, output, fieldType }) => {
-      const client = { get: jest.fn().mockReturnValue({ data }) }
+    async ({ data, input, output, FieldType }) => {
+      const fieldType = new FieldType({ app: testApp._app })
+      let dataI = 0
+      const get = () => {
+        const returnValue = { data: data[dataI] }
+        dataI++
+        return returnValue
+      }
+      const client = { get }
       const result = await fieldType.parseQueryParameter(
         input.field,
         input.value,
