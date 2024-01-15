@@ -29,6 +29,8 @@ import DropdownElement from '@baserow/modules/builder/components/elements/compon
 import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
 import CheckboxElement from '@baserow/modules/builder/components/elements/components/CheckboxElement.vue'
 import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
+import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
+import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -686,5 +688,31 @@ export class CheckboxElementType extends FormElementType {
     } catch {
       return false
     }
+  }
+}
+
+export class IFrameElementType extends ElementType {
+  getType() {
+    return 'iframe'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.iframe')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.iframeDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-app-window'
+  }
+
+  get component() {
+    return IFrameElement
+  }
+
+  get generalFormComponent() {
+    return IFrameElementForm
   }
 }

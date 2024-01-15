@@ -8,6 +8,7 @@ from baserow.contrib.builder.elements.element_types import (
     ContainerElementType,
     DropdownElementType,
     FormElementType,
+    IFrameElementType,
     InputTextElementType,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
@@ -15,6 +16,7 @@ from baserow.contrib.builder.elements.models import (
     CheckboxElement,
     DropdownElementOption,
     HeadingElement,
+    IFrameElement,
     InputTextElement,
     LinkElement,
 )
@@ -241,3 +243,27 @@ def test_checkbox_element_import_export_formula(data_fixture):
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.label == expected_formula
     assert imported_element.default_value == expected_formula
+
+
+@pytest.mark.django_db
+def test_iframe_element_import_export_formula(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = IFrameElementType()
+
+    exported_element = data_fixture.create_builder_element(
+        IFrameElement,
+        url=f"get('data_source.{data_source_1.id}.field_1')",
+        embed=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.url == expected_formula
+    assert imported_element.embed == expected_formula

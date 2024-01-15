@@ -163,6 +163,7 @@ class BuilderConfig(AppConfig):
             DropdownElementType,
             FormContainerElementType,
             HeadingElementType,
+            IFrameElementType,
             ImageElementType,
             InputTextElementType,
             LinkElementType,
@@ -182,6 +183,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(FormContainerElementType())
         element_type_registry.register(DropdownElementType())
         element_type_registry.register(CheckboxElementType())
+        element_type_registry.register(IFrameElementType())
 
         from .domains.domain_types import CustomDomainType, SubDomainType
         from .domains.registries import domain_type_registry
