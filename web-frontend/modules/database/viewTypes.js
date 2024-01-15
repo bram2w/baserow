@@ -912,6 +912,7 @@ export class FormViewType extends ViewType {
           show_when_matching_conditions: false,
           condition_type: 'AND',
           conditions: [],
+          field_component: 'default',
         },
       },
       { root: true }
