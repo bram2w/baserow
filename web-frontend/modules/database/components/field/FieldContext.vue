@@ -34,6 +34,7 @@
         <UpdateFieldContext
           ref="updateFieldContext"
           :table="table"
+          :view="view"
           :field="field"
           @update="$emit('update', $event)"
           @updated="$refs.context.hide()"
@@ -81,6 +82,10 @@ export default {
       required: true,
     },
     table: {
+      type: Object,
+      required: true,
+    },
+    view: {
       type: Object,
       required: true,
     },

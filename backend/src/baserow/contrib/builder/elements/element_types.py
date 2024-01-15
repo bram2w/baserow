@@ -588,7 +588,7 @@ class LinkElementType(ElementType):
             ),
             "page_parameters": PageParameterValueSerializer(
                 many=True,
-                help_text=LinkElement._meta.get_field("navigate_to_url").help_text,
+                help_text=LinkElement._meta.get_field("page_parameters").help_text,
                 required=False,
             ),
             "variant": serializers.ChoiceField(

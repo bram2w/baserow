@@ -43,6 +43,7 @@
         ref="context"
         :database="database"
         :table="table"
+        :view="view"
         :field="field"
         @update="$emit('refresh', $event)"
         @delete="$emit('refresh')"
@@ -95,6 +96,7 @@
           <InsertFieldContext
             ref="insertFieldContext"
             :table="table"
+            :view="view"
             :from-field="field"
             @field-created="$emit('field-created', $event)"
             @move-field="moveField($event)"

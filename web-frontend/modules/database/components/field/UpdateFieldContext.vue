@@ -8,6 +8,7 @@
     <FieldForm
       ref="form"
       :table="table"
+      :view="view"
       :default-values="field"
       :primary="field.primary"
       @submitted="submit"
@@ -46,6 +47,10 @@ export default {
       required: true,
     },
     field: {
+      type: Object,
+      required: true,
+    },
+    view: {
       type: Object,
       required: true,
     },

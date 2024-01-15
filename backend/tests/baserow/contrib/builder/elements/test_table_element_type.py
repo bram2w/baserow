@@ -217,7 +217,10 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
                 "name": "Field 2",
                 "type": "link",
                 "config": {
-                    "url": f"get('current_record.field_{fields[0].id}')",
+                    "page_parameters": [],
+                    "navigate_to_page_id": None,
+                    "navigation_type": "custom",
+                    "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
                     "link_name": f"get('current_record.field_{fields[0].id}')",
                 },
             },
@@ -229,7 +232,10 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
     assert [f.config for f in result["elements"][0].fields.all()] == [
         {"value": f"get('current_record.field_{fields[0].id}')"},
         {
-            "url": f"get('current_record.field_{fields[0].id}')",
+            "page_parameters": [],
+            "navigate_to_page_id": None,
+            "navigation_type": "custom",
+            "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
             "link_name": f"get('current_record.field_{fields[0].id}')",
         },
     ]
@@ -273,7 +279,10 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
             {
                 "name": "Field 2",
                 "config": {
-                    "url": f"get('current_record.field_42')",
+                    "page_parameters": [],
+                    "navigate_to_page_id": None,
+                    "navigation_type": "custom",
+                    "navigate_to_url": f"get('current_record.field_42')",
                     "link_name": f"get('current_record.field_42')",
                 },
                 "type": "link",
@@ -295,7 +304,10 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
     assert [f.config for f in imported_table_element.specific.fields.all()] == [
         {"value": f"get('current_record.field_{fields[0].id}')"},
         {
-            "url": f"get('current_record.field_{fields[0].id}')",
+            "page_parameters": [],
+            "navigate_to_page_id": None,
+            "navigation_type": "custom",
+            "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
             "link_name": f"get('current_record.field_{fields[0].id}')",
         },
     ]

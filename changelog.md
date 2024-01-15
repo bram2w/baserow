@@ -3,6 +3,7 @@
 ## Released 1.22.2
 
 ### New features
+* Allow form view prefill of multiple link to table entries [#2024](https://gitlab.com/baserow/baserow/-/issues/2024)
 * Show the button formula as a clickable button. [#2089](https://gitlab.com/baserow/baserow/-/issues/2089)
 * Add group by support for the duration field type [#2191](https://gitlab.com/baserow/baserow/-/issues/2191)
 * Implement Sentry integration (FE/BE) via environment variables. [#2205](https://gitlab.com/baserow/baserow/-/issues/2205)

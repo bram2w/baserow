@@ -18,7 +18,7 @@ export default {
   methods: {
     getDefaultValues() {
       return {
-        view_id: this.$store.getters['view/getSelectedId'],
+        view_id: this.view.id,
       }
     },
   },

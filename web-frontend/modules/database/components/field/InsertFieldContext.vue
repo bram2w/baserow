@@ -2,6 +2,7 @@
   <CreateFieldContext
     ref="createFieldContext"
     :table="table"
+    :view="view"
     :force-typed="forcedType"
     :use-action-group-id="true"
     @field-created="$emit('field-created', $event)"
@@ -18,6 +19,10 @@ export default {
 
   props: {
     table: {
+      type: Object,
+      required: true,
+    },
+    view: {
       type: Object,
       required: true,
     },

@@ -21,6 +21,7 @@
         :hidden="hidden"
         :read-only="readOnly"
         :row="row"
+        :view="view"
         :table="table"
         :database="database"
         :sortable="sortable && fieldIsSortable(field)"
@@ -72,6 +73,10 @@ export default {
     },
     row: {
       type: Object,
+      required: true,
+    },
+    view: {
+      type: [Object, null],
       required: true,
     },
     table: {

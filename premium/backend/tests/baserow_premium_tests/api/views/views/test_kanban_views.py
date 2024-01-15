@@ -15,6 +15,7 @@ from rest_framework.status import (
 
 from baserow.contrib.database.action.scopes import ViewActionScopeType
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.actions import UpdateViewActionType
 from baserow.contrib.database.views.handler import ViewHandler
@@ -1984,3 +1985,36 @@ def test_list_rows_public_with_query_param_advanced_filters(
         response_json = response.json()
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"
+
+
+@pytest.mark.django_db
+def test_reference_to_single_select_field_is_removed_after_trashing(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    kanban = premium_data_fixture.create_kanban_view(
+        table=table, single_select_field=single_select_field
+    )
+    url = reverse("api:database:fields:list", kwargs={"table_id": table.id})
+    response = api_client.get(f"{url}", **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    json_response = response.json()
+
+    assert len(json_response) == 1
+    assert json_response[0]["id"] == single_select_field.id
+
+    field_handler = FieldHandler()
+    field_handler.delete_field(user, single_select_field)
+    kanban.refresh_from_db()
+
+    assert kanban.single_select_field is None
+    assert kanban.single_select_field_id is None
+
+    url = reverse("api:database:fields:list", kwargs={"table_id": table.id})
+    response = api_client.get(f"{url}", **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    json_response = response.json()
+
+    assert len(json_response) == 0
