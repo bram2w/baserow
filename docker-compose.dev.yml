@@ -65,6 +65,7 @@ services:
       - ./web-frontend:/baserow/web-frontend
       # Override the above mounts for node_modules so we use the node_modules built
       # directly into the image instead of whatever is on your local filesystem.
+      - /baserow/web-frontend/node_modules
       - ./premium/web-frontend/:/baserow/premium/web-frontend
       - ./enterprise/web-frontend/:/baserow/enterprise/web-frontend
       - ./tests/:/baserow/tests
