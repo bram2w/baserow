@@ -191,7 +191,7 @@
                 <BadgeCounter
                   class="tree__counter"
                   :count="unreadNotificationCount"
-                  limit="10"
+                  :limit="10"
                 >
                 </BadgeCounter>
               </div>
