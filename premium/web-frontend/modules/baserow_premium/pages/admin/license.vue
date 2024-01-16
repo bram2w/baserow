@@ -37,12 +37,8 @@
               <Badge :color="licenseType.getLicenseBadgeColor()" bold>
                 {{ licenseType.getName() }}</Badge
               >
-              <div
-                v-if="!license.is_active"
-                class="license-plan license-plan--inline license-plan--expired"
-              >
-                {{ $t('license.expired') }}
-              </div>
+              <Badge color="red">{{ $t('licenses.expired') }}</Badge>
+              <Badge v-if="!license.is_active" color="red">{{ $t('licenses.expired') }}</Badge>
             </div>
           </div>
           <div class="license-detail__item">
