@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.conf import settings
 from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
@@ -609,3 +610,51 @@ class PublicBuilderWorkflowActionsView(APIView):
         ]
 
         return Response(data)
+
+
+class AskPublicBuilderDomainExistsView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="domain",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="The domain name for which",
+            )
+        ],
+        tags=["Builder workflow_actions"],
+        operation_id="ask_public_builder_domain_exists",
+        description=(
+            "This endpoint can be used to check whether a domain exists for SSL "
+            "certificate purposes. It's compatible with the Caddy on_demand TLS as "
+            "described here: https://caddyserver.com/docs/json/apps/tls/automation"
+            "/on_demand/ask/. It will respond with a 200 status code if it exists or "
+            "a 404 if it doesn't exist."
+        ),
+        responses={
+            200: None,
+            404: None,
+        },
+    )
+    def get(self, request):
+        domain_name = request.GET.get("domain", "")
+
+        # It's difficult to make an exception in the `Caddyfile` to always get an SSL
+        # certificate for the one domain, and ask for the rest of the domains.
+        # Because the backend and web-frontend hostname are not builder domains,
+        # we must add these as accepted domains.
+        allowed_domain = [
+            settings.PUBLIC_BACKEND_HOSTNAME,
+            settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
+        ]
+
+        if domain_name in allowed_domain:
+            return Response(None, status=200)
+
+        try:
+            DomainService().get_public_builder_by_domain_name(request.user, domain_name)
+            return Response(None, status=200)
+        except BuilderDoesNotExist:
+            return Response(None, status=404)

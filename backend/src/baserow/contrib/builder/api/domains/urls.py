@@ -1,6 +1,7 @@
 from django.urls import re_path
 
 from baserow.contrib.builder.api.domains.views import (
+    AskPublicBuilderDomainExistsView,
     AsyncPublishDomainView,
     DomainsView,
     DomainView,
@@ -54,5 +55,10 @@ urlpatterns_without_builder_id = [
         r"published/page/(?P<page_id>[0-9]+)/workflow_actions/$",
         PublicBuilderWorkflowActionsView.as_view(),
         name="list_workflow_actions",
+    ),
+    re_path(
+        r"ask-public-domain-exists/$",
+        AskPublicBuilderDomainExistsView.as_view(),
+        name="ask_exists",
     ),
 ]

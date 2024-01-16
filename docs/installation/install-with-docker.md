@@ -326,6 +326,18 @@ docker exec -it baserow cat /baserow/data/.pgpass
 # the password above with the username `baserow`.
 ```
 
+## Application builder domains
+
+The build in Caddy server is configured to automatically handle additional application
+builder domains. Depending on the environment variables, it will also automatically
+fetch SSL certificates for those domains.
+
+By default, it will accept requests of any domain over the http protocol, which is
+perfect if you have a proxy in front of Baserow. If `BASEROW_CADDY_ADDRESSES` starts
+with `https` protocol, then it will redirect http requests to https, and will handle
+the SSL certificate part automatically. This is recommended when the container is
+directly exposed to the internet.
+
 ### Run a one off command on the database
 
 If you want to run a one off backend command against your Baserow data volume without

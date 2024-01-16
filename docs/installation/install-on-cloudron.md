@@ -96,3 +96,18 @@ cloudron update --app {YOUR_APP_ID} --image baserow/cloudron:1.22.2
 > latest version can be found here:
 > [https://gitlab.com/baserow/baserow/container_registry/1692077](https://gitlab.com/baserow/baserow/container_registry/1692077)
 
+## Application builder domains
+
+Baserow has an application builder that allows to deploy an application to a specific
+domain. Because Cloudron has a reverse proxy that routes a domain to the right Cloudron
+app, the deployed application isn't automatically available on the chosen domain.
+
+To make this work, you must add a domain alias in the Cloudron settings. This can be
+done by going to the settings of your Baserow app, then click on `Location`, click on
+`Add an alias`, and then add the domain you've published the application to in  Baserow.
+Make sure that the alias matches the full domain name in Baserow. After that, Cloudron
+will request the SSL certificate, and then you can visit your domain.
+
+It's also possible to add a wildcard alias to Cloudron, but the SSL certificate then
+doesn't work out of the box. Some additional settings on Cloudron might be required to
+make it work.
