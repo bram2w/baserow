@@ -17,5 +17,6 @@
     "localstorage": {}
   },
   "memoryLimit": 2147483648,
-  "manifestVersion": 2
+  "manifestVersion": 2,
+  "multiDomain": true
 }

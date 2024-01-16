@@ -234,6 +234,18 @@ docker run -it \
   backend-cmd-with-db manage dbshell
 ```
 
+## Application builder domains
+
+The build in Caddy server is configured to automatically handle additional application
+builder domains. Depending on the environment variables, it will also automatically
+fetch SSL certificates for those domains.
+
+By default, it will accept requests of any domain over the http protocol, which is
+perfect if you have a proxy in front of Baserow. If `BASEROW_CADDY_ADDRESSES` starts
+with `https` protocol, then it will redirect http requests to https, and will handle
+the SSL certificate part automatically. This is recommended when the container is
+directly exposed to the internet.
+
 ## Backing up and Restoring Baserow
 
 Baserow stores all of its persistent data in the `/baserow/data` directory by default.

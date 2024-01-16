@@ -17,20 +17,24 @@
         <td class="dns-status__table-cell" />
       </thead>
       <tbody>
-        <tr class="dns-status__table-row">
-          <td class="dns-status__table-cell">A</td>
-          <td class="dns-status__table-cell">@</td>
-          <td class="dns-status__table-cell">127.0.01</td>
+        <tr v-if="isRootDomain" class="dns-status__table-row">
+          <td class="dns-status__table-cell">ALIAS</td>
+          <td class="dns-status__table-cell">{{ domain.domain_name }}</td>
+          <td class="dns-status__table-cell">{{ webFrontendHostname }}.</td>
           <td class="dns-status__table-cell">
+            <!--
             <i class="iconoir-warning-triangle color--deep-dark-orange" />
+            -->
           </td>
         </tr>
-        <tr class="dns-status__table-row">
+        <tr v-else class="dns-status__table-row">
           <td class="dns-status__table-cell">CNAME</td>
-          <td class="dns-status__table-cell">www</td>
           <td class="dns-status__table-cell">{{ domain.domain_name }}</td>
+          <td class="dns-status__table-cell">{{ webFrontendHostname }}</td>
           <td class="dns-status__table-cell">
-            <i class="iconoir-check color--deep-dark-green" />
+            <!--
+            <i class="iconoir-warning-triangle color--deep-dark-orange" />
+            -->
           </td>
         </tr>
       </tbody>
@@ -45,6 +49,15 @@ export default {
     domain: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    isRootDomain() {
+      return this.domain.domain_name.split('.').length === 2
+    },
+    webFrontendHostname() {
+      const url = new URL(this.$config.PUBLIC_WEB_FRONTEND_URL)
+      return url.hostname
     },
   },
 }
