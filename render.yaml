@@ -2,7 +2,7 @@ services:
   - type: web
     name: baserow
     env: docker
-    plan: starter plus
+    plan: standard
     dockerfilePath: ./deploy/render/Dockerfile
     envVars:
       - key: SECRET_KEY
