@@ -125,8 +125,9 @@
             v-for="field in fields"
             v-show="isFieldAvailable(field)"
             :key="field.id"
+            class="context__menu-item"
           >
-            <a @click="addSort(field)">
+            <a class="context__menu-item-link" @click="addSort(field)">
               <i
                 class="context__menu-icon"
                 :class="getFieldType(field).iconClass"
