@@ -188,6 +188,21 @@ VALID_FORMULA_TESTS = [
         ")",
         "20191231 2300",
     ),
+    (
+        "datetime_format("
+        "  todate_tz('20200101 0000', 'YYYYMMDD HH24MI', 'Europe/Rome'),"
+        "  'day'"
+        ")",
+        "tuesday",
+    ),
+    (
+        "datetime_format_tz("
+        "  todate_tz('20200103 0000', 'YYYYMMDD HH24MI', 'Europe/Rome'),"
+        "  'day',"
+        "  'Europe/Rome'"
+        ")",
+        "friday",
+    ),
     ("todate_tz('', '', '')", None),
     ("replace('test test', 'test', 'a')", "a a"),
     ("search('test test', 'test')", "1"),
