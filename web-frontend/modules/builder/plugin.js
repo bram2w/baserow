@@ -9,7 +9,6 @@ import {
   DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
-  UserSourcesBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
@@ -149,10 +148,6 @@ export default (context) => {
   app.$registry.register(
     'builderSettings',
     new DomainsBuilderSettingsType(context)
-  )
-  app.$registry.register(
-    'builderSettings',
-    new UserSourcesBuilderSettingsType(context)
   )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
