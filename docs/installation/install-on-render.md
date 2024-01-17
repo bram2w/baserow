@@ -6,12 +6,12 @@
 
 [Render](https://render.com) is a modern alternative to Heroku, a platform as a service.
 Render enables you to build, run and operate applications entirely in the cloud. We have
-created a template that allows you to easily install Baserow on the "Starter Plus" paid
+created a template that allows you to easily install Baserow on the "Standard" paid
 plan and the paid Postgres plan provided by Render.
 
 ## The template
 
-> Currently, we only support running Baserow on the $17 per month "Starter Plus" Render
+> Currently, we only support running Baserow on the $25 per month "Standard" Render
 > plan additionally with their $7 per month Postgres plan for performance reasons.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://gitlab.com/baserow/baserow/tree/master)
