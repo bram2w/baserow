@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Remove trailing spaces from datetime_format formula",
+    "issue_number": 2131,
+    "bullet_points": [],
+    "created_at": "2024-01-09"
+}

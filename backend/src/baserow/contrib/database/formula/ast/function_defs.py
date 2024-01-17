@@ -49,6 +49,7 @@ from django.db.models.functions import (
     Sign,
     Sqrt,
     StrIndex,
+    Trim,
     Upper,
 )
 from django.db.models.functions.datetime import TimezoneMixin
@@ -305,11 +306,13 @@ class BaserowDatetimeFormat(TwoArgumentBaserowFunction):
         if isinstance(arg1, Value) and arg1.value is None:
             return Value("")
         return Coalesce(
-            Func(
-                arg1,
-                arg2,
-                function="to_char",
-                output_field=fields.TextField(),
+            Trim(
+                Func(
+                    arg1,
+                    arg2,
+                    function="to_char",
+                    output_field=fields.TextField(),
+                )
             ),
             Value(""),
             output_field=fields.TextField(),
@@ -334,12 +337,18 @@ class BaserowDatetimeFormatTz(ThreeArgumentBaserowFunction):
     def to_django_expression(
         self, arg1: Expression, arg2: Expression, arg3: Expression
     ) -> Expression:
-        return Func(
-            arg1,
-            arg2,
-            arg3,
-            function="try_datetime_format_tz",
-            output_field=fields.TextField(),
+        return Trim(
+            Coalesce(
+                Func(
+                    arg1,
+                    arg2,
+                    arg3,
+                    function="try_datetime_format_tz",
+                    output_field=fields.TextField(),
+                ),
+                Value(""),
+                output_field=fields.TextField(),
+            ),
         )
 
 
