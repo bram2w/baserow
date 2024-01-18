@@ -1563,6 +1563,27 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
+        field_db_column_by_name["duration_dh"]: {
+            "title": "duration_dh",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dhm"]: {
+            "title": "duration_dhm",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dhms"]: {
+            "title": "duration_dhms",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
         "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 

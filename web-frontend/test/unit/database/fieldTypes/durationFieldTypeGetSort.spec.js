@@ -12,7 +12,7 @@ const tableRows = [
   {
     id: 2,
     order: '2.00000000000000000000',
-    field: '0:1:0',
+    field: 60,
   },
   {
     id: 3,
@@ -32,12 +32,12 @@ const tableRows = [
   {
     id: 6,
     order: '5.00000000000000000000',
-    field: '2:0:0.123',
+    field: 7200.123,
   },
   {
     id: 7,
     order: '6.00000000000000000000',
-    field: '1.12'
+    field: 1.12
   }
 ]
 
@@ -71,11 +71,11 @@ describe('LastModifiedByFieldType.getSort()', () => {
     )
     const expected = [
       null,
-      '1.12',
-      '0:1:0',
+      1.12,
+      60,
       120,
       3600,
-      '2:0:0.123',
+      7200.123,
       86400,
     ]
 
@@ -89,11 +89,11 @@ describe('LastModifiedByFieldType.getSort()', () => {
 
     const expectedReversed = [
       86400,
-      '2:0:0.123',
+      7200.123,
       3600,
       120,
-      '0:1:0',
-      '1.12',
+      60,
+      1.12,
       null,
     ]
 

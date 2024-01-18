@@ -48,7 +48,8 @@ export default {
       }
     },
     onKeyPress(field, event) {
-      if (!/\d/.test(event.key) && event.key !== '.' && event.key !== ':') {
+      const allowedChars = ['.', ':', ' ', 'd', 'h']
+      if (!/\d/.test(event.key) && !allowedChars.includes(event.key)) {
         return event.preventDefault()
       }
     },

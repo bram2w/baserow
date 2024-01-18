@@ -9,9 +9,7 @@ from django.db.models.fields.related_descriptors import (
 )
 from django.utils.functional import cached_property
 
-from baserow.contrib.database.fields.utils.duration import (
-    convert_duration_input_value_to_timedelta,
-)
+from baserow.contrib.database.fields.utils.duration import duration_value_to_timedelta
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
 from baserow.core.fields import SyncedDateTimeField
 
@@ -318,7 +316,7 @@ class DurationField(models.DurationField):
         super().__init__(*args, **kwargs)
 
     def get_prep_value(self, value: Any) -> Any:
-        value = convert_duration_input_value_to_timedelta(value, self.duration_format)
+        value = duration_value_to_timedelta(value, self.duration_format)
         return super().get_prep_value(value)
 
 

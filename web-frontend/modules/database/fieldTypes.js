@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import {
-  formatDuration,
+  formatDurationValue,
   parseDurationValue,
   roundDurationValueToFormat,
   DURATION_FORMATS,
@@ -2285,31 +2285,17 @@ export class DurationFieldType extends FieldType {
 
   getSort(name, order) {
     return (a, b) => {
-      const aValue = parseDurationValue(a[name])
-      const bValue = parseDurationValue(b[name])
+      const aValue = a[name]
+      const bValue = b[name]
 
       if (aValue === bValue) {
         return 0
       }
 
-      if (
-        (aValue === null && order === 'ASC') ||
-        (bValue === null && order === 'DESC')
-      ) {
-        return -1
-      }
-
-      if (
-        (bValue === null && order === 'ASC') ||
-        (aValue === null && order === 'DESC')
-      ) {
-        return 1
-      }
-
       if (order === 'ASC') {
-        return aValue < bValue ? -1 : 1
+        return aValue === null || (bValue !== null && aValue < bValue) ? -1 : 1
       } else {
-        return bValue < aValue ? -1 : 1
+        return bValue === null || (aValue !== null && bValue < aValue) ? -1 : 1
       }
     }
   }
@@ -2361,7 +2347,7 @@ export class DurationFieldType extends FieldType {
   }
 
   static formatValue(field, value) {
-    return formatDuration(value, field.duration_format)
+    return formatDurationValue(value, field.duration_format)
   }
 
   static parseInputValue(field, value) {

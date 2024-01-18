@@ -1,4 +1,5 @@
 import pytest
+from pytest_unordered import unordered
 
 from baserow.contrib.database.api.views.serializers import serialize_group_by_metadata
 from baserow.contrib.database.fields.models import Field
@@ -90,7 +91,7 @@ def test_serialize_group_by_metadata_on_all_fields_in_interesting_table(data_fix
         # comparison.
         for result in serialized:
             result[f"field_{field.name}"] = result.pop(f"field_{str(field.id)}")
-        actual_result_per_field_name[field.name] = serialized
+        actual_result_per_field_name[field.name] = unordered(serialized)
 
     assert actual_result_per_field_name == {
         "text": [
@@ -236,5 +237,17 @@ def test_serialize_group_by_metadata_on_all_fields_in_interesting_table(data_fix
         "duration_hms_sss": [
             {"count": 1, "field_duration_hms_sss": 3666.666},
             {"count": 1, "field_duration_hms_sss": None},
+        ],
+        "duration_dh": [
+            {"count": 1, "field_duration_dh": 90000.0},
+            {"count": 1, "field_duration_dh": None},
+        ],
+        "duration_dhm": [
+            {"count": 1, "field_duration_dhm": 90060.0},
+            {"count": 1, "field_duration_dhm": None},
+        ],
+        "duration_dhms": [
+            {"count": 1, "field_duration_dhms": 90066.0},
+            {"count": 1, "field_duration_dhms": None},
         ],
     }
