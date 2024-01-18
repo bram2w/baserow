@@ -298,6 +298,7 @@ def test_get_adjacent_row(data_fixture):
         table=table, name="Name", text_default="Test"
     )
 
+    table_model = table.get_model()
     handler = RowHandler()
     rows = handler.create_rows(
         user=user,
@@ -313,11 +314,11 @@ def test_get_adjacent_row(data_fixture):
                 f"field_{name_field.id}": "BMW",
             },
         ],
+        model=table_model,
     )
 
-    queryset = table.get_model().objects.all()
-    next_row = handler.get_adjacent_row(rows[1], queryset)
-    previous_row = handler.get_adjacent_row(rows[1], queryset, previous=True)
+    next_row = handler.get_adjacent_row(table_model, rows[1].id)
+    previous_row = handler.get_adjacent_row(table_model, rows[1].id, previous=True)
 
     assert next_row.id == rows[2].id
     assert previous_row.id == rows[0].id
@@ -331,6 +332,7 @@ def test_get_adjacent_row_with_custom_filters(data_fixture):
         table=table, name="Name", text_default="Test"
     )
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_1, row_2, row_3] = handler.create_rows(
         user=user,
@@ -346,12 +348,22 @@ def test_get_adjacent_row_with_custom_filters(data_fixture):
                 f"field_{name_field.id}": "BMW",
             },
         ],
+        model=table_model,
     )
 
-    base_queryset = table.get_model().objects.filter(id__in=[row_2.id, row_3.id])
+    base_queryset = (
+        table.get_model()
+        .objects.filter(id__in=[row_2.id, row_3.id])
+        .order_by("order", "id")
+    )
 
-    next_row = handler.get_adjacent_row(row_2, base_queryset)
-    previous_row = handler.get_adjacent_row(row_2, base_queryset, previous=True)
+    with pytest.raises(RowDoesNotExist):
+        handler.get_adjacent_row_in_queryset(base_queryset, row_1.id)
+
+    next_row = handler.get_adjacent_row_in_queryset(base_queryset, row_2.id)
+    previous_row = handler.get_adjacent_row_in_queryset(
+        base_queryset, row_2.id, previous=True
+    )
 
     assert next_row.id == row_3.id
     assert previous_row is None
@@ -368,6 +380,7 @@ def test_get_adjacent_row_with_view_sort(data_fixture):
 
     data_fixture.create_view_sort(view=view, field=name_field, order="DESC")
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_1, row_2, row_3] = handler.create_rows(
         user=user,
@@ -383,13 +396,12 @@ def test_get_adjacent_row_with_view_sort(data_fixture):
                 f"field_{name_field.id}": "C",
             },
         ],
+        model=table_model,
     )
 
-    base_queryset = table.get_model().objects.all()
-
-    next_row = handler.get_adjacent_row(row_2, base_queryset, view=view)
+    next_row = handler.get_adjacent_row(table_model, row_2.id, view=view)
     previous_row = handler.get_adjacent_row(
-        row_2, base_queryset, previous=True, view=view
+        table_model, row_2.id, previous=True, view=view
     )
 
     assert next_row.id == row_1.id
@@ -407,6 +419,7 @@ def test_get_adjacent_row_with_view_group_by(data_fixture):
 
     data_fixture.create_view_group_by(view=view, field=name_field, order="DESC")
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_1, row_2, row_3] = handler.create_rows(
         user=user,
@@ -422,17 +435,63 @@ def test_get_adjacent_row_with_view_group_by(data_fixture):
                 f"field_{name_field.id}": "C",
             },
         ],
+        model=table_model,
     )
 
-    base_queryset = table.get_model().objects.all()
-
-    next_row = handler.get_adjacent_row(row_2, base_queryset, view=view)
+    next_row = handler.get_adjacent_row(table_model, row_2.id, view=view)
     previous_row = handler.get_adjacent_row(
-        row_2, base_queryset, previous=True, view=view
+        table_model, row_2.id, previous=True, view=view
     )
 
     assert next_row.id == row_1.id
     assert previous_row.id == row_3.id
+
+
+@pytest.mark.django_db
+def test_get_adjacent_row_with_search(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    view = data_fixture.create_grid_view(table=table)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    table_model = table.get_model()
+    handler = RowHandler()
+    [row_1, row_2, row_3] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "a",
+            },
+            {
+                f"field_{name_field.id}": "ab",
+            },
+            {
+                f"field_{name_field.id}": "c",
+            },
+        ],
+        model=table_model,
+    )
+
+    search = "a"
+    next_row = handler.get_adjacent_row(table_model, row_2.id, view=view, search=search)
+    previous_row = handler.get_adjacent_row(
+        table_model, row_2.id, previous=True, view=view, search=search
+    )
+
+    assert previous_row.id == row_1.id
+    assert next_row is None
+
+    search = "b"
+    next_row = handler.get_adjacent_row(table_model, row_2.id, view=view, search=search)
+    previous_row = handler.get_adjacent_row(
+        table_model, row_2.id, previous=True, view=view, search=search
+    )
+
+    assert previous_row is None
+    assert next_row is None
 
 
 @pytest.mark.django_db
@@ -448,6 +507,7 @@ def test_get_adjacent_row_with_view_group_by_and_view_sort(data_fixture):
     data_fixture.create_view_sort(view=view, field=name_field, order="ASC")
     data_fixture.create_view_group_by(view=view, field=name_field, order="DESC")
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_1, row_2, row_3] = handler.create_rows(
         user=user,
@@ -466,13 +526,12 @@ def test_get_adjacent_row_with_view_group_by_and_view_sort(data_fixture):
                 f"field_{other_field.id}": "A",
             },
         ],
+        model=table_model,
     )
 
-    base_queryset = table.get_model().objects.all()
-
-    next_row = handler.get_adjacent_row(row_2, base_queryset, view=view)
+    next_row = handler.get_adjacent_row(table_model, row_2.id, view=view)
     previous_row = handler.get_adjacent_row(
-        row_2, base_queryset, previous=True, view=view
+        table_model, row_2.id, previous=True, view=view
     )
 
     assert next_row.id == row_1.id
@@ -496,11 +555,14 @@ def test_get_adjacent_row_performance_many_rows(data_fixture):
     row_amount = 100000
     row_values = [{f"field_{name_field.id}": "Tesla"} for _ in range(row_amount)]
 
-    rows = handler.create_rows(user=user, table=table, rows_values=row_values)
+    table_model = table.get_model()
+    rows = handler.create_rows(
+        user=user, table=table, rows_values=row_values, model=table_model
+    )
 
     profiler = Profiler()
     profiler.start()
-    next_row = handler.get_adjacent_row(rows[5])
+    next_row = handler.get_adjacent_row(table_model, rows[5].id)
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
@@ -532,11 +594,14 @@ def test_get_adjacent_row_performance_many_fields(data_fixture):
         row_value = {f"field_{field.id}": "Tesla" for field in fields}
         row_values.append(row_value)
 
-    rows = handler.create_rows(user=user, table=table, rows_values=row_values)
+    table_model = table.get_model()
+    rows = handler.create_rows(
+        user=user, table=table, rows_values=row_values, model=table_model
+    )
 
     profiler = Profiler()
     profiler.start()
-    next_row = handler.get_adjacent_row(rows[5])
+    next_row = handler.get_adjacent_row(table_model, rows[5].id)
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
