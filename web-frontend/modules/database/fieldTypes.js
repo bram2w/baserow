@@ -2261,6 +2261,10 @@ export class DurationFieldType extends FieldType {
     return DURATION_FORMATS.get(field.duration_format).example
   }
 
+  canBeReferencedByFormulaField() {
+    return true
+  }
+
   getDocsDescription(field) {
     return this.app.i18n.t('fieldDocs.duration', {
       format: field.duration_format,

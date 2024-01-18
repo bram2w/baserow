@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "New formulas returning a date_interval/duration are sent as number of seconds instead of a formatted string.",
+    "issue_number": 2190,
+    "bullet_points": [],
+    "created_at": "2024-01-12"
+}

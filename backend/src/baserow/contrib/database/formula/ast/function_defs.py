@@ -105,8 +105,8 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaBooleanType,
     BaserowFormulaButtonType,
     BaserowFormulaCharType,
-    BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
+    BaserowFormulaDurationType,
     BaserowFormulaLinkType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaNumberType,
@@ -1237,9 +1237,12 @@ class BaserowEqual(TwoArgumentBaserowFunction):
             return func_call.with_valid_type(BaserowFormulaBooleanType())
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return EqualsExpr(
-            arg1,
-            arg2,
+        return Case(
+            When(
+                condition=IsNullExpr(arg1, output_field=fields.BooleanField()),
+                then=IsNullExpr(arg2, output_field=fields.BooleanField()),
+            ),
+            default=EqualsExpr(arg1, arg2, output_field=fields.BooleanField()),
             output_field=fields.BooleanField(),
         )
 
@@ -1728,7 +1731,7 @@ class BaserowDateInterval(OneArgumentBaserowFunction):
         func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(BaserowFormulaDateIntervalType(nullable=True))
+        return func_call.with_valid_type(BaserowFormulaDurationType(nullable=True))
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return Func(

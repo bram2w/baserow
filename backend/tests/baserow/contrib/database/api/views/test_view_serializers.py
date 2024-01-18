@@ -207,7 +207,7 @@ def test_serialize_group_by_metadata_on_all_fields_in_interesting_table(data_fix
         "formula_int": [{"count": 2, "field_formula_int": "1"}],
         "formula_bool": [{"count": 2, "field_formula_bool": True}],
         "formula_decimal": [{"count": 2, "field_formula_decimal": "33.3333333333"}],
-        "formula_dateinterval": [{"count": 2, "field_formula_dateinterval": "1 day"}],
+        "formula_dateinterval": [{"count": 2, "field_formula_dateinterval": 24 * 3600}],
         "formula_date": [{"count": 2, "field_formula_date": "2020-01-01"}],
         "formula_email": [
             {"count": 1, "field_formula_email": ""},

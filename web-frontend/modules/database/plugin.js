@@ -217,7 +217,8 @@ import {
   BaserowFormulaButtonType,
   BaserowFormulaCharType,
   BaserowFormulaLinkType,
-  BaserowFormulaDateIntervalType,
+  BaserowFormulaDateIntervalType, // Deprecated
+  BaserowFormulaDurationType,
   BaserowFormulaDateType,
   BaserowFormulaInvalidType,
   BaserowFormulaNumberType,
@@ -612,6 +613,10 @@ export default (context) => {
   app.$registry.register(
     'formula_type',
     new BaserowFormulaDateIntervalType(context)
+  )
+  app.$registry.register(
+    'formula_type',
+    new BaserowFormulaDurationType(context)
   )
   app.$registry.register('formula_type', new BaserowFormulaNumberType(context))
   app.$registry.register('formula_type', new BaserowFormulaArrayType(context))

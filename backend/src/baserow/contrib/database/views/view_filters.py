@@ -55,6 +55,7 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaDateIntervalType,
+    BaserowFormulaDurationType,
     BaserowFormulaSingleFileType,
 )
 from baserow.core.datetime import get_timezones
@@ -1405,6 +1406,7 @@ class EmptyViewFilterType(ViewFilterType):
             BaserowFormulaDateType.type,
             BaserowFormulaBooleanType.type,
             BaserowFormulaDateIntervalType.type,
+            BaserowFormulaDurationType.type,
             FormulaFieldType.array_of(BaserowFormulaSingleFileType.type),
         ),
     ]

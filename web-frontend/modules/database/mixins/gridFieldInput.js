@@ -144,7 +144,7 @@ export default {
 
       this.editing = true
       this.copy = value === null ? this.value : value
-      this.afterEdit(event)
+      this.afterEdit(event, value)
     },
     /**
      * Method that can be called when in the editing state. It will bring the
