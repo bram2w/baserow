@@ -38,7 +38,9 @@ export default {
     setCopyAndDelayedUpdate(value, immediately = false) {
       const newValue = this.updateCopy(this.field, value)
       if (newValue !== undefined) {
-        this.delayedUpdate(this.copy, immediately)
+        // a filter Value cannot be null, so send an empty string in case.
+        const filterValue = newValue === null ? '' : newValue
+        this.delayedUpdate(filterValue, immediately)
       }
     },
     getValidationError(value) {

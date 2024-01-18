@@ -250,6 +250,9 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                 "duration_hms_s": 3666.6,
                 "duration_hms_ss": 3666.66,
                 "duration_hms_sss": 3666.666,
+                "duration_dh": 90000,
+                "duration_dhm": 90060,
+                "duration_dhms": 90066,
                 "email": "test@example.com",
                 "file": [
                     {
