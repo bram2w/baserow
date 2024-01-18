@@ -39,6 +39,7 @@
         :default-values="defaultValues"
         :formula-type="formulaType"
         :table="table"
+        :view="view"
       >
       </FormulaTypeSubForms>
     </template>

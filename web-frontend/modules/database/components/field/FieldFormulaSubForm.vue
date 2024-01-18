@@ -6,6 +6,7 @@
       :error="formulaError"
       :formula-type="localOrServerFormulaType"
       :table="table"
+      :view="view"
       :loading="refreshingFormula"
       :formula-type-refresh-needed="formulaTypeRefreshNeeded"
       @open-advanced-context="
