@@ -30,7 +30,54 @@ def test_builder_application_type_init_application(data_fixture):
 
     BuilderApplicationType().init_application(user, builder)
 
-    assert Page.objects.count() == 1
+    assert Page.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_builder_application_type_init_application_customers_table_use(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+
+    from baserow.contrib.builder.builder_beta_init_application import (
+        BuilderApplicationTypeInitApplication,
+    )
+
+    builder_init = BuilderApplicationTypeInitApplication(user, builder)
+
+    # Correct: name, workspace. Wrong: fields (none).
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    assert table.field_set.count() == 0
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Correct: name, field names, workspace. Wrong: fields types.
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    data_fixture.create_number_field(table=table, name="Name")
+    data_fixture.create_number_field(table=table, name="Last name")
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Correct: name, single field, workspace. Wrong: Last name field.
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    data_fixture.create_text_field(table=table, name="Name")
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Correct: nearly all. Wrong: workspace.
+    table = data_fixture.create_database_table(name="Customers")
+    data_fixture.create_text_field(table=table, name="Name")
+    data_fixture.create_text_field(table=table, name="Last name")
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Everything matches.
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    data_fixture.create_text_field(table=table, name="Name")
+    data_fixture.create_text_field(table=table, name="Last name")
+    assert builder_init.get_target_table() == table
+    table.delete()
 
 
 @pytest.mark.django_db

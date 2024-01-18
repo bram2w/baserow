@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-16 11:09+0000\n"
+"POT-Creation-Date: 2024-01-18 13:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -78,33 +78,33 @@ msgid ""
 "\"%(application_name)s\" (%(application_id)s) %(application_type)s created"
 msgstr ""
 
-#: src/baserow/core/actions.py:438
+#: src/baserow/core/actions.py:442
 msgid "Delete application"
 msgstr ""
 
-#: src/baserow/core/actions.py:440
+#: src/baserow/core/actions.py:444
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
 "%(application_type)s deleted"
 msgstr ""
 
-#: src/baserow/core/actions.py:502
+#: src/baserow/core/actions.py:506
 msgid "Update application"
 msgstr ""
 
-#: src/baserow/core/actions.py:504
+#: src/baserow/core/actions.py:508
 #, python-format
 msgid ""
 "Application (%(application_id)s) of type %(application_type)s renamed from "
 "\"%(original_application_name)s\" to \"%(application_name)s\""
 msgstr ""
 
-#: src/baserow/core/actions.py:575
+#: src/baserow/core/actions.py:579
 msgid "Duplicate application"
 msgstr ""
 
-#: src/baserow/core/actions.py:577
+#: src/baserow/core/actions.py:581
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
@@ -112,66 +112,66 @@ msgid ""
 "\" (%(original_application_id)s)"
 msgstr ""
 
-#: src/baserow/core/actions.py:654
+#: src/baserow/core/actions.py:658
 msgid "Install template"
 msgstr ""
 
-#: src/baserow/core/actions.py:656
+#: src/baserow/core/actions.py:660
 #, python-format
 msgid ""
 "Template \"%(template_name)s\" (%(template_id)s) installed into application "
 "IDs %(installed_application_ids)s"
 msgstr ""
 
-#: src/baserow/core/actions.py:734
+#: src/baserow/core/actions.py:738
 msgid "Create group invitation"
 msgstr ""
 
-#: src/baserow/core/actions.py:736
+#: src/baserow/core/actions.py:740
 #, python-format
 msgid ""
 "Group invitation created for \"%(email)s\" to join \"%(group_name)s"
 "\" (%(group_id)s) as %(permissions)s."
 msgstr ""
 
-#: src/baserow/core/actions.py:787
+#: src/baserow/core/actions.py:791
 msgid "Delete group invitation"
 msgstr ""
 
-#: src/baserow/core/actions.py:789
+#: src/baserow/core/actions.py:793
 #, python-format
 msgid ""
 "Group invitation (%(invitation_id)s) deleted for \"%(email)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s."
 msgstr ""
 
-#: src/baserow/core/actions.py:842
+#: src/baserow/core/actions.py:846
 msgid "Accept group invitation"
 msgstr ""
 
-#: src/baserow/core/actions.py:844
+#: src/baserow/core/actions.py:848
 #, python-format
 msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was accepted."
 msgstr ""
 
-#: src/baserow/core/actions.py:897
+#: src/baserow/core/actions.py:901
 msgid "Reject group invitation"
 msgstr ""
 
-#: src/baserow/core/actions.py:899
+#: src/baserow/core/actions.py:903
 #, python-format
 msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was rejected."
 msgstr ""
 
-#: src/baserow/core/actions.py:952
+#: src/baserow/core/actions.py:956
 msgid "Update group invitation permissions"
 msgstr ""
 
-#: src/baserow/core/actions.py:954
+#: src/baserow/core/actions.py:958
 #, python-format
 msgid ""
 "Invitation (%(invitation_id)s) permissions changed from "
@@ -179,11 +179,11 @@ msgid ""
 "\"%(group_name)s\" (%(group_id)s)."
 msgstr ""
 
-#: src/baserow/core/actions.py:1011
+#: src/baserow/core/actions.py:1015
 msgid "Leave group"
 msgstr ""
 
-#: src/baserow/core/actions.py:1012
+#: src/baserow/core/actions.py:1016
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
 msgstr ""

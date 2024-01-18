@@ -6,14 +6,14 @@ from django.core.files.storage import Storage
 from django.db import transaction
 from django.db.transaction import Atomic
 from django.urls import include, path
-from django.utils import translation
-from django.utils.translation import gettext as _
 
+from baserow.contrib.builder.builder_beta_init_application import (
+    BuilderApplicationTypeInitApplication,
+)
 from baserow.contrib.builder.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
-from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.builder.theme.handler import ThemeHandler
 from baserow.contrib.builder.theme.registries import theme_config_block_registry
 from baserow.contrib.builder.types import BuilderDict
@@ -52,10 +52,51 @@ class BuilderApplicationType(ApplicationType):
         return transaction.atomic()
 
     def init_application(self, user: AbstractUser, application: Application) -> None:
-        with translation.override(user.profile.language):
-            first_page_name = _("Homepage")
+        """
+        Responsible for creating dummy data in the newly created builder application.
 
-        PageService().create_page(user, application.specific, first_page_name, path="/")
+        By default, we'll always create a page with an intro section, and a paragraph
+        explaining what the designer can do in the editor.
+
+        If the dummy "Customers" table in `application.workspace` hasn't changed its
+        schema (i.e. version = initial_version) then we'll also creating some extra
+        fun elements with a data source and workflow action.
+
+        :param user: The user who is creating a new builder application.
+        :param application: The newly created builder application.
+        :return: None
+        """
+
+        builder_init = BuilderApplicationTypeInitApplication(user, application)
+
+        # Get our target table, "Customers". It won't be returned if:
+        # 1. It's been trashed, or renamed.
+        # 2. The table has permissions the user doesn't have.
+        # 3. It exists, but the fields we want (first/last name) have been changed.
+        table = builder_init.get_target_table()
+
+        # Create the Homepage Page.
+        homepage = builder_init.create_page(builder_init.homepage_name, "/")
+
+        # Create the Examples Page.
+        examples = builder_init.create_page(builder_init.examples_name, "/examples")
+
+        # Create the Local Baserow integration.
+        integration = builder_init.create_integration()
+
+        # Create our intro section in Homepage.
+        builder_init.create_intro_element(homepage, link_to_page=examples)
+
+        # If we found a table...
+        if table:
+            # Create our sample table element, if we have a Customers table.
+            builder_init.create_table_element(examples, table, integration)
+
+        # Create our sample form element
+        builder_init.create_form_element(examples, integration, table=table)
+
+        # Create our sample container element.
+        builder_init.create_container_element(examples)
 
     def export_serialized(
         self,

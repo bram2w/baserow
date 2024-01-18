@@ -2,11 +2,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-27 10:23+0000\n"
+"POT-Creation-Date: 2024-01-18 13:32+0000\n"
 "PO-Revision-Date: 2023-03-31 12:31+0000\n"
 "Last-Translator: Bram <bram@baserow.io>\n"
-"Language-Team: Dutch <https://hosted.weblate.org/projects/baserow/"
-"backend-core/nl/>\n"
+"Language-Team: Dutch <https://hosted.weblate.org/projects/baserow/backend-"
+"core/nl/>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -47,8 +47,8 @@ msgid ""
 "Group (%(group_id)s) name changed from \"%(original_group_name)s\" to "
 "\"%(group_name)s.\""
 msgstr ""
-"Werkruimte (%(group_id)s) naam veranderd van \"%(original_group_name)s\" naar "
-"\"%(group_name)s.\""
+"Werkruimte (%(group_id)s) naam veranderd van \"%(original_group_name)s\" "
+"naar \"%(group_name)s.\""
 
 #: src/baserow/core/actions.py:237
 msgid "Order groups"
@@ -77,11 +77,11 @@ msgid ""
 msgstr ""
 "\"%(application_name)s\" (%(application_id)s) %(application_type)s aangemaakt"
 
-#: src/baserow/core/actions.py:438
+#: src/baserow/core/actions.py:442
 msgid "Delete application"
 msgstr "Applicatie verwijderen"
 
-#: src/baserow/core/actions.py:440
+#: src/baserow/core/actions.py:444
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
@@ -90,11 +90,11 @@ msgstr ""
 "Applicatie \"%(application_name)s\" (%(application_id)s) van het type "
 "%(application_type)s verwijderd"
 
-#: src/baserow/core/actions.py:502
+#: src/baserow/core/actions.py:506
 msgid "Update application"
 msgstr "Applicatie bijwerken"
 
-#: src/baserow/core/actions.py:504
+#: src/baserow/core/actions.py:508
 #, python-format
 msgid ""
 "Application (%(application_id)s) of type %(application_type)s renamed from "
@@ -103,11 +103,11 @@ msgstr ""
 "Applicatie (%(application_id)s) van type %(application_type)s hernoemd van "
 "\"%(original_application_name)s\" naar \"%(application_name)s\""
 
-#: src/baserow/core/actions.py:575
+#: src/baserow/core/actions.py:579
 msgid "Duplicate application"
 msgstr "Applicatie dupliceren"
 
-#: src/baserow/core/actions.py:577
+#: src/baserow/core/actions.py:581
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
@@ -118,11 +118,11 @@ msgstr ""
 "%(application_type)s gedupliceerd van \"%(original_application_name)s"
 "\" (%(original_application_id)s)"
 
-#: src/baserow/core/actions.py:654
+#: src/baserow/core/actions.py:658
 msgid "Install template"
 msgstr "Template installeren"
 
-#: src/baserow/core/actions.py:656
+#: src/baserow/core/actions.py:660
 #, python-format
 msgid ""
 "Template \"%(template_name)s\" (%(template_id)s) installed into application "
@@ -131,16 +131,28 @@ msgstr ""
 "Template \"%(template_name)s\" (%(template_id)s) geïnstalleerd in applicatie "
 "ID's %(installed_application_ids)s"
 
-#: src/baserow/core/actions.py:736
+#: src/baserow/core/actions.py:738
+#, fuzzy
+#| msgid "Accept group invitation"
+msgid "Create group invitation"
+msgstr "Uitnodiging accepteren"
+
+#: src/baserow/core/actions.py:740
 #, fuzzy, python-format
 msgid ""
 "Group invitation created for \"%(email)s\" to join \"%(group_name)s"
 "\" (%(group_id)s) as %(permissions)s."
 msgstr ""
-"Groepsuitnodiging gemaakt voor \"%(email)s\" om zich aan te sluiten bij \""
-"%(group_name)s\" (%(group_id)s) als %(permissions)s."
+"Groepsuitnodiging gemaakt voor \"%(email)s\" om zich aan te sluiten bij "
+"\"%(group_name)s\" (%(group_id)s) als %(permissions)s."
 
-#: src/baserow/core/actions.py:789
+#: src/baserow/core/actions.py:791
+#, fuzzy
+#| msgid "Accept group invitation"
+msgid "Delete group invitation"
+msgstr "Uitnodiging accepteren"
+
+#: src/baserow/core/actions.py:793
 #, fuzzy, python-format
 msgid ""
 "Group invitation (%(invitation_id)s) deleted for \"%(email)s\" to join "
@@ -149,36 +161,41 @@ msgstr ""
 "Groepsuitnodiging (%(invitation_id)s) verwijderd voor \"%(email)s\" om zich "
 "aan te sluiten bij \"%(group_name)s\" (%(group_id)s) als %(permissions)s."
 
-#: src/baserow/core/actions.py:842
-#| msgid "Accept invitation"
+#: src/baserow/core/actions.py:846
 msgid "Accept group invitation"
 msgstr "Uitnodiging accepteren"
 
-#: src/baserow/core/actions.py:844
+#: src/baserow/core/actions.py:848
 #, fuzzy, python-format
 msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was accepted."
 msgstr ""
-"Uitnodiging (%(invitation_id)s) verzonden door \"%(sender)s\" om zich bij \""
-"%(group_name)s\" (%(group_id)s) aan te sluiten als %(permissions)s werd "
+"Uitnodiging (%(invitation_id)s) verzonden door \"%(sender)s\" om zich bij "
+"\"%(group_name)s\" (%(group_id)s) aan te sluiten als %(permissions)s werd "
 "aanvaard."
 
-#: src/baserow/core/actions.py:899
+#: src/baserow/core/actions.py:901
+#, fuzzy
+#| msgid "Accept group invitation"
+msgid "Reject group invitation"
+msgstr "Uitnodiging accepteren"
+
+#: src/baserow/core/actions.py:903
 #, fuzzy, python-format
 msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was rejected."
 msgstr ""
-"Uitnodiging (%(invitation_id)s) verzonden door \"%(sender)s\" om zich bij \""
-"%(group_name)s\" (%(group_id)s) aan te sluiten als %(permissions)s werd "
+"Uitnodiging (%(invitation_id)s) verzonden door \"%(sender)s\" om zich bij "
+"\"%(group_name)s\" (%(group_id)s) aan te sluiten als %(permissions)s werd "
 "afgewezen."
 
-#: src/baserow/core/actions.py:952
+#: src/baserow/core/actions.py:956
 msgid "Update group invitation permissions"
 msgstr "Machtigingen voor groepsuitnodigingen bijwerken"
 
-#: src/baserow/core/actions.py:954
+#: src/baserow/core/actions.py:958
 #, fuzzy, python-format
 msgid ""
 "Invitation (%(invitation_id)s) permissions changed from "
@@ -186,22 +203,51 @@ msgid ""
 "\"%(group_name)s\" (%(group_id)s)."
 msgstr ""
 "Uitnodiging (%(invitation_id)s) machtigingen veranderd van "
-"%(original_permissions)s naar %(permissions)s voor %(email)s op groep \""
-"%(group_name)s\" (%(group_id)s)."
+"%(original_permissions)s naar %(permissions)s voor %(email)s op groep "
+"\"%(group_name)s\" (%(group_id)s)."
 
-#: src/baserow/core/actions.py:1011
+#: src/baserow/core/actions.py:1015
 msgid "Leave group"
 msgstr "Werkruimte verlaten"
 
-#: src/baserow/core/actions.py:1012
+#: src/baserow/core/actions.py:1016
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
 msgstr "Werkruimte \"%(group_name)s\" (%(group_id)s) verwijderd."
 
-#: src/baserow/core/emails.py:96
+#: src/baserow/core/emails.py:103
 #, python-format
 msgid "%(by)s invited you to %(workspace_name)s - Baserow"
 msgstr "%(by)s heeft je uitgenodigd voor %(workspace_name)s - Baserow"
+
+#: src/baserow/core/emails.py:136
+msgid "You have 1 new notification - Baserow"
+msgstr ""
+
+#: src/baserow/core/emails.py:138
+#, python-format
+msgid "You have %(count)d new notifications - Baserow"
+msgstr ""
+
+#: src/baserow/core/notification_types.py:94
+#, fuzzy, python-format
+#| msgid ""
+#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
+#| "%(group_name)s</strong>."
+msgid "%(user)s accepted your invitation to collaborate to %(workspace_name)s."
+msgstr ""
+"<strong>%(first_name)s</strong> heeft je uitgenodigd om samen te werken op "
+"<strong>%(group_name)s</strong>."
+
+#: src/baserow/core/notification_types.py:135
+#, fuzzy, python-format
+#| msgid ""
+#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
+#| "%(group_name)s</strong>."
+msgid "%(user)s rejected your invitation to collaborate to %(workspace_name)s."
+msgstr ""
+"<strong>%(first_name)s</strong> heeft je uitgenodigd om samen te werken op "
+"<strong>%(group_name)s</strong>."
 
 #: src/baserow/core/snapshots/actions.py:21
 msgid "Create Snapshot"
@@ -244,11 +290,67 @@ msgstr ""
 "Snapshot \"%(snapshot_name)s\" (%(snapshot_id)s) verwijderd voor applicatie "
 "\"%(application_name)s\" (%(application_id)s)."
 
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:146
+#: src/baserow/core/templates/baserow/core/group_invitation.html:144
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:144
+msgid "Invitation"
+msgstr "Uitnodiging"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:149
+#, fuzzy, python-format
+#| msgid ""
+#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
+#| "%(group_name)s</strong>."
+msgid ""
+"<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
+"%(group_name)s</strong>."
+msgstr ""
+"<strong>%(first_name)s</strong> heeft je uitgenodigd om samen te werken op "
+"<strong>%(group_name)s</strong>."
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:163
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:167
+msgid "Accept invitation"
+msgstr "Uitnodiging accepteren"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:177
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:212
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:154
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:154
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:159
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:177
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:181
+msgid ""
+"Baserow is an open source no-code database tool which allows you to "
+"collaborate on projects, customers and more. It gives you the powers of a "
+"developer without leaving your browser."
+msgstr ""
+"Baserow is een codevrij open-source database tool. Hiermee kun je "
+"samenwerken aan projecten, klanten en nog veel meer. Je hebt de kracht van "
+"een ontwikkelaar zonder de browser te verlaten."
+
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:146
+#, python-format
+msgid "You have %(counter)s new notification"
+msgid_plural "You have %(counter)s new notifications"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:187
+#, python-format
+msgid "Plus %(counter)s more notification."
+msgid_plural "Plus %(counter)s more notifications."
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:198
+msgid "View in Baserow"
+msgstr ""
+
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:144
 msgid "Account permanently deleted"
 msgstr "Account definitief verwijderd"
 
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:151
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:149
 #, fuzzy, python-format
 #| msgid ""
 #| "A password reset was requested for your account (%(username)s) on Baserow "
@@ -262,25 +364,11 @@ msgstr ""
 "account (%(username)s) op Baserow (%(public_web_frontend_hostname)s). Als "
 "dit zonder jouw toestemming gebeurde, kun je deze e-mail gewoon negeren."
 
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:156
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:156
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:161
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:179
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:180
-msgid ""
-"Baserow is an open source no-code database tool which allows you to "
-"collaborate on projects, customers and more. It gives you the powers of a "
-"developer without leaving your browser."
-msgstr ""
-"Baserow is een codevrij open-source database tool. Hiermee kun je "
-"samenwerken aan projecten, klanten en nog veel meer. Je hebt de kracht van "
-"een ontwikkelaar zonder de browser te verlaten."
-
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:146
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:144
 msgid "Account deletion cancelled"
 msgstr "Accountverwijdering geannuleerd"
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:151
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:149
 #, fuzzy, python-format
 #| msgid ""
 #| "A password reset was requested for your account (%(username)s) on Baserow "
@@ -295,11 +383,11 @@ msgstr ""
 "account (%(username)s) op Baserow (%(public_web_frontend_hostname)s). Als "
 "dit zonder jouw toestemming gebeurde, kun je deze e-mail gewoon negeren."
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:146
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:144
 msgid "Account pending deletion"
 msgstr "Account in afwachting van verwijdering"
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:151
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:149
 #, fuzzy, python-format
 #| msgid ""
 #| "A password reset was requested for your account (%(username)s) on Baserow "
@@ -313,7 +401,7 @@ msgstr ""
 "account (%(username)s) op Baserow (%(public_web_frontend_hostname)s). Als "
 "dit zonder jouw toestemming gebeurde, kun je deze e-mail gewoon negeren."
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:156
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:154
 #, fuzzy
 msgid ""
 "If you've changed your mind and want to cancel your account deletion, you "
@@ -322,12 +410,12 @@ msgstr ""
 "Als u van gedachten bent veranderd en de verwijdering van uw account wilt "
 "annuleren, hoeft u alleen maar opnieuw in te loggen."
 
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:146
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:165
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:144
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:163
 msgid "Reset password"
 msgstr "Nieuw wachtwoord aanmaken"
 
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:151
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:149
 #, python-format
 msgid ""
 "A password reset was requested for your account (%(username)s) on Baserow "
@@ -338,7 +426,7 @@ msgstr ""
 "account (%(username)s) op Baserow (%(public_web_frontend_hostname)s). Als "
 "dit zonder jouw toestemming gebeurde, kun je deze e-mail gewoon negeren."
 
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:156
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:154
 #, python-format
 msgid ""
 "To continue with your password reset, simply click the button below, and you "
@@ -348,11 +436,7 @@ msgstr ""
 "Maak een nieuw wachtwoord aan door te klikken op de knop hieronder. Dan kun "
 "je je wachtwoord veranderen. Deze link is %(hours)s uur geldig."
 
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:146
-msgid "Invitation"
-msgstr "Uitnodiging"
-
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:152
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:149
 #, fuzzy, python-format
 #| msgid ""
 #| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
@@ -363,10 +447,6 @@ msgid ""
 msgstr ""
 "<strong>%(first_name)s</strong> heeft je uitgenodigd om samen te werken op "
 "<strong>%(group_name)s</strong>."
-
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:166
-msgid "Accept invitation"
-msgstr "Uitnodiging accepteren"
 
 #: src/baserow/core/trash/actions.py:20
 msgid "Empty trash"
@@ -430,11 +510,11 @@ msgstr "Gebruiker bijwerken"
 msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgstr "Gebruiker \"%(user_email)s\" (%(user_id)s) bijgewerkt"
 
-#: src/baserow/core/user/actions.py:155
+#: src/baserow/core/user/actions.py:163
 msgid "Schedule user deletion"
 msgstr "Gepland verwijderen van gebruiker"
 
-#: src/baserow/core/user/actions.py:157
+#: src/baserow/core/user/actions.py:165
 #, fuzzy, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) scheduled to be deleted after grace "
@@ -443,11 +523,11 @@ msgstr ""
 "Gebruiker \"%(user_email)s\" (%(user_id)s) gepland om verwijderd te worden "
 "na respijtperiode"
 
-#: src/baserow/core/user/actions.py:188
+#: src/baserow/core/user/actions.py:196
 msgid "Cancel user deletion"
 msgstr "Annuleer gebruiker verwijderen"
 
-#: src/baserow/core/user/actions.py:190
+#: src/baserow/core/user/actions.py:198
 #, fuzzy, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
@@ -456,11 +536,11 @@ msgstr ""
 "Gebruiker \"%(user_email)s\" (%(user_id)s) heeft ingelogd en het "
 "verwijderingsproces geannuleerd."
 
-#: src/baserow/core/user/actions.py:221
+#: src/baserow/core/user/actions.py:229
 msgid "Sign In User"
 msgstr "Aanmelden gebruiker"
 
-#: src/baserow/core/user/actions.py:223
+#: src/baserow/core/user/actions.py:231
 #, fuzzy, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) signed in via \"%(auth_provider_type)s"
@@ -469,37 +549,37 @@ msgstr ""
 "Gebruiker \"%(user_email)s\" (%(user_id)s) heeft ingelogd en het "
 "verwijderingsproces geannuleerd."
 
-#: src/baserow/core/user/actions.py:275
+#: src/baserow/core/user/actions.py:283
 #, fuzzy
 #| msgid "Reset password"
 msgid "Send reset user password"
 msgstr "Nieuw wachtwoord aanmaken"
 
-#: src/baserow/core/user/actions.py:276
+#: src/baserow/core/user/actions.py:284
 #, fuzzy, python-format
 #| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
 msgstr "Gebruiker \"%(user_email)s\" (%(user_id)s) bijgewerkt"
 
-#: src/baserow/core/user/actions.py:306
+#: src/baserow/core/user/actions.py:314
 #, fuzzy
 #| msgid "Reset password"
 msgid "Change user password"
 msgstr "Nieuw wachtwoord aanmaken"
 
-#: src/baserow/core/user/actions.py:307
+#: src/baserow/core/user/actions.py:315
 #, fuzzy, python-format
 #| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
 msgstr "Gebruiker \"%(user_email)s\" (%(user_id)s) bijgewerkt"
 
-#: src/baserow/core/user/actions.py:343
+#: src/baserow/core/user/actions.py:351
 #, fuzzy
 #| msgid "Reset password"
 msgid "Reset user password"
 msgstr "Nieuw wachtwoord aanmaken"
 
-#: src/baserow/core/user/actions.py:344
+#: src/baserow/core/user/actions.py:352
 #, fuzzy, python-format
 #| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
@@ -521,7 +601,7 @@ msgstr "Account definitief verwijderd - Baserow"
 msgid "Account deletion cancelled - Baserow"
 msgstr "Accountverwijdering geannuleerd - Baserow"
 
-#: src/baserow/core/user/handler.py:213
+#: src/baserow/core/user/handler.py:248
 #, fuzzy, python-format
 #| msgid "%(name)s's group"
 msgid "%(name)s's workspace"
