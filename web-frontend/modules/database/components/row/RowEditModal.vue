@@ -37,7 +37,7 @@
           </a>
         </template>
       </div>
-      <h2 class="box__title">
+      <h2 class="box__title row_modal__title">
         {{ heading }}
       </h2>
       <RowEditModalFieldsList

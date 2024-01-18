@@ -1,7 +1,7 @@
 <template>
   <Modal ref="modal">
     <form @submit.prevent="create">
-      <h2 class="box__title">
+      <h2 class="box__title row_modal__title">
         {{ heading }}
       </h2>
       <Error :error="error"></Error>
