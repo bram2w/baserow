@@ -104,6 +104,7 @@ from baserow.core.utils import list_to_comma_separated_string
 
 from ..formula.types.formula_types import (
     BaserowFormulaArrayType,
+    BaserowFormulaDurationType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
 )
@@ -1795,6 +1796,14 @@ class DurationFieldType(FieldType):
         base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {**base, "duration_format": field.duration_format}
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaDurationType(
+            duration_format=field.duration_format, nullable=True
+        )
+
+    def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
+        return self.model_class(duration_format=formula_type.duration_format)
 
 
 class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):

@@ -18,7 +18,7 @@
         class="grid-field-duration__input"
         :placeholder="field.duration_format"
         @keypress="onKeyPress(field, $event)"
-        @keyup="updateCopy(field, $event.target.value)"
+        @input="onInput(field, $event)"
       />
       <div v-show="!isValid()" class="grid-view__cell--error align-right">
         {{ getError() }}
@@ -43,7 +43,11 @@ export default {
       this.updateFormattedValue(this.field, value)
       return this.$super(gridFieldInput).beforeSave(value)
     },
-    afterEdit() {
+    afterEdit(event, value) {
+      if (value !== null) {
+        this.updateCopy(this.field, value)
+        this.updateFormattedValue(this.field, this.copy)
+      }
       this.$nextTick(() => {
         this.$refs.input.focus()
         this.$refs.input.selectionStart = this.$refs.input.selectionEnd = 100000

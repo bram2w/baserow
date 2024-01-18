@@ -662,3 +662,126 @@ def test_get_group_by_metadata_in_rows_with_duration_field(data_fixture):
             ]
         )
     }
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_duration_field_can_be_used_in_formulas(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    duration_field = data_fixture.create_duration_field(
+        table=table, name="duration", duration_format="h:mm:ss"
+    )
+    ref_field = data_fixture.create_formula_field(
+        table=table, name="ref", formula=f"field('{duration_field.name}')"
+    )
+    add_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{duration_field.name}') + field('{ref_field.name}')",
+    )
+    sub_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{duration_field.name}') - field('{ref_field.name}')",
+    )
+    compare_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{duration_field.name}') = field('{ref_field.name}')",
+    )
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {duration_field.db_column: 3600},
+            {duration_field.db_column: 0},
+            {},
+        ],
+    )
+
+    model = table.get_model()
+
+    assert list(
+        model.objects.all().values(
+            ref_field.db_column,
+            add_field.db_column,
+            sub_field.db_column,
+            compare_field.db_column,
+        )
+    ) == [
+        {
+            ref_field.db_column: timedelta(seconds=3600),
+            add_field.db_column: timedelta(seconds=7200),
+            sub_field.db_column: timedelta(seconds=0),
+            compare_field.db_column: True,
+        },
+        {
+            ref_field.db_column: timedelta(seconds=0),
+            add_field.db_column: timedelta(seconds=0),
+            sub_field.db_column: timedelta(seconds=0),
+            compare_field.db_column: True,
+        },
+        {
+            ref_field.db_column: None,
+            add_field.db_column: timedelta(seconds=0),
+            sub_field.db_column: timedelta(seconds=0),
+            compare_field.db_column: True,
+        },
+    ]
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_duration_field_can_be_looked_up(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    duration_field = data_fixture.create_duration_field(
+        table=table_b, name="duration", duration_format="h:mm:ss"
+    )
+    lookup_field = data_fixture.create_formula_field(
+        table=table_a, formula=f"lookup('{link_field.name}', 'duration')"
+    )
+
+    # Also a formula field referencing a duration can be looked up
+    duration_formula = data_fixture.create_formula_field(
+        table=table_b,
+        name="formula",
+        formula=f"field('{duration_field.name}') + date_interval('60s')",
+    )
+    lookup_formula = data_fixture.create_formula_field(
+        table=table_a, formula=f"lookup('{link_field.name}', 'formula')"
+    )
+
+    model_b = table_b.get_model()
+    row_b_1, row_b_2 = RowHandler().create_rows(
+        user=user,
+        table=table_b,
+        rows_values=[
+            {duration_field.db_column: 3600},
+            {duration_field.db_column: 60},
+        ],
+        model=model_b,
+    )
+
+    assert list(model_b.objects.values_list(duration_formula.db_column, flat=True)) == [
+        timedelta(seconds=3600 + 60),
+        timedelta(seconds=60 + 60),
+    ]
+
+    model_a = table_a.get_model()
+    (row,) = RowHandler().create_rows(
+        user=user,
+        table=table_a,
+        rows_values=[
+            {f"field_{link_field.id}": [row_b_1.id, row_b_2.id]},
+        ],
+        model=model_a,
+    )
+    assert getattr(row, f"field_{lookup_field.id}") == [
+        {"id": row_b_1.id, "value": 3600},
+        {"id": row_b_2.id, "value": 60},
+    ]
+
+    assert getattr(row, f"field_{lookup_formula.id}") == [
+        {"id": row_b_1.id, "value": 3600 + 60},
+        {"id": row_b_2.id, "value": 60 + 60},
+    ]

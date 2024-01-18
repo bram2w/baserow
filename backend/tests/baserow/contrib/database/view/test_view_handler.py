@@ -4181,7 +4181,9 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         "formula_decimal": [
             {"field_formula_decimal": Decimal("33.3333333333"), "count": 2}
         ],
-        "formula_dateinterval": [{"field_formula_dateinterval": "1 day", "count": 2}],
+        "formula_dateinterval": [
+            {"field_formula_dateinterval": datetime.timedelta(days=1), "count": 2}
+        ],
         "formula_date": [{"field_formula_date": datetime.date(2020, 1, 1), "count": 2}],
         "formula_email": [
             {"field_formula_email": "", "count": 1},

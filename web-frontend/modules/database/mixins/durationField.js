@@ -47,11 +47,17 @@ export default {
         return newCopy
       }
     },
-    onKeyPress(field, event) {
+    isValidChar(char) {
       const allowedChars = ['.', ':', ' ', 'd', 'h']
-      if (!/\d/.test(event.key) && !allowedChars.includes(event.key)) {
+      return /\d/.test(char) || allowedChars.includes(char)
+    },
+    onKeyPress(field, event) {
+      if (!this.isValidChar(event.key)) {
         return event.preventDefault()
       }
+    },
+    onInput(field, event) {
+      this.updateCopy(field, event.target.value)
     },
   },
 }

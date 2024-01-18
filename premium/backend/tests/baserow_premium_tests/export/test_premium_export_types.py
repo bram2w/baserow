@@ -88,7 +88,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_int": 1,
     "formula_bool": true,
     "formula_decimal": "33.3333333333",
-    "formula_dateinterval": "1 day",
+    "formula_dateinterval": "1d 0:00",
     "formula_date": "2020-01-01",
     "formula_singleselect": "",
     "formula_email": "",
@@ -195,7 +195,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_int": 1,
     "formula_bool": true,
     "formula_decimal": "33.3333333333",
-    "formula_dateinterval": "1 day",
+    "formula_dateinterval": "1d 0:00",
     "formula_date": "2020-01-01",
     "formula_singleselect": "A",
     "formula_email": "test@example.com",
@@ -351,7 +351,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-int>1</formula-int>
       <formula-bool>true</formula-bool>
       <formula-decimal>33.3333333333</formula-decimal>
-      <formula-dateinterval>1 day</formula-dateinterval>
+      <formula-dateinterval>1d 0:00</formula-dateinterval>
       <formula-date>2020-01-01</formula-date>
       <formula-singleselect/>
       <formula-email/>
@@ -458,7 +458,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-int>1</formula-int>
       <formula-bool>true</formula-bool>
       <formula-decimal>33.3333333333</formula-decimal>
-      <formula-dateinterval>1 day</formula-dateinterval>
+      <formula-dateinterval>1d 0:00</formula-dateinterval>
       <formula-date>2020-01-01</formula-date>
       <formula-singleselect>A</formula-singleselect>
       <formula-email>test@example.com</formula-email>

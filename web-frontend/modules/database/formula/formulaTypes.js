@@ -17,7 +17,9 @@ import RowEditFieldMultipleSelectReadOnly from '@baserow/modules/database/compon
 import RowEditFieldArray from '@baserow/modules/database/components/row/RowEditFieldArray'
 import RowEditFieldLinkURL from '@baserow/modules/database/components/row/RowEditFieldLinkURL'
 import RowEditFieldButton from '@baserow/modules/database/components/row/RowEditFieldButton'
+import RowEditFieldDurationReadOnly from '@baserow/modules/database/components/row/RowEditFieldDurationReadOnly.vue'
 import FunctionalFormulaArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem'
+import FunctionalFormulaArrayDurationItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayDurationItem'
 import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem'
 import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
 import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
@@ -351,6 +353,41 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
   }
 }
 
+export class BaserowFormulaDurationType extends BaserowFormulaTypeDefinition {
+  static getType() {
+    return 'duration'
+  }
+
+  getFieldType() {
+    return 'duration'
+  }
+
+  getIconClass() {
+    return 'iconoir-clock-rotate-right'
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldDurationReadOnly
+  }
+
+  getSortOrder() {
+    return 5
+  }
+
+  canGroupByInView() {
+    return true
+  }
+
+  getFunctionalGridViewFieldArrayComponent() {
+    return FunctionalFormulaArrayDurationItem
+  }
+
+  canBeSortedWhenInArray(field) {
+    return true
+  }
+}
+
+// Deprecated, use BaserowFormulaDurationType instead.
 export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition {
   static getType() {
     return 'date_interval'

@@ -236,7 +236,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         "1,,,,,,,,,0,False,,,,,,,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,02/01/2021 13:00,"
         "user@example.com,user@example.com,,,,,,,,,,,,,,,,,,,test FORMULA,1,True,33.3333333333,"
-        "1 day,2020-01-01,,,label (https://google.com),https://google.com,,0,0.000,,"
+        "1d 0:00,2020-01-01,,,label (https://google.com),https://google.com,,0,0.000,,"
         "00000000-0000-4000-8000-000000000001,1\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,3,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,01/02/2020 02:23,"
@@ -250,7 +250,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         '"a.txt (http://localhost:8000/media/user_files/hashed_name.txt),'
         'b.txt (http://localhost:8000/media/user_files/other_name.txt)",A,"D,C,E",'
         '"user2@example.com,user3@example.com",\'+4412345678,test FORMULA,1,True,33.3333333333,'
-        "1 day,2020-01-01,A,test@example.com,label (https://google.com),https://google.com,"
+        "1d 0:00,2020-01-01,A,test@example.com,label (https://google.com),https://google.com,"
         '"D,C,E",3,-122.222,"linked_row_1,linked_row_2,",00000000-0000-4000-8000-000000000002,2\r\n'
     )
 

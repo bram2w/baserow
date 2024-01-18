@@ -117,7 +117,7 @@ export const DURATION_FORMATS = new Map([
       example: '1:23:40',
       toString(d, h, m, s) {
         return `${d * 24 + h}:${m.toString().padStart(2, '0')}:${s
-          .toString()
+          .toFixed(0)
           .padStart(2, '0')}`
       },
       round: (value) => Math.round(value),
@@ -191,7 +191,7 @@ export const DURATION_FORMATS = new Map([
       example: '1d 2:34:56',
       toString(d, h, m, s) {
         return `${d}d ${h}:${m.toString().padStart(2, '0')}:${s
-          .toString()
+          .toFixed(0)
           .padStart(2, '0')}`
       },
       round: (value) => Math.round(value),
