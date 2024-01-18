@@ -613,6 +613,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_id: int,
         view_model: Optional[Type[View]] = None,
         base_queryset: Optional[QuerySet] = None,
+        table_id: Optional[int] = None,
     ) -> View:
         """
         Selects a view and checks if the user has access to that view.
@@ -626,12 +627,14 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param base_queryset: The base queryset from where to select the view
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `view_model` parameter doesn't work anymore.
+        :params table_id: The table id of the view. This is used to check if the
+            view is in the table. If not provided the view is not checked.
         :raises ViewDoesNotExist: When the view with the provided id does not exist.
         :raises PermissionDenied: When not allowed.
         :return: the view instance.
         """
 
-        view = self.get_view(view_id, view_model, base_queryset)
+        view = self.get_view(view_id, view_model, base_queryset, table_id=table_id)
         CoreHandler().check_permissions(
             user,
             ReadViewOperationType.type,
@@ -646,6 +649,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_id: int,
         view_model: Optional[Type[View]] = None,
         base_queryset: Optional[QuerySet] = None,
+        table_id: Optional[int] = None,
     ) -> View:
         """
         Selects a view and checks if the user has access to that view.
@@ -658,6 +662,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param base_queryset: The base queryset from where to select the view
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `view_model` parameter doesn't work anymore.
+        :params table_id: The table id of the view. This is used to check if the
+            view is in the table. If not provided the view is not checked.
         :raises ViewDoesNotExist: When the view with the provided id does not exist.
         :return: the view instance.
         """
@@ -676,6 +682,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             raise ViewDoesNotExist(
                 f"The view with id {view_id} does not exist."
             ) from exc
+
+        if table_id is not None and view.table_id != table_id:
+            raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
 
         if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")

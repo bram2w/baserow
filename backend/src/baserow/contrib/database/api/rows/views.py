@@ -1428,29 +1428,21 @@ class RowAdjacentView(APIView):
         )
 
         model = table.get_model()
-        queryset = model.objects.all().enhance_by_fields()
 
-        if search is not None:
-            queryset = queryset.search_all_fields(search, search_mode=search_mode)
-
-        view = None
-        if view_id:
-            view_handler = ViewHandler()
-            view = view_handler.get_view_as_user(request.user, view_id)
-
-            if view.table_id != table.id:
-                raise ViewDoesNotExist()
-
-            queryset = view_handler.apply_filters(view, queryset)
-            queryset = view_handler.apply_sorting(view, queryset)
-
-        try:
-            row = queryset.get(pk=row_id)
-        except model.DoesNotExist:
-            raise RowDoesNotExist(row_id)
+        if view_id is None:
+            view = None
+        else:
+            view = ViewHandler().get_view_as_user(
+                request.user, view_id, table_id=table.id
+            )
 
         adjacent_row = RowHandler().get_adjacent_row(
-            row, queryset, previous=previous, view=view
+            model,
+            row_id,
+            previous=previous,
+            view=view,
+            search=search,
+            search_mode=search_mode,
         )
 
         # Don't fail, just let the user know there isn't an adjacent row

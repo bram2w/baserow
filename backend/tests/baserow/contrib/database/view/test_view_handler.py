@@ -130,6 +130,13 @@ def test_get_view(data_fixture):
     view = handler.get_view_as_user(user, view_id=grid.id, view_model=GridView)
     assert view.id == grid.id
 
+    # If a table_id is provided, it needs to be coherent with the view.
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_view_as_user(user, view_id=grid.id, table_id=grid.table.id + 1)
+
+    view = handler.get_view_as_user(user, view_id=grid.id, table_id=grid.table.id)
+    assert view.id == grid.id
+
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_created.send")

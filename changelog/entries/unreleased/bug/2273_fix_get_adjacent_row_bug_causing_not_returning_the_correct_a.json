@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix get_adjacent_row bug causing not returning the correct adjacent row in certain situations.",
+    "issue_number": 2273,
+    "bullet_points": [],
+    "created_at": "2024-01-15"
+}

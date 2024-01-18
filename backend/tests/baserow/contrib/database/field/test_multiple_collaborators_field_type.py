@@ -442,13 +442,11 @@ def test_multiple_collaborators_field_adjacent_row(data_fixture):
         user=user,
     )
 
-    base_queryset = table.get_model().objects.all()
-
-    row_b = base_queryset.get(pk=row_b.id)
+    table_model = table.get_model()
     previous_row = RowHandler().get_adjacent_row(
-        row_b, base_queryset, previous=True, view=grid_view
+        table_model, row_b.id, previous=True, view=grid_view
     )
-    next_row = RowHandler().get_adjacent_row(row_b, base_queryset, view=grid_view)
+    next_row = RowHandler().get_adjacent_row(table_model, row_b.id, view=grid_view)
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id

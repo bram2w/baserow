@@ -121,6 +121,7 @@ def test_boolean_field_adjacent_row(data_fixture):
 
     data_fixture.create_view_sort(view=grid_view, field=boolean_field, order="DESC")
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_a, row_b, row_c] = handler.create_rows(
         user=user,
@@ -136,15 +137,13 @@ def test_boolean_field_adjacent_row(data_fixture):
                 f"field_{boolean_field.id}": True,
             },
         ],
+        model=table_model,
     )
 
-    base_queryset = table.get_model().objects.all()
-
-    row_c = base_queryset.get(pk=row_c.id)
     previous_row = handler.get_adjacent_row(
-        row_c, base_queryset, previous=True, view=grid_view
+        table_model, row_c.id, previous=True, view=grid_view
     )
-    next_row = handler.get_adjacent_row(row_c, base_queryset, view=grid_view)
+    next_row = handler.get_adjacent_row(table_model, row_c.id, view=grid_view)
 
     assert previous_row.id == row_b.id
     assert next_row.id == row_a.id
