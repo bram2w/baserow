@@ -4,6 +4,7 @@
       v-if="formulaType === 'number'"
       :default-values="defaultValues"
       :table="table"
+      :view="view"
       :allow-set-number-negative="false"
     >
     </FieldNumberSubForm>
@@ -11,6 +12,7 @@
       v-else-if="['date', 'last_modified', 'created_on'].includes(formulaType)"
       :default-values="defaultValues"
       :table="table"
+      :view="view"
     >
     </FieldDateSubForm>
   </div>

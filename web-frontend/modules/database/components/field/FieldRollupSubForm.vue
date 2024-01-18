@@ -42,6 +42,7 @@
         :default-values="defaultValues"
         :formula-type="targetFieldFormulaType"
         :table="table"
+        :view="view"
       >
       </FormulaTypeSubForms>
     </template>
