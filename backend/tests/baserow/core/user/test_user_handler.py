@@ -1,6 +1,5 @@
-import datetime
 import os
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -30,7 +29,7 @@ from baserow.core.exceptions import (
     WorkspaceInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import BlacklistedToken, Workspace, WorkspaceUser
+from baserow.core.models import BlacklistedToken, UserLogEntry, Workspace, WorkspaceUser
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     DisabledSignupError,
@@ -381,7 +380,7 @@ def test_reset_password(data_fixture):
     with freeze_time("2020-01-02 12:00"):
         user = handler.reset_password(token, valid_password)
         assert user.check_password(valid_password)
-        assert user.profile.last_password_change == datetime.datetime(
+        assert user.profile.last_password_change == datetime(
             2020, 1, 2, 12, 00, tzinfo=timezone.utc
         )
 
@@ -429,7 +428,7 @@ def test_change_password(data_fixture):
     with freeze_time("2020-01-01 12:00"):
         user = handler.change_password(user, valid_password, valid_new_password)
         assert user.check_password(valid_new_password)
-        assert user.profile.last_password_change == datetime.datetime(
+        assert user.profile.last_password_change == datetime(
             2020, 1, 1, 12, 00, tzinfo=timezone.utc
         )
 
@@ -578,7 +577,7 @@ def test_delete_expired_users_and_related_workspaces_if_last_admin(
     with freeze_time("2020-01-07 12:00"):
         with django_capture_on_commit_callbacks(execute=True):
             handler.delete_expired_users_and_related_workspaces_if_last_admin(
-                grace_delay=datetime.timedelta(days=3)
+                grace_delay=timedelta(days=3)
             )
 
     user_ids = User.objects.values_list("pk", flat=True)
@@ -640,9 +639,7 @@ def test_active_users_qs_excludes_pending_deletion_users(data_fixture):
 def test_blacklist_refresh_token(data_fixture):
     user = data_fixture.create_user()
 
-    UserHandler().blacklist_refresh_token(
-        user, "test", datetime.datetime(2021, 1, 1, 12, 00)
-    )
+    UserHandler().blacklist_refresh_token(user, "test", datetime(2021, 1, 1, 12, 00))
 
     tokens = BlacklistedToken.objects.all()
     assert len(tokens) == 1
@@ -657,13 +654,11 @@ def test_blacklist_refresh_token(data_fixture):
 def test_duplicate_blacklist_refresh_token(data_fixture):
     user = data_fixture.create_user()
 
-    UserHandler().blacklist_refresh_token(
-        user, "test", datetime.datetime(2021, 1, 1, 12, 00)
-    )
+    UserHandler().blacklist_refresh_token(user, "test", datetime(2021, 1, 1, 12, 00))
 
     with pytest.raises(RefreshTokenAlreadyBlacklisted):
         UserHandler().blacklist_refresh_token(
-            user, "test", datetime.datetime(2021, 1, 1, 12, 00)
+            user, "test", datetime(2021, 1, 1, 12, 00)
         )
 
 
@@ -672,7 +667,37 @@ def test_refresh_token_is_blacklisted(data_fixture):
     user = data_fixture.create_user()
 
     assert UserHandler().refresh_token_is_blacklisted("test") is False
-    UserHandler().blacklist_refresh_token(
-        user, "test", datetime.datetime(2021, 1, 1, 12, 00)
-    )
+    UserHandler().blacklist_refresh_token(user, "test", datetime(2021, 1, 1, 12, 00))
     assert UserHandler().refresh_token_is_blacklisted("test") is True
+
+
+@pytest.mark.django_db
+def test_user_handler_delete_user_log_entries_older_than(data_fixture):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    action = "SIGNED_IN"
+    before_retention_period = datetime(2021, 1, 3, 23, 59, tzinfo=timezone.utc)
+    after_retention_period = datetime(2021, 1, 4, 0, 1, tzinfo=timezone.utc)
+    cutoff = datetime(2021, 1, 4, 0, 0, tzinfo=timezone.utc)
+
+    entries = [
+        UserLogEntry(actor=user, action=action),
+        UserLogEntry(actor=user2, action=action),
+        UserLogEntry(actor=user, action=action),
+        UserLogEntry(actor=user2, action=action),
+        UserLogEntry(actor=user, action=action),
+    ]
+
+    UserLogEntry.objects.bulk_create(entries)
+    assert UserLogEntry.objects.count() == 5
+
+    entries[0].timestamp = before_retention_period
+    entries[1].timestamp = before_retention_period
+    entries[2].timestamp = before_retention_period
+    entries[3].timestamp = after_retention_period
+    entries[4].timestamp = after_retention_period
+    UserLogEntry.objects.bulk_update(entries, ["timestamp"])
+
+    UserHandler().delete_user_log_entries_older_than(cutoff)
+
+    assert UserLogEntry.objects.count() == 2

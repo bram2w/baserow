@@ -462,6 +462,16 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         for plugin in plugin_registry.registry.values():
             plugin.user_signed_in(user)
 
+    def delete_user_log_entries_older_than(self, cutoff: datetime):
+        """
+        Deletes all UserLogEntry entries that are older than the given cutoff date.
+
+        :param cutoff: The date and time before which all entries will be deleted.
+        """
+
+        delete_qs = UserLogEntry.objects.filter(timestamp__lt=cutoff)
+        delete_qs._raw_delete(delete_qs.db)
+
     def schedule_user_deletion(self, user: AbstractUser):
         """
         Schedules the user account deletion. The user is flagged as `to_be_deleted` and
