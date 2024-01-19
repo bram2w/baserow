@@ -47,6 +47,11 @@ class CreateSnapshotJobType(JobType):
             job.user, job.snapshot, progress
         )
 
+    def on_error(self, job: CreateSnapshotJob, error: Exception):
+        if job.snapshot:
+            # avoid dangling snapshot entries
+            job.snapshot.delete()
+
 
 class RestoreSnapshotJobType(JobType):
     type = "restore_snapshot"
