@@ -29,8 +29,8 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
-    ParagraphElement,
     TableElement,
+    TextElement,
     VerticalAlignments,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -446,13 +446,13 @@ class HeadingElementType(ElementType):
         return super().import_serialized(page, serialized_copy, id_mapping)
 
 
-class ParagraphElementType(ElementType):
+class TextElementType(ElementType):
     """
-    A simple paragraph element that can be used to display a paragraph of text.
+    A text element that allows plain or markdown content.
     """
 
-    type = "paragraph"
-    model_class = ParagraphElement
+    type = "text"
+    model_class = TextElement
     serializer_field_names = ["value"]
     allowed_fields = ["value"]
 

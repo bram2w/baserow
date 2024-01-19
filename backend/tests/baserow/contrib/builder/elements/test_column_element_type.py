@@ -43,10 +43,10 @@ def test_apply_order_by_children(data_fixture):
     first_element = data_fixture.create_builder_heading_element(
         parent_element=column_element, place_in_container="0"
     )
-    last_element = data_fixture.create_builder_paragraph_element(
+    last_element = data_fixture.create_builder_text_element(
         parent_element=column_element, place_in_container="11"
     )
-    middle_element = data_fixture.create_builder_paragraph_element(
+    middle_element = data_fixture.create_builder_text_element(
         parent_element=column_element, place_in_container="5"
     )
 

@@ -54,8 +54,8 @@
     "elementType": {
         "heading": "Kop",
         "headingDescription": "Titel paginakop",
-        "paragraph": "Paragraaf",
-        "paragraphDescription": "Tekst op één regel",
+        "text": "Paragraaf",
+        "textDescription": "Tekst op één regel",
         "link": "Link",
         "image": "Afbeelding",
         "linkDescription": "Een link naar pagina/URL",
@@ -101,10 +101,10 @@
         "textError": "De waarde is ongeldig.",
         "textPlaceholder": "Tekst invoeren..."
     },
-    "paragraphElement": {
+    "textElement": {
         "noValue": "Lege paragraaf..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Tekst",
         "textPlaceholder": "Tekst invoeren...",
         "textError": "De waarde is ongeldig."

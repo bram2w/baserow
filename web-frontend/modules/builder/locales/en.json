@@ -68,8 +68,8 @@
     "elementType": {
         "heading": "Heading",
         "headingDescription": "Page heading title",
-        "paragraph": "Paragraph",
-        "paragraphDescription": "Single line text",
+        "text": "Text",
+        "textDescription": "Single line text",
         "link": "Link",
         "linkDescription": "A link to page/URL",
         "image": "Image",
@@ -137,10 +137,10 @@
         "headingName": "Heading {level} <h{level}>",
         "textError": "The value is invalid."
     },
-    "paragraphElement": {
-        "noValue": "Empty paragraph..."
+    "textElement": {
+        "noValue": "Empty text..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Text",
         "textPlaceholder": "Enter text...",
         "textError": "The value is invalid."

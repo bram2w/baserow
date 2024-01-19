@@ -47,8 +47,8 @@
     },
     "elementType": {
         "heading": "Titre",
-        "paragraph": "Paragraphe",
-        "paragraphDescription": "Texte simple",
+        "text": "texte",
+        "textDescription": "Texte simple",
         "headingDescription": "Titre de page",
         "link": "Lien",
         "linkDescription": "Un lien vers une page/URL",
@@ -101,10 +101,10 @@
         "headingName": "Titre {level} <h{level}>",
         "textError": "La valeur est invalide."
     },
-    "paragraphElement": {
-        "noValue": "Paragraphe vide..."
+    "textElement": {
+        "noValue": "texte vide..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Texte",
         "textPlaceholder": "Saisir le texte...",
         "textError": "La valeur est invalide."

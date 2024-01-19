@@ -37,8 +37,8 @@
     },
     "elementType": {
         "heading": "Intestazione",
-        "paragraph": "Paragrafo",
-        "paragraphDescription": "Linea di testo singola",
+        "text": "Paragrafo",
+        "textDescription": "Linea di testo singola",
         "headingDescription": "Titolo intestazione"
     },
     "addElementButton": {
@@ -75,10 +75,10 @@
         "textError": "Il valore non è valido.",
         "levelTitle": "Livello"
     },
-    "paragraphElement": {
+    "textElement": {
         "noValue": "Paragrafo vuoto..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Testo",
         "textError": "Il valore non è valido.",
         "textPlaceholder": "Inserisci testo..."

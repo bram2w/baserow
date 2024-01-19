@@ -4,18 +4,14 @@ import pytest
 
 from baserow.contrib.builder.elements.element_types import (
     ColumnElementType,
-    ParagraphElementType,
+    TextElementType,
 )
 from baserow.contrib.builder.elements.exceptions import (
     ElementDoesNotExist,
     ElementNotInSamePage,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.models import (
-    Element,
-    HeadingElement,
-    ParagraphElement,
-)
+from baserow.contrib.builder.elements.models import Element, HeadingElement, TextElement
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 
@@ -62,7 +58,7 @@ def test_get_elements(data_fixture):
     page = data_fixture.create_builder_page()
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     elements = ElementHandler().get_elements(page)
 
@@ -73,7 +69,7 @@ def test_get_elements(data_fixture):
     ]
 
     assert isinstance(elements[0], HeadingElement)
-    assert isinstance(elements[2], ParagraphElement)
+    assert isinstance(elements[2], TextElement)
 
 
 @pytest.mark.django_db
@@ -160,15 +156,15 @@ def test_move_element_before_fails(data_fixture):
 def test_creating_element_in_container_starts_its_own_order_sequence(data_fixture):
     page = data_fixture.create_builder_page()
     container = ElementHandler().create_element(ColumnElementType(), page=page)
-    root_element = ElementHandler().create_element(ParagraphElementType(), page=page)
+    root_element = ElementHandler().create_element(TextElementType(), page=page)
     element_inside_container_one = ElementHandler().create_element(
-        ParagraphElementType(),
+        TextElementType(),
         page=page,
         parent_element_id=container.id,
         place_in_container="1",
     )
     element_inside_container_two = ElementHandler().create_element(
-        ParagraphElementType(),
+        TextElementType(),
         page=page,
         parent_element_id=container.id,
         place_in_container="1",
@@ -185,15 +181,15 @@ def test_creating_element_in_container_starts_its_own_order_sequence(data_fixtur
 def test_moving_elements_inside_container(data_fixture):
     page = data_fixture.create_builder_page()
     container = ElementHandler().create_element(ColumnElementType(), page=page)
-    root_element = ElementHandler().create_element(ParagraphElementType(), page=page)
+    root_element = ElementHandler().create_element(TextElementType(), page=page)
     element_inside_container_one = ElementHandler().create_element(
-        ParagraphElementType(),
+        TextElementType(),
         page=page,
         parent_element_id=container.id,
         place_in_container="1",
     )
     element_inside_container_two = ElementHandler().create_element(
-        ParagraphElementType(),
+        TextElementType(),
         page=page,
         parent_element_id=container.id,
         place_in_container="1",
@@ -366,7 +362,7 @@ def test_before_places_in_container_removed_no_change(data_fixture):
 
 @pytest.mark.django_db
 def test_duplicate_element_single_element(data_fixture):
-    element = data_fixture.create_builder_paragraph_element(value="'test'")
+    element = data_fixture.create_builder_text_element(value="'test'")
 
     [element_duplicated] = ElementHandler().duplicate_element(element)["elements"]
 
@@ -379,11 +375,11 @@ def test_duplicate_element_single_element(data_fixture):
 @pytest.mark.django_db
 def test_duplicate_element_multiple_elements(data_fixture):
     container_element = data_fixture.create_builder_column_element(column_amount=12)
-    child = data_fixture.create_builder_paragraph_element(
-        value="'test'", parent_element=container_element, page=container_element.page
+    child = data_fixture.create_builder_text_element(
+        page=container_element.page, value="'test'", parent_element=container_element
     )
-    child_two = data_fixture.create_builder_paragraph_element(
-        value="'test2'", parent_element=container_element, page=container_element.page
+    child_two = data_fixture.create_builder_text_element(
+        page=container_element.page, value="'test2'", parent_element=container_element
     )
 
     [

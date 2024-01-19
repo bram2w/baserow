@@ -120,28 +120,28 @@ def test_elements_moved_when_column_is_removed(api_client, data_fixture):
     column = data_fixture.create_builder_column_element(
         user=user, page=page, column_amount=3
     )
-    column_element_column_0 = data_fixture.create_builder_paragraph_element(
+    column_element_column_0 = data_fixture.create_builder_text_element(
         user=user,
         page=page,
         parent_element_id=column.id,
         place_in_container="0",
         order=22,
     )
-    column_element_column_1 = data_fixture.create_builder_paragraph_element(
+    column_element_column_1 = data_fixture.create_builder_text_element(
         user=user,
         page=page,
         parent_element_id=column.id,
         place_in_container="1",
         order=4,
     )
-    column_element_column_1_1 = data_fixture.create_builder_paragraph_element(
+    column_element_column_1_1 = data_fixture.create_builder_text_element(
         user=user,
         page=page,
         parent_element_id=column.id,
         place_in_container="1",
         order=5,
     )
-    column_element_column_2 = data_fixture.create_builder_paragraph_element(
+    column_element_column_2 = data_fixture.create_builder_text_element(
         user=user,
         page=page,
         parent_element_id=column.id,
@@ -185,7 +185,7 @@ def test_moving_an_element_to_new_column_appends_element(api_client, data_fixtur
         user=user, page=page, column_amount=2
     )
 
-    element_in_column_0 = data_fixture.create_builder_paragraph_element(
+    element_in_column_0 = data_fixture.create_builder_text_element(
         user=user,
         page=page,
         parent_element_id=column_element.id,
@@ -193,7 +193,7 @@ def test_moving_an_element_to_new_column_appends_element(api_client, data_fixtur
         order=1,
     )
 
-    element_in_column_1 = data_fixture.create_builder_paragraph_element(
+    element_in_column_1 = data_fixture.create_builder_text_element(
         user=user,
         page=page,
         parent_element_id=column_element.id,
@@ -232,7 +232,7 @@ def test_column_element_invalid_child_in_container_on_move(api_client, data_fixt
     column_element = data_fixture.create_builder_column_element(
         user=user, column_amount=2
     )
-    child = data_fixture.create_builder_paragraph_element(page=column_element.page)
+    child = data_fixture.create_builder_text_element(page=column_element.page)
 
     url = reverse("api:builder:element:move", kwargs={"element_id": child.id})
     response = api_client.patch(
@@ -262,7 +262,7 @@ def test_column_element_invalid_child_in_container_on_create(api_client, data_fi
     response = api_client.post(
         url,
         {
-            "type": "paragraph",
+            "type": "text",
             "parent_element_id": column_element.id,
             "place_in_container": "9999",
         },

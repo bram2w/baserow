@@ -174,7 +174,7 @@ def test_domain_publishing(data_fixture):
     element1 = data_fixture.create_builder_heading_element(
         page=page1, level=2, value="'foo'"
     )
-    element2 = data_fixture.create_builder_paragraph_element(page=page1)
+    element2 = data_fixture.create_builder_text_element(page=page1)
     element3 = data_fixture.create_builder_heading_element(page=page2)
 
     progress = Progress(100)
