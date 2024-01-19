@@ -1,8 +1,8 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import ParagraphElement from '@baserow/modules/builder/components/elements/components/ParagraphElement'
+import TextElement from '@baserow/modules/builder/components/elements/components/TextElement.vue'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
-import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ParagraphElementForm'
+import TextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TextElementForm.vue'
 import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/general/HeadingElementForm'
 import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkElementForm'
 import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ImageElementForm'
@@ -381,17 +381,17 @@ export class HeadingElementType extends ElementType {
   }
 }
 
-export class ParagraphElementType extends ElementType {
+export class TextElementType extends ElementType {
   static getType() {
-    return 'paragraph'
+    return 'text'
   }
 
   get name() {
-    return this.app.i18n.t('elementType.paragraph')
+    return this.app.i18n.t('elementType.text')
   }
 
   get description() {
-    return this.app.i18n.t('elementType.paragraphDescription')
+    return this.app.i18n.t('elementType.textDescription')
   }
 
   get iconClass() {
@@ -399,11 +399,11 @@ export class ParagraphElementType extends ElementType {
   }
 
   get component() {
-    return ParagraphElement
+    return TextElement
   }
 
   get generalFormComponent() {
-    return ParagraphElementForm
+    return TextElementForm
   }
 }
 

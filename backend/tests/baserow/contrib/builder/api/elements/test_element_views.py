@@ -22,7 +22,7 @@ def test_get_elements(api_client, data_fixture):
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
     response = api_client.get(
@@ -40,7 +40,7 @@ def test_get_elements(api_client, data_fixture):
     assert response_json[1]["id"] == element2.id
     assert response_json[1]["type"] == "heading"
     assert response_json[2]["id"] == element3.id
-    assert response_json[2]["type"] == "paragraph"
+    assert response_json[2]["type"] == "text"
     assert "level" not in response_json[2]
 
 

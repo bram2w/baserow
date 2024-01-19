@@ -345,9 +345,9 @@ class HeadingElement(Element):
     )
 
 
-class ParagraphElement(Element):
+class TextElement(Element):
     """
-    A simple paragraph.
+    A simple blob of text.
     """
 
     value = FormulaField(default="")

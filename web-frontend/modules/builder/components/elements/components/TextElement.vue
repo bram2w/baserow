@@ -1,15 +1,11 @@
 <template>
   <div v-if="paragraphs.length">
-    <p
-      v-for="paragraph in paragraphs"
-      :key="paragraph.id"
-      class="paragraph-element"
-    >
+    <p v-for="paragraph in paragraphs" :key="paragraph.id" class="text-element">
       {{ paragraph.content }}
     </p>
   </div>
-  <p v-else class="paragraph-element element--no-value">
-    {{ $t('paragraphElement.noValue') }}
+  <p v-else class="text-element element--no-value">
+    {{ $t('textElement.noValue') }}
   </p>
 </template>
 
@@ -19,18 +15,18 @@ import { generateHash } from '@baserow/modules/core/utils/hashing'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 
 /**
- * @typedef Paragraph
+ * @typedef Text
  * @property {string} content - The text displayed
  * @property {string} id - The id of the paragraph hashed
  */
 
 export default {
-  name: 'ParagraphElement',
+  name: 'TextElement',
   mixins: [element],
   props: {
     /**
      * @type {Object}
-     * @property {Array.<Paragraph>} value - A list of paragraphs
+     * @property {Array.<Text>} value - A list of paragraphs
      */
     element: {
       type: Object,

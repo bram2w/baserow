@@ -2,8 +2,8 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
-      :label="$t('paragraphElementForm.textTitle')"
-      :placeholder="$t('elementForms.textInputPlaceholder')"
+      :label="$t('textElementForm.textTitle')"
+      :placeholder="$t('textElementForm.textPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
   </form>
@@ -14,7 +14,7 @@ import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/compon
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
-  name: 'ParagraphElementForm',
+  name: 'TextElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
   mixins: [elementForm],
   data() {

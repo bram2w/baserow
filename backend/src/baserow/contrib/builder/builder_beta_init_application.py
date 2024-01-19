@@ -104,7 +104,7 @@ class BuilderApplicationTypeInitApplication:
             value="'Welcome to the Application Builder!'",
         )
         ElementHandler().create_element(
-            element_type_registry.get("paragraph"),
+            element_type_registry.get("text"),
             page=page,
             value="\"Baserow's application builder allows you to create dynamic and "
             "complex interface applications with no code. Pages can optionally "
@@ -140,7 +140,7 @@ class BuilderApplicationTypeInitApplication:
             value="'Tables'",
         )
         ElementHandler().create_element(
-            element_type_registry.get("paragraph"),
+            element_type_registry.get("text"),
             page=page,
             value="'Here is an example table sourcing data from the "
             f"{table.name} table.'",
@@ -284,7 +284,7 @@ class BuilderApplicationTypeInitApplication:
             value="'Containers'",
         )
         ElementHandler().create_element(
-            element_type_registry.get("paragraph"),
+            element_type_registry.get("text"),
             page=page,
             place_in_container=0,
             style_padding_left=0,
@@ -293,7 +293,7 @@ class BuilderApplicationTypeInitApplication:
             value="'Elements can be placed in containers...'",
         )
         ElementHandler().create_element(
-            element_type_registry.get("paragraph"),
+            element_type_registry.get("text"),
             page=page,
             place_in_container=1,
             style_padding_left=0,
@@ -302,7 +302,7 @@ class BuilderApplicationTypeInitApplication:
             value="'which you can configure with more, or fewer columns.'",
         )
         ElementHandler().create_element(
-            element_type_registry.get("paragraph"),
+            element_type_registry.get("text"),
             page=page,
             place_in_container=2,
             style_padding_left=0,

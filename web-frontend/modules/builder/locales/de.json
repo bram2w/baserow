@@ -29,10 +29,10 @@
         "userSourcesName": "Benutzer"
     },
     "elementType": {
-        "paragraphDescription": "Einzeiliger Text",
+        "textDescription": "Einzeiliger Text",
         "heading": "Überschrift",
         "headingDescription": "Titel der Seitenüberschrift",
-        "paragraph": "Paragraph",
+        "text": "Paragraph",
         "table": "Tabelle",
         "formContainer": "Formular",
         "inputText": "Texteingabe",
@@ -89,10 +89,10 @@
         "textError": "Der Wert ist ungültig.",
         "textPlaceholder": "Text eingeben..."
     },
-    "paragraphElement": {
+    "textElement": {
         "noValue": "Leerer Absatz..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Text",
         "textPlaceholder": "Text eingeben...",
         "textError": "Der Wert ist ungültig."

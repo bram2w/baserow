@@ -10,8 +10,8 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
-    ParagraphElement,
     TableElement,
+    TextElement,
 )
 
 
@@ -20,8 +20,8 @@ class ElementFixtures:
         element = self.create_builder_element(HeadingElement, user, page, **kwargs)
         return element
 
-    def create_builder_paragraph_element(self, user=None, page=None, **kwargs):
-        element = self.create_builder_element(ParagraphElement, user, page, **kwargs)
+    def create_builder_text_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(TextElement, user, page, **kwargs)
         return element
 
     def create_builder_image_element(self, user=None, page=None, **kwargs):

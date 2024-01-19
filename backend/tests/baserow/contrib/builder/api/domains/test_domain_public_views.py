@@ -215,7 +215,7 @@ def test_get_elements_of_public_builder(api_client, data_fixture):
     page = data_fixture.create_builder_page(builder=builder_to, user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io",

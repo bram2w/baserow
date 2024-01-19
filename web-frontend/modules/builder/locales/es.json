@@ -68,7 +68,7 @@
         "target": "Abrir en...",
         "paramsInErrorDescription": "Los parámetros guardados no coinciden con los parámetros de la página. Es probable que la página se haya eliminado o actualizado."
     },
-    "paragraphElement": {
+    "textElement": {
         "noValue": "Párrafo vacío..."
     },
     "linkFieldForm": {
@@ -96,11 +96,11 @@
     "elementType": {
         "table": "Tabla",
         "formContainer": "Formulario",
-        "paragraphDescription": "Texto de una línea",
+        "textDescription": "Texto de una línea",
         "heading": "Título",
         "inputText": "Introducción de texto",
         "inputTextDescription": "Un campo de entrada de texto",
-        "paragraph": "Párrafo",
+        "text": "Párrafo",
         "headingDescription": "Título de la página",
         "image": "Imagen",
         "tableDescription": "Un elemento de la tabla",
@@ -326,7 +326,7 @@
         "searchPlaceholder": "Buscar elementos",
         "noElements": "No se han encontrado elementos"
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Texto",
         "textError": "El valor es inválido.",
         "textPlaceholder": "Introducir texto..."

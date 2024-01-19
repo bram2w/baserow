@@ -4,8 +4,8 @@ from baserow.contrib.builder.application_types import BuilderApplicationType
 from baserow.contrib.builder.elements.models import (
     ColumnElement,
     HeadingElement,
-    ParagraphElement,
     TableElement,
+    TextElement,
 )
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
@@ -91,12 +91,12 @@ def test_builder_application_export(data_fixture):
     element1 = data_fixture.create_builder_heading_element(
         page=page1, level=2, value="foo"
     )
-    element2 = data_fixture.create_builder_paragraph_element(page=page1)
+    element2 = data_fixture.create_builder_text_element(page=page1)
     element3 = data_fixture.create_builder_heading_element(page=page2)
     element_container = data_fixture.create_builder_column_element(
         page=page1, column_amount=3, column_gap=50
     )
-    element_inside_container = data_fixture.create_builder_paragraph_element(
+    element_inside_container = data_fixture.create_builder_text_element(
         page=page1, parent_element=element_container, place_in_container="0"
     )
 
@@ -199,7 +199,7 @@ def test_builder_application_export(data_fixture):
                     },
                     {
                         "id": element2.id,
-                        "type": "paragraph",
+                        "type": "text",
                         "order": str(element2.order),
                         "parent_element_id": None,
                         "place_in_container": None,
@@ -247,7 +247,7 @@ def test_builder_application_export(data_fixture):
                     },
                     {
                         "id": element_inside_container.id,
-                        "type": "paragraph",
+                        "type": "text",
                         "parent_element_id": element_container.id,
                         "place_in_container": "0",
                         "style_background_color": "#ffffffff",
@@ -446,7 +446,7 @@ IMPORT_REFERENCE = {
                 },
                 {
                     "id": 999,
-                    "type": "paragraph",
+                    "type": "text",
                     "parent_element_id": None,
                     "place_in_container": None,
                     "style_background": "none",
@@ -495,7 +495,7 @@ IMPORT_REFERENCE = {
                 },
                 {
                     "id": 502,
-                    "type": "paragraph",
+                    "type": "text",
                     "parent_element_id": 500,
                     "place_in_container": "1",
                     "style_background": "none",
@@ -531,7 +531,7 @@ IMPORT_REFERENCE = {
                 },
                 {
                     "id": 501,
-                    "type": "paragraph",
+                    "type": "text",
                     "parent_element_id": 500,
                     "place_in_container": "0",
                     "style_background": "none",
@@ -715,7 +715,7 @@ def test_builder_application_import(data_fixture):
     ] = specific_iterator(page1.element_set.all())
 
     assert isinstance(element1, HeadingElement)
-    assert isinstance(element2, ParagraphElement)
+    assert isinstance(element2, TextElement)
     assert isinstance(container_element, ColumnElement)
     assert isinstance(table_element, TableElement)
 
