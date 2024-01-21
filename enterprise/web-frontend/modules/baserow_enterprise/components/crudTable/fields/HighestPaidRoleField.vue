@@ -5,7 +5,7 @@
       href="https://baserow.io/user-docs/subscriptions-overview#who-is-considered-a-user-for-billing-purposes"
       target="_blank"
     >
-      <Badge v-if="role.isBillable" class="margin-left-1" primary
+      <Badge v-if="role.isBillable" color="cyan" class="margin-left-1"
         >{{ $t('highestPaidRoleField.billable') }}
       </Badge>
     </a>

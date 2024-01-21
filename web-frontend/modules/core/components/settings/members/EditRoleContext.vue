@@ -29,7 +29,11 @@
           >
             <span class="context__menu-item-title">
               {{ role.name }}
-              <Badge v-if="!role.isBillable && atLeastOneBillableRole" primary
+              <Badge
+                v-if="!role.isBillable && atLeastOneBillableRole"
+                color="yellow"
+                size="small"
+                bold
                 >{{ $t('common.free') }}
               </Badge>
             </span>
