@@ -680,7 +680,7 @@
     "snapshotsModal": {
         "title": "sauvegardes",
         "snapshotRestoredErrorMessage": "La sauvegarde n'a pas pu être restaurée. Veuillez réessayer plus tard.",
-        "description": "Les sauvegardes sont une copie complète de votre base de données au moment où elles ont été créés. Une duplication des données sera créée lors de la restauration. Les sauvegardes sont automatiquement supprimées après un an.",
+        "description": "Les sauvegardes sont une copie complète de votre {applicationTypeName} au moment où elles ont été créés. Une duplication des données sera créée lors de la restauration. Les sauvegardes sont automatiquement supprimées après un an.",
         "descriptionLimits": "Vous pouvez avoir un maximum de 0 sauvegarde par projet. | Vous pouvez avoir un maximum de 1 sauvegarde par projet. | Vous pouvez avoir un maximum de {n} sauvegardes par projet.",
         "createLabel": "Créer une nouvelle sauvegarde",
         "create": "Créer une sauvegarde",
@@ -819,7 +819,8 @@
         "noGroupByText": "Regroupez les lignes par un champ."
     },
     "collaboratorAddedToRowNotification": {
-        "title": "{sender} vous a assigné à {fieldName} dans la ligne {rowId} de la table {tableName}"
+        "title": "{sender} vous a assigné à {fieldName} dans la ligne {rowId} de la table {tableName}",
+        "deletedUser": "Un utilisateur supprimé"
     },
     "fieldCollaboratorSubForm": {
         "notifyUserWhenAdded": "Notifier l'utilisateur lorsqu'il est ajouté"
@@ -830,5 +831,8 @@
     "formSubmittedNotification": {
         "title": "{formName} a été soumis dans la table {tableName} :",
         "moreValues": "0 | et 1 champ supplémentaire. | et {count} champs supplémentaires."
+    },
+    "fieldDurationSubForm": {
+        "durationFormatLabel": "Format de la durée"
     }
 }
