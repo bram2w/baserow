@@ -4,7 +4,8 @@
         "no": "non",
         "wrong": "Une erreur est survenue",
         "none": "Aucun(e)",
-        "free": "Gratuit"
+        "free": "Gratuit",
+        "comingSoon": "A venir..."
     },
     "action": {
         "upload": "Envoyer",
@@ -72,7 +73,8 @@
         "requiredField": "Ce champ est requis.",
         "integerField": "Le champ doit être un entier.",
         "minValueField": "Le champ doit être supérieur ou égal à {min}.",
-        "maxValueField": "Le champ doit être inférieur ou égal à {max}."
+        "maxValueField": "Le champ doit être inférieur ou égal à {max}.",
+        "minMaxValueField": "La valeur du champ doit être comprise entre {min} et {max}."
     },
     "permission": {
         "admin": "Admin",
@@ -111,7 +113,8 @@
         "createdBy": "Créé par",
         "singleSelectRadios": "Boutons radio",
         "lastModifiedBy": "Dernière modification par",
-        "multipleSelectCheckboxes": "Cases à cocher"
+        "multipleSelectCheckboxes": "Cases à cocher",
+        "duration": "Durée"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -119,13 +122,15 @@
         "invalidUrl": "URL invalide",
         "max254Chars": "254 caractères maximum",
         "invalidEmail": "Adresse électronique invalide",
-        "invalidPhoneNumber": "Num. téléphone invalide"
+        "invalidPhoneNumber": "Num. téléphone invalide",
+        "invalidDuration": "Format invalide ({durationFormat}).",
+        "overflowDuration": "La valeur est trop grande."
     },
     "fieldDocs": {
         "readOnly": "Ce champ est en lecture seule.",
         "text": "Accepte une seule ligne de texte.",
         "longText": "Accepte un texte multi-ligne.",
-        "linkRow": "Accepte un tableau contenant les identifiants ou les valeurs textuelles des champs principaux des lignes liées de la table {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont mises à jour. Si un tableau vide est fourni, toutes les relations seront supprimées. Dans le cas d'une valeur textuelle au lieu d'un identifiant, une ligne avec la valeur correspondante pour son champ principal sera recherchée. Si plusieurs correspondances sont trouvées, la première dans l'ordre du tableau est sélectionnée.",
+        "linkRow": "Accepte un tableau contenant les identifiants ou les valeurs textuelles des champs principaux des lignes liées de la table {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont mises à jour. Si un tableau vide est fourni, toutes les relations seront supprimées. Dans le cas d'une valeur textuelle au lieu d'un identifiant, une ligne avec la valeur correspondante pour son champ principal sera recherchée. Si plusieurs correspondances sont trouvées, la première dans l'ordre du tableau est sélectionnée. Vous pouvez également envoyer un chaine de caractères avec les noms séparés par des virgules, dans ce cas la chaine sera convertie en une liste de noms.",
         "number": "Accepte un entier.",
         "numberPositive": "Accepte un entier positive.",
         "decimal": "Accepte un nombre décimal.",
@@ -142,7 +147,7 @@
         "email": "Accepte une adresse électronique valide.",
         "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur. Vous pouvez utiliser l'API « Envoi de fichier » pour envoyer des fichiers. La réponse à ces appels peut-être fournie directement en tant qu'objet ici. Les différentes API sont listées dans la barre latérale gauche.",
         "singleSelect": "Accepte un nombre entier ou une valeur textuelle représentant l'identifiant de l'option de sélection choisie ou la valeur de l'option. Une valeur nulle signifie qu'aucune option n'est sélectionnée. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée.",
-        "multipleSelect": "Accepte un tableau d'entiers mixtes ou de valeurs textuelles représentant chacun l'identifiant ou la valeur de l'option de sélection choisie. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée.",
+        "multipleSelect": "Accepte un tableau d'entiers mixtes ou de valeurs textuelles représentant chacun l'identifiant ou la valeur de l'option de sélection choisie. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée. Vous pouvez envoyer une chaîne de caractères contenant des noms séparé par des virgules. Dans ce cas la chaîne est convertie en une liste de noms.",
         "phoneNumber": "Accepte un numéro de téléphone d'une longueur maximum de 100 caractères qui doivent être des chiffres, des espaces ou les caractères suivants : Nx,._+*()#=;/- .",
         "formula": "Un champ en lecture seule défini par une formule rédigée dans le format spécifique de Baserow.",
         "lookup": "Un champ en lecture seule relié à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
@@ -152,7 +157,8 @@
         "lastModifiedBy": "Le champ « Dernière modification par » est un champ en lecture seule.",
         "autonumber": "Un champ en lecture seule qui dont la valeur s'incrémente automatiquement pour chaque nouvelle ligne.",
         "uuid": "Un UUID unique et persistant en lecture seule.",
-        "createdBy": "Le champ « Créé par » est un champ en lecture seule qui indique l'utilisateur qui a créé la ligne."
+        "createdBy": "Le champ « Créé par » est un champ en lecture seule qui indique l'utilisateur qui a créé la ligne.",
+        "duration": "Accepte une durée temporelle sous la forme d'une chaîne au format {format} ou d'un nombre représentant le nombre total de secondes."
     },
     "viewFilter": {
         "contains": "contient",

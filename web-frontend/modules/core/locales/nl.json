@@ -642,7 +642,9 @@
         "instant": "Direct"
     },
     "dataExplorer": {
-        "emptyText": "Geen data gevonden"
+        "emptyText": "Geen data gevonden",
+        "noProvidersText": "Er zijn geen gegevensverstrekkers gevonden. Om te beginnen kun je bijvoorbeeld een gegevensbron of paginaparameter toevoegen.",
+        "noMatchingNodesText": "Er zijn geen overeenkomende gegevensverstrekkers gevonden."
     },
     "formulaInputField": {
         "errorInvalidFormula": "De formule is ongeldig."

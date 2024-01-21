@@ -458,7 +458,7 @@
             "title": "{userAmount} Mitglieder in {workspaceName}",
             "actions": {
                 "copyEmail": "E-Mail kopieren",
-                "remove": "Aus den Arbeitsbereich entfernen"
+                "remove": "Aus dem Arbeitsbereich entfernen"
             },
             "inviteMember": "Mitglied einladen",
             "columns": {

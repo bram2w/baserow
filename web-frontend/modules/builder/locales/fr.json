@@ -63,13 +63,20 @@
         "button": "Bouton",
         "buttonDescription": "Un bouton",
         "formContainer": "Formulaire",
-        "formContainerDescription": "Un élément Formulaire"
+        "formContainerDescription": "Un élément Formulaire",
+        "dropdown": "Liste déroulante",
+        "dropdownDescription": "Une liste déroulante",
+        "checkbox": "Case à cocher",
+        "checkboxDescription": "Une case à cocher",
+        "iframe": "IFrame",
+        "iframeDescription": "Un element IFrame"
     },
     "elementMenu": {
         "moveDown": "Descendre",
         "moveUp": "Monter",
         "moveRight": "Déplacer à droite",
-        "moveLeft": "Déplacer à gauche"
+        "moveLeft": "Déplacer à gauche",
+        "selectParent": "Sélectionner le parent"
     },
     "addElementButton": {
         "label": "Élément"
@@ -86,7 +93,8 @@
         "general": "Général",
         "visibility": "Visibilité",
         "events": "Événements",
-        "style": "Style"
+        "style": "Style",
+        "eventsTabDeactivatedNoEvents": "Cet élément ne supporte aucun événement"
     },
     "emptySidePanelState": {
         "message": "Cliquez sur l'un des éléments pour obtenir plus de détails"
@@ -203,7 +211,8 @@
         "target": "Ouvrir dans...",
         "targetNewTab": "Nouvel onglet",
         "pageParameterTypeError": "Type non valide",
-        "paramsInErrorDescription": "Les paramètres enregistrés ne correspondent pas aux paramètres de la page. La page a probablement été mise à jour ou supprimée."
+        "paramsInErrorDescription": "Les paramètres enregistrés ne correspondent pas aux paramètres de la page. La page a probablement été mise à jour ou supprimée.",
+        "buttonColor": "Couleur du bouton"
     },
     "alignmentSelector": {
         "alignment": "Alignement",
@@ -265,7 +274,10 @@
         "placeholderTitle": "Texte provisoire",
         "requiredTitle": "Obligatoire",
         "labelTitle": "Étiquette",
-        "labelPlaceholder": "Entrez une étiquette (facultatif)"
+        "labelPlaceholder": "Entrez une étiquette (facultatif)",
+        "multilineTitle": "Multiligne",
+        "rowsTitle": "Nombre de lignes",
+        "rowsPlaceholder": "Saisir le nombre de lignes minimum"
     },
     "columnElementForm": {
         "columnGapPlaceholder": "Entrez l'espace entre les colonnes...",
@@ -282,7 +294,9 @@
         "itemsPerPagePlaceholder": "Saisir la valeur...",
         "fields": "Colonnes",
         "fieldType": "Type",
-        "fieldDefaultName": "Colonne"
+        "fieldDefaultName": "Colonne",
+        "selectSourceFirst": "Choisissez une source de données de type liste pour commencer à configurer vos champs.",
+        "buttonColor": "Couleur du bouton"
     },
     "mainThemeConfigBlock": {
         "colorsLabel": "Couleurs",
@@ -303,11 +317,14 @@
         "boxBottom": "Bas",
         "widthLabel": "Largeur",
         "backgroundLabel": "Arrière plan",
-        "backgroundColor": "Couleur d'arrière-plan"
+        "backgroundColor": "Couleur d'arrière-plan",
+        "boxLeft": "Gauche",
+        "boxRight": "Droit"
     },
     "buttonElementForm": {
         "valuePlaceholder": "Saisir le texte...",
-        "valueLabel": "Texte"
+        "valueLabel": "Texte",
+        "buttonColor": "Couleur du bouton"
     },
     "subDomainDetails": {
         "text": "Les paramètres DNS du domaine ont déjà été configurés et vérifiés. Cela fonctionne sans qu'il soit nécessaire d'apporter des modifications supplémentaires."
@@ -375,7 +392,8 @@
         "fieldLinkNamePlaceholder": "Saisir la valeur...",
         "fieldValuePlaceholder": "Saisir la valeur...",
         "fieldLinkNameLabel": "Texte du lien",
-        "fieldValueLabel": "Url"
+        "fieldValueLabel": "Url",
+        "buttonColor": "Couleur du bouton"
     },
     "updateUserSourceForm": {
         "nameFieldLabel": "Nom",
@@ -431,9 +449,50 @@
     },
     "formContainerElementForm": {
         "submitButtonLabel": "Bouton de soumission",
-        "submitButtonPlaceholder": "Saisir la valeur..."
+        "submitButtonPlaceholder": "Saisir la valeur...",
+        "buttonColor": "Couleur du bouton"
     },
     "linkField": {
         "details": "Détails"
+    },
+    "generalForm": {
+        "labelPlaceholder": "Saisir un label (facultatif)",
+        "valuePlaceholder": "Saisir une valeur par défaut (facultatif)",
+        "requiredTitle": "Obligatoire",
+        "labelTitle": "Label",
+        "valueTitle": "Valeur par défaut",
+        "placeholderTitle": "Texte provisoire",
+        "placeholderPlaceholder": "Saisir un texte provisoire (facultatif)"
+    },
+    "iframeElementForm": {
+        "urlPlaceholder": "Lien vers la ressource externe à intégrer",
+        "empty": "IFrame vide...",
+        "sourceTypeLabel": "Type de la source",
+        "urlLabel": "URL",
+        "urlHelp": "Remarque : assurez-vous que vous contrôlez ou faites confiance à l'URL saisie.",
+        "embedLabel": "Embarquer",
+        "embedPlaceholder": "Contenu HTML brut à intégrer",
+        "heightLabel": "Hauteur (px)",
+        "heightPlaceholder": "Hauteur en pixels"
+    },
+    "linkNavigationSelection": {
+        "paramPlaceholder": "Saisir une valeur...",
+        "urlPlaceholder": "Saisir une URL...",
+        "navigateTo": "Naviguer vers",
+        "navigateToCustom": "URL personnalisée",
+        "url": "URL de destination",
+        "paramsInErrorDescription": "Les paramètres enregistrés ne correspondent pas aux paramètres de la page. La page a probablement été mise à jour ou supprimée.",
+        "paramsInErrorButton": "Mettre à jour les paramètres"
+    },
+    "dropdownOptionSelector": {
+        "label": "Options",
+        "addOption": "ajouter une option",
+        "value": "Valeur",
+        "name": "Nom"
+    },
+    "checkboxElementForm": {
+        "labelTitle": "Label",
+        "valueTitle": "Valeur par défaut",
+        "requiredTitle": "Obligatoire"
     }
 }

@@ -1,1 +1,64 @@
-{}
+{
+    "localBaserowListRowsForm": {
+        "noTableChosenForSorting": "Kies een tabel om te beginnen met het sorteren van gegevensbronnen.",
+        "filterTabTitle": "Filters",
+        "sortTabTitle": "Sorteringen",
+        "searchTabTitle": "Zoeken",
+        "searchFieldPlaceHolder": "Voer een zoekterm in...",
+        "noTableChosenForFiltering": "Kies een tabel om te beginnen met het gebruik van gegevensbronfilters."
+    },
+    "localBaserowGetRowForm": {
+        "rowFieldHelpText": "Laat deze waarde leeg om de eerste rij te retourneren.",
+        "noTableChosenForSorting": "Kies een tabel om te beginnen met het sorteren van gegevensbronnen.",
+        "rowFieldLabel": "Rij ID",
+        "invalidFormula": "De formule is ongeldig",
+        "rowFieldPlaceHolder": "Selecteer een rij ID",
+        "searchFieldPlaceHolder": "Voer een zoekterm in...",
+        "noTableChosenForFiltering": "Kies een tabel om te beginnen met het gebruik van gegevensbronfilters.",
+        "filterTabTitle": "Filters",
+        "searchTabTitle": "Zoeken"
+    },
+    "localBaserowTableServiceConditionalForm": {
+        "relatedFieldNotFound": "Het gerelateerde veld is niet gevonden.",
+        "addFilter": "Extra filter toevoegen",
+        "noFilterTitle": "U hebt nog geen gegevensbronfilter gemaakt",
+        "noFilterText": "Met gegevensbronfilters kun je rijen in de Baserow tabel weergeven die van toepassing zijn op je voorwaarden.",
+        "filterTypeNotFound": "Het filtertype is niet compatibel.",
+        "noCompatibleFilterTypesErrorTitle": "Geen passende filtertypes",
+        "noCompatibleFilterTypesErrorMessage": "Geen van uw velden heeft passende filtertypen"
+    },
+    "localBaserowTableSelector": {
+        "databaseFieldLabel": "Database",
+        "viewFieldLabel": "Weergave",
+        "tableFieldLabel": "Tabel",
+        "chooseNoView": "Niet geselecteerd"
+    },
+    "integrationType": {
+        "localBaserow": "Lokaal Baserow",
+        "localBaserowSummary": "Lokaal Baserow - {name}, {username}",
+        "localBaserowWarning": "Door jouw account te autoriseren krijgt iedereen die bewerkingsrechten heeft voor de applicatie volledige toegang tot de gegevens waar jij toegang tot hebt. Het is mogelijk om een tweede gebruiker aan te maken, de juiste rechten te geven en die te gebruiken."
+    },
+    "serviceType": {
+        "localBaserowGetRow": "Rij ophalen",
+        "localBaserowListRows": "Rijen ophalen"
+    },
+    "userSourceType": {
+        "localBaserow": "Baserow tabel authenticatie"
+    },
+    "localBaserowForm": {
+        "user": "Gebruiker",
+        "userMessage": "Door deze verbinding te maken, geef je de applicatie toestemming om jouw account te gebruiken om wijzigingen aan te brengen in je lokale Baserow werkruimte."
+    },
+    "localBaserowTableServiceSortForm": {
+        "noSortTitle": "Je hebt nog geen gegevensbronsoort gemaakt",
+        "noSortText": "Met sorteringen kun je rijen op een veld sorteren.",
+        "sortBy": "Sorteer op",
+        "thenBy": "Dan op",
+        "addSort": "Extra sortering toevoegen",
+        "noTableChosenForSorting": "Kies een tabel om te beginnen met het sorteren van gegevensbronnen."
+    },
+    "dataProviderType": {
+        "dataSource": "Gegevensbron",
+        "pageParameter": "Parameter"
+    }
+}
