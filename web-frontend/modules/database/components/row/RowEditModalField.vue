@@ -66,7 +66,8 @@ export default {
     },
     view: {
       type: [Object, null],
-      required: true,
+      required: false,
+      default: null,
     },
     field: {
       type: Object,
