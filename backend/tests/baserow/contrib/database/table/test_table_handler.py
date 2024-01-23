@@ -761,3 +761,36 @@ def test_create_last_modified_by_field(data_fixture):
 
     model = table.get_model()
     model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
+
+
+@pytest.mark.django_db
+def test_list_workspace_tables_containing_trashed_table(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+    data_fixture.create_database_table(user, database=database, trashed=True)
+    workspace_tables = TableHandler().list_workspace_tables(user, workspace=workspace)
+    assert list(workspace_tables) == [table]
+
+
+@pytest.mark.django_db
+def test_list_workspace_tables_in_trashed_database(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(
+        workspace=workspace, trashed=True
+    )
+    data_fixture.create_database_table(user, database=database)
+    workspace_tables = TableHandler().list_workspace_tables(user, workspace=workspace)
+    assert workspace_tables.count() == 0
+
+
+@pytest.mark.django_db
+def test_list_workspace_tables_in_trashed_workspace(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user, trashed=True)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(user, database=database)
+    workspace_tables = TableHandler().list_workspace_tables(user, workspace=workspace)
+    assert workspace_tables.count() == 0
