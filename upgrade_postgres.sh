@@ -117,9 +117,6 @@ _main() {
         startup_echo "********************************************************************"
         startup_echo "Creation of temporary directory '${NEW}' failed. Aborting completely"
         startup_echo "********************************************************************"
-        # With a failure at this point we should be able to move the old data back
-        # to its original location
-        mv -v "${OLD}"/* "${PGDATA}"
         exit 8
     fi
     startup_echo "--------------------------------------------"
