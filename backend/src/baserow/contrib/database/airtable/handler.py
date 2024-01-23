@@ -597,8 +597,19 @@ class AirtableHandler:
                 fetch_application_structure=index == 0,
                 stream=False,
             )
-            decoded_content = remove_invalid_surrogate_characters(response.content)
-            tables.append(json.loads(decoded_content))
+            try:
+                decoded_content = remove_invalid_surrogate_characters(
+                    response.content, response.encoding
+                )
+                json_decoded_content = json.loads(decoded_content)
+            except json.decoder.JSONDecodeError:
+                # In some cases, the `remove_invalid_surrogate_characters` results in
+                # invalid JSON. It's not completely clear why that is, but this
+                # fallback can still produce valid JSON to import in most cases if
+                # the original json didn't contain invalid surrogate characters.
+                json_decoded_content = response.json()
+
+            tables.append(json_decoded_content)
 
         # Split database schema from the tables because we need this to be separated
         # later on.
