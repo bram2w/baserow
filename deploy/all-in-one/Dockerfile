@@ -47,6 +47,9 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     postgresql-$POSTGRES_VERSION \
     postgresql-client-$POSTGRES_VERSION \
+    # Install PostgreSQL 15 for the upgrade:
+    postgresql-15 \
+    postgresql-client-15 \
     libpq-dev \
     redis-server \
     python3 \

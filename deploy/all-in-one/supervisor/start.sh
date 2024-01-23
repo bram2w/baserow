@@ -42,6 +42,41 @@ if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
   # Setup an empty baserow database with the provided user and password.
   ./baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh setup
 
+  _use_postgresql15() {
+    export POSTGRES_VERSION=15
+    export POSTGRES_LOCATION="/baserow/data/postgres"
+  }
+
+  ALREADY_UPGRADED_INDICATOR_FILE="$PGDATA/baserow_db_upgrade"
+  if [ -f "$ALREADY_UPGRADED_INDICATOR_FILE" ]; then
+    echo
+    echo 'PostgreSQL Database already upgraded to version 15; Skipping upgrade.'
+    echo
+    _use_postgresql15
+  else
+    #running as root:
+    set +e  # Disable 'exit immediately' option
+
+    ./upgrade_postgres.sh
+
+    upgrade_status=$?
+    #TODO: if script completes successfully, here, remove the old PostgresSQL binaries?
+
+    if [ $upgrade_status -ne 0 ]; then
+      startup_echo "Upgrading to PostgreSQL 15 failed with exit code $upgrade_status"
+    else
+      #All went fine with the upgrade, so use the new PostgreSQL 15 in subsequent steps, in the
+      #Dockerfile we have these set to PostgreSQL 11, these are picekd up by supervisor
+      #during startup:
+      _use_postgresql15
+      touch "$ALREADY_UPGRADED_INDICATOR_FILE"
+      startup_echo "upgrade_postgres.sh succeeded with exit code $upgrade_status"
+    fi
+    # Re-enable 'exit immediately' option.
+    # TODO: check with 'set -Eeo pipefail' at the top:
+    set -e
+  fi
+
   # Enable the embedded postgres by moving it into the directory from which supervisor
   # includes all .conf files it finds.
   if [ ! -f "$SUPERVISOR_ENABLED_CONF_DIR/embedded-postgres.conf" ]; then
