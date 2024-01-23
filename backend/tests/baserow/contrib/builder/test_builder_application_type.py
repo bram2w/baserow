@@ -1,6 +1,9 @@
 import pytest
 
 from baserow.contrib.builder.application_types import BuilderApplicationType
+from baserow.contrib.builder.builder_beta_init_application import (
+    BuilderApplicationTypeInitApplication,
+)
 from baserow.contrib.builder.elements.models import (
     ColumnElement,
     HeadingElement,
@@ -761,3 +764,20 @@ def test_builder_application_creation_does_not_register_an_action(data_fixture):
         init_with_data=False,
     )
     assert Action.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_builder_application_creation_uses_first_customers_table(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table1 = data_fixture.create_database_table(database=database, name="Customers")
+    data_fixture.create_text_field(table=table1, name="Name")
+    data_fixture.create_text_field(table=table1, name="Last name")
+    _ = data_fixture.create_database_table(database=database, name="Customers")
+    _ = data_fixture.create_database_table(database=database, name="Customers")
+
+    builder_init = BuilderApplicationTypeInitApplication(user, builder)
+    target_table = builder_init.get_target_table()
+    assert target_table == table1

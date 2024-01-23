@@ -61,15 +61,16 @@ class BuilderApplicationTypeInitApplication:
         4. The target fields we want must still exist, and be a TextField.
         """
 
-        try:
-            # Sanity check the Customers table exists.
-            table = (
-                TableHandler()
-                .list_workspace_tables(self.user, self.application.workspace)
-                .filter(name=self.customers_table_name)
-                .get()
-            )
-        except Table.DoesNotExist:
+        # Sanity check the Customers table exists.
+        # If there are multiple, we'll use the first one.
+        table = (
+            TableHandler()
+            .list_workspace_tables(self.user, self.application.workspace)
+            .filter(name=self.customers_table_name)
+            .order_by("created_on")
+            .first()
+        )
+        if table is None:
             return None
 
         # If we have a table, ensure it has the two fields we care about.
