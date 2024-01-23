@@ -208,9 +208,14 @@ def sync_default_roles_after_migrate(sender, **kwargs):
 
                     to_add = []
                     for operation_type in operations:
-                        operation, _ = Operation.objects.get_or_create(
-                            name=operation_type.type
-                        )
+                        try:
+                            operation, _ = Operation.objects.get_or_create(
+                                name=operation_type.type
+                            )
+                        except Operation.MultipleObjectsReturned:
+                            duplicated_operations = Operation.objects.filter(name=operation_type.type)
+                            operation = duplicated_operations.first()
+                            duplicated_operations.exclude(id=operation.id).delete()
                         to_add.append(operation)
 
                     role.operations.add(*to_add)
