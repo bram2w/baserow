@@ -189,6 +189,7 @@
                   }}</span>
                 </a>
                 <BadgeCounter
+                  v-show="unreadNotificationCount"
                   class="tree__counter"
                   :count="unreadNotificationCount"
                   :limit="10"
