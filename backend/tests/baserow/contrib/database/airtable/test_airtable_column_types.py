@@ -762,6 +762,7 @@ def test_airtable_import_rich_text_column_with_mention(data_fixture, api_client)
 def test_airtable_import_multi_select_column(
     data_fixture, api_client, django_assert_num_queries
 ):
+    table = data_fixture.create_database_table()
     airtable_field = {
         "id": "fldURNo0cvi6YWYcYj1",
         "name": "Multiple select",
@@ -791,6 +792,10 @@ def test_airtable_import_multi_select_column(
     )
     assert isinstance(baserow_field, MultipleSelectField)
     assert isinstance(airtable_column_type, MultiSelectAirtableColumnType)
+
+    baserow_field.table_id = table.id
+    baserow_field.order = 999
+    baserow_field.save()
 
     with django_assert_num_queries(0):
         select_options = list(baserow_field.select_options.all())
@@ -1018,6 +1023,7 @@ def test_airtable_import_rating_column(data_fixture, api_client):
 def test_airtable_import_select_column(
     data_fixture, api_client, django_assert_num_queries
 ):
+    table = data_fixture.create_database_table()
     airtable_field = {
         "id": "fldRd2Vkzgsf6X4z6B4",
         "name": "Single select",
@@ -1047,6 +1053,10 @@ def test_airtable_import_select_column(
     )
     assert isinstance(baserow_field, SingleSelectField)
     assert isinstance(airtable_column_type, SelectAirtableColumnType)
+
+    baserow_field.table_id = table.id
+    baserow_field.order = 999
+    baserow_field.save()
 
     with django_assert_num_queries(0):
         select_options = list(baserow_field.select_options.all())

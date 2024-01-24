@@ -1012,6 +1012,7 @@ class DateFieldType(FieldType):
                         output_field=CharField(),
                     ),
                     Value(""),
+                    output_field=models.TextField(),
                 )
             },
             q={f"formatted_date_{field_name}__icontains": value},
@@ -3732,7 +3733,9 @@ class MultipleSelectFieldType(
     def get_search_expression(self, field: MultipleSelectField, queryset) -> Expression:
         return Subquery(
             queryset.filter(pk=OuterRef("pk")).values(
-                aggregated=StringAgg(f"{field.db_column}__value", " ")
+                aggregated=StringAgg(
+                    f"{field.db_column}__value", " ", output_field=models.TextField()
+                )
             )[:1]
         )
 
@@ -4007,11 +4010,13 @@ class MultipleSelectFieldType(
         if value == "":
             return Q()
 
-        query = StringAgg(f"{field_name}__value", ",")
+        query = StringAgg(f"{field_name}__value", ",", output_field=models.TextField())
 
         return AnnotatedQ(
             annotation={
-                f"select_option_value_{field_name}": Coalesce(query, Value(""))
+                f"select_option_value_{field_name}": Coalesce(
+                    query, Value(""), output_field=models.TextField()
+                )
             },
             q={f"select_option_value_{field_name}__icontains": value},
         )
@@ -4022,11 +4027,13 @@ class MultipleSelectFieldType(
         if value == "":
             return Q()
         value = re.escape(value)
-        query = StringAgg(f"{field_name}__value", " ")
+        query = StringAgg(f"{field_name}__value", " ", output_field=models.TextField())
 
         return AnnotatedQ(
             annotation={
-                f"select_option_value_{field_name}": Coalesce(query, Value(""))
+                f"select_option_value_{field_name}": Coalesce(
+                    query, Value(""), output_field=models.TextField()
+                )
             },
             q={f"select_option_value_{field_name}__iregex": rf"\m{value}\M"},
         )
@@ -4040,7 +4047,11 @@ class MultipleSelectFieldType(
         """
 
         sort_column_name = f"{field_name}_agg_sort"
-        query = Coalesce(StringAgg(f"{field_name}__value", ","), Value(""))
+        query = Coalesce(
+            StringAgg(f"{field_name}__value", ",", output_field=models.TextField()),
+            Value(""),
+            output_field=models.TextField(),
+        )
         annotation = {sort_column_name: query}
         order = F(sort_column_name)
 
@@ -5202,7 +5213,11 @@ class MultipleCollaboratorsFieldType(
     ) -> Expression:
         return Subquery(
             queryset.filter(pk=OuterRef("pk")).values(
-                aggregated=StringAgg(f"{field.db_column}__first_name", " ")
+                aggregated=StringAgg(
+                    f"{field.db_column}__first_name",
+                    " ",
+                    output_field=models.TextField(),
+                )
             )[:1]
         )
 
@@ -5496,7 +5511,11 @@ class MultipleCollaboratorsFieldType(
         """
 
         sort_column_name = f"{field_name}_agg_sort"
-        query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
+        query = Coalesce(
+            StringAgg(f"{field_name}__first_name", "", output_field=models.TextField()),
+            Value(""),
+            output_field=models.TextField(),
+        )
         annotation = {sort_column_name: query}
 
         order = F(sort_column_name)
