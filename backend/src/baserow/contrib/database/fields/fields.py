@@ -281,23 +281,28 @@ class BaserowExpressionField(models.Field):
         return self.expression is not None
 
 
-class SerialField(models.Field):
+class SerialField(models.IntegerField):
     """
     The serial field works very similar compared to the `AutoField` (primary key field).
     Every time a new row is created and the value is not set, it will automatically
-    increment a sequence and that will be set as value. It's basically an auto
-    increment column. The sequence is independent of a transaction to prevent race
-    conditions.
+    increment a sequence and that will be set as value. It's basically an auto increment
+    column. The sequence is independent of a transaction to prevent race conditions.
+    Please, ensure to create the sequence manually in the database before using this
+    field. Look at the migration `0071_alter_linkrowfield_link_row_relation_id` for an
+    example.
     """
 
     db_returning = True
 
-    def db_type(self, connection):
-        return "serial"
+    @classmethod
+    def get_sequence_name(cls, db_table, field_name):
+        return f"{db_table}_{field_name}_seq"
 
     def pre_save(self, model_instance, add):
         if add and not getattr(model_instance, self.name):
-            sequence_name = f"{model_instance._meta.db_table}_{self.name}_seq"
+            sequence_name = self.get_sequence_name(
+                model_instance._meta.db_table, self.name
+            )
             return RawSQL(  # nosec
                 f"nextval('{sequence_name}'::regclass)",
                 (),

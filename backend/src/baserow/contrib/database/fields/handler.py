@@ -820,6 +820,8 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         field_type = field_type_registry.get_by_model(field)
 
+        FieldDependencyHandler.break_dependencies_delete_dependants(field)
+
         if immediately_delete_only_the_provided_field:
             field.delete()
         else:
@@ -833,8 +835,6 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # The trash call above might have just caused a massive field update to lots of
         # different fields. We need to reset our cache accordingly.
         field_cache.reset_cache()
-
-        FieldDependencyHandler.break_dependencies_delete_dependants(field)
 
         for (
             dependant_field,
