@@ -284,7 +284,10 @@ services:
       local:
 
   db:
-    image: postgres:11
+    image: pgautoupgrade/pgautoupgrade:15-alpine3.8
+    #TODO: after PostgreSQL 11 > 15 upgrade is done, the above image can be
+    #safely switched to the below image:
+    #image: postgres:15
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${DATABASE_USER:-baserow}
