@@ -603,17 +603,20 @@ const queryParametersForParsing = [
   },
   {
     fieldType: new DurationFieldType(),
-    input: { value: '1:01', field: { duration_format: 'h:mm' } },
+    input: { value: '1:01', field: { field: { duration_format: 'h:mm' } } },
     output: 3660,
   },
   {
     fieldType: new DurationFieldType(),
-    input: { value: '1:01:01', field: { duration_format: 'h:mm:ss' } },
+    input: {
+      value: '1:01:01',
+      field: { field: { duration_format: 'h:mm:ss' } },
+    },
     output: 3661,
   },
   {
     fieldType: new DurationFieldType(),
-    input: { value: 61, field: { duration_format: 'h:mm' } },
+    input: { value: 61, field: { field: { duration_format: 'h:mm' } } },
     output: 60, // the value is rounded according to the duration format
   },
 ]

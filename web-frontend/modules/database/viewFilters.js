@@ -1341,13 +1341,9 @@ export class HigherThanViewFilterType extends ViewFilterType {
       return true
     }
 
-    rowValue = fieldType.constructor.parseInputValue(field, rowValue)
-    filterValue = fieldType.constructor.parseInputValue(field, filterValue)
-    return (
-      Number.isFinite(rowValue) &&
-      Number.isFinite(filterValue) &&
-      rowValue > filterValue
-    )
+    const rowVal = fieldType.parseInputValue(field, rowValue)
+    const fltVal = fieldType.parseInputValue(field, filterValue)
+    return Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal > fltVal
   }
 }
 
@@ -1388,13 +1384,9 @@ export class LowerThanViewFilterType extends ViewFilterType {
       return true
     }
 
-    rowValue = fieldType.constructor.parseInputValue(field, rowValue)
-    filterValue = fieldType.constructor.parseInputValue(field, filterValue)
-    return (
-      Number.isFinite(rowValue) &&
-      Number.isFinite(filterValue) &&
-      rowValue < filterValue
-    )
+    const rowVal = fieldType.parseInputValue(field, rowValue)
+    const fltVal = fieldType.parseInputValue(field, filterValue)
+    return Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal < fltVal
   }
 }
 
