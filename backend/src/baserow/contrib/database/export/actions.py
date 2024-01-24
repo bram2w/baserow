@@ -21,6 +21,13 @@ class ExportTableActionType(ActionType):
         _('View "%(view_name)s" (%(view_id)s) exported to %(export_type)s'),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "table_id",
+        "export_type",
+        "database_id",
+        "workspace_id",
+        "view_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

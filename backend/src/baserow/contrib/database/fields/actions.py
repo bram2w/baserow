@@ -36,6 +36,13 @@ class UpdateFieldActionType(UndoableActionCustomCleanupMixin, UndoableActionType
         _('Field "%(field_name)s" (%(field_id)s) updated'),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "database_id",
+        "table_id",
+        "field_id",
+        "field_type",
+        "original_field_type",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -333,6 +340,7 @@ class CreateFieldActionType(UndoableActionType):
         _('Field "%(field_name)s" (%(field_id)s) created'),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = ["table_id", "database_id", "field_id", "field_type"]
 
     @dataclasses.dataclass
     class Params:
@@ -426,6 +434,11 @@ class DeleteFieldActionType(UndoableActionType):
         _('Field "%(field_name)s" (%(field_id)s) deleted'),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+        "field_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -497,6 +510,13 @@ class DuplicateFieldActionType(UndoableActionType):
         ),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+        "field_id",
+        "with_data",
+        "original_field_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

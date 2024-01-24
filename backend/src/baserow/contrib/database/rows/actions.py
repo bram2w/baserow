@@ -31,6 +31,11 @@ class CreateRowActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Create row"), _("Row (%(row_id)s) created"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+        "row_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -111,6 +116,11 @@ class CreateRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Create rows"), _("Rows (%(row_ids)s) created"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+        "trashed_rows_entry_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -192,6 +202,7 @@ class ImportRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Import rows"), _("Rows (%(row_ids)s) imported"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = ["table_id", "database_id", "trashed_rows_entry_id"]
 
     @dataclasses.dataclass
     class Params:
@@ -272,6 +283,11 @@ class DeleteRowActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Delete row"), _("Row (%(row_id)s) deleted"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+        "row_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -333,6 +349,11 @@ class DeleteRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Delete rows"), _("Rows (%(row_ids)s) deleted"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+        "trashed_rows_entry_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -475,6 +496,7 @@ class MoveRowActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Move row"), _("Row (%(row_id)s) moved"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = ["table_id", "database_id", "row_id", "row_displacement"]
 
     @dataclasses.dataclass
     class Params:
@@ -584,7 +606,7 @@ class UpdateRowActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Update row"), _("Row (%(row_id)s) updated"), TABLE_ACTION_CONTEXT
     )
-    privacy_sensitive_params = ["row_values", "original_row_values"]
+    analytics_params = ["table_id", "database_id", "row_id"]
 
     @dataclasses.dataclass
     class Params:
@@ -684,10 +706,9 @@ class UpdateRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Update rows"), _("Rows (%(row_ids)s) updated"), TABLE_ACTION_CONTEXT
     )
-    privacy_sensitive_params = [
-        "row_values",
-        "original_rows_values_by_id",
-        "updated_fields_metadata_by_row_id",
+    analytics_params = [
+        "table_id",
+        "database_id",
     ]
 
     @dataclasses.dataclass
@@ -697,9 +718,6 @@ class UpdateRowsActionType(UndoableActionType):
         database_id: int
         database_name: str
         row_ids: List[int]
-        # !!! WARNING !!!
-        # Make sure these values are kept in sync with privacy_sensitive_params above
-        # !!! WARNING !!!
         row_values: List[Dict[str, Any]]  # TODO: rename to rows_values
         original_rows_values_by_id: Dict[int, Dict[str, Any]]
         updated_fields_metadata_by_row_id: Dict[int, Dict[str, Any]]

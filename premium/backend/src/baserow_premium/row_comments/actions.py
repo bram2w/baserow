@@ -24,7 +24,13 @@ class CreateRowCommentActionType(UndoableActionType):
         _("Comment (%(comment_id)s) has been added to row (%(row_id)s)"),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["message"]
+    analytics_params = [
+        "comment_id",
+        "row_id",
+        "table_id",
+        "database_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -103,7 +109,13 @@ class UpdateRowCommentActionType(UndoableActionType):
         _("Comment (%(comment_id)s) has been updated in row (%(row_id)s)"),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["message", "original_message"]
+    analytics_params = [
+        "comment_id",
+        "row_id",
+        "table_id",
+        "database_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -192,7 +204,13 @@ class DeleteRowCommentActionType(UndoableActionType):
         _("Comment (%(comment_id)s) has been deleted from row (%(row_id)s)"),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["message"]
+    analytics_params = [
+        "comment_id",
+        "row_id",
+        "table_id",
+        "database_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

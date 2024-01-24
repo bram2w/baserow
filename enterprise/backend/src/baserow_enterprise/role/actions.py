@@ -32,6 +32,9 @@ class BatchAssignRoleActionType(UndoableActionType):
         'Role %(role_uid)s assigned to subject type "%(subject_type_name)s" (%(subject_id)s) '
         'on scope type "%(scope_type_name)s" (%(scope_id)s).'
     )
+    analytics_params = [
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

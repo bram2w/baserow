@@ -31,11 +31,13 @@ from baserow.core.utils import ChildProgressBuilder
 
 class DeleteWorkspaceActionType(UndoableActionType):
     type = "delete_group"
-
     description = ActionTypeDescription(
         _("Delete group"),
         _('Group "%(group_name)s" (%(group_id)s) deleted.'),
     )
+    analytics_params = [
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -97,6 +99,9 @@ class CreateWorkspaceActionType(UndoableActionType):
         _("Create group"),
         _('Group "%(group_name)s" (%(group_id)s) created.'),
     )
+    analytics_params = [
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -159,6 +164,9 @@ class UpdateWorkspaceActionType(UndoableActionType):
             '"%(original_group_name)s" to "%(group_name)s."'
         ),
     )
+    analytics_params = [
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -296,6 +304,9 @@ class OrderApplicationsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Order applications"), _("Applications reordered"), WORKSPACE_ACTION_CONTEXT
     )
+    analytics_params = [
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -361,6 +372,12 @@ class CreateApplicationActionType(UndoableActionType):
         _('"%(application_name)s" (%(application_id)s) %(application_type)s created'),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "application_type",
+        "application_id",
+        "with_data",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -446,6 +463,11 @@ class DeleteApplicationActionType(UndoableActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "application_type",
+        "application_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -510,6 +532,11 @@ class UpdateApplicationActionType(UndoableActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "application_type",
+        "application_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -583,6 +610,12 @@ class DuplicateApplicationActionType(UndoableActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "application_type",
+        "application_id",
+        "original_application_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -662,6 +695,11 @@ class InstallTemplateActionType(UndoableActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "template_id",
+        "installed_application_ids",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -741,6 +779,10 @@ class CreateWorkspaceInvitationActionType(ActionType):
             '"%(group_name)s" (%(group_id)s) as %(permissions)s.'
         ),
     )
+    analytics_params = [
+        "permissions",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -794,6 +836,11 @@ class DeleteWorkspaceInvitationActionType(ActionType):
             'to join "%(group_name)s" (%(group_id)s) as %(permissions)s.'
         ),
     )
+    analytics_params = [
+        "invitation_id",
+        "permissions",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -849,6 +896,11 @@ class AcceptWorkspaceInvitationActionType(ActionType):
             '"%(group_name)s" (%(group_id)s) as %(permissions)s was accepted.'
         ),
     )
+    analytics_params = [
+        "invitation_id",
+        "permissions",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -904,6 +956,11 @@ class RejectWorkspaceInvitationActionType(ActionType):
             '"%(group_name)s" (%(group_id)s) as %(permissions)s was rejected.'
         ),
     )
+    analytics_params = [
+        "invitation_id",
+        "permissions",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -960,6 +1017,12 @@ class UpdateWorkspaceInvitationActionType(ActionType):
             ' on group "%(group_name)s" (%(group_id)s).'
         ),
     )
+    analytics_params = [
+        "invitation_id",
+        "permissions",
+        "workspace_id",
+        "original_permissions",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1015,6 +1078,9 @@ class LeaveWorkspaceActionType(ActionType):
         _("Leave group"),
         _('Group "%(group_name)s" (%(group_id)s) left.'),
     )
+    analytics_params = [
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
