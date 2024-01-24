@@ -27,6 +27,10 @@ class CreateTableActionType(UndoableActionType):
         _('Table "%(table_name)s" (%(table_id)s) created'),
         DATABASE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "database_id",
+        "table_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -101,6 +105,10 @@ class DeleteTableActionType(UndoableActionType):
         _('Table "%(table_name)s" (%(table_id)s) deleted'),
         DATABASE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "database_id",
+        "table_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -153,6 +161,9 @@ class OrderTableActionType(UndoableActionType):
         _("Tables order changed"),
         DATABASE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "database_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -217,6 +228,10 @@ class UpdateTableActionType(UndoableActionType):
         ),
         DATABASE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "database_id",
+        "table_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -285,6 +300,11 @@ class DuplicateTableActionType(UndoableActionType):
         ),
         DATABASE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "database_id",
+        "table_id",
+        "original_table_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

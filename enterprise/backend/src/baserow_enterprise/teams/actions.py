@@ -27,6 +27,10 @@ class CreateTeamActionType(UndoableActionType):
         _("Create team"),
         _('Team "%(name)s" (%(team_id)s) created.'),
     )
+    analytics_params = [
+        "team_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -101,6 +105,12 @@ class UpdateTeamActionType(UndoableActionType):
         _("Update team"),
         _('Team "%(name)s" (%(team_id)s) updated.'),
     )
+    analytics_params = [
+        "team_id",
+        "workspace_id",
+        "original_default_role_uid",
+        "default_role_uid",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -193,6 +203,9 @@ class DeleteTeamActionType(UndoableActionType):
         _("Delete team"),
         _('Team "%(team_name)s" (%(team_id)s) deleted.'),
     )
+    analytics_params = [
+        "team_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -239,6 +252,11 @@ class CreateTeamSubjectActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Create team subject"), _("Subject (%(subject_id)s) created"), TEAM_CONTEXT
     )
+    analytics_params = [
+        "team_id",
+        "subject_id",
+        "subject_subject_type_natural_key",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -321,6 +339,12 @@ class DeleteTeamSubjectActionType(UndoableActionType):
         _("Subject (%(subject_id)s) deleted"),
         TEAM_CONTEXT,
     )
+    analytics_params = [
+        "team_id",
+        "subject_id",
+        "subject_subject_id",
+        "subject_subject_type_natural_key",
+    ]
 
     @dataclasses.dataclass
     class Params:
