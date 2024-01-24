@@ -689,6 +689,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
     request_serializer_field_names = [
         "image_source_type",
@@ -696,6 +699,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
     allowed_fields = [
         "image_source_type",
@@ -703,6 +709,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
 
     class SerializedDict(ElementDict):
@@ -711,6 +720,9 @@ class ImageElementType(ElementType):
         image_url: BaserowFormula
         alt_text: BaserowFormula
         alignment: str
+        style_image_constraint: str
+        style_max_width: Optional[int]
+        style_max_height: Optional[int]
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -719,6 +731,9 @@ class ImageElementType(ElementType):
             "image_url": "'https://test.com/image.png'",
             "alt_text": "'some alt text'",
             "alignment": HorizontalAlignments.LEFT,
+            "style_image_constraint": "",
+            "style_max_width": None,
+            "style_max_height": None,
         }
 
     @property
@@ -762,6 +777,12 @@ class ImageElementType(ElementType):
                 choices=HorizontalAlignments.choices,
                 help_text=ImageElement._meta.get_field("alignment").help_text,
                 required=False,
+            ),
+            "style_max_width": serializers.IntegerField(
+                required=False,
+                allow_null=ImageElement._meta.get_field("style_max_width").null,
+                default=ImageElement._meta.get_field("style_max_width").default,
+                help_text=ImageElement._meta.get_field("style_max_width").help_text,
             ),
         }
         if super().request_serializer_field_overrides is not None:
