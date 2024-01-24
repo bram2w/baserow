@@ -170,7 +170,17 @@
         "fileSourceTypeUpload": "Upload",
         "fileSourceTypeURL": "URL",
         "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
-        "uploadFileButton": "Upload file"
+        "uploadFileButton": "Upload file",
+        "maxWidthLabel": "Max width",
+        "maxHeightLabel": "Max height",
+        "maxHeightPlaceholder": "Enter a maximum height in pixels.",
+        "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
+        "imageConstraintsLabel": "Constraints",
+        "imageConstraintFullWidth": "Extend to max width",
+        "imageConstraintCover": "Cover",
+        "imageConstraintCoverDisabled": "Unavailable with empty max height.",
+        "imageConstraintContain": "Contain",
+        "imageConstraintContainDisabled": "Unavailable with a max height."
     },
     "iframeElementForm": {
       "empty": "Empty IFrame...",

@@ -15,7 +15,9 @@ export const ensureInteger = (value) => {
       return Number(value)
     }
   }
-  throw new Error('Value is not a valid integer or convertible to an integer.')
+  throw new Error(
+    `Value '${value}' is not a valid integer or convertible to an integer.`
+  )
 }
 
 /**
