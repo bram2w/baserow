@@ -1,6 +1,6 @@
 <template>
   <a
-    class="link-button-element-button"
+    class="ab-button"
     v-bind="extraAttr"
     @click.prevent="onButtonFieldClick($event)"
   >

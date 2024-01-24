@@ -20,7 +20,7 @@
     <div class="table-element__footer">
       <button
         v-if="hasMorePage"
-        class="link-button-element-button"
+        class="ab-button"
         :disabled="loading"
         @click="loadMore()"
       >

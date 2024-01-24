@@ -395,13 +395,14 @@ class HeadingElementType(ElementType):
 
     type = "heading"
     model_class = HeadingElement
-    serializer_field_names = ["value", "level", "font_color"]
-    allowed_fields = ["value", "level", "font_color"]
+    serializer_field_names = ["value", "level", "font_color", "alignment"]
+    allowed_fields = ["value", "level", "font_color", "alignment"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
         font_color: str
         level: int
+        alignment: str
 
     @property
     def serializer_field_overrides(self):
@@ -431,10 +432,7 @@ class HeadingElementType(ElementType):
         return overrides
 
     def get_pytest_params(self, pytest_data_fixture):
-        return {
-            "value": "'Corporis perspiciatis'",
-            "level": 2,
-        }
+        return {"value": "'Corporis perspiciatis'", "level": 2, "alignment": "left"}
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
@@ -453,11 +451,12 @@ class TextElementType(ElementType):
 
     type = "text"
     model_class = TextElement
-    serializer_field_names = ["value"]
-    allowed_fields = ["value"]
+    serializer_field_names = ["value", "alignment"]
+    allowed_fields = ["value", "alignment"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
+        alignment: str
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -465,7 +464,8 @@ class TextElementType(ElementType):
             "Eum dicta sit rerum animi. Sint sapiente eum cupiditate nobis vel. "
             "Maxime qui nam consequatur. "
             "Asperiores corporis perspiciatis nam harum veritatis. "
-            "Impedit qui maxime aut illo quod ea molestias.'"
+            "Impedit qui maxime aut illo quod ea molestias.'",
+            "alignment": "left",
         }
 
     @property

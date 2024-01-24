@@ -343,6 +343,11 @@ class HeadingElement(Element):
         blank=True,
         help_text="The font color of the heading",
     )
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
 
 
 class TextElement(Element):
@@ -351,6 +356,11 @@ class TextElement(Element):
     """
 
     value = FormulaField(default="")
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
 
 
 class LinkElement(Element):
