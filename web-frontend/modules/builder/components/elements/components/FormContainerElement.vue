@@ -29,7 +29,7 @@
       </template>
     </div>
     <div class="form-container-element__submit-button margin-top-2">
-      <button class="link-button-element-button" @click="fireSubmitEvent">
+      <button class="ab-button" @click="fireSubmitEvent">
         {{ submitButtonLabelResolved || $t('buttonElement.noValue') }}
       </button>
     </div>

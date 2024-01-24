@@ -199,6 +199,7 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "value": element1.value,
                         "level": element1.level,
+                        "alignment": "left",
                     },
                     {
                         "id": element2.id,
@@ -222,6 +223,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_right": 20,
                         "style_background": "none",
                         "value": element2.value,
+                        "alignment": "left",
                     },
                     {
                         "id": element_container.id,
@@ -270,6 +272,7 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
+                        "alignment": "left",
                     },
                 ],
             },
@@ -337,6 +340,7 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "value": element3.value,
                         "level": element3.level,
+                        "alignment": "left",
                     },
                     {
                         "id": element4.id,

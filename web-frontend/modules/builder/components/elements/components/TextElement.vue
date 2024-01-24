@@ -1,12 +1,18 @@
 <template>
-  <div v-if="paragraphs.length">
-    <p v-for="paragraph in paragraphs" :key="paragraph.id" class="text-element">
+  <div
+    class="text-element"
+    :class="{
+      'element--no-value': !resolvedValue,
+      [`element--alignment-horizontal-${element.alignment}`]: true,
+    }"
+  >
+    <p v-for="paragraph in paragraphs" :key="paragraph.id" class="ab-paragraph">
       {{ paragraph.content }}
     </p>
+    <p v-if="!paragraphs.length" class="ab-paragraph">
+      {{ $t('textElement.noValue') }}
+    </p>
   </div>
-  <p v-else class="text-element element--no-value">
-    {{ $t('textElement.noValue') }}
-  </p>
 </template>
 
 <script>
@@ -27,6 +33,7 @@ export default {
     /**
      * @type {Object}
      * @property {Array.<Text>} value - A list of paragraphs
+     * @property {string} alignment - The alignment of the element on the page
      */
     element: {
       type: Object,
