@@ -213,7 +213,9 @@ def sync_default_roles_after_migrate(sender, **kwargs):
                                 name=operation_type.type
                             )
                         except Operation.MultipleObjectsReturned:
-                            duplicated_operations = Operation.objects.filter(name=operation_type.type)
+                            duplicated_operations = Operation.objects.filter(
+                                name=operation_type.type
+                            )
                             operation = duplicated_operations.first()
                             duplicated_operations.exclude(id=operation.id).delete()
                         to_add.append(operation)
