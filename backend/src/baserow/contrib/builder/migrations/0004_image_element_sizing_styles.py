@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("builder", "0002_rename_paragraphelement_textelement"),
+        ("builder", "0003_heading_text_alignment"),
     ]
 
     operations = [
