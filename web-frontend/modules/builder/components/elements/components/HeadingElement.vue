@@ -1,15 +1,23 @@
 <template>
-  <component
-    :is="`h${element.level}`"
-    class="heading-element"
-    :class="{ 'element--no-value': !resolvedValue }"
-    :style="{
-      '--color': resolveColor(element.font_color, headingColorVariables),
-      '--font-size': `${builder.theme[`heading_${element.level}_font_size`]}px`,
+  <div
+    :class="{
+      'element--no-value': !resolvedValue,
+      [`element--alignment-horizontal-${element.alignment}`]: true,
     }"
   >
-    {{ resolvedValue || $t('headingElement.noValue') }}
-  </component>
+    <component
+      :is="`h${element.level}`"
+      class="heading-element__heading"
+      :style="{
+        '--color': resolveColor(element.font_color, headingColorVariables),
+        '--font-size': `${
+          builder.theme[`heading_${element.level}_font_size`]
+        }px`,
+      }"
+    >
+      {{ resolvedValue || $t('headingElement.noValue') }}
+    </component>
+  </div>
 </template>
 
 <script>
@@ -24,6 +32,7 @@ export default {
      * @type {Object}
      * @property {number} level - The size of the heading
      * @property {string} value - The text displayed
+     * @property {string} alignment - The alignment of the element on the page
      */
     element: {
       type: Object,

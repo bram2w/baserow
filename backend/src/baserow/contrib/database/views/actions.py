@@ -43,6 +43,15 @@ class CreateViewFilterActionType(UndoableActionType):
         _('View filter created on field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "field_id",
+        "table_id",
+        "database_id",
+        "view_filter_id",
+        "filter_type",
+        "filter_group_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -144,6 +153,16 @@ class UpdateViewFilterActionType(UndoableActionType):
         _('View filter updated on field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_filter_id",
+        "filter_type",
+        "original_field_id",
+        "original_filter_type",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -266,6 +285,15 @@ class DeleteViewFilterActionType(UndoableActionType):
         _('View filter deleted from field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_filter_id",
+        "filter_type",
+        "filter_group_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -367,6 +395,13 @@ class CreateViewFilterGroupActionType(UndoableActionType):
         _("View filter group created"),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_filter_group_id",
+        "filter_type",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -444,6 +479,14 @@ class UpdateViewFilterGroupActionType(UndoableActionType):
         _('View filter group updated to "%(filter_type)s"'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_filter_group_id",
+        "filter_type",
+        "original_filter_type",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -537,6 +580,13 @@ class DeleteViewFilterGroupActionType(UndoableActionType):
         _("View filter group deleted"),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_filter_group_id",
+        "filter_type",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -650,6 +700,14 @@ class CreateViewSortActionType(UndoableActionType):
         _('View sorted on field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_sort_id",
+        "sort_order",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -727,6 +785,16 @@ class UpdateViewSortActionType(UndoableActionType):
         _('View sort updated on field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_sort_id",
+        "sort_order",
+        "original_field_id",
+        "original_sort_order",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -826,6 +894,14 @@ class DeleteViewSortActionType(UndoableActionType):
         _('View sort deleted from field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_sort_id",
+        "sort_order",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -902,6 +978,10 @@ class OrderViewsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Order views"), _("Views order changed"), TABLE_ACTION_CONTEXT
     )
+    analytics_params = [
+        "table_id",
+        "database_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -971,6 +1051,12 @@ class UpdateViewFieldOptionsActionType(UndoableActionType):
         _("ViewFieldOptions updated"),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id" "table_id",
+        "database_id",
+        "field_options",
+        "original_field_options",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1067,7 +1153,11 @@ class RotateViewSlugActionType(UndoableActionType):
         _("View changed public slug URL"),
         VIEW_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["slug", "original_slug"]
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1137,7 +1227,12 @@ class UpdateViewActionType(UndoableActionType):
         _('View "%(view_name)s" (%(view_id)s) updated'),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["data", "original_data"]
+    analytics_params = [
+        "view_id",
+        "view_ownership_type",
+        "table_id",
+        "database_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1214,6 +1309,12 @@ class CreateViewActionType(UndoableActionType):
         _('View "%(view_name)s" (%(view_id)s) created'),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "view_type",
+        "table_id",
+        "database_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1286,6 +1387,12 @@ class DuplicateViewActionType(UndoableActionType):
         ),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "original_view_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1353,6 +1460,11 @@ class DeleteViewActionType(UndoableActionType):
         _('View "%(view_name)s" (%(view_id)s) deleted'),
         TABLE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1411,6 +1523,15 @@ class CreateDecorationActionType(UndoableActionType):
         _("View decoration %(decorator_id)s created"),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "decorator_id",
+        "decorator_type_name",
+        "value_provider_type_name",
+        "value_provider_conf",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1507,6 +1628,19 @@ class UpdateDecorationActionType(UndoableActionType):
         _("View decoration %(decorator_id)s updated"),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "decorator_id",
+        "original_decoration_type_name",
+        "original_value_provider_type_name",
+        "original_value_provider_conf",
+        "original_order",
+        "new_decorator_type_name" "new_value_provider_type_name",
+        "new_value_provider_conf",
+        "new_order",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1632,6 +1766,17 @@ class DeleteDecorationActionType(UndoableActionType):
         _("View decoration %(decorator_id)s deleted"),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "decorator_id",
+        "original_decorator_id",
+        "original_decoration_type_name",
+        "original_value_provider_type_name",
+        "original_value_provider_conf",
+        "original_order",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1718,6 +1863,15 @@ class CreateViewGroupByActionType(UndoableActionType):
         _('View grouped on field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_group_by_id",
+        "group_by_order",
+        "group_by_width",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1810,6 +1964,19 @@ class UpdateViewGroupByActionType(UndoableActionType):
         _('View group by updated on field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_group_by_id",
+        "group_by_order",
+        "group_by_width",
+        "original_field_id",
+        "original_field_name",
+        "original_group_by_order",
+        "original_group_by_width",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -1926,6 +2093,15 @@ class DeleteViewGroupByActionType(UndoableActionType):
         _('View group by deleted from field "%(field_name)s" (%(field_id)s)'),
         VIEW_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "field_id",
+        "view_id",
+        "table_id",
+        "database_id",
+        "view_group_by_id",
+        "group_by_order",
+        "group_by_width",
+    ]
 
     @dataclasses.dataclass
     class Params:

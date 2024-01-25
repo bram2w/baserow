@@ -343,14 +343,24 @@ class HeadingElement(Element):
         blank=True,
         help_text="The font color of the heading",
     )
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
 
 
-class ParagraphElement(Element):
+class TextElement(Element):
     """
-    A simple paragraph.
+    A simple blob of text.
     """
 
     value = FormulaField(default="")
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
 
 
 class LinkElement(Element):
@@ -435,6 +445,11 @@ class ImageElement(Element):
         UPLOAD = "upload"
         URL = "url"
 
+    class IMAGE_CONSTRAINT_TYPES(models.TextChoices):
+        COVER = "cover"
+        CONTAIN = "contain"
+        FULL_WIDTH = "full-width"
+
     image_source_type = models.CharField(
         choices=IMAGE_SOURCE_TYPES.choices,
         max_length=32,
@@ -459,6 +474,29 @@ class ImageElement(Element):
         choices=HorizontalAlignments.choices,
         max_length=10,
         default=HorizontalAlignments.LEFT,
+    )
+    style_max_width = models.PositiveIntegerField(
+        null=True,
+        help_text="The max-width for this image element.",
+        default=100,
+        validators=[
+            MinValueValidator(0, message="Value cannot be less than 0."),
+            MaxValueValidator(100, message="Value cannot be greater than 100."),
+        ],
+    )
+    style_max_height = models.PositiveIntegerField(
+        null=True,
+        help_text="The max-height for this image element.",
+        validators=[
+            MinValueValidator(5, message="Value cannot be less than 5."),
+            MaxValueValidator(3000, message="Value cannot be greater than 3000."),
+        ],
+    )
+    style_image_constraint = models.CharField(
+        help_text="The image constraint to apply to this image",
+        choices=IMAGE_CONSTRAINT_TYPES.choices,
+        max_length=32,
+        default=IMAGE_CONSTRAINT_TYPES.CONTAIN,
     )
 
 

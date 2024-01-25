@@ -40,7 +40,9 @@
                   {{ role.name }}
                   <Badge
                     v-if="!role.isBillable && atLeastOneBillableRole"
-                    primary
+                    color="yellow"
+                    size="small"
+                    bold
                     class="margin-left-1"
                     >{{ $t('common.free') }}
                   </Badge>

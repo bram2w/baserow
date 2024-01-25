@@ -233,6 +233,7 @@ def test_last_modified_field_adjacent_row(data_fixture):
         view=grid_view, field=last_modified_field, order="DESC"
     )
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_a, row_b, row_c] = handler.create_rows(
         user=user,
@@ -242,15 +243,13 @@ def test_last_modified_field_adjacent_row(data_fixture):
             {},
             {},
         ],
+        model=table_model,
     )
 
-    base_queryset = table.get_model().objects.all()
-
-    row_b = base_queryset.get(pk=row_b.id)
     previous_row = handler.get_adjacent_row(
-        row_b, base_queryset, previous=True, view=grid_view
+        table_model, row_b.id, previous=True, view=grid_view
     )
-    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+    next_row = handler.get_adjacent_row(table_model, row_b.id, view=grid_view)
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id

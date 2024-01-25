@@ -1,5 +1,5 @@
 from collections import defaultdict
-from copy import copy, deepcopy
+from copy import deepcopy
 from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
@@ -19,9 +19,11 @@ from typing import (
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import Model, Q, QuerySet
+from django.db import connection, transaction
+from django.db.models import Model, QuerySet, Window
+from django.db.models.expressions import RawSQL
 from django.db.models.fields.related import ForeignKey, ManyToManyField
+from django.db.models.functions import RowNumber
 from django.utils.encoding import force_str
 
 from opentelemetry import metrics, trace
@@ -32,11 +34,6 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_OR,
-    AnnotatedQ,
-    FilterBuilder,
-)
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
 from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
@@ -468,109 +465,87 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         return row
 
-    def get_adjacent_row(self, row, original_queryset, previous=False, view=None):
+    def get_adjacent_row(
+        self,
+        table_model,
+        row_id,
+        previous=False,
+        view=None,
+        search=None,
+        search_mode=None,
+    ):
         """
-        Fetches the adjacent row of the provided row. By default, the next row will
-        be fetched. This will be done by applying the order as greater than or lower
-        than filter using the values of the provided row.
+        Fetches the adjacent row of the provided row in the provided table. By default,
+        the next row is fetched, but this can be changed by setting `previous` to True.
+        If a view is provided, the adjacent row will be fetched based on the ordering
+        and filtering of the view. If a search is provided, the adjacent row will be
+        fetched based on the search results. If no view or search is provided, the
+        adjacent row will be fetched based on the table's ordering.
 
-        :param row: An instance of the row where the adjacent row must be
-            fetched from.
-        :param original_queryset: The original queryset that was used to fetch the
-            row. This should contain all the orders, annotations, filters that were
-            used when fetching the row.
+        :param table_model: The model of the table where the row must be fetched from.
+        :param row_id: The id of the row where the adjacent row must be fetched from.
         :param previous: If the previous row should be fetched.
-        :param view: The view which contains the sorts that need to be applied to the
-            queryset, to find the right adjacent field.
-        :return: The adjacent rows.
+        :param view: The view that was used to fetch the row. If provided, the adjacent
+            row will be fetched based on the ordering and filtering of the view.
+        :param search: The search query that was used to fetch the row. If provided,
+            the adjacent row will be fetched based on the search results.
+        :param search_mode: The search mode that was used to fetch the row. If
+            provided, the adjacent row will be fetched based on the search results.
+        :return: The adjacent row instance if any, None otherwise.
         """
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        default_sorting = ["order", "id"]
-
-        if previous:
-            original_queryset = original_queryset.reverse()
-
-        # Sort query set
-        if view:
-            queryset_sorted = ViewHandler().apply_sorting(view, original_queryset)
+        if view is not None:
+            queryset = ViewHandler().get_queryset(view, model=table_model)
         else:
-            direction_prefix = "-" if previous else ""
-            sorting = [f"{direction_prefix}{sort}" for sort in default_sorting]
-            queryset_sorted = original_queryset.order_by(*sorting)
+            queryset = table_model.objects.all().enhance_by_fields()
 
-        # Apply filters to find the adjacent row
-        filter_builder = FilterBuilder(FILTER_TYPE_OR)
+        if search is not None:
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
-        previous_fields = {}
-        # Append view sorting
-        if view:
-            for view_sort_or_group_by in view.get_all_sorts():
-                field = view_sort_or_group_by.field
-                field_name = field.db_column
-                field_type = field_type_registry.get_by_model(
-                    view_sort_or_group_by.field.specific_class
-                )
+        return self.get_adjacent_row_in_queryset(queryset, row_id, previous=previous)
 
-                if previous:
-                    if view_sort_or_group_by.order == "DESC":
-                        order_direction = "ASC"
-                    else:
-                        order_direction = "DESC"
-                else:
-                    order_direction = view_sort_or_group_by.order
+    def get_adjacent_row_in_queryset(self, queryset, row_id, previous=False):
+        """
+        Fetches the adjacent row of the provided row in the provided queryset. By
+        default, the next row is fetched, but this can be changed by setting `previous`
+        to True.
 
-                order_direction_suffix = "__gt" if order_direction == "ASC" else "__lt"
+        :param queryset: The queryset that was used to fetch the row. This should
+            contain all the orders, annotations, filters that were used when fetching
+            the row.
+        :param row_id: The id of the row where the adjacent row must be fetched from.
+        :param previous: If the previous row should be fetched.
+        :return: The adjacent row.
+        :raise RowDoesNotExist: When the row with the provided id does not exist.
+        """
 
-                field_annotated_order_by = field_type.get_order(
-                    field, field_name, order_direction
-                )
+        table_model = queryset.model
+        try:
+            row = queryset.get(pk=row_id)
+        except table_model.DoesNotExist:
+            raise RowDoesNotExist(row_id)
 
-                # In this case the field type is more complex and probably requires
-                # joins in order to filter on the field. We will add the order
-                # expression to the queryset and filter on that expression.
-                annotation = field_annotated_order_by.annotation
-                field_expression = field_annotated_order_by.field_expression
-                filter_key = f"{field_expression}{order_direction_suffix}"
+        order_bys = queryset.query.order_by or table_model._meta.ordering
+        queryset_with_row_nr = queryset.annotate(
+            row_nr=Window(expression=RowNumber(), order_by=order_bys)
+        ).values("id", "row_nr")
 
-                value = field_type.get_value_for_filter(row, field)
-                if value is not None:
-                    q_kwargs = copy(previous_fields)
-                    q_kwargs[filter_key] = value
+        sql, params = queryset_with_row_nr.query.get_compiler(
+            connection=connection
+        ).as_sql()
 
-                    q = Q(**q_kwargs)
+        adjacent_id_subquery = f"""
+            WITH ordered AS ({sql})
+            SELECT id FROM ordered
+            WHERE row_nr = (SELECT row_nr FROM ordered WHERE id = %s)
+            {'-' if previous else '+'} 1
+        """  # nosec B608
 
-                    # As the key we want to use the field name without any direction
-                    # suffix.
-                    # In the case of a "normal" field type, that will just be the
-                    # field_name like `field_1`.
-                    # But in the case of a more complex field type, it might be an
-                    # expression like `field_1__value`.
-                    previous_fields[field_expression or field_name] = value
-
-                    if annotation:
-                        q = AnnotatedQ(annotation=annotation, q=q)
-
-                    filter_builder.filter(q)
-
-        # Append default sorting
-        for field_name in default_sorting:
-            direction_suffix = "__lt" if previous else "__gt"
-            filter_key = f"{field_name}{direction_suffix}"
-
-            value = getattr(row, field_name)
-
-            q_kwargs = copy(previous_fields)
-            q_kwargs[filter_key] = value
-
-            previous_fields[field_name] = value
-
-            filter_builder.filter(Q(**q_kwargs))
-
-        queryset_filtered = filter_builder.apply_to_queryset(queryset_sorted)
-
-        return queryset_filtered.first()
+        return table_model.objects.filter(
+            id=RawSQL(adjacent_id_subquery, (*params, row.id))  # nosec B611
+        ).first()
 
     def get_row_for_update(
         self,

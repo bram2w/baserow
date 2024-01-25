@@ -698,6 +698,21 @@ def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
 
     assert dispatch_data["data"].id == rows[0].id
 
+    # If the `row_id` is a formula, and its resolved value is blank, ensure we're
+    # raising `ServiceImproperlyConfigured`. We don't want to use the "no row ID"
+    # behaviour of returning the first row if we're using formulas.
+    fake_request = Mock()
+    fake_request.data = {"page_parameter": {"id": ""}}
+    service.row_id = 'get("page_parameter.id")'
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        service_type.resolve_service_formulas(service, dispatch_context)
+
+    assert (
+        exc.value.args[0] == "The result of the `row_id` formula must "
+        "be an integer or convertible to an integer."
+    )
+
 
 @pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_filters(
@@ -1558,6 +1573,27 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
         },
         field_db_column_by_name["duration_hms_sss"]: {
             "title": "duration_hms_sss",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dh"]: {
+            "title": "duration_dh",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dhm"]: {
+            "title": "duration_dhm",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dhms"]: {
+            "title": "duration_dhms",
             "default": None,
             "original_type": "duration",
             "metadata": {},

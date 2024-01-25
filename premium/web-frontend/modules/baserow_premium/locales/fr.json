@@ -346,10 +346,12 @@
         "row_comment": "commentaire de ligne"
     },
     "rowCommentMentionNotification": {
-        "title": "{sender} vous a mentionné dans la ligne {row} de la table {table}"
+        "title": "{sender} vous a mentionné dans la ligne {row} de la table {table}",
+        "deletedUser": "Un utilisateur a été supprimé"
     },
     "rowCommentNotification": {
-        "title": "{sender} a posté un commentaire pour la ligne {row} de {table}"
+        "title": "{sender} a posté un commentaire pour la ligne {row} de {table}",
+        "deletedUser": "Un utilisateur a été supprimé"
     },
     "RowEditModalCommentNotificationMode": {
         "modeMentionsDesc": "Vous ne recevrez les notifications uniquement lorsque vous serez mentionné·e.",

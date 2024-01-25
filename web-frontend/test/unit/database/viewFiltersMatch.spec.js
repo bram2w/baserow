@@ -31,7 +31,11 @@ import {
   HigherThanViewFilterType,
   LowerThanViewFilterType,
 } from '@baserow/modules/database/viewFilters'
-import { DurationFieldType } from '@baserow/modules/database/fieldTypes'
+import {
+  DurationFieldType,
+  NumberFieldType,
+  FormulaFieldType,
+} from '@baserow/modules/database/fieldTypes'
 
 const dateBeforeCases = [
   {
@@ -1126,6 +1130,42 @@ const durationLowerThanCases = [
   },
 ]
 
+const numberValueIsHigherThanCases = [
+  {
+    rowValue: 2,
+    filterValue: 0,
+    expected: true,
+  },
+  {
+    rowValue: null,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: 0,
+    filterValue: '0',
+    expected: false,
+  },
+]
+
+const numberValueIsLowerThanCases = [
+  {
+    rowValue: 1,
+    filterValue: '2',
+    expected: true,
+  },
+  {
+    rowValue: null,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: 0,
+    filterValue: '0',
+    expected: false,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -1405,10 +1445,28 @@ describe('All Tests', () => {
     ).toBe(true)
   })
 
-  test.each(durationHigherThanCases)('HigherThanFilterType', (values) => {
-    const fieldType = new DurationFieldType()
+  test.each(durationHigherThanCases)(
+    'DurationHigherThanFilterType',
+    (values) => {
+      const fieldType = new DurationFieldType({
+        app: testApp,
+      })
+      const { field } = values.context
+      const result = new HigherThanViewFilterType({ app: testApp }).matches(
+        values.rowValue,
+        values.filterValue,
+        field,
+        fieldType
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(durationLowerThanCases)('DurationLowerThanFilterType', (values) => {
+    const app = testApp.getApp()
+    const fieldType = new DurationFieldType({ app })
     const { field } = values.context
-    const result = new HigherThanViewFilterType({ app: testApp }).matches(
+    const result = new LowerThanViewFilterType({ app }).matches(
       values.rowValue,
       values.filterValue,
       field,
@@ -1417,15 +1475,59 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
-  test.each(durationLowerThanCases)('LowerThanFilterType', (values) => {
-    const fieldType = new DurationFieldType()
-    const { field } = values.context
-    const result = new LowerThanViewFilterType({ app: testApp }).matches(
-      values.rowValue,
-      values.filterValue,
-      field,
-      fieldType
-    )
-    expect(result).toBe(values.expected)
-  })
+  test.each(numberValueIsHigherThanCases)(
+    'NumberHigherThanFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new HigherThanViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(numberValueIsHigherThanCases)(
+    'FormulaNumberHigherThanFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new HigherThanViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'formula', formula_type: 'number' },
+        new FormulaFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(numberValueIsLowerThanCases)(
+    'NumberLowerThanFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new LowerThanViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(numberValueIsLowerThanCases)(
+    'FormulaNumberLowerThanFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new LowerThanViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'formula', formula_type: 'number' },
+        new FormulaFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
 })

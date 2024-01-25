@@ -87,7 +87,11 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         if not include_trashed:
-            table_qs = table_qs.filter(database__workspace__trashed=False)
+            table_qs = table_qs.filter(
+                trashed=False,
+                database__trashed=False,
+                database__workspace__trashed=False,
+            )
 
         return CoreHandler().filter_queryset(
             user,

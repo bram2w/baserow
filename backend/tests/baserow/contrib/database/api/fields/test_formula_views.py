@@ -948,7 +948,7 @@ def test_can_type_a_valid_formula_field(data_fixture, api_client):
             "api:database:formula:type_formula",
             kwargs={"table_id": table.id},
         ),
-        {f"formula": "1+1", "name": formula_field_name},
+        {"formula": "1+1", "name": formula_field_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -960,6 +960,7 @@ def test_can_type_a_valid_formula_field(data_fixture, api_client):
         "date_time_format": None,
         "date_show_tzinfo": None,
         "date_force_timezone": None,
+        "duration_format": None,
         "error": None,
         "formula": "1+1",
         "formula_type": "number",

@@ -36,7 +36,11 @@ export default {
   methods: {
     formattedDuration(value) {
       const metadata = this.entry.fields_metadata[this.fieldIdentifier]
-      return DurationFieldType.formatValue(metadata, value)
+      const durationFieldType = this.$registry.get(
+        'field',
+        DurationFieldType.getType()
+      )
+      return durationFieldType.formatValue(metadata, value)
     },
   },
 }

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix higher_than and lower_than frontend view filters for formula fields.",
+    "issue_number": 2289,
+    "bullet_points": [],
+    "created_at": "2024-01-17"
+}

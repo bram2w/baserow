@@ -49,6 +49,7 @@ from django.db.models.functions import (
     Sign,
     Sqrt,
     StrIndex,
+    Trim,
     Upper,
 )
 from django.db.models.functions.datetime import TimezoneMixin
@@ -104,8 +105,8 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaBooleanType,
     BaserowFormulaButtonType,
     BaserowFormulaCharType,
-    BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
+    BaserowFormulaDurationType,
     BaserowFormulaLinkType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaNumberType,
@@ -305,11 +306,13 @@ class BaserowDatetimeFormat(TwoArgumentBaserowFunction):
         if isinstance(arg1, Value) and arg1.value is None:
             return Value("")
         return Coalesce(
-            Func(
-                arg1,
-                arg2,
-                function="to_char",
-                output_field=fields.TextField(),
+            Trim(
+                Func(
+                    arg1,
+                    arg2,
+                    function="to_char",
+                    output_field=fields.TextField(),
+                )
             ),
             Value(""),
             output_field=fields.TextField(),
@@ -334,12 +337,18 @@ class BaserowDatetimeFormatTz(ThreeArgumentBaserowFunction):
     def to_django_expression(
         self, arg1: Expression, arg2: Expression, arg3: Expression
     ) -> Expression:
-        return Func(
-            arg1,
-            arg2,
-            arg3,
-            function="try_datetime_format_tz",
-            output_field=fields.TextField(),
+        return Trim(
+            Coalesce(
+                Func(
+                    arg1,
+                    arg2,
+                    arg3,
+                    function="try_datetime_format_tz",
+                    output_field=fields.TextField(),
+                ),
+                Value(""),
+                output_field=fields.TextField(),
+            ),
         )
 
 
@@ -1228,9 +1237,12 @@ class BaserowEqual(TwoArgumentBaserowFunction):
             return func_call.with_valid_type(BaserowFormulaBooleanType())
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return EqualsExpr(
-            arg1,
-            arg2,
+        return Case(
+            When(
+                condition=IsNullExpr(arg1, output_field=fields.BooleanField()),
+                then=IsNullExpr(arg2, output_field=fields.BooleanField()),
+            ),
+            default=EqualsExpr(arg1, arg2, output_field=fields.BooleanField()),
             output_field=fields.BooleanField(),
         )
 
@@ -1719,7 +1731,7 @@ class BaserowDateInterval(OneArgumentBaserowFunction):
         func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(BaserowFormulaDateIntervalType(nullable=True))
+        return func_call.with_valid_type(BaserowFormulaDurationType(nullable=True))
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return Func(

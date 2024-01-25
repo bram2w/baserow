@@ -2305,11 +2305,11 @@ def test_multiple_select_adjacent_row(data_fixture):
     assert base_queryset[1].id == row_b.id
     assert base_queryset[2].id == row_c.id
 
-    row_b = base_queryset.get(pk=row_b.id)
+    table_model = table.get_model()
     previous_row = handler.get_adjacent_row(
-        row_b, base_queryset, previous=True, view=grid_view
+        table_model, row_b.id, previous=True, view=grid_view
     )
-    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+    next_row = handler.get_adjacent_row(table_model, row_b.id, view=grid_view)
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id

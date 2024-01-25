@@ -39,7 +39,8 @@
         "moveUp": "Verplaats omhoog",
         "moveDown": "Verplaats omlaag",
         "moveRight": "Naar rechts",
-        "moveLeft": "Naar links"
+        "moveLeft": "Naar links",
+        "selectParent": "Selecteer ouder"
     },
     "pageHeaderItemTypes": {
         "labelElements": "Elementen",
@@ -54,8 +55,8 @@
     "elementType": {
         "heading": "Kop",
         "headingDescription": "Titel paginakop",
-        "paragraph": "Paragraaf",
-        "paragraphDescription": "Tekst op één regel",
+        "text": "Paragraaf",
+        "textDescription": "Tekst op één regel",
         "link": "Link",
         "image": "Afbeelding",
         "linkDescription": "Een link naar pagina/URL",
@@ -69,7 +70,13 @@
         "columnDescription": "Kolommen container",
         "button": "Knop",
         "buttonDescription": "Een knop element",
-        "formContainerDescription": "Een formulier element"
+        "formContainerDescription": "Een formulier element",
+        "dropdownDescription": "Dropdown element",
+        "iframeDescription": "Inline frame",
+        "dropdown": "Dropdown",
+        "checkbox": "Checkbox",
+        "checkboxDescription": "Checkbox element",
+        "iframe": "IFrame"
     },
     "addElementButton": {
         "label": "Element"
@@ -86,7 +93,8 @@
         "general": "Algemeen",
         "style": "Stijl",
         "visibility": "Zichtbaarheid",
-        "events": "Gebeurtenissen"
+        "events": "Gebeurtenissen",
+        "eventsTabDeactivatedNoEvents": "Dit element ondersteunt geen events"
     },
     "emptySidePanelState": {
         "message": "Klik op een van de elementen om meer details te zien"
@@ -101,10 +109,10 @@
         "textError": "De waarde is ongeldig.",
         "textPlaceholder": "Tekst invoeren..."
     },
-    "paragraphElement": {
+    "textElement": {
         "noValue": "Lege paragraaf..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Tekst",
         "textPlaceholder": "Tekst invoeren...",
         "textError": "De waarde is ongeldig."
@@ -184,7 +192,8 @@
         "widthFull": "Volle breedte",
         "variantLink": "Link",
         "paramPlaceholder": "Voer een waarde in...",
-        "paramsInErrorButton": "Parameters bijwerken"
+        "paramsInErrorButton": "Parameters bijwerken",
+        "buttonColor": "Kleur knop"
     },
     "alignmentSelector": {
         "alignment": "Uitlijning",
@@ -261,13 +270,16 @@
         "dataSource": "Gegevensbron",
         "fieldValuePlaceholder": "Waarde invoeren...",
         "itemsPerPagePlaceholder": "Waarde invoeren...",
-        "fields": "Velden"
+        "fields": "Velden",
+        "selectSourceFirst": "Kies een lijstgegevensbron om te beginnen met het configureren van je velden.",
+        "buttonColor": "Kleur knop"
     },
     "linkFieldForm": {
         "fieldLinkNamePlaceholder": "Waarde invoeren...",
         "fieldValuePlaceholder": "Waarde invoeren...",
         "fieldLinkNameLabel": "Link tekst",
-        "fieldValueLabel": "Url"
+        "fieldValueLabel": "Url",
+        "buttonColor": "Kleur knop"
     },
     "verticalAlignmentSelector": {
         "alignmentTop": "Boven",
@@ -286,7 +298,9 @@
         "boxTop": "Bovenkant",
         "backgroundLabel": "Achtergrond",
         "backgroundColor": "Achtergrond kleur",
-        "boxBottom": "Onderkant"
+        "boxBottom": "Onderkant",
+        "boxRight": "Rechts",
+        "boxLeft": "Links"
     },
     "updateUserSourceForm": {
         "nameFieldLabel": "Naam",
@@ -308,7 +322,10 @@
         "placeholderTitle": "Placeholder",
         "labelTitle": "Label",
         "requiredTitle": "Vereist",
-        "labelPlaceholder": "Voer een label in (optioneel)"
+        "labelPlaceholder": "Voer een label in (optioneel)",
+        "multilineTitle": "Meerdere regels",
+        "rowsTitle": "Aantal regels",
+        "rowsPlaceholder": "Voer het aantal rijen van deze invoer in"
     },
     "widthSelector": {
         "widthFull": "Volledige breedte",
@@ -317,7 +334,8 @@
     },
     "buttonElementForm": {
         "valuePlaceholder": "Voer tekst in...",
-        "valueLabel": "Tekst"
+        "valueLabel": "Tekst",
+        "buttonColor": "Kleur knop"
     },
     "workflowActionTypes": {
         "updateRowLabel": "Rij bijwerken",
@@ -423,7 +441,8 @@
     },
     "formContainerElementForm": {
         "submitButtonLabel": "Verstuur knop",
-        "submitButtonPlaceholder": "Waarde invoeren..."
+        "submitButtonPlaceholder": "Waarde invoeren...",
+        "buttonColor": "Kleur knop"
     },
     "subDomainForm": {
         "domainNameLabel": "Domeinnaam"
@@ -433,5 +452,45 @@
     },
     "getFormulaComponent": {
         "errorTooltip": "Ongeldige referentie"
+    },
+    "generalForm": {
+        "labelTitle": "Label",
+        "labelPlaceholder": "Voer een label in (optioneel)",
+        "valueTitle": "Standaardwaarde",
+        "valuePlaceholder": "Voer een standaardwaarde in (optioneel)",
+        "placeholderTitle": "Placeholder",
+        "placeholderPlaceholder": "Voer een placeholder in (optioneel)",
+        "requiredTitle": "Verplicht"
+    },
+    "linkNavigationSelection": {
+        "urlPlaceholder": "Voer een URL in...",
+        "navigateToCustom": "Aangepaste URL",
+        "navigateTo": "Navigeer naar",
+        "paramPlaceholder": "Voer een waarde in...",
+        "url": "Bestemmings URL",
+        "paramsInErrorDescription": "De opgeslagen parameters komen niet overeen met de paginaparameters. De pagina is waarschijnlijk verwijderd of bijgewerkt.",
+        "paramsInErrorButton": "Parameters bijwerken"
+    },
+    "iframeElementForm": {
+        "empty": "Leeg IFrame...",
+        "sourceTypeLabel": "Bron soort",
+        "urlLabel": "URL",
+        "urlPlaceholder": "Link naar de externe bron die moet worden ingesloten",
+        "urlHelp": "Opmerking: zorg ervoor dat je controle hebt over de ingevoerde URL of dat je deze vertrouwt.",
+        "embedLabel": "Insluiten",
+        "embedPlaceholder": "Ruwe HTML-inhoud die moet worden ingesloten",
+        "heightLabel": "Hoogte (px)",
+        "heightPlaceholder": "Hoogte in pixels"
+    },
+    "dropdownOptionSelector": {
+        "label": "Opties",
+        "value": "Waarde",
+        "name": "Naam",
+        "addOption": "optie toevoegen"
+    },
+    "checkboxElementForm": {
+        "labelTitle": "Label",
+        "valueTitle": "Standaardwaarde",
+        "requiredTitle": "Verplicht"
     }
 }

@@ -1,47 +1,49 @@
-import _ from 'lodash/fp'
-
 export class FromTipTapVisitor {
   constructor(functions) {
     this.functions = functions
   }
 
-  visit(content) {
-    if (_.isArray(content)) {
-      return this.visitArray(content)
-    } else {
-      return this.visitNode(content)
-    }
-  }
-
-  visitNode(node) {
+  visit(node) {
     switch (node.type) {
       case 'text':
         return this.visitText(node)
-      case 'hardBreak':
-        return this.visitHardBreak(node)
+      case 'doc':
+        return this.visitDoc(node)
+      case 'wrapper':
+        return this.visitWrapper(node)
       default:
         return this.visitFunction(node)
     }
   }
 
-  visitArray(content) {
-    if (content.length === 0) {
+  visitDoc(node) {
+    if (!node.content || node.content.length === 0) {
       return ''
     }
 
-    if (content.length === 1) {
-      return this.visit(content[0])
+    if (node.content.length === 1) {
+      return this.visit(node.content[0])
     }
 
-    return `concat(${content.map(this.visit.bind(this)).join(', ')})`
+    // Add the newlines between root wrappers. They are paragraphs.
+    return `concat(${node.content.map(this.visit.bind(this)).join(", '\n', ")})`
+  }
+
+  visitWrapper(node) {
+    if (!node.content || node.content.length === 0) {
+      // An empty wrapper is an empty string
+      return "''"
+    }
+
+    if (node.content.length === 1) {
+      return this.visit(node.content[0])
+    }
+
+    return `concat(${node.content.map(this.visit.bind(this)).join(', ')})`
   }
 
   visitText(node) {
     return `'${node.text.replace(/'/g, "\\'")}'`
-  }
-
-  visitHardBreak(node) {
-    return "'\n'"
   }
 
   visitFunction(node) {

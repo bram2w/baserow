@@ -12,6 +12,11 @@ export default {
       formattedValue: '',
     }
   },
+  computed: {
+    fieldType() {
+      return this.$registry.get('field', DurationFieldType.getType())
+    },
+  },
   watch: {
     value(value) {
       this.updateFormattedValue(this.field, value)
@@ -31,7 +36,7 @@ export default {
       return this.errorMsg
     },
     formatValue(field, value) {
-      return DurationFieldType.formatValue(field, value)
+      return this.fieldType.formatValue(field, value)
     },
     updateFormattedValue(field, value) {
       this.formattedValue = this.formatValue(field, value)
@@ -41,16 +46,23 @@ export default {
       if (this.errorMsg !== null) {
         return
       }
-      const newCopy = DurationFieldType.parseInputValue(field, value)
+      const newCopy = this.fieldType.parseInputValue(field, value)
       if (newCopy !== this.copy) {
         this.copy = newCopy
         return newCopy
       }
     },
+    isValidChar(char) {
+      const allowedChars = ['.', ':', ' ', 'd', 'h']
+      return /\d/.test(char) || allowedChars.includes(char)
+    },
     onKeyPress(field, event) {
-      if (!/\d/.test(event.key) && event.key !== '.' && event.key !== ':') {
+      if (!this.isValidChar(event.key)) {
         return event.preventDefault()
       }
+    },
+    onInput(field, event) {
+      this.updateCopy(field, event.target.value)
     },
   },
 }

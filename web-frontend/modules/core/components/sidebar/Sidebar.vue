@@ -188,9 +188,13 @@
                     $t('sidebar.notifications')
                   }}</span>
                 </a>
-                <span v-show="unreadNotificationCount" class="tree__counter">{{
-                  unreadNotificationCount >= 10 ? '9+' : unreadNotificationCount
-                }}</span>
+                <BadgeCounter
+                  v-show="unreadNotificationCount"
+                  class="tree__counter"
+                  :count="unreadNotificationCount"
+                  :limit="10"
+                >
+                </BadgeCounter>
               </div>
               <NotificationPanel ref="notificationPanel" />
             </li>
@@ -413,6 +417,7 @@ import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 import WorkspaceMemberInviteModal from '@baserow/modules/core/components/workspace/WorkspaceMemberInviteModal'
 import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 import NotificationPanel from '@baserow/modules/core/components/NotificationPanel'
+import BadgeCounter from '@baserow/modules/core/components/BadgeCounter'
 
 export default {
   name: 'Sidebar',
@@ -428,6 +433,7 @@ export default {
     TrashModal,
     WorkspaceMemberInviteModal,
     NotificationPanel,
+    BadgeCounter,
   },
   mixins: [editWorkspace, undoRedo],
   data() {

@@ -29,8 +29,8 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
-    ParagraphElement,
     TableElement,
+    TextElement,
     VerticalAlignments,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -395,13 +395,14 @@ class HeadingElementType(ElementType):
 
     type = "heading"
     model_class = HeadingElement
-    serializer_field_names = ["value", "level", "font_color"]
-    allowed_fields = ["value", "level", "font_color"]
+    serializer_field_names = ["value", "level", "font_color", "alignment"]
+    allowed_fields = ["value", "level", "font_color", "alignment"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
         font_color: str
         level: int
+        alignment: str
 
     @property
     def serializer_field_overrides(self):
@@ -431,10 +432,7 @@ class HeadingElementType(ElementType):
         return overrides
 
     def get_pytest_params(self, pytest_data_fixture):
-        return {
-            "value": "'Corporis perspiciatis'",
-            "level": 2,
-        }
+        return {"value": "'Corporis perspiciatis'", "level": 2, "alignment": "left"}
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
@@ -446,18 +444,19 @@ class HeadingElementType(ElementType):
         return super().import_serialized(page, serialized_copy, id_mapping)
 
 
-class ParagraphElementType(ElementType):
+class TextElementType(ElementType):
     """
-    A simple paragraph element that can be used to display a paragraph of text.
+    A text element that allows plain or markdown content.
     """
 
-    type = "paragraph"
-    model_class = ParagraphElement
-    serializer_field_names = ["value"]
-    allowed_fields = ["value"]
+    type = "text"
+    model_class = TextElement
+    serializer_field_names = ["value", "alignment"]
+    allowed_fields = ["value", "alignment"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
+        alignment: str
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -465,7 +464,8 @@ class ParagraphElementType(ElementType):
             "Eum dicta sit rerum animi. Sint sapiente eum cupiditate nobis vel. "
             "Maxime qui nam consequatur. "
             "Asperiores corporis perspiciatis nam harum veritatis. "
-            "Impedit qui maxime aut illo quod ea molestias.'"
+            "Impedit qui maxime aut illo quod ea molestias.'",
+            "alignment": "left",
         }
 
     @property
@@ -689,6 +689,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
     request_serializer_field_names = [
         "image_source_type",
@@ -696,6 +699,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
     allowed_fields = [
         "image_source_type",
@@ -703,6 +709,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
 
     class SerializedDict(ElementDict):
@@ -711,6 +720,9 @@ class ImageElementType(ElementType):
         image_url: BaserowFormula
         alt_text: BaserowFormula
         alignment: str
+        style_image_constraint: str
+        style_max_width: Optional[int]
+        style_max_height: Optional[int]
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -719,6 +731,9 @@ class ImageElementType(ElementType):
             "image_url": "'https://test.com/image.png'",
             "alt_text": "'some alt text'",
             "alignment": HorizontalAlignments.LEFT,
+            "style_image_constraint": "",
+            "style_max_width": None,
+            "style_max_height": None,
         }
 
     @property
@@ -762,6 +777,12 @@ class ImageElementType(ElementType):
                 choices=HorizontalAlignments.choices,
                 help_text=ImageElement._meta.get_field("alignment").help_text,
                 required=False,
+            ),
+            "style_max_width": serializers.IntegerField(
+                required=False,
+                allow_null=ImageElement._meta.get_field("style_max_width").null,
+                default=ImageElement._meta.get_field("style_max_width").default,
+                help_text=ImageElement._meta.get_field("style_max_width").help_text,
             ),
         }
         if super().request_serializer_field_overrides is not None:

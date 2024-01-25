@@ -5,7 +5,7 @@ import {
 } from '@baserow/modules/database/utils/row'
 import { TestApp } from '@baserow/test/helpers/testApp'
 
-describe('Row untilities', () => {
+describe('Row utilities', () => {
   let testApp = null
   let store = null
 

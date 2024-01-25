@@ -167,13 +167,13 @@ class BuilderConfig(AppConfig):
             ImageElementType,
             InputTextElementType,
             LinkElementType,
-            ParagraphElementType,
             TableElementType,
+            TextElementType,
         )
         from .elements.registries import element_type_registry
 
         element_type_registry.register(HeadingElementType())
-        element_type_registry.register(ParagraphElementType())
+        element_type_registry.register(TextElementType())
         element_type_registry.register(LinkElementType())
         element_type_registry.register(ImageElementType())
         element_type_registry.register(InputTextElementType())

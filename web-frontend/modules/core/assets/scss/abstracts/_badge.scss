@@ -1,0 +1,68 @@
+%badge-cyan {
+  background: $palette-cyan-50 !important;
+  color: $palette-cyan-800;
+
+  .badge__indicator {
+    background: $palette-cyan-500;
+  }
+}
+
+%badge-green {
+  background: $palette-green-50 !important;
+  color: $palette-green-800;
+
+  .badge__indicator {
+    background: $palette-green-500;
+  }
+}
+
+%badge-purple {
+  background: $palette-purple-50 !important;
+  color: $palette-purple-800;
+
+  .badge__indicator {
+    background: $palette-purple-500;
+  }
+}
+
+%badge-red {
+  background: $palette-red-50 !important;
+  color: $palette-red-800;
+
+  .badge__indicator {
+    background: $palette-red-500;
+  }
+}
+
+%badge-magenta {
+  background: $palette-magenta-50 !important;
+  color: $palette-magenta-800;
+
+  .badge__indicator {
+    background: $palette-magenta-500;
+  }
+}
+
+%badge-yellow {
+  background: $palette-yellow-50 !important;
+  color: $palette-yellow-800;
+
+  .badge__indicator {
+    background: $palette-yellow-500;
+  }
+}
+
+%badge-neutral {
+  background: $palette-neutral-50 !important;
+  color: $palette-neutral-800;
+
+  .badge__indicator {
+    background: $palette-neutral-700;
+  }
+}
+
+@mixin badge-color($color: 'cyan') {
+  .badge--#{$color} {
+    @extend %badge-#{$color};
+  }
+}

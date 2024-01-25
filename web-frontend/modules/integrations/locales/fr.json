@@ -1,1 +1,64 @@
-{}
+{
+  "integrationType": {
+    "localBaserowSummary": "Baserow local - {name}, {username}",
+    "localBaserow": "Baserow local",
+    "localBaserowWarning": "Associer votre compte donne à tous ceux qui peuvent modifier l'application un accès complet aux données auxquelles vous avez accès. Il est possible de créer un deuxième utilisateur, donner les bonnes autorisations et utiliser celui-ci."
+  },
+  "serviceType": {
+    "localBaserowGetRow": "Obtenir une ligne",
+    "localBaserowListRows": "Lister des lignes"
+  },
+  "localBaserowForm": {
+    "user": "Utilisateur",
+    "userMessage": "En créant cette connexion, vous autorisez l'application à utiliser votre compte pour effectuer des modifications dans votre projet local Baserow."
+  },
+  "localBaserowGetRowForm": {
+    "rowFieldLabel": "ID de ligne",
+    "invalidFormula": "La formule est invalide",
+    "rowFieldPlaceHolder": "Saisir l'ID d'une ligne",
+    "searchFieldPlaceHolder": "Saisissez un terme de recherche...",
+    "noTableChosenForFiltering": "Sélectionnez une table pour commencer à utiliser les filtres de source de données.",
+    "filterTabTitle": "Filtres",
+    "searchTabTitle": "Recherche",
+    "noTableChosenForSorting": "Choisissez une table pour pouvoir ordonner les lignes de la sources de données.",
+    "rowFieldHelpText": "Laissez cette valeur vide pour renvoyer la première ligne."
+  },
+  "localBaserowListRowsForm": {
+    "filterTabTitle": "Filtres",
+    "sortTabTitle": "Tris",
+    "searchTabTitle": "Recherche",
+    "searchFieldPlaceHolder": "Saisissez un terme de recherche...",
+    "noTableChosenForFiltering": "Sélectionnez une table pour commencer à filtrer les lignes de la source de données.",
+    "noTableChosenForSorting": "Sélectionnez une table pour pouvoir ordonner les lignes de la sources de données."
+  },
+  "localBaserowTableServiceConditionalForm": {
+    "noFilterTitle": "Vous n'avez pas encore créé de filtre pour cette source de données",
+    "noFilterText": "Les filtres de source de données vous permettent de n'afficher que les lignes de la table Baserow qui satisfont les conditions.",
+    "relatedFieldNotFound": "Le champ correspondant n'a pas été trouvé.",
+    "noCompatibleFilterTypesErrorTitle": "Aucun filtre compatible",
+    "noCompatibleFilterTypesErrorMessage": "Aucun de vos champs n'a de filtres compatibles",
+    "addFilter": "Ajouter un filtre",
+    "filterTypeNotFound": "Le type de filtre n'est pas compatible."
+  },
+  "localBaserowTableServiceSortForm": {
+    "noSortTitle": "Vous n'avez pas encore créé de tri pour cette source de données",
+    "noSortText": "Les tris vous permettent de trier les lignes de la table Baserow en fonction d'un champ.",
+    "sortBy": "Trier par",
+    "addSort": "Ajouter un tri",
+    "thenBy": "Puis par",
+    "noTableChosenForSorting": "Sélectionnez une table pour pouvoir ordonner les lignes de la sources de données."
+  },
+  "dataProviderType": {
+    "dataSource": "Source de données",
+    "pageParameter": "Paramètre"
+  },
+  "localBaserowTableSelector": {
+    "viewFieldLabel": "Vue",
+    "tableFieldLabel": "Table",
+    "chooseNoView": "Non sélectionnée",
+    "databaseFieldLabel": "Base de données"
+  },
+  "userSourceType": {
+    "localBaserow": "Authentification par table Baserow"
+  }
+}

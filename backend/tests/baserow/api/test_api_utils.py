@@ -426,7 +426,7 @@ def test_api_give_informative_404_page_in_debug_for_invalid_urls(api_client):
             )
 
             assert response.status_code == status.HTTP_404_NOT_FOUND
-            assert response.headers.get("content-type") == "text/html"
+            assert response.headers.get("content-type") == "text/html; charset=utf-8"
 
 
 fake_redis_server = FakeServer()

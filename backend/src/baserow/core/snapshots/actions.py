@@ -24,6 +24,10 @@ class CreateSnapshotActionType(ActionType):
             'application "%(application_name)s" (%(application_id)s).'
         ),
     )
+    analytics_params = [
+        "application_id",
+        "snapshot_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -72,6 +76,11 @@ class RestoreSnapshotActionType(ActionType):
             'to application "%(application_name)s" (%(application_id)s).'
         ),
     )
+    analytics_params = [
+        "application_id",
+        "snapshot_id",
+        "original_application_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -127,6 +136,10 @@ class DeleteSnapshotActionType(ActionType):
             'application "%(application_name)s" (%(application_id)s).'
         ),
     )
+    analytics_params = [
+        "application_id",
+        "snapshot_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

@@ -155,7 +155,7 @@ class ActionType(
 ):
     type: str = NotImplemented
     description: ActionTypeDescription = ActionTypeDescription()
-    privacy_sensitive_params = []
+    analytics_params = []
 
     @dataclasses.dataclass
     class Params:

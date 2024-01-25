@@ -23,6 +23,10 @@ class EmptyTrashActionType(ActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "application_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -91,6 +95,10 @@ class RestoreFromTrashActionType(ActionType):
         _('Item of type "%(item_type)s" (%(item_id)s) has been restored from trash'),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "workspace_id",
+        "item_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

@@ -1,25 +1,53 @@
 .badge {
-  background-color: $color-primary-500;
-  color: $white;
-  padding: 0 4px;
-  width: fit-content;
+  background: $palette-blue-500;
+  display: inline-flex;
+  padding: 6px 10px;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  height: 24px;
+  max-width: 100%;
 
-  @include fixed-height(14px, 11px);
   @include rounded($rounded);
 }
 
-.badge--primary {
-  background-color: $color-primary-500;
+.badge__label {
+  @extend %ellipsis;
 }
 
-.badge--success {
-  background-color: $color-success-500;
+@include badge-color('cyan');
+@include badge-color('green');
+@include badge-color('yellow');
+@include badge-color('red');
+@include badge-color('magenta');
+@include badge-color('purple');
+@include badge-color('neutral');
+
+.badge--small {
+  padding: 4px 8px;
+  font-size: 10px;
+  height: 20px;
 }
 
-.badge--warning {
-  background-color: $color-warning-500;
+.badge--large {
+  padding: 4px 10px;
+  gap: 8px;
+  font-size: 13px;
+  height: 28px;
 }
 
-.badge--error {
-  background-color: $color-error-500;
+.badge--rounded {
+  @include rounded($rounded-2xl);
+}
+
+.badge__indicator {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+
+  @include rounded($rounded-3xl);
+}
+
+.badge--bold {
+  font-weight: bold;
 }

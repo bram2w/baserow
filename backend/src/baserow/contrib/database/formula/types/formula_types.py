@@ -21,6 +21,7 @@ from baserow.contrib.database.fields.expressions import (
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.mixins import get_date_time_format
+from baserow.contrib.database.fields.utils.duration import D_H_M_S
 from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
     BaserowDecimalLiteral,
@@ -414,12 +415,12 @@ def _calculate_addition_interval_type(
 ) -> BaserowFormulaValidType:
     arg1_type = arg1.expression_type
     arg2_type = arg2.expression_type
-    if isinstance(arg1_type, BaserowFormulaDateIntervalType) and isinstance(
-        arg2_type, BaserowFormulaDateIntervalType
+    if isinstance(arg1_type, BaserowFormulaDateIntervalTypeMixin) and isinstance(
+        arg2_type, BaserowFormulaDateIntervalTypeMixin
     ):
         # interval + interval = interval
         resulting_type = arg1_type
-    elif isinstance(arg1_type, BaserowFormulaDateIntervalType):
+    elif isinstance(arg1_type, BaserowFormulaDateIntervalTypeMixin):
         # interval + date = date
         resulting_type = arg2_type
     else:
@@ -429,9 +430,20 @@ def _calculate_addition_interval_type(
     return resulting_type
 
 
-# noinspection PyMethodMayBeStatic
+class BaserowFormulaDateIntervalTypeMixin:
+    """
+    Empty mixin to allow us to check if a type is a date interval type or a duration
+    type. NOTE: This can be removed once the BaserowFormulaDateIntervalType is removed.
+    """
+
+    pass
+
+
+# Deprecated, use BaserowFormulaDurationType instead
 class BaserowFormulaDateIntervalType(
-    BaserowFormulaTypeHasEmptyBaserowExpression, BaserowFormulaValidType
+    BaserowFormulaTypeHasEmptyBaserowExpression,
+    BaserowFormulaValidType,
+    BaserowFormulaDateIntervalTypeMixin,
 ):
     type = "date_interval"
     baserow_field_type = None
@@ -535,6 +547,74 @@ class BaserowFormulaDateIntervalType(
         return Cast(field.db_column, output_field=models.TextField())
 
 
+class BaserowFormulaDurationType(
+    BaserowFormulaTypeHasEmptyBaserowExpression,
+    BaserowFormulaValidType,
+    BaserowFormulaDateIntervalTypeMixin,
+):
+    type = "duration"
+    baserow_field_type = "duration"
+    user_overridable_formatting_option_fields = ["duration_format"]
+    can_group_by = True
+    can_order_by_in_array = True
+
+    def __init__(self, duration_format: str = D_H_M_S, **kwargs):
+        super().__init__(**kwargs)
+        self.duration_format = duration_format
+
+    @property
+    def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self)]
+
+    @property
+    def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self)]
+
+    @property
+    def addable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self), BaserowFormulaDateType]
+
+    @property
+    def subtractable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self)]
+
+    def add(
+        self,
+        add_func_call: "BaserowFunctionCall[UnTyped]",
+        arg1: "BaserowExpression[BaserowFormulaValidType]",
+        arg2: "BaserowExpression[BaserowFormulaValidType]",
+    ):
+        return add_func_call.with_valid_type(
+            _calculate_addition_interval_type(arg1, arg2)
+        )
+
+    def minus(
+        self,
+        minus_func_call: "BaserowFunctionCall[UnTyped]",
+        arg1: "BaserowExpression[BaserowFormulaValidType]",
+        arg2: "BaserowExpression[BaserowFormulaValidType]",
+    ):
+        return minus_func_call.with_valid_type(
+            BaserowFormulaDurationType(
+                duration_format=self.duration_format,
+                nullable=arg1.expression_type.nullable or arg2.expression_type.nullable,
+            )
+        )
+
+    def placeholder_empty_value(self):
+        return Value(datetime.timedelta(hours=0), output_field=models.DurationField())
+
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return literal(datetime.timedelta(hours=0))
+
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleKeyArrayExpression(
+            field_name, "value", "interval", output_field=models.DurationField()
+        )
+
+
 class BaserowFormulaDateType(BaserowFormulaValidType):
     type = "date"
     baserow_field_type = "date"
@@ -579,11 +659,11 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
 
     @property
     def addable_types(self) -> List[Type["BaserowFormulaValidType"]]:
-        return [BaserowFormulaDateIntervalType]
+        return [BaserowFormulaDateIntervalType, BaserowFormulaDurationType]
 
     @property
     def subtractable_types(self) -> List[Type["BaserowFormulaValidType"]]:
-        return [type(self), BaserowFormulaDateIntervalType]
+        return [type(self), BaserowFormulaDateIntervalType, BaserowFormulaDurationType]
 
     def add(
         self,
@@ -604,12 +684,12 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         arg1_type = arg1.expression_type
         arg2_type = arg2.expression_type
         if isinstance(arg2_type, BaserowFormulaDateType):
-            # date - date = interval
-            resulting_type = BaserowFormulaDateIntervalType(
+            # date - date = duration
+            resulting_type = BaserowFormulaDurationType(
                 nullable=arg1_type.nullable or arg2_type.nullable
             )
         else:
-            # date - interval = date
+            # date - duration = date
             resulting_type = arg1_type
         return minus_func_call.with_valid_type(resulting_type)
 
@@ -1003,6 +1083,11 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
                 # strings, we need to reparse them back first before giving it to
                 # the date field type.
                 list_item = parser.isoparse(list_item)
+            elif list_item is not None and self.sub_type.type == "duration":
+                # Arrays are stored as JSON which means the durations are converted to
+                # the number of seconds, we need to reparse them back first before
+                # giving the duration field type.
+                list_item = datetime.timedelta(seconds=list_item)
             export_value = map_func(list_item)
             if export_value is None:
                 export_value = ""
@@ -1268,7 +1353,8 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaCharType,
     BaserowFormulaButtonType,
     BaserowFormulaLinkType,
-    BaserowFormulaDateIntervalType,
+    BaserowFormulaDateIntervalType,  # Deprecated in favor of BaserowFormulaDurationType
+    BaserowFormulaDurationType,
     BaserowFormulaDateType,
     BaserowFormulaBooleanType,
     BaserowFormulaNumberType,

@@ -12,6 +12,14 @@ export default async function ({ route, from, store, app }) {
 
   const toDatabaseId = parseIntOrNull(route?.params?.databaseId)
   const toDatabase = store.getters['application/get'](toDatabaseId)
+
+  // If the database is not found, it means that the user has no access to it, or
+  // it does not exist. In this case, we don't have to do anything with the table
+  // loading state because the table page is going to fail with a 404.
+  if (!toDatabase) {
+    return
+  }
+
   const toWorkspaceId = toDatabase.workspace.id
   const toTableId = parseIntOrNull(route.params.tableId)
   const toViewId = parseIntOrNull(route.params.viewId)

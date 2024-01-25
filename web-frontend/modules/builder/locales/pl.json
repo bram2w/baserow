@@ -90,8 +90,8 @@
     "elementType": {
         "heading": "Nagłówek",
         "headingDescription": "Tytuł nagłówka strony",
-        "paragraph": "Ustęp",
-        "paragraphDescription": "Tekst jednowierszowy",
+        "text": "Ustęp",
+        "textDescription": "Tekst jednowierszowy",
         "link": "Link",
         "linkDescription": "Link do strony/URL",
         "image": "Obraz",
@@ -189,10 +189,10 @@
         "integrationMessage": "Nowe integracje można tworzyć poprzez dodanie źródła danych, akcji lub uwierzytelnienia użytkownika.",
         "noIntegrationMessage": "Nie utworzono jeszcze żadnego połączenia. Można je utworzyć poprzez dodanie źródła danych, akcji lub uwierzytelnienia użytkownika."
     },
-    "paragraphElement": {
+    "textElement": {
         "noValue": "Pusty akapit..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Tekst",
         "textPlaceholder": "Wprowadź tekst...",
         "textError": "Wartość jest nieprawidłowa."

@@ -489,6 +489,13 @@ class FormulaField(Field):
         null=True,
         help_text="Force a timezone for the field overriding user profile settings.",
     )
+    duration_format = models.CharField(
+        choices=DURATION_FORMAT_CHOICES,
+        default=DURATION_FORMAT_CHOICES[0][0],
+        max_length=32,
+        null=True,
+        help_text=_("The format of the duration."),
+    )
     needs_periodic_update = models.BooleanField(
         default=False,
         help_text="Indicates if the field needs to be periodically updated.",

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support to reference duration fields in the formula language.",
+    "issue_number": 2190,
+    "bullet_points": [],
+    "created_at": "2024-01-08"
+}

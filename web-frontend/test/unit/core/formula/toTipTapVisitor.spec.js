@@ -11,7 +11,7 @@ describe('toTipTapVisitor', () => {
   })
 
   testCases.forEach(({ formula, content }) => {
-    it('should return the expected formula', () => {
+    it(`should return the expected formula for ${formula}`, () => {
       const functionCollection = new RuntimeFunctionCollection(
         testApp.store.$registry
       )

@@ -6,26 +6,6 @@
   color: $color-error-500;
 }
 
-.license-plan {
-  font-size: 12px;
-  line-height: 23px;
-  padding: 0 10px;
-
-  @include rounded($rounded);
-
-  &.license-plan--inline {
-    display: inline-block;
-  }
-
-  &.license-plan--premium {
-    background-color: $color-primary-100;
-  }
-
-  &.license-plan--expired {
-    background-color: $color-error-100;
-  }
-}
-
 .license-detail {
   padding: 30px;
 }

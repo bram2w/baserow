@@ -144,8 +144,6 @@ export default {
           this.$registry
         )
 
-      console.log(newRowValues)
-
       this.$store.dispatch('rowModal/updated', {
         tableId: this.tableId,
         values: newRowValues,

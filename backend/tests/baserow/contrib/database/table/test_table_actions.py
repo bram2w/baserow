@@ -108,9 +108,9 @@ def test_can_undo_order_tables(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
-    table_1 = data_fixture.create_database_table(database=database, user=user)
-    table_2 = data_fixture.create_database_table(database=database, user=user)
-    table_3 = data_fixture.create_database_table(database=database, user=user)
+    table_1 = data_fixture.create_database_table(database=database, user=user, order=1)
+    table_2 = data_fixture.create_database_table(database=database, user=user, order=2)
+    table_3 = data_fixture.create_database_table(database=database, user=user, order=3)
 
     def get_tables_order():
         return [t.id for t in database.table_set.order_by("order")]
@@ -138,9 +138,9 @@ def test_can_undo_redo_order_tables(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
     database = data_fixture.create_database_application(user=user)
-    table_1 = data_fixture.create_database_table(database=database, user=user)
-    table_2 = data_fixture.create_database_table(database=database, user=user)
-    table_3 = data_fixture.create_database_table(database=database, user=user)
+    table_1 = data_fixture.create_database_table(database=database, user=user, order=1)
+    table_2 = data_fixture.create_database_table(database=database, user=user, order=2)
+    table_3 = data_fixture.create_database_table(database=database, user=user, order=3)
 
     def get_tables_order():
         return [t.id for t in database.table_set.all()]

@@ -1,7 +1,7 @@
 import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms * 4))
 }
 
 // Split the test to make sure they run async. This actually helps with the sleep

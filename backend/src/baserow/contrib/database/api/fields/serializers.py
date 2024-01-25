@@ -301,4 +301,9 @@ class DurationFieldSerializer(serializers.Field):
         )
 
     def to_representation(self, value):
-        return value.total_seconds()
+        if isinstance(value, (int, float)):
+            # Durations are stored as the number of seconds for lookups/arrays in
+            # formula land, so just return the value in that case.
+            return value
+        else:
+            return value.total_seconds()

@@ -62,7 +62,7 @@
         "triggerButton": "触发测试Webhook",
         "deactivated": {
             "title": "Webhook 已停用",
-            "content": "此webhook已被停用，因为连续失败太多。详情请查看通话记录。点击下方按钮再次激活。激活后不要忘记保存webhook。" ,
+            "content": "此webhook已被停用，因为连续失败太多。详情请查看通话记录。点击下方按钮再次激活。激活后不要忘记保存webhook。",
             "activate": "激活"
         },
         "deprecatedEventType": {
@@ -179,7 +179,7 @@
         "pythonClient": "Python 示例 API 客户端："
     },
     "apiDocsTableListFields": {
-        "description": "要列出 {name} 表的字段，必须向 {name} 字段端点发出 `GET` 请求。只有在令牌具有读取、创建或更新权限时才能列出字段。" ,
+        "description": "要列出 {name} 表的字段，必须向 {name} 字段端点发出 `GET` 请求。只有在令牌具有读取、创建或更新权限时才能列出字段。",
         "resultFieldProperties": "结果字段属性",
         "id": "字段主键。可以通过添加`field_`前缀来生成数据库列名。",
         "name": "字段名。",
@@ -272,7 +272,7 @@
         "typeLabel": "数字类型",
         "integer": "整型",
         "decimal": "十进制小数",
-       "decimalPlacesLabel": "小数位数",
+        "decimalPlacesLabel": "小数位数",
         "allowNegative": "允许负数"
     },
     "fieldContext": {
@@ -308,7 +308,7 @@
         "addField": "添加字段"
     },
     "selectRowContent": {
-         "search": "搜索行"
+        "search": "搜索行"
     },
     "rowEditModal": {
         "addField": "添加字段",

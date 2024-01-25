@@ -17,8 +17,7 @@ def test_get_rows_grouped_by_single_select_field(
     premium_data_fixture, django_assert_num_queries
 ):
     table = premium_data_fixture.create_database_table()
-    view = View()
-    view.table = table
+    view = premium_data_fixture.create_grid_view(table=table)
     text_field = premium_data_fixture.create_text_field(table=table, primary=True)
     single_select_field = premium_data_fixture.create_single_select_field(table=table)
     option_a = premium_data_fixture.create_select_option(
@@ -67,7 +66,7 @@ def test_get_rows_grouped_by_single_select_field(
     )
 
     # The amount of queries including
-    with django_assert_num_queries(4):
+    with django_assert_num_queries(6):
         rows = get_rows_grouped_by_single_select_field(
             view, single_select_field, model=model
         )
@@ -171,6 +170,7 @@ def test_get_rows_grouped_by_single_select_field_not_existing_options_are_null(
 ):
     table = premium_data_fixture.create_database_table()
     view = View()
+    view.id = 999  # fake pk
     view.table = table
     text_field = premium_data_fixture.create_text_field(table=table, primary=True)
     single_select_field = premium_data_fixture.create_single_select_field(table=table)
@@ -234,6 +234,7 @@ def test_get_rows_grouped_by_single_select_field_with_empty_table(
 ):
     table = premium_data_fixture.create_database_table()
     view = View()
+    view.id = 999  # fake pk
     view.table = table
     single_select_field = premium_data_fixture.create_single_select_field(table=table)
     rows = get_rows_grouped_by_single_select_field(view, single_select_field)

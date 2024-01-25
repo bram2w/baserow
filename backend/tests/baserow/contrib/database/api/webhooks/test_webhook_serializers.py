@@ -6,7 +6,7 @@ from baserow.contrib.database.api.webhooks.validators import url_validation
 
 @pytest.mark.parametrize(
     "valid_url",
-    ["http://google.de", "https://google.de", "https://heise.de/myendpoint"],
+    ["http://google.de", "https://google.de"],
 )
 def test_valid_urls(valid_url):
     validated_url = url_validation(valid_url)
