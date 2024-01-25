@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Show billable label only to workspace admins",
+    "issue_number": 2295,
+    "bullet_points": [],
+    "created_at": "2024-01-25"
+}
