@@ -83,9 +83,11 @@
           :attributes="[]"
         >
           <template #left-side="{ item }">
-            <div class="select-members-list__user-initials margin-left-1">
-              {{ item.name | nameAbbreviation }}
-            </div>
+            <Avatar
+              rounded
+              size="medium"
+              :initials="item.name | nameAbbreviation"
+            ></Avatar>
             <span class="margin-left-1">
               {{ item.name }}
             </span>

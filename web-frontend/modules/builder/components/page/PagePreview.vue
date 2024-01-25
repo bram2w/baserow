@@ -10,8 +10,8 @@
           v-if="!elements.length"
           class="page-preview__empty"
           icon="baserow-icon-plus"
-          icon-color="ghost"
-          icon-size="tiny"
+          icon-color="neutral"
+          icon-size="large"
           icon-rounded
           @click="$refs.addElementModal.show()"
         >

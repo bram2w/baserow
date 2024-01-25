@@ -3,16 +3,16 @@
     class="avatar"
     :class="{
       'avatar--rounded': rounded,
-      'avatar--icon': Boolean(icon),
-      'avatar--image': Boolean(image),
-      'avatar--initials': Boolean(initials),
-      [`avatar--size-${size}`]: true,
-      [`avatar--${color}`]: color,
+      [`avatar--${size}`]: true,
+      [`avatar--${color}`]: color && !image,
+      'avatar--transparent': image || color === 'transparent',
     }"
   >
-    <i v-if="icon" :class="`${icon}`" />
+    <i v-if="icon" :class="icon" class="avatar__icon" />
     <img v-if="image" :src="image" class="avatar__image" />
-    <span v-if="initials">{{ initials }}</span>
+    <span v-if="initials && !image" class="avatar__initials">{{
+      initials
+    }}</span>
   </div>
 </template>
 
@@ -20,37 +20,69 @@
 export default {
   name: 'Avatar',
   props: {
-    image: {
-      type: String,
-      required: false,
-      default: '',
-    },
+    /**
+     * The icon classname to display.
+     */
     icon: {
       type: String,
       required: false,
-      default: '',
+      default: null,
     },
-    initials: {
+    /**
+     * The URL of the image to display.
+     */
+    image: {
       type: String,
       required: false,
-      default: '',
+      default: null,
     },
+    /**
+     * If true the avatar will be rounded.
+     */
     rounded: {
       type: Boolean,
       required: false,
-      default: true,
+      default: false,
     },
+    /**
+     * The initials to display if no image is provided
+     */
+    initials: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    /**
+     * The background color of the avatar
+     */
     color: {
-      //  primary - success - warning - error - ghost
       required: false,
       type: String,
-      default: 'primary',
+      default: 'blue',
+      validator: function (value) {
+        return [
+          'blue',
+          'cyan',
+          'green',
+          'yellow',
+          'red',
+          'magenta',
+          'purple',
+          'neutral',
+          'transparent',
+        ].includes(value)
+      },
     },
+    /**
+     * The size of the avatar
+     */
     size: {
-      // normal - large - tiny
       type: String,
       required: false,
-      default: 'normal',
+      default: 'medium',
+      validator: function (value) {
+        return ['small', 'medium', 'large', 'x-large'].includes(value)
+      },
     },
   },
 }

@@ -13,9 +13,12 @@
         v-if="roleAssignment.subject_type === 'auth.User'"
         class="member-roles-members-list__subject-section"
       >
-        <div class="member-roles-members-list__user-initials">
-          {{ roleAssignment.subject.first_name | nameAbbreviation }}
-        </div>
+        <Avatar
+          size="large"
+          :initials="roleAssignment.subject.first_name | nameAbbreviation"
+          rounded
+        ></Avatar>
+
         <div
           v-tooltip="roleAssignment.subject.first_name"
           class="margin-left-1 member-roles-members-list__user-name"

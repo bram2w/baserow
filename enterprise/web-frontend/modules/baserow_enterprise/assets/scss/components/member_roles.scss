@@ -33,16 +33,6 @@
   font-size: 14px;
 }
 
-.member-roles-members-list__user-initials {
-  flex: 0 0 30px;
-  font-weight: bold;
-  color: $white;
-  background-color: $color-primary-500;
-  border-radius: 100%;
-
-  @include center-text(30px, 10px);
-}
-
 .member-roles-members-list__team-initials {
   flex: 0 0 30px;
   font-weight: bold;

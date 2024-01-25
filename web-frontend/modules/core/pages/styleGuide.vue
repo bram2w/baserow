@@ -1994,50 +1994,53 @@
         <div class="margin-bottom-3">
           <h2>Avatars</h2>
           <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar size="tiny" icon="iconoir-bin" />
-            <Avatar size="tiny" icon="iconoir-bin" color="warning" />
-            <Avatar size="tiny" icon="iconoir-bin" color="error" />
-            <Avatar size="tiny" icon="iconoir-bin" color="ghost" />
-            <Avatar size="tiny" :image="image" color="ghost" />
-            <Avatar size="tiny" initials="BW" color="ghost" />
-            <Avatar size="tiny" icon="iconoir-bin" :rounded="false" />
-            <Avatar size="tiny" :image="image" color="ghost" :rounded="false" />
-            <Avatar size="tiny" initials="BW" color="error" :rounded="false" />
+            <Avatar size="small" icon="iconoir-bin" />
+            <Avatar size="small" icon="iconoir-bin" color="yellow" />
+            <Avatar size="small" icon="iconoir-bin" color="red" />
+            <Avatar size="small" icon="iconoir-bin" color="transparent" />
+            <Avatar size="small" :image="image" />
+            <Avatar size="small" initials="BW" color="neutral" />
+            <Avatar size="small" initials="BW" color="cyan" rounded />
+            <Avatar size="small" icon="iconoir-bin" />
+            <Avatar size="small" :image="image" color="neutral" />
+            <Avatar size="small" initials="BW" color="red" :rounded="false" />
           </div>
           <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar icon="iconoir-bin" />
-            <Avatar :image="image" />
-            <Avatar initials="BW" />
-            <Avatar icon="iconoir-bin" color="warning" />
-            <Avatar :image="image" color="warning" />
-            <Avatar initials="BW" color="warning" />
-            <Avatar icon="iconoir-bin" color="error" />
-            <Avatar :image="image" color="error" />
-            <Avatar initials="BW" color="error" />
-          </div>
-          <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar icon="iconoir-bin" color="ghost" />
-            <Avatar :image="image" color="ghost" />
-            <Avatar initials="BW" color="ghost" />
-            <Avatar icon="iconoir-bin" :rounded="false" />
-            <Avatar :image="image" color="ghost" :rounded="false" />
-            <Avatar initials="BW" color="error" :rounded="false" />
+            <Avatar size="medium" icon="iconoir-bin" />
+            <Avatar size="medium" icon="iconoir-bin" color="yellow" />
+            <Avatar size="medium" icon="iconoir-bin" color="red" />
+            <Avatar size="medium" icon="iconoir-bin" color="transparent" />
+            <Avatar size="medium" :image="image" />
+            <Avatar size="medium" initials="BW" color="neutral" />
+            <Avatar size="medium" initials="BW" color="cyan" rounded />
+            <Avatar size="medium" icon="iconoir-bin" />
+            <Avatar size="medium" :image="image" color="neutral" />
+            <Avatar size="medium" initials="BW" color="red" />
           </div>
           <div style="display: flex; gap: 10px; padding: 0.5em">
             <Avatar size="large" icon="iconoir-bin" />
-            <Avatar size="large" icon="iconoir-bin" color="warning" />
-            <Avatar size="large" icon="iconoir-bin" color="error" />
-            <Avatar size="large" icon="iconoir-bin" color="ghost" />
-            <Avatar size="large" :image="image" color="ghost" />
-            <Avatar size="large" initials="BW" color="ghost" />
-            <Avatar size="large" icon="iconoir-bin" :rounded="false" />
-            <Avatar
-              size="large"
-              :image="image"
-              color="ghost"
-              :rounded="false"
-            />
-            <Avatar size="large" initials="BW" color="error" :rounded="false" />
+            <Avatar size="large" icon="iconoir-bin" color="yellow" />
+            <Avatar size="large" icon="iconoir-bin" color="red" />
+            <Avatar size="large" icon="iconoir-bin" color="transparent" />
+            <Avatar size="large" :image="image" />
+            <Avatar size="large" initials="BW" color="neutral" />
+            <Avatar size="large" initials="BW" color="cyan" rounded />
+            <Avatar size="large" icon="iconoir-bin" />
+            <Avatar size="large" :image="image" color="neutral" />
+            <Avatar size="large" initials="BW" color="red" />
+          </div>
+
+          <div style="display: flex; gap: 10px; padding: 0.5em">
+            <Avatar size="x-large" icon="iconoir-bin" />
+            <Avatar size="x-large" icon="iconoir-bin" color="yellow" />
+            <Avatar size="x-large" icon="iconoir-bin" color="red" />
+            <Avatar size="x-large" icon="iconoir-bin" color="transparent" />
+            <Avatar size="x-large" :image="image" />
+            <Avatar size="x-large" initials="BW" color="neutral" />
+            <Avatar size="x-large" initials="BW" color="cyan" rounded />
+            <Avatar size="x-large" icon="iconoir-bin" />
+            <Avatar size="x-large" :image="image" />
+            <Avatar size="x-large" initials="BW" color="red" />
           </div>
         </div>
         <div class="margin-bottom-3">
@@ -2045,28 +2048,33 @@
           <Presentation
             title="My baserow integration"
             subtitle="Local baserow integration"
+            class="margin-bottom-2"
           />
           <Presentation
             title="My baserow integration"
             subtitle="Local baserow integration"
             initials="LB"
+            class="margin-bottom-2"
           />
           <Presentation
             title="My baserow integration"
             subtitle="Local baserow integration"
-            icon="table"
+            icon="iconoir-db"
+            class="margin-bottom-2"
           />
           <Presentation
             :image="image"
             title="My baserow integration"
             subtitle="Local baserow integration"
-            avatar-color="ghost"
+            avatar-color="neutral"
+            class="margin-bottom-2"
           />
           <Presentation
             :image="image"
             title="My baserow integration"
             subtitle="Local baserow integration with a very long description"
-            avatar-color="ghost"
+            avatar-color="neutral"
+            class="margin-bottom-2"
           />
         </div>
         <div
