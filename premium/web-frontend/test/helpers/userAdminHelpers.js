@@ -51,7 +51,7 @@ export default class UserAdminUserHelpers {
   }
 
   getUsernameInitials(usernameCell) {
-    const initials = usernameCell.get('.user-admin-username__initials')
+    const initials = usernameCell.get('.user-admin-username__avatar')
     return initials.text()
   }
 

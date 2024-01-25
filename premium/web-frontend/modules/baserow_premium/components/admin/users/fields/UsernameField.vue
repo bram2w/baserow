@@ -1,8 +1,11 @@
 <template functional>
   <div class="user-admin-username" :class="[data.staticClass, data.class]">
-    <div class="user-admin-username__initials">
-      {{ $options.methods.firstTwoInitials(props.row.name) }}
-    </div>
+    <Avatar
+      class="user-admin-username__avatar"
+      rounded
+      size="large"
+      :initials="$options.methods.firstTwoInitials(props.row.name)"
+    ></Avatar>
     <div class="user-admin-username__name" :title="props.row.username">
       {{ props.row.username }}
     </div>

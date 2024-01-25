@@ -1,62 +1,103 @@
 .avatar {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
-  flex: 0 0 36px;
   font-weight: bold;
+  font-size: 10px;
+  overflow: hidden;
   color: $white;
-  background-color: $color-primary-500;
-  border: 1px solid transparent;
+  flex-shrink: 0;
 
-  @include center-text(36px, 17px);
   @include rounded($rounded-md);
 }
 
-.avatar--size-large {
-  flex: 0 0 42px;
-
-  @include center-text(42px, 19px);
+.avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.avatar--size-tiny {
-  flex: 0 0 32px;
+.avatar__icon {
+  font-size: 14px;
+}
 
-  @include center-text(32px, 15px);
+.avatar--small {
+  width: 14px;
+  height: 14px;
+  font-size: 7px;
+
+  @include rounded($rounded);
+
+  .avatar__icon {
+    font-size: 8px;
+  }
+}
+
+.avatar--medium {
+  width: 24px;
+  height: 24px;
+}
+
+.avatar--large {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+
+  .avatar__icon {
+    font-size: 16px;
+  }
+}
+
+.avatar--x-large {
+  width: 40px;
+  height: 40px;
+  font-size: 13px;
+
+  .avatar__icon {
+    font-size: 18px;
+  }
 }
 
 .avatar--rounded {
   @include rounded($rounded-3xl);
 }
 
-.avatar__image {
-  max-width: calc(100% - 15px);
-  max-height: calc(100% - 15px);
+.avatar--blue {
+  background: $palette-blue-500;
+}
 
-  .avatar--size-tiny & {
-    max-width: calc(100% - 12px);
-    max-height: calc(100% - 12px);
+.avatar--cyan {
+  background: $palette-cyan-500;
+}
+
+.avatar--green {
+  background: $palette-green-500;
+}
+
+.avatar--yellow {
+  background: $palette-yellow-500;
+}
+
+.avatar--red {
+  background: $palette-red-500;
+}
+
+.avatar--magenta {
+  background: $palette-magenta-500;
+}
+
+.avatar--purple {
+  background: $palette-purple-500;
+}
+
+.avatar--neutral {
+  background: $palette-neutral-500;
+}
+
+.avatar--transparent {
+  background: transparent;
+
+  .avatar__icon {
+    color: $palette-neutral-1100;
   }
-
-  .avatar--size-large & {
-    max-width: calc(100% - 20px);
-    max-height: calc(100% - 20px);
-  }
-}
-
-.avatar--success {
-  background-color: $color-success-500;
-}
-
-.avatar--warning {
-  background-color: $color-warning-500;
-}
-
-.avatar--error {
-  background-color: $color-error-500;
-}
-
-.avatar--ghost {
-  background-color: $white;
-  border-color: $color-neutral-400;
-  color: $color-neutral-900;
 }
