@@ -21,12 +21,18 @@ export class FromTipTapVisitor {
       return ''
     }
 
-    if (node.content.length === 1) {
-      return this.visit(node.content[0])
+    const nodeContents = node.content.map(this.visit.bind(this))
+
+    if (nodeContents.length === 1) {
+      if (nodeContents[0] === "''") {
+        return ''
+      } else {
+        return nodeContents[0]
+      }
     }
 
     // Add the newlines between root wrappers. They are paragraphs.
-    return `concat(${node.content.map(this.visit.bind(this)).join(", '\n', ")})`
+    return `concat(${nodeContents.join(", '\n', ")})`
   }
 
   visitWrapper(node) {
