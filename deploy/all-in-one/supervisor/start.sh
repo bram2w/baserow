@@ -54,8 +54,8 @@ if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
     echo
     _use_postgresql15
   else
-    #running as root:
-    set +e  # Disable 'exit immediately' option
+    # Disable 'exit immediately' option
+    set +e
 
     ./upgrade_postgres.sh
 
@@ -73,7 +73,6 @@ if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
       startup_echo "upgrade_postgres.sh succeeded with exit code $upgrade_status"
     fi
     # Re-enable 'exit immediately' option.
-    # TODO: check with 'set -Eeo pipefail' at the top:
     set -e
   fi
 
