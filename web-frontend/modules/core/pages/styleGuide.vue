@@ -267,19 +267,41 @@
             <div class="control__elements">
               value: {{ switchValue }}
               <br />
-              <SwitchInput v-model="switchValue"></SwitchInput>
-              <SwitchInput v-model="switchValue">With text</SwitchInput>
-              <SwitchInput v-model="switchUnknown">With text</SwitchInput>
-              <SwitchInput v-model="switchUnknown" large>With text</SwitchInput>
-              <SwitchInput v-model="switchValue" large></SwitchInput>
-              <SwitchInput v-model="switchValue" large>
-                Large with text
+              <SwitchInput
+                v-model="switchValue"
+                class="margin-bottom-1"
+              ></SwitchInput>
+              <SwitchInput v-model="switchValue" class="margin-bottom-1"
+                >With text</SwitchInput
+              >
+              <SwitchInput v-model="switchUnknown" class="margin-bottom-1"
+                >With text</SwitchInput
+              >
+              <SwitchInput v-model="switchUnknown" small class="margin-bottom-1"
+                >Small With text</SwitchInput
+              >
+              <SwitchInput
+                v-model="switchValue"
+                class="margin-bottom-1"
+                small
+              ></SwitchInput>
+              <SwitchInput class="margin-bottom-1" v-model="switchValue" large>
+                Small with text
               </SwitchInput>
-              <SwitchInput v-model="switchUnknown" disabled>
+              <SwitchInput
+                class="margin-bottom-1"
+                v-model="switchUnknown"
+                disabled
+              >
                 Disabled
               </SwitchInput>
-              <SwitchInput v-model="switchUnknown" disabled large>
-                Large disabled
+              <SwitchInput
+                class="margin-bottom-1"
+                v-model="switchUnknown"
+                disabled
+                small
+              >
+                Small disabled
               </SwitchInput>
             </div>
           </div>
