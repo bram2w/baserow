@@ -74,7 +74,7 @@ class BuilderWorkflowActionsView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder workflow_actions"],
+        tags=["Builder workflow actions"],
         operation_id="create_builder_page_workflow_action",
         description="Creates a new builder workflow action",
         request=DiscriminatorCustomFieldsMappingSerializer(
@@ -130,7 +130,7 @@ class BuilderWorkflowActionsView(APIView):
                 "the provided Id.",
             )
         ],
-        tags=["Builder workflow_actions"],
+        tags=["Builder workflow actions"],
         operation_id="list_builder_page_workflow_actions",
         description=(
             "Lists all the workflow actions of the page related to the provided parameter "
@@ -182,7 +182,7 @@ class BuilderWorkflowActionView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder workflow_actions"],
+        tags=["Builder workflow actions"],
         operation_id="delete_builder_page_workflow_action",
         description="Deletes the workflow action related by the given id.",
         responses={
@@ -222,7 +222,7 @@ class BuilderWorkflowActionView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder workflow_actions"],
+        tags=["Builder workflow actions"],
         operation_id="update_builder_page_workflow_action",
         description="Updates an existing builder workflow action.",
         request=CustomFieldRegistryMappingSerializer(
@@ -288,7 +288,7 @@ class OrderBuilderWorkflowActionsView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder workflow_actions"],
+        tags=["Builder workflow actions"],
         operation_id="order_builder_workflow_actions",
         description="Apply a new order to the workflow actions of a page",
         request=OrderWorkflowActionsSerializer,

@@ -259,6 +259,13 @@ def test_export_user_source(data_fixture):
         application=builder, integration=integration, name="Test name"
     )
 
+    app_auth_provider1 = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source
+    )
+    app_auth_provider2 = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source
+    )
+
     exported = UserSourceHandler().export_user_source(user_source)
 
     assert exported == {
@@ -270,6 +277,22 @@ def test_export_user_source(data_fixture):
         "order": "1.00000000000000000000",
         "table_id": None,
         "type": "local_baserow",
+        "auth_providers": [
+            {
+                "domain": None,
+                "enabled": True,
+                "id": app_auth_provider1.id,
+                "password_field_id": None,
+                "type": "local_baserow_password",
+            },
+            {
+                "domain": None,
+                "enabled": True,
+                "id": app_auth_provider2.id,
+                "password_field_id": None,
+                "type": "local_baserow_password",
+            },
+        ],
     }
 
 
@@ -287,6 +310,22 @@ def test_import_user_source(data_fixture):
         "order": "1.00000000000000000000",
         "table_id": None,
         "type": "local_baserow",
+        "auth_providers": [
+            {
+                "domain": None,
+                "enabled": True,
+                "id": 42,
+                "password_field_id": None,
+                "type": "local_baserow_password",
+            },
+            {
+                "domain": None,
+                "enabled": True,
+                "id": 43,
+                "password_field_id": None,
+                "type": "local_baserow_password",
+            },
+        ],
     }
 
     imported_instance = UserSourceHandler().import_user_source(
@@ -296,6 +335,8 @@ def test_import_user_source(data_fixture):
     assert imported_instance.id != 28
     assert imported_instance.integration_id == integration.id
     assert imported_instance.name == "Test name"
+
+    assert imported_instance.auth_providers.count() == 2
 
 
 @pytest.mark.django_db

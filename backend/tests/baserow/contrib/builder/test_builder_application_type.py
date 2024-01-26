@@ -111,6 +111,10 @@ def test_builder_application_export(data_fixture):
         application=builder, user=user, integration=integration
     )
 
+    auth_provider = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source
+    )
+
     datasource1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page1, user=user, name="source 1", integration=integration
     )
@@ -393,6 +397,15 @@ def test_builder_application_export(data_fixture):
                 "order": "1.00000000000000000000",
                 "table_id": None,
                 "type": "local_baserow",
+                "auth_providers": [
+                    {
+                        "id": auth_provider.id,
+                        "type": auth_provider.get_type().type,
+                        "domain": None,
+                        "enabled": True,
+                        "password_field_id": None,
+                    }
+                ],
             },
         ],
         "theme": {
@@ -643,6 +656,7 @@ IMPORT_REFERENCE = {
     ],
     "user_sources": [
         {
+            "auth_providers": [],
             "email_field_id": None,
             "id": 42,
             "integration_id": 42,
