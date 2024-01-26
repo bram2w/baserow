@@ -382,10 +382,6 @@ export default {
       verticalOffset,
       horizontalOffset
     ) {
-      // Take into account that the document might be scrollable.
-      verticalOffset += document.documentElement.scrollTop
-      horizontalOffset += document.documentElement.scrollLeft
-
       const { vertical: verticalAdjusted, horizontal: horizontalAdjusted } =
         this.checkForEdges(
           {
