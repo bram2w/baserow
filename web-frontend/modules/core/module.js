@@ -106,6 +106,10 @@ export default function CoreModule(options) {
       process.env.BASEROW_FRONTEND_SAME_SITE_COOKIE ?? 'lax',
   }
 
+  this.options.publicRuntimeConfig.BASEROW_EMBEDDED_SHARE_URL =
+    process.env.BASEROW_EMBEDDED_SHARE_URL ??
+    this.options.publicRuntimeConfig.PUBLIC_WEB_FRONTEND_URL
+
   this.requireModule([
     '@nuxtjs/sentry',
     {

@@ -87,7 +87,7 @@
             align="left"
             width="140px"
             src="{{ public_web_frontend_url }}/img/logo.svg"
-            href="{{ public_web_frontend_url }}"
+            href="{{ baserow_embedded_share_url }}"
             padding-bottom="0"
         ></mj-image>
       </mj-column>

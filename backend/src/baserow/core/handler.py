@@ -895,7 +895,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         parsed_base_url = urlparse(base_url)
-        if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
+        if parsed_base_url.hostname not in (
+            settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
+            settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
+        ):
             raise BaseURLHostnameNotAllowed(
                 f"The hostname {parsed_base_url.netloc} is not allowed."
             )

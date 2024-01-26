@@ -37,6 +37,7 @@ x-backend-variables: &backend-variables
 
   PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL-http://localhost:8000}
   PUBLIC_WEB_FRONTEND_URL: ${PUBLIC_WEB_FRONTEND_URL-http://localhost:3000}
+  BASEROW_EMBEDDED_SHARE_URL:
 
   # Set these if you want to use an external postgres instead of the db service below.
   DATABASE_USER: ${DATABASE_USER:-baserow}
@@ -190,6 +191,7 @@ services:
       PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
       PUBLIC_BACKEND_URL:
       PUBLIC_WEB_FRONTEND_URL:
+      BASEROW_EMBEDDED_SHARE_URL:
       BASEROW_DISABLE_PUBLIC_URL_CHECK:
       INITIAL_TABLE_DATA_LIMIT:
       DOWNLOAD_FILE_VIA_XHR:

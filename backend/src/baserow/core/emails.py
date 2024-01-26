@@ -70,6 +70,8 @@ class BaseEmailMessage(EmailMultiAlternatives):
             "public_backend_url": settings.PUBLIC_BACKEND_URL,
             "public_web_frontend_hostname": settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
             "public_web_frontend_url": settings.PUBLIC_WEB_FRONTEND_URL,
+            "baserow_embedded_share_url": settings.BASEROW_EMBEDDED_SHARE_URL,
+            "baserow_embedded_share_hostname": settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
         }
 
     def get_from_email(self):
