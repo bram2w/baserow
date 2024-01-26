@@ -6,7 +6,7 @@
     @shown="focus"
   >
     <form class="context__form" @submit.prevent="searchIfChanged">
-      <div class="control margin-bottom-1">
+      <div class="control margin-bottom-2">
         <div class="control__elements">
           <div
             class="input__with-icon input__with-icon--left"
@@ -30,6 +30,7 @@
       >
         <SwitchInput
           v-model="hideRowsNotMatchingSearch"
+          small
           @input="searchIfChanged"
         >
           {{ $t('viewSearchContext.hideNotMatching') }}

@@ -1,0 +1,127 @@
+.switch {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+
+  &.switch--static {
+    cursor: initial;
+    user-select: initial;
+  }
+
+  &::before {
+    content: '';
+    width: 40px;
+    height: 24px;
+    background-color: $palette-neutral-400;
+
+    @include rounded($rounded-xl);
+  }
+
+  &:hover {
+    &::before {
+      background-color: $palette-neutral-500;
+    }
+  }
+
+  &::after {
+    content: '';
+    border-radius: 100%;
+    width: 20px;
+    height: 20px;
+    background-color: $white;
+    transition: left 0.1s ease-in;
+
+    @include add-elevation($elevation-medium);
+    @include absolute(2px, auto, auto, 2px);
+  }
+
+  &.switch--active {
+    &::before {
+      background-color: $palette-green-500;
+    }
+
+    &:not(.switch--disabled):hover {
+      &::before {
+        background-color: $palette-green-800;
+      }
+    }
+
+    &::after {
+      left: 17px;
+    }
+  }
+
+  &.switch--indeterminate {
+    &::before {
+      background-color: $palette-yellow-500;
+    }
+
+    &:not(.switch--disabled):hover {
+      &::before {
+        background-color: $palette-yellow-800;
+      }
+    }
+
+    &::after {
+      left: 10px;
+    }
+  }
+
+  &.switch--disabled {
+    cursor: not-allowed;
+
+    &::before {
+      background-color: $palette-neutral-400;
+    }
+
+    &::after {
+      box-shadow: none;
+    }
+  }
+
+  &.switch--small {
+    line-height: 16px;
+
+    &::before {
+      height: 16px;
+      width: 24px;
+    }
+
+    &::after {
+      top: 2px;
+      width: 12px;
+      height: 12px;
+    }
+
+    &.switch--active::after {
+      left: 10px;
+    }
+
+    &.switch--indeterminate::after {
+      left: 6px;
+    }
+  }
+}
+
+.switch__label {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  color: $palette-neutral-900;
+
+  i {
+    font-size: 16px;
+  }
+
+  .switch--active & {
+    color: $palette-neutral-1200;
+  }
+
+  .switch--disabled & {
+    color: $palette-neutral-700;
+  }
+}

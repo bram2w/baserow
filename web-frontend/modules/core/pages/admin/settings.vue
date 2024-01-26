@@ -42,7 +42,6 @@
           <div class="admin-settings__control">
             <SwitchInput
               :value="settings.allow_new_signups"
-              :large="true"
               @input="updateSettings({ allow_new_signups: $event })"
               >{{ $t('settings.enabled') }}</SwitchInput
             >
@@ -66,7 +65,6 @@
           <div class="admin-settings__control">
             <SwitchInput
               :value="settings.allow_signups_via_workspace_invitations"
-              :large="true"
               @input="
                 updateSettings({
                   allow_signups_via_workspace_invitations: $event,
@@ -88,7 +86,6 @@
           <div class="admin-settings__control">
             <SwitchInput
               :value="settings.allow_reset_password"
-              :large="true"
               @input="updateSettings({ allow_reset_password: $event })"
               >{{ $t('settings.enabled') }}</SwitchInput
             >
@@ -113,7 +110,6 @@
           <div class="admin-settings__control">
             <SwitchInput
               :value="settings.allow_global_workspace_creation"
-              :large="true"
               @input="
                 updateSettings({ allow_global_workspace_creation: $event })
               "
@@ -177,7 +173,6 @@
           <div class="admin-settings__control">
             <SwitchInput
               :value="settings.track_workspace_usage"
-              :large="true"
               @input="updateSettings({ track_workspace_usage: $event })"
               >{{ $t('settings.enabled') }}</SwitchInput
             >

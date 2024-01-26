@@ -51,7 +51,7 @@
       </div>
     </div>
     <div v-auto-overflow-scroll class="hidings__body">
-      <ul class="hidings__list margin-bottom-0">
+      <ul class="hidings__list margin-top-1 margin-bottom-0">
         <li
           v-for="field in filteredFields"
           :key="field.id"
@@ -65,6 +65,7 @@
           <a class="hidings__item-handle" data-field-handle></a>
           <SwitchInput
             v-if="allowHidingFields"
+            small
             :value="!isHidden(field.id)"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
