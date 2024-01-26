@@ -1,5 +1,16 @@
 [
   {
+    "formula": "",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper"
+        }
+      ]
+    }
+  },
+  {
     "formula": "'hello'",
     "content": {
       "type": "doc",

@@ -83,7 +83,7 @@ const actions = {
     )
     const elementToDelete = elementsOfPage[elementIndex]
 
-    if (getters.getSelected.id === elementId) {
+    if (getters.getSelected?.id === elementId) {
       commit('SELECT_ITEM', { element: null })
     }
     commit('DELETE_ITEM', { page, elementId })
