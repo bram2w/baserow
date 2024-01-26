@@ -331,7 +331,10 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             raise ResetPasswordDisabledError("Reset password is disabled")
 
         parsed_base_url = urlparse(base_url)
-        if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
+        if parsed_base_url.hostname not in (
+            settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
+            settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
+        ):
             raise BaseURLHostnameNotAllowed(
                 f"The hostname {parsed_base_url.netloc} is not allowed."
             )
@@ -544,7 +547,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
           in the core Baserow settings.
         """
 
-        if not grace_delay:
+        if not isinstance(grace_delay, timedelta):
             core_settings = CoreHandler().get_settings()
             grace_delay = getattr(
                 settings,

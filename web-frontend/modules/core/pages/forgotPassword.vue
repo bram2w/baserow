@@ -131,7 +131,7 @@ export default {
       this.hideError()
 
       try {
-        const resetUrl = `${this.$config.PUBLIC_WEB_FRONTEND_URL}/reset-password`
+        const resetUrl = `${this.$config.BASEROW_EMBEDDED_SHARE_URL}/reset-password`
         await AuthService(this.$client).sendResetPasswordEmail(
           this.account.email,
           resetUrl

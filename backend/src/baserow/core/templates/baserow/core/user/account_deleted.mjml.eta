@@ -4,9 +4,9 @@
   <mj-column>
     <mj-text mj-class="title">{% trans "Account permanently deleted" %}</mj-text>
     <mj-text mj-class="text">
-      {% blocktrans trimmed with public_web_frontend_hostname as public_web_frontend_hostname %}
+      {% blocktrans trimmed with baserow_embedded_share_hostname as baserow_embedded_share_hostname %}
         Your account ({{ username }}) on
-        Baserow ({{ public_web_frontend_hostname }}) has been permanently
+        Baserow ({{ baserow_embedded_share_hostname }}) has been permanently
         deleted.
       {% endblocktrans %}
     </mj-text>
