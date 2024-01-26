@@ -570,7 +570,7 @@ class PublicBuilderWorkflowActionsView(APIView):
                 "to the provided Id.",
             )
         ],
-        tags=["Builder workflow_actions"],
+        tags=["Builder workflow actions"],
         operation_id="list_public_builder_page_workflow_actions",
         description=(
             "Lists all the workflow actions with their public accessible data. Some "

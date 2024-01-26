@@ -5,8 +5,11 @@ from django.contrib.auth.models import AbstractUser
 from rest_framework import serializers
 
 from baserow.api.exceptions import RequestBodyValidationException
+from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.core.app_auth_providers.handler import AppAuthProviderHandler
 from baserow.core.user_sources.registries import UserSourceType
 from baserow.core.user_sources.types import UserSourceDict, UserSourceSubClass
 from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
@@ -56,7 +59,20 @@ class LocalBaserowUserSourceType(UserSourceType):
         if "table_id" in values:
             table_id = values.pop("table_id")
             if table_id is not None:
-                table = TableHandler().get_table(table_id)
+                try:
+                    table = TableHandler().get_table(table_id)
+                except TableDoesNotExist as exc:
+                    raise RequestBodyValidationException(
+                        {
+                            "table_id": [
+                                {
+                                    "detail": f"The table with ID {table_id} doesn't "
+                                    "exist",
+                                    "code": "invalid_table",
+                                }
+                            ]
+                        }
+                    ) from exc
 
                 # check that table belongs to same workspace
                 integration_to_check = None
@@ -88,7 +104,7 @@ class LocalBaserowUserSourceType(UserSourceType):
                     "email_field_id" not in values
                     and instance
                     and instance.email_field_id
-                    and instance.email_field_id.table_id != table_id
+                    and instance.email_field.table_id != table_id
                 ):
                     values["email_field_id"] = None
 
@@ -96,7 +112,7 @@ class LocalBaserowUserSourceType(UserSourceType):
                     "name_field_id" not in values
                     and instance
                     and instance.name_field_id
-                    and instance.name_field_id.table_id != table_id
+                    and instance.name_field.table_id != table_id
                 ):
                     values["name_field_id"] = None
             else:
@@ -112,9 +128,34 @@ class LocalBaserowUserSourceType(UserSourceType):
         if "email_field_id" in values:
             email_field_id = values.pop("email_field_id")
             if email_field_id is not None:
-                field = FieldHandler().get_field(email_field_id)
+                if not table_to_check:
+                    raise RequestBodyValidationException(
+                        {
+                            "email_field_id": [
+                                {
+                                    "detail": "Please select a table before selecting "
+                                    "this field.",
+                                    "code": "missing_table",
+                                }
+                            ]
+                        }
+                    )
 
-                if not table_to_check or field.table_id != table_to_check.id:
+                try:
+                    field = FieldHandler().get_field(email_field_id)
+                except FieldDoesNotExist as exc:
+                    raise RequestBodyValidationException(
+                        {
+                            "email_field_id": [
+                                {
+                                    "detail": "The provided Id doesn't exist.",
+                                    "code": "invalid_field",
+                                }
+                            ]
+                        }
+                    ) from exc
+
+                if field.table_id != table_to_check.id:
                     raise RequestBodyValidationException(
                         {
                             "email_field_id": [
@@ -133,9 +174,34 @@ class LocalBaserowUserSourceType(UserSourceType):
         if "name_field_id" in values:
             name_field_id = values.pop("name_field_id")
             if name_field_id is not None:
-                field = FieldHandler().get_field(name_field_id)
+                if not table_to_check:
+                    raise RequestBodyValidationException(
+                        {
+                            "name_field_id": [
+                                {
+                                    "detail": "Please select a table before selecting "
+                                    "this field.",
+                                    "code": "missing_table",
+                                }
+                            ]
+                        }
+                    )
 
-                if not table_to_check or field.table_id != table_to_check.id:
+                try:
+                    field = FieldHandler().get_field(name_field_id)
+                except FieldDoesNotExist as exc:
+                    raise RequestBodyValidationException(
+                        {
+                            "name_field_id": [
+                                {
+                                    "detail": "The provided Id doesn't exist.",
+                                    "code": "invalid_field",
+                                }
+                            ]
+                        }
+                    ) from exc
+
+                if field.table_id != table_to_check.id:
                     raise RequestBodyValidationException(
                         {
                             "name_field_id": [
@@ -152,6 +218,16 @@ class LocalBaserowUserSourceType(UserSourceType):
                 values["name_field"] = None
 
         return values
+
+    def after_update(self, user, user_source, values):
+        if "auth_provider" not in values and "table" in values:
+            # We clear all auth provider when the table changes
+            for ap in AppAuthProviderHandler.list_app_auth_providers_for_user_source(
+                user_source
+            ):
+                ap.get_type().after_user_source_update(user, ap, user_source)
+
+        return super().after_update(user, user_source, values)
 
     def deserialize_property(
         self,

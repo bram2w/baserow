@@ -9,6 +9,8 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.core.app_auth_providers.models import AppAuthProvider
+from baserow.core.app_auth_providers.registries import app_auth_provider_type_registry
 from baserow.core.user_sources.models import UserSource
 
 
@@ -46,6 +48,64 @@ def test_get_user_sources(api_client, data_fixture):
     assert response_json[1]["type"] == "local_baserow"
     assert response_json[2]["id"] == user_source3.id
     assert response_json[2]["type"] == "local_baserow"
+
+
+@pytest.mark.django_db
+def test_get_user_sources_w_auth_providers(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
+    user_source1 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+    user_source2 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+    user_source3 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+    app_auth_provider1 = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source1, domain="A"
+    )
+    app_auth_provider2 = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source2, domain="A"
+    )
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json) == 3
+    assert response_json[0]["id"] == user_source1.id
+    assert response_json[0]["type"] == "local_baserow"
+    assert response_json[0]["auth_providers"] == [
+        {
+            "domain": "A",
+            "id": app_auth_provider1.id,
+            "password_field_id": None,
+            "type": app_auth_provider1.get_type().type,
+        },
+    ]
+    assert response_json[1]["id"] == user_source2.id
+    assert response_json[1]["type"] == "local_baserow"
+    assert response_json[1]["auth_providers"] == [
+        {
+            "domain": "A",
+            "id": app_auth_provider2.id,
+            "password_field_id": None,
+            "type": app_auth_provider2.get_type().type,
+        },
+    ]
+    assert response_json[2]["id"] == user_source3.id
+    assert response_json[2]["type"] == "local_baserow"
+    assert response_json[2]["auth_providers"] == []
 
 
 @pytest.mark.django_db
@@ -107,6 +167,141 @@ def test_create_user_source_missing_properties(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_user_source_missing_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {"type": "missing_type", "name": "test", "integration_id": integration.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_create_user_source_w_auth_providers(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    data_fixture.create_database_table(database=database)
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {
+            "type": "local_baserow",
+            "name": "test",
+            "integration_id": integration.id,
+            "auth_providers": [
+                {"type": "local_baserow_password", "enabled": False, "domain": "test1"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert AppAuthProvider.objects.count() == 1
+    first = AppAuthProvider.objects.first()
+
+    assert response_json["auth_providers"] == [
+        {
+            "domain": "test1",
+            "id": first.id,
+            "password_field_id": None,
+            "type": "local_baserow_password",
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_create_user_source_w_auth_provider_wrong_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
+
+    app_auth_provider_type = list(app_auth_provider_type_registry.get_all())[0]
+
+    original_compatible = app_auth_provider_type.compatible_user_source_types
+    app_auth_provider_type.compatible_user_source_types = []
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {
+            "type": "local_baserow",
+            "name": "test",
+            "integration_id": integration.id,
+            "auth_providers": [
+                {
+                    "domain": "test_domain",
+                    "enabled": True,
+                    "type": app_auth_provider_type.type,
+                },
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    app_auth_provider_type.compatible_user_source_types = original_compatible
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_AUTH_PROVIDER_TYPE_NOT_COMPATIBLE"
+
+
+@pytest.mark.django_db
+def test_create_user_source_w_auth_provider_missing_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {
+            "type": "local_baserow",
+            "name": "test",
+            "integration_id": integration.id,
+            "auth_providers": [
+                {
+                    "domain": "test_domain",
+                    "enabled": True,
+                    "type": "bad_type",
+                },
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_AUTH_PROVIDER_TYPE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
 def test_create_user_source_permission_denied(
     api_client, data_fixture, stub_check_permissions
 ):
@@ -156,6 +351,8 @@ def test_create_user_source_bad_application_type(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
+    print(response.json())
+
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_APPLICATION_OPERATION_NOT_SUPPORTED"
 
@@ -183,8 +380,7 @@ def test_update_user_source(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip  # No modifiable user_source yet
-def test_update_user_source_bad_request(api_client, data_fixture):
+def test_update_user_source_w_auth_providers(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     application = data_fixture.create_builder_application(user=user)
     user_source1 = data_fixture.create_user_source_with_first_type(
@@ -194,12 +390,119 @@ def test_update_user_source_bad_request(api_client, data_fixture):
     url = reverse("api:user_sources:item", kwargs={"user_source_id": user_source1.id})
     response = api_client.patch(
         url,
-        {"modifiable_field": []},
+        {
+            "auth_providers": [
+                {"type": "local_baserow_password", "enabled": False, "domain": "test1"},
+            ],
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+
+    assert response.status_code == HTTP_200_OK
+
+    assert AppAuthProvider.objects.count() == 1
+    first = AppAuthProvider.objects.first()
+
+    assert response.json()["auth_providers"] == [
+        {
+            "domain": "test1",
+            "id": first.id,
+            "password_field_id": None,
+            "type": "local_baserow_password",
+        },
+    ]
+
+    response = api_client.patch(
+        url,
+        {
+            "auth_providers": [
+                {"type": "local_baserow_password", "enabled": False, "domain": "test3"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert AppAuthProvider.objects.count() == 1
+    first = AppAuthProvider.objects.first()
+
+    assert response.json()["auth_providers"] == [
+        {
+            "domain": "test3",
+            "id": first.id,
+            "password_field_id": None,
+            "type": "local_baserow_password",
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_update_user_source_with_bad_auth_providers(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    user_source1 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+
+    url = reverse("api:user_sources:item", kwargs={"user_source_id": user_source1.id})
+    response = api_client.patch(
+        url,
+        {
+            "auth_providers": [
+                {
+                    "type": "local_baserow_password",
+                    "enabled": [],
+                    "domain": [],
+                },
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    response = api_client.patch(
+        url,
+        {
+            "auth_providers": [
+                {
+                    "type": "local_baserow_password",
+                    "password_field_id": [],
+                },
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_update_user_source_w_missing_auth_provider_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    user_source1 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+
+    url = reverse("api:user_sources:item", kwargs={"user_source_id": user_source1.id})
+    response = api_client.patch(
+        url,
+        {
+            "auth_providers": [
+                {"type": "missing", "enabled": False, "domain": "test1"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_AUTH_PROVIDER_TYPE_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db

@@ -1,5 +1,6 @@
-from typing import NewType, TypedDict, TypeVar
+from typing import List, NewType, TypedDict, TypeVar
 
+from baserow.core.app_auth_providers.models import AppAuthProvider
 from baserow.core.user_sources.models import UserSource
 
 
@@ -9,6 +10,7 @@ class UserSourceDict(TypedDict):
     order: int
     type: str
     integration_id: int
+    auth_providers: List[AppAuthProvider]
 
 
 UserSourceDictSubClass = TypeVar("UserSourceDictSubClass", bound="UserSourceDict")

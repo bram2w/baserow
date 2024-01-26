@@ -124,6 +124,8 @@ class UserSourceService:
                 user_source_type, application, before=before, **prepared_values
             )
 
+        new_user_source.get_type().after_create(user, new_user_source, prepared_values)
+
         user_source_created.send(
             self,
             user_source=new_user_source,
@@ -154,11 +156,15 @@ class UserSourceService:
             context=user_source,
         )
 
-        prepared_values = user_source.get_type().prepare_values(kwargs, user)
+        prepared_values = user_source.get_type().prepare_values(
+            kwargs, user, user_source
+        )
 
         user_source = self.handler.update_user_source(
             user_source.get_type(), user_source, **prepared_values
         )
+
+        user_source.get_type().after_update(user, user_source, prepared_values)
 
         user_source_updated.send(self, user_source=user_source, user=user)
 
