@@ -41,9 +41,9 @@ Navigate to the `Spaces Object Storage` page in the left sidebar of your Digital
 dashboard. Click on `Create Spaces Bucket`. Choose your region, it's important
 that the bucket is created the same region, and create the bucket.
 
-Navigate to the `API` page in the left sidebar of the sidebar, click on the `Spaces 
+Navigate to the `API` page in the left sidebar of the sidebar, click on the `Spaces
 Keys` tab, click on `Generate New Key`, and create a new key. Copy the `Access Key` and
-`Secret key` because your going to need that later. 
+`Secret key` because your going to need that later.
 
 ## Application
 
@@ -88,7 +88,7 @@ You can scale up later. Click on `Back` and then on `Create Resources`.
 
 ## Security
 
-To make your PostgreSQL and Redis servers secure, navigate to their detail pages, click 
+To make your PostgreSQL and Redis servers secure, navigate to their detail pages, click
 `Settings`, click on `Edit` at `Trusted Sources`, and add the newly created app.
 
 ## Change domain
@@ -111,7 +111,7 @@ environment variable `BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION` to `true`.
 In order for the download button to work in Baserow you would need to configure the CORS
 settings in spaces. Navigate to the created space, go to the `Settings` tab, click on
 `Add` next to the CORS  Configurations, and add the URL of the newly created
-application with a trailing slash, so it must end with a `/`. Select the `GET` method,
+application without a trailing slash, so it must not end with a `/`. Select the `GET` method,
 and click `Save CORS Configuration`.
 
 ## Finish
@@ -124,7 +124,7 @@ environment.
 In order to update the Baserow version, you simply need to replace the image tag.
 Navigate to the `Settings` tag of your created app, click on the `baserow-baserow`
 component, then click on the `Edit` button next to source, change the `Image tag` into
-the desired version (latest is `1.22.2`), and click on save. The app will redeploy 
+the desired version (latest is `1.22.2`), and click on save. The app will redeploy
 with the latest version.
 
 ## External email server
@@ -154,7 +154,7 @@ application builder domain.
 
 ### Containers
 
-If you're going to use Baserow with more concurrent users, have big database schemas, 
+If you're going to use Baserow with more concurrent users, have big database schemas,
 need more API requests per second, then you're going to run into limitations with
 the current setup, and you need to scale up.
 
@@ -193,4 +193,4 @@ number of connections needed =
 ```
 
 So if you have 2 containers of 8GB of ram, you would need at least:
-`((10 * 2) + (8 * 2)) * 2 + 5 = 77 connections`. 
+`((10 * 2) + (8 * 2)) * 2 + 5 = 77 connections`.
