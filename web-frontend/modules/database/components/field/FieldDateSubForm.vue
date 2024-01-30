@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="control">
+    <div class="control margin-bottom-2">
       <label class="control__label control__label--small">{{
         $t('fieldDateSubForm.dateFormatLabel')
       }}</label>
@@ -29,34 +29,39 @@
     </div>
     <div class="control">
       <div class="control__elements">
-        <Checkbox v-model="values.date_include_time">{{
-          $t('fieldDateSubForm.includeTimeLabel')
-        }}</Checkbox>
-        <div v-show="values.date_include_time" class="control margin-top-2">
-          <label class="control__label control__label--small">{{
-            $t('fieldDateSubForm.timeFormatLabel')
-          }}</label>
-          <div class="control__elements">
-            <Dropdown
-              v-model="values.date_time_format"
-              :fixed-items="true"
-              small
-              @hide="$v.values.date_time_format.$touch()"
-            >
-              <DropdownItem
-                :name="$t('fieldDateSubForm.24Hour') + ' (23:00)'"
-                value="24"
-              ></DropdownItem>
-              <DropdownItem
-                :name="$t('fieldDateSubForm.12Hour') + ' (11:00 PM)'"
-                value="12"
-              ></DropdownItem>
-            </Dropdown>
+        <div class="margin-bottom-1">
+          <Checkbox v-model="values.date_include_time">{{
+            $t('fieldDateSubForm.includeTimeLabel')
+          }}</Checkbox>
+          <div
+            v-show="values.date_include_time"
+            class="control margin-bottom-2 margin-top-2"
+          >
+            <label class="control__label control__label--small">{{
+              $t('fieldDateSubForm.timeFormatLabel')
+            }}</label>
+            <div class="control__elements">
+              <Dropdown
+                v-model="values.date_time_format"
+                :fixed-items="true"
+                small
+                @hide="$v.values.date_time_format.$touch()"
+              >
+                <DropdownItem
+                  :name="$t('fieldDateSubForm.24Hour') + ' (23:00)'"
+                  value="24"
+                ></DropdownItem>
+                <DropdownItem
+                  :name="$t('fieldDateSubForm.12Hour') + ' (11:00 PM)'"
+                  value="12"
+                ></DropdownItem>
+              </Dropdown>
+            </div>
           </div>
         </div>
         <Checkbox
           v-show="values.date_include_time"
-          :value="values.date_force_timezone !== null"
+          :checked="values.date_force_timezone !== null"
           @input="toggleForceTimezone()"
           >{{ $t('fieldDateSubForm.forceTimezoneLabel') }}</Checkbox
         >
@@ -69,7 +74,7 @@
           <label class="control__label control__label--small">{{
             $t('fieldDateSubForm.forceTimezoneValue')
           }}</label>
-          <div class="control__elements">
+          <div class="control__elements margin-top-2 margin-bottom-2">
             <PaginatedDropdown
               :value="values.date_force_timezone"
               :fetch-page="fetchTimezonePage"
@@ -89,7 +94,7 @@
             values.date_include_time &&
             utcOffsetDiff !== 0
           "
-          :value="values.date_force_timezone_offset !== null"
+          :checked="values.date_force_timezone_offset !== null"
           @input="toggleForceTimezoneOffset()"
           >{{
             $t(
@@ -100,7 +105,7 @@
             )
           }}</Checkbox
         >
-        <Checkbox v-model="values.date_show_tzinfo">{{
+        <Checkbox v-model="values.date_show_tzinfo" class="margin-top-1">{{
           $t('fieldDateSubForm.showTimezoneLabel')
         }}</Checkbox>
       </div>

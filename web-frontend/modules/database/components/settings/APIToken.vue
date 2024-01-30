@@ -173,7 +173,7 @@
                     workspace.id
                   )
                 "
-                :value="isTableActive(table, database, operation)"
+                :checked="isTableActive(table, database, operation)"
                 @input="
                   toggleTable(table, database, databases, operation, $event)
                 "

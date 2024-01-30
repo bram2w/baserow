@@ -1,5 +1,5 @@
 <template>
-  <Checkbox :value="copy" :disabled="disabled" @input="input($event)">
+  <Checkbox :checked="copy" :disabled="disabled" @input="input($event)">
     {{ $t('viewFilterTypeBoolean.selected') }}
   </Checkbox>
 </template>
