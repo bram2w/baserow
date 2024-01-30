@@ -1,20 +1,95 @@
 <template>
-  <div class="checkbox" :class="classNames" @click="toggle(value)">
-    <i v-if="value === true" class="checkbox__checked-icon iconoir-check"></i>
-    <label class="checkbox__label"><slot></slot></label>
+  <div class="checkbox" :class="classNames" @click="toggle(checked)">
+    <div class="checkbox__button">
+      <svg
+        v-show="checked && !indeterminate"
+        class="checkbox__tick"
+        xmlns="http://www.w3.org/2000/svg"
+        width="9"
+        height="8"
+        viewBox="0 0 9 8"
+        fill="none"
+      >
+        <g clip-path="url(#clip0_1138_66)">
+          <path
+            d="M1.5179 4.4821L3.18211 6.18211L7.42475 2.15368"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </g>
+        <defs>
+          <clipPath id="clip0_1138_66">
+            <rect
+              width="8"
+              height="8"
+              fill="white"
+              transform="translate(0.5)"
+            />
+          </clipPath>
+        </defs>
+      </svg>
+      <svg
+        v-show="checked && indeterminate"
+        class="checkbox__tick-indeterminate"
+        xmlns="http://www.w3.org/2000/svg"
+        width="8"
+        height="8"
+        viewBox="0 0 8 8"
+        fill="none"
+      >
+        <path
+          d="M1.5 4L6.5 4"
+          stroke="white"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
+    <label v-if="hasSlot" class="checkbox__label">
+      <slot></slot>
+    </label>
   </div>
 </template>
 
 <script>
 export default {
   name: 'Checkbox',
+  model: {
+    prop: 'checked',
+    event: 'input',
+  },
   props: {
-    value: {
+    /**
+     * The state of the checkbox.
+     */
+    checked: {
       type: Boolean,
       required: false,
       default: false,
     },
+    /**
+     * Whether the checkbox is disabled.
+     */
     disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    /**
+     * Whether the checkbox is in error state.
+     */
+    error: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    /**
+     * Whether the checkbox is in indeterminate state
+     */
+    indeterminate: {
       type: Boolean,
       required: false,
       default: false,
@@ -23,21 +98,20 @@ export default {
   computed: {
     classNames() {
       return {
-        'checkbox--has-content': Object.prototype.hasOwnProperty.call(
-          this.$slots,
-          'default'
-        ),
         'checkbox--disabled': this.disabled,
-        active: this.value === true,
+        'checkbox--checked': this.checked,
+        'checkbox--error': this.error,
       }
+    },
+    hasSlot() {
+      return !!this.$slots.default
     },
   },
   methods: {
-    toggle(value) {
-      if (this.disabled) {
-        return
-      }
-      this.$emit('input', !value)
+    toggle(checked) {
+      if (this.disabled) return
+
+      this.$emit('input', !checked)
     },
   },
 }

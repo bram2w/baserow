@@ -2,9 +2,9 @@
   <ul class="list">
     <li v-for="(item, index) in items" :key="index" class="list__item">
       <div class="list__left-side">
-        <checkbox
+        <Checkbox
           v-if="selectable"
-          :value="selectedItemsIds.includes(item.id)"
+          :checked="selectedItemsIds.includes(item.id)"
           @input="selected($event, item, index)"
         />
         <slot name="left-side" :item="item"></slot>

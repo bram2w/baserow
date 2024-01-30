@@ -173,7 +173,7 @@
               value: {{ checkbox }}
               <br />
               <br />
-              <Checkbox v-model="checkbox"></Checkbox>
+              <Checkbox class="margin-bottom-1" v-model="checkbox"></Checkbox>
               <Checkbox v-model="checkbox">With text</Checkbox>
             </div>
           </div>
