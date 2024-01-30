@@ -6,6 +6,7 @@
     @click="click"
   >
     <SwitchInput
+      small
       :value="!view.show_logo"
       :disabled="!hasPremiumFeatures"
       @input="update"

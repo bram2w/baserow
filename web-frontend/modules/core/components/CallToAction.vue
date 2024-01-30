@@ -23,7 +23,7 @@ export default {
     iconColor: {
       type: String,
       required: false,
-      default: '',
+      default: 'blue',
     },
     iconRounded: {
       type: Boolean,
@@ -33,7 +33,7 @@ export default {
     iconSize: {
       type: String,
       required: false,
-      default: 'normal',
+      default: 'medium',
     },
   },
 }

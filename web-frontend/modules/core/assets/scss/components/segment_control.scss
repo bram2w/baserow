@@ -1,0 +1,78 @@
+.segment-control {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  background: $palette-neutral-50;
+  @include rounded($rounded-md);
+}
+
+.segment-control--small:not(.segment-control--icons-only) {
+  padding: 0;
+}
+
+.segment-control--icons-only {
+  display: inline-flex;
+  gap: 4px;
+  padding: 0;
+
+  &.segment-control--small {
+    padding: 4px;
+  }
+}
+
+.segment-control--transparent {
+  background: none;
+}
+
+.segment-control__button {
+  flex: 1;
+  overflow: hidden;
+  height: 32px;
+  box-sizing: border-box;
+  cursor: pointer;
+  outline: none;
+  background: none;
+  transition: background-color 0.3s ease;
+  color: $palette-neutral-900;
+  font-weight: 500;
+  border: 1px solid transparent;
+  justify-content: center;
+
+  @include flex-align-items(5px);
+  @include rounded($rounded);
+
+  &:hover {
+    background: $palette-neutral-200;
+    color: $palette-neutral-1200;
+  }
+
+  .segment-control--small & {
+    height: 36px;
+  }
+
+  .segment-control--icons-only & {
+    width: 36px;
+    height: 36px;
+  }
+
+  .segment-control--icons-only.segment-control--small & {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.segment-control__button--active {
+  color: $palette-neutral-1200;
+  background-color: $white;
+  border: 1px solid $palette-neutral-400;
+  @include add-elevation($elevation-low);
+
+  &:hover {
+    border: 1px solid $palette-neutral-500;
+    background: $white;
+  }
+}
+
+.segment-control__button-label {
+  @extend %ellipsis;
+}

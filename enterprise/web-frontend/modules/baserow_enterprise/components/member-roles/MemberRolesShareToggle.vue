@@ -8,8 +8,8 @@
     </div>
     <SwitchInput
       disabled
+      small
       :value="toggled"
-      large
       @input="$emit('update:toggled', $event)"
     ></SwitchInput>
   </div>

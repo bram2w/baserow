@@ -498,6 +498,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Snapshots"},
         {"name": "Jobs"},
         {"name": "Integrations"},
+        {"name": "User sources"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
         {"name": "Database table views"},
@@ -519,6 +520,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Builder domains"},
         {"name": "Builder public"},
         {"name": "Builder data sources"},
+        {"name": "Builder workflow actions"},
         {"name": "Builder theme"},
         {"name": "Admin"},
     ],
@@ -781,9 +783,14 @@ else:
             "the URL where users can access your Baserow server."
         )
 
+BASEROW_EMBEDDED_SHARE_URL = os.getenv("BASEROW_EMBEDDED_SHARE_URL")
+if not BASEROW_EMBEDDED_SHARE_URL:
+    BASEROW_EMBEDDED_SHARE_URL = PUBLIC_WEB_FRONTEND_URL
+
 PRIVATE_BACKEND_URL = os.getenv("PRIVATE_BACKEND_URL", "http://backend:8000")
 PUBLIC_BACKEND_HOSTNAME = urlparse(PUBLIC_BACKEND_URL).hostname
 PUBLIC_WEB_FRONTEND_HOSTNAME = urlparse(PUBLIC_WEB_FRONTEND_URL).hostname
+BASEROW_EMBEDDED_SHARE_HOSTNAME = urlparse(BASEROW_EMBEDDED_SHARE_URL).hostname
 PRIVATE_BACKEND_HOSTNAME = urlparse(PRIVATE_BACKEND_URL).hostname
 
 if PUBLIC_BACKEND_HOSTNAME:

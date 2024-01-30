@@ -70,7 +70,7 @@
         </Dropdown>
         <Checkbox
           v-if="includeUserFieldsCheckbox"
-          :value="value.userFieldNames"
+          :checked="value.userFieldNames"
           class="api-docs__example-type-item"
           @input="$emit('input', { userFieldNames: $event, type: value.type })"
           >{{ $t('apiDocsExample.userFieldNames') }}</Checkbox

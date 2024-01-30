@@ -4,15 +4,8 @@
   justify-content: flex-start;
 }
 
-.user-admin-username__initials {
-  flex: 0 0 28px;
-  font-weight: bold;
-  color: $white;
-  background-color: $color-primary-500;
-  border-radius: 100%;
+.user-admin-username__avatar {
   margin-right: 12px;
-
-  @include center-text(28px, 12px);
 }
 
 .user-admin-username__name {

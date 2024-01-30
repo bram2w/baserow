@@ -2,9 +2,11 @@
   <Modal :left-sidebar="true" :left-sidebar-scrollable="true">
     <template #sidebar>
       <div class="modal-sidebar__head">
-        <div class="modal-sidebar__head-initials-icon">
-          {{ name | nameAbbreviation }}
-        </div>
+        <Avatar
+          rounded
+          :initials="name | nameAbbreviation"
+          size="large"
+        ></Avatar>
         <div class="modal-sidebar__head-name">
           {{ $t('settingsModal.title') }}
         </div>

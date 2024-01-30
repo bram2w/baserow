@@ -3,6 +3,7 @@ from django.db import models
 
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.models import Table
+from baserow.core.app_auth_providers.models import AppAuthProvider
 from baserow.core.user_sources.models import UserSource
 
 User = get_user_model()
@@ -30,4 +31,14 @@ class LocalBaserowUserSource(UserSource):
         on_delete=models.SET_NULL,
         related_name="+",
         help_text="The Baserow field that contains the name of the user.",
+    )
+
+
+class LocalBaserowPasswordAppAuthProvider(AppAuthProvider):
+    password_field = models.ForeignKey(
+        Field,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="The Baserow field that contains the password of the user.",
     )

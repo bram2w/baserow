@@ -7,6 +7,7 @@
         :icon="icon"
         :initials="initials"
         :color="avatarColor"
+        rounded
       />
     </div>
     <div class="presentation__content">
@@ -38,12 +39,12 @@ export default {
     image: {
       type: String,
       required: false,
-      default: '',
+      default: null,
     },
     avatarColor: {
       type: String,
       required: false,
-      default: 'primary',
+      default: 'blue',
     },
     title: {
       type: String,

@@ -131,6 +131,14 @@
   padding: 30px 30px 0 30px;
 }
 
+// This container is needed to mimic the way the tool works. This is needed so that the
+// contexts menus are positioned the right way.
+.form-view__page-container {
+  @include absolute(0);
+
+  overflow: auto;
+}
+
 .form-view__page {
   min-height: 100%;
   background-color: $white;

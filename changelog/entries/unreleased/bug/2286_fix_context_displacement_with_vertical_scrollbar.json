@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fixes bug where the context menu was displaced if there was a vertical scrollbar (e.g. form form).",
+  "issue_number": 2286,
+  "bullet_points": [],
+  "created_at": "2024-01-17"
+}

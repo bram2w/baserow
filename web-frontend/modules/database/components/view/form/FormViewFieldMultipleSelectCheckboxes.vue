@@ -2,7 +2,8 @@
   <div class="control__elements">
     <div v-for="option in field.select_options" :key="option.id">
       <Checkbox
-        :value="value.findIndex((o) => o.id === option.id) !== -1"
+        :checked="value.findIndex((o) => o.id === option.id) !== -1"
+        class="margin-bottom-1"
         @input=";[touch(), toggleValue(option.id, value)]"
         >{{ option.value }}</Checkbox
       >

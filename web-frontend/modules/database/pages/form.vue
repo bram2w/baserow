@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="form-view__page-container">
     <Toasts></Toasts>
     <div class="form-view__page">
       <div v-if="fields.length === 0" class="form-view__body">

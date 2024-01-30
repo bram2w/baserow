@@ -20,6 +20,8 @@ from django.db.models import ForeignKey, ManyToManyField, Model
 from django.db.models.fields import NOT_PROVIDED
 from django.db.transaction import get_connection
 
+from requests.utils import guess_json_utf
+
 from baserow.contrib.database.db.schema import optional_atomic
 
 from .exceptions import CannotCalculateIntermediateOrder
@@ -505,7 +507,9 @@ def get_model_reference_field_name(lookup_model, target_model):
     return None
 
 
-def remove_invalid_surrogate_characters(content: bytes) -> str:
+def remove_invalid_surrogate_characters(
+    content: bytes, encoding: Optional[str] = None
+) -> str:
     """
     Removes illegal unicode characters from the provided content. If you for example
     run something like `b"\uD83D".encode("utf-8")`, it will result in a
@@ -514,11 +518,16 @@ def remove_invalid_surrogate_characters(content: bytes) -> str:
 
     :param content: The content where the illegal unicode characters must be removed
         from.
+    :param encoding: The coding of the provided content. Will be guessed if nothing
+        is provided.
     :return: Decoded string where the unicode illegal unicode characters are removed
         from.
     """
 
-    return re.sub(r"\\u(d|D)([a-z|A-Z|0-9]{3})", "", content.decode("utf-8", "ignore"))
+    if encoding is None:
+        encoding = guess_json_utf(content)
+
+    return re.sub(r"\\u(d|D)([a-z|A-Z|0-9]{3})", "", content.decode(encoding, "ignore"))
 
 
 def split_ending_number(name: str) -> Tuple[str, str]:

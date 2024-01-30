@@ -4,6 +4,10 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.app_auth_providers.serializers import (
+    PolymorphicAppAuthProviderSerializer,
+    ReadPolymorphicAppAuthProviderSerializer,
+)
 from baserow.core.user_sources.models import UserSource
 from baserow.core.user_sources.registries import user_source_type_registry
 
@@ -19,12 +23,27 @@ class UserSourceSerializer(serializers.ModelSerializer):
     def get_type(self, instance):
         return user_source_type_registry.get_by_model(instance.specific_class).type
 
+    auth_providers = ReadPolymorphicAppAuthProviderSerializer(
+        required=False,
+        many=True,
+        help_text="Auth providers related to this user source.",
+    )
+
     class Meta:
         model = UserSource
-        fields = ("id", "application_id", "integration_id", "type", "name", "order")
+        fields = (
+            "id",
+            "application_id",
+            "integration_id",
+            "type",
+            "name",
+            "order",
+            "auth_providers",
+        )
         extra_kwargs = {
             "id": {"read_only": True},
             "application_id": {"read_only": True},
+            "auth_providers": {"read_only": True},
             "integration_id": {"read_only": True},
             "type": {"read_only": True},
             "name": {"read_only": True},
@@ -54,9 +73,15 @@ class CreateUserSourceSerializer(serializers.ModelSerializer):
         help_text="The related integration id.",
     )
 
+    auth_providers = PolymorphicAppAuthProviderSerializer(
+        required=False,
+        many=True,
+        help_text="Auth providers related to this user source.",
+    )
+
     class Meta:
         model = UserSource
-        fields = ("before_id", "type", "name", "integration_id")
+        fields = ("before_id", "type", "name", "integration_id", "auth_providers")
         extra_kwargs = {
             "name": {"required": True},
         }
@@ -69,9 +94,15 @@ class UpdateUserSourceSerializer(serializers.ModelSerializer):
         help_text="The related integration id.",
     )
 
+    auth_providers = PolymorphicAppAuthProviderSerializer(
+        required=False,
+        many=True,
+        help_text="Auth providers related to this user source.",
+    )
+
     class Meta:
         model = UserSource
-        fields = ("name", "integration_id")
+        fields = ("name", "integration_id", "auth_providers")
         extra_kwargs = {
             "name": {"required": False},
             "integration_id": {"required": False},
@@ -79,6 +110,10 @@ class UpdateUserSourceSerializer(serializers.ModelSerializer):
 
 
 class MoveUserSourceSerializer(serializers.Serializer):
+    """
+    Serializer used when moving a user source.
+    """
+
     before_id = serializers.IntegerField(
         allow_null=True,
         required=False,

@@ -187,3 +187,14 @@ class DiscriminatorCustomFieldsMappingSerializerExtension(
             )
 
         return self._map_serializer(auto_schema, direction, mapping)
+
+
+class PolymorphicMappingSerializerExtensionMixin(
+    DiscriminatorCustomFieldsMappingSerializerExtension
+):
+    """
+    Extension to correctly display Polymorphic serializer documentation.
+    """
+
+    target_class = "baserow.api.polymorphic.PolymorphicSerializer"
+    match_subclasses = True

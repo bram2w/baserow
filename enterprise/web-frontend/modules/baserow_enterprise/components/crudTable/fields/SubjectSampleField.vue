@@ -9,13 +9,16 @@
     v-on="listeners"
   >
     <div v-if="!props.row[props.column.key].length">-</div>
-    <div
+
+    <Avatar
       v-for="(sample, index) in props.row[props.column.key]"
       :key="index"
-      class="subject_sample_field-list__user-initials"
-    >
-      {{ sample.subject_label | nameAbbreviation }}
-    </div>
+      class="subject_sample_field-list__avatar"
+      rounded
+      size="large"
+      :initials="sample.subject_label | nameAbbreviation"
+    ></Avatar>
+
     <div
       v-if="props.row.subject_count > 10"
       class="subject_sample_field-list__user-initials extras"

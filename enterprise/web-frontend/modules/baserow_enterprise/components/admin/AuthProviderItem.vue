@@ -36,8 +36,8 @@
     </div>
     <SwitchInput
       class="auth-provider-admin__item-toggle"
+      small
       :value="authProvider.enabled"
-      :large="true"
       :disabled="isOneProviderEnabled && authProvider.enabled"
       @input="setEnabled($event)"
     ></SwitchInput>

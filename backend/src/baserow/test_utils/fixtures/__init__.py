@@ -1,6 +1,7 @@
 from baserow.core.db import get_collation_name
 
 from .airtable import AirtableFixtures
+from .app_auth_provider import AppAuthProviderFixtures
 from .application import ApplicationFixtures
 from .auth_provider import AuthProviderFixtures
 from .data_source import DataSourceFixtures
@@ -55,6 +56,7 @@ class Fixtures(
     NotificationsFixture,
     WorkflowActionFixture,
     UserSourceFixtures,
+    AppAuthProviderFixtures,
 ):
     def __init__(self, fake=None):
         self.fake = fake

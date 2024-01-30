@@ -113,7 +113,7 @@
             <Checkbox
               v-for="webhookEvent in webhookEventTypes"
               :key="webhookEvent.type"
-              :value="values.events.includes(webhookEvent.type)"
+              :checked="values.events.includes(webhookEvent.type)"
               class="webhook__type"
               @input="
                 $event

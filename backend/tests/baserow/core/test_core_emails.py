@@ -39,5 +39,7 @@ def test_base_email_message():
     assert "public_backend_hostname" in context
     assert "public_web_frontend_url" in context
     assert "public_web_frontend_hostname" in context
+    assert "baserow_embedded_share_url" in context
+    assert "baserow_embedded_share_hostname" in context
     assert email.get_from_email() == "no-reply@localhost"
     assert email.get_subject() == "Reset password"

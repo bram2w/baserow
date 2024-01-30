@@ -2,22 +2,12 @@
   display: flex;
   align-items: center;
   padding: 16px;
+  gap: 16px;
 }
 
 .modal-sidebar__head-icon {
   flex: 0 0 32px;
   margin-right: 16px;
-}
-
-.modal-sidebar__head-initials-icon {
-  flex: 0 0 32px;
-  border-radius: 100%;
-  margin-right: 16px;
-  background-color: $color-primary-500;
-  color: $white;
-  font-weight: 600;
-
-  @include center-text(32px, 13px);
 }
 
 .modal-sidebar__head-name {

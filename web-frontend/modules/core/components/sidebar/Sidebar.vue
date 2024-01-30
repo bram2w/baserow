@@ -19,9 +19,11 @@
           )
         "
       >
-        <div class="sidebar__user-initials">
-          {{ name | nameAbbreviation }}
-        </div>
+        <Avatar
+          rounded
+          :initials="name | nameAbbreviation"
+          :size="avatarSize"
+        ></Avatar>
         <div class="sidebar__user-info">
           <div class="sidebar__user-info-top">
             <div class="sidebar__user-name">{{ name }}</div>
@@ -492,6 +494,9 @@ export default {
           ({ name }) => name === adminType.routeName
         )
       })
+    },
+    avatarSize() {
+      return this.isCollapsed ? 'large' : 'x-large'
     },
     ...mapState({
       workspaces: (state) => state.workspace.items,
