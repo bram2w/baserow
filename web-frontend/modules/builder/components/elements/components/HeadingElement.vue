@@ -8,11 +8,9 @@
     <component
       :is="`h${element.level}`"
       class="heading-element__heading"
+      :class="{ [`ab-heading--h${element.level}`]: true }"
       :style="{
         '--color': resolveColor(element.font_color, headingColorVariables),
-        '--font-size': `${
-          builder.theme[`heading_${element.level}_font_size`]
-        }px`,
       }"
     >
       {{ resolvedValue || $t('headingElement.noValue') }}

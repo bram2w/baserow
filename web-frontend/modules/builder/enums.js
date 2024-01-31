@@ -20,6 +20,11 @@ export const PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS = {
   text: ensureNonEmptyString,
 }
 
+export const TEXT_FORMAT_TYPES = {
+  PLAIN: 'plain',
+  MARKDOWN: 'markdown',
+}
+
 export const IMAGE_SOURCE_TYPES = {
   UPLOAD: 'upload',
   URL: 'url',

@@ -1,19 +1,20 @@
 <template>
-  <div>
+  <ThemeProvider>
     <PageElement
       v-for="element in elements"
       :key="element.id"
       :element="element"
       :mode="mode"
     />
-  </div>
+  </ThemeProvider>
 </template>
 
 <script>
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
+import ThemeProvider from '@baserow/modules/builder/components/theme/ThemeProvider.vue'
 
 export default {
-  components: { PageElement },
+  components: { ThemeProvider, PageElement },
   inject: ['builder', 'mode'],
   props: {
     page: {

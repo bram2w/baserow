@@ -228,6 +228,7 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "value": element2.value,
                         "alignment": "left",
+                        "format": TextElement.TEXT_FORMATS.PLAIN,
                     },
                     {
                         "id": element_container.id,
@@ -277,6 +278,7 @@ def test_builder_application_export(data_fixture):
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
                         "alignment": "left",
+                        "format": TextElement.TEXT_FORMATS.PLAIN,
                     },
                 ],
             },

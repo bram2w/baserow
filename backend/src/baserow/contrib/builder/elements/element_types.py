@@ -451,12 +451,13 @@ class TextElementType(ElementType):
 
     type = "text"
     model_class = TextElement
-    serializer_field_names = ["value", "alignment"]
-    allowed_fields = ["value", "alignment"]
+    serializer_field_names = ["value", "alignment", "format"]
+    allowed_fields = ["value", "alignment", "format"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
         alignment: str
+        format: str
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -466,6 +467,7 @@ class TextElementType(ElementType):
             "Asperiores corporis perspiciatis nam harum veritatis. "
             "Impedit qui maxime aut illo quod ea molestias.'",
             "alignment": "left",
+            "format": TextElement.TEXT_FORMATS.PLAIN,
         }
 
     @property
@@ -478,6 +480,11 @@ class TextElementType(ElementType):
                 required=False,
                 allow_blank=True,
                 default="",
+            ),
+            "format": serializers.ChoiceField(
+                choices=TextElement.TEXT_FORMATS.choices,
+                default=TextElement.TEXT_FORMATS.PLAIN,
+                help_text=TextElement._meta.get_field("format").help_text,
             ),
         }
 
