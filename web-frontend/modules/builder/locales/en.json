@@ -143,7 +143,10 @@
     "textElementForm": {
         "textTitle": "Text",
         "textPlaceholder": "Enter text...",
-        "textError": "The value is invalid."
+        "textError": "The value is invalid.",
+        "textFormatTypeLabel": "Format",
+        "textFormatTypePlain": "Plain text",
+        "textFormatTypeMarkdown": "Markdown"
     },
     "imageElement": {
         "emptyState": "No alt text defined..."
