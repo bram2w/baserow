@@ -10,6 +10,10 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceSort,
     LocalBaserowViewService,
 )
+from baserow.core.formula import resolve_formula
+from baserow.core.formula.registries import formula_runtime_function_registry
+from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.services.exceptions import ServiceImproperlyConfigured
 
 if TYPE_CHECKING:
     from baserow.contrib.database.table.models import GeneratedTableModel
@@ -28,6 +32,7 @@ class LocalBaserowTableServiceFilterableMixin:
         service: "ServiceSubClass",
         queryset: QuerySet,
         model: Type["GeneratedTableModel"],
+        dispatch_context: DispatchContext,
     ) -> QuerySet:
         """
         Responsible for defining how the `LocalBaserow` services are filtered. To issue
@@ -56,9 +61,23 @@ class LocalBaserowTableServiceFilterableMixin:
             field_name = field_object["name"]
             model_field = model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(service_filter.type)
+
+            try:
+                resolved_value = str(
+                    resolve_formula(
+                        service_filter.value,
+                        formula_runtime_function_registry,
+                        dispatch_context,
+                    )
+                )
+            except Exception as exc:
+                raise ServiceImproperlyConfigured(
+                    f"The {field_name} service filter formula can't be resolved: {exc}"
+                ) from exc
+
             service_filter_builder.filter(
                 view_filter_type.get_filter(
-                    field_name, service_filter.value, model_field, field_object["field"]
+                    field_name, resolved_value, model_field, field_object["field"]
                 )
             )
 
@@ -110,7 +129,9 @@ class LocalBaserowTableServiceSearchableMixin:
     search queries applied to their service's table are applied to the queryset.
     """
 
-    def get_dispatch_search(self, service: "ServiceSubClass") -> str:
+    def get_dispatch_search(
+        self, service: "ServiceSubClass", dispatch_context: DispatchContext
+    ) -> str:
         """
         Returns this service's search query, which can be applied to the dispatch
         queryset.
@@ -119,4 +140,13 @@ class LocalBaserowTableServiceSearchableMixin:
         :return: string
         """
 
-        return service.search_query
+        try:
+            return resolve_formula(
+                service.search_query,
+                formula_runtime_function_registry,
+                dispatch_context,
+            )
+        except Exception as exc:
+            raise ServiceImproperlyConfigured(
+                f"The `search_query` formula can't be resolved: {exc}"
+            ) from exc

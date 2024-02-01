@@ -16,6 +16,9 @@ class LocalBaserowTableServiceSortSerializer(serializers.ModelSerializer):
 
 
 class LocalBaserowTableServiceFilterSerializer(serializers.ModelSerializer):
+    value = FormulaSerializerField(
+        allow_blank=True, help_text="A formula for the filter's value."
+    )
     order = serializers.IntegerField(read_only=True)
 
     class Meta:

@@ -60,7 +60,7 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceSort,
     LocalBaserowUpsertRow,
 )
-from baserow.core.formula import resolve_formula
+from baserow.core.formula import BaserowFormula, resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_integer
@@ -546,7 +546,7 @@ class LocalBaserowListRowsUserServiceType(
             allow_null=True,
             help_text="The id of the Baserow view we want the data for.",
         ),
-        "search_query": serializers.CharField(
+        "search_query": FormulaSerializerField(
             required=False,
             allow_blank=True,
             help_text="Any search queries to apply to the "
@@ -587,6 +587,44 @@ class LocalBaserowListRowsUserServiceType(
 
         return [row, f"field_{field_id}", *rest]
 
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
+        **kwargs,
+    ):
+        """
+        Responsible for deserializing the `search_query` and `filters` property
+        by importing its formula.
+
+        :param prop_name: the name of the property being transformed.
+        :param value: the value of this property.
+        :param id_mapping: the id mapping dict.
+        :param import_formula: the import formula function.
+        :return: the deserialized version for this property.
+        """
+
+        if prop_name == "search_query":
+            return import_formula(value, id_mapping)
+
+        if prop_name == "filters":
+            return [
+                {
+                    **f,
+                    "value": import_formula(f["value"], id_mapping),
+                    "field_id": id_mapping["database_fields"][f["field_id"]]
+                    if "database_fields" in id_mapping
+                    else f["field_id"],
+                }
+                for f in value
+            ]
+
+        return super().deserialize_property(
+            prop_name, value, id_mapping, import_formula=import_formula, **kwargs
+        )
+
     def dispatch_data(
         self,
         service: LocalBaserowListRows,
@@ -617,13 +655,13 @@ class LocalBaserowListRowsUserServiceType(
         queryset = model.objects.all().enhance_by_fields()
 
         # Apply the search query to this Service's View.
-        search_query = self.get_dispatch_search(service)
+        search_query = self.get_dispatch_search(service, dispatch_context)
         if search_query:
             search_mode = SearchHandler.get_default_search_mode_for_table(table)
             queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
 
         # Find filters applicable to this service.
-        queryset = self.get_dispatch_filters(service, queryset, model)
+        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
 
         # Find sorts applicable to this service.
         view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
@@ -722,7 +760,7 @@ class LocalBaserowGetRowUserServiceType(
             allow_null=True,
             help_text="The id of the Baserow view we want the data for.",
         ),
-        "search_query": serializers.CharField(
+        "search_query": FormulaSerializerField(
             required=False,
             allow_blank=True,
             help_text="Any search queries to apply to the "
@@ -733,9 +771,9 @@ class LocalBaserowGetRowUserServiceType(
     class SerializedDict(ServiceDict):
         table_id: int
         view_id: int
-        row_id: str
-        search_query: str
         filters: List[Dict]
+        row_id: BaserowFormula
+        search_query: BaserowFormula
 
     def enhance_queryset(self, queryset):
         return queryset.select_related(
@@ -769,10 +807,25 @@ class LocalBaserowGetRowUserServiceType(
     ):
         """
         Get the view & table ID from the mapping if it exists and also updates the
-        row_id formula.
+        row_id, search_query & filters formulas.
         """
 
         if prop_name == "row_id":
+            return import_formula(value, id_mapping)
+
+        if prop_name == "filters":
+            return [
+                {
+                    **f,
+                    "value": import_formula(f["value"], id_mapping),
+                    "field_id": id_mapping["database_fields"][f["field_id"]]
+                    if "database_fields" in id_mapping
+                    else f["field_id"],
+                }
+                for f in value
+            ]
+
+        if prop_name == "search_query":
             return import_formula(value, id_mapping)
 
         return super().deserialize_property(
@@ -867,13 +920,13 @@ class LocalBaserowGetRowUserServiceType(
         queryset = model.objects.all()
 
         # Apply the search query to this Service's View.
-        search_query = self.get_dispatch_search(service)
+        search_query = self.get_dispatch_search(service, dispatch_context)
         if search_query:
             search_mode = SearchHandler.get_default_search_mode_for_table(table)
             queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
 
         # Find the `filters` applicable to this Service's View.
-        queryset = self.get_dispatch_filters(service, queryset, model)
+        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
 
         # Find sorts applicable to this service.
         view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
@@ -934,7 +987,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
     }
 
     class SerializedDict(ServiceDict):
-        row_id: str
+        row_id: BaserowFormula
         table_id: int
         field_mappings: List[Dict]
 

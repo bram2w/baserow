@@ -35,10 +35,10 @@ def test_local_baserow_table_service_refinement_manager(data_fixture):
     ingredient = table.field_set.get(name="Ingredient")
 
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="25", order=0
+        service=service, field=cost, value="'25'", order=0
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=ingredient, value="Cheese", order=1
+        service=service, field=ingredient, value="'Cheese'", order=1
     )
 
     data_fixture.create_local_baserow_table_service_sort(

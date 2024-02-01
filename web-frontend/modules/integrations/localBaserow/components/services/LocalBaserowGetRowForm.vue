@@ -13,13 +13,12 @@
       </div>
       <div class="row">
         <div class="col col-6">
-          <ApplicationBuilderFormulaInputGroup
+          <InjectedFormulaInputGroup
             v-model="values.row_id"
             small-label
             :label="$t('localBaserowGetRowForm.rowFieldLabel')"
             :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
             :help-text="$t('localBaserowGetRowForm.rowFieldHelpText')"
-            :data-providers-allowed="DATA_PROVIDERS_ALLOWED_DATA_SOURCES"
           />
         </div>
       </div>
@@ -36,16 +35,27 @@
                 :schema="dataSource.schema"
                 :table-loading="tableLoading"
                 :filter-type.sync="values.filter_type"
-              />
+              >
+                <template #filterInputComponent="{ slotProps }">
+                  <InjectedFormulaInputGroup
+                    v-if="
+                      shouldInjectFormulaInputComponent(slotProps.filter.type)
+                    "
+                    v-model="slotProps.filter.value"
+                    small
+                    :placeholder="
+                      $t('localBaserowGetRowForm.formulaFilterInputPlaceholder')
+                    "
+                  />
+                </template>
+              </LocalBaserowTableServiceConditionalForm>
               <p v-if="!values.table_id">
                 {{ $t('localBaserowGetRowForm.noTableChosenForFiltering') }}
               </p>
             </Tab>
             <Tab :title="$t('localBaserowGetRowForm.searchTabTitle')">
-              <FormInput
+              <InjectedFormulaInputGroup
                 v-model="values.search_query"
-                type="text"
-                small-label
                 :placeholder="
                   $t('localBaserowGetRowForm.searchFieldPlaceHolder')
                 "
@@ -61,18 +71,23 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
-import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm.vue'
+import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm'
+import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup.vue'
+import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText.vue'
+import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber.vue'
 
 export default {
   components: {
+    InjectedFormulaInputGroup,
     LocalBaserowTableSelector,
     LocalBaserowTableServiceConditionalForm,
-    ApplicationBuilderFormulaInputGroup,
   },
   mixins: [form],
   inject: ['page'],
+  provide() {
+    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
+  },
   props: {
     builder: {
       type: Object,
@@ -130,8 +145,6 @@ export default {
         this.values.table_id = newValue
       },
     },
-    DATA_PROVIDERS_ALLOWED_DATA_SOURCES: () =>
-      DATA_PROVIDERS_ALLOWED_DATA_SOURCES,
     databases() {
       return this.contextData?.databases || []
     },
@@ -147,6 +160,16 @@ export default {
         this.tableLoading = false
       },
       immediate: true,
+    },
+  },
+  methods: {
+    shouldInjectFormulaInputComponent(filterType) {
+      const viewFilterType = this.$registry.get('viewFilter', filterType)
+      const filterComponent = viewFilterType.getInputComponent()
+      return (
+        filterComponent === ViewFilterTypeText ||
+        filterComponent === ViewFilterTypeNumber
+      )
     },
   },
 }
