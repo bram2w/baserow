@@ -8,6 +8,13 @@
   cursor: pointer;
 }
 
+.table-element-form__field-error {
+  font-size: 20px;
+  color: #ffbdb4;
+  pointer-events: none;
+  padding-right: 3px;
+}
+
 .table-element-form__field-name {
   flex: 1;
   padding-right: 5px;
