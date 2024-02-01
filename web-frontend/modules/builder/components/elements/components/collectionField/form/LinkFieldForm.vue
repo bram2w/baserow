@@ -94,6 +94,7 @@
 import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 
 export default {
   name: 'TextField',
@@ -151,10 +152,9 @@ export default {
   watch: {
     'destinationPage.path_params': {
       handler(value) {
-        this.updatePageParameters()
+        this.refreshParametersInError()
       },
       deep: true,
-      immediate: true,
     },
     navigateTo(value) {
       if (value === '') {
@@ -178,7 +178,13 @@ export default {
       }
     },
   },
+  mounted() {
+    this.refreshParametersInError()
+  },
   methods: {
+    refreshParametersInError() {
+      this.parametersInError = pathParametersInError(this.values, this.builder)
+    },
     updatePageParameters() {
       this.values.page_parameters = (
         this.destinationPage?.path_params || []

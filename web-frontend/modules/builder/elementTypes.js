@@ -31,6 +31,7 @@ import CheckboxElement from '@baserow/modules/builder/components/elements/compon
 import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
 import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
 import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
+import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 
 export class ElementType extends Registerable {
   get name() {
@@ -433,34 +434,7 @@ export class LinkElementType extends ElementType {
   }
 
   isInError({ element, builder }) {
-    return LinkElementType.arePathParametersInError(element, builder)
-  }
-
-  static arePathParametersInError(element, builder) {
-    if (
-      element.navigation_type === 'page' &&
-      !isNaN(element.navigate_to_page_id)
-    ) {
-      const destinationPage = builder.pages.find(
-        ({ id }) => id === element.navigate_to_page_id
-      )
-
-      if (destinationPage) {
-        const destinationPageParams = destinationPage.path_params || []
-        const pageParams = element.page_parameters || []
-
-        const destinationPageParamNames = destinationPageParams.map(
-          ({ name }) => name
-        )
-        const pageParamNames = pageParams.map(({ name }) => name)
-
-        if (!_.isEqual(destinationPageParamNames, pageParamNames)) {
-          return true
-        }
-      }
-    } //
-
-    return false
+    return pathParametersInError(element, builder)
   }
 }
 
@@ -570,6 +544,20 @@ export class TableElementType extends ElementType {
         )
       }
     }
+  }
+
+  isInError({ element, builder }) {
+    const collectionFieldsInError = element.fields.map((collectionField) => {
+      const collectionFieldType = this.app.$registry.get(
+        'collectionField',
+        collectionField.type
+      )
+      return collectionFieldType.isInError({
+        field: collectionField,
+        builder,
+      })
+    })
+    return collectionFieldsInError.includes(true)
   }
 }
 

@@ -1,7 +1,7 @@
-import { LinkElementType } from '@baserow/modules/builder/elementTypes'
+import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 
-describe('linkElementType', () => {
-  describe('arePathParametersInError', () => {
+describe('Builder parameter util tests', () => {
+  describe('pathParametersInError', () => {
     test('should return false when element is not a page navigation', () => {
       const element = {
         navigation_type: 'link',
@@ -14,7 +14,7 @@ describe('linkElementType', () => {
         ],
       }
 
-      const result = LinkElementType.arePathParametersInError(element, builder)
+      const result = pathParametersInError(element, builder)
       expect(result).toBe(false)
     })
 
@@ -27,7 +27,7 @@ describe('linkElementType', () => {
         pages: [{ id: 1, path_params: [] }],
       }
 
-      const result = LinkElementType.arePathParametersInError(element, builder)
+      const result = pathParametersInError(element, builder)
       expect(result).toBe(false)
     })
 
@@ -52,7 +52,7 @@ describe('linkElementType', () => {
         ],
       }
 
-      const result = LinkElementType.arePathParametersInError(element, builder)
+      const result = pathParametersInError(element, builder)
       expect(result).toBe(false)
     })
 
@@ -69,7 +69,7 @@ describe('linkElementType', () => {
         pages: [{ id: 1, path_params: [{ name: 'param1', type: 'numeric' }] }],
       }
 
-      const result = LinkElementType.arePathParametersInError(element, builder)
+      const result = pathParametersInError(element, builder)
       expect(result).toBe(true)
     })
 
@@ -94,7 +94,7 @@ describe('linkElementType', () => {
         ],
       }
 
-      const result = LinkElementType.arePathParametersInError(element, builder)
+      const result = pathParametersInError(element, builder)
       expect(result).toBe(true)
     })
   })
