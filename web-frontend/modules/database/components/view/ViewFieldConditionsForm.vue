@@ -27,7 +27,11 @@
           :read-only="readOnly"
           @updateFilter="updateFilter(filter, $event)"
           @deleteFilter="deleteFilter(filter, $event)"
-        />
+        >
+          <template #filterInputComponent="{ slotProps }">
+            <slot name="filterInputComponent" :slot-props="slotProps"></slot>
+          </template>
+        </ViewFieldConditionItem>
       </div>
     </div>
     <div
@@ -69,7 +73,14 @@
                 :read-only="readOnly"
                 @updateFilter="updateFilter(filter, $event)"
                 @deleteFilter="deleteFilter(filter, $event)"
-              />
+              >
+                <template #filterInputComponent="{ slotProps }">
+                  <slot
+                    name="filterInputComponent"
+                    :slot-props="slotProps"
+                  ></slot>
+                </template>
+              </ViewFieldConditionItem>
             </div>
           </div>
         </div>
