@@ -103,8 +103,10 @@ def test_row_comment_created_signal_called(
 
     mock_row_comment_created.assert_called_once()
     args = mock_row_comment_created.call_args
-
-    assert args == call(RowCommentHandler, row_comment=c, user=user, mentions=[])
+    assert args.kwargs["mentions"] == []
+    assert args.kwargs["row_comment"] == c
+    assert args.kwargs["user"] == user
+    assert args.kwargs["row"].id == rows[0].id
 
 
 @pytest.mark.django_db
@@ -168,7 +170,10 @@ def test_row_comment_updated_signal_called(
     mock_row_comment_updated.assert_called_once()
     args = mock_row_comment_updated.call_args
 
-    assert args == call(RowCommentHandler, row_comment=c, user=user, mentions=[])
+    assert args.kwargs["mentions"] == []
+    assert args.kwargs["row_comment"] == c
+    assert args.kwargs["user"] == user
+    assert args.kwargs["row"].id == rows[0].id
 
 
 @pytest.mark.django_db
