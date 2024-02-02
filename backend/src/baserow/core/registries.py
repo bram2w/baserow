@@ -854,7 +854,7 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
 
             # We have all the objects in the queryset, but now we want to sort them
             # into buckets per original scope they are a child of.
-            for scope in scopes:
+            for scope in parent_scopes:
                 objects_per_scope[scope] = set()
                 scope_type = object_scope_type_registry.get_by_model(scope)
                 for obj in query_result:

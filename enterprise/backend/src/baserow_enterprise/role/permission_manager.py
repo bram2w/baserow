@@ -107,6 +107,7 @@ class RolePermissionManagerType(PermissionManagerType):
                         context,
                         scope_includes_cache,
                     )
+
                 computed_roles = computed_role_cache[cache_key]
 
                 if any(
@@ -154,6 +155,7 @@ class RolePermissionManagerType(PermissionManagerType):
             ]
         )
         exceptions = set()
+        inclusions = set()
 
         for scope, roles in roles_by_scope[1:]:
             allowed_operations = set()
@@ -175,13 +177,17 @@ class RolePermissionManagerType(PermissionManagerType):
                 if operation_type.type not in allowed_operations:
                     if default:
                         exceptions.add(context_exception)
+                        inclusions.discard(context_exception)
                     else:
+                        inclusions.add(context_exception)
                         exceptions.discard(context_exception)
                 else:
                     if default:
+                        inclusions.add(context_exception)
                         exceptions.discard(context_exception)
                     else:
                         exceptions.add(context_exception)
+                        inclusions.discard(context_exception)
 
             # Second case
             # The scope of the role assignment is included by the role of the operation
@@ -203,15 +209,20 @@ class RolePermissionManagerType(PermissionManagerType):
                 )
 
                 if default:
-                    if found_object in exceptions:
-                        exceptions.discard(found_object)
+                    exceptions.discard(found_object)
+                    inclusions.add(found_object)
                 else:
                     exceptions.add(found_object)
+                    inclusions.discard(found_object)
 
-        return default, exceptions
+        return default, exceptions, inclusions
 
     def get_permissions_object(
-        self, actor: AbstractUser, workspace: Optional[Workspace] = None
+        self,
+        actor: AbstractUser,
+        workspace: Optional[Workspace] = None,
+        for_operation_types=None,
+        use_object_scope=False,
     ) -> List[Dict[str, OperationPermissionContent]]:
         """
         Returns the permission object for this permission manager. The permission object
@@ -236,41 +247,63 @@ class RolePermissionManagerType(PermissionManagerType):
 
         policy_per_operation = defaultdict(lambda: {"default": False, "exceptions": []})
 
-        exceptions_with_mixed_types_per_scope = defaultdict(set)
+        scope_map_with_mixed_types_per_scope = defaultdict(set)
+
+        all_operations = for_operation_types or operation_type_registry.get_all()
 
         # First, for each operation we want the default policy and exceptions
-        for operation_type in operation_type_registry.get_all():
-            default, exceptions = self.get_operation_policy(
-                roles_by_scope, operation_type
+        for operation_type in all_operations:
+            default, exceptions, inclusions = self.get_operation_policy(
+                roles_by_scope, operation_type, use_object_scope
             )
 
-            if default or exceptions:
-                policy_per_operation[operation_type.type]["default"] = default
-                policy_per_operation[operation_type.type]["exceptions"] = exceptions
+            base_scope_type = (
+                operation_type.object_scope
+                if use_object_scope
+                else operation_type.context_scope
+            )
 
-            if exceptions:
-                # We store the exceptions by scope to get all objects at once later
-                exceptions_with_mixed_types_per_scope[
-                    operation_type.context_scope
-                ] |= exceptions
+            policy_per_operation[operation_type.type]["default"] = default
+            policy_per_operation[operation_type.type]["exceptions"] = exceptions
+            policy_per_operation[operation_type.type]["inclusions"] = inclusions
 
-        # Get all objects for all exceptions at once to improve perfs
+            # We store the exceptions/inclusions by scope to get all
+            # objects at once later
+            scope_map_with_mixed_types_per_scope[base_scope_type] |= (
+                exceptions | inclusions
+            )
+
+        # Get all objects for all exceptions/inclusions at once to improve perfs
         exception_ids_per_scope = {}
-        for object_scope, exceptions in exceptions_with_mixed_types_per_scope.items():
+        for object_scope, exceptions in scope_map_with_mixed_types_per_scope.items():
             exception_ids_per_scope[object_scope] = {
                 scope: {o.id for o in exc}
                 for scope, exc in object_scope.get_objects_in_scopes(exceptions).items()
             }
 
-        # Dispatch actual context object ids for each exceptions scopes
+        # Dispatch actual context object ids for each exceptions/inclusions scopes
         policy_per_operation_with_exception_ids = {}
-        for operation_type in operation_type_registry.get_all():
+        for operation_type in all_operations:
+            inclusions = policy_per_operation[operation_type.type]["inclusions"]
+            exclusions = policy_per_operation[operation_type.type]["exceptions"]
+            ordered_scope = sorted(
+                inclusions | exclusions,
+                key=lambda s: object_scope_type_registry.get_by_model(s).level,
+            )
+
+            base_scope_type = (
+                operation_type.object_scope
+                if use_object_scope
+                else operation_type.context_scope
+            )
+
             # Gather all ids for all scopes of the exception list of this operation
             exceptions_ids = set()
-            for scope in policy_per_operation[operation_type.type]["exceptions"]:
-                exceptions_ids |= exception_ids_per_scope[operation_type.context_scope][
-                    scope
-                ]
+            for scope in ordered_scope:
+                if scope in exclusions:
+                    exceptions_ids |= exception_ids_per_scope[base_scope_type][scope]
+                if scope in inclusions:
+                    exceptions_ids -= exception_ids_per_scope[base_scope_type][scope]
 
             policy_per_operation_with_exception_ids[operation_type.type] = {
                 "default": policy_per_operation[operation_type.type]["default"],
@@ -288,25 +321,25 @@ class RolePermissionManagerType(PermissionManagerType):
         if workspace is None or not self.is_enabled(workspace):
             return queryset
 
-        # Get all role assignments for this user into this workspace
-        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(workspace, actor)
         operation_type = operation_type_registry.get(operation_name)
 
-        default, exceptions = self.get_operation_policy(
-            roles_by_scope, operation_type, True
+        permission_obj = self.get_permissions_object(
+            actor,
+            workspace,
+            for_operation_types=[operation_type],
+            use_object_scope=True,
         )
 
-        exceptions_filter = operation_type.object_scope.get_filter_for_scopes(
-            exceptions
-        )
+        default = permission_obj[operation_type.type]["default"]
+        exceptions = permission_obj[operation_type.type]["exceptions"]
 
         # Finally filter the queryset with the exception filter.
         if default:
             if exceptions:
-                queryset = queryset.exclude(exceptions_filter)
+                queryset = queryset.exclude(id__in=exceptions)
         else:
             if exceptions:
-                queryset = queryset.filter(exceptions_filter)
+                queryset = queryset.filter(id__in=exceptions)
             else:
                 queryset = queryset.none()
 
