@@ -28,17 +28,19 @@ class RowCommentNotificationData:
     table_id: int
     table_name: str
     row_id: int
+    row_name: str
     comment_id: int
     message: str
 
     @classmethod
-    def from_row_comment(cls, row_comment):
+    def from_row_comment(cls, row_comment, row):
         return cls(
             database_id=row_comment.table.database.id,
             database_name=row_comment.table.database.name,
             table_id=row_comment.table_id,
             table_name=row_comment.table.name,
             row_id=int(row_comment.row_id),
+            row_name=row.name_or_id,
             comment_id=row_comment.id,
             message=row_comment.message,
         )
@@ -48,7 +50,7 @@ class RowCommentMentionNotificationType(EmailNotificationTypeMixin, Notification
     type = "row_comment_mention"
 
     @classmethod
-    def notify_mentioned_users(cls, row_comment, mentions):
+    def notify_mentioned_users(cls, row_comment, row, mentions):
         """
         Creates a notification for each user that is mentioned in the comment.
 
@@ -57,7 +59,9 @@ class RowCommentMentionNotificationType(EmailNotificationTypeMixin, Notification
         :return: The list of created notifications.
         """
 
-        notification_data = RowCommentNotificationData.from_row_comment(row_comment)
+        notification_data = RowCommentNotificationData.from_row_comment(
+            row_comment, row
+        )
         NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=mentions,
@@ -68,9 +72,9 @@ class RowCommentMentionNotificationType(EmailNotificationTypeMixin, Notification
 
     @classmethod
     def get_notification_title_for_email(cls, notification, context):
-        return _("%(user)s mentioned you in row %(row_id)s in %(table_name)s.") % {
+        return _("%(user)s mentioned you in row %(row_name)s in %(table_name)s.") % {
             "user": notification.sender.first_name,
-            "row_id": notification.data["row_id"],
+            "row_name": notification.data.get("row_name", notification.data["row_id"]),
             "table_name": notification.data["table_name"],
         }
 
@@ -92,7 +96,7 @@ class RowCommentNotificationType(EmailNotificationTypeMixin, NotificationType):
 
     @classmethod
     def notify_subscribed_users(
-        cls, row_comment, users_to_notify
+        cls, row_comment, row, users_to_notify
     ) -> Optional[List[NotificationRecipient]]:
         """
         Creates a notification for each user that is subscribed to receive comments on
@@ -107,7 +111,9 @@ class RowCommentNotificationType(EmailNotificationTypeMixin, NotificationType):
         if not users_to_notify:
             return
 
-        notification_data = RowCommentNotificationData.from_row_comment(row_comment)
+        notification_data = RowCommentNotificationData.from_row_comment(
+            row_comment, row
+        )
         return NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=users_to_notify,
@@ -118,9 +124,9 @@ class RowCommentNotificationType(EmailNotificationTypeMixin, NotificationType):
 
     @classmethod
     def get_notification_title_for_email(cls, notification, context):
-        return _("%(user)s posted a comment in row %(row_id)s in %(table_name)s.") % {
+        return _("%(user)s posted a comment in row %(row_name)s in %(table_name)s.") % {
             "user": notification.sender.first_name,
-            "row_id": notification.data["row_id"],
+            "row_name": notification.data.get("row_name", notification.data["row_id"]),
             "table_name": notification.data["table_name"],
         }
 
@@ -130,16 +136,20 @@ class RowCommentNotificationType(EmailNotificationTypeMixin, NotificationType):
 
 
 @receiver(row_comment_created)
-def on_row_comment_created(sender, row_comment, user, mentions, **kwargs):
+def on_row_comment_created(sender, row_comment, row, user, mentions, **kwargs):
     if mentions:
-        RowCommentMentionNotificationType.notify_mentioned_users(row_comment, mentions)
+        RowCommentMentionNotificationType.notify_mentioned_users(
+            row_comment, row, mentions
+        )
 
     user_ids_to_exclude = [mention.id for mention in mentions]
     users_to_notify = RowCommentHandler.get_users_to_notify_for_comment(
         row_comment, user_ids_to_exclude
     )
     if users_to_notify:
-        RowCommentNotificationType.notify_subscribed_users(row_comment, users_to_notify)
+        RowCommentNotificationType.notify_subscribed_users(
+            row_comment, row, users_to_notify
+        )
 
     # The sender will probably wants to receive the notification about all
     # future comments posted on this row if this is the first comment, so change
@@ -160,6 +170,8 @@ def on_row_comment_created(sender, row_comment, user, mentions, **kwargs):
 
 
 @receiver(row_comment_updated)
-def on_row_comment_updated(sender, row_comment, user, mentions, **kwargs):
+def on_row_comment_updated(sender, row_comment, row, user, mentions, **kwargs):
     if mentions:
-        RowCommentMentionNotificationType.notify_mentioned_users(row_comment, mentions)
+        RowCommentMentionNotificationType.notify_mentioned_users(
+            row_comment, row, mentions
+        )

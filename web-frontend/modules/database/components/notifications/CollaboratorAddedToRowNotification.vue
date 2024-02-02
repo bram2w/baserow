@@ -18,7 +18,9 @@
           <strong>{{ notification.data.field_name }}</strong>
         </template>
         <template #rowId>
-          <strong>{{ notification.data.row_id }}</strong>
+          <strong>{{
+            notification.data.row_name ?? notification.data.row_id
+          }}</strong>
         </template>
         <template #tableName>
           <strong>{{ notification.data.table_name }}</strong>

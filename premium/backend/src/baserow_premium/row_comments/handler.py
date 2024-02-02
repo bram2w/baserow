@@ -176,7 +176,7 @@ class RowCommentHandler:
             context=table,
         )
 
-        RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
+        row = RowHandler().get_row(requesting_user, table, row_id)
 
         if not is_valid_prosemirror_document(message):
             raise InvalidRowCommentException()
@@ -198,7 +198,11 @@ class RowCommentHandler:
             row_comment.mentions.set(mentions)
 
         row_comment_created.send(
-            cls, row_comment=row_comment, user=requesting_user, mentions=list(mentions)
+            cls,
+            row_comment=row_comment,
+            row=row,
+            user=requesting_user,
+            mentions=list(mentions),
         )
         return row_comment
 
@@ -251,9 +255,12 @@ class RowCommentHandler:
         if new_mentions:
             row_comment.mentions.set(new_mentions)
 
+        row = RowHandler().get_row(requesting_user, table, row_comment.row_id)
+
         row_comment_updated.send(
             cls,
             row_comment=row_comment,
+            row=row,
             user=requesting_user,
             mentions=list(set(new_mentions) - set(old_mentions)),
         )

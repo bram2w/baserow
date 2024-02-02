@@ -9,7 +9,7 @@ from baserow.ws.tasks import broadcast_to_users
 
 
 @receiver(row_comment_signals.row_comment_created)
-def row_comment_created(sender, row_comment, user, **kwargs):
+def row_comment_created(sender, row_comment, row, user, **kwargs):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
@@ -24,7 +24,7 @@ def row_comment_created(sender, row_comment, user, **kwargs):
 
 
 @receiver(row_comment_signals.row_comment_updated)
-def row_comment_updated(sender, row_comment, user, **kwargs):
+def row_comment_updated(sender, row_comment, row, user, **kwargs):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(

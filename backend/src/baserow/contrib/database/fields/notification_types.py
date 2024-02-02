@@ -32,6 +32,7 @@ class CollaboratorAddedToRowNotificationData:
     field_id: int
     field_name: str
     row_id: int
+    row_name: str
 
 
 class CollaboratorAddedToRowNotificationType(
@@ -42,11 +43,11 @@ class CollaboratorAddedToRowNotificationType(
     @classmethod
     def get_notification_title_for_email(cls, notification, context):
         return _(
-            "%(sender)s assigned you to %(field_name)s in row %(row_id)s in %(table_name)s."
+            "%(sender)s assigned you to %(field_name)s in row %(row_name)s in %(table_name)s."
         ) % {
             "sender": notification.sender.first_name,
             "field_name": notification.data["field_name"],
-            "row_id": notification.data["row_id"],
+            "row_name": notification.data.get("row_name", notification.data["row_id"]),
             "table_name": notification.data["table_name"],
         }
 
@@ -71,6 +72,7 @@ class CollaboratorAddedToRowNotificationType(
         workspace = table.database.workspace
         data = CollaboratorAddedToRowNotificationData(
             row_id=row.id,
+            row_name=row.name_or_id,
             field_id=field.id,
             field_name=field.name,
             table_id=table.id,
