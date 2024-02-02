@@ -12,7 +12,7 @@ export const registerRealtimeEvents = (realtime) => {
           workspaceId
         )
       ) {
-        store.dispatch('notification/setPermissionsUpdated', true)
+        store.dispatch('toast/setPermissionsUpdated', true)
       }
     }
   )
