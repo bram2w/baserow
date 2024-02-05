@@ -54,7 +54,7 @@
     </li>
     <li v-if="isDev" class="header__filter-item">
       <div>
-        <Badge>Debug</Badge>
+        <Badge color="yellow" indicator>Debug</Badge>
         <span>{{ timezone(fields) }}</span>
       </div>
     </li>

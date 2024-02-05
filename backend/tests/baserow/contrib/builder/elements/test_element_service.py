@@ -181,7 +181,7 @@ def test_get_elements(data_fixture, stub_check_permissions):
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     assert [p.id for p in ElementService().get_elements(user, page)] == [
         element1.id,
@@ -259,7 +259,7 @@ def test_move_element(element_updated_mock, data_fixture):
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     element_moved = ElementService().move_element(
         user,
@@ -279,7 +279,7 @@ def test_move_element_not_same_page(data_fixture, stub_check_permissions):
     page2 = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page2)
+    element3 = data_fixture.create_builder_text_element(page=page2)
 
     with pytest.raises(ElementNotInSamePage):
         ElementService().move_element(
@@ -297,7 +297,7 @@ def test_move_element_permission_denied(data_fixture, stub_check_permissions):
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException

@@ -11,7 +11,7 @@ from baserow.core.posthog import capture_event, capture_event_action_done
 
 class TestActionType(ActionType):
     type = "test"
-    privacy_sensitive_params = ["must_be_removed"]
+    analytics_params = ["must_be_kept"]
 
     class Params:
         must_be_kept: str
@@ -47,7 +47,6 @@ def test_capture_event_if_enabled(mock_posthog, data_fixture):
             "user_email": user.email,
             "user_session": "session",
             "workspace_id": workspace.id,
-            "workspace_name": workspace.name,
         },
     )
 

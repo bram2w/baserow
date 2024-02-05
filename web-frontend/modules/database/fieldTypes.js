@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import {
-  formatDuration,
+  formatDurationValue,
   parseDurationValue,
   roundDurationValueToFormat,
   DURATION_FORMATS,
@@ -741,7 +741,7 @@ export class FieldType extends Registerable {
    * moment object, or a duration field can accept a string like '1:30' to
    * convert it to a number of seconds.
    */
-  static parseInputValue(field, value) {
+  parseInputValue(field, value) {
     return value
   }
 }
@@ -1351,7 +1351,7 @@ export class NumberFieldType extends FieldType {
     return true
   }
 
-  static parseInputValue(field, value) {
+  parseInputValue(field, value) {
     return parseFloat(value)
   }
 }
@@ -1683,8 +1683,8 @@ class BaseDateFieldType extends FieldType {
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData, richClipboardData) {
-    const dateValue = DateFieldType.parseInputValue(field, clipboardData || '')
-    return DateFieldType.formatDate(field, dateValue)
+    const dateValue = this.parseInputValue(field, clipboardData || '')
+    return this.formatValue(field, dateValue)
   }
 
   /**
@@ -1724,7 +1724,7 @@ class BaseDateFieldType extends FieldType {
     return formats
   }
 
-  static parseInputValue(field, dateString) {
+  parseInputValue(field, dateString) {
     const formats = DateFieldType.getDateFormatsOptionsForValue(
       field,
       dateString
@@ -1751,8 +1751,8 @@ class BaseDateFieldType extends FieldType {
     return date
   }
 
-  static formatDate(field, date) {
-    const momentDate = moment.utc(date)
+  formatValue(field, value) {
+    const momentDate = moment.utc(value)
     if (momentDate.isValid()) {
       return field.date_include_time
         ? momentDate.format()
@@ -1838,9 +1838,9 @@ export class DateFieldType extends BaseDateFieldType {
   }
 
   parseQueryParameter(field, value) {
-    return DateFieldType.formatDate(
+    return this.formatValue(
       field.field,
-      DateFieldType.parseInputValue(field.field, value)
+      this.parseInputValue(field.field, value)
     )
   }
 }
@@ -2261,6 +2261,10 @@ export class DurationFieldType extends FieldType {
     return DURATION_FORMATS.get(field.duration_format).example
   }
 
+  canBeReferencedByFormulaField() {
+    return true
+  }
+
   getDocsDescription(field) {
     return this.app.i18n.t('fieldDocs.duration', {
       format: field.duration_format,
@@ -2276,40 +2280,26 @@ export class DurationFieldType extends FieldType {
   }
 
   parseQueryParameter(field, value, options) {
-    return DurationFieldType.parseInputValue(field, value)
+    return this.parseInputValue(field.field, value)
   }
 
   toSearchableString(field, value, delimiter = ', ') {
-    return DurationFieldType.formatValue(field, value)
+    return this.formatValue(field, value)
   }
 
   getSort(name, order) {
     return (a, b) => {
-      const aValue = parseDurationValue(a[name])
-      const bValue = parseDurationValue(b[name])
+      const aValue = a[name]
+      const bValue = b[name]
 
       if (aValue === bValue) {
         return 0
       }
 
-      if (
-        (aValue === null && order === 'ASC') ||
-        (bValue === null && order === 'DESC')
-      ) {
-        return -1
-      }
-
-      if (
-        (bValue === null && order === 'ASC') ||
-        (aValue === null && order === 'DESC')
-      ) {
-        return 1
-      }
-
       if (order === 'ASC') {
-        return aValue < bValue ? -1 : 1
+        return aValue === null || (bValue !== null && aValue < bValue) ? -1 : 1
       } else {
-        return bValue < aValue ? -1 : 1
+        return bValue === null || (aValue !== null && bValue < aValue) ? -1 : 1
       }
     }
   }
@@ -2360,22 +2350,22 @@ export class DurationFieldType extends FieldType {
     return RowHistoryFieldDuration
   }
 
-  static formatValue(field, value) {
-    return formatDuration(value, field.duration_format)
+  formatValue(field, value) {
+    return formatDurationValue(value, field.duration_format)
   }
 
-  static parseInputValue(field, value) {
+  parseInputValue(field, value) {
     const format = field.duration_format
     const preparedValue = parseDurationValue(value, format)
     return roundDurationValueToFormat(preparedValue, format)
   }
 
   toHumanReadableString(field, value, delimiter = ', ') {
-    return DurationFieldType.formatValue(field, value)
+    return this.formatValue(field, value)
   }
 
   prepareValueForCopy(field, value) {
-    return DurationFieldType.formatValue(field, value)
+    return this.formatValue(field, value)
   }
 
   prepareRichValueForCopy(field, value) {
@@ -2386,7 +2376,7 @@ export class DurationFieldType extends FieldType {
     if (richClipboardData && isNumeric(richClipboardData)) {
       return richClipboardData
     }
-    return DurationFieldType.parseInputValue(field, clipboardData)
+    return this.parseInputValue(field, clipboardData)
   }
 
   getCanGroupByInView(field) {
@@ -3552,6 +3542,14 @@ export class FormulaFieldType extends FieldType {
   getCanGroupByInView(field) {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.canGroupByInView(field)
+  }
+
+  parseInputValue(field, value) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.parseInputValue(field, value)
   }
 }
 

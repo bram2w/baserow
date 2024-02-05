@@ -2,10 +2,11 @@
   <div v-if="roleUID" class="highest-role-field">
     {{ roleName }}
     <a
+      v-if="showBillable"
       href="https://baserow.io/user-docs/subscriptions-overview#who-is-considered-a-user-for-billing-purposes"
       target="_blank"
     >
-      <Badge v-if="role.isBillable" class="margin-left-1" primary
+      <Badge v-if="role.isBillable" color="cyan" class="margin-left-1"
         >{{ $t('highestPaidRoleField.billable') }}
       </Badge>
     </a>
@@ -46,6 +47,13 @@ export default {
     roles() {
       // filters out role not for Team subject and not for workspace level
       return this.workspace ? this.workspace._.roles : []
+    },
+    showBillable() {
+      return this.$hasPermission(
+        'workspace_user.update',
+        this.row,
+        this.column.additionalProps.workspaceId
+      )
     },
   },
   methods: {

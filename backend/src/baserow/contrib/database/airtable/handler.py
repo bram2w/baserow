@@ -226,6 +226,7 @@ class AirtableHandler:
             order = 32767
 
         baserow_field.id = column["id"]
+        baserow_field.pk = 0
         baserow_field.name = column["name"]
         baserow_field.order = order
         baserow_field.primary = (
@@ -490,7 +491,7 @@ class AirtableHandler:
 
             # Create an empty grid view because the importing of views doesn't work
             # yet. It's a bit quick and dirty, but it will be replaced soon.
-            grid_view = GridView(id=None, name="Grid", order=1)
+            grid_view = GridView(pk=0, id=None, name="Grid", order=1)
             grid_view.get_field_options = lambda *args, **kwargs: []
             grid_view_type = view_type_registry.get_by_model(grid_view)
             empty_serialized_grid_view = grid_view_type.export_serialized(
@@ -597,8 +598,19 @@ class AirtableHandler:
                 fetch_application_structure=index == 0,
                 stream=False,
             )
-            decoded_content = remove_invalid_surrogate_characters(response.content)
-            tables.append(json.loads(decoded_content))
+            try:
+                decoded_content = remove_invalid_surrogate_characters(
+                    response.content, response.encoding
+                )
+                json_decoded_content = json.loads(decoded_content)
+            except json.decoder.JSONDecodeError:
+                # In some cases, the `remove_invalid_surrogate_characters` results in
+                # invalid JSON. It's not completely clear why that is, but this
+                # fallback can still produce valid JSON to import in most cases if
+                # the original json didn't contain invalid surrogate characters.
+                json_decoded_content = response.json()
+
+            tables.append(json_decoded_content)
 
         # Split database schema from the tables because we need this to be separated
         # later on.

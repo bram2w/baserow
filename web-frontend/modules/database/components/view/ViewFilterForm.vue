@@ -42,6 +42,7 @@
       </div>
       <div v-if="view.filters.length > 0">
         <SwitchInput
+          small
           :value="view.filters_disabled"
           @input="updateView(view, { filters_disabled: $event })"
           >{{ $t('viewFilterContext.disableAllFilters') }}</SwitchInput

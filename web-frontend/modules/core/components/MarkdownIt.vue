@@ -16,6 +16,11 @@ export default {
       type: String,
       default: 'div',
     },
+    rules: {
+      required: false,
+      type: Object,
+      default: () => {},
+    },
   },
   data() {
     return {
@@ -38,6 +43,7 @@ export default {
   async created() {
     const Markdown = (await import('markdown-it')).default
     this.md = new Markdown()
+    this.md.renderer.rules = { ...this.md.renderer.rules, ...this.rules }
     this.htmlContent = this.md.render(this.content)
   },
 }

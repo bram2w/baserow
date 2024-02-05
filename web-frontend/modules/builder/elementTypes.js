@@ -1,8 +1,8 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import ParagraphElement from '@baserow/modules/builder/components/elements/components/ParagraphElement'
+import TextElement from '@baserow/modules/builder/components/elements/components/TextElement.vue'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
-import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ParagraphElementForm'
+import TextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TextElementForm.vue'
 import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/general/HeadingElementForm'
 import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkElementForm'
 import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ImageElementForm'
@@ -29,6 +29,9 @@ import DropdownElement from '@baserow/modules/builder/components/elements/compon
 import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
 import CheckboxElement from '@baserow/modules/builder/components/elements/components/CheckboxElement.vue'
 import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
+import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
+import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
+import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 
 export class ElementType extends Registerable {
   get name() {
@@ -379,17 +382,17 @@ export class HeadingElementType extends ElementType {
   }
 }
 
-export class ParagraphElementType extends ElementType {
+export class TextElementType extends ElementType {
   static getType() {
-    return 'paragraph'
+    return 'text'
   }
 
   get name() {
-    return this.app.i18n.t('elementType.paragraph')
+    return this.app.i18n.t('elementType.text')
   }
 
   get description() {
-    return this.app.i18n.t('elementType.paragraphDescription')
+    return this.app.i18n.t('elementType.textDescription')
   }
 
   get iconClass() {
@@ -397,11 +400,11 @@ export class ParagraphElementType extends ElementType {
   }
 
   get component() {
-    return ParagraphElement
+    return TextElement
   }
 
   get generalFormComponent() {
-    return ParagraphElementForm
+    return TextElementForm
   }
 }
 
@@ -431,34 +434,7 @@ export class LinkElementType extends ElementType {
   }
 
   isInError({ element, builder }) {
-    return LinkElementType.arePathParametersInError(element, builder)
-  }
-
-  static arePathParametersInError(element, builder) {
-    if (
-      element.navigation_type === 'page' &&
-      !isNaN(element.navigate_to_page_id)
-    ) {
-      const destinationPage = builder.pages.find(
-        ({ id }) => id === element.navigate_to_page_id
-      )
-
-      if (destinationPage) {
-        const destinationPageParams = destinationPage.path_params || []
-        const pageParams = element.page_parameters || []
-
-        const destinationPageParamNames = destinationPageParams.map(
-          ({ name }) => name
-        )
-        const pageParamNames = pageParams.map(({ name }) => name)
-
-        if (!_.isEqual(destinationPageParamNames, pageParamNames)) {
-          return true
-        }
-      }
-    } //
-
-    return false
+    return pathParametersInError(element, builder)
   }
 }
 
@@ -568,6 +544,20 @@ export class TableElementType extends ElementType {
         )
       }
     }
+  }
+
+  isInError({ element, builder }) {
+    const collectionFieldsInError = element.fields.map((collectionField) => {
+      const collectionFieldType = this.app.$registry.get(
+        'collectionField',
+        collectionField.type
+      )
+      return collectionFieldType.isInError({
+        field: collectionField,
+        builder,
+      })
+    })
+    return collectionFieldsInError.includes(true)
   }
 }
 
@@ -686,5 +676,31 @@ export class CheckboxElementType extends FormElementType {
     } catch {
       return false
     }
+  }
+}
+
+export class IFrameElementType extends ElementType {
+  getType() {
+    return 'iframe'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.iframe')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.iframeDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-app-window'
+  }
+
+  get component() {
+    return IFrameElement
+  }
+
+  get generalFormComponent() {
+    return IFrameElementForm
   }
 }

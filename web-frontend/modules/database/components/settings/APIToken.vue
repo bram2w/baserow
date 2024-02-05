@@ -122,9 +122,10 @@
           :key="operation"
           class="api-token__permission"
         >
-          <span>{{ operationName }}</span>
+          <span class="margin-bottom-1">{{ operationName }}</span>
           <SwitchInput
             :value="isActive(operation)"
+            small
             @input="toggle(operation, $event)"
           ></SwitchInput>
         </div>
@@ -144,6 +145,7 @@
             >
               <SwitchInput
                 :value="isDatabaseActive(database, operation)"
+                small
                 @input="toggleDatabase(database, databases, operation, $event)"
               ></SwitchInput>
             </div>
@@ -171,7 +173,7 @@
                     workspace.id
                   )
                 "
-                :value="isTableActive(table, database, operation)"
+                :checked="isTableActive(table, database, operation)"
                 @input="
                   toggleTable(table, database, databases, operation, $event)
                 "

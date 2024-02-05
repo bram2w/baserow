@@ -6,6 +6,10 @@
   height: auto;
 }
 
+.formula-input-field--small {
+  line-height: 13px;
+}
+
 .formula-input-field--focused {
   border-color: $color-primary-500;
 }
@@ -14,7 +18,7 @@
   width: 100%;
 }
 
-.ProseMirror span.is-editor-empty:first-child::before {
+.ProseMirror div.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
   color: $color-neutral-500;

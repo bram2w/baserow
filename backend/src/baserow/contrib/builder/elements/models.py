@@ -343,14 +343,34 @@ class HeadingElement(Element):
         blank=True,
         help_text="The font color of the heading",
     )
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
 
 
-class ParagraphElement(Element):
+class TextElement(Element):
     """
-    A simple paragraph.
+    A simple blob of text.
     """
+
+    class TEXT_FORMATS(models.TextChoices):
+        PLAIN = "plain"
+        MARKDOWN = "markdown"
 
     value = FormulaField(default="")
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
+    format = models.CharField(
+        choices=TEXT_FORMATS.choices,
+        help_text="The format of the text",
+        max_length=10,
+        default=TEXT_FORMATS.PLAIN,
+    )
 
 
 class LinkElement(Element):
@@ -435,6 +455,11 @@ class ImageElement(Element):
         UPLOAD = "upload"
         URL = "url"
 
+    class IMAGE_CONSTRAINT_TYPES(models.TextChoices):
+        COVER = "cover"
+        CONTAIN = "contain"
+        FULL_WIDTH = "full-width"
+
     image_source_type = models.CharField(
         choices=IMAGE_SOURCE_TYPES.choices,
         max_length=32,
@@ -459,6 +484,29 @@ class ImageElement(Element):
         choices=HorizontalAlignments.choices,
         max_length=10,
         default=HorizontalAlignments.LEFT,
+    )
+    style_max_width = models.PositiveIntegerField(
+        null=True,
+        help_text="The max-width for this image element.",
+        default=100,
+        validators=[
+            MinValueValidator(0, message="Value cannot be less than 0."),
+            MaxValueValidator(100, message="Value cannot be greater than 100."),
+        ],
+    )
+    style_max_height = models.PositiveIntegerField(
+        null=True,
+        help_text="The max-height for this image element.",
+        validators=[
+            MinValueValidator(5, message="Value cannot be less than 5."),
+            MaxValueValidator(3000, message="Value cannot be greater than 3000."),
+        ],
+    )
+    style_image_constraint = models.CharField(
+        help_text="The image constraint to apply to this image",
+        choices=IMAGE_CONSTRAINT_TYPES.choices,
+        max_length=32,
+        default=IMAGE_CONSTRAINT_TYPES.CONTAIN,
     )
 
 
@@ -648,4 +696,30 @@ class CheckboxElement(InputElement):
     default_value = FormulaField(default="", help_text="The input's default value.")
     required = models.BooleanField(
         default=False, help_text="Whether this input is a required field."
+    )
+
+
+class IFrameElement(Element):
+    """
+    An element for embedding external resources in the application.
+    """
+
+    class IFRAME_SOURCE_TYPE(models.TextChoices):
+        URL = "url"
+        EMBED = "embed"
+
+    source_type = models.CharField(
+        choices=IFRAME_SOURCE_TYPE.choices,
+        max_length=32,
+        default=IFRAME_SOURCE_TYPE.URL,
+    )
+    url = FormulaField(
+        help_text="A link to the page to embed",
+        blank=True,
+        default="",
+    )
+    embed = FormulaField(help_text="Inline HTML to embed", blank=True, default="")
+    height = models.PositiveIntegerField(
+        help_text="Height in pixels of the iframe",
+        default=300,
     )

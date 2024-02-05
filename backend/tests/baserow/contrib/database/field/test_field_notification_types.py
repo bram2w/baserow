@@ -72,6 +72,7 @@ def test_notification_creation_on_adding_users_on_collaborator_fields(
                 "workspace": {"id": workspace.id},
                 "data": {
                     "row_id": row.id,
+                    "row_name": row.name_or_id,
                     "field_id": collaborator_field.id,
                     "field_name": collaborator_field.name,
                     "table_id": table.id,
@@ -101,6 +102,7 @@ def test_notification_creation_on_adding_users_on_collaborator_fields(
                     "created_on": "2023-07-06T12:00:00Z",
                     "data": {
                         "row_id": row.id,
+                        "row_name": row.name_or_id,
                         "field_id": collaborator_field.id,
                         "field_name": collaborator_field.name,
                         "table_id": table.id,
@@ -160,6 +162,7 @@ def test_notification_creation_on_adding_users_on_collaborator_fields(
                     "created_on": "2023-07-06T12:00:00Z",
                     "data": {
                         "row_id": row.id,
+                        "row_name": row.name_or_id,
                         "field_id": collaborator_field.id,
                         "field_name": collaborator_field.name,
                         "table_id": table.id,
@@ -199,6 +202,7 @@ def test_notification_creation_on_adding_users_on_collaborator_fields(
                 "workspace": {"id": workspace.id},
                 "data": {
                     "row_id": row.id,
+                    "row_name": row.name_or_id,
                     "field_id": collaborator_field.id,
                     "field_name": collaborator_field.name,
                     "table_id": table.id,
@@ -270,6 +274,7 @@ def test_notifications_are_grouped_when_user_is_added_to_multiple_rows(
                 "workspace": {"id": workspace.id},
                 "data": {
                     "row_id": row_1_id,
+                    "row_name": str(row_1_id),
                     "field_id": collaborator_field.id,
                     "field_name": collaborator_field.name,
                     "table_id": table.id,
@@ -291,6 +296,7 @@ def test_notifications_are_grouped_when_user_is_added_to_multiple_rows(
                 "workspace": {"id": workspace.id},
                 "data": {
                     "row_id": row_2_id,
+                    "row_name": str(row_2_id),
                     "field_id": collaborator_field.id,
                     "field_name": collaborator_field.name,
                     "table_id": table.id,
@@ -320,6 +326,7 @@ def test_notifications_are_grouped_when_user_is_added_to_multiple_rows(
                     "created_on": "2023-07-06T12:00:00Z",
                     "data": {
                         "row_id": row_1_id,
+                        "row_name": str(row_1_id),
                         "field_id": collaborator_field.id,
                         "field_name": collaborator_field.name,
                         "table_id": table.id,
@@ -341,6 +348,7 @@ def test_notifications_are_grouped_when_user_is_added_to_multiple_rows(
                     "created_on": "2023-07-06T12:00:00Z",
                     "data": {
                         "row_id": row_2_id,
+                        "row_name": str(row_2_id),
                         "field_id": collaborator_field.id,
                         "field_name": collaborator_field.name,
                         "table_id": table.id,

@@ -43,7 +43,6 @@ def capture_event(
 
     if workspace is not None:
         properties["workspace_id"] = workspace.id
-        properties["workspace_name"] = workspace.name
 
     try:
         posthog.capture(
@@ -74,12 +73,11 @@ def capture_event_action_done(
     # Only capture do commands for now because the undo might make it more difficult
     # to do analytics on the data.
     if action_command_type == ActionCommandType.DO:
-        # We don't want to capture privacy sensitive information, and will therefore
-        # remove those from the properties if they exist.
-        properties = deepcopy(action_params)
-        for param in action_type.privacy_sensitive_params:
-            properties.pop(param, None)
-
+        action_params_copy = deepcopy(action_params)
+        properties = {
+            key: action_params_copy.get(key, None)
+            for key in action_type.analytics_params
+        }
         capture_event(
             user, action_type.type, properties, workspace=workspace, session=session
         )

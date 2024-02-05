@@ -71,6 +71,9 @@ def test_can_export_every_interesting_different_field_to_json(
     "duration_hms_s": "",
     "duration_hms_ss": "",
     "duration_hms_sss": "",
+    "duration_dh": "",
+    "duration_dhm": "",
+    "duration_dhms": "",
     "link_row": [],
     "self_link_row": [],
     "link_row_without_related": [],
@@ -85,7 +88,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_int": 1,
     "formula_bool": true,
     "formula_decimal": "33.3333333333",
-    "formula_dateinterval": "1 day",
+    "formula_dateinterval": "1d 0:00",
     "formula_date": "2020-01-01",
     "formula_singleselect": "",
     "formula_email": "",
@@ -138,6 +141,9 @@ def test_can_export_every_interesting_different_field_to_json(
     "duration_hms_s": "1:01:06.6",
     "duration_hms_ss": "1:01:06.66",
     "duration_hms_sss": "1:01:06.666",
+    "duration_dh": "1d 1h",
+    "duration_dhm": "1d 1:01",
+    "duration_dhms": "1d 1:01:06",
     "link_row": [
         "linked_row_1",
         "linked_row_2",
@@ -189,7 +195,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_int": 1,
     "formula_bool": true,
     "formula_decimal": "33.3333333333",
-    "formula_dateinterval": "1 day",
+    "formula_dateinterval": "1d 0:00",
     "formula_date": "2020-01-01",
     "formula_singleselect": "A",
     "formula_email": "test@example.com",
@@ -328,6 +334,9 @@ def test_can_export_every_interesting_different_field_to_xml(
       <duration-hms-s/>
       <duration-hms-ss/>
       <duration-hms-sss/>
+      <duration-dh/>
+      <duration-dhm/>
+      <duration-dhms/>
       <link-row/>
       <self-link-row/>
       <link-row-without-related/>
@@ -342,7 +351,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-int>1</formula-int>
       <formula-bool>true</formula-bool>
       <formula-decimal>33.3333333333</formula-decimal>
-      <formula-dateinterval>1 day</formula-dateinterval>
+      <formula-dateinterval>1d 0:00</formula-dateinterval>
       <formula-date>2020-01-01</formula-date>
       <formula-singleselect/>
       <formula-email/>
@@ -395,6 +404,9 @@ def test_can_export_every_interesting_different_field_to_xml(
       <duration-hms-s>1:01:06.6</duration-hms-s>
       <duration-hms-ss>1:01:06.66</duration-hms-ss>
       <duration-hms-sss>1:01:06.666</duration-hms-sss>
+      <duration-dh>1d 1h</duration-dh>
+      <duration-dhm>1d 1:01</duration-dhm>
+      <duration-dhms>1d 1:01:06</duration-dhms>
       <link-row>
          <item>linked_row_1</item>
          <item>linked_row_2</item>
@@ -446,7 +458,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-int>1</formula-int>
       <formula-bool>true</formula-bool>
       <formula-decimal>33.3333333333</formula-decimal>
-      <formula-dateinterval>1 day</formula-dateinterval>
+      <formula-dateinterval>1d 0:00</formula-dateinterval>
       <formula-date>2020-01-01</formula-date>
       <formula-singleselect>A</formula-singleselect>
       <formula-email>test@example.com</formula-email>

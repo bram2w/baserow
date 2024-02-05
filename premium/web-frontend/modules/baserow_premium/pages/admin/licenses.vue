@@ -100,18 +100,10 @@
                 license.license_id
               }}</span>
             </div>
-            <div
-              class="license-plan margin-right-1"
-              :class="getLicenseType(license).getLicenseBadgeClass()"
+            <Badge :color="getLicenseType(license).getLicenseBadgeColor()" bold class="margin-right-1">
+              {{ getLicenseType(license).getName() }}</Badge
             >
-              {{ getLicenseType(license).getName() }}
-            </div>
-            <div
-              v-if="!license.is_active"
-              class="license-plan license-plan--expired"
-            >
-              {{ $t('licenses.expired') }}
-            </div>
+            <Badge v-if="!license.is_active" color="red">{{ $t('licenses.expired') }}</Badge>
           </div>
           <div class="licenses__item-validity">
             {{

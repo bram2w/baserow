@@ -1,11 +1,14 @@
 import pytest
 
 from baserow.contrib.builder.application_types import BuilderApplicationType
+from baserow.contrib.builder.builder_beta_init_application import (
+    BuilderApplicationTypeInitApplication,
+)
 from baserow.contrib.builder.elements.models import (
     ColumnElement,
     HeadingElement,
-    ParagraphElement,
     TableElement,
+    TextElement,
 )
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
@@ -30,7 +33,54 @@ def test_builder_application_type_init_application(data_fixture):
 
     BuilderApplicationType().init_application(user, builder)
 
-    assert Page.objects.count() == 1
+    assert Page.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_builder_application_type_init_application_customers_table_use(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+
+    from baserow.contrib.builder.builder_beta_init_application import (
+        BuilderApplicationTypeInitApplication,
+    )
+
+    builder_init = BuilderApplicationTypeInitApplication(user, builder)
+
+    # Correct: name, workspace. Wrong: fields (none).
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    assert table.field_set.count() == 0
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Correct: name, field names, workspace. Wrong: fields types.
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    data_fixture.create_number_field(table=table, name="Name")
+    data_fixture.create_number_field(table=table, name="Last name")
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Correct: name, single field, workspace. Wrong: Last name field.
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    data_fixture.create_text_field(table=table, name="Name")
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Correct: nearly all. Wrong: workspace.
+    table = data_fixture.create_database_table(name="Customers")
+    data_fixture.create_text_field(table=table, name="Name")
+    data_fixture.create_text_field(table=table, name="Last name")
+    assert builder_init.get_target_table() is None
+    table.delete()
+
+    # Everything matches.
+    table = data_fixture.create_database_table(name="Customers", database=database)
+    data_fixture.create_text_field(table=table, name="Name")
+    data_fixture.create_text_field(table=table, name="Last name")
+    assert builder_init.get_target_table() == table
+    table.delete()
 
 
 @pytest.mark.django_db
@@ -44,12 +94,12 @@ def test_builder_application_export(data_fixture):
     element1 = data_fixture.create_builder_heading_element(
         page=page1, level=2, value="foo"
     )
-    element2 = data_fixture.create_builder_paragraph_element(page=page1)
+    element2 = data_fixture.create_builder_text_element(page=page1)
     element3 = data_fixture.create_builder_heading_element(page=page2)
     element_container = data_fixture.create_builder_column_element(
         page=page1, column_amount=3, column_gap=50
     )
-    element_inside_container = data_fixture.create_builder_paragraph_element(
+    element_inside_container = data_fixture.create_builder_text_element(
         page=page1, parent_element=element_container, place_in_container="0"
     )
 
@@ -59,6 +109,10 @@ def test_builder_application_export(data_fixture):
 
     user_source = data_fixture.create_user_source_with_first_type(
         application=builder, user=user, integration=integration
+    )
+
+    auth_provider = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source
     )
 
     datasource1 = data_fixture.create_builder_local_baserow_get_row_data_source(
@@ -149,10 +203,11 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "value": element1.value,
                         "level": element1.level,
+                        "alignment": "left",
                     },
                     {
                         "id": element2.id,
-                        "type": "paragraph",
+                        "type": "text",
                         "order": str(element2.order),
                         "parent_element_id": None,
                         "place_in_container": None,
@@ -172,6 +227,8 @@ def test_builder_application_export(data_fixture):
                         "style_padding_right": 20,
                         "style_background": "none",
                         "value": element2.value,
+                        "alignment": "left",
+                        "format": TextElement.TEXT_FORMATS.PLAIN,
                     },
                     {
                         "id": element_container.id,
@@ -200,7 +257,7 @@ def test_builder_application_export(data_fixture):
                     },
                     {
                         "id": element_inside_container.id,
-                        "type": "paragraph",
+                        "type": "text",
                         "parent_element_id": element_container.id,
                         "place_in_container": "0",
                         "style_background_color": "#ffffffff",
@@ -220,6 +277,8 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
+                        "alignment": "left",
+                        "format": TextElement.TEXT_FORMATS.PLAIN,
                     },
                 ],
             },
@@ -287,6 +346,7 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "value": element3.value,
                         "level": element3.level,
+                        "alignment": "left",
                     },
                     {
                         "id": element4.id,
@@ -339,6 +399,15 @@ def test_builder_application_export(data_fixture):
                 "order": "1.00000000000000000000",
                 "table_id": None,
                 "type": "local_baserow",
+                "auth_providers": [
+                    {
+                        "id": auth_provider.id,
+                        "type": auth_provider.get_type().type,
+                        "domain": None,
+                        "enabled": True,
+                        "password_field_id": None,
+                    }
+                ],
             },
         ],
         "theme": {
@@ -399,7 +468,7 @@ IMPORT_REFERENCE = {
                 },
                 {
                     "id": 999,
-                    "type": "paragraph",
+                    "type": "text",
                     "parent_element_id": None,
                     "place_in_container": None,
                     "style_background": "none",
@@ -448,7 +517,7 @@ IMPORT_REFERENCE = {
                 },
                 {
                     "id": 502,
-                    "type": "paragraph",
+                    "type": "text",
                     "parent_element_id": 500,
                     "place_in_container": "1",
                     "style_background": "none",
@@ -484,7 +553,7 @@ IMPORT_REFERENCE = {
                 },
                 {
                     "id": 501,
-                    "type": "paragraph",
+                    "type": "text",
                     "parent_element_id": 500,
                     "place_in_container": "0",
                     "style_background": "none",
@@ -589,6 +658,7 @@ IMPORT_REFERENCE = {
     ],
     "user_sources": [
         {
+            "auth_providers": [],
             "email_field_id": None,
             "id": 42,
             "integration_id": 42,
@@ -668,7 +738,7 @@ def test_builder_application_import(data_fixture):
     ] = specific_iterator(page1.element_set.all())
 
     assert isinstance(element1, HeadingElement)
-    assert isinstance(element2, ParagraphElement)
+    assert isinstance(element2, TextElement)
     assert isinstance(container_element, ColumnElement)
     assert isinstance(table_element, TableElement)
 
@@ -714,3 +784,20 @@ def test_builder_application_creation_does_not_register_an_action(data_fixture):
         init_with_data=False,
     )
     assert Action.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_builder_application_creation_uses_first_customers_table(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table1 = data_fixture.create_database_table(database=database, name="Customers")
+    data_fixture.create_text_field(table=table1, name="Name")
+    data_fixture.create_text_field(table=table1, name="Last name")
+    _ = data_fixture.create_database_table(database=database, name="Customers")
+    _ = data_fixture.create_database_table(database=database, name="Customers")
+
+    builder_init = BuilderApplicationTypeInitApplication(user, builder)
+    target_table = builder_init.get_target_table()
+    assert target_table == table1

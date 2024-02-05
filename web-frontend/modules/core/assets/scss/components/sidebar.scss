@@ -27,6 +27,7 @@
   width: 100%;
   padding: 16px;
   margin-bottom: 4px;
+  gap: 12px;
 
   &:hover {
     background-color: $color-neutral-100;
@@ -35,24 +36,6 @@
 
   .layout--collapsed & {
     padding: 8px;
-  }
-}
-
-.sidebar__user-initials {
-  flex: 0 0 36px;
-  font-weight: bold;
-  color: $white;
-  background-color: $color-primary-500;
-  border-radius: 100%;
-  margin-right: 12px;
-
-  @include center-text(36px, 15px);
-
-  .layout--collapsed & {
-    flex-basis: 32px;
-    margin-right: 0;
-
-    @include center-text(32px, 12px);
   }
 }
 

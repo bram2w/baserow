@@ -26,11 +26,11 @@
         {% endblocktrans %}
         </mj-text>
       <mj-raw><!-- htmlmin:ignore -->{% endif %}<!-- htmlmin:ignore --></mj-raw>
-    <mj-button mj-class="button mt-20" href="{{ public_web_frontend_url }}">
+    <mj-button mj-class="button mt-20" href="{{ baserow_embedded_share_url }}">
       {% trans "View in Baserow" %}
     </mj-button>
     <mj-text mj-class="button-url">
-      {{ public_web_frontend_url }}
+      {{ baserow_embedded_share_url }}
     </mj-text>
     <mj-text mj-class="text">
       {% blocktrans trimmed %}

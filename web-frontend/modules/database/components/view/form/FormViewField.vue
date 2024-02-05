@@ -102,6 +102,8 @@
             </div>
           </div>
           <SwitchInput
+            class="margin-bottom-1"
+            small
             :value="fieldOptions.required"
             :disabled="readOnly"
             @input="$emit('updated-field-options', { required: $event })"
@@ -109,6 +111,7 @@
           >
           <SwitchInput
             v-if="allowedConditionalFields.length > 0"
+            small
             :value="fieldOptions.show_when_matching_conditions"
             :disabled="readOnly"
             @input="setShowWhenMatchingConditions($event)"

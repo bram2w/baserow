@@ -102,6 +102,7 @@ x-backend-variables: &backend-variables
   PRIVATE_BACKEND_URL: http://backend:8000
   PUBLIC_BACKEND_URL:
   PUBLIC_WEB_FRONTEND_URL:
+  BASEROW_EMBEDDED_SHARE_URL:
   MEDIA_URL:
   MEDIA_ROOT:
 
@@ -118,6 +119,8 @@ x-backend-variables: &backend-variables
   BASEROW_JOB_CLEANUP_INTERVAL_MINUTES:
   BASEROW_ROW_HISTORY_CLEANUP_INTERVAL_MINUTES:
   BASEROW_ROW_HISTORY_RETENTION_DAYS:
+  BASEROW_USER_LOG_ENTRY_CLEANUP_INTERVAL_MINUTES:
+  BASEROW_USER_LOG_ENTRY_RETENTION_DAYS:
   BASEROW_MAX_ROW_REPORT_ERROR_COUNT:
   BASEROW_JOB_SOFT_TIME_LIMIT:
   BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS:
@@ -188,7 +191,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.22.2
+    image: baserow/backend:1.22.3
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -201,13 +204,14 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.22.2
+    image: baserow/web-frontend:1.22.3
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
       PRIVATE_BACKEND_URL: ${PRIVATE_BACKEND_URL:-http://backend:8000}
       PUBLIC_BACKEND_URL:
       PUBLIC_WEB_FRONTEND_URL:
+      BASEROW_EMBEDDED_SHARE_URL:
       BASEROW_DISABLE_PUBLIC_URL_CHECK:
       INITIAL_TABLE_DATA_LIMIT:
       DOWNLOAD_FILE_VIA_XHR:
@@ -235,7 +239,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.22.2
+    image: baserow/backend:1.22.3
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -252,7 +256,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.22.2
+    image: baserow/backend:1.22.3
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -269,7 +273,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.22.2
+    image: baserow/backend:1.22.3
     restart: unless-stopped
     command: celery-beat
     environment:

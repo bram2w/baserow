@@ -18,6 +18,9 @@
       :placeholder="$t('elementForms.textInputPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
+    <FormElement class="control">
+      <HorizontalAlignmentsSelector v-model="values.alignment" />
+    </FormElement>
     <FontSelector
       :default-values="defaultValues"
       :color-variables="headingColorVariables"
@@ -31,10 +34,13 @@ import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/compon
 import headingElement from '@baserow/modules/builder/mixins/headingElement'
 import FontSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/FontSelector'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector.vue'
+import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'HeaderElementForm',
   components: {
+    HorizontalAlignmentsSelector,
     FontSelector,
     ApplicationBuilderFormulaInputGroup,
   },
@@ -45,6 +51,7 @@ export default {
         value: '',
         level: 1,
         font_color: '',
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
       },
       levels: [...Array(6).keys()].map((level) => ({
         name: this.$t('headingElementForm.headingName', { level: level + 1 }),

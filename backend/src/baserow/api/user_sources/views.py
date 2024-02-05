@@ -19,6 +19,9 @@ from baserow.api.decorators import (
 )
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.user_sources.errors import (
+    ERROR_AUTH_PROVIDER_CANT_BE_CREATED,
+    ERROR_AUTH_PROVIDER_TYPE_DOES_NOT_EXIST,
+    ERROR_AUTH_PROVIDER_TYPE_NOT_COMPATIBLE,
     ERROR_USER_SOURCE_DOES_NOT_EXIST,
     ERROR_USER_SOURCE_NOT_IN_SAME_APPLICATION,
 )
@@ -34,6 +37,11 @@ from baserow.api.utils import (
     type_from_data_or_registry,
     validate_data_custom_fields,
 )
+from baserow.core.app_auth_providers.exceptions import (
+    AppAuthenticationProviderTypeDoesNotExist,
+    IncompatibleUserSourceType,
+)
+from baserow.core.auth_provider.exceptions import CannotCreateAuthProvider
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationOperationNotSupported,
@@ -61,7 +69,7 @@ class UserSourcesView(APIView):
                 "to the provided Id.",
             )
         ],
-        tags=["UserSources"],
+        tags=["User sources"],
         operation_id="list_application_user_sources",
         description=(
             "Lists all the user_sources of the application related to the provided "
@@ -93,7 +101,8 @@ class UserSourcesView(APIView):
 
         data = [
             user_source_type_registry.get_serializer(
-                user_source, UserSourceSerializer
+                user_source,
+                UserSourceSerializer,
             ).data
             for user_source in user_sources
         ]
@@ -111,7 +120,7 @@ class UserSourcesView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["UserSources"],
+        tags=["User sources"],
         operation_id="create_application_user_source",
         description="Creates a new user_source",
         request=DiscriminatorCustomFieldsMappingSerializer(
@@ -135,6 +144,9 @@ class UserSourcesView(APIView):
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             ApplicationOperationNotSupported: ERROR_APPLICATION_OPERATION_NOT_SUPPORTED,
+            IncompatibleUserSourceType: ERROR_AUTH_PROVIDER_TYPE_NOT_COMPATIBLE,
+            CannotCreateAuthProvider: ERROR_AUTH_PROVIDER_CANT_BE_CREATED,
+            AppAuthenticationProviderTypeDoesNotExist: ERROR_AUTH_PROVIDER_TYPE_DOES_NOT_EXIST,
         }
     )
     @validate_body_custom_fields(
@@ -156,8 +168,10 @@ class UserSourcesView(APIView):
         )
 
         serializer = user_source_type_registry.get_serializer(
-            user_source, UserSourceSerializer
+            user_source,
+            UserSourceSerializer,
         )
+
         return Response(serializer.data)
 
 
@@ -172,7 +186,7 @@ class UserSourceView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["UserSources"],
+        tags=["User sources"],
         operation_id="update_application_user_source",
         description="Updates an existing user_source.",
         request=CustomFieldRegistryMappingSerializer(
@@ -199,6 +213,9 @@ class UserSourceView(APIView):
     @map_exceptions(
         {
             UserSourceDoesNotExist: ERROR_USER_SOURCE_DOES_NOT_EXIST,
+            IncompatibleUserSourceType: ERROR_AUTH_PROVIDER_TYPE_NOT_COMPATIBLE,
+            CannotCreateAuthProvider: ERROR_AUTH_PROVIDER_CANT_BE_CREATED,
+            AppAuthenticationProviderTypeDoesNotExist: ERROR_AUTH_PROVIDER_TYPE_DOES_NOT_EXIST,
         }
     )
     def patch(self, request, user_source_id: int):
@@ -224,8 +241,10 @@ class UserSourceView(APIView):
         )
 
         serializer = user_source_type_registry.get_serializer(
-            user_source_updated, UserSourceSerializer
+            user_source_updated,
+            UserSourceSerializer,
         )
+
         return Response(serializer.data)
 
     @extend_schema(
@@ -238,7 +257,7 @@ class UserSourceView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["UserSources"],
+        tags=["User sources"],
         operation_id="delete_application_user_source",
         description="Deletes the user_source related by the given id.",
         responses={
@@ -281,7 +300,7 @@ class MoveUserSourceView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["UserSources"],
+        tags=["User sources"],
         operation_id="move_application_user_source",
         description=(
             "Moves the user_source in the application before another user_source or at "
@@ -333,6 +352,7 @@ class MoveUserSourceView(APIView):
         )
 
         serializer = user_source_type_registry.get_serializer(
-            moved_user_source, UserSourceSerializer
+            moved_user_source,
+            UserSourceSerializer,
         )
         return Response(serializer.data)

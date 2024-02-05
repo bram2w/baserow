@@ -666,7 +666,7 @@ export default {
     },
     copyLinkToSelectedRow(event, selectedRow) {
       const url =
-        this.$config.PUBLIC_WEB_FRONTEND_URL +
+        this.$config.BASEROW_EMBEDDED_SHARE_URL +
         this.$router.resolve({
           name: 'database-table-row',
           params: { ...this.$route.params, rowId: selectedRow.id },

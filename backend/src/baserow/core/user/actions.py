@@ -26,6 +26,13 @@ class CreateUserActionType(ActionType):
             " (%(auth_provider_id)s) auth provider (invitation: %(with_invitation_token)s)"
         ),
     )
+    analytics_params = [
+        "user_id",
+        "auth_provider_id",
+        "workspace_id",
+        "with_invitation_token",
+        "template_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -110,6 +117,10 @@ class UpdateUserActionType(ActionType):
         _("Update User"),
         _('User "%(user_email)s" (%(user_id)s) updated'),
     )
+    analytics_params = [
+        "user_id",
+        "language",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -165,6 +176,9 @@ class ScheduleUserDeletionActionType(ActionType):
             'User "%(user_email)s" (%(user_id)s) scheduled to be deleted after grace time'
         ),
     )
+    analytics_params = [
+        "user_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -198,6 +212,9 @@ class CancelUserDeletionActionType(ActionType):
             'User "%(user_email)s" (%(user_id)s) logged in cancelling the deletion process'
         ),
     )
+    analytics_params = [
+        "user_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -232,6 +249,11 @@ class SignInUserActionType(ActionType):
             '"%(auth_provider_type)s" (%(auth_provider_id)s) auth provider'
         ),
     )
+    analytics_params = [
+        "user_id",
+        "auth_provider_id",
+        "auth_provider_type",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -283,6 +305,9 @@ class SendResetUserPasswordActionType(ActionType):
         _("Send reset user password"),
         _('User "%(user_email)s" (%(user_id)s) requested to reset password'),
     )
+    analytics_params = [
+        "user_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -314,6 +339,9 @@ class ChangeUserPasswordActionType(ActionType):
         _("Change user password"),
         _('User "%(user_email)s" (%(user_id)s) changed password'),
     )
+    analytics_params = [
+        "user_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -351,6 +379,9 @@ class ResetUserPasswordActionType(ActionType):
         _("Reset user password"),
         _('User "%(user_email)s" (%(user_id)s) reset password'),
     )
+    analytics_params = [
+        "user_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

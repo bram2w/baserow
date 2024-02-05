@@ -11,13 +11,16 @@ describe('toTipTapVisitor', () => {
   })
 
   testCases.forEach(({ formula, content }) => {
-    it('should return the expected formula', () => {
+    it(`should return the expected formula for ${formula}`, () => {
       const functionCollection = new RuntimeFunctionCollection(
         testApp.store.$registry
       )
-      const tree = parseBaserowFormula(formula)
-      const result = new ToTipTapVisitor(functionCollection).visit(tree)
-      expect(result).toEqual(content)
+      // We don't want to test empty formula
+      if (formula) {
+        const tree = parseBaserowFormula(formula)
+        const result = new ToTipTapVisitor(functionCollection).visit(tree)
+        expect(result).toEqual(content)
+      }
     })
   })
 })

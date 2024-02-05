@@ -65,7 +65,7 @@ def load_test_data():
         )
 
     heading_element_type = element_type_registry.get("heading")
-    paragraph_element_type = element_type_registry.get("paragraph")
+    text_element_type = element_type_registry.get("text")
     table_element_type = element_type_registry.get("table")
     link_element_type = element_type_registry.get("link")
 
@@ -82,7 +82,7 @@ def load_test_data():
         )
         content = "\n".join(fake.paragraphs(nb=2))
         ElementHandler().create_element(
-            paragraph_element_type,
+            text_element_type,
             homepage,
             value=f'"{content}"',
         )
@@ -94,7 +94,7 @@ def load_test_data():
         )
         content = "\n".join(fake.paragraphs(nb=2))
         ElementHandler().create_element(
-            paragraph_element_type,
+            text_element_type,
             homepage,
             value=f'"{content}"',
         )
@@ -112,7 +112,7 @@ def load_test_data():
         )
         content = "\n".join(fake.paragraphs(nb=3))
         ElementHandler().create_element(
-            paragraph_element_type,
+            text_element_type,
             terms,
             value=f'"{content}"',
         )
@@ -124,7 +124,7 @@ def load_test_data():
         )
         content = "\n".join(fake.paragraphs(nb=3))
         ElementHandler().create_element(
-            paragraph_element_type,
+            text_element_type,
             terms,
             value=(f'"{content}"'),
         )
@@ -136,7 +136,7 @@ def load_test_data():
         )
         content = "\n".join(fake.paragraphs(nb=3))
         ElementHandler().create_element(
-            paragraph_element_type,
+            text_element_type,
             terms,
             value=(f'"{content}"'),
         )
@@ -222,7 +222,7 @@ def load_test_data():
         )
 
         ElementHandler().create_element(
-            paragraph_element_type,
+            text_element_type,
             product_detail,
             value=(
                 f'get("data_source.{product_detail_data_source.id}.{field_notes.db_column}")'

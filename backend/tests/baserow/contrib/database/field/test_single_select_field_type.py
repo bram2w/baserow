@@ -1082,6 +1082,7 @@ def test_single_select_adjacent_row(data_fixture):
         view=grid_view, field=single_select_field, order="ASC"
     )
 
+    table_model = table.get_model()
     handler = RowHandler()
     [row_b, row_c, row_a] = handler.create_rows(
         user=user,
@@ -1097,17 +1098,47 @@ def test_single_select_adjacent_row(data_fixture):
                 f"field_{single_select_field.id}": option_a.id,
             },
         ],
+        model=table_model,
     )
-
-    base_queryset = table.get_model().objects.all()
 
     previous_row = handler.get_adjacent_row(
-        row_b, base_queryset, previous=True, view=grid_view
+        table_model, row_b.id, previous=True, view=grid_view
     )
-    next_row = handler.get_adjacent_row(row_b, base_queryset, view=grid_view)
+    next_row = handler.get_adjacent_row(table_model, row_b.id, view=grid_view)
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id
+
+
+@pytest.mark.django_db
+def test_single_select_adjacent_row_working_with_sorts_and_null_values(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, name="Test")
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue", order=0
+    )
+    data_fixture.create_view_sort(
+        view=grid_view, field=single_select_field, order="DESC"
+    )
+
+    table_model = table.get_model()
+    handler = RowHandler()
+    [row_a, row_b] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {f"field_{single_select_field.id}": option_a.id},
+            {},
+        ],
+        model=table_model,
+    )
+
+    next_row = handler.get_adjacent_row(table_model, row_a.id, view=grid_view)
+    assert next_row.id == row_b.id
 
 
 @pytest.mark.django_db

@@ -12,7 +12,7 @@
       class="control form-view__control-notification-on-submit"
     >
       <SwitchInput
-        class=""
+        small
         :value="view.receive_notification_on_submit"
         @input="
           $emit('updated-form', { receive_notification_on_submit: $event })

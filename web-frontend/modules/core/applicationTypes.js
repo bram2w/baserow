@@ -174,4 +174,11 @@ export class ApplicationType extends Registerable {
    * might be needed because providing certain values could break the update.
    */
   prepareForStoreUpdate(application, data) {}
+
+  /**
+   * Indicates whether the application is visible in the create new application contact.
+   */
+  isVisible(application, context) {
+    return true
+  }
 }

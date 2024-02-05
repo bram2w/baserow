@@ -130,6 +130,13 @@ def test_get_view(data_fixture):
     view = handler.get_view_as_user(user, view_id=grid.id, view_model=GridView)
     assert view.id == grid.id
 
+    # If a table_id is provided, it needs to be coherent with the view.
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_view_as_user(user, view_id=grid.id, table_id=grid.table.id + 1)
+
+    view = handler.get_view_as_user(user, view_id=grid.id, table_id=grid.table.id)
+    assert view.id == grid.id
+
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_created.send")
@@ -4181,7 +4188,9 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         "formula_decimal": [
             {"field_formula_decimal": Decimal("33.3333333333"), "count": 2}
         ],
-        "formula_dateinterval": [{"field_formula_dateinterval": "1 day", "count": 2}],
+        "formula_dateinterval": [
+            {"field_formula_dateinterval": datetime.timedelta(days=1), "count": 2}
+        ],
         "formula_date": [{"field_formula_date": datetime.date(2020, 1, 1), "count": 2}],
         "formula_email": [
             {"field_formula_email": "", "count": 1},

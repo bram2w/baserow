@@ -9,7 +9,6 @@ import {
   DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
-  UserSourcesBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
@@ -28,7 +27,7 @@ import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
   HeadingElementType,
   ImageElementType,
-  ParagraphElementType,
+  TextElementType,
   LinkElementType,
   InputTextElementType,
   ColumnElementType,
@@ -37,6 +36,7 @@ import {
   FormContainerElementType,
   DropdownElementType,
   CheckboxElementType,
+  IFrameElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -149,15 +149,11 @@ export default (context) => {
     'builderSettings',
     new DomainsBuilderSettingsType(context)
   )
-  app.$registry.register(
-    'builderSettings',
-    new UserSourcesBuilderSettingsType(context)
-  )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
 
   app.$registry.register('element', new HeadingElementType(context))
-  app.$registry.register('element', new ParagraphElementType(context))
+  app.$registry.register('element', new TextElementType(context))
   app.$registry.register('element', new LinkElementType(context))
   app.$registry.register('element', new ImageElementType(context))
   app.$registry.register('element', new InputTextElementType(context))
@@ -167,6 +163,7 @@ export default (context) => {
   app.$registry.register('element', new FormContainerElementType(context))
   app.$registry.register('element', new DropdownElementType(context))
   app.$registry.register('element', new CheckboxElementType(context))
+  app.$registry.register('element', new IFrameElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))

@@ -8,7 +8,7 @@
   "contactEmail": "bram@baserow.io",
   "icon": "file://logo.png",
   "tags": ["no-code", "nocode", "database", "data", "collaborate", "airtable"],
-  "version": "1.22.2",
+  "version": "1.22.3",
   "healthCheckPath": "/api/_health/",
   "httpPort": 80,
   "addons": {
@@ -17,5 +17,6 @@
     "localstorage": {}
   },
   "memoryLimit": 2147483648,
-  "manifestVersion": 2
+  "manifestVersion": 2,
+  "multiDomain": true
 }

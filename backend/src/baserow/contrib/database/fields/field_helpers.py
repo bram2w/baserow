@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils.duration import D_H_M
 
 
 def construct_all_possible_field_kwargs(
@@ -142,6 +143,9 @@ def construct_all_possible_field_kwargs(
             {"name": "duration_hms_s", "duration_format": "h:mm:ss.s"},
             {"name": "duration_hms_ss", "duration_format": "h:mm:ss.ss"},
             {"name": "duration_hms_sss", "duration_format": "h:mm:ss.sss"},
+            {"name": "duration_dh", "duration_format": "d h"},
+            {"name": "duration_dhm", "duration_format": "d h:mm"},
+            {"name": "duration_dhms", "duration_format": "d h:mm:ss"},
         ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
@@ -191,7 +195,11 @@ def construct_all_possible_field_kwargs(
             {"name": "formula_int", "formula": "1"},
             {"name": "formula_bool", "formula": "true"},
             {"name": "formula_decimal", "formula": "100/3"},
-            {"name": "formula_dateinterval", "formula": "date_interval('1 day')"},
+            {
+                "name": "formula_dateinterval",
+                "formula": "date_interval('1 day')",
+                "duration_format": D_H_M,
+            },
             {"name": "formula_date", "formula": "todate('20200101', 'YYYYMMDD')"},
             {"name": "formula_singleselect", "formula": "field('single_select')"},
             {"name": "formula_email", "formula": "field('email')"},

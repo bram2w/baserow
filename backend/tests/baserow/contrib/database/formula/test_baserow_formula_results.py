@@ -147,7 +147,7 @@ VALID_FORMULA_TESTS = [
     ("or(false, true)", True),
     ("or(true, true)", True),
     ("'a' + 'b'", "ab"),
-    ("date_interval('1 year')", "1 year"),
+    ("date_interval('1 year')", 365 * 24 * 3600),
     ("date_interval('1 year') > date_interval('1 day')", True),
     ("date_interval('1 invalid')", None),
     ("todate('20200101', 'YYYYMMDD') + date_interval('1 year')", "2021-01-01"),
@@ -163,8 +163,11 @@ VALID_FORMULA_TESTS = [
         ")",
         "6",
     ),
-    ("todate('20200101', 'YYYYMMDD') - todate('20210101', 'YYYYMMDD')", "-366 days"),
-    ("date_interval('1 year') - date_interval('1 day')", "1 year -1 days"),
+    (
+        "todate('20200101', 'YYYYMMDD') - todate('20210101', 'YYYYMMDD')",
+        -366 * 24 * 3600,
+    ),
+    ("date_interval('1 year') - date_interval('1 day')", 364 * 24 * 3600),
     ("now() > todate('20200101', 'YYYYMMDD')", True),
     ("todate('01123456', 'DDMMYYYY') < now()", False),
     ("todate('01123456', 'DDMMYYYY') < today()", False),
@@ -187,6 +190,21 @@ VALID_FORMULA_TESTS = [
         "  'YYYYMMDD HH24MI'"
         ")",
         "20191231 2300",
+    ),
+    (
+        "datetime_format("
+        "  todate_tz('20200101 0000', 'YYYYMMDD HH24MI', 'Europe/Rome'),"
+        "  'day'"
+        ")",
+        "tuesday",
+    ),
+    (
+        "datetime_format_tz("
+        "  todate_tz('20200103 0000', 'YYYYMMDD HH24MI', 'Europe/Rome'),"
+        "  'day',"
+        "  'Europe/Rome'"
+        ")",
+        "friday",
     ),
     ("todate_tz('', '', '')", None),
     ("replace('test test', 'test', 'a')", "a a"),
@@ -567,7 +585,7 @@ def test_can_lookup_date_intervals(data_fixture, api_client):
     )
     assert response.status_code == HTTP_200_OK
     assert [o[lookup_formula.db_column] for o in response.json()["results"]] == [
-        [{"id": row_1.id, "value": "2 days"}]
+        [{"id": row_1.id, "value": 2 * 24 * 3600}]
     ]
 
 
@@ -949,13 +967,13 @@ INVALID_FORMULA_TESTS = [
         "todate('20200101', 'YYYYMMDD') + todate('20210101', 'YYYYMMDD')",
         "ERROR_WITH_FORMULA",
         "Error with formula: argument number 2 given to operator + was of type date "
-        "but the only usable type for this argument is date_interval.",
+        "but the only usable types for this argument are date_interval,duration.",
     ),
     (
         "date_interval('1 second') - todate('20210101', 'YYYYMMDD')",
         "ERROR_WITH_FORMULA",
         "Error with formula: argument number 2 given to operator - was of type date "
-        "but the only usable type for this argument is date_interval.",
+        "but the only usable type for this argument is duration.",
     ),
     (
         "when_empty(1, 'a')",

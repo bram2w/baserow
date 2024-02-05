@@ -41,7 +41,6 @@ import { ToTipTapVisitor } from '@baserow/modules/core/formula/tiptap/toTipTapVi
 import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollection'
 import { FromTipTapVisitor } from '@baserow/modules/core/formula/tiptap/fromTipTapVisitor'
 import { mergeAttributes } from '@tiptap/core'
-import { HardBreak } from '@tiptap/extension-hard-break'
 import DataExplorer from '@baserow/modules/core/components/dataExplorer/DataExplorer'
 import { RuntimeGet } from '@baserow/modules/core/runtimeFormulaTypes'
 
@@ -78,6 +77,11 @@ export default {
       type: Object,
       required: true,
     },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -95,21 +99,13 @@ export default {
     },
     classes() {
       return {
+        'formula-input-field--small': this.small,
         'formula-input-field--focused': this.isFocused,
       }
     },
     placeHolderExt() {
       return Placeholder.configure({
         placeholder: this.placeholder,
-      })
-    },
-    hardBreakExt() {
-      return HardBreak.extend({
-        addKeyboardShortcuts() {
-          return {
-            Enter: () => this.editor.commands.setHardBreak(),
-          }
-        },
       })
     },
     formulaComponents() {
@@ -123,10 +119,10 @@ export default {
         group: 'block',
         content: 'inline*',
         parseHTML() {
-          return [{ tag: 'span' }]
+          return [{ tag: 'div' }]
         },
         renderHTML({ HTMLAttributes }) {
-          return ['span', mergeAttributes(HTMLAttributes), 0]
+          return ['div', mergeAttributes(HTMLAttributes), 0]
         },
       })
     },
@@ -139,7 +135,6 @@ export default {
         this.wrapperNode,
         TextNode,
         this.placeHolderExt,
-        this.hardBreakExt,
         ...this.formulaComponents,
       ]
     },
@@ -147,7 +142,7 @@ export default {
       return generateHTML(this.content, this.extensions)
     },
     wrapperContent() {
-      return this.editor.getJSON().content[0].content
+      return this.editor.getJSON()
     },
     nodes() {
       return this.dataProviders
@@ -225,7 +220,6 @@ export default {
       }
     },
     onUpdate() {
-      this.fixMultipleWrappers()
       this.unSelectNode()
       this.emitChange()
     },
@@ -243,22 +237,17 @@ export default {
       }, 0)
     },
     toContent(formula) {
-      if (_.isEmpty(formula)) {
+      if (!formula) {
         return {
           type: 'doc',
-          content: [{ type: 'wrapper', content: [] }],
+          content: [{ type: 'wrapper' }],
         }
       }
 
       try {
         const tree = parseBaserowFormula(formula)
         const functionCollection = new RuntimeFunctionCollection(this.$registry)
-        const content = new ToTipTapVisitor(functionCollection).visit(tree)
-
-        return {
-          type: 'doc',
-          content: [{ type: 'wrapper', content }],
-        }
+        return new ToTipTapVisitor(functionCollection).visit(tree)
       } catch (error) {
         this.isFormulaInvalid = true
         return null
@@ -267,24 +256,10 @@ export default {
     toFormula(content) {
       const functionCollection = new RuntimeFunctionCollection(this.$registry)
       try {
-        return new FromTipTapVisitor(functionCollection).visit(content || [])
+        return new FromTipTapVisitor(functionCollection).visit(content)
       } catch (error) {
         this.isFormulaInvalid = true
         return null
-      }
-    },
-    /**
-     * Sometimes TipTap will insert a new wrapper by itself. For example when you add
-     * text in front of a custom component it will create a separate wrapper for that
-     * text. This is annoying behaviour since we only want to deal with one wrapper
-     * and not multiple.
-     *
-     * This function checks if there are multiple wrappers and if so, combines them
-     * into one. That action is seamless to the user and won't interfere with the typing
-     */
-    fixMultipleWrappers() {
-      if (this.editor.getJSON().content.length > 1) {
-        this.editor.commands.joinForward()
       }
     },
     dataComponentClicked(node) {

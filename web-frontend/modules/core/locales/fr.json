@@ -1,6 +1,6 @@
 {
     "paginator": {
-        "page": "page",
+        "page": "Page",
         "of": "sur {pages}"
     },
     "copied": {
@@ -613,7 +613,8 @@
         "namePlaceholder": "Saisissez le nom de l'intégration..."
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{sender} vous a invité à rejoindre {workspaceName}"
+        "title": "{sender} vous a invité à rejoindre {workspaceName}",
+        "deletedUser": "Un utilisateur supprimé"
     },
     "dropdown": {
         "empty": "Aucune entrée disponible"
@@ -626,10 +627,12 @@
         "paddingError": "La valeur doit être un entier compris entre 0 et 200."
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} a accepté votre invitation à rejoindre {workspaceName}"
+        "title": "{sender} a accepté votre invitation à rejoindre {workspaceName}",
+        "deletedUser": "Un utilisateur supprimé"
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{sender} a rejeté votre invitation à rejoindre {workspaceName}"
+        "title": "{sender} a rejeté votre invitation à rejoindre {workspaceName}",
+        "deletedUser": "Un utilisateur supprimé"
     },
     "emailNotifications": {
         "submitButton": "Mise à jour de la fréquence",
@@ -642,7 +645,9 @@
         "instant": "Instantanée"
     },
     "dataExplorer": {
-        "emptyText": "Aucune donnée disponible"
+        "emptyText": "Aucune donnée disponible",
+        "noMatchingNodesText": "Aucune donnée n'a été trouvé.",
+        "noProvidersText": "Aucun fournisseur de données n'a été trouvé. Pour commencer, vous pouvez, par exemple, ajouter une source de données ou un paramètre de page."
     },
     "formulaInputField": {
         "errorInvalidFormula": "La formule est invalide."

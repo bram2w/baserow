@@ -3,6 +3,9 @@ from unittest.mock import patch
 
 import pytest
 
+from baserow.core.app_auth_providers.exceptions import IncompatibleUserSourceType
+from baserow.core.app_auth_providers.models import AppAuthProvider
+from baserow.core.app_auth_providers.registries import app_auth_provider_type_registry
 from baserow.core.exceptions import PermissionException
 from baserow.core.user_sources.exceptions import (
     UserSourceDoesNotExist,
@@ -46,6 +49,46 @@ def test_create_user_source(user_source_created_mock, data_fixture, user_source_
 
 
 @pytest.mark.django_db
+def test_create_user_source_w_auth_source(data_fixture):
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+
+    user_source_type = list(user_source_type_registry.get_all())[0]
+    app_auth_provider_type = list(app_auth_provider_type_registry.get_all())[0]
+
+    user_source2 = UserSourceService().create_user_source(
+        user,
+        user_source_type,
+        application=application,
+        auth_providers=[{"type": app_auth_provider_type.type}],
+    )
+
+    assert AppAuthProvider.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_create_user_source_w_incompatible_auth_source(data_fixture):
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+
+    user_source_type = list(user_source_type_registry.get_all())[0]
+    app_auth_provider_type = list(app_auth_provider_type_registry.get_all())[0]
+
+    original_compatible = app_auth_provider_type.compatible_user_source_types
+    app_auth_provider_type.compatible_user_source_types = []
+
+    with pytest.raises(IncompatibleUserSourceType):
+        UserSourceService().create_user_source(
+            user,
+            user_source_type,
+            application=application,
+            auth_providers=[{"type": app_auth_provider_type.type}],
+        )
+
+    app_auth_provider_type.compatible_user_source_types = original_compatible
+
+
+@pytest.mark.django_db
 def test_create_user_source_before(data_fixture):
     user = data_fixture.create_user()
     application = data_fixture.create_builder_application(user=user)
@@ -56,7 +99,7 @@ def test_create_user_source_before(data_fixture):
         application=application, order="2.0000"
     )
 
-    user_source_type = user_source_type_registry.get("local_baserow")
+    user_source_type = list(user_source_type_registry.get_all())[0]
 
     user_source2 = UserSourceService().create_user_source(
         user,

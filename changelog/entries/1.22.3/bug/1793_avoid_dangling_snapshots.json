@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Avoid dangling snapshots",
+    "issue_number": 1793,
+    "bullet_points": [],
+    "created_at": "2024-01-19"
+}

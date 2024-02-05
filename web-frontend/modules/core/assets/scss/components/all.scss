@@ -4,6 +4,8 @@
 @import 'button';
 @import 'alert';
 @import 'form';
+@import 'switch_input';
+@import 'checkbox';
 @import 'box';
 @import 'layout';
 @import 'tree';
@@ -17,7 +19,6 @@
 @import 'dropdown';
 @import 'field_form_context';
 @import 'tooltip';
-@import 'markdown';
 @import 'rating';
 @import 'progress';
 @import 'fields/boolean';
@@ -125,6 +126,7 @@
 @import 'settings/members/edit_role_context';
 @import 'settings/members/member_role_field';
 @import 'badge';
+@import 'badge_counter';
 @import 'builder/all';
 @import 'expandable';
 @import 'email_tester';
@@ -151,3 +153,4 @@
 @import 'toast_button';
 @import 'workflow_action';
 @import 'chips';
+@import 'segment_control';

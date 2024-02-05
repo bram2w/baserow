@@ -545,6 +545,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               class="input filters__value-input input--small"
               type="text"
             />
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1002,6 +1006,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 />
               </div>
             </div>
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1046,13 +1054,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
      
     <div>
       <div
-        class="switch switch--has-content"
+        class="switch switch--small"
       >
-        <label
+        <div
           class="switch__label"
         >
           viewFilterContext.disableAllFilters
-        </label>
+        </div>
       </div>
     </div>
   </div>
@@ -1424,6 +1432,10 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                 />
               </div>
             </div>
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1468,13 +1480,13 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
      
     <div>
       <div
-        class="switch switch--has-content"
+        class="switch switch--small"
       >
-        <label
+        <div
           class="switch__label"
         >
           viewFilterContext.disableAllFilters
-        </label>
+        </div>
       </div>
     </div>
   </div>
@@ -1846,6 +1858,10 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                 />
               </div>
             </div>
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1890,13 +1906,13 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
      
     <div>
       <div
-        class="switch switch--has-content"
+        class="switch switch--small"
       >
-        <label
+        <div
           class="switch__label"
         >
           viewFilterContext.disableAllFilters
-        </label>
+        </div>
       </div>
     </div>
   </div>

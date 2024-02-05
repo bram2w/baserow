@@ -8,13 +8,3 @@
   height: 100%;
   overflow-y: auto;
 }
-
-.select-members-list__user-initials {
-  flex: 0 0 20px;
-  font-weight: bold;
-  color: $white;
-  background-color: $color-primary-500;
-  border-radius: 100%;
-
-  @include center-text(20px, 10px);
-}

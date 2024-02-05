@@ -37,27 +37,29 @@
       </Dropdown>
     </div>
     <div class="filters__value">
-      <component
-        :is="getInputComponent(filter.type, filter.field)"
-        v-if="
-          fieldIdExists(fields, filter.field) &&
-          fieldIsCompatible(filter.type, filter.field)
-        "
-        ref="filter-value"
-        :filter="filter"
-        :view="view"
-        :fields="fields"
-        :disabled="disableFilter"
-        :read-only="readOnly"
-        @input="$emit('updateFilter', { value: $event })"
-      />
+      <slot
+        name="filterInputComponent"
+        :slot-props="{ filter: filter, field: getField(filter.field) }"
+      >
+        <component
+          :is="getInputComponent(filter.type, filter.field)"
+          v-if="fieldCanBeFiltered(fields, filter)"
+          ref="filter-value"
+          :filter="filter"
+          :view="view"
+          :fields="fields"
+          :disabled="disableFilter"
+          :read-only="readOnly"
+          @input="$emit('updateFilter', { value: $event })"
+        />
+      </slot>
       <i
-        v-else-if="!fieldIdExists(fields, filter.field)"
+        v-if="!fieldIdExists(fields, filter.field)"
         v-tooltip="$t('viewFilterContext.relatedFieldNotFound')"
         class="fas fa-exclamation-triangle color-error"
       ></i>
       <i
-        v-else-if="!fieldIsCompatible(filter.type, filter.field)"
+        v-if="!fieldIsCompatible(filter.type, filter.field)"
         v-tooltip="$t('viewFilterContext.filterTypeNotFound')"
         class="fas fa-exclamation-triangle color-error"
       ></i>
@@ -109,21 +111,30 @@ export default {
         this.$refs['filter-value'].focus()
       }
     },
+    getField(fieldId) {
+      return this.fields.find(({ id }) => id === fieldId)
+    },
     allowedFilters(filterTypes, fields, fieldId) {
-      const field = fields.find((f) => f.id === fieldId)
+      const field = this.getField(fieldId)
       return Object.values(filterTypes).filter((filterType) => {
         return field !== undefined && filterType.fieldIsCompatible(field)
       })
     },
     getInputComponent(type, fieldId) {
-      const field = this.fields.find(({ id }) => id === fieldId)
+      const field = this.getField(fieldId)
       return this.$registry.get('viewFilter', type).getInputComponent(field)
+    },
+    fieldCanBeFiltered(fields, filter) {
+      return (
+        this.fieldIdExists(fields, filter.field) &&
+        this.fieldIsCompatible(filter.type, filter.field)
+      )
     },
     fieldIdExists(fields, fieldId) {
       return fields.findIndex((field) => field.id === fieldId) !== -1
     },
     fieldIsCompatible(filterType, fieldId) {
-      const field = this.fields.find(({ id }) => id === fieldId)
+      const field = this.getField(fieldId)
       if (!(filterType in this.filterTypes)) {
         return false
       }

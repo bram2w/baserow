@@ -62,6 +62,8 @@
         <div class="view-sharing__shared-link-options">
           <div class="view-sharing__option">
             <SwitchInput
+              class="margin-bottom-1"
+              small
               :value="view.public_view_has_password"
               @input="toggleShareViewPassword"
             >
@@ -141,7 +143,7 @@ export default {
   computed: {
     shareUrl() {
       return (
-        this.$config.PUBLIC_WEB_FRONTEND_URL +
+        this.$config.BASEROW_EMBEDDED_SHARE_URL +
         this.$router.resolve({
           name: this.viewType.getPublicRoute(),
           params: { slug: this.view.slug },

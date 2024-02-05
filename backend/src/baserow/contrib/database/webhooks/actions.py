@@ -24,7 +24,13 @@ class CreateWebhookActionType(ActionType):
         ),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["webhook_url"]
+    analytics_params = [
+        "webhook_id",
+        "webhook_request_method",
+        "table_id",
+        "database_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -86,7 +92,13 @@ class DeleteWebhookActionType(ActionType):
         ),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["webhook_url"]
+    analytics_params = [
+        "webhook_id",
+        "webhook_request_method",
+        "table_id",
+        "database_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -144,7 +156,14 @@ class UpdateWebhookActionType(ActionType):
         ),
         TABLE_ACTION_CONTEXT,
     )
-    privacy_sensitive_params = ["webhook_url", "original_webhook_url"]
+    analytics_params = [
+        "webhook_id",
+        "webhook_request_method",
+        "original_webhook_request_method",
+        "table_id",
+        "database_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

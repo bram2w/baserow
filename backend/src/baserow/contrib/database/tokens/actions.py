@@ -24,6 +24,10 @@ class CreateDbTokenActionType(ActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "token_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -57,6 +61,10 @@ class UpdateDbTokenNameActionType(ActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "token_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -97,6 +105,12 @@ class UpdateDbTokenPermissionsActionType(ActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "token_id",
+        "workspace_id",
+        "token_permissions",
+        "original_token_permissions",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -150,6 +164,10 @@ class RotateDbTokenKeyActionType(ActionType):
         _('The Database Token "%(token_name)s" (%(token_id)s) has been rotated'),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "token_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -183,6 +201,10 @@ class DeleteDbTokenActionType(ActionType):
         _('The Database Token "%(token_name)s" (%(token_id)s) has been deleted'),
         WORKSPACE_ACTION_CONTEXT,
     )
+    analytics_params = [
+        "token_id",
+        "workspace_id",
+    ]
 
     @dataclasses.dataclass
     class Params:

@@ -159,6 +159,17 @@ class BaserowEnterpriseConfig(AppConfig):
 
         user_source_type_registry.register(LocalBaserowUserSourceType())
 
+        from baserow.core.app_auth_providers.registries import (
+            app_auth_provider_type_registry,
+        )
+        from baserow_enterprise.integrations.local_baserow.auth_provider_types import (
+            LocalBaserowPasswordAppAuthProviderType,
+        )
+
+        app_auth_provider_type_registry.register(
+            LocalBaserowPasswordAppAuthProviderType()
+        )
+
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 

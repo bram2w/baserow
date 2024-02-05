@@ -1,8 +1,7 @@
 <template>
   <div class="custom-domain-details">
     <DnsStatus :domain="domain" />
-    <div class="actions">
-      <a class="button button--ghost">{{ $t('domainCard.refresh') }}</a>
+    <div class="actions actions--right">
       <a
         class="button button--error"
         :class="{ 'button--loading': domain._.loading }"

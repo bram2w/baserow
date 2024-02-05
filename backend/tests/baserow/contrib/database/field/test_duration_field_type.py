@@ -196,6 +196,15 @@ def test_remove_duration_field(data_fixture):
         (timedelta(seconds=3665.5), "h:mm:ss.s", "1:01:05.5"),
         (timedelta(seconds=3665.55), "h:mm:ss.ss", "1:01:05.55"),
         (timedelta(seconds=3665.555), "h:mm:ss.sss", "1:01:05.555"),
+        (timedelta(days=1, hours=2), "d h", "1d 2h"),
+        (timedelta(days=1, hours=1, minutes=2), "d h:mm", "1d 1:02"),
+        (timedelta(days=1, hours=1, minutes=2, seconds=3), "d h:mm:ss", "1d 1:02:03"),
+        (None, "h:mm", None),
+        (None, "d h", None),
+        (None, "d h:mm", None),
+        (None, "d h:mm:ss", None),
+        (0, "h:mm", "0:00"),
+        (0, "d h", "0d 0h"),
     ],
 )
 @pytest.mark.django_db
@@ -261,6 +270,21 @@ def test_convert_duration_field_to_text_field(
             "1:01:05.555",
             timedelta(seconds=3665.555),
         ),
+        (
+            "d h",
+            "1d 2h",
+            timedelta(days=1, hours=2),
+        ),
+        (
+            "d h:mm",
+            "1d 1:02",
+            timedelta(days=1, hours=1, minutes=2),
+        ),
+        (
+            "d h:mm:ss",
+            "1d 1:02:03",
+            timedelta(days=1, hours=1, minutes=2, seconds=3),
+        ),
     ],
 )
 @pytest.mark.django_db
@@ -315,11 +339,38 @@ def test_convert_text_field_to_duration_field(
 @pytest.mark.parametrize(
     "expected,field_kwargs",
     [
-        ([0, 0, 60, 120, 120], {"duration_format": "h:mm"}),
-        ([1, 10, 51, 100, 122], {"duration_format": "h:mm:ss"}),
-        ([1.2, 10.1, 50.7, 100.1, 122], {"duration_format": "h:mm:ss.s"}),
-        ([1.20, 10.11, 50.68, 100.1, 122], {"duration_format": "h:mm:ss.ss"}),
-        ([1.199, 10.11, 50.679, 100.1, 122], {"duration_format": "h:mm:ss.sss"}),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "h:mm"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "h:mm:ss"},
+        ),
+        (
+            [1.2, 10.1, 50.7, 100.1, 122, 86461, 90001.8],
+            {"duration_format": "h:mm:ss.s"},
+        ),
+        (
+            [1.20, 10.11, 50.68, 100.1, 122, 86461, 90001.8],
+            {"duration_format": "h:mm:ss.ss"},
+        ),
+        (
+            [1.199, 10.11, 50.679, 100.1, 122, 86461, 90001.8],
+            {"duration_format": "h:mm:ss.sss"},
+        ),
+        (
+            [0, 0, 0, 0, 0, 86400, 90000],
+            {"duration_format": "d h"},
+        ),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "d h:mm"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "d h:mm:ss"},
+        ),
     ],
 )
 def test_alter_duration_format(expected, field_kwargs, data_fixture):
@@ -329,7 +380,7 @@ def test_alter_duration_format(expected, field_kwargs, data_fixture):
         user=user, table=table, duration_format="h:mm:ss.sss"
     )
 
-    original_values = [1.199, 10.11, 50.6789, 100.1, 122]
+    original_values = [1.199, 10.11, 50.6789, 100.1, 122, 86461, 90001.8]
 
     RowHandler().create_rows(
         user,
@@ -353,11 +404,38 @@ def test_alter_duration_format(expected, field_kwargs, data_fixture):
 @pytest.mark.parametrize(
     "expected,field_kwargs",
     [
-        ([0, 0, 60, 120, 120], {"duration_format": "h:mm"}),
-        ([1, 10, 51, 100, 122], {"duration_format": "h:mm:ss"}),
-        ([1.2, 10.1, 50.7, 100.1, 122], {"duration_format": "h:mm:ss.s"}),
-        ([1.20, 10.11, 50.68, 100.1, 122], {"duration_format": "h:mm:ss.ss"}),
-        ([1.199, 10.11, 50.679, 100.1, 122], {"duration_format": "h:mm:ss.sss"}),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "h:mm"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "h:mm:ss"},
+        ),
+        (
+            [1.2, 10.1, 50.7, 100.1, 122, 86461, 90001.8],
+            {"duration_format": "h:mm:ss.s"},
+        ),
+        (
+            [1.20, 10.11, 50.68, 100.1, 122, 86461, 90001.8],
+            {"duration_format": "h:mm:ss.ss"},
+        ),
+        (
+            [1.199, 10.11, 50.679, 100.1, 122, 86461, 90001.8],
+            {"duration_format": "h:mm:ss.sss"},
+        ),
+        (
+            [0, 0, 0, 0, 0, 86400, 90000],
+            {"duration_format": "d h"},
+        ),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "d h:mm"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "d h:mm:ss"},
+        ),
     ],
 )
 def test_alter_duration_format_can_be_undone(expected, field_kwargs, data_fixture):
@@ -368,7 +446,7 @@ def test_alter_duration_format_can_be_undone(expected, field_kwargs, data_fixtur
         user=user, table=table, duration_format="h:mm:ss.sss"
     )
 
-    original_values = [1.199, 10.11, 50.679, 100.1, 122]
+    original_values = [1.199, 10.11, 50.679, 100.1, 122, 86461, 90001.8]
 
     RowHandler().create_rows(
         user,
@@ -416,7 +494,7 @@ def test_duration_field_view_filters(data_fixture):
             {field.db_column: 1.123},
             {field.db_column: 60},  # 1min
             {field.db_column: "24:0:0"},  # 1day
-            {field.db_column: 86400},  # 1day
+            {field.db_column: "1 0"},  # 1day
             {field.db_column: 3601},  # 1hour 1sec
             {field.db_column: "1:0:0"},  # 1 hour
         ],
@@ -584,3 +662,126 @@ def test_get_group_by_metadata_in_rows_with_duration_field(data_fixture):
             ]
         )
     }
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_duration_field_can_be_used_in_formulas(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    duration_field = data_fixture.create_duration_field(
+        table=table, name="duration", duration_format="h:mm:ss"
+    )
+    ref_field = data_fixture.create_formula_field(
+        table=table, name="ref", formula=f"field('{duration_field.name}')"
+    )
+    add_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{duration_field.name}') + field('{ref_field.name}')",
+    )
+    sub_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{duration_field.name}') - field('{ref_field.name}')",
+    )
+    compare_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"field('{duration_field.name}') = field('{ref_field.name}')",
+    )
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {duration_field.db_column: 3600},
+            {duration_field.db_column: 0},
+            {},
+        ],
+    )
+
+    model = table.get_model()
+
+    assert list(
+        model.objects.all().values(
+            ref_field.db_column,
+            add_field.db_column,
+            sub_field.db_column,
+            compare_field.db_column,
+        )
+    ) == [
+        {
+            ref_field.db_column: timedelta(seconds=3600),
+            add_field.db_column: timedelta(seconds=7200),
+            sub_field.db_column: timedelta(seconds=0),
+            compare_field.db_column: True,
+        },
+        {
+            ref_field.db_column: timedelta(seconds=0),
+            add_field.db_column: timedelta(seconds=0),
+            sub_field.db_column: timedelta(seconds=0),
+            compare_field.db_column: True,
+        },
+        {
+            ref_field.db_column: None,
+            add_field.db_column: timedelta(seconds=0),
+            sub_field.db_column: timedelta(seconds=0),
+            compare_field.db_column: True,
+        },
+    ]
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_duration_field_can_be_looked_up(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    duration_field = data_fixture.create_duration_field(
+        table=table_b, name="duration", duration_format="h:mm:ss"
+    )
+    lookup_field = data_fixture.create_formula_field(
+        table=table_a, formula=f"lookup('{link_field.name}', 'duration')"
+    )
+
+    # Also a formula field referencing a duration can be looked up
+    duration_formula = data_fixture.create_formula_field(
+        table=table_b,
+        name="formula",
+        formula=f"field('{duration_field.name}') + date_interval('60s')",
+    )
+    lookup_formula = data_fixture.create_formula_field(
+        table=table_a, formula=f"lookup('{link_field.name}', 'formula')"
+    )
+
+    model_b = table_b.get_model()
+    row_b_1, row_b_2 = RowHandler().create_rows(
+        user=user,
+        table=table_b,
+        rows_values=[
+            {duration_field.db_column: 3600},
+            {duration_field.db_column: 60},
+        ],
+        model=model_b,
+    )
+
+    assert list(model_b.objects.values_list(duration_formula.db_column, flat=True)) == [
+        timedelta(seconds=3600 + 60),
+        timedelta(seconds=60 + 60),
+    ]
+
+    model_a = table_a.get_model()
+    (row,) = RowHandler().create_rows(
+        user=user,
+        table=table_a,
+        rows_values=[
+            {f"field_{link_field.id}": [row_b_1.id, row_b_2.id]},
+        ],
+        model=model_a,
+    )
+    assert getattr(row, f"field_{lookup_field.id}") == [
+        {"id": row_b_1.id, "value": 3600},
+        {"id": row_b_2.id, "value": 60},
+    ]
+
+    assert getattr(row, f"field_{lookup_formula.id}") == [
+        {"id": row_b_1.id, "value": 3600 + 60},
+        {"id": row_b_2.id, "value": 60 + 60},
+    ]

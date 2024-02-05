@@ -68,8 +68,8 @@
     "elementType": {
         "heading": "Heading",
         "headingDescription": "Page heading title",
-        "paragraph": "Paragraph",
-        "paragraphDescription": "Single line text",
+        "text": "Text",
+        "textDescription": "Single line text",
         "link": "Link",
         "linkDescription": "A link to page/URL",
         "image": "Image",
@@ -87,7 +87,9 @@
         "dropdown": "Dropdown",
         "dropdownDescription": "Dropdown element",
         "checkbox": "Checkbox",
-        "checkboxDescription": "Checkbox element"
+        "checkboxDescription": "Checkbox element",
+        "iframe": "IFrame",
+        "iframeDescription": "Inline frame"
     },
     "addElementButton": {
         "label": "Element"
@@ -135,13 +137,16 @@
         "headingName": "Heading {level} <h{level}>",
         "textError": "The value is invalid."
     },
-    "paragraphElement": {
-        "noValue": "Empty paragraph..."
+    "textElement": {
+        "noValue": "Empty text..."
     },
-    "paragraphElementForm": {
+    "textElementForm": {
         "textTitle": "Text",
         "textPlaceholder": "Enter text...",
-        "textError": "The value is invalid."
+        "textError": "The value is invalid.",
+        "textFormatTypeLabel": "Format",
+        "textFormatTypePlain": "Plain text",
+        "textFormatTypeMarkdown": "Markdown"
     },
     "imageElement": {
         "emptyState": "No alt text defined..."
@@ -168,7 +173,28 @@
         "fileSourceTypeUpload": "Upload",
         "fileSourceTypeURL": "URL",
         "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
-        "uploadFileButton": "Upload file"
+        "uploadFileButton": "Upload file",
+        "maxWidthLabel": "Max width",
+        "maxHeightLabel": "Max height",
+        "maxHeightPlaceholder": "Enter a maximum height in pixels.",
+        "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
+        "imageConstraintsLabel": "Constraints",
+        "imageConstraintFullWidth": "Extend to max width",
+        "imageConstraintCover": "Cover",
+        "imageConstraintCoverDisabled": "Unavailable with empty max height.",
+        "imageConstraintContain": "Contain",
+        "imageConstraintContainDisabled": "Unavailable with a max height."
+    },
+    "iframeElementForm": {
+      "empty": "Empty IFrame...",
+      "sourceTypeLabel": "Source type",
+      "urlLabel": "URL",
+      "urlPlaceholder": "Link to the external resource to be embedded",
+      "urlHelp": "Note: please make sure that you have control over, or trust the url entered.",
+      "embedLabel": "Embed",
+      "embedPlaceholder": "Raw HTML content to be embedded",
+      "heightLabel": "Height (px)",
+      "heightPlaceholder": "Height in pixels"
     },
     "columnElementForm": {
         "columnAmountTitle": "Layout",

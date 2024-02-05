@@ -1,73 +1,165 @@
 [
-    {
-        "formula": "'hello'",
-        "content": [{ "type": "text", "text": "hello" }]
-    },
-    {
-        "formula": "concat('hello', 'there')",
-        "content": [
+  {
+    "formula": "",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper"
+        }
+      ]
+    }
+  },
+  {
+    "formula": "'hello'",
+    "content": {
+      "type": "doc",
+      "content": [{ "text": "hello", "type": "text" }]
+    }
+  },
+  {
+    "formula": "concat('hello', 'there')",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper",
+          "content": [
             { "type": "text", "text": "hello" },
             { "type": "text", "text": "there" }
-        ]
-    },
-    {
-        "formula": "concat('hello', 'there', 'friend :)')",
-        "content": [
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "formula": "concat('hello', 'there', 'friend :)')",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper",
+          "content": [
             { "type": "text", "text": "hello" },
             { "type": "text", "text": "there" },
             { "type": "text", "text": "friend :)" }
-        ]
-    },
-    {
-        "formula": "get('data_source.hello.there')",
-        "content": [
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "formula": "get('data_source.hello.there')",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "get-formula-component",
+          "attrs": { "path": "data_source.hello.there", "isSelected": false }
+        }
+      ]
+    }
+  },
+  {
+    "formula": "concat(get('data_source.hello.there'), 'friend :)')",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper",
+          "content": [
             {
-                "type": "get-formula-component",
-                "attrs": { "path": "data_source.hello.there", "isSelected": false }
-            }
-        ]
-    },
-    {
-        "formula": "concat(get('data_source.hello.there'), 'friend :)')",
-        "content": [
-            {
-                "type": "get-formula-component",
-                "attrs": { "path": "data_source.hello.there", "isSelected": false }
+              "type": "get-formula-component",
+              "attrs": {
+                "path": "data_source.hello.there",
+                "isSelected": false
+              }
             },
             { "type": "text", "text": "friend :)" }
-        ]
-    },
-
-    {
-        "formula": "concat('hello', '\n', 'there')",
-        "content": [
-            {
-                "type": "text",
-                "text": "hello"
-            },
-            {
-                "type": "hardBreak"
-            },
-            {
-                "type": "text",
-                "text": "there"
-            }
-        ]
-    },
-    {
-        "formula": "concat('hello', '\n', get('data_source.hello.there'))",
-        "content": [
-            {
-                "type": "text",
-                "text": "hello"
-            },
-            {
-                "type": "hardBreak"
-            },
-            {
-                "type": "get-formula-component",
-                "attrs": { "path": "data_source.hello.there", "isSelected": false }
-            }
-        ]
+          ]
+        }
+      ]
     }
+  },
+
+  {
+    "formula": "concat('hello', '\n', 'there')",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper",
+          "content": [
+            {
+              "type": "text",
+              "text": "hello"
+            }
+          ]
+        },
+        {
+          "type": "wrapper",
+          "content": [
+            {
+              "type": "text",
+              "text": "there"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "formula": "concat('hello', '\n', get('data_source.hello.there'))",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper",
+          "content": [
+            {
+              "type": "text",
+              "text": "hello"
+            }
+          ]
+        },
+        {
+          "type": "wrapper",
+          "content": [
+            {
+              "type": "get-formula-component",
+              "attrs": {
+                "path": "data_source.hello.there",
+                "isSelected": false
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "formula": "concat('hello', '\n', '')",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "wrapper",
+          "content": [
+            {
+              "type": "text",
+              "text": "hello"
+            }
+          ]
+        },
+        {
+          "type": "wrapper",
+          "content": [
+            {
+              "type": "wrapper"
+            }
+          ]
+        }
+      ]
+    }
+  }
 ]

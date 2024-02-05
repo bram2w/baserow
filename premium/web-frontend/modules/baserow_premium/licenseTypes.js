@@ -17,7 +17,7 @@ export class LicenseType extends Registerable {
    * The css class that should be applied when rendering the badge of a license of
    * this type.
    */
-  getLicenseBadgeClass() {
+  getLicenseBadgeColor() {
     throw new Error('Must be set by the implementing sub class.')
   }
 
@@ -71,8 +71,8 @@ export class PremiumLicenseType extends LicenseType {
     return i18n.t('licenses.premium')
   }
 
-  getLicenseBadgeClass() {
-    return 'license-plan--premium'
+  getLicenseBadgeColor() {
+    return 'cyan'
   }
 
   getFeatures() {

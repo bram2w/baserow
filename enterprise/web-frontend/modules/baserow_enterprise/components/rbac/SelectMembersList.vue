@@ -24,9 +24,13 @@
       @selected="userSelected"
     >
       <template #left-side="{ item }">
-        <div class="select-members-list__user-initials margin-left-1">
-          {{ item.name | nameAbbreviation }}
-        </div>
+        <Avatar
+          class="margin-left-1"
+          rounded
+          size="medium"
+          :initials="item.name | nameAbbreviation"
+        ></Avatar>
+
         <span
           v-tooltip="item.name"
           class="margin-left-1 select-members-list__user-name"

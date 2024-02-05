@@ -3,6 +3,8 @@ from typing import Any, Dict, Optional, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
+from baserow.core.app_auth_providers.handler import AppAuthProviderHandler
+from baserow.core.app_auth_providers.registries import app_auth_provider_type_registry
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
@@ -71,18 +73,48 @@ class UserSourceType(
 
         return values
 
-    def serialize_property(self, user_source: UserSource, prop_name: str):
-        if prop_name == "order":
-            return str(user_source.order)
+    def after_create(self, user, user_source, values):
+        """
+        Add the auth providers.
+        """
 
-        return super().serialize_property(user_source, prop_name)
+        if "auth_providers" in values:
+            for ap in values["auth_providers"]:
+                ap_type = app_auth_provider_type_registry.get(ap["type"])
+                ap_type.check_user_source_compatibility(user_source)
+                AppAuthProviderHandler.create_app_auth_provider(
+                    user, ap_type, user_source, **ap
+                )
+
+    def after_update(self, user, user_source, values):
+        """
+        Recreate the auth providers.
+        """
+
+        if "auth_providers" in values:
+            user_source.auth_providers.all().delete()
+            self.after_create(user, user_source, values)
+
+    def serialize_property(self, instance: UserSource, prop_name: str):
+        if prop_name == "order":
+            return str(instance.order)
+
+        if prop_name == "auth_providers":
+            return [
+                ap.get_type().export_serialized(ap)
+                for ap in AppAuthProviderHandler.list_app_auth_providers_for_user_source(
+                    instance
+                )
+            ]
+
+        return super().serialize_property(instance, prop_name)
 
     def deserialize_property(
         self,
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Dict[int, int]],
-        **kwargs
+        **kwargs,
     ) -> Any:
         if prop_name == "integration_id":
             return id_mapping["integrations"][value]
@@ -93,10 +125,28 @@ class UserSourceType(
         self,
         parent: Any,
         serialized_values: Dict[str, Any],
-        id_mapping: Dict[str, Any],
-        cache=None,
+        id_mapping: Dict[str, Dict[int, int]],
+        **kwargs,
     ) -> UserSourceSubClass:
-        return super().import_serialized(parent, serialized_values, id_mapping)
+        """
+        Handles the auth provider import.
+        """
+
+        auth_providers = serialized_values.pop("auth_providers", [])
+
+        created_user_source = super().import_serialized(
+            parent, serialized_values, id_mapping, **kwargs
+        )
+
+        for auth_provider in auth_providers:
+            auth_provider_type = app_auth_provider_type_registry.get(
+                auth_provider["type"]
+            )
+            auth_provider_type.import_serialized(
+                created_user_source, auth_provider, id_mapping
+            )
+
+        return created_user_source
 
 
 UserSourceTypeSubClass = TypeVar("UserSourceTypeSubClass", bound=UserSourceType)

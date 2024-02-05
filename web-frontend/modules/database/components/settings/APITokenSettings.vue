@@ -21,13 +21,13 @@
           @deleted="deleteToken(token.id)"
         ></APIToken>
         <div v-if="tokens.length > 0" class="margin-top-3">
-          <SwitchInput :value="true" class="switch--static">
+          <SwitchInput :value="true" small class="margin-bottom-1">
             {{ $t('apiTokenSettings.hasFullPermissions') }}
           </SwitchInput>
-          <SwitchInput :value="2" class="switch--static">
+          <SwitchInput :value="2" small class="margin-bottom-1">
             {{ $t('apiTokenSettings.hasOnlySelectedPermissions') }}
           </SwitchInput>
-          <SwitchInput :value="false" class="switch--static">
+          <SwitchInput :value="false" small>
             {{ $t('apiTokenSettings.noPermissions') }}
           </SwitchInput>
         </div>

@@ -62,7 +62,7 @@ decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-django==4.0.10
+django==4.1.13
     # via
     #   -c base.txt
     #   django-extensions
@@ -248,7 +248,7 @@ pytest-asyncio==0.21.0
     # via -r dev.in
 pytest-cov==4.0.0
     # via -r dev.in
-pytest-django==4.5.2
+pytest-django==4.7.0
     # via -r dev.in
 pytest-env==0.8.1
     # via -r dev.in

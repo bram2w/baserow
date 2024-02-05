@@ -59,6 +59,25 @@ writing and reviewing code.
 
 https://black.readthedocs.io/en/stable/index.html
 
+```
+make format
+```
+
+### Internationalization
+
+For internationalization (i18n), we leverage Django's built-in support. Django's internationalization framework allows us to easily translate our web application into multiple languages.
+
+To use Django's internationalization features, we wrap our text with a special function called `gettext` or `gettext_lazy`.
+For more information, refer to the [Django Internationalization and Localization documentation](https://docs.djangoproject.com/en/3.2/topics/i18n/).
+Then, we created a Makefile command to collect or update all these strings into a message file.
+
+```
+make translations
+```
+
+This will call the Django's `makemessages` command for the English language of all the installed applications. The creation of the messages for the other languages and the step to compile all these messages, will be automatically handled by `Weblate` before each release.
+
+
 ### ItsDangerous
 
 In order to safely share sensitive data like password reset tokens we use a proven

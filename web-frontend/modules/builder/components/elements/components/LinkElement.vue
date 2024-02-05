@@ -9,8 +9,8 @@
     <a
       :class="{
         'link-element__link': element.variant !== 'button',
-        'link-button-element-button': element.variant === 'button',
-        'link-button-element-button--full-width':
+        'ab-button': element.variant === 'button',
+        'ab-button--full-width':
           element.variant === 'button' && element.width === WIDTHS.FULL.value,
       }"
       v-bind="extraAttr"

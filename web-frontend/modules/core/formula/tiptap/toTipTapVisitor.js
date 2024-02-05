@@ -10,15 +10,21 @@ export class ToTipTapVisitor extends BaserowFormulaVisitor {
 
   visitRoot(ctx) {
     const result = ctx.expr().accept(this)
-    return _.isArray(result) ? result : [result]
+    return { type: 'doc', content: _.isArray(result) ? result : [result] }
   }
 
   visitStringLiteral(ctx) {
     switch (ctx.getText()) {
       case "'\n'":
-        return { type: 'hardBreak' }
+        // Specific element that helps to recognize root concat
+        return { type: 'newLine' }
       default:
-        return { type: 'text', text: this.processString(ctx) }
+        if (this.processString(ctx)) {
+          return { type: 'text', text: this.processString(ctx) }
+        } else {
+          // An empty string is an empty wrapper
+          return { type: 'wrapper' }
+        }
     }
   }
 

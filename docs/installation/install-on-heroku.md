@@ -139,6 +139,17 @@ have a custom domain then this value can be empty.
 * AWS_S3_ENDPOINT_URL: Custom S3 URL to use when connecting to S3, including scheme.
 * AWS_S3_CUSTOM_DOMAIN: Your custom domain where the files can be downloaded from.
 
+## Application builder domains
+
+Baserow has an application builder that allows to deploy an application to a specific
+domain. Because Heroku has a reverse proxy that routes a domain to the right dyno, the
+deployed application isn't automatically available on the chosen domain.
+
+To make this work, you must add a domain alias in the app settings. This can be
+done by going to the settings of your Baserow app, then scroll to `Domains`, click on
+`Add domain`, and then add the domain you've published the application to in Baserow.
+Make sure that the domain matches the full domain name in Baserow.
+
 ## Update
 
 When a new version of Baserow has been released, you probably want to update.

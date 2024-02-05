@@ -191,7 +191,7 @@ def test_update_data_source_with_filters(api_client, data_fixture):
                 {
                     "field": field.id,
                     "type": "equals",
-                    "value": "foobar",
+                    "value": "'foobar'",
                 }
             ]
         },
@@ -207,7 +207,7 @@ def test_update_data_source_with_filters(api_client, data_fixture):
             "order": 0,
             "field": field.id,
             "type": "equals",
-            "value": "foobar",
+            "value": "'foobar'",
         }
     ]
 
@@ -223,7 +223,7 @@ def test_update_data_source_with_filters(api_client, data_fixture):
 
     # Given an existing filter, we delete it if it's not in the payload.
     data_fixture.create_local_baserow_table_service_filter(
-        service=data_source1.service, field=field, value="baz", order=0
+        service=data_source1.service, field=field, value="'baz'", order=0
     )
     response = api_client.patch(
         url,
@@ -233,7 +233,7 @@ def test_update_data_source_with_filters(api_client, data_fixture):
                     "service": data_source1.service_id,
                     "field": field.id,
                     "type": "equals",
-                    "value": "foobar",
+                    "value": "'foobar'",
                 }
             ]
         },
@@ -249,7 +249,7 @@ def test_update_data_source_with_filters(api_client, data_fixture):
             "order": 0,
             "field": field.id,
             "type": "equals",
-            "value": "foobar",
+            "value": "'foobar'",
         }
     ]
 

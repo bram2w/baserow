@@ -7,14 +7,14 @@
 </template>
 
 <script>
-import { DurationFieldType } from '@baserow/modules/database/fieldTypes'
+import { formatDurationValue } from '@baserow/modules/database/utils/duration'
 
 export default {
   name: 'FunctionalGridViewFieldDuration',
   functional: true,
   methods: {
     formatValue(field, value) {
-      return DurationFieldType.formatValue(field, value)
+      return formatDurationValue(value, field.duration_format)
     },
   },
 }

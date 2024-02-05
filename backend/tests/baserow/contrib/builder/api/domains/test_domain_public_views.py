@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.test.utils import override_settings
 from django.urls import reverse
 
 import pytest
@@ -214,7 +215,7 @@ def test_get_elements_of_public_builder(api_client, data_fixture):
     page = data_fixture.create_builder_page(builder=builder_to, user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_paragraph_element(page=page)
+    element3 = data_fixture.create_builder_text_element(page=page)
 
     domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io",
@@ -312,3 +313,67 @@ def test_get_data_source_of_public_builder_permission_denied(api_client, data_fi
     )
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_ask_public_builder_domain_exists(api_client, data_fixture):
+    user = data_fixture.create_user()
+    builder_from = data_fixture.create_builder_application(user=user)
+    builder_to = data_fixture.create_builder_application(user=user, workspace=None)
+    data_fixture.create_builder_custom_domain(
+        domain_name="test.getbaserow.io",
+        published_to=builder_to,
+        builder=builder_from,
+    )
+    data_fixture.create_builder_custom_domain(
+        domain_name="another-domain.com",
+    )
+
+    url = reverse("api:builder:domains:ask_exists")
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain="
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=nothing"
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=nothing.com"
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=test2.getbaserow.io"
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=another-domain.com"
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=test.getbaserow.io"
+    response = api_client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+@override_settings(
+    PUBLIC_BACKEND_HOSTNAME="backend.localhost",
+    PUBLIC_WEB_FRONTEND_HOSTNAME="web-frontend.localhost",
+)
+def test_ask_public_builder_domain_exists_with_public_backend_and_web_frontend_domains(
+    api_client, data_fixture
+):
+    url = reverse("api:builder:domains:ask_exists") + "?domain=localhost"
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=backend.localhost"
+    response = api_client.get(url)
+    assert response.status_code == 200
+
+    url = reverse("api:builder:domains:ask_exists") + "?domain=web-frontend.localhost"
+    response = api_client.get(url)
+    assert response.status_code == 200

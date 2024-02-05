@@ -1009,6 +1009,150 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
 
 
 @pytest.mark.django_db(transaction=True)
+@override_settings(
+    PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
+)
+def test_get_permissions_object_with_database_and_table_level_permissions(
+    data_fixture, enterprise_data_fixture, synced_roles
+):
+    enterprise_data_fixture.enable_enterprise()
+    admin = data_fixture.create_user(email="admin@test.net")
+    editor = data_fixture.create_user(email="editor@test.net")
+
+    workspace_1 = data_fixture.create_workspace(
+        user=admin,
+        members=[editor],
+    )
+    data_fixture.create_database_application()
+    data_fixture.create_database_application()
+    data_fixture.create_database_application()
+    data_fixture.create_database_application()
+    data_fixture.create_database_application()
+
+    database_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    database_2 = data_fixture.create_database_application(
+        workspace=workspace_1, order=2
+    )
+
+    table_0, _, _ = data_fixture.build_table(
+        columns=[("number", "number"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_1,
+        order=1,
+    )
+    table_1, _, _ = data_fixture.build_table(
+        columns=[("number", "number"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_1,
+        order=1,
+    )
+    table_2, _, _ = data_fixture.build_table(
+        columns=[("number", "text"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_2,
+        order=2,
+    )
+    table_3, _, _ = data_fixture.build_table(
+        columns=[("number", "text"), ("text", "text")],
+        rows=[[1, "test"]],
+        database=database_2,
+        order=3,
+    )
+
+    role_editor = Role.objects.get(uid="EDITOR")
+    role_no_access = Role.objects.get(uid="NO_ACCESS")
+
+    perm_manager = RolePermissionManagerType()
+
+    # Case 1 - default policy is False, we add the permission to db then we remove
+    # it from the table
+
+    # Workspace level assignments
+    RoleAssignmentHandler().assign_role(editor, workspace_1, role=role_no_access)
+
+    # Application level assignments
+    RoleAssignmentHandler().assign_role(
+        editor, workspace_1, role=role_editor, scope=database_1.application_ptr
+    )
+
+    # Table level assignments
+    RoleAssignmentHandler().assign_role(
+        editor, workspace_1, role=role_no_access, scope=table_1
+    )
+
+    perms = perm_manager.get_permissions_object(editor, workspace=workspace_1)
+
+    assert perms[CreateRowDatabaseTableOperationType.type]["default"] is False
+
+    # The user has editor permissions to `database_1` but no_role at `table_1`,
+    # so we should see only the `table_0` as an exception to the default (False)
+    # policy.
+    assert perms[CreateRowDatabaseTableOperationType.type]["exceptions"] == [
+        table_0.id,
+    ]
+
+    # Case 2 - default policy is True and we remove then add the permission
+
+    # Now with the opposite default policy
+    RoleAssignmentHandler().assign_role(editor, workspace_1, role=role_editor)
+
+    # Application level assignments
+    RoleAssignmentHandler().assign_role(
+        editor, workspace_1, role=role_no_access, scope=database_1.application_ptr
+    )
+
+    # Table level assignments
+    RoleAssignmentHandler().assign_role(
+        editor, workspace_1, role=role_editor, scope=table_1
+    )
+
+    perms = perm_manager.get_permissions_object(editor, workspace=workspace_1)
+
+    assert perms[CreateRowDatabaseTableOperationType.type]["default"] is True
+
+    # The user has editor permissions to `table_1` but no_role at `database_1`,
+    # so we should see only the `table_0` as an exception to the default
+    # (True) policy.
+    assert perms[CreateRowDatabaseTableOperationType.type]["exceptions"] == [
+        table_0.id,
+    ]
+
+    # case 3 - default is False and we add the permission on another database
+
+    # Workspace level assignments
+    RoleAssignmentHandler().assign_role(editor, workspace_1, role=role_no_access)
+
+    # Table level assignments
+    RoleAssignmentHandler().assign_role(
+        editor, workspace_1, role=role_editor, scope=table_1
+    )
+
+    # Database level assignments
+    RoleAssignmentHandler().assign_role(
+        editor, workspace_1, role=role_editor, scope=database_2
+    )
+
+    perms = perm_manager.get_permissions_object(editor, workspace=workspace_1)
+
+    assert perms[CreateRowDatabaseTableOperationType.type]["default"] is False
+
+    # The user has editor permissions to `table_1` and `database_2`, so we expect
+    # table 1, table 2 and table 3 to be in there because table 2,3 belong
+    # in database 2.
+    assert sorted(
+        perms[CreateRowDatabaseTableOperationType.type]["exceptions"]
+    ) == sorted(
+        [
+            table_1.id,
+            table_2.id,
+            table_3.id,
+        ]
+    )
+
+
+@pytest.mark.django_db(transaction=True)
 def test_get_permissions_object_with_teams(
     data_fixture, enterprise_data_fixture, synced_roles
 ):
@@ -1177,6 +1321,7 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     assert list(builder_table_queryset) == [table_2_1]
 
     viewer_role = Role.objects.get(uid="VIEWER")
+    editor_role = Role.objects.get(uid="EDITOR")
     role_no_access = Role.objects.get(uid="NO_ACCESS")
 
     # In this scenario the user is:
@@ -1215,6 +1360,7 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     # - no_access at application_2 level
     # - builder at at table_2_1 level
     # -> should still be able to see application_2 and application_3
+    # -> and table_2_1, table_1_x
     RoleAssignmentHandler().assign_role(
         builder, workspace_2, role=role_no_access, scope=database_2.application_ptr
     )
@@ -1228,6 +1374,32 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
 
     assert list(builder_application_queryset) == [
         database_2.application_ptr,
+        database_3.application_ptr,
+    ]
+
+    builder_table_queryset = perm_manager.filter_queryset(
+        builder,
+        ListTablesDatabaseTableOperationType.type,
+        table_2_queryset,
+        workspace=workspace_2,
+    )
+
+    assert list(builder_table_queryset) == [table_2_1]
+
+    # In this scenario the user is:
+    # - Viewer at workspace_2 level
+    # - no_access at application_2 level
+    # -> should be able to see application_3 only
+    RoleAssignmentHandler().assign_role(builder, workspace_2, scope=table_2_1)
+
+    builder_application_queryset = perm_manager.filter_queryset(
+        builder,
+        ListApplicationsWorkspaceOperationType.type,
+        application_2_queryset,
+        workspace=workspace_2,
+    )
+
+    assert list(builder_application_queryset) == [
         database_3.application_ptr,
     ]
 

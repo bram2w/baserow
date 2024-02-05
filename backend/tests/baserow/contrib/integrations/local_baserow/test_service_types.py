@@ -99,7 +99,13 @@ def test_create_local_baserow_list_rows_service(data_fixture):
 @pytest.mark.django_db
 def test_export_import_local_baserow_list_rows_service(data_fixture):
     user = data_fixture.create_user()
-    page = data_fixture.create_builder_page(user=user)
+    path_params = [
+        {"name": "id", "type": "numeric"},
+        {"name": "filter", "type": "text"},
+    ]
+    page = data_fixture.create_builder_page(
+        path="/page/:id/:filter/", path_params=path_params
+    )
     table, fields, rows = data_fixture.build_table(
         user=user,
         columns=[
@@ -115,12 +121,15 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         application=page.builder, user=user
     )
     service = data_fixture.create_local_baserow_list_rows_service(
-        integration=integration, view=view, table=view.table, search_query="Teams"
+        integration=integration,
+        view=view,
+        table=view.table,
+        search_query="get('page_parameter.id')",
     )
 
     field = fields[0]
     service_filter = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="PSG", order=0
+        service=service, field=field, value="get('page_parameter.filter')", order=0
     )
     service_sort = data_fixture.create_local_baserow_table_service_sort(
         service=service, field=field, order_by=SORT_ORDER_ASC, order=0
@@ -360,7 +369,13 @@ def test_create_local_baserow_get_row_service(data_fixture):
 @pytest.mark.django_db
 def test_export_import_local_baserow_get_row_service(data_fixture):
     user = data_fixture.create_user()
-    page = data_fixture.create_builder_page(user=user)
+    path_params = [
+        {"name": "id", "type": "numeric"},
+        {"name": "filter", "type": "text"},
+    ]
+    page = data_fixture.create_builder_page(
+        path="/page/:id/:filter/", path_params=path_params
+    )
     table, fields, rows = data_fixture.build_table(
         user=user,
         columns=[
@@ -381,10 +396,10 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
         row_id="1",
         view=view,
         table=view.table,
-        search_query="Teams",
+        search_query="get('page_parameter.id')",
     )
     service_filter = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="PSG", order=0
+        service=service, field=field, value="get('page_parameter.filter')", order=0
     )
 
     exported = service_type.export_serialized(service)
@@ -571,7 +586,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_search(data_fi
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="1", search_query="Au"
+        integration=integration, table=table, row_id="1", search_query="'Au'"
     )
     service_type = service.get_type()
 
@@ -698,6 +713,21 @@ def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
 
     assert dispatch_data["data"].id == rows[0].id
 
+    # If the `row_id` is a formula, and its resolved value is blank, ensure we're
+    # raising `ServiceImproperlyConfigured`. We don't want to use the "no row ID"
+    # behaviour of returning the first row if we're using formulas.
+    fake_request = Mock()
+    fake_request.data = {"page_parameter": {"id": ""}}
+    service.row_id = 'get("page_parameter.id")'
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        service_type.resolve_service_formulas(service, dispatch_context)
+
+    assert (
+        exc.value.args[0] == "The result of the `row_id` formula must "
+        "be an integer or convertible to an integer."
+    )
+
 
 @pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_filters(
@@ -745,7 +775,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
     assert [r.id for r in results] == [row_1.id, row_2.id]
 
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="Cheese", order=0
+        service=service, field=field, value="'Cheese'", order=0
     )
 
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
@@ -805,7 +835,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         view=view, field=ingredient, type="equal", value="Goose"
     )
     cost_150 = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="150", order=0
+        service=service, field=cost, value="'150'", order=0
     )
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
@@ -824,10 +854,10 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         view=view, field=ingredient, type="contains", value="Duck"
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="25", order=0
+        service=service, field=cost, value="'25'", order=0
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="50", order=0
+        service=service, field=cost, value="'50'", order=0
     )
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
@@ -1558,6 +1588,27 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
         },
         field_db_column_by_name["duration_hms_sss"]: {
             "title": "duration_hms_sss",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dh"]: {
+            "title": "duration_dh",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dhm"]: {
+            "title": "duration_dhm",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_dhms"]: {
+            "title": "duration_dhms",
             "default": None,
             "original_type": "duration",
             "metadata": {},

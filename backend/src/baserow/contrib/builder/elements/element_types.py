@@ -25,11 +25,12 @@ from baserow.contrib.builder.elements.models import (
     FormContainerElement,
     HeadingElement,
     HorizontalAlignments,
+    IFrameElement,
     ImageElement,
     InputTextElement,
     LinkElement,
-    ParagraphElement,
     TableElement,
+    TextElement,
     VerticalAlignments,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -394,13 +395,14 @@ class HeadingElementType(ElementType):
 
     type = "heading"
     model_class = HeadingElement
-    serializer_field_names = ["value", "level", "font_color"]
-    allowed_fields = ["value", "level", "font_color"]
+    serializer_field_names = ["value", "level", "font_color", "alignment"]
+    allowed_fields = ["value", "level", "font_color", "alignment"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
         font_color: str
         level: int
+        alignment: str
 
     @property
     def serializer_field_overrides(self):
@@ -430,10 +432,7 @@ class HeadingElementType(ElementType):
         return overrides
 
     def get_pytest_params(self, pytest_data_fixture):
-        return {
-            "value": "'Corporis perspiciatis'",
-            "level": 2,
-        }
+        return {"value": "'Corporis perspiciatis'", "level": 2, "alignment": "left"}
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
@@ -445,18 +444,20 @@ class HeadingElementType(ElementType):
         return super().import_serialized(page, serialized_copy, id_mapping)
 
 
-class ParagraphElementType(ElementType):
+class TextElementType(ElementType):
     """
-    A simple paragraph element that can be used to display a paragraph of text.
+    A text element that allows plain or markdown content.
     """
 
-    type = "paragraph"
-    model_class = ParagraphElement
-    serializer_field_names = ["value"]
-    allowed_fields = ["value"]
+    type = "text"
+    model_class = TextElement
+    serializer_field_names = ["value", "alignment", "format"]
+    allowed_fields = ["value", "alignment", "format"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
+        alignment: str
+        format: str
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -464,7 +465,9 @@ class ParagraphElementType(ElementType):
             "Eum dicta sit rerum animi. Sint sapiente eum cupiditate nobis vel. "
             "Maxime qui nam consequatur. "
             "Asperiores corporis perspiciatis nam harum veritatis. "
-            "Impedit qui maxime aut illo quod ea molestias.'"
+            "Impedit qui maxime aut illo quod ea molestias.'",
+            "alignment": "left",
+            "format": TextElement.TEXT_FORMATS.PLAIN,
         }
 
     @property
@@ -477,6 +480,11 @@ class ParagraphElementType(ElementType):
                 required=False,
                 allow_blank=True,
                 default="",
+            ),
+            "format": serializers.ChoiceField(
+                choices=TextElement.TEXT_FORMATS.choices,
+                default=TextElement.TEXT_FORMATS.PLAIN,
+                help_text=TextElement._meta.get_field("format").help_text,
             ),
         }
 
@@ -688,6 +696,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
     request_serializer_field_names = [
         "image_source_type",
@@ -695,6 +706,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
     allowed_fields = [
         "image_source_type",
@@ -702,6 +716,9 @@ class ImageElementType(ElementType):
         "image_url",
         "alt_text",
         "alignment",
+        "style_image_constraint",
+        "style_max_width",
+        "style_max_height",
     ]
 
     class SerializedDict(ElementDict):
@@ -710,6 +727,9 @@ class ImageElementType(ElementType):
         image_url: BaserowFormula
         alt_text: BaserowFormula
         alignment: str
+        style_image_constraint: str
+        style_max_width: Optional[int]
+        style_max_height: Optional[int]
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -718,6 +738,9 @@ class ImageElementType(ElementType):
             "image_url": "'https://test.com/image.png'",
             "alt_text": "'some alt text'",
             "alignment": HorizontalAlignments.LEFT,
+            "style_image_constraint": "",
+            "style_max_width": None,
+            "style_max_height": None,
         }
 
     @property
@@ -761,6 +784,12 @@ class ImageElementType(ElementType):
                 choices=HorizontalAlignments.choices,
                 help_text=ImageElement._meta.get_field("alignment").help_text,
                 required=False,
+            ),
+            "style_max_width": serializers.IntegerField(
+                required=False,
+                allow_null=ImageElement._meta.get_field("style_max_width").null,
+                default=ImageElement._meta.get_field("style_max_width").default,
+                help_text=ImageElement._meta.get_field("style_max_width").help_text,
             ),
         }
         if super().request_serializer_field_overrides is not None:
@@ -1237,3 +1266,69 @@ class DropdownElementType(FormElementType):
                     for option in options
                 ]
             )
+
+
+class IFrameElementType(ElementType):
+    type = "iframe"
+    model_class = IFrameElement
+    allowed_fields = ["source_type", "url", "embed", "height"]
+    serializer_field_names = ["source_type", "url", "embed", "height"]
+
+    class SerializedDict(ElementDict):
+        source_type: str
+        url: BaserowFormula
+        embed: BaserowFormula
+        height: int
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "source_type": serializers.ChoiceField(
+                help_text=IFrameElement._meta.get_field("source_type").help_text,
+                required=False,
+                choices=IFrameElement.IFRAME_SOURCE_TYPE.choices,
+                default=IFrameElement.IFRAME_SOURCE_TYPE.URL,
+            ),
+            "url": FormulaSerializerField(
+                help_text=IFrameElement._meta.get_field("url").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "embed": FormulaSerializerField(
+                help_text=IFrameElement._meta.get_field("embed").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "height": serializers.IntegerField(
+                help_text=IFrameElement._meta.get_field("height").help_text,
+                required=False,
+                default=300,
+                min_value=1,
+                max_value=2000,
+            ),
+        }
+
+        return overrides
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["url"]:
+            serialized_copy["url"] = import_formula(serialized_copy["url"], id_mapping)
+        if serialized_copy["embed"]:
+            serialized_copy["embed"] = import_formula(
+                serialized_copy["embed"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return {
+            "source_type": IFrameElement.IFRAME_SOURCE_TYPE.URL,
+            "url": "",
+            "embed": "",
+            "height": 300,
+        }

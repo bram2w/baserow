@@ -147,7 +147,13 @@ export class RuntimeConcat extends RuntimeFormulaFunction {
   }
 
   toNode(args) {
-    return _.flatten(args)
+    // Recognize root concat that adds the new lines between paragraphs
+    if (args.every((arg, index) => index % 2 === 0 || arg.type === 'newLine')) {
+      return args
+        .filter((arg, index) => index % 2 === 0) // Remove the new lines elements
+        .map((arg) => ({ type: 'wrapper', content: [arg].flat() }))
+    }
+    return { type: 'wrapper', content: args }
   }
 }
 

@@ -65,6 +65,7 @@ export default function CoreModule(options) {
   this.options.publicRuntimeConfig = {
     sentry: {
       config: {
+        dsn: process.env.SENTRY_DSN || '',
         environment: process.env.SENTRY_ENVIRONMENT || '',
       },
     },
@@ -105,9 +106,20 @@ export default function CoreModule(options) {
       process.env.BASEROW_FRONTEND_SAME_SITE_COOKIE ?? 'lax',
   }
 
+  this.options.publicRuntimeConfig.BASEROW_EMBEDDED_SHARE_URL =
+    process.env.BASEROW_EMBEDDED_SHARE_URL ??
+    this.options.publicRuntimeConfig.PUBLIC_WEB_FRONTEND_URL
+
   this.requireModule([
     '@nuxtjs/sentry',
     {
+      // We want the `SENTRY_DSN` environment variable to work on runtime. If a
+      // valid DSN is not provided during build, it will build with a mocked
+      // instance. To make sure the environment variable is accepted, we must
+      // prevent that during build. Providing a fake DSN will have no impact because
+      // the environment variable fallback is an empty string, tso then it will be
+      // disabled.
+      dsn: 'https://public@sentry.com/1',
       clientIntegrations: {
         Dedupe: {},
         ExtraErrorData: {},

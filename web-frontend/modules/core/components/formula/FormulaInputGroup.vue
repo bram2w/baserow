@@ -1,5 +1,5 @@
 <template>
-  <FormElement class="control" :class="{ 'control--horizontal': horizontal }">
+  <FormElement :class="{ control: !small, 'control--horizontal': horizontal }">
     <label
       v-if="label"
       class="control__label"
@@ -10,6 +10,7 @@
     <div class="control__elements">
       <FormulaInputField
         :value="value"
+        :small="small"
         :placeholder="placeholder"
         :data-providers="dataProviders"
         :data-explorer-loading="dataExplorerLoading"
@@ -44,6 +45,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     smallLabel: {
       type: Boolean,
