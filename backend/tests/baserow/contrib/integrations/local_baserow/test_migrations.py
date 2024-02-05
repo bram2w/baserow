@@ -43,7 +43,7 @@ def test_0003_migrate_local_baserow_table_service_filter_values_to_formulas_redu
 
 @pytest.mark.once_per_day_in_ci
 def test_0003_migrate_local_baserow_table_service_filter_values_to_formulas_forwards(
-    migrator,
+    migrator, teardown_table_metadata
 ):
     migrate_from = [
         ("builder", "0001_squashed_0038_initial"),
@@ -139,7 +139,7 @@ def test_0003_migrate_local_baserow_table_service_filter_values_to_formulas_forw
 
 @pytest.mark.once_per_day_in_ci
 def test_0004_migrate_local_baserow_getrow_list_rows_search_query_to_formulas_forwards(
-    migrator,
+    migrator, teardown_table_metadata
 ):
     migrate_from = [
         ("builder", "0001_squashed_0038_initial"),
