@@ -102,7 +102,6 @@ _main() {
           echo
           echo 'In order to upgrade, use this command: xxx'
           echo
-          #FIXME: the container will keep restarting there:
           exit 1
         else
           echo

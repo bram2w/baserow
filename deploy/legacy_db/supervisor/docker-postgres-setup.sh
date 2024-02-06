@@ -103,7 +103,6 @@ _main() {
           echo
           echo "Your data directory ${PGDATA} was initialised by PostgreSQL version ${db_version}."
           echo
-          #FIXME: the container will keep restarting there:
           exit 1
         fi
       else

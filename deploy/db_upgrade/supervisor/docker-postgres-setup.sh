@@ -106,35 +106,19 @@ _main() {
         db_version=$(cat "${PGDATA}/PG_VERSION")
 
         if [ "$db_version" = "11" ]; then
-          set +e
           echo
           echo 'Upgrading PostgreSQL data directory to version 15 . . .'
-
-
-          #echo "XXX"
-          #whoami
-          #echo "XXX"
-          #ls -ld /baserow/data
-          #echo "XXX"
+          echo
 
           ./upgrade_postgres.sh
           upgrade_status=$?
 
-          #docker_temp_server_start "$@"
-          #rehash_user_password
-          #rehash_status=$?
-          #docker_temp_server_stop
-
           if [ $upgrade_status -ne 0 ]; then
-            #FIXME: the container will keep restarting there:
+            set +e
             echo
             echo "Upgrading to PostgreSQL 15 failed with exit code $upgrade_status"
             echo
             exit 1
-          #elif [ $rehash_status -ne 0 ]; then
-            #echo
-            #echo "Rehashing user password failed with exit code $rehash_status"
-            #echo
           else
             echo
             echo '. . . PostgreSQL data directory upgrade complete, continuing setup.'
