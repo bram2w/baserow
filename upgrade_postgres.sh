@@ -11,10 +11,10 @@ init_old_data_directory () {
     #to make sure it has access to the directory:
     chown postgres:postgres "${OLD}"
 
-    su - postgres -c "/usr/lib/postgresql/11/bin/initdb \
+    /usr/lib/postgresql/11/bin/initdb \
         --encoding=UTF8 \
         --username='postgres' \
-        -D ${OLD}"
+        -D ${OLD}
 }
 
 init_new_data_directory() {
@@ -30,10 +30,10 @@ init_new_data_directory() {
     chown postgres:postgres "${NEW}"
 
     # XXX: encoding is hardcoded:
-    su - postgres -c "/usr/lib/postgresql/15/bin/initdb \
+    /usr/lib/postgresql/15/bin/initdb \
         --encoding=UTF8 \
         --username='postgres' \
-        ${NEW}"
+        ${NEW}
 }
 
 _main() {
@@ -148,18 +148,42 @@ _main() {
     #${NEW} directory is already owned by postgres user, because it was populated
     #during the initdb command at init_new_data_directory():
     chown -R postgres:postgres "${OLD}"
-    su - postgres -c "/usr/lib/postgresql/15/bin/pg_upgrade \
+    /usr/lib/postgresql/15/bin/pg_upgrade \
         --username='postgres' \
         --link \
         -d ${OLD} \
-        -D '${NEW}' \
+        -D ${NEW} \
         -b /usr/lib/postgresql/11/bin \
         -B /usr/lib/postgresql/15/bin \
-        -p 5433"
+        -p 5433
 
     startup_echo "--------------------------------------"
     startup_echo "Running pg_upgrade command is complete"
     startup_echo "--------------------------------------"
+
+    startup_echo "--------------------------------------------------------"
+    startup_echo "Re-hashing user password to use SCRAM-SHA-256 encryption"
+    startup_echo "--------------------------------------------------------"
+
+    /usr/lib/postgresql/15/bin/pg_ctl \
+      -D ${NEW} \
+      -o "-p 5433" \
+      start
+
+    PGPASSWORD=$POSTGRES_PASSWORD /usr/lib/postgresql/15/bin/psql \
+      -U postgres \
+      -p 5433 \
+      -d $POSTGRES_DB \
+      -c "ALTER USER \"$POSTGRES_USER\" WITH PASSWORD '$POSTGRES_PASSWORD';"
+
+    /usr/lib/postgresql/15/bin/pg_ctl \
+      -D ${NEW} \
+      -o "-p 5433" \
+      stop
+
+    startup_echo "-------------------------------------------------"
+    startup_echo "Re-hashing user password complete, server stopped"
+    startup_echo "-------------------------------------------------"
 
     startup_echo "----------------------------------------------------------------------------------------"
     startup_echo "Replacing the original data directory with the upgraded one which supports PostgreSQL 15"
@@ -185,6 +209,7 @@ _main() {
     startup_echo "------------------------------------------------------------------"
     startup_echo "*** Upgrading from PostgreSQL 11 to PostgreSQL 15 is complete! ***"
     startup_echo "------------------------------------------------------------------"
+    exit 10
 }
 
 _main "$@"

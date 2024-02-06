@@ -18,7 +18,8 @@ ENV DOCKER_USER=${DOCKER_USER:-baserow_docker_user}
 
 ENV DATA_DIR=/baserow/data
 ENV BASEROW_PLUGIN_DIR=$DATA_DIR/plugins
-ENV POSTGRES_VERSION=15
+ENV POSTGRES_VERSION=11
+ENV TARGET_POSTGRES_VERSION=15
 ENV NODE_MAJOR=18
 ENV POSTGRES_LOCATION=/etc/postgresql/15/main
 ENV BASEROW_IMAGE_TYPE="all-in-one"
@@ -45,8 +46,12 @@ RUN apt-get update && \
     # Install the correct version of postgresql and the remaining packages
     apt-get update && \
     apt-get install --no-install-recommends -y \
+    #Existing PostgreSQL version:
     postgresql-$POSTGRES_VERSION \
     postgresql-client-$POSTGRES_VERSION \
+    #Target PostgreSQL version:
+    postgresql-$TARGET_POSTGRES_VERSION \
+    postgresql-client-$TARGET_POSTGRES_VERSION \
     libpq-dev \
     redis-server \
     python3 \
@@ -117,12 +122,12 @@ COPY --chown=$UID:$GID --from=web_frontend_image_base /baserow/ /baserow/
 COPY --chown=$UID:$GID --from=backend_image_base /baserow/ /baserow/
 
 
-COPY --chown=$UID:$GID deploy/all-in-one/supervisor/ /baserow/supervisor
+COPY --chown=$UID:$GID deploy/db_upgrade/supervisor/ /baserow/supervisor
 
 COPY upgrade_postgres.sh /upgrade_postgres.sh
 RUN chmod +x /upgrade_postgres.sh
 
-COPY --chown=$UID:$GID deploy/all-in-one/baserow.sh /baserow.sh
+COPY --chown=$UID:$GID deploy/db_upgrade/baserow.sh /baserow.sh
 COPY --chown=$UID:$GID deploy/plugins/*.sh /baserow/plugins/
 ENTRYPOINT ["/baserow.sh"]
 CMD ["start"]

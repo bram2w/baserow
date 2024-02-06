@@ -57,8 +57,6 @@ docker_setup_db() {
 			CREATE DATABASE :"db";
 			create user :"user" with encrypted password :'pass';
 			grant all privileges on database :"db" to :"user";
-            \connect :"db"
-            grant all privileges on schema public to :"user";
 		EOSQL
 	fi
 }
@@ -81,6 +79,9 @@ _main() {
     export POSTGRES_USER=$DATABASE_USER
     export POSTGRES_PASSWORD=$DATABASE_PASSWORD
     export POSTGRES_DB=$DATABASE_NAME
+
+    chown -R postgres:postgres "$DATA_DIR/"
+
     if [ "$(id -u)" = '0' ]; then
       # then restart script as postgres user
       echo "Becoming postgres superuser to run setup SQL commands:"
@@ -95,19 +96,15 @@ _main() {
 
         db_version=$(cat "${PGDATA}/PG_VERSION")
 
-        if [ "$db_version" = "11" ]; then
+        if [ "$db_version" != "11" ]; then
           set +e
           echo
-          echo 'This image only supports PostgreSQL version 15.'
+          echo "This image only supports PostgreSQL version 11."
           echo
-          echo 'In order to upgrade, use this command: xxx'
+          echo "Your data directory ${PGDATA} was initialised by PostgreSQL version ${db_version}."
           echo
           #FIXME: the container will keep restarting there:
           exit 1
-        else
-          echo
-          echo 'PostgreSQL data directory is already compatible with PostgreSQL version 15.'
-          echo
         fi
       else
         docker_verify_minimum_env
