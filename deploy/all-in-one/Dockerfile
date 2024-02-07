@@ -119,9 +119,6 @@ COPY --chown=$UID:$GID --from=backend_image_base /baserow/ /baserow/
 
 COPY --chown=$UID:$GID deploy/all-in-one/supervisor/ /baserow/supervisor
 
-COPY upgrade_postgres.sh /upgrade_postgres.sh
-RUN chmod +x /upgrade_postgres.sh
-
 COPY --chown=$UID:$GID deploy/all-in-one/baserow.sh /baserow.sh
 COPY --chown=$UID:$GID deploy/plugins/*.sh /baserow/plugins/
 ENTRYPOINT ["/baserow.sh"]

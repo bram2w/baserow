@@ -63,4 +63,3 @@ RUN chmod +x /upgrade_postgres.sh
 COPY --chown=$UID:$GID deploy/db_upgrade/baserow.sh /baserow.sh
 ENTRYPOINT ["/baserow.sh"]
 CMD ["start"]
-EXPOSE 80
