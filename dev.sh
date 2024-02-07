@@ -228,7 +228,6 @@ case "${1:-noneleft}" in
         ensure_only_one_env_selected_at_once
         db_upgrade=true
         dev=false
-        build_dependencies=(local)
         shift
     ;;
     legacy_db)
