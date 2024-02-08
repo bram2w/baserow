@@ -24,4 +24,4 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt $(. /etc/os-release; echo 
 ENV POSTGRES_VERSION=11
 ENV POSTGRES_LOCATION=/etc/postgresql/11/main
 
-COPY --chown=$UID:$GID deploy/all_in_one_embedded_pg_11/supervisor/ /baserow/supervisor
+COPY --chown=$UID:$GID deploy/all-in-one-embedded-pg-11/supervisor/ /baserow/supervisor

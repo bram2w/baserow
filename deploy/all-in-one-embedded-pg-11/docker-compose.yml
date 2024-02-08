@@ -4,7 +4,7 @@ services:
   baserow_all_in_one_embedded_pg_11:
     image: baserow_all_in_one_embedded_pg_11
     build:
-      dockerfile: $PWD/deploy/all_in_one_embedded_pg_11/Dockerfile
+      dockerfile: $PWD/deploy/all-in-one-embedded-pg-11/Dockerfile
       context: $PWD
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user

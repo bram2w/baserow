@@ -408,12 +408,12 @@ if [ "$all_in_one" = true ] ; then
 fi
 
 if [ "$all_in_one_embedded_pg_15_auto_upgrade" = true ] ; then
-  CORE_FILE=deploy/all_in_one_embedded_pg_15_auto_upgrade/"$CORE_FILE"
+  CORE_FILE=deploy/all-in-one-embedded-pg-15-auto-upgrade/"$CORE_FILE"
   OVERRIDE_FILE=()
 fi
 
 if [ "$all_in_one_embedded_pg_11" = true ] ; then
-  CORE_FILE=deploy/all_in_one_embedded_pg_11/"$CORE_FILE"
+  CORE_FILE=deploy/all-in-one-embedded-pg-11/"$CORE_FILE"
   OVERRIDE_FILE=()
 fi
 
