@@ -57,8 +57,8 @@ docker_setup_db() {
 			CREATE DATABASE :"db";
 			create user :"user" with encrypted password :'pass';
 			grant all privileges on database :"db" to :"user";
-            \connect :"db"
-            grant all privileges on schema public to :"user";
+                        \connect :"db"
+                        grant all privileges on schema public to :"user";
 		EOSQL
 	fi
 }
@@ -100,7 +100,9 @@ _main() {
           echo
           echo 'This image only supports PostgreSQL version 15.'
           echo
-          echo 'In order to upgrade, use this command: xxx'
+          echo 'In order to upgrade your data to be compatible with this version, use "baserow/baserow_db_upgrade:latest" image.'
+          echo
+          echo 'CAUTION: make sure to backup your data before doing the upgrade, see Baserow docs for more information.'
           echo
           exit 1
         else
