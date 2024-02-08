@@ -6,6 +6,10 @@
   height: auto;
 }
 
+.formula-input-field--small {
+  line-height: 13px;
+}
+
 .formula-input-field--focused {
   border-color: $color-primary-500;
 }

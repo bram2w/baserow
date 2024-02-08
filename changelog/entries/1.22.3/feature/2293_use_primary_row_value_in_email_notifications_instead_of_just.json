@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Use primary row value in email notifications instead of just row ids",
+    "issue_number": 2293,
+    "bullet_points": [],
+    "created_at": "2024-01-25"
+}

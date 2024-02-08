@@ -545,6 +545,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               class="input filters__value-input input--small"
               type="text"
             />
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1002,6 +1006,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 />
               </div>
             </div>
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1424,6 +1432,10 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                 />
               </div>
             </div>
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a
@@ -1846,6 +1858,10 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                 />
               </div>
             </div>
+             
+            <!---->
+             
+            <!---->
           </div>
            
           <a

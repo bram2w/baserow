@@ -1,5 +1,10 @@
 .row_modal__title {
-  height: 49px;
+  min-height: 29px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .row-modal__field-list {

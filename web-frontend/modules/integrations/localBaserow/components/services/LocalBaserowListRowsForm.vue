@@ -22,7 +22,20 @@
               :schema="dataSource.schema"
               :table-loading="tableLoading"
               :filter-type.sync="values.filter_type"
-            />
+            >
+              <template #filterInputComponent="{ slotProps }">
+                <InjectedFormulaInputGroup
+                  v-if="
+                    shouldInjectFormulaInputComponent(slotProps.filter.type)
+                  "
+                  v-model="slotProps.filter.value"
+                  small
+                  :placeholder="
+                    $t('localBaserowListRowsForm.formulaFilterInputPlaceholder')
+                  "
+                />
+              </template>
+            </LocalBaserowTableServiceConditionalForm>
             <p v-if="!values.table_id">
               {{ $t('localBaserowListRowsForm.noTableChosenForFiltering') }}
             </p>
@@ -45,10 +58,8 @@
             :title="$t('localBaserowListRowsForm.searchTabTitle')"
             class="data-source-form__search-form-tab"
           >
-            <FormInput
+            <InjectedFormulaInputGroup
               v-model="values.search_query"
-              type="text"
-              small-label
               :placeholder="
                 $t('localBaserowListRowsForm.searchFieldPlaceHolder')
               "
@@ -63,17 +74,25 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
-import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm.vue'
+import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm'
 import LocalBaserowTableServiceSortForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceSortForm'
+import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
+import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup.vue'
+import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber.vue'
+import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText.vue'
 
 export default {
   components: {
+    InjectedFormulaInputGroup,
     LocalBaserowTableSelector,
     LocalBaserowTableServiceSortForm,
     LocalBaserowTableServiceConditionalForm,
   },
   mixins: [form],
   inject: ['page'],
+  provide() {
+    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
+  },
   props: {
     builder: {
       type: Object,
@@ -141,6 +160,16 @@ export default {
         this.tableLoading = false
       },
       immediate: true,
+    },
+  },
+  methods: {
+    shouldInjectFormulaInputComponent(filterType) {
+      const viewFilterType = this.$registry.get('viewFilter', filterType)
+      const filterComponent = viewFilterType.getInputComponent()
+      return (
+        filterComponent === ViewFilterTypeText ||
+        filterComponent === ViewFilterTypeNumber
+      )
     },
   },
 }

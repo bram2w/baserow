@@ -355,11 +355,21 @@ class TextElement(Element):
     A simple blob of text.
     """
 
+    class TEXT_FORMATS(models.TextChoices):
+        PLAIN = "plain"
+        MARKDOWN = "markdown"
+
     value = FormulaField(default="")
     alignment = models.CharField(
         choices=HorizontalAlignments.choices,
         max_length=10,
         default=HorizontalAlignments.LEFT,
+    )
+    format = models.CharField(
+        choices=TEXT_FORMATS.choices,
+        help_text="The format of the text",
+        max_length=10,
+        default=TEXT_FORMATS.PLAIN,
     )
 
 

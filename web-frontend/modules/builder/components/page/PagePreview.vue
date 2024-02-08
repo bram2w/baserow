@@ -1,5 +1,5 @@
 <template>
-  <div
+  <ThemeProvider
     class="page-preview__wrapper"
     @click.self="actionSelectElement({ element: null })"
   >
@@ -32,7 +32,7 @@
         />
       </div>
     </div>
-  </div>
+  </ThemeProvider>
 </template>
 
 <script>
@@ -42,10 +42,12 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import PreviewNavigationBar from '@baserow/modules/builder/components/page/PreviewNavigationBar'
 import { PLACEMENTS } from '@baserow/modules/builder/enums'
 import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal.vue'
+import ThemeProvider from '@baserow/modules/builder/components/theme/ThemeProvider.vue'
 
 export default {
   name: 'PagePreview',
   components: {
+    ThemeProvider,
     AddElementModal,
     ElementPreview,
     PreviewNavigationBar,

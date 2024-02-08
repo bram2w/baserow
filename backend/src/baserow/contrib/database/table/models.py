@@ -596,6 +596,28 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
             raise ValueError(f"Field {field_name} not found.")
 
     @classmethod
+    def get_primary_field_object(cls):
+        field_objects = cls.get_field_objects()
+        for field_obj in field_objects:
+            if field_obj["field"].primary:
+                return field_obj
+
+    @property
+    def name(self):
+        primary_field_object = self.__class__.get_primary_field_object()
+        if primary_field_object is None:
+            return None
+        primary_field_name = primary_field_object["name"]
+        return getattr(self, primary_field_name)
+
+    @property
+    def name_or_id(self):
+        name = self.name
+        if name is None or name == "":
+            name = str(self.id)
+        return name
+
+    @classmethod
     def get_field_objects(cls, include_trash: bool = False):
         field_objects = cls._field_objects.values()
         if include_trash:

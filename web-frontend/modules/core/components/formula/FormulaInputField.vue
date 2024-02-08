@@ -77,6 +77,11 @@ export default {
       type: Object,
       required: true,
     },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -94,6 +99,7 @@ export default {
     },
     classes() {
       return {
+        'formula-input-field--small': this.small,
         'formula-input-field--focused': this.isFocused,
       }
     },

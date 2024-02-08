@@ -20,7 +20,11 @@
       @deleteFilter="deleteFilter($event)"
       @updateFilter="updateFilter($event)"
       @selectOperator="$emit('update:filterType', $event)"
-    />
+    >
+      <template #filterInputComponent="{ slotProps }">
+        <slot name="filterInputComponent" :slot-props="slotProps"></slot>
+      </template>
+    </ViewFieldConditionsForm>
     <div class="filters_footer">
       <a v-if="!tableLoading" class="filters__add" @click.prevent="addFilter()">
         <i class="filters__add-icon iconoir-plus"></i>
@@ -34,7 +38,7 @@
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm.vue'
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import { uuid } from '@baserow/modules/core/utils/string'
+import { v1 as uuidv1 } from 'uuid'
 
 export default {
   name: 'LocalBaserowTableServiceConditionalForm',
@@ -122,8 +126,11 @@ export default {
           })
         } else {
           const newFilters = [...this.value]
+          // Setting an `id` of `uuidv1` is necessary for two reasons:
+          // 1) So that we can distinguish between filters locally
+          // 2) It has to match what is sorted against `sortNumbersAndUuid1Asc`.
           newFilters.push({
-            id: uuid(), // Necessary or we can't distinguish between filters locally.
+            id: uuidv1(),
             field: field.id,
             type: 'equal',
             value: '',

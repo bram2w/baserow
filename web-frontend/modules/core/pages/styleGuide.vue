@@ -173,7 +173,7 @@
               value: {{ checkbox }}
               <br />
               <br />
-              <Checkbox class="margin-bottom-1" v-model="checkbox"></Checkbox>
+              <Checkbox v-model="checkbox" class="margin-bottom-1"></Checkbox>
               <Checkbox v-model="checkbox">With text</Checkbox>
             </div>
           </div>
@@ -285,19 +285,19 @@
                 class="margin-bottom-1"
                 small
               ></SwitchInput>
-              <SwitchInput class="margin-bottom-1" v-model="switchValue" large>
+              <SwitchInput v-model="switchValue" class="margin-bottom-1" large>
                 Small with text
               </SwitchInput>
               <SwitchInput
-                class="margin-bottom-1"
                 v-model="switchUnknown"
+                class="margin-bottom-1"
                 disabled
               >
                 Disabled
               </SwitchInput>
               <SwitchInput
-                class="margin-bottom-1"
                 v-model="switchUnknown"
+                class="margin-bottom-1"
                 disabled
                 small
               >

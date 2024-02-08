@@ -1,5 +1,44 @@
 # Changelog
 
+## Released 1.22.3
+
+### New features
+* Clean up UserLogEntry table entries [#1792](https://gitlab.com/baserow/baserow/-/issues/1792)
+* Add segmentControl UI component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Add support to reference duration fields in the formula language. [#2190](https://gitlab.com/baserow/baserow/-/issues/2190)
+* Add formats with days to the duration field. [#2217](https://gitlab.com/baserow/baserow/-/issues/2217)
+* Allow custom public share URLs [#2292](https://gitlab.com/baserow/baserow/-/issues/2292)
+* Use primary row value in email notifications instead of just row ids [#2293](https://gitlab.com/baserow/baserow/-/issues/2293)
+* Show billable label only to workspace admins [#2295](https://gitlab.com/baserow/baserow/-/issues/2295)
+* Added instructions on how to deploy Baserow to Railway. [#2308](https://gitlab.com/baserow/baserow/-/issues/2308)
+* Update Django to 4.1.X [#761](https://gitlab.com/baserow/baserow/-/issues/761)
+* Added instructions on how to deploy Baserow to Digital Ocean Apps. [#998](https://gitlab.com/baserow/baserow/-/issues/998)
+* Prepared Cloudron, all-in-one Docker image, and Heroku for having multiple application builder domains.
+
+### Bug fixes
+* Keep space for title in the row edit modal [#1734](https://gitlab.com/baserow/baserow/-/issues/1734)
+* Avoid dangling snapshots [#1793](https://gitlab.com/baserow/baserow/-/issues/1793)
+* Remove trailing spaces from datetime_format formula [#2131](https://gitlab.com/baserow/baserow/-/issues/2131)
+* Fix get_adjacent_row bug causing not returning the correct adjacent row in certain situations. [#2273](https://gitlab.com/baserow/baserow/-/issues/2273)
+* Fixes for Render deployments after changes for their plans. [#2275](https://gitlab.com/baserow/baserow/-/issues/2275)
+* Fixes bug where the context menu was displaced if there was a vertical scrollbar (e.g. form form). [#2286](https://gitlab.com/baserow/baserow/-/issues/2286)
+* Fix higher_than and lower_than frontend view filters for formula fields. [#2289](https://gitlab.com/baserow/baserow/-/issues/2289)
+* Nullify single select field for KanbanView if it's been trashed. [#711](https://gitlab.com/baserow/baserow/-/issues/711)
+* Fix cannot read properties of undefined workspace when navigating to a table that you don't have access to.
+* Fix bug where combined database and table level roles would not be respected when listing permissions.
+* Introduce Airtable import remove invalid surrogates JSON loads fallback.
+* Fixed a bug where the SENTRY_DSN env var was ignored.
+
+### Refactors
+* Redesign checkbox component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Refactor avatar UI component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* refactor badge component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Change analytics blacklist to whitelist [#2204](https://gitlab.com/baserow/baserow/-/issues/2204)
+
+### Breaking API changes
+* New formulas returning a date_interval/duration are sent as number of seconds instead of a formatted string. [#2190](https://gitlab.com/baserow/baserow/-/issues/2190)
+
+
 ## Released 1.22.2
 
 ### New features

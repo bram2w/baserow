@@ -124,13 +124,13 @@
 </template>
 
 <script>
-import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
 import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
 import { PageParameterDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 
 export default {
   name: 'LinkElementForm',
@@ -187,10 +187,9 @@ export default {
   watch: {
     'destinationPage.path_params': {
       handler(value) {
-        this.updatePageParameters()
+        this.refreshParametersInError()
       },
       deep: true,
-      immediate: true,
     },
     navigateTo(value) {
       if (value === '') {
@@ -215,11 +214,12 @@ export default {
     },
   },
   mounted() {
-    if (LinkElementType.arePathParametersInError(this.values, this.builder)) {
-      this.parametersInError = true
-    }
+    this.refreshParametersInError()
   },
   methods: {
+    refreshParametersInError() {
+      this.parametersInError = pathParametersInError(this.values, this.builder)
+    },
     updatePageParameters() {
       this.values.page_parameters = (
         this.destinationPage?.path_params || []

@@ -96,6 +96,8 @@ class LocalBaserowTableServiceRefinementManager(models.Manager):
     Ensures that we exclude filters and sort with a trashed field.
     """
 
+    use_in_migrations = True
+
     def get_queryset(self):
         return super().get_queryset().filter(field__trashed=False)
 
@@ -120,8 +122,8 @@ class LocalBaserowTableServiceFilter(ServiceFilter):
         "value. The filter is always in this order `field` `type` `value` "
         "(example: `field_1` `contains` `Test`).",
     )
-    value = models.CharField(
-        max_length=255,
+    value = FormulaField(
+        default="",
         blank=True,
         help_text="The filter value that must be compared to the field's value.",
     )

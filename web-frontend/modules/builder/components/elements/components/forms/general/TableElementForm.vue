@@ -60,6 +60,10 @@
                   data-sortable-handle
                 />
                 <div class="table-element-form__field-name">
+                  <i
+                    v-if="!expanded && fieldInError(field)"
+                    class="table-element-form__field-error iconoir-warning-circle"
+                  ></i>
                   {{ field.name }}
                 </div>
                 <i
@@ -262,6 +266,12 @@ export default {
         this.values.fields.map((field) => [field.id, field])
       )
       this.values.fields = newOrder.map((fieldId) => fieldById[fieldId])
+    },
+    fieldInError(field) {
+      return this.collectionTypes[field.type].isInError({
+        field,
+        builder: this.builder,
+      })
     },
   },
   validations() {
