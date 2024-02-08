@@ -460,8 +460,6 @@ build-all-in-one-image:
     - saas-linux-medium-amd64
   only:
     variables:
-      #FIXME: remove this:
-      - $CI_COMMIT_BRANCH == "568-upgrade-postgresql-to-version-15"
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
       - $BUILD_ALL_IN_ONE == "true"
