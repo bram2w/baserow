@@ -100,7 +100,7 @@ _main() {
           echo
           echo 'This image only supports PostgreSQL version 15.'
           echo
-          echo 'In order to upgrade your data to be compatible with this version, use "baserow/baserow_db_upgrade:latest" image.'
+          echo 'In order to upgrade your data to be compatible with this version, use "baserow/baserow_all_in_one_embedded_pg_15_auto_upgrade:latest" image.'
           echo
           echo 'CAUTION: make sure to backup your data before doing the upgrade, see Baserow docs for more information.'
           echo

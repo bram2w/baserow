@@ -1,10 +1,10 @@
 version: "3.4"
 services:
   # A dev / testing /example compose file for quickly setting up an all in one
-  baserow_legacy_db:
-    image: baserow_legacy_db
+  baserow_all_in_one_embedded_pg_11:
+    image: baserow_all_in_one_embedded_pg_11
     build:
-      dockerfile: $PWD/deploy/legacy_db/Dockerfile
+      dockerfile: $PWD/deploy/all_in_one_embedded_pg_11/Dockerfile
       context: $PWD
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user

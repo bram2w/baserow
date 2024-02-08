@@ -55,11 +55,11 @@ RUN apt-get update && \
 # ========================
 # = DB upgrade stage
 # ========================
-COPY --chown=$UID:$GID deploy/db_upgrade/supervisor/ /baserow/supervisor
+COPY --chown=$UID:$GID deploy/all_in_one_embedded_pg_15_auto_upgrade/supervisor/ /baserow/supervisor
 
 COPY upgrade_postgres.sh /upgrade_postgres.sh
 RUN chmod +x /upgrade_postgres.sh
 
-COPY --chown=$UID:$GID deploy/db_upgrade/baserow.sh /baserow.sh
+COPY --chown=$UID:$GID deploy/all_in_one_embedded_pg_15_auto_upgrade/baserow.sh /baserow.sh
 ENTRYPOINT ["/baserow.sh"]
 CMD ["start"]

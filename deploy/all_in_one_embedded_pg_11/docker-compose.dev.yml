@@ -4,7 +4,7 @@ services:
   baserow_all_in_one_dev:
     image: baserow_dev
     build:
-      dockerfile: $PWD/deploy/legacy_db/dev.Dockerfile
+      dockerfile: $PWD/deploy/all_in_one_embedded_pg_11/dev.Dockerfile
       context: $PWD
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
@@ -20,7 +20,7 @@ services:
       - "443:443"
     volumes:
       - baserow_all_in_one_data:/baserow/data
-      - $PWD/deploy/legacy_db/baserow.sh:/baserow.sh
+      - $PWD/deploy/all_in_one_embedded_pg_11/baserow.sh:/baserow.sh
       - $PWD/backend:/baserow/backend
       - $PWD/premium/backend/:/baserow/premium/backend
       - $PWD/enterprise/backend/:/baserow/enterprise/backend

@@ -146,8 +146,8 @@ dev=true
 local=false
 all_in_one=false
 all_in_one_dev=false
-db_upgrade=false
-legacy_db=false
+all_in_one_embedded_pg_15_auto_upgrade=false
+all_in_one_embedded_pg_11=false
 cloudron=false
 heroku=false
 env_set=false
@@ -223,17 +223,17 @@ case "${1:-noneleft}" in
         build_dependencies=(all_in_one)
         shift
     ;;
-    db_upgrade)
+    all_in_one_embedded_pg_15_auto_upgrade)
         echo "./dev.sh: Switching to db upgrade image"
         ensure_only_one_env_selected_at_once
-        db_upgrade=true
+        all_in_one_embedded_pg_15_auto_upgrade=true
         dev=false
         shift
     ;;
-    legacy_db)
+    all_in_one_embedded_pg_11)
         echo "./dev.sh: Switching to legacy db image"
         ensure_only_one_env_selected_at_once
-        legacy_db=true
+        all_in_one_embedded_pg_11=true
         dev=false
         build_dependencies=(local)
         shift
@@ -407,13 +407,13 @@ if [ "$all_in_one" = true ] ; then
   OVERRIDE_FILE=()
 fi
 
-if [ "$db_upgrade" = true ] ; then
-  CORE_FILE=deploy/db_upgrade/"$CORE_FILE"
+if [ "$all_in_one_embedded_pg_15_auto_upgrade" = true ] ; then
+  CORE_FILE=deploy/all_in_one_embedded_pg_15_auto_upgrade/"$CORE_FILE"
   OVERRIDE_FILE=()
 fi
 
-if [ "$legacy_db" = true ] ; then
-  CORE_FILE=deploy/legacy_db/"$CORE_FILE"
+if [ "$all_in_one_embedded_pg_11" = true ] ; then
+  CORE_FILE=deploy/all_in_one_embedded_pg_11/"$CORE_FILE"
   OVERRIDE_FILE=()
 fi
 
