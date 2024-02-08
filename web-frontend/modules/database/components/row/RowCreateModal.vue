@@ -1,9 +1,11 @@
 <template>
   <Modal ref="modal">
     <form @submit.prevent="create">
-      <h2 class="box__title row_modal__title">
-        {{ heading }}
-      </h2>
+      <div class="box__title">
+        <h2 class="row_modal__title">
+          {{ heading }}
+        </h2>
+      </div>
       <Error :error="error"></Error>
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
