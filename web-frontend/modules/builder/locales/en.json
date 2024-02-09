@@ -440,6 +440,7 @@
     "updateUserSourceForm": {
       "nameFieldLabel": "Name",
       "nameFieldPlaceholder": "Enter a name...",
+      "authTitle": "Authentication",
       "integrationFieldLabel": "Integration"
     },
     "formContainerElementForm": {

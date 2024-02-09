@@ -1,4 +1,5 @@
 import UserSourceService from '@baserow/modules/core/services/userSource'
+import _ from 'lodash'
 
 const state = {
   // The loaded userSources
@@ -90,10 +91,12 @@ const actions = {
   async update({ dispatch, getters }, { userSourceId, values }) {
     const userSourcesOfPage = getters.getUserSources
     const userSource = userSourcesOfPage.find(({ id }) => id === userSourceId)
+
     const oldValues = {}
     const newValues = {}
+
     Object.keys(values).forEach((name) => {
-      if (Object.prototype.hasOwnProperty.call(userSource, name)) {
+      if (!_.isEqual(userSource[name], values[name])) {
         oldValues[name] = userSource[name]
         newValues[name] = values[name]
       }
@@ -102,7 +105,10 @@ const actions = {
     await dispatch('forceUpdate', { userSource, values: newValues })
 
     try {
-      await UserSourceService(this.$client).update(userSource.id, values)
+      const { data: newUserSource } = await UserSourceService(
+        this.$client
+      ).update(userSource.id, newValues)
+      await dispatch('forceUpdate', { userSource, values: newUserSource })
     } catch (error) {
       await dispatch('forceUpdate', { userSource, values: oldValues })
       throw error

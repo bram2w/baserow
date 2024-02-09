@@ -26,7 +26,7 @@
           :image="getUserSourceType(userSource).image"
           :title="userSource.name"
           :subtitle="getUserSourceType(userSource).getSummary(userSource)"
-          avatar-color="ghost"
+          avatar-color="transparent"
           style="flex: 1"
         />
         <div class="user-source-settings__user-source-actions">
@@ -60,9 +60,9 @@
     <Presentation
       :image="getUserSourceType(editedUserSource).image"
       :title="getUserSourceType(editedUserSource).name"
-      avatar-color="ghost"
+      avatar-color="transparent"
       style="flex: 1; margin-bottom: 18px"
-      icon-size="tiny"
+      icon-size="medium"
     />
 
     <UpdateUserSourceForm

@@ -9,7 +9,7 @@
           :title="values.authorized_user.first_name"
           :subtitle="values.authorized_user.username"
           :initials="values.authorized_user.first_name | nameAbbreviation"
-          avatar-color="primary"
+          avatar-color="blue"
         />
         <div>{{ $t('localBaserowForm.userMessage') }}</div>
       </div>

@@ -59,8 +59,10 @@ export default {
       required: false,
       type: String,
       default: 'blue',
-      validator: function (value) {
+      validator(value) {
         return [
+          null,
+          undefined,
           'blue',
           'cyan',
           'green',
@@ -80,7 +82,7 @@ export default {
       type: String,
       required: false,
       default: 'medium',
-      validator: function (value) {
+      validator(value) {
         return ['small', 'medium', 'large', 'x-large'].includes(value)
       },
     },
