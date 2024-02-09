@@ -129,6 +129,12 @@ export default {
     collectionFieldTypes() {
       return this.$registry.getAll('collectionField')
     },
+    dispatchContext() {
+      return DataProviderType.getAllDispatchContext(
+        this.$registry.getAll('builderDataProvider'),
+        this.applicationContext
+      )
+    },
   },
   watch: {
     reset() {
@@ -139,6 +145,12 @@ export default {
     },
     'element.items_per_page'() {
       this.debouncedReset()
+    },
+    dispatchContext: {
+      handler() {
+        this.debouncedReset()
+      },
+      deep: true,
     },
   },
   async mounted() {
@@ -152,15 +164,10 @@ export default {
       clearElementContent: 'elementContent/clearElementContent',
     }),
     async fetchContent(range, replace) {
-      const dispatchContext = DataProviderType.getAllDispatchContext(
-        this.$registry.getAll('builderDataProvider'),
-        this.applicationContext
-      )
-
       await this.fetchElementContent({
         element: this.element,
         dataSource: this.dataSource,
-        data: dispatchContext,
+        data: this.dispatchContext,
         range,
         replace,
       })

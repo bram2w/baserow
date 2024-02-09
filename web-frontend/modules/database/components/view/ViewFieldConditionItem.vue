@@ -36,10 +36,19 @@
         ></DropdownItem>
       </Dropdown>
     </div>
-    <div class="filters__value">
+    <div
+      class="filters__value"
+      :class="{
+        'filters__value--with-after-input': hasAfterValueInputContent,
+      }"
+    >
       <slot
         name="filterInputComponent"
-        :slot-props="{ filter: filter, field: getField(filter.field) }"
+        :slot-props="{
+          filter: filter,
+          field: getField(filter.field),
+          filterType: getFilterType(filter.type),
+        }"
       >
         <component
           :is="getInputComponent(filter.type, filter.field)"
@@ -53,6 +62,14 @@
           @input="$emit('updateFilter', { value: $event })"
         />
       </slot>
+      <slot
+        name="afterValueInput"
+        :slot-props="{
+          filter: filter,
+          filterType: getFilterType(filter.type),
+          emitUpdate: emitUpdate,
+        }"
+      ></slot>
       <i
         v-if="!fieldIdExists(fields, filter.field)"
         v-tooltip="$t('viewFilterContext.relatedFieldNotFound')"
@@ -104,6 +121,11 @@ export default {
       required: true,
     },
   },
+  computed: {
+    hasAfterValueInputContent() {
+      return !!this.$scopedSlots.afterValueInput
+    },
+  },
   methods: {
     hasCompatibleFilterTypes,
     focusValue() {
@@ -114,6 +136,9 @@ export default {
     getField(fieldId) {
       return this.fields.find(({ id }) => id === fieldId)
     },
+    getFilterType(type) {
+      return this.$registry.get('viewFilter', type)
+    },
     allowedFilters(filterTypes, fields, fieldId) {
       const field = this.getField(fieldId)
       return Object.values(filterTypes).filter((filterType) => {
@@ -122,7 +147,7 @@ export default {
     },
     getInputComponent(type, fieldId) {
       const field = this.getField(fieldId)
-      return this.$registry.get('viewFilter', type).getInputComponent(field)
+      return this.getFilterType(type).getInputComponent(field)
     },
     fieldCanBeFiltered(fields, filter) {
       return (
@@ -139,6 +164,9 @@ export default {
         return false
       }
       return this.filterTypes[filterType].fieldIsCompatible(field)
+    },
+    emitUpdate(changes) {
+      this.$emit('updateFilter', changes)
     },
   },
 }

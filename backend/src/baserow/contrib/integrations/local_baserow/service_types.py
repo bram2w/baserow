@@ -199,6 +199,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                     "field_id": f.field_id,
                     "type": f.type,
                     "value": f.value,
+                    "value_is_formula": f.value_is_formula,
                 }
                 for f in service.service_filters.all()
             ]
@@ -613,7 +614,9 @@ class LocalBaserowListRowsUserServiceType(
             return [
                 {
                     **f,
-                    "value": import_formula(f["value"], id_mapping),
+                    "value": import_formula(f["value"], id_mapping)
+                    if f["value_is_formula"]
+                    else f["value"],
                     "field_id": id_mapping["database_fields"][f["field_id"]]
                     if "database_fields" in id_mapping
                     else f["field_id"],
@@ -817,7 +820,9 @@ class LocalBaserowGetRowUserServiceType(
             return [
                 {
                     **f,
-                    "value": import_formula(f["value"], id_mapping),
+                    "value": import_formula(f["value"], id_mapping)
+                    if f["value_is_formula"]
+                    else f["value"],
                     "field_id": id_mapping["database_fields"][f["field_id"]]
                     if "database_fields" in id_mapping
                     else f["field_id"],
