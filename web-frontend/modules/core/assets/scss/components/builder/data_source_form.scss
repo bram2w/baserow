@@ -49,6 +49,28 @@
   .filters__add {
     padding: 12px 0 6px 4px;
   }
+
+  .filters__value--with-after-input {
+    display: flex;
+    align-items: center;
+
+    .filters__value--formula-input {
+      flex: 1;
+    }
+
+    .filters__value-dropdown {
+      width: 100%;
+    }
+
+    .filters__value--formula-toggle {
+      margin-left: auto;
+      padding-left: 6px;
+    }
+
+    .filters__value--formula-toggle--disabled {
+      color: $color-neutral-400;
+    }
+  }
 }
 
 .data-source-form__search-form-tab {

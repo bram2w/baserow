@@ -24,8 +24,7 @@
         "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
         "filterTabTitle": "Filters",
         "searchTabTitle": "Search",
-        "noTableChosenForSorting": "Choose a table to begin using data source sorts.",
-        "formulaFilterInputPlaceholder": "Enter text..."
+        "noTableChosenForSorting": "Choose a table to begin using data source sorts."
     },
     "localBaserowListRowsForm": {
         "filterTabTitle": "Filters",
@@ -33,8 +32,7 @@
         "searchTabTitle": "Search",
         "searchFieldPlaceHolder": "Enter a search term...",
         "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
-        "noTableChosenForSorting": "Choose a table to begin using data source sorts.",
-        "formulaFilterInputPlaceholder": "Enter text..."
+        "noTableChosenForSorting": "Choose a table to begin using data source sorts."
     },
     "localBaserowTableServiceConditionalForm": {
       "addFilter": "Add additional filter",
@@ -43,7 +41,10 @@
       "relatedFieldNotFound": "The related field is not found.",
       "filterTypeNotFound": "The filter type is not compatible.",
       "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
-      "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types"
+      "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types",
+      "formulaFilterInputPlaceholder": "Enter text...",
+      "useFormulaForValue": "Use a formula for this filter",
+      "useDefaultForValue": "Use the default filter for this field"
     },
     "localBaserowTableServiceSortForm": {
       "noSortTitle": "You have not yet created a data source sort",

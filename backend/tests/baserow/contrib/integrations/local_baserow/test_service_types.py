@@ -149,6 +149,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
                 "field_id": service_filter.field_id,
                 "type": service_filter.type,
                 "value": service_filter.value,
+                "value_is_formula": service_filter.value_is_formula,
             }
         ],
         "sortings": [
@@ -177,6 +178,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
     assert service_filter.type == exported["filters"][0]["type"]
     assert service_filter.value == exported["filters"][0]["value"]
     assert service_filter.field_id == exported["filters"][0]["field_id"]
+    assert service_filter.value_is_formula == exported["filters"][0]["value_is_formula"]
 
     assert service.service_sorts.count() == 1
     service_sort = service.service_sorts.get()
@@ -417,6 +419,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
                 "field_id": service_filter.field_id,
                 "type": service_filter.type,
                 "value": service_filter.value,
+                "value_is_formula": service_filter.value_is_formula,
             }
         ],
     }
@@ -440,6 +443,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
     assert service_filter.type == exported["filters"][0]["type"]
     assert service_filter.value == exported["filters"][0]["value"]
     assert service_filter.field_id == exported["filters"][0]["field_id"]
+    assert service_filter.value_is_formula == exported["filters"][0]["value_is_formula"]
 
     view_2 = data_fixture.create_grid_view(user, table=table)
     field_2 = data_fixture.create_text_field(order=1, table=table)
@@ -775,7 +779,11 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
     assert [r.id for r in results] == [row_1.id, row_2.id]
 
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="'Cheese'", order=0
+        service=service,
+        field=field,
+        value="'Cheese'",
+        order=0,
+        value_is_formula=True,
     )
 
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
@@ -835,7 +843,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         view=view, field=ingredient, type="equal", value="Goose"
     )
     cost_150 = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="'150'", order=0
+        service=service, field=cost, value="'150'", order=0, value_is_formula=True
     )
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
@@ -854,10 +862,10 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         view=view, field=ingredient, type="contains", value="Duck"
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="'25'", order=0
+        service=service, field=cost, value="'25'", order=0, value_is_formula=True
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="'50'", order=0
+        service=service, field=cost, value="'50'", order=0, value_is_formula=True
     )
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(

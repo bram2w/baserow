@@ -4,7 +4,10 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
 )
-from baserow.core.formula.serializers import FormulaSerializerField
+from baserow.core.formula.serializers import (
+    FormulaSerializerField,
+    OptionalFormulaSerializerField,
+)
 
 
 class LocalBaserowTableServiceSortSerializer(serializers.ModelSerializer):
@@ -16,14 +19,17 @@ class LocalBaserowTableServiceSortSerializer(serializers.ModelSerializer):
 
 
 class LocalBaserowTableServiceFilterSerializer(serializers.ModelSerializer):
-    value = FormulaSerializerField(
+    value = OptionalFormulaSerializerField(
         allow_blank=True, help_text="A formula for the filter's value."
+    )
+    value_is_formula = serializers.BooleanField(
+        default=False, help_text="Indicates whether the value is a formula or not."
     )
     order = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = LocalBaserowTableServiceFilter
-        fields = ("id", "order", "field", "type", "value")
+        fields = ("id", "order", "field", "type", "value", "value_is_formula")
 
 
 class LocalBaserowTableServiceFieldMappingSerializer(serializers.Serializer):

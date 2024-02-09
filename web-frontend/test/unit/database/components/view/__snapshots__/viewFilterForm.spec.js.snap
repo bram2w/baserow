@@ -539,13 +539,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </div>
            
           <div
-            class="filters__value"
+            class="filters__value filters__value--with-after-input"
           >
             <input
               class="input filters__value-input input--small"
               type="text"
             />
-             
+              
             <!---->
              
             <!---->
@@ -981,7 +981,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </div>
            
           <div
-            class="filters__value"
+            class="filters__value filters__value--with-after-input"
           >
             <div
               class="filters__value-rating"
@@ -1006,7 +1006,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 />
               </div>
             </div>
-             
+              
             <!---->
              
             <!---->
@@ -1407,7 +1407,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
           </div>
            
           <div
-            class="filters__value"
+            class="filters__value filters__value--with-after-input"
           >
             <div
               class="filters__value-rating"
@@ -1432,7 +1432,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                 />
               </div>
             </div>
-             
+              
             <!---->
              
             <!---->
@@ -1833,7 +1833,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
           </div>
            
           <div
-            class="filters__value"
+            class="filters__value filters__value--with-after-input"
           >
             <div
               class="filters__value-rating"
@@ -1858,7 +1858,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                 />
               </div>
             </div>
-             
+              
             <!---->
              
             <!---->

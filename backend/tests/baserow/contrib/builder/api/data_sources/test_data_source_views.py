@@ -174,7 +174,8 @@ def test_update_data_source_with_filters(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     table = data_fixture.create_database_table(user=user)
-    field = data_fixture.create_text_field(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    formula_field = data_fixture.create_text_field(table=table)
     data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page
     )
@@ -189,10 +190,17 @@ def test_update_data_source_with_filters(api_client, data_fixture):
         {
             "filters": [
                 {
-                    "field": field.id,
+                    "field": text_field.id,
                     "type": "equals",
-                    "value": "'foobar'",
-                }
+                    "value": "foobar",
+                    "value_is_formula": False,
+                },
+                {
+                    "field": formula_field.id,
+                    "type": "equals",
+                    "value": "get('page_parameter.id')",
+                    "value_is_formula": True,
+                },
             ]
         },
         format="json",
@@ -200,15 +208,24 @@ def test_update_data_source_with_filters(api_client, data_fixture):
     )
     assert response.status_code == HTTP_200_OK
 
-    service_filter = data_source1.service.service_filters.get()
+    service_filters = data_source1.service.service_filters.order_by("id")
     assert response.json()["filters"] == [
         {
-            "id": service_filter.id,
-            "order": 0,
-            "field": field.id,
+            "id": service_filters[0].id,
+            "order": service_filters[0].order,
+            "field": text_field.id,
             "type": "equals",
-            "value": "'foobar'",
-        }
+            "value": "foobar",
+            "value_is_formula": False,
+        },
+        {
+            "id": service_filters[1].id,
+            "order": service_filters[1].order,
+            "field": formula_field.id,
+            "type": "equals",
+            "value": "get('page_parameter.id')",
+            "value_is_formula": True,
+        },
     ]
 
     # Reset the filters to nothing.
@@ -223,7 +240,7 @@ def test_update_data_source_with_filters(api_client, data_fixture):
 
     # Given an existing filter, we delete it if it's not in the payload.
     data_fixture.create_local_baserow_table_service_filter(
-        service=data_source1.service, field=field, value="'baz'", order=0
+        service=data_source1.service, field=text_field, value="baz", order=0
     )
     response = api_client.patch(
         url,
@@ -231,9 +248,10 @@ def test_update_data_source_with_filters(api_client, data_fixture):
             "filters": [
                 {
                     "service": data_source1.service_id,
-                    "field": field.id,
+                    "field": text_field.id,
                     "type": "equals",
-                    "value": "'foobar'",
+                    "value": "foobar",
+                    "value_is_formula": False,
                 }
             ]
         },
@@ -247,9 +265,10 @@ def test_update_data_source_with_filters(api_client, data_fixture):
         {
             "id": service_filter.id,
             "order": 0,
-            "field": field.id,
+            "field": text_field.id,
             "type": "equals",
-            "value": "'foobar'",
+            "value": "foobar",
+            "value_is_formula": False,
         }
     ]
 
