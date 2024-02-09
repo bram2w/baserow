@@ -2029,10 +2029,10 @@ def test_export_import_local_baserow_upsert_row_service(
 ):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
-    builder = data_fixture.create_builder_application(workspace=workspace)
+    builder = data_fixture.create_builder_application(workspace=workspace, order=2)
     page = data_fixture.create_builder_page(builder=builder)
     element = data_fixture.create_builder_button_element(page=page)
-    database = data_fixture.create_database_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace, order=1)
     table = data_fixture.create_database_table(database=database)
     field = data_fixture.create_text_field(table=table)
     integration = data_fixture.create_local_baserow_integration(application=builder)
@@ -2068,7 +2068,7 @@ def test_export_import_local_baserow_upsert_row_service(
 
     imported_page = imported_builder.page_set.get()
     imported_data_source = imported_page.datasource_set.get()
-    imported_integration = imported_builder.application_ptr.integrations.get()
+    imported_integration = imported_builder.integrations.get()
     imported_upsert_row_service = LocalBaserowUpsertRow.objects.get(
         integration=imported_integration
     )
