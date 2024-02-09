@@ -9,7 +9,7 @@ FROM $FROM_IMAGE as image_base
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Remove PostgreSQL 15
-RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y --purge postgresql-15 postgresql-client-15 && \
+RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y --purge postgresql-15 postgresql-client-15 || true && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/lib/postgresql/15 /etc/postgresql/15
