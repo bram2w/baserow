@@ -1,6 +1,6 @@
-ARG FROM_IMAGE=baserow:latest
 #FIXME:
-#ARG FROM_IMAGE=baserow/baserow:1.22.2
+#ARG FROM_IMAGE=baserow:latest
+ARG FROM_IMAGE=baserow/baserow:1.22.3
 
 # This is pinned as version pinning is done by the CI setting FROM_IMAGE.
 # hadolint ignore=DL3006
