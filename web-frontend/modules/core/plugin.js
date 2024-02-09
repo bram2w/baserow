@@ -52,6 +52,7 @@ import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
 import userSourceStore from '@baserow/modules/core/store/userSource'
+import appAuthProviderStore from '@baserow/modules/core/store/appAuthProvider'
 import notificationStore from '@baserow/modules/core/store/notification'
 
 import en from '@baserow/modules/core/locales/en.json'
@@ -101,6 +102,11 @@ export default (context, inject) => {
   registry.registerNamespace('runtimeFormulaFunction')
   registry.registerNamespace('notification')
   registry.registerNamespace('workflowAction')
+  registry.registerNamespace('integration')
+  registry.registerNamespace('service')
+  registry.registerNamespace('userSource')
+  registry.registerNamespace('appAuthProvider')
+
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new EmailNotificationsSettingsType(context))
@@ -142,10 +148,7 @@ export default (context, inject) => {
   store.registerModule('undoRedo', undoRedoStore)
   store.registerModule('integration', integrationStore)
   store.registerModule('userSource', userSourceStore)
-
-  registry.registerNamespace('integration')
-  registry.registerNamespace('service')
-  registry.registerNamespace('userSource')
+  store.registerModule('appAuthProvider', appAuthProviderStore)
   store.registerModule('notification', notificationStore)
 
   registry.register('authProvider', new PasswordAuthProviderType(context))
