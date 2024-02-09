@@ -53,13 +53,13 @@ export default {
           })
         case UNDO_REDO_STATES.NO_MORE_UNDO:
           return base({
-            icon: 'iconoir-times',
+            icon: 'iconoir-cancel',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.noMoreUndo'),
           })
         case UNDO_REDO_STATES.NO_MORE_REDO:
           return base({
-            icon: 'iconoir-times',
+            icon: 'iconoir-cancel',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.noMoreRedo'),
           })
