@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Update axios and posthog-jw frontend libraries",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2024-02-13"
+}
