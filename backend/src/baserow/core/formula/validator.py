@@ -21,3 +21,20 @@ def ensure_integer(value: Any) -> int:
         raise ValidationError(
             "The value must be an integer or convertible to an integer."
         )
+
+
+def ensure_string(value, allow_empty=True):
+    """
+    Ensures that the value is a string or try to convert it.
+
+    :param value: The value to ensure as a string.
+    :param allow_empty: Whether we should throw an error if `value` is empty.
+    :return: The value as a string.
+    :raises ValueError: If not allow_empty and the `value` is empty.
+    """
+
+    if value is None or value == "":
+        if not allow_empty:
+            raise ValueError("A valid String is required.")
+        return ""
+    return str(value)

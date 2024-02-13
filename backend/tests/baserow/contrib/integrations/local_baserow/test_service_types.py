@@ -570,7 +570,9 @@ def test_local_baserow_get_row_service_dispatch_data_with_view_filter(data_fixtu
 
 
 @pytest.mark.django_db
-def test_local_baserow_get_row_service_dispatch_data_with_service_search(data_fixture):
+def test_local_baserow_get_row_service_dispatch_data_with_service_search(
+    data_fixture, disable_full_text_search
+):
     # Demonstrates that you can fetch a specific row (1) and search for a specific
     # value to exclude it from the `dispatch_data` result.
     user = data_fixture.create_user()
@@ -598,6 +600,47 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_search(data_fi
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(DoesNotExist):
         service_type.dispatch_data(service, dispatch_values, dispatch_context)
+
+
+@pytest.mark.django_db  # (transaction=True)
+def test_local_baserow_get_row_service_dispatch_data_with_service_integer_search(
+    data_fixture, disable_full_text_search
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+            ["Audi"],
+            ["42"],
+        ],
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration, table=table, row_id="", search_query="42"
+    )
+    service_type = service.get_type()
+
+    dispatch_context = FakeDispatchContext()
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+    result = service_type.dispatch_transform(dispatch_data)
+
+    assert result == {
+        "id": rows[2].id,
+        fields[0].db_column: "42",
+        "order": "1.00000000000000000000",
+    }
 
 
 @pytest.mark.django_db
