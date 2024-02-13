@@ -164,22 +164,25 @@ def test_workspace_restored(mock_broadcast_to_users, data_fixture):
     call_1 = args[1][0]
     call_2 = args[0][0]
     assert [call_1[0], call_2[0]] == unordered([[member_user.id], [admin_user.id]])
+    permissions = unordered(["MEMBER", "ADMIN"])
+    assert [
+        call_1[1]["group"]["permissions"],
+        call_2[1]["group"]["permissions"],
+    ] == permissions
+    assert [
+        call_1[1]["workspace"]["permissions"],
+        call_2[1]["workspace"]["permissions"],
+    ] == permissions
 
     assert call_1[1]["type"] == "group_restored"
     # GroupDeprecation
     assert call_1[1]["group"]["id"] == member_workspace_user.workspace_id
-    assert call_1[1]["group"]["permissions"] == "MEMBER"
     assert call_1[1]["workspace"]["id"] == member_workspace_user.workspace_id
-    assert call_1[1]["workspace"]["permissions"] == "MEMBER"
     assert call_1[1]["applications"] == [expected_database_json]
 
     assert call_2[1]["type"] == "group_restored"
     # GroupDeprecation
     assert call_2[1]["group"]["id"] == workspace_user.workspace_id
-    assert call_2[1]["group"]["permissions"] == "ADMIN"
-    assert call_2[1]["group"]["id"] == workspace_user.workspace_id
-    assert call_2[1]["workspace"]["id"] == workspace_user.workspace_id
-    assert call_2[1]["workspace"]["permissions"] == "ADMIN"
     assert call_2[1]["workspace"]["id"] == workspace_user.workspace_id
     assert call_2[1]["applications"] == [expected_database_json]
 
