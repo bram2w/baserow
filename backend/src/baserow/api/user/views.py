@@ -353,7 +353,7 @@ class SendResetPasswordEmailView(APIView):
         except UserNotFound:
             pass
 
-        return Response("", status=204)
+        return Response(status=204)
 
 
 class ResetPasswordView(APIView):
@@ -400,7 +400,7 @@ class ResetPasswordView(APIView):
             data["token"], data["password"]
         )
 
-        return Response("", status=204)
+        return Response(status=204)
 
 
 class ChangePasswordView(APIView):
@@ -441,7 +441,7 @@ class ChangePasswordView(APIView):
             request.user, data["old_password"], data["new_password"]
         )
 
-        return Response("", status=204)
+        return Response(status=204)
 
 
 class AccountView(APIView):
