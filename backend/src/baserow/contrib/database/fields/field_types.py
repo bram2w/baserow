@@ -1959,6 +1959,13 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         # Create a map {value -> row_indexes} for ids and strings
         name_map = defaultdict(list)
         invalid_values = []
+
+        def preprocess_value(val):
+            return val.strip() if isinstance(val, str) else val
+
+        for row_index, values in values_by_row.items():
+            values_by_row[row_index] = [preprocess_value(val) for val in values]
+
         for row_index, values in values_by_row.items():
             for row_name_or_id in values:
                 if isinstance(row_name_or_id, int):
