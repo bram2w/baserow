@@ -1,5 +1,6 @@
 import os
 import random
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -10,7 +11,9 @@ from django.db import connection
 from django.test.utils import override_settings
 
 import pytest
+from freezegun import freeze_time
 from pyinstrument import Profiler
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -24,6 +27,7 @@ from baserow.contrib.database.fields.models import (
     TextField,
 )
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.constants import (
     LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
@@ -34,13 +38,14 @@ from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
 )
-from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.handler import TableHandler, TableUsageHandler
+from baserow.contrib.database.table.models import Table, TableUsage, TableUsageUpdate
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.usage.registries import USAGE_UNIT_MB
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
@@ -507,7 +512,6 @@ def test_restoring_table_with_a_previously_trashed_field_leaves_the_field_trashe
 @pytest.mark.django_db
 def test_count_rows(data_fixture):
     table = data_fixture.create_database_table()
-    grid_view = data_fixture.create_grid_view(table=table)
     field = data_fixture.create_text_field(table=table)
     model = table.get_model()
 
@@ -516,10 +520,10 @@ def test_count_rows(data_fixture):
     for i in range(count_expected):
         model.objects.create(**{f"field_{field.id}": i})
 
-    TableHandler().count_rows()
+    TableUsageHandler.update_tables_usage()
 
     table.refresh_from_db()
-    assert table.row_count == count_expected
+    assert table.usage.row_count == count_expected
 
 
 @pytest.mark.django_db
@@ -536,10 +540,8 @@ def test_count_rows_ignores_templates(data_fixture, tmpdir):
     CoreHandler().sync_templates(storage=storage)
     assert Table.objects.count() > 0
 
-    TableHandler.count_rows()
-
-    for table in Table.objects.all():
-        assert table.row_count is None
+    TableUsageHandler.update_tables_usage()
+    assert TableUsage.objects.all().count() == 0
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates
 
@@ -548,7 +550,6 @@ def test_count_rows_ignores_templates(data_fixture, tmpdir):
 def test_count_rows_table_gets_deleted(data_fixture):
     table = data_fixture.create_database_table()
     table_deleted = data_fixture.create_database_table(create_table=False)
-    grid_view = data_fixture.create_grid_view(table=table)
     field = data_fixture.create_text_field(table=table)
     model = table.get_model()
 
@@ -557,23 +558,12 @@ def test_count_rows_table_gets_deleted(data_fixture):
     for i in range(count_expected):
         model.objects.create(**{f"field_{field.id}": i})
 
-    TableHandler().count_rows()
+    TableUsageHandler.update_tables_usage()
 
     table.refresh_from_db()
     table_deleted.refresh_from_db()
-    assert table.row_count == count_expected
-    assert table_deleted.row_count is None
-
-
-@pytest.mark.django_db
-def test_exception_is_raised_if_something_goes_wrong(data_fixture):
-    data_fixture.create_database_table()
-
-    with patch("baserow.contrib.database.table.models.Table.get_model") as mock:
-        mock.side_effect = Exception("Something went wrong")
-
-        with pytest.raises(Exception):
-            TableHandler().count_rows()
+    assert table.usage.row_count == count_expected
+    assert table_deleted.usage.row_count is None
 
 
 @pytest.mark.django_db
@@ -587,59 +577,41 @@ def test_counting_many_rows_in_many_tables(data_fixture):
     profiler = Profiler()
 
     # 1000 tables
-    for i in range(table_amount):
+    for _ in range(table_amount):
         table = data_fixture.create_database_table()
         fill_table_rows(rows_amount, table)
 
     profiler.start()
-    TableHandler.count_rows()
+    TableUsageHandler.update_tables_usage()
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
     profiler.reset()
+    TableUsage.objects.all().delete()
 
     # 2000 tables
-    for i in range(table_amount):
+    for _ in range(table_amount):
         table = data_fixture.create_database_table()
         fill_table_rows(rows_amount, table)
 
     profiler.start()
-    TableHandler.count_rows()
+    TableUsageHandler.update_tables_usage()
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
     profiler.reset()
+    TableUsage.objects.all().delete()
 
     # 3000 tables
-    for i in range(table_amount):
+    for _ in range(table_amount):
         table = data_fixture.create_database_table()
         fill_table_rows(rows_amount, table)
 
     profiler.start()
-    TableHandler.count_rows()
+    TableUsageHandler.update_tables_usage()
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))
-
-
-@pytest.mark.django_db
-def test_get_total_row_count_of_workspace(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    database = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=database)
-
-    user2 = data_fixture.create_user()
-    table_not_in_workspace = data_fixture.create_database_table(user2)
-
-    assert TableHandler.get_total_row_count_of_workspace(workspace.id) == 0
-
-    fill_table_rows(10, table)
-    fill_table_rows(10, table_not_in_workspace)
-
-    TableHandler.count_rows()
-
-    assert TableHandler.get_total_row_count_of_workspace(workspace.id) == 10
 
 
 @pytest.mark.django_db
@@ -794,3 +766,199 @@ def test_list_workspace_tables_in_trashed_workspace(data_fixture):
     data_fixture.create_database_table(user, database=database)
     workspace_tables = TableHandler().list_workspace_tables(user, workspace=workspace)
     assert workspace_tables.count() == 0
+
+
+@pytest.mark.django_db
+def test_table_usage_handler_mark_table_for_usage_update(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+    table_2 = data_fixture.create_database_table(user, database=database)
+
+    with freeze_time("2020-02-01 01:20"):
+        TableUsageHandler.update_tables_usage()
+
+    assert list(
+        TableUsage.objects.values("table_id", "row_count", "storage_usage")
+    ) == unordered(
+        [
+            {"table_id": table.id, "row_count": 0, "storage_usage": 0},
+            {"table_id": table_2.id, "row_count": 0, "storage_usage": 0},
+        ]
+    )
+
+    with freeze_time("2020-02-01 01:23"):
+        TableUsageHandler.mark_table_for_usage_update(table.id, 10)
+
+    assert TableUsageUpdate.objects.all().count() == 1
+    usage_entry = TableUsageUpdate.objects.get(table_id=table.id)
+    assert usage_entry.row_count == 10
+    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 23, tzinfo=timezone.utc)
+
+    # A second update on the same table should update the previous value
+    with freeze_time("2020-02-01 01:24"):
+        TableUsageHandler.mark_table_for_usage_update(table.id, -3)
+
+    assert TableUsageUpdate.objects.all().count() == 1
+    usage_entry = TableUsageUpdate.objects.get(table_id=table.id)
+    assert usage_entry.row_count == 7
+    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 24, tzinfo=timezone.utc)
+
+    # If row_count is 0, then 0 should be the stored value
+    with freeze_time("2020-02-01 01:25"):
+        TableUsageHandler.mark_table_for_usage_update(table.id, 0)
+
+    assert TableUsageUpdate.objects.all().count() == 1
+    usage_entry = TableUsageUpdate.objects.get(table_id=table.id)
+    assert usage_entry.row_count == 7
+    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 24, tzinfo=timezone.utc)
+
+    # An update to a second table, should create a second entry
+    with freeze_time("2020-02-01 01:26"):
+        TableUsageHandler.mark_table_for_usage_update(table_2.id, 10)
+
+    assert TableUsageUpdate.objects.all().count() == 2
+    usage_entry_2 = TableUsageUpdate.objects.get(table_id=table_2.id)
+    assert usage_entry_2.row_count == 10
+    assert usage_entry_2.timestamp == datetime(2020, 2, 1, 1, 26, tzinfo=timezone.utc)
+
+    # A call to `update_tables_usage` should merge the updates into the TableUsage table
+    with freeze_time("2020-02-01 01:30"):
+        TableUsageHandler.update_tables_usage()
+
+    assert TableUsageUpdate.objects.count() == 0
+    # no matter what the row_count was in the updates, the row in the table is
+    # zero and the method will properly recount table rows
+    assert list(
+        TableUsage.objects.values("table_id", "row_count", "storage_usage")
+    ) == unordered(
+        [
+            {"table_id": table.id, "row_count": 0, "storage_usage": 0},
+            {"table_id": table_2.id, "row_count": 0, "storage_usage": 0},
+        ]
+    )
+
+
+@pytest.mark.django_db
+def test_table_usage_handler_should_clear_updates_correctly(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+    table_2 = data_fixture.create_database_table(user, database=database)
+
+    with freeze_time("2020-02-01 01:20"):
+        TableUsageHandler.update_tables_usage()
+
+    with freeze_time("2020-02-01 01:21"):
+        TableUsageHandler.mark_table_for_usage_update(table.id, 10)
+        TableUsageHandler.mark_table_for_usage_update(table_2.id, 20)
+
+    assert TableUsageUpdate.objects.count() == 2
+    table_usage_updates = TableUsageUpdate.objects.filter(table=table)
+
+    TableUsageHandler._update_tables_usage(table_usage_updates)
+
+    assert TableUsageUpdate.objects.count() == 1
+    assert TableUsageUpdate.objects.get(table=table_2) is not None
+
+
+@pytest.mark.django_db
+def test_table_usage_handler_creates_usage_entries_if_missing(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+    table_2 = data_fixture.create_database_table(user, database=database)
+
+    assert TableUsage.objects.count() == 0
+
+    TableUsageHandler.update_tables_usage()
+
+    assert TableUsage.objects.count() == 2
+    assert list(Table.objects.order_by("id").values_list("id", flat=True)) == [
+        table.id,
+        table_2.id,
+    ]
+
+
+@pytest.mark.django_db
+def test_table_usage_handler_create_updates_for_all_tables_in_database(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+    table_2 = data_fixture.create_database_table(user, database=database)
+    data_fixture.create_database_table(user, database=database, trashed=True)
+
+    TableUsageHandler.create_tables_usage_for_new_database(database.id)
+
+    assert TableUsage.objects.count() == 0
+    assert TableUsageUpdate.objects.count() == 2
+    assert list(
+        TableUsageUpdate.objects.order_by("table_id").values_list("table_id", flat=True)
+    ) == [table.id, table_2.id]
+
+    # create the correct entries in the TableUsage table
+    TableUsageHandler.update_tables_usage()
+
+    assert TableUsage.objects.count() == 2
+    assert list(
+        TableUsage.objects.order_by("table_id").values_list("table_id", flat=True)
+    ) == [table.id, table_2.id]
+    assert TableUsageUpdate.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_get_database_table_storage_usage(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_file_field(table=table)
+
+    file_1 = data_fixture.create_user_file(size=2 * USAGE_UNIT_MB)
+    file_2 = data_fixture.create_user_file(size=3 * USAGE_UNIT_MB)
+    file_3 = data_fixture.create_user_file(size=5 * USAGE_UNIT_MB)
+
+    RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                field.db_column: [
+                    {"name": file_1.name, "visible_name": "new name"},
+                ]
+            }
+        ],
+    )
+
+    assert TableUsageHandler.calculate_table_storage_usage(table.id) == 2
+
+    RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                field.db_column: [
+                    {"name": file_1.name, "visible_name": "new name"},
+                ]
+            }
+        ],
+    )
+
+    assert TableUsageHandler.calculate_table_storage_usage(table.id) == 2
+
+    RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                field.db_column: [
+                    {"name": file_2.name, "visible_name": "new name 2"},
+                    {"name": file_3.name, "visible_name": "new name 3"},
+                ]
+            }
+        ],
+    )
+
+    assert TableUsageHandler.calculate_table_storage_usage(table.id) == 10

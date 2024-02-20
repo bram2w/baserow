@@ -737,6 +737,64 @@ def patch_meta_get_field(_meta):
     _meta.get_field = MethodType(get_field, _meta)
 
 
+class TableUsageUpdate(models.Model):
+    """
+    This table maintains an entry for each table where the 'row_count' or
+    'storage_usage' has changed due to an operation on the table (e.g., a new row
+    insertion or a new file in a file field).
+
+    Given the following considerations:
+        - to allow concurrent requests to insert/update/delete rows on the same tables,
+          we cannot update the TableUsage entry or any other shared resource
+          synchronously.
+        - even if we perform the update asynchronously in a celery task, the
+          operations to recount rows and calculate storage usage might be slow.
+          We want to avoid running these operations every time a change occurs.
+
+    We use this table to insert/update the corresponding table entry with a relative
+    'row_count' (if available) in an asynchronous celery task. This approach allows
+    concurrent operations to run simultaneously. The row count displayed in the admin
+    panel can be more accurate by using this value as a delta.
+
+    However, 'storage_usage' needs to be recalculated every time there is an entry in
+    this table. This is because it's challenging to determine if a change related to a
+    file field references a newly uploaded file or not.
+    """
+
+    table = models.OneToOneField(
+        "database.Table", on_delete=models.CASCADE, related_name="usage_update"
+    )
+    row_count = models.IntegerField(
+        null=True,
+        help_text="The change in the row count value. It can be positive or negative."
+        "A null value means that the row_count is not changed, but it might be changed "
+        "storage count and we want to recalculate the storage needed by this table.",
+    )
+    timestamp = models.DateTimeField(auto_now=True)
+
+
+class TableUsage(models.Model):
+    """
+    This table stores the resources required by the associated table. It gets updated
+    whenever the `UsageHandler.calculate_storage_usage()` method is executed. This
+    method runs for all tables that either have an entry in the `TableUsageUpdate` table
+    or do not have an entry yet.
+    """
+
+    table = models.OneToOneField(
+        "database.Table", on_delete=models.CASCADE, related_name="usage"
+    )
+    row_count = models.PositiveIntegerField(
+        null=True, help_text="The number of non-trashed rows of the linked table."
+    )
+    row_count_updated_at = models.DateTimeField(null=True)
+    storage_usage = models.PositiveIntegerField(
+        null=True,
+        help_text="The storage needed in MB by files saved in file fields of the linked table.",
+    )
+    storage_usage_updated_at = models.DateTimeField(null=True)
+
+
 class Table(
     HierarchicalModelMixin,
     TrashableModelMixin,
@@ -747,8 +805,18 @@ class Table(
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
-    row_count = models.PositiveIntegerField(null=True)
-    row_count_updated_at = models.DateTimeField(null=True)
+    _row_count = models.PositiveIntegerField(
+        null=True,
+        db_column="row_count",
+        help_text="Deprecated: use usage.row_count instead. "
+        "This field will be removed in a future version.",
+    )
+    _row_count_updated_at = models.DateTimeField(
+        null=True,
+        db_column="row_count_updated_at",
+        help_text="Deprecated: use usage.row_count_updated_at instead. "
+        "This field will be removed in a future version.",
+    )
     version = models.TextField(default="initial_version")
     needs_background_update_column_added = models.BooleanField(
         default=False,

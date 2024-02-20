@@ -3,12 +3,12 @@ from typing import Any, Dict, List, NewType, Optional, Tuple, cast
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import DatabaseError, ProgrammingError
-from django.db.models import Q, QuerySet, Sum
-from django.utils import timezone, translation
+from django.db import DatabaseError, transaction
+from django.db.models import F, Q, QuerySet, Sum
+from django.db.models.functions import Coalesce, Now
+from django.utils import translation
 from django.utils.translation import gettext as _
 
-from loguru import logger
 from opentelemetry import trace
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
@@ -30,13 +30,19 @@ from baserow.contrib.database.operations import (
     OrderTablesDatabaseTableOperationType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.expressions import (
+    BaserowTableFileUniques,
+    BaserowTableRowCount,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
+from baserow.core.usage.registries import USAGE_UNIT_MB
+from baserow.core.user_files.models import UserFile
+from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name, grouper
 
 from .constants import (
     CREATED_BY_COLUMN_NAME,
@@ -52,7 +58,12 @@ from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
 )
-from .models import Table, get_row_needs_background_update_index
+from .models import (
+    Table,
+    TableUsage,
+    TableUsageUpdate,
+    get_row_needs_background_update_index,
+)
 from .operations import (
     DeleteDatabaseTableOperationType,
     DuplicateDatabaseTableOperationType,
@@ -67,7 +78,243 @@ TableForUpdate = NewType("TableForUpdate", Table)
 tracer = trace.get_tracer(__name__)
 
 
+class TableUsageHandler:
+    @classmethod
+    def calculate_table_storage_usage(cls, table_id):
+        return UserFile.objects.filter(
+            unique__in=BaserowTableFileUniques(table_id)
+        ).aggregate(tot_MB=Coalesce(Sum("size"), 0) / USAGE_UNIT_MB)["tot_MB"]
+
+    @classmethod
+    def mark_table_for_usage_update(cls, table_id: int, row_count: int = None):
+        """
+        Updates or creates a table usage log entry. This function can be called when an
+        operation change the table row_count or the storage usage to create or update an
+        entry so that the usage can be tracked and updated.
+
+        :param table_id: The id of the table that needs to be updated.
+        :param row_count: This represents the change in row count for the table
+            identified by 'table_id'. A value of 0 indicates that it might be expensive
+            to calculate the delta and ensure to creates an entry to recount table rows
+            correctly at the first occurrence. relevant task. If None, only the storage
+            usage changed but since we don't have an easy way to store the delta, the
+            entry will ensure the storage usage will be recalculated at next task run.
+        """
+
+        defaults = {"row_count": row_count}
+
+        with transaction.atomic():
+            obj, created = TableUsageUpdate.objects.select_for_update().get_or_create(
+                defaults, table_id=table_id
+            )
+            if not created and row_count:
+                obj.row_count = Coalesce(F("row_count"), 0) + row_count
+                obj.save(update_fields=["row_count", "timestamp"])
+
+    @classmethod
+    def create_tables_usage_for_new_database(cls, database_id: int):
+        """
+        Creates all the tables belonging to the database with the provided database_id.
+
+        :param database_id: The id of the database that needs to be updated.
+        """
+
+        tables_in_database = TableHandler.get_tables().filter(database_id=database_id)
+
+        entries = [
+            TableUsageUpdate(
+                table_id=table.id, row_count=BaserowTableRowCount(table.id)
+            )
+            for table in tables_in_database
+        ]
+        TableUsageUpdate.objects.bulk_create(entries, ignore_conflicts=True)
+
+    @classmethod
+    def update_tables_usage(
+        cls,
+        chunk_size: int = 250,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> int:
+        """
+        Updates all the tables usage for the existing entries that have received updates
+        since the last time, and creates the new ones for new tables if missing.
+
+        :param chunk_size: the number of tables to analyze per transaction to avoid the
+            `max_locks_per_transaction` error in Postgres.
+        :param progress_builder: an optional child progress builder to keep track of the
+            progress of this (potentially very long) function.
+        """
+
+        table_usage_updates = TableUsageUpdate.objects.all()
+        # Order tables to prevent concurrent processes to deadlock on the same tables
+        tables_without_usage = (
+            TableHandler.get_tables()
+            .filter(Q(usage=None), database__workspace__template__isnull=True)
+            .order_by("id")
+        )
+        progress = ChildProgressBuilder.build(
+            progress_builder,
+            child_total=len(table_usage_updates) + len(tables_without_usage),
+        )
+
+        updated = 0
+        if len(table_usage_updates) > 0:
+            updated = cls._update_tables_usage(
+                table_usage_updates,
+                chunk_size,
+                progress.create_child_builder(
+                    represents_progress=len(table_usage_updates)
+                ),
+            )
+
+        created = 0
+        if len(tables_without_usage) > 0:
+            created = cls._create_tables_usage(
+                tables_without_usage,
+                chunk_size,
+                progress.create_child_builder(
+                    represents_progress=len(tables_without_usage)
+                ),
+            )
+        return updated + created
+
+    @classmethod
+    def _create_tables_usage(
+        cls,
+        tables: QuerySet[Table],
+        chunk_size: int = 250,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> int:
+        """
+        Counts how many rows each user table has and stores the count
+        for later reference.
+
+        :param tables: The tables that need to be updated.
+        :param chunk_size: The number of tables to update at once.
+        :param progress_builder: A progress builder that can be used to report progress.
+        :returns: The number of tables counted.
+        """
+
+        total_tables_counted = 0
+        progress = ChildProgressBuilder.build(progress_builder, child_total=len(tables))
+
+        def _create_table_usage(table_id: int) -> TableUsage:
+            return TableUsage(
+                table_id=table_id,
+                row_count=BaserowTableRowCount(table_id),
+                row_count_updated_at=Now(),
+                storage_usage=cls.calculate_table_storage_usage(table_id),
+                storage_usage_updated_at=Now(),
+            )
+
+        for table_group in grouper(chunk_size, tables.only("id").iterator(chunk_size)):
+            with transaction.atomic():
+                table_usage_stats = []
+                for table in table_group:
+                    table_usage = _create_table_usage(table.id)
+                    table_usage_stats.append(table_usage)
+
+                created = TableUsage.objects.bulk_create(
+                    table_usage_stats, ignore_conflicts=True
+                )
+                total_tables_counted += len(created)
+                progress.increment(len(created))
+
+        return total_tables_counted
+
+    @classmethod
+    def _update_tables_usage(
+        cls,
+        table_usage_updates: QuerySet[TableUsageUpdate],
+        chunk_size: int = 250,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> int:
+        """
+        Recalculates the row count and storage usage for the tables that have changed
+        and have a TableUsageUpdate entry.
+
+        :param table_usage_updates: The tables usage updates linking the tables that
+            need to be updated.
+        :param chunk_size: The number of tables to update at once.
+        :param progress_builder: A progress builder that can be used to report progress.
+        :returns: The number of tables counted.
+        """
+
+        total_tables_counted = 0
+
+        progress = ChildProgressBuilder.build(
+            progress_builder, child_total=len(table_usage_updates)
+        )
+
+        def _bulk_update_or_create(table_ids):
+            entries = []
+            for table_id in table_ids:
+                entries.append(
+                    TableUsage(
+                        table_id=table_id,
+                        row_count=BaserowTableRowCount(table_id),
+                        row_count_updated_at=Now(),
+                        storage_usage=cls.calculate_table_storage_usage(table_id),
+                        storage_usage_updated_at=Now(),
+                    )
+                )
+                return TableUsage.objects.bulk_create(
+                    entries,
+                    update_conflicts=True,
+                    update_fields=[
+                        "row_count",
+                        "row_count_updated_at",
+                        "storage_usage",
+                        "storage_usage_updated_at",
+                    ],
+                    unique_fields=["table_id"],
+                )
+
+        while True:
+            # Postgres needs a lock for every table in the loop, so this limits
+            # the number updated per transaction.
+            with transaction.atomic():
+                table_ids = table_usage_updates.select_for_update(of=("self",))[
+                    :chunk_size
+                ].values_list("table_id", flat=True)
+
+                _bulk_update_or_create(table_ids)
+
+                table_usage_updates.filter(table_id__in=table_ids).delete()
+                updated = len(table_ids)
+                total_tables_counted += updated
+                if updated > 0:
+                    progress.increment(updated)
+
+            is_last_chunk = updated < chunk_size
+            if is_last_chunk:
+                break
+
+        return total_tables_counted
+
+
 class TableHandler(metaclass=baserow_trace_methods(tracer)):
+    @classmethod
+    def get_tables(
+        cls, base_queryset: Optional[QuerySet[Table]] = None
+    ) -> QuerySet[Table]:
+        """
+        Returns a queryset containing all the tables that are not trashed.
+
+        :param base_queryset: specify a base queryset to use. If not provided, the
+            default Table queryset will be used.
+        :return: The queryset containing all the tables that are not trashed.
+        """
+
+        if base_queryset is None:
+            base_queryset = Table.objects.all()
+
+        return base_queryset.filter(
+            trashed=False,
+            database__trashed=False,
+            database__workspace__trashed=False,
+        )
+
     def list_workspace_tables(
         self, user: AbstractUser, workspace, include_trashed=False, base_queryset=None
     ) -> QuerySet[Table]:
@@ -87,11 +334,7 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         if not include_trashed:
-            table_qs = table_qs.filter(
-                trashed=False,
-                database__trashed=False,
-                database__workspace__trashed=False,
-            )
+            table_qs = self.get_tables(table_qs)
 
         return CoreHandler().filter_queryset(
             user,
@@ -662,64 +905,6 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         TrashHandler.trash(user, table.database.workspace, table.database, table)
 
         table_deleted.send(self, table_id=table.id, table=table, user=user)
-
-    @classmethod
-    def count_rows(cls) -> int:
-        """
-        Counts how many rows each user table has and stores the count
-        for later reference.
-        :returns: The number of tables counted.
-        """
-
-        chunk_size = 200
-        tables_to_store = []
-        time = timezone.now()
-        i = 0
-        for table in Table.objects.filter(
-            database__workspace__template__isnull=True
-        ).iterator(chunk_size=chunk_size):
-            try:
-                count = table.get_model(field_ids=[]).objects.count()
-                table.row_count = count
-                table.row_count_updated_at = time
-                tables_to_store.append(table)
-            except ProgrammingError as e:
-                if f'"database_table_{table.id}" does not exist' in str(e):
-                    logger.warning(f"Error while counting rows {e}")
-                else:
-                    raise e
-
-            # This makes sure we don't pollute the memory
-            if i % chunk_size == 0:
-                Table.objects.bulk_update(
-                    tables_to_store, ["row_count", "row_count_updated_at"]
-                )
-                tables_to_store = []
-            i += 1
-
-        if len(tables_to_store) > 0:
-            Table.objects.bulk_update(
-                tables_to_store, ["row_count", "row_count_updated_at"]
-            )
-
-        return i
-
-    @classmethod
-    def get_total_row_count_of_workspace(cls, workspace_id: int) -> int:
-        """
-        Returns the total row count of all tables in the given workspace.
-
-        :param workspace_id: The workspace which the total row count needs to be
-            calculated.
-        :return: The total row count of all tables in the given workspace.
-        """
-
-        return (
-            Table.objects.filter(database__workspace_id=workspace_id).aggregate(
-                Sum("row_count")
-            )["row_count__sum"]
-            or 0
-        )
 
     def create_needs_background_update_field(self, table: "Table") -> None:
         """

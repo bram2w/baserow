@@ -1,6 +1,6 @@
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.models import Table, TableUsage
 
 
 class TableFixtures:
@@ -17,8 +17,11 @@ class TableFixtures:
             kwargs["order"] = 0
 
         kwargs.setdefault("needs_background_update_column_added", True)
+        usage = kwargs.pop("usage", None)
 
         table = Table.objects.create(**kwargs)
+        if usage is not None:
+            TableUsage.objects.create(table=table, **usage)
 
         if create_table:
             model = table.get_model(force_add_tsvectors=force_add_tsvectors)
