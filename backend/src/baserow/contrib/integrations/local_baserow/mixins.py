@@ -12,6 +12,7 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
+from baserow.core.formula.validator import ensure_string
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 
@@ -144,10 +145,13 @@ class LocalBaserowTableServiceSearchableMixin:
         """
 
         try:
-            return resolve_formula(
-                service.search_query,
-                formula_runtime_function_registry,
-                dispatch_context,
+            return ensure_string(
+                resolve_formula(
+                    service.search_query,
+                    formula_runtime_function_registry,
+                    dispatch_context,
+                ),
+                allow_empty=True,
             )
         except Exception as exc:
             raise ServiceImproperlyConfigured(
