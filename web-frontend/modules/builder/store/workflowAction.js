@@ -5,6 +5,7 @@ const updateContext = {
   updateTimeout: null,
   promiseResolve: null,
   lastUpdatedValues: null,
+  valuesToUpdate: {},
 }
 
 export function populateWorkflowAction(workflowAction) {
@@ -120,28 +121,35 @@ const actions = {
     const excludeValues = ['order']
 
     const oldValues = {}
-    const newValues = {}
-
     Object.keys(values).forEach((name) => {
       if (
         Object.prototype.hasOwnProperty.call(workflowAction, name) &&
         !excludeValues.includes(name)
       ) {
         oldValues[name] = workflowAction[name]
-        newValues[name] = values[name]
+        // Accumulate the changed values to send all the ongoing changes with the
+        // final request
+        updateContext.valuesToUpdate[name] = values[name]
       }
     })
 
-    await dispatch('forceUpdate', { page, workflowAction, values: newValues })
+    await dispatch('forceUpdate', {
+      page,
+      workflowAction,
+      values: updateContext.valuesToUpdate,
+    })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
         commit('SET_LOADING', { workflowAction, value: true })
+        const toUpdate = updateContext.valuesToUpdate
+        updateContext.valuesToUpdate = {}
         try {
           const { data } = await WorkflowActionService(this.$client).update(
             workflowAction.id,
-            values
+            toUpdate
           )
+          updateContext.lastUpdatedValues = null
 
           excludeValues.forEach((name) => {
             delete data[name]
@@ -159,6 +167,7 @@ const actions = {
             workflowAction,
             values: updateContext.lastUpdatedValues,
           })
+          updateContext.lastUpdatedValues = null
           reject(error)
         }
         updateContext.lastUpdatedValues = null
