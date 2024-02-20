@@ -849,11 +849,6 @@ BASEROW_SEAT_USAGE_JOB_CRONTAB = get_crontab_from_env(
     "BASEROW_SEAT_USAGE_JOB_CRONTAB", default_crontab=ONE_AM_CRONTRAB_STR
 )
 
-THREE_AM_CRONTAB_STR = "0 3 * * *"
-BASEROW_ROW_COUNT_JOB_CRONTAB = get_crontab_from_env(
-    "BASEROW_ROW_COUNT_JOB_CRONTAB", default_crontab=THREE_AM_CRONTAB_STR
-)
-
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
 if os.getenv("EMAIL_SMTP", ""):

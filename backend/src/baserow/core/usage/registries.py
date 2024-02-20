@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 
 from baserow.core.registry import Instance, Registry
 
-UsageInBytes = int
+UsageInMB = int
+USAGE_UNIT_MB = 1000**2
 
 
 class WorkspaceStorageUsageItemType(Instance, ABC):
@@ -12,7 +13,7 @@ class WorkspaceStorageUsageItemType(Instance, ABC):
     """
 
     @abstractmethod
-    def calculate_storage_usage(self, workspace_id: int) -> UsageInBytes:
+    def calculate_storage_usage(self, workspace_id: int) -> UsageInMB:
         """
         Calculates the storage usage for a group
         in a specific part of the application
