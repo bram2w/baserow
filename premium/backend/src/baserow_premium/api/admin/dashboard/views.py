@@ -52,8 +52,10 @@ class AdminDashboardView(APIView):
 
         handler = AdminDashboardHandler()
         total_users = User.objects.filter(is_active=True).count()
-        total_workspaces = Workspace.objects.all().count()
-        total_applications = Application.objects.all().count()
+        total_workspaces = Workspace.objects.filter(template__isnull=True).count()
+        total_applications = Application.objects.filter(
+            workspace__template__isnull=True
+        ).count()
         new_users = handler.get_new_user_counts(
             {
                 "new_users_last_24_hours": timedelta(hours=24),
