@@ -2264,19 +2264,23 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         # Store the current table's model into the manytomany_models object so that the
         # related ManyToMany field can use that one. Otherwise we end up in a recursive
         # loop.
-        model.baserow_m2m_models[instance.table_id] = model
+        model_name = model._meta.model_name
+        model.baserow_models[model_name] = model
 
-        # Check if the related table model is already in the model.baserow_m2m_model.
+        # Check if the related table model is already in the model.baserow_models.
         if instance.is_self_referencing:
             related_model = model
         else:
-            related_model = model.baserow_m2m_models.get(instance.link_row_table_id)
+            related_model_name = Table.get_table_model_name(
+                instance.link_row_table_id
+            ).lower()
+            related_model = model.baserow_models.get(related_model_name)
             # If we do not have a related table model already we can generate a new one.
             if related_model is None:
                 related_model = instance.link_row_table.get_model(
-                    manytomany_models=model.baserow_m2m_models
+                    manytomany_models=model.baserow_models
                 )
-                model.baserow_m2m_models[instance.link_row_table_id] = related_model
+                model.baserow_models[related_model_name] = related_model
 
         instance._related_model = related_model
         related_name = f"reversed_field_{instance.id}"
@@ -2297,8 +2301,6 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
                     related_name = related_field["name"]
                     break
 
-        # Note that the through model will not be registered with the apps because
-        # of the `DatabaseConfig.prevent_generated_model_for_registering` hack.
         models.ManyToManyField(
             to=related_model,
             related_name=related_name,
@@ -2307,20 +2309,6 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             db_table=instance.through_table_name,
             db_constraint=False,
         ).contribute_to_class(model, field_name)
-
-        model_field = model._meta.get_field(field_name)
-        through_model = model_field.remote_field.through
-
-        # Trigger the newly created pending operations of all the models related to the
-        # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because every time a table model is generated, it will
-        # register new pending operations.
-        apps = model._meta.apps
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(related_model)
-        apps.do_pending_operations(through_model)
-        apps.clear_cache()
 
     def prepare_values(self, values, user):
         """
@@ -3930,21 +3918,6 @@ class MultipleSelectFieldType(
             to=model, related_name=field_name, **shared_kwargs
         ).contribute_to_class(select_option_model, related_name)
 
-        # Trigger the newly created pending operations of all the models related to the
-        # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because everytime a table model is generated, it will
-        # register new pending operations.
-        apps = model._meta.apps
-        model_field = model._meta.get_field(field_name)
-        select_option_field = select_option_model._meta.get_field(related_name)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(select_option_model)
-        apps.do_pending_operations(model_field.remote_field.through)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(select_option_field.remote_field.through)
-        apps.clear_cache()
-
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         cache_entry = f"{field_name}_relations"
         if cache_entry not in cache:
@@ -5382,21 +5355,6 @@ class MultipleCollaboratorsFieldType(
             reversed_additional_filters=additional_filters,
             **shared_kwargs,
         ).contribute_to_class(user_model, related_name)
-
-        # Trigger the newly created pending operations of all the models related to the
-        # created CollaboratorField. They need to be called manually because normally
-        # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because everytime a table model is generated, it will
-        # register new pending operations.
-        apps = model._meta.apps
-        model_field = model._meta.get_field(field_name)
-        collaborator_field = user_model._meta.get_field(related_name)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(user_model)
-        apps.do_pending_operations(model_field.remote_field.through)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(collaborator_field.remote_field.through)
-        apps.clear_cache()
 
     def enhance_queryset(self, queryset, field, name):
         return queryset.prefetch_related(name)

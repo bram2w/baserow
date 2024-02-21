@@ -687,27 +687,84 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         abstract = True
 
 
-class DefaultAppsProxy:
+class GeneratedModelAppsProxy:
     """
-    A proxy class to the default apps registry.
-    This class is needed to make our dynamic models available in the
-    options then the relation tree is built.
+    A proxy class to the default apps registry. This class is needed to make our dynamic
+    models available in the options when the relation tree is built, without polluting
+    the global apps registry, meant to keep only the static models that do not change.
 
-    This permits to django to find the reverse relation in the _relation_tree.
-    Look into django.db.models.options.py - _populate_directed_relation_graph
-    for more information.
+    This permits to Django to find the reverse relation in the _relation_tree. Look into
+    django.db.models.options.py - _populate_directed_relation_graph for more
+    information.
+
+    It also allows us to register dynamic models in a separate registry and to perform
+    all the pending operations for the generated models without the need of clearing the
+    global apps registry cache.
+
+    This registry, created as needed by a generated table model, holds references to
+    other such models. It's discarded after the operation, ensuring it only exists when
+    necessary.
     """
 
-    def __init__(self, baserow_m2m_models):
-        self.baserow_m2m_models = baserow_m2m_models
+    def __init__(self, baserow_models=None):
+        self.baserow_models = baserow_models or {}
+        self.baserow_app_label = "database_table"
 
     def get_models(self, *args, **kwargs):
-        # Called by django and must contain ALL the models that have been generated
-        # and connected together as django will loop over every model in this list
-        # and set cached properties on each. These cached django properties are then
-        # used to when looking up fields, so they must include every connected model
-        # that could be involved in queries and not just a sub-set of them.
-        return apps.get_models(*args, **kwargs) + list(self.baserow_m2m_models.values())
+        """
+        Called by django and must contain ALL the models that have been generated
+        and connected together as django will loop over every model in this list
+        and set cached properties on each. These cached django properties are then
+        used to when looking up fields, so they must include every connected model
+        that could be involved in queries and not just a sub-set of them.
+        """
+
+        return apps.get_models(*args, **kwargs) + list(self.baserow_models.values())
+
+    def register_model(self, app_label, model):
+        """
+        This is hack that prevents a generated table model and related auto created
+        models from being registered into the Django apps model registry. It tries to
+        keep separate Django's model registry from Baserow's generated models. In this
+        way we can leverage all the great features of Django's static models, while
+        still being able to generate dynamic models for tables, without polluting the
+        global ones.
+        """
+
+        model_name = model._meta.model_name.lower()
+        if not hasattr(model, "_generated_table_model"):
+            # it must be an auto created intermediary m2m model, so use a list of
+            # baserow models we can later use to resolve the pending operations.
+            if not hasattr(self, "baserow_models"):
+                self.baserow_models = model._meta.auto_created.baserow_models
+
+        self.baserow_models[model_name] = model
+        self.do_all_pending_operations()
+        self._clear_baserow_models_cache()
+
+    def _clear_baserow_models_cache(self):
+        for model in self.baserow_models.values():
+            model._meta._expire_cache()
+
+    def do_all_pending_operations(self):
+        """
+        This method will perform all the pending operations for the generated models.
+        It will keep performing the pending operations until there are no more pending
+        operations left. It will perform a maximum of `max_iterations` to prevent
+        infinite loops and because one pending operation can trigger another pending
+        operation for another model. The number of 3 has been chosen because it's
+        the number observed to be enough to resolve all pending operations in the
+        tests.
+        """
+
+        max_iterations = 3
+        for _ in range(max_iterations):
+            for _, model_name in list(apps._pending_operations.keys()):
+                model = self.baserow_models[model_name]
+                apps.do_pending_operations(model)
+
+            if not apps._pending_operations:
+                break
 
     def __getattr__(self, attr):
         return getattr(apps, attr)
@@ -857,6 +914,10 @@ class Table(
         queryset = Table.objects.filter(database=database)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
+    @classmethod
+    def get_table_model_name(cls, table_id):
+        return f"Table{table_id}Model"
+
     def get_database_table_name(self):
         return f"{USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
 
@@ -875,9 +936,7 @@ class Table(
     ) -> Type[GeneratedTableModel]:
         """
         Generates a temporary Django model based on available fields that belong to
-        this table. Note that the model will not be registered with the apps because
-        of the `DatabaseConfig.prevent_generated_model_for_registering` hack. We do
-        not want to the model cached because models with the same name can differ.
+        this table.
 
         :param fields: Extra table field instances that need to be added the model.
         :type fields: list
@@ -913,7 +972,7 @@ class Table(
         """
 
         filtered = field_names is not None or field_ids is not None
-        model_name = f"Table{self.pk}Model"
+        model_name = self.get_table_model_name(self.pk)
 
         if fields is None:
             fields = []
@@ -929,13 +988,13 @@ class Table(
             )
         ]
 
-        app_label = "database_table"
-        baserow_m2m_models = manytomany_models or {}
+        apps = GeneratedModelAppsProxy(manytomany_models)
+        app_label = apps.baserow_app_label
         meta = type(
             "Meta",
             (),
             {
-                "apps": DefaultAppsProxy(baserow_m2m_models),
+                "apps": apps,
                 "managed": managed,
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
@@ -966,7 +1025,7 @@ class Table(
             "_generated_table_model": True,
             "baserow_table": self,
             "baserow_table_id": self.id,
-            "baserow_m2m_models": baserow_m2m_models,
+            "baserow_models": apps.baserow_models,
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
@@ -1061,7 +1120,7 @@ class Table(
 
         patch_meta_get_field(model._meta)
 
-        if not model.baserow_m2m_models:
+        if not manytomany_models:
             self._after_model_generation(attrs, model)
 
         return model
@@ -1096,7 +1155,7 @@ class Table(
             related_name="+",
             related_query_name="+",
             db_constraint=False,
-            on_delete=models.SET_NULL,
+            on_delete=models.DO_NOTHING,
             help_text="Stores information about the user that created the row.",
         )
 
@@ -1107,7 +1166,7 @@ class Table(
             related_name="+",
             related_query_name="+",
             db_constraint=False,
-            on_delete=models.SET_NULL,
+            on_delete=models.DO_NOTHING,
             help_text="Stores information about the user that modified the row last.",
         )
 

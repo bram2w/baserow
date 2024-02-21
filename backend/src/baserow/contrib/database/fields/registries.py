@@ -75,7 +75,6 @@ class FieldType(
     ModelInstanceMixin,
     Instance,
 ):
-
     """
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
