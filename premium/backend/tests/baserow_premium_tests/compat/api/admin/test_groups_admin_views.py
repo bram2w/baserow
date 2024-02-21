@@ -53,9 +53,7 @@ def test_list_admin_workspaces(
     )
     premium_data_fixture.create_database_application(workspace=workspace_1)
     database = premium_data_fixture.create_database_application(workspace=workspace_1)
-    premium_data_fixture.create_database_table(
-        database=database, usage={"row_count": 2000}
-    )
+    premium_data_fixture.create_database_table(database=database, row_count=2000)
 
     response = api_client.get(
         reverse("api:premium:admin:groups:list"),
