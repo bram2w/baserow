@@ -24,6 +24,7 @@ import FieldAutonumberSubForm from '@baserow/modules/database/components/field/F
 import FieldDurationSubForm from '@baserow/modules/database/components/field/FieldDurationSubForm'
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
+import FieldLongTextSubForm from '@baserow/modules/database/components/field/FieldLongTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
@@ -31,6 +32,7 @@ import FieldCollaboratorSubForm from '@baserow/modules/database/components/field
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
+import GridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldRichText'
 import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL'
 import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/fields/GridViewFieldEmail'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkRow'
@@ -69,6 +71,7 @@ import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/com
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
+import RowEditFieldRichText from '@baserow/modules/database/components/row/RowEditFieldRichText'
 import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
 import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
@@ -170,7 +173,7 @@ export class FieldType extends Registerable {
    * example if we are creating a number fields this component should contain
    * the inputs to choose of it is an integer of decimal.
    */
-  getFormComponent() {
+  getFormComponent(field) {
     return null
   }
 
@@ -179,7 +182,7 @@ export class FieldType extends Registerable {
    * type. It will only be used in the grid view and it also responsible for editing
    * the value.
    */
-  getGridViewFieldComponent() {
+  getGridViewFieldComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -847,8 +850,16 @@ export class LongTextFieldType extends FieldType {
     return i18n.t('fieldType.longText')
   }
 
-  getGridViewFieldComponent() {
-    return GridViewFieldLongText
+  getFormComponent() {
+    return FieldLongTextSubForm
+  }
+
+  getGridViewFieldComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return GridViewFieldRichText
+    } else {
+      return GridViewFieldLongText
+    }
   }
 
   getFunctionalGridViewFieldComponent() {
@@ -856,7 +867,11 @@ export class LongTextFieldType extends FieldType {
   }
 
   getRowEditFieldComponent(field) {
-    return RowEditFieldLongText
+    if (field?.long_text_enable_rich_text) {
+      return RowEditFieldRichText
+    } else {
+      return RowEditFieldLongText
+    }
   }
 
   getCardComponent() {

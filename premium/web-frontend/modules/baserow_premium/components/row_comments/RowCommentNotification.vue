@@ -22,7 +22,11 @@
         </template>
       </i18n>
     </div>
-    <RichTextEditor :editable="false" :value="notification.data.message" />
+    <RichTextEditor
+      :editable="false"
+      :enable-mentions="true"
+      :value="notification.data.message"
+    />
   </nuxt-link>
 </template>
 

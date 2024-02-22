@@ -402,6 +402,8 @@ class TextFieldType(CollationSortMixin, FieldType):
 class LongTextFieldType(CollationSortMixin, FieldType):
     type = "long_text"
     model_class = LongTextField
+    allowed_fields = ["long_text_enable_rich_text"]
+    serializer_field_names = ["long_text_enable_rich_text"]
     _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):

@@ -425,6 +425,9 @@
     "formulaInputPlaceholder": "Click to edit the formula",
     "refreshFormulaOptions": "Refresh formula options"
   },
+  "fieldLongTextSubForm": {
+    "enableRichTextFormatting": "Enable rich text formatting"
+  },
   "formulaFieldItemDescription": {
     "syntax": "Syntax",
     "examples": "Examples"

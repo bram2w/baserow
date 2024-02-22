@@ -257,7 +257,9 @@ class TextField(Field):
 
 
 class LongTextField(Field):
-    pass
+    long_text_enable_rich_text = models.BooleanField(
+        default=False, null=True, help_text="Enable rich text formatting for the field."
+    )  # TODO: Remove null=True in a future release.
 
 
 class URLField(Field):

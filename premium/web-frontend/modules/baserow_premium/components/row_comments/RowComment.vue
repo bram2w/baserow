@@ -60,7 +60,9 @@
         ref="editor"
         v-model="message"
         :editable="editing"
-        @entered="stopEdit(true)"
+        :enable-mentions="true"
+        :enter-stop-edit="true"
+        @stop-edit="stopEdit(true)"
       />
     </div>
     <div v-if="editing" class="row_comments__comment-text-actions">

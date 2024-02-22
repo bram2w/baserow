@@ -32,3 +32,30 @@
     background-color: $color-primary-100;
   }
 }
+
+.grid-field-long-text--uniform {
+  & h1,
+  h2,
+  h3,
+  p,
+  a,
+  ul,
+  ol,
+  li,
+  blockquote,
+  pre,
+  code {
+    @extend %ellipsis;
+
+    @include fixed-height(32px, 13px);
+
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    color: revert;
+  }
+
+  li::marker {
+    content: initial;
+  }
+}
