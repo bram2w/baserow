@@ -407,6 +407,45 @@
               "order": 29,
               "primary": false,
               "duration_format": "h:mm:ss"
+            },
+            {
+              "id": 4701,
+              "type": "formula",
+              "name": "Formula Duration",
+              "order": 30,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "duration_format": "h:mm:ss",
+              "array_formula_type": null,
+              "formula": "field(\"Duration\") + date_interval('1 h')",
+              "formula_type": "duration"
+            },
+            {
+              "id": 4702,
+              "type": "lookup",
+              "name": "Lookup duration",
+              "order": 31,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "array_formula_type": "duration",
+              "through_field_id": 4686,
+              "through_field_name": "Related",
+              "target_field_id": 4200,
+              "target_field_name": "Duration"
             }
           ],
           "views": [
@@ -745,7 +784,7 @@
                 "bram@baserow.io"
               ],
               "field_4697": "100.00",
-              "field_4700": "1:23:45"
+              "field_4700": "1:23:45" 
             }
           ]
         },
@@ -810,6 +849,14 @@
               "date_time_format": "24",
               "date_show_tzinfo": false,
               "date_force_timezone": null
+            },
+            {
+              "id": 4200,
+              "type": "duration",
+              "name": "Duration",
+              "order": 5,
+              "primary": false,
+              "duration_format": "h:mm:ss"
             }
           ],
           "views": [
@@ -879,7 +926,8 @@
               "field_4684": "1",
               "field_4685": 2497,
               "field_4690": "true",
-              "field_4692": "2023-10-01T19:12:41+00:00"
+              "field_4692": "2023-10-01T19:12:41+00:00",
+              "field_4200": "0:30:00"
             },
             {
               "id": 2,
@@ -890,7 +938,8 @@
               "field_4684": "2",
               "field_4685": 2498,
               "field_4690": "true",
-              "field_4692": "2023-10-02T19:12:44+00:00"
+              "field_4692": "2023-10-02T19:12:44+00:00",
+              "field_4200": "1:00:00"
             }
           ]
         }
