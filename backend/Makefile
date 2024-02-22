@@ -26,6 +26,9 @@ sort:
 test:
 	pytest tests ../premium/backend/tests ../enterprise/backend/tests || exit;
 
+test-coverage:
+	pytest -n 10 --cov-report term --cov-report html:reports/html --cov=src tests ../premium/backend/tests ../enterprise/backend/tests || exit;
+
 test-builder:
 	pytest tests/baserow/contrib/builder || exit
 
@@ -68,15 +71,6 @@ ci-test-python:
 	    backend/tests \
 	    premium/backend/tests\
 		enterprise/backend/tests;
-
-generate-html-coverage-report:
-	mkdir html_coverage/ -p; \
-	cd ..; \
-	coverage run --rcfile=backend/.coveragerc -m pytest \
-	    backend/tests \
-	    premium/backend/tests; \
-	    enterprise/backend/tests; \
-	coverage html -d html_coverage/;
 
 ci-check-startup-python:
 	timeout --preserve-status 10s \
