@@ -1,13 +1,39 @@
 .rich-text-editor {
   width: 100%;
-  background-color: white;
-  max-height: 60vh;
-  overflow-y: auto;
+  height: 100%;
   text-align: left;
 
+  .tiptap.ProseMirror {
+    height: 100%;
+  }
+
   p {
+    margin: 0;
     color: revert;
   }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  blockquote {
+    margin: 1rem;
+    padding-left: 1rem;
+    color: $color-neutral-700;
+    border-left: 4px solid $color-neutral-300;
+  }
+
+  pre {
+    padding: 1rem;
+    background-color: $color-neutral-100;
+    border-radius: $rounded;
+  }
+}
+
+.rich-text-editor__comment {
+  max-height: 60vh;
+  overflow-y: auto;
+  background-color: white;
 }
 
 .rich-text-editor__mention {

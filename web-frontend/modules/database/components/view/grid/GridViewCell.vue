@@ -102,7 +102,7 @@ export default {
     getComponent(parent, props) {
       return parent.$registry
         .get('field', props.field.type)
-        .getGridViewFieldComponent()
+        .getGridViewFieldComponent(props.field)
     },
     /**
      * If the grid field component emits an update event then this method will be
