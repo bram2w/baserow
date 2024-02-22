@@ -179,9 +179,7 @@ def test_get_workspace_row_count_annotation_sums_all_database_tables_row_counts(
 
     # One with a mix of tables with and without the count
     database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(
-        user=user, database=database, usage={"row_count": 10}
-    )
+    data_fixture.create_database_table(user=user, database=database, row_count=10)
     data_fixture.create_database_table(user=user, database=database)
 
     # One with a single table
@@ -189,7 +187,7 @@ def test_get_workspace_row_count_annotation_sums_all_database_tables_row_counts(
         workspace=workspace
     )
     data_fixture.create_database_table(
-        user=user, database=database_single_table, usage={"row_count": 50}
+        user=user, database=database_single_table, row_count=50
     )
 
     # And a second workspace with its own different tables
@@ -198,7 +196,7 @@ def test_get_workspace_row_count_annotation_sums_all_database_tables_row_counts(
         workspace=workspace2
     )
     data_fixture.create_database_table(
-        user=user, database=database_other_workspace, usage={"row_count": 1234}
+        user=user, database=database_other_workspace, row_count=1234
     )
 
     annotated_workspaces = Workspace.objects.annotate(
@@ -221,9 +219,7 @@ def test_get_workspace_row_count_annotation_ignores_trashed_databases(
     database = data_fixture.create_database_application(
         workspace=workspace, trashed=True
     )
-    data_fixture.create_database_table(
-        user=user, database=database, usage={"row_count": 10}
-    )
+    data_fixture.create_database_table(user=user, database=database, row_count=10)
     data_fixture.create_database_table(user=user, database=database)
 
     annotated_workspaces = Workspace.objects.annotate(
@@ -243,12 +239,10 @@ def test_get_workspace_row_count_annotation_ignores_trashed_tables(
     workspace = data_fixture.create_workspace(user=user)
 
     database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(
-        user=user, database=database, usage={"row_count": 10}
-    )
+    data_fixture.create_database_table(user=user, database=database, row_count=10)
     data_fixture.create_database_table(user=user, database=database)
     data_fixture.create_database_table(
-        user=user, database=database, usage={"row_count": 20}, trashed=True
+        user=user, database=database, row_count=20, trashed=True
     )
 
     annotated_workspaces = Workspace.objects.annotate(

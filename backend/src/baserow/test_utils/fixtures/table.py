@@ -17,10 +17,18 @@ class TableFixtures:
             kwargs["order"] = 0
 
         kwargs.setdefault("needs_background_update_column_added", True)
-        usage = kwargs.pop("usage", None)
+
+        row_count = kwargs.pop("row_count", None)
+        usage = {}
+        if row_count is not None:
+            usage = {"row_count": row_count}
+
+        storage_usage = kwargs.pop("storage_usage", None)
+        if storage_usage is not None:
+            usage["storage_usage"] = storage_usage
 
         table = Table.objects.create(**kwargs)
-        if usage is not None:
+        if usage:
             TableUsage.objects.create(table=table, **usage)
 
         if create_table:
