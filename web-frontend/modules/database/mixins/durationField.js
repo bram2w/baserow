@@ -1,4 +1,5 @@
 import { DurationFieldType } from '@baserow/modules/database/fieldTypes'
+import { formatDurationValue } from '@baserow/modules/database/utils/duration'
 
 /**
  * This mixin contains some method overrides for validating and formatting the
@@ -11,11 +12,6 @@ export default {
       errorMsg: null,
       formattedValue: '',
     }
-  },
-  computed: {
-    fieldType() {
-      return this.$registry.get('field', DurationFieldType.getType())
-    },
   },
   watch: {
     value(value) {
@@ -36,7 +32,9 @@ export default {
       return this.errorMsg
     },
     formatValue(field, value) {
-      return this.fieldType.formatValue(field, value)
+      // This function is used also in functional components,
+      // so we cannot get the field type from the registry here.
+      return formatDurationValue(value, field.duration_format)
     },
     updateFormattedValue(field, value) {
       this.formattedValue = this.formatValue(field, value)
@@ -46,7 +44,8 @@ export default {
       if (this.errorMsg !== null) {
         return
       }
-      const newCopy = this.fieldType.parseInputValue(field, value)
+      const fieldType = this.$registry.get('field', DurationFieldType.getType())
+      const newCopy = fieldType.parseInputValue(field, value)
       if (newCopy !== this.copy) {
         this.copy = newCopy
         return newCopy
