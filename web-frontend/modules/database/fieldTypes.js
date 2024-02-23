@@ -1018,7 +1018,13 @@ export class LinkRowFieldType extends FieldType {
       return ''
     }
 
-    const nameList = value.map(({ value }) => value)
+    const nameList = value.map((link) => {
+      if (link.value) {
+        return link.value
+      }
+      return this.app.i18n.t('gridViewFieldLinkRow.unnamed', { value: link.id })
+    })
+
     // Use papa to generate a CSV string
     return this.app.$papa.arrayToString(nameList)
   }
