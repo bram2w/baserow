@@ -209,6 +209,15 @@ class FieldType(
 
         return getattr(row, field_name)
 
+    def prepare_row_history_value_from_action_meta_data(self, value):
+        """
+        Prepare the row action update action meta data value for the row history.
+        This can be used to change the value to a different format if needed. It's
+        for example used by the password field to mask the hash.
+        """
+
+        return value
+
     def prepare_value_for_db_in_bulk(
         self,
         instance: Field,

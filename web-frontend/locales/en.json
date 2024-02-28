@@ -26,6 +26,7 @@
     "makeChoice": "Make a choice",
     "cancel": "Cancel",
     "save": "Save",
+    "set": "Set",
     "retry": "Retry",
     "search": "Search",
     "copy": "Copy",
@@ -114,7 +115,8 @@
     "multipleSelectCheckboxes": "Checkboxes",
     "singleSelectDropdown": "Dropdown",
     "singleSelectRadios": "Radios",
-    "autonumber": "Autonumber"
+    "autonumber": "Autonumber",
+    "password": "Password"
   },
   "fieldErrors": {
     "invalidNumber": "Invalid number",
@@ -124,7 +126,9 @@
     "invalidEmail": "Invalid email",
     "invalidPhoneNumber": "Invalid Phone Number",
     "invalidDuration": "Invalid format ({durationFormat}).",
-    "overflowDuration": "Value is too large."
+    "overflowDuration": "Value is too large.",
+    "maxChars": "Max {max} chars.",
+    "minChars": "Min {min} chars."
   },
   "fieldDocs": {
     "readOnly": "This is a read only field.",
@@ -158,7 +162,8 @@
     "lookup": "A read-only field connected to a link to table field which returns an array of values and row ids from the chosen lookup field in the linked table.",
     "multipleCollaborators": "Accepts an array of objects where each object contains a user's id.",
     "uuid": "A read-only unique and persistent uuid.",
-    "autonumber": "A read-only field that automatically increments a number for each new row."
+    "autonumber": "A read-only field that automatically increments a number for each new row.",
+    "password": "A write-only field that holds a hashed password. The value will be `null` if not set, or `true` if it has been set. It accepts a string to set it."
   },
   "viewFilter": {
     "contains": "contains",

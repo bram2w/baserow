@@ -37,6 +37,7 @@ from baserow.contrib.database.fields.field_types import (
     MultipleCollaboratorsFieldType,
     MultipleSelectFieldType,
     NumberFieldType,
+    PasswordFieldType,
     PhoneNumberFieldType,
     RatingFieldType,
     SingleSelectFieldType,
@@ -1399,6 +1400,7 @@ class EmptyViewFilterType(ViewFilterType):
         MultipleSelectFieldType.type,
         MultipleCollaboratorsFieldType.type,
         DurationFieldType.type,
+        PasswordFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,

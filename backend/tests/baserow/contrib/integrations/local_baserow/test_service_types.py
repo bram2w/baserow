@@ -1665,6 +1665,13 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
+        field_db_column_by_name["password"]: {
+            "title": "password",
+            "default": None,
+            "original_type": "password",
+            "metadata": {},
+            "type": "boolean",
+        },
         "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 

@@ -180,6 +180,7 @@ class DatabaseConfig(AppConfig):
             MultipleCollaboratorsFieldType,
             MultipleSelectFieldType,
             NumberFieldType,
+            PasswordFieldType,
             PhoneNumberFieldType,
             RatingFieldType,
             RollupFieldType,
@@ -214,6 +215,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(MultipleCollaboratorsFieldType())
         field_type_registry.register(UUIDFieldType())
         field_type_registry.register(AutonumberFieldType())
+        field_type_registry.register(PasswordFieldType())
 
         from .fields.field_converters import (
             AutonumberFieldConverter,
@@ -223,6 +225,7 @@ class DatabaseConfig(AppConfig):
             MultipleCollaboratorsFieldConverter,
             MultipleSelectFieldToSingleSelectFieldConverter,
             MultipleSelectFieldToTextFieldConverter,
+            PasswordFieldConverter,
             SingleSelectFieldToMultipleSelectFieldConverter,
             TextFieldToMultipleSelectFieldConverter,
         )
@@ -240,6 +243,7 @@ class DatabaseConfig(AppConfig):
         )
         field_converter_registry.register(FormulaFieldConverter())
         field_converter_registry.register(AutonumberFieldConverter())
+        field_converter_registry.register(PasswordFieldConverter())
 
         from .fields.actions import (
             CreateFieldActionType,
