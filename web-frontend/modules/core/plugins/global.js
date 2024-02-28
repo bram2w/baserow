@@ -47,6 +47,7 @@ import RadioButton from '@baserow/modules/core/components/RadioButton'
 import Thumbnail from '@baserow/modules/core/components/Thumbnail'
 import ColorInput from '@baserow/modules/core/components/ColorInput'
 import ColorInputGroup from '@baserow/modules/core/components/ColorInputGroup'
+import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 
 function setupVue(Vue) {
   Vue.component('Context', Context)
@@ -83,6 +84,7 @@ function setupVue(Vue) {
   Vue.component('FormRow', FormRow)
   Vue.component('ColorInput', ColorInput)
   Vue.component('ColorInputGroup', ColorInputGroup)
+  Vue.component('SelectSearch', SelectSearch)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

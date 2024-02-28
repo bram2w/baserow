@@ -1,12 +1,15 @@
 from collections import defaultdict
 from unittest.mock import MagicMock
 
+from django.contrib.auth.models import AnonymousUser
+
 import pytest
 
 from baserow.contrib.builder.data_providers.data_provider_types import (
     DataSourceDataProviderType,
     FormDataProviderType,
     PageParameterDataProviderType,
+    UserDataProviderType,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
@@ -15,6 +18,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.core.utils import MirrorDict
 
 
@@ -509,9 +513,12 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
-    data_source_provider.get_data_chunk(
-        dispatch_context, [data_source.id, fields[1].db_column]
-    ) == "Blue"
+    assert (
+        data_source_provider.get_data_chunk(
+            dispatch_context, [data_source.id, fields[1].db_column]
+        )
+        == "Blue"
+    )
 
 
 @pytest.mark.django_db
@@ -637,3 +644,37 @@ def test_form_data_provider_type_import_path(data_fixture):
     path_imported = FormDataProviderType().import_path(path, id_mapping)
 
     assert path_imported == [str(element_duplicated.id), "test"]
+
+
+@pytest.mark.django_db
+def test_user_data_provider_get_data_chunk(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+
+    user_data_provider_type = UserDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "page_parameter": {},
+    }
+    fake_request.user_source_user = AnonymousUser()
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+
+    assert not user_data_provider_type.get_data_chunk(
+        dispatch_context, ["is_authenticated"]
+    )
+
+    assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 0
+
+    fake_request.user_source_user = UserSourceUser(
+        None, None, 42, "username", "e@ma.il"
+    )
+
+    assert user_data_provider_type.get_data_chunk(
+        dispatch_context, ["is_authenticated"]
+    )
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["email"]) == "e@ma.il"
+    )
+    assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 42

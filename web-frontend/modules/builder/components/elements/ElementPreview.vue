@@ -26,12 +26,7 @@
       @select-parent="actionSelectElement({ element: parentElement })"
     />
 
-    <PageElement
-      v-if="isRootElement"
-      :element="element"
-      :mode="mode"
-    ></PageElement>
-    <PageElement v-else :element="element" :mode="mode" />
+    <PageElement :element="element" :mode="mode" class="element--read-only" />
 
     <InsertElementButton
       v-show="isSelected"

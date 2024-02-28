@@ -27,6 +27,7 @@ import {
 import { EnterprisePlugin } from '@baserow_enterprise/plugins'
 import { LocalBaserowUserSourceType } from '@baserow_enterprise/integrations/userSourceTypes'
 import { LocalBaserowPasswordAppAuthProviderType } from '@baserow_enterprise/integrations/appAuthProviderTypes'
+import { AuthFormElementType } from '@baserow_enterprise/builder/elementTypes'
 
 export default (context) => {
   const { app, isDev, store } = context
@@ -95,4 +96,6 @@ export default (context) => {
     'appAuthProvider',
     new LocalBaserowPasswordAppAuthProviderType(context)
   )
+
+  app.$registry.register('element', new AuthFormElementType(context))
 }

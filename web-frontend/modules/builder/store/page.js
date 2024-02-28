@@ -71,7 +71,7 @@ const actions = {
   forceCreate({ commit }, { builder, page }) {
     commit('ADD_ITEM', { builder, page })
   },
-  selectById({ commit, dispatch, getters }, { builder, pageId }) {
+  selectById({ commit, getters }, { builder, pageId }) {
     const type = BuilderApplicationType.getType()
 
     // Check if the just selected application is a builder
@@ -85,15 +85,6 @@ const actions = {
     const page = getters.getById(builder, pageId)
 
     commit('SET_SELECTED', { builder, page })
-
-    // Unselect previously selected element
-    dispatch(
-      'element/select',
-      {
-        element: null,
-      },
-      { root: true }
-    )
 
     return page
   },

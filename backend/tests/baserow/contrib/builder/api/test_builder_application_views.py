@@ -44,7 +44,7 @@ def test_list_builder_applications_theme_config_block_created_number_of_queries(
 
 @pytest.mark.django_db
 def test_list_builder_applications_equal_number_of_queries_n_builders(
-    api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -86,12 +86,13 @@ def test_list_builder_applications_equal_number_of_queries_n_builders(
 
     # The number of queries should not increase because another builder application
     # is added, with its own theme.
+
     assert (
         len(queries_request_1.captured_queries)
-        # The -3 queries are expected because that's another license check and a
+        # The -2 queries are expected because that's another a
         # savepoint + release savepoint. This is unrelated to the builder application
         # specific code.
-        == len(queries_request_2.captured_queries) - 3
+        == len(queries_request_2.captured_queries) - 2
     )
 
 

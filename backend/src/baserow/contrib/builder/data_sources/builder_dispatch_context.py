@@ -1,11 +1,14 @@
+from rest_framework.request import Request
+
 from baserow.contrib.builder.data_providers.registries import (
     builder_data_provider_type_registry,
 )
+from baserow.contrib.builder.pages.models import Page
 from baserow.core.services.dispatch_context import DispatchContext
 
 
 class BuilderDispatchContext(DispatchContext):
-    def __init__(self, request, page):
+    def __init__(self, request: Request, page: Page):
         self.request = request
         self.page = page
 

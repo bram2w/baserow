@@ -610,7 +610,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
     def blacklist_refresh_token(
-        self, user: AbstractUser, refresh_token: str, expires_at: datetime.datetime
+        self, refresh_token: str, expires_at: datetime.datetime
     ):
         """
         Blacklists the provided refresh token. This results in not being able to
@@ -626,7 +626,6 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         try:
             BlacklistedToken.objects.create(
-                user=user,
                 hashed_token=hashed_token,
                 expires_at=expires_at,
             )

@@ -639,11 +639,10 @@ def test_active_users_qs_excludes_pending_deletion_users(data_fixture):
 def test_blacklist_refresh_token(data_fixture):
     user = data_fixture.create_user()
 
-    UserHandler().blacklist_refresh_token(user, "test", datetime(2021, 1, 1, 12, 00))
+    UserHandler().blacklist_refresh_token("test", datetime(2021, 1, 1, 12, 00))
 
     tokens = BlacklistedToken.objects.all()
     assert len(tokens) == 1
-    assert tokens[0].user_id == user.id
     assert (
         tokens[0].hashed_token
         == "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
@@ -652,22 +651,16 @@ def test_blacklist_refresh_token(data_fixture):
 
 @pytest.mark.django_db
 def test_duplicate_blacklist_refresh_token(data_fixture):
-    user = data_fixture.create_user()
-
-    UserHandler().blacklist_refresh_token(user, "test", datetime(2021, 1, 1, 12, 00))
+    UserHandler().blacklist_refresh_token("test", datetime(2021, 1, 1, 12, 00))
 
     with pytest.raises(RefreshTokenAlreadyBlacklisted):
-        UserHandler().blacklist_refresh_token(
-            user, "test", datetime(2021, 1, 1, 12, 00)
-        )
+        UserHandler().blacklist_refresh_token("test", datetime(2021, 1, 1, 12, 00))
 
 
 @pytest.mark.django_db
 def test_refresh_token_is_blacklisted(data_fixture):
-    user = data_fixture.create_user()
-
     assert UserHandler().refresh_token_is_blacklisted("test") is False
-    UserHandler().blacklist_refresh_token(user, "test", datetime(2021, 1, 1, 12, 00))
+    UserHandler().blacklist_refresh_token("test", datetime(2021, 1, 1, 12, 00))
     assert UserHandler().refresh_token_is_blacklisted("test") is True
 
 

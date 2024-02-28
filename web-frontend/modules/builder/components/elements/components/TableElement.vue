@@ -3,6 +3,7 @@
     :style="{
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
+    class="table-element"
   >
     <BaserowTable :fields="element.fields" :rows="rows">
       <template #cell-content="{ field, value }">

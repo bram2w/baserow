@@ -28,6 +28,7 @@ export default {
       formulaComponent: ApplicationBuilderFormulaInputGroup,
     }
   },
+  middleware: ['userSourceAuthentication'],
   async asyncData({ store, params, error, $registry, app, req }) {
     let mode = 'public'
     const builderId = parseInt(params.builderId, 10)
@@ -148,7 +149,7 @@ export default {
     dispatchContext: {
       deep: true,
       /**
-       * Update data source content on backend context changes
+       * Update data source content on dispatch context changes
        */
       handler(newValue) {
         this.$store.dispatch(

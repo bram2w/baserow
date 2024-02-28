@@ -1,5 +1,7 @@
+import uuid
 from collections import defaultdict
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 
@@ -33,13 +35,30 @@ def test_create_user_source(data_fixture, user_source_type: UserSourceType):
     user_source = UserSourceHandler().create_user_source(
         user_source_type,
         application=application,
-        **user_source_type.prepare_values({}, user)
+        **user_source_type.prepare_values({}, user),
     )
 
     assert user_source.application.id == application.id
 
     assert user_source.order == 1
     assert UserSource.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_create_user_source_check_uid(data_fixture, stub_user_source_registry):
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+
+    def gen_uid(user_source):
+        return f"{user_source.id}_test"
+
+    with stub_user_source_registry(gen_uid_return=gen_uid):
+        first_type = list(user_source_type_registry.get_all())[0]
+        user_source = UserSourceHandler().create_user_source(
+            first_type, application=application, **first_type.prepare_values({}, user)
+        )
+
+    assert user_source.uid == f"{user_source.id}_test"
 
 
 @pytest.mark.django_db
@@ -53,7 +72,7 @@ def test_create_user_source_bad_application(data_fixture):
         UserSourceHandler().create_user_source(
             user_source_type,
             application=application,
-            **user_source_type.prepare_values({}, user)
+            **user_source_type.prepare_values({}, user),
         )
 
 
@@ -99,7 +118,7 @@ def test_delete_user_source(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_user_source(data_fixture):
+def test_update_user_source(data_fixture, stub_user_source_registry):
     user = data_fixture.create_user()
     integration = data_fixture.create_local_baserow_integration(user=user)
     integration2 = data_fixture.create_local_baserow_integration(user=user)
@@ -108,13 +127,18 @@ def test_update_user_source(data_fixture):
         user=user, integration=integration
     )
 
-    user_source_type = user_source_type_registry.get("local_baserow")
+    def gen_uid(user_source):
+        return f"{user_source.id}_test"
 
-    user_source_updated = UserSourceHandler().update_user_source(
-        user_source_type, user_source, integration=integration2
-    )
+    with stub_user_source_registry(gen_uid_return=gen_uid):
+        user_source_type = user_source_type_registry.get("local_baserow")
+
+        user_source_updated = UserSourceHandler().update_user_source(
+            user_source_type, user_source, integration=integration2
+        )
 
     assert user_source_updated.integration.id == integration2.id
+    assert user_source.uid == f"{user_source.id}_test"
 
 
 @pytest.mark.django_db
@@ -255,9 +279,12 @@ def test_export_user_source(data_fixture):
     builder = data_fixture.create_builder_application()
     integration = data_fixture.create_local_baserow_integration()
 
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=builder, integration=integration, name="Test name"
-    )
+    with patch(
+        "uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")
+    ):
+        user_source = data_fixture.create_user_source_with_first_type(
+            application=builder, integration=integration, name="Test name"
+        )
 
     app_auth_provider1 = data_fixture.create_app_auth_provider_with_first_type(
         user_source=user_source
@@ -277,6 +304,7 @@ def test_export_user_source(data_fixture):
         "order": "1.00000000000000000000",
         "table_id": None,
         "type": "local_baserow",
+        "uid": "12345678123456781234567812345678",
         "auth_providers": [
             {
                 "domain": None,
@@ -363,3 +391,45 @@ def test_import_user_source_with_migrated_integration(data_fixture):
     )
 
     assert imported_instance.integration_id == integration.id
+
+
+@pytest.mark.django_db
+def test_export_then_import_user_source(data_fixture):
+    """
+    Basically test that we can duplicate a usersource which can be problematic
+    because of the unique uid.
+    """
+
+    builder = data_fixture.create_builder_application()
+    integration = data_fixture.create_local_baserow_integration()
+
+    with patch(
+        "uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")
+    ):
+        user_source = data_fixture.create_user_source_with_first_type(
+            application=builder, integration=integration, name="Test name"
+        )
+
+    app_auth_provider1 = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source
+    )
+    app_auth_provider2 = data_fixture.create_app_auth_provider_with_first_type(
+        user_source=user_source
+    )
+
+    exported = UserSourceHandler().export_user_source(user_source)
+
+    imported_instance = UserSourceHandler().import_user_source(
+        builder, exported, defaultdict(MirrorDict)
+    )
+
+    assert imported_instance.uid != user_source.uid
+
+    exported["uid"] = "another_uid"
+
+    imported_instance = UserSourceHandler().import_user_source(
+        builder, exported, defaultdict(MirrorDict)
+    )
+
+    # Should update the uid only if it already exists
+    assert imported_instance.uid == "another_uid"

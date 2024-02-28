@@ -21,11 +21,27 @@
     width: 100%;
   }
 
+  &--center {
+    text-align: center;
+  }
+
+  &--large {
+    font-size: 15px;
+    padding: 5px 12px;
+  }
+
   .element--alignment-horizontal-center & {
     text-align: center;
   }
 
   .element--alignment-horizontal-right & {
     text-align: right;
+  }
+
+  &[disabled],
+  &[disabled]:hover {
+    cursor: not-allowed;
+    filter: saturate(0%);
+    opacity: 0.8;
   }
 }

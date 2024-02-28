@@ -202,6 +202,14 @@ class DomainHandler:
             builder, import_export_config, None, default_storage
         )
 
+        # Update user_source uid to have something stable per domain.
+        # This is mainly because we want a token generated for one version of a site
+        # to still be valid if we redeploy the website.
+        exported_builder["user_sources"] = [
+            {**user_source, "uid": f"domain_{domain.id}__{user_source['uid']}"}
+            for user_source in exported_builder["user_sources"]
+        ]
+
         progress.increment(by=50)
 
         id_mapping = {"import_workspace_id": workspace.id}

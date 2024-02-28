@@ -32,3 +32,9 @@ ERROR_AUTH_PROVIDER_CANT_BE_CREATED = (
     HTTP_400_BAD_REQUEST,
     "One of the auth provider can't be created.",
 )
+
+ERROR_USER_SOURCE_IMPROPERLY_CONFIGURED = (
+    "ERROR_USER_SOURCE_IMPROPERLY_CONFIGURED",
+    HTTP_400_BAD_REQUEST,
+    "The user_source configuration is incomplete.",
+)

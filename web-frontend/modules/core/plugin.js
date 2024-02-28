@@ -52,8 +52,8 @@ import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
 import userSourceStore from '@baserow/modules/core/store/userSource'
-import appAuthProviderStore from '@baserow/modules/core/store/appAuthProvider'
 import notificationStore from '@baserow/modules/core/store/notification'
+import userSourceUserStore from '@baserow/modules/core/store/userSourceUser'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -148,8 +148,8 @@ export default (context, inject) => {
   store.registerModule('undoRedo', undoRedoStore)
   store.registerModule('integration', integrationStore)
   store.registerModule('userSource', userSourceStore)
-  store.registerModule('appAuthProvider', appAuthProviderStore)
   store.registerModule('notification', notificationStore)
+  store.registerModule('userSourceUser', userSourceUserStore)
 
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))

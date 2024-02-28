@@ -1,5 +1,5 @@
 <template>
-  <form>
+  <form @submit.prevent="submit">
     <FormGroup
       :label="$t('createUserSourceForm.userSourceType')"
       :error="getError('type')"
@@ -34,6 +34,7 @@
       :error="getError('name')"
       :label="$t('createUserSourceForm.userSourceName')"
     />
+    <input type="submit" hidden />
   </form>
 </template>
 
@@ -42,7 +43,6 @@ import form from '@baserow/modules/core/mixins/form'
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import { required, maxLength } from 'vuelidate/lib/validators'
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
-import { mapGetters } from 'vuex'
 
 export default {
   name: 'CreateUserSourceForm',
@@ -64,9 +64,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      userSources: 'userSource/getUserSources',
-    }),
+    userSources() {
+      return this.$store.getters['userSource/getUserSources'](this.builder)
+    },
     userSourceTypes() {
       return Object.values(this.$registry.getOrderedList('userSource'))
     },

@@ -32,46 +32,6 @@ const mutations = {
 
 const actions = {
   /**
-   * Fetch the data from the server and add them to the store.
-   * @param {object} dataSource the data source we want to dispatch
-   * @param {object} data the query body
-   */
-  async fetchDataSourceContent(
-    { commit },
-    { page, dataSource, data: queryData }
-  ) {
-    if (!dataSource.type) {
-      return
-    }
-
-    const serviceType = this.app.$registry.get('service', dataSource.type)
-
-    commit('SET_LOADING', { page, value: true })
-    try {
-      if (serviceType.isValid(dataSource)) {
-        const { data } = await DataSourceService(this.app.$client).dispatch(
-          dataSource.id,
-          queryData
-        )
-        commit('SET_CONTENT', {
-          page,
-          dataSourceId: dataSource.id,
-          value: data,
-        })
-      } else {
-        commit('SET_CONTENT', {
-          page,
-          dataSourceId: dataSource.id,
-          value: null,
-        })
-      }
-    } catch (e) {
-      commit('SET_CONTENT', { page, dataSourceId: dataSource.id, value: null })
-    }
-    commit('SET_LOADING', { page, value: false })
-  },
-
-  /**
    * Fetch the content for every data sources of the given page.
    */
   async fetchPageDataSourceContent({ commit }, { page, data: queryData }) {

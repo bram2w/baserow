@@ -6,6 +6,10 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.app_auth_providers.serializers import (
+    ReadPolymorphicAppAuthProviderSerializer,
+)
+from baserow.api.polymorphic import PolymorphicSerializer
 from baserow.api.services.serializers import PublicServiceSerializer
 from baserow.contrib.builder.api.pages.serializers import PathParamSerializer
 from baserow.contrib.builder.api.theme.serializers import (
@@ -20,6 +24,8 @@ from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.services.registries import service_type_registry
+from baserow.core.user_sources.models import UserSource
+from baserow.core.user_sources.registries import user_source_type_registry
 
 
 class DomainSerializer(serializers.ModelSerializer):
@@ -138,6 +144,51 @@ class PublicPageSerializer(serializers.ModelSerializer):
         }
 
 
+class BasePublicUserSourceSerializer(serializers.ModelSerializer):
+    """
+    Basic user source serializer mostly for returned values.
+    """
+
+    type = serializers.SerializerMethodField(help_text="The type of the user_source.")
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_type(self, instance):
+        return user_source_type_registry.get_by_model(instance.specific_class).type
+
+    auth_providers = ReadPolymorphicAppAuthProviderSerializer(
+        required=False,
+        many=True,
+        help_text="Auth providers related to this user source.",
+    )
+
+    class Meta:
+        model = UserSource
+        fields = (
+            "id",
+            "type",
+            "name",
+            "order",
+            "auth_providers",
+        )
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "auth_providers": {"read_only": True},
+            "type": {"read_only": True},
+            "name": {"read_only": True},
+            "order": {"read_only": True, "help_text": "Lowest first."},
+        }
+
+
+class PolymorphicPublicUserSourceSerializer(PolymorphicSerializer):
+    """
+    Public polymorphic serializer for user sources.
+    """
+
+    base_class = BasePublicUserSourceSerializer
+    registry = user_source_type_registry
+    request = False
+
+
 class PublicBuilderSerializer(serializers.ModelSerializer):
     """
     A public version of the builder serializer with less data to prevent data leaks.
@@ -146,6 +197,10 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
     pages = serializers.SerializerMethodField(
         help_text="This field is specific to the `builder` application and contains "
         "an array of pages that are in the builder."
+    )
+
+    user_sources = serializers.SerializerMethodField(
+        help_text="The user sources related with this builder."
     )
 
     theme = serializers.SerializerMethodField(
@@ -157,7 +212,7 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Builder
-        fields = ("id", "name", "pages", "type", "theme")
+        fields = ("id", "name", "pages", "type", "theme", "user_sources")
 
     @extend_schema_field(PublicPageSerializer(many=True))
     def get_pages(self, instance: Builder) -> List:
@@ -171,6 +226,19 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
         pages = instance.page_set.all()
 
         return PublicPageSerializer(pages, many=True).data
+
+    @extend_schema_field(PolymorphicPublicUserSourceSerializer(many=True))
+    def get_user_sources(self, instance: Builder) -> List:
+        """
+        Returns the user sources related to this public builder.
+
+        :param instance: The builder application instance.
+        :return: A list of serialized user sources that belong to this instance.
+        """
+
+        user_sources = instance.user_sources.all()
+
+        return PolymorphicPublicUserSourceSerializer(user_sources, many=True).data
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance: Builder) -> str:

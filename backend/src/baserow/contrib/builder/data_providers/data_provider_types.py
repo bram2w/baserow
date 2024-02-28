@@ -181,3 +181,36 @@ class CurrentRecordDataProviderType(DataProviderType):
         _, *rest = service_type.import_path([0, *path], id_mapping)
 
         return rest
+
+
+class UserDataProviderType(DataProviderType):
+    """
+    This data provider user the user in `request.user_source_user` to resolve formula
+    paths. This property is injected into the request by the
+    `baserow.api.user_sources.middleware.AddUserSourceUserMiddleware` django middleware.
+    """
+
+    type = "user"
+
+    def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
+        """
+        Loads the user_source_user from the request object and expose it to the
+        formulas.
+        """
+
+        user = dispatch_context.request.user_source_user
+
+        is_authenticated = user.is_authenticated
+
+        if is_authenticated:
+            user = {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+            }
+        else:
+            user = {"id": 0, "username": "", "email": ""}
+
+        return get_nested_value_from_dict(
+            {"is_authenticated": is_authenticated, **user}, path
+        )

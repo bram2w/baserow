@@ -35,6 +35,13 @@ export class UserSourceType extends Registerable {
     return null
   }
 
+  /**
+   * Should return the login option to display the right auth form.
+   */
+  getLoginOptions(userSource) {
+    throw new Error('Must be set on the type.')
+  }
+
   getOrder() {
     return 0
   }

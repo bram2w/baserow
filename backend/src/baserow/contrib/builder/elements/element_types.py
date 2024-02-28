@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
@@ -171,6 +172,24 @@ class CollectionElementType(ElementType, ABC):
                     raise ValidationError(
                         f"The data source with ID {data_source_id} doesn't return a "
                         "list."
+                    )
+
+                if instance:
+                    current_page = PageHandler().get_page(instance.page_id)
+                else:
+                    current_page = values["page"]
+
+                if current_page.id != data_source.page_id:
+                    raise RequestBodyValidationException(
+                        {
+                            "data_source_id": [
+                                {
+                                    "detail": "The provided data source doesn't belong "
+                                    "to the same application.",
+                                    "code": "invalid_data_source",
+                                }
+                            ]
+                        }
                     )
                 values["data_source"] = data_source
             else:

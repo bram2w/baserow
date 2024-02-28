@@ -1,5 +1,5 @@
 <template>
-  <form>
+  <form @submit.prevent="submit">
     <FormRow>
       <FormInput
         v-model="$v.values.name.$model"
@@ -55,6 +55,7 @@
         </div>
       </div>
     </div>
+    <input type="submit" hidden />
   </form>
 </template>
 

@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING
 
 from django.contrib.contenttypes.models import ContentType
@@ -18,6 +19,10 @@ if TYPE_CHECKING:
 
 def get_default_user_source():
     return ContentType.objects.get_for_model(UserSource)
+
+
+def gen_uuid():
+    return uuid.uuid4().hex
 
 
 class UserSource(
@@ -61,6 +66,13 @@ class UserSource(
         ContentType,
         related_name="user_sources",
         on_delete=models.SET(get_default_user_source),
+    )
+    uid = models.TextField(
+        default=gen_uuid,
+        editable=False,
+        unique=True,
+        null=False,
+        help_text="Unique id for this user source.",
     )
 
     @staticmethod

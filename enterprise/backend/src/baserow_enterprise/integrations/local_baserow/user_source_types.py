@@ -6,18 +6,47 @@ from rest_framework import serializers
 
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
+from baserow.contrib.database.fields.field_types import (
+    EmailFieldType,
+    LongTextFieldType,
+    NumberFieldType,
+    TextFieldType,
+    UUIDFieldType,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
+from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.app_auth_providers.handler import AppAuthProviderHandler
+from baserow.core.handler import CoreHandler
+from baserow.core.user.exceptions import UserNotFound
+from baserow.core.user_sources.exceptions import UserSourceImproperlyConfigured
+from baserow.core.user_sources.models import UserSource
 from baserow.core.user_sources.registries import UserSourceType
 from baserow.core.user_sources.types import UserSourceDict, UserSourceSubClass
-from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
+from baserow.core.user_sources.user_source_user import UserSourceUser
+from baserow_enterprise.integrations.local_baserow.models import (
+    LocalBaserowPasswordAppAuthProvider,
+    LocalBaserowUserSource,
+)
 
 
 class LocalBaserowUserSourceType(UserSourceType):
     type = "local_baserow"
     model_class = LocalBaserowUserSource
+    field_types_allowed_as_name = [
+        EmailFieldType.type,
+        TextFieldType.type,
+        LongTextFieldType.type,
+        NumberFieldType.type,
+        UUIDFieldType.type,
+    ]
+    field_types_allowed_as_email = [
+        EmailFieldType.type,
+        TextFieldType.type,
+        LongTextFieldType.type,
+    ]
 
     class SerializedDict(UserSourceDict):
         table_id: int
@@ -167,6 +196,19 @@ class LocalBaserowUserSourceType(UserSourceType):
                             ]
                         }
                     )
+                if field.get_type().type not in self.field_types_allowed_as_email:
+                    raise RequestBodyValidationException(
+                        {
+                            "email_field_id": [
+                                {
+                                    "detail": "This field type can't be used as "
+                                    "email.",
+                                    "code": "invalid_field",
+                                }
+                            ]
+                        }
+                    )
+
                 values["email_field"] = field
             else:
                 values["email_field"] = None
@@ -213,6 +255,20 @@ class LocalBaserowUserSourceType(UserSourceType):
                             ]
                         }
                     )
+
+                if field.get_type().type not in self.field_types_allowed_as_name:
+                    raise RequestBodyValidationException(
+                        {
+                            "name_field_id": [
+                                {
+                                    "detail": "This field type can't be used as "
+                                    "name.",
+                                    "code": "invalid_field",
+                                }
+                            ]
+                        }
+                    )
+
                 values["name_field"] = field
             else:
                 values["name_field"] = None
@@ -250,3 +306,127 @@ class LocalBaserowUserSourceType(UserSourceType):
             return id_mapping.get("database_fields", {}).get(value, value)
 
         return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+
+    def get_user_model(self, user_source):
+        # Use table handler to exclude trashed table
+        table = TableHandler().get_table(user_source.table_id)
+        integration = user_source.integration.specific
+
+        model = table.get_model()
+
+        CoreHandler().check_permissions(
+            integration.authorized_user,
+            ReadDatabaseRowOperationType.type,
+            workspace=table.database.workspace,
+            context=table,
+        )
+
+        return model
+
+    def is_configured(self, user_source):
+        """
+        Returns True if the user source is configured properly. False otherwise.
+        """
+
+        return user_source.email_field_id and user_source.name_field_id
+
+    def gen_uid(self, user_source):
+        """
+        We want to invalidate user tokens if the table or the email field change.
+        """
+
+        return (
+            f"{user_source.id}"
+            f"_{user_source.table_id if user_source.table_id else '?'}"
+            f"_{user_source.email_field_id if user_source.email_field_id else '?'}"
+        )
+
+    def list_users(self, user_source: UserSource, count: int = 5, search: str = ""):
+        """
+        Returns the users from the table selected with the user source.
+        """
+
+        UserModel = self.get_user_model(user_source)
+
+        queryset = UserModel.objects.all()
+
+        if not self.is_configured(user_source):
+            return []
+
+        if search:
+            search_mode = SearchHandler.get_default_search_mode_for_table(
+                user_source.table
+            )
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
+
+        return [
+            UserSourceUser(
+                user_source,
+                user,
+                user.id,
+                getattr(user, user_source.name_field.db_column),
+                getattr(user, user_source.email_field.db_column),
+            )
+            for user in queryset[:count]
+        ]
+
+    def get_user(self, user_source: UserSource, **kwargs):
+        """
+        Returns a user from the selected table.
+        """
+
+        UserModel = self.get_user_model(user_source)
+
+        user = None
+
+        if not self.is_configured(user_source):
+            raise UserNotFound()
+
+        if kwargs.get("email", None):
+            # As we have no unique constraint for fields we return the first matching
+            # user.
+            user = UserModel.objects.filter(
+                **{user_source.email_field.db_column: kwargs["email"]}
+            ).first()
+
+        if kwargs.get("user_id", None):
+            try:
+                user = UserModel.objects.get(id=kwargs["user_id"])
+            except UserModel.DoesNotExist as exc:
+                raise UserNotFound() from exc
+
+        if user:
+            return UserSourceUser(
+                user_source,
+                user,
+                user.id,
+                getattr(user, user_source.name_field.db_column),
+                getattr(user, user_source.email_field.db_column),
+            )
+
+        raise UserNotFound()
+
+    def authenticate(self, user_source: UserSource, **kwargs):
+        """
+        Authenticates using the given credentials. It uses the password auth provider.
+        """
+
+        if not self.is_configured(user_source):
+            raise UserSourceImproperlyConfigured()
+
+        try:
+            # Get the unique password auth provider
+            auth_provider = LocalBaserowPasswordAppAuthProvider.objects.get(
+                user_source=user_source.id
+            )
+        except LocalBaserowPasswordAppAuthProvider.DoesNotExist as exc:
+            raise UserSourceImproperlyConfigured() from exc
+
+        if not auth_provider.get_type().is_configured(auth_provider):
+            raise UserSourceImproperlyConfigured()
+
+        return auth_provider.get_type().authenticate(
+            auth_provider,
+            kwargs.get("email", ""),
+            kwargs.get("password", ""),
+        )

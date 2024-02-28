@@ -7,6 +7,7 @@ import {
   PageParameterDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
+  UserDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 export const PLACEMENTS = {
@@ -95,6 +96,7 @@ export const WIDTH_TYPES = {
  * @type {String[]}
  */
 export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
+  UserDataProviderType.getType(),
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
@@ -102,6 +104,7 @@ export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
 ]
 
 export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
+  UserDataProviderType.getType(),
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
@@ -113,6 +116,7 @@ export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
  * @type {String[]}
  */
 export const DATA_PROVIDERS_ALLOWED_DATA_SOURCES = [
+  UserDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
 ]
 

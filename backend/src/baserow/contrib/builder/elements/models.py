@@ -1,11 +1,10 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import SET_NULL, QuerySet
 
-from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
@@ -16,6 +15,9 @@ from baserow.core.mixins import (
     WithRegistry,
 )
 from baserow.core.user_files.models import UserFile
+
+if TYPE_CHECKING:
+    from baserow.contrib.builder.pages.models import Page
 
 
 class HorizontalAlignments(models.TextChoices):
@@ -65,7 +67,7 @@ class Element(
     display an information or something the user can interact with.
     """
 
-    page = models.ForeignKey(Page, on_delete=models.CASCADE)
+    page = models.ForeignKey("builder.Page", on_delete=models.CASCADE)
     order = models.DecimalField(
         help_text="Lowest first.",
         max_digits=40,
@@ -195,7 +197,7 @@ class Element(
     @classmethod
     def get_last_order(
         cls,
-        page: Page,
+        page: "Page",
         parent_element_id: Optional[int] = None,
         place_in_container: Optional[str] = None,
     ):
@@ -212,7 +214,7 @@ class Element(
     @classmethod
     def get_last_orders(
         cls,
-        page: Page,
+        page: "Page",
         parent_element_id: Optional[int] = None,
         place_in_container: Optional[str] = None,
         amount=1,
@@ -398,7 +400,7 @@ class LinkElement(Element):
         default=NAVIGATION_TYPES.PAGE,
     )
     navigate_to_page = models.ForeignKey(
-        Page,
+        "builder.Page",
         null=True,
         on_delete=models.SET_NULL,
         help_text=(
