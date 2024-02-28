@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolve the issue where table import options vanish upon interacting with the form that displays these options, disrupting the table import process.",
+    "issue_number": 2326,
+    "bullet_points": [],
+    "created_at": "2024-02-01"
+}
