@@ -56,6 +56,7 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
             "heading_3_font_size": 16,
             "heading_3_color": "#070810ff",
         },
+        "user_sources": [],
     }
 
     # Even if I'm authenticated I should be able to see it.
@@ -151,6 +152,7 @@ def test_get_public_builder_by_id(api_client, data_fixture):
             "heading_3_font_size": 16,
             "heading_3_color": "#070810ff",
         },
+        "user_sources": [],
     }
 
 

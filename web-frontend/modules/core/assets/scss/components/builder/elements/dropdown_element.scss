@@ -23,4 +23,9 @@
   .dropdown__toggle-icon {
     color: $black;
   }
+
+  .element--read-only & {
+    pointer-events: none;
+    user-select: none;
+  }
 }

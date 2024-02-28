@@ -174,11 +174,12 @@ class ElementHandler:
             kwargs, self.allowed_fields_create + element_type.allowed_fields
         )
 
+        allowed_values["page"] = page
         allowed_values = element_type.prepare_value_for_db(allowed_values)
 
         model_class = cast(Element, element_type.model_class)
 
-        element = model_class(page=page, order=order, **allowed_values)
+        element = model_class(order=order, **allowed_values)
         element.save()
 
         element_type.after_create(element, kwargs)

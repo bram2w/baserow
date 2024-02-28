@@ -414,3 +414,47 @@ export class FormDataProviderType extends DataProviderType {
     return super.getPathTitle(applicationContext, pathParts)
   }
 }
+
+export class UserDataProviderType extends DataProviderType {
+  static getType() {
+    return 'user'
+  }
+
+  get name() {
+    return this.app.i18n.t('dataProviderType.user')
+  }
+
+  getDispatchContext(applicationContext) {
+    const { isAuthenticated, id } = this.getDataContent(applicationContext)
+
+    if (isAuthenticated) {
+      return id
+    } else {
+      return null
+    }
+  }
+
+  getDataChunk(applicationContext, path) {
+    const content = this.getDataContent(applicationContext)
+    return _.get(content, path.join('.'))
+  }
+
+  getDataContent(applicationContext) {
+    return {
+      isAuthenticated: this.app.store.getters['userSourceUser/isAuthenticated'],
+      ...this.app.store.getters['userSourceUser/getUser'],
+    }
+  }
+
+  getDataSchema(applicationContext) {
+    return {
+      type: 'object',
+      properties: {
+        is_authenticated: { title: 'isAuthenticated', type: 'boolean' },
+        id: { type: 'number', title: 'id' },
+        email: { type: 'string', title: 'email' },
+        username: { type: 'string', title: 'username' },
+      },
+    }
+  }
+}

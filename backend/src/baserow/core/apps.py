@@ -81,9 +81,11 @@ class CoreConfig(AppConfig):
         from baserow.core.registries import subject_type_registry
 
         from .subjects import AnonymousUserSubjectType, UserSubjectType
+        from .user_sources.subjects import UserSourceUserSubjectType
 
         subject_type_registry.register(UserSubjectType())
         subject_type_registry.register(AnonymousUserSubjectType())
+        subject_type_registry.register(UserSourceUserSubjectType())
 
         from .notifications.operations import (
             ClearNotificationsOperationType,
@@ -344,9 +346,11 @@ class CoreConfig(AppConfig):
         object_scope_type_registry.register(UserSourceObjectScopeType())
 
         from baserow.core.user_sources.operations import (
+            AuthenticateUserSourceOperationType,
             CreateUserSourceOperationType,
             DeleteUserSourceOperationType,
             ListUserSourcesApplicationOperationType,
+            LoginUserSourceOperationType,
             OrderUserSourcesOperationType,
             ReadUserSourceOperationType,
             UpdateUserSourceOperationType,
@@ -358,6 +362,8 @@ class CoreConfig(AppConfig):
         operation_type_registry.register(OrderUserSourcesOperationType())
         operation_type_registry.register(ReadUserSourceOperationType())
         operation_type_registry.register(UpdateUserSourceOperationType())
+        operation_type_registry.register(AuthenticateUserSourceOperationType())
+        operation_type_registry.register(LoginUserSourceOperationType())
 
         plugin_dir.register(DebugModeHealthCheck)
         if getattr(settings, "HEROKU_ENABLED", False):

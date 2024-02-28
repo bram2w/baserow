@@ -1,5 +1,5 @@
 <template>
-  <div class="presentation">
+  <div class="presentation" @click="$emit('click', $event)">
     <div v-if="image || icon || initials" class="presentation__avatar">
       <Avatar
         :size="iconSize"
@@ -7,7 +7,7 @@
         :icon="icon"
         :initials="initials"
         :color="avatarColor"
-        rounded
+        :rounded="roundedIcon"
       />
     </div>
     <div class="presentation__content">
@@ -35,6 +35,11 @@ export default {
       type: String,
       required: false,
       default: 'large',
+    },
+    roundedIcon: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
     image: {
       type: String,

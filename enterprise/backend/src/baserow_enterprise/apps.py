@@ -170,6 +170,13 @@ class BaserowEnterpriseConfig(AppConfig):
             LocalBaserowPasswordAppAuthProviderType()
         )
 
+        from baserow.contrib.builder.elements.registries import element_type_registry
+        from baserow_enterprise.builder.elements.element_types import (
+            AuthFormElementType,
+        )
+
+        element_type_registry.register(AuthFormElementType())
+
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 

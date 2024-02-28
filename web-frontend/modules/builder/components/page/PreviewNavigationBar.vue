@@ -1,6 +1,8 @@
 <template>
   <div class="preview-navigation-bar">
-    <div />
+    <div class="preview-navigation-bar__user-selector">
+      <UserSelector />
+    </div>
     <div class="preview-navigation-bar__address-bar">
       <template v-for="pathPart in splitPath">
         <PreviewNavigationBarInput
@@ -35,11 +37,12 @@
 <script>
 import { splitPath } from '@baserow/modules/builder/utils/path'
 import PreviewNavigationBarInput from '@baserow/modules/builder/components/page/PreviewNavigationBarInput'
+import UserSelector from '@baserow/modules/builder/components/page/UserSelector'
 import { mapActions } from 'vuex'
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 
 export default {
-  components: { PreviewNavigationBarInput },
+  components: { PreviewNavigationBarInput, UserSelector },
   props: {
     page: {
       type: Object,

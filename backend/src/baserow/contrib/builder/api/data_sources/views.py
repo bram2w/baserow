@@ -102,15 +102,17 @@ class DataSourcesView(APIView):
         data_sources = DataSourceService().get_data_sources(request.user, page)
 
         data = [
-            service_type_registry.get_serializer(
-                data_source.service,
-                DataSourceSerializer,
-                context={"data_source": data_source},
-            ).data
-            if data_source.service
-            else DataSourceSerializer(
-                data_source, context={"data_source": data_source}
-            ).data
+            (
+                service_type_registry.get_serializer(
+                    data_source.service,
+                    DataSourceSerializer,
+                    context={"data_source": data_source},
+                ).data
+                if data_source.service
+                else DataSourceSerializer(
+                    data_source, context={"data_source": data_source}
+                ).data
+            )
             for data_source in data_sources
         ]
         return Response(data)
@@ -336,130 +338,6 @@ class DataSourceView(APIView):
         return Response(status=204)
 
 
-class DispatchDataSourceView(APIView):
-    permission_classes = (AllowAny,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="data_source_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="The id of the data_source you want to call the dispatch "
-                "for",
-            ),
-            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-        ],
-        tags=["Builder data sources"],
-        operation_id="dispatch_builder_page_data_source",
-        description=(
-            "Dispatches the service of the related data_source and returns "
-            "the result."
-        ),
-        responses={
-            404: get_error_schema(
-                [
-                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
-                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
-                    "ERROR_IN_DISPATCH_CONTEXT",
-                    "ERROR_DATA_DOES_NOT_EXIST",
-                ]
-            ),
-        },
-    )
-    @transaction.atomic
-    @map_exceptions(
-        {
-            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
-            DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
-            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
-            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
-        }
-    )
-    def post(self, request, data_source_id: int):
-        """
-        Call the given data_source related service dispatch method.
-        """
-
-        data_source = DataSourceHandler().get_data_source(data_source_id)
-
-        dispatch_context = BuilderDispatchContext(request, data_source.page)
-
-        response = DataSourceService().dispatch_data_source(
-            request.user, data_source, dispatch_context
-        )
-
-        return Response(response)
-
-
-class DispatchDataSourcesView(APIView):
-    permission_classes = (AllowAny,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="page_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="",
-            ),
-            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-        ],
-        tags=["Builder data sources"],
-        operation_id="dispatch_builder_page_data_sources",
-        description="Dispatches the service of the related page data_sources",
-        responses={
-            404: get_error_schema(
-                [
-                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
-                    "ERROR_IN_DISPATCH_CONTEXT",
-                    "ERROR_DATA_DOES_NOT_EXIST",
-                ]
-            ),
-        },
-    )
-    @transaction.atomic
-    @map_exceptions(
-        {
-            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
-            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
-        }
-    )
-    def post(self, request, page_id: int):
-        """
-        Call the given data_source related service dispatch method.
-        """
-
-        page = PageHandler().get_page(page_id)
-
-        dispatch_context = BuilderDispatchContext(request, page)
-
-        service_contents = DataSourceService().dispatch_page_data_sources(
-            request.user, page, dispatch_context
-        )
-
-        responses = {}
-
-        for service_id, content in service_contents.items():
-            if isinstance(content, Exception):
-                _, error, detail = apply_exception_mapping(
-                    {
-                        DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
-                        DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
-                        ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
-                        DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
-                        PermissionException: ERROR_PERMISSION_DENIED,
-                    },
-                    content,
-                    with_fallback=True,
-                )
-                responses[service_id] = {"_error": error, "detail": detail}
-            else:
-                responses[service_id] = content
-
-        return Response(responses)
-
-
 class MoveDataSourceView(APIView):
     @extend_schema(
         parameters=[
@@ -525,3 +403,127 @@ class MoveDataSourceView(APIView):
             context={"data_source": moved_data_source},
         )
         return Response(serializer.data)
+
+
+class DispatchDataSourceView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source you want to call the dispatch "
+                "for",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="dispatch_builder_page_data_source",
+        description=(
+            "Dispatches the service of the related data_source and returns "
+            "the result."
+        ),
+        responses={
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                    "ERROR_IN_DISPATCH_CONTEXT",
+                    "ERROR_DATA_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, data_source_id: int):
+        """
+        Call the given data_source related service dispatch method.
+        """
+
+        data_source = DataSourceHandler().get_data_source(data_source_id)
+
+        dispatch_context = BuilderDispatchContext(request, data_source.page)
+
+        response = DataSourceService().dispatch_data_source(
+            request.user, data_source, dispatch_context
+        )
+
+        return Response(response)
+
+
+class DispatchDataSourcesView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The page we want to dispatch the data source for.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="dispatch_builder_page_data_sources",
+        description="Dispatches the service of the related page data_sources",
+        responses={
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                    "ERROR_IN_DISPATCH_CONTEXT",
+                    "ERROR_DATA_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, page_id: int):
+        """
+        Call the given data_source related service dispatch method.
+        """
+
+        page = PageHandler().get_page(page_id)
+
+        dispatch_context = BuilderDispatchContext(request, page)
+
+        service_contents = DataSourceService().dispatch_page_data_sources(
+            request.user, page, dispatch_context
+        )
+
+        responses = {}
+
+        for service_id, content in service_contents.items():
+            if isinstance(content, Exception):
+                _, error, detail = apply_exception_mapping(
+                    {
+                        DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+                        DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+                        ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+                        DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+                        PermissionException: ERROR_PERMISSION_DENIED,
+                    },
+                    content,
+                    with_fallback=True,
+                )
+                responses[service_id] = {"_error": error, "detail": detail}
+            else:
+                responses[service_id] = content
+
+        return Response(responses)

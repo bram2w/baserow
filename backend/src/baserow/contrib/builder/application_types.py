@@ -318,5 +318,6 @@ class BuilderApplicationType(ApplicationType):
 
     def enhance_queryset(self, queryset):
         queryset = queryset.prefetch_related("page_set")
+        queryset = queryset.prefetch_related("user_sources")
         queryset = theme_config_block_registry.enhance_list_builder_queryset(queryset)
         return queryset

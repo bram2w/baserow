@@ -15,7 +15,7 @@
         "
       >
         <DropdownItem
-          v-for="field in selectedTable?.fields || []"
+          v-for="field in passwordFields"
           :key="field.id"
           :name="field.name"
           :value="field.id"
@@ -53,6 +53,9 @@ export default {
     }
   },
   computed: {
+    authProviderType() {
+      return this.$registry.get('appAuthProvider', 'local_baserow_password')
+    },
     databases() {
       return this.integration.context_data.databases
     },
@@ -71,6 +74,18 @@ export default {
         }
       }
       return null
+    },
+    fields() {
+      if (!this.selectedTable) {
+        return []
+      } else {
+        return this.selectedTable.fields
+      }
+    },
+    passwordFields() {
+      return this.fields.filter(({ type }) =>
+        this.authProviderType.allowedPasswordFieldTypes.includes(type)
+      )
     },
   },
   watch: {

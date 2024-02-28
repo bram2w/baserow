@@ -1,6 +1,7 @@
 <template>
   <ThemeProvider
     class="page-preview__wrapper"
+    :class="`page-preview__wrapper--${deviceType.type}`"
     @click.self="actionSelectElement({ element: null })"
   >
     <PreviewNavigationBar :page="page" :style="{ maxWidth }" />

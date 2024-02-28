@@ -51,6 +51,35 @@ class UserSourceHandler:
 
         return user_source
 
+    def get_user_source_by_uid(
+        self,
+        user_source_uid: int,
+        base_queryset: Optional[QuerySet] = None,
+    ) -> UserSource:
+        """
+        Returns an user_source instance from the database.
+
+        :param user_source_uid: The uid of the user_source.
+        :param base_queryset: The base queryset use to build the query if provided.
+        :raises UserSourceDoesNotExist: If the user_source can't be found.
+        :return: The specific user_source instance.
+        """
+
+        queryset = (
+            base_queryset if base_queryset is not None else UserSource.objects.all()
+        )
+
+        try:
+            user_source = (
+                queryset.select_related("application", "application__workspace")
+                .get(uid=user_source_uid)
+                .specific
+            )
+        except UserSource.DoesNotExist as exc:
+            raise UserSourceDoesNotExist() from exc
+
+        return user_source
+
     def get_user_source_for_update(
         self, user_source_id: int, base_queryset: Optional[QuerySet] = None
     ) -> UserSourceForUpdate:
@@ -155,6 +184,12 @@ class UserSourceHandler:
         )
         user_source.save()
 
+        # We need to save the user_source first to make sure we have the Id in case if
+        # we use it in the gen_uid method.
+        uid = user_source_type.gen_uid(user_source)
+        user_source.uid = uid
+        user_source.save()
+
         return user_source
 
     def update_user_source(
@@ -179,6 +214,8 @@ class UserSourceHandler:
         for key, value in allowed_updates.items():
             setattr(user_source, key, value)
 
+        uid = user_source_type.gen_uid(user_source)
+        user_source.uid = uid
         user_source.save()
 
         return user_source

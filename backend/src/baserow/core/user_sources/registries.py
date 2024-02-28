@@ -1,5 +1,6 @@
-from abc import ABC
-from typing import Any, Dict, Optional, Type, TypeVar
+import uuid
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterable, Optional, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -15,6 +16,7 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.user_sources.user_source_user import UserSourceUser
 
 from .models import UserSource
 from .types import UserSourceDictSubClass, UserSourceSubClass
@@ -119,6 +121,14 @@ class UserSourceType(
         if prop_name == "integration_id":
             return id_mapping["integrations"][value]
 
+        if prop_name == "uid":
+            # If the uid is already used then we need to update it to ensure the
+            # uniqueness
+            if UserSource.objects.filter(uid=value).exists():
+                return uuid.uuid4().hex
+            else:
+                return value
+
         return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
 
     def import_serialized(
@@ -147,6 +157,46 @@ class UserSourceType(
             )
 
         return created_user_source
+
+    @abstractmethod
+    def gen_uid(self, user_source):
+        """
+        Should generate a new UID given a user_source. This UID must be different if
+        the configuration has changed substantially and the current user tokens need
+        to be invalidated.
+        """
+
+    @abstractmethod
+    def list_users(
+        self, user_source: UserSource, count: int = 5, search: str = ""
+    ) -> Iterable[UserSourceUser]:
+        """
+        Returns a list of users for this user source.
+
+        :param user_source: The user source instance.
+        :param count: The number of user we want.
+        :param search: A search term to filter the users.
+        :return: An iterable of users.
+        """
+
+    @abstractmethod
+    def get_user(self, user_source: UserSource, **kwargs) -> Optional[UserSourceUser]:
+        """
+        Returns a user given some args.
+
+        :param user_source: The user source used to get the user.
+        :param kwargs: Keyword arguments to get the user.
+        :return: A user instance if any found with the given parameters.
+        """
+
+    @abstractmethod
+    def authenticate(self, user_source: UserSource, **kwargs) -> UserSourceUser:
+        """
+        Authenticates using the given credentials. It uses the password auth provider.
+
+        :param user_source: The user source used to authenticate the user.
+        :param kwargs: The credential used to authenticate the user.
+        """
 
 
 UserSourceTypeSubClass = TypeVar("UserSourceTypeSubClass", bound=UserSourceType)

@@ -19,8 +19,6 @@ def test_get_user_sources(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
     user_source1 = data_fixture.create_user_source_with_first_type(
         application=application
     )
@@ -55,8 +53,6 @@ def test_get_user_sources_w_auth_providers(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
     user_source1 = data_fixture.create_user_source_with_first_type(
         application=application
     )
@@ -114,8 +110,6 @@ def test_create_user_source(api_client, data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(application=application)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -136,8 +130,6 @@ def test_create_user_source_missing_properties(api_client, data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(application=application)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -172,8 +164,6 @@ def test_create_user_source_missing_type(api_client, data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(application=application)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -193,9 +183,7 @@ def test_create_user_source_w_auth_providers(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
-    database = data_fixture.create_database_application(workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(application=application)
-    data_fixture.create_database_table(database=database)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -234,8 +222,6 @@ def test_create_user_source_w_auth_provider_wrong_type(api_client, data_fixture)
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(application=application)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
 
     app_auth_provider_type = list(app_auth_provider_type_registry.get_all())[0]
 
@@ -274,8 +260,6 @@ def test_create_user_source_w_auth_provider_missing_type(api_client, data_fixtur
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     integration = data_fixture.create_local_baserow_integration(application=application)
-    database = data_fixture.create_database_application(workspace=workspace)
-    data_fixture.create_database_table(database=database)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -350,8 +334,6 @@ def test_create_user_source_bad_application_type(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-
-    print(response.json())
 
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_APPLICATION_OPERATION_NOT_SUPPORTED"
@@ -697,3 +679,207 @@ def test_delete_user_source_user_source_not_exist(api_client, data_fixture):
 
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_USER_SOURCE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_get_user_source_users(api_client, data_fixture, stub_user_source_registry):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    user_source1 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+    user_source2 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+
+    def list_users_return(user_source, count, search):
+        if user_source.id == user_source1.id:
+            return [
+                data_fixture.create_user_source_user(
+                    user_source=user_source,
+                    user_id=1,
+                    email="test1@mail.com",
+                    username="user1",
+                ),
+                data_fixture.create_user_source_user(
+                    user_source=user_source,
+                    user_id=2,
+                    email="test2@mail.com",
+                    username="user2",
+                ),
+            ]
+        if user_source.id == user_source2.id:
+            return [
+                data_fixture.create_user_source_user(
+                    user_source=user_source,
+                    user_id=3,
+                    email="test3@mail.com",
+                    username="user3",
+                ),
+            ]
+        return []
+
+    url = reverse(
+        "api:user_sources:list_user_source_users",
+        kwargs={"application_id": application.id},
+    )
+    with stub_user_source_registry(list_users_return=list_users_return):
+        response = api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "users_per_user_sources" in response_json
+    assert response_json["users_per_user_sources"] == {
+        str(user_source1.id): [
+            {
+                "id": 1,
+                "email": "test1@mail.com",
+                "username": "user1",
+                "user_source_id": user_source1.id,
+            },
+            {
+                "id": 2,
+                "email": "test2@mail.com",
+                "username": "user2",
+                "user_source_id": user_source1.id,
+            },
+        ],
+        str(user_source2.id): [
+            {
+                "id": 3,
+                "email": "test3@mail.com",
+                "username": "user3",
+                "user_source_id": user_source2.id,
+            }
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_get_user_source_users_with_search(
+    api_client, data_fixture, stub_user_source_registry
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    user_source1 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+    user_source2 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+
+    def list_users_return(user_source, count, search):
+        if search == "first":
+            if user_source.id == user_source1.id:
+                return [
+                    data_fixture.create_user_source_user(
+                        user_source=user_source,
+                        user_id=1,
+                        email="test1@mail.com",
+                        username="user1",
+                    ),
+                    data_fixture.create_user_source_user(
+                        user_source=user_source,
+                        user_id=2,
+                        email="test2@mail.com",
+                        username="user2",
+                    ),
+                ]
+        if search == "second":
+            if user_source.id == user_source2.id:
+                return [
+                    data_fixture.create_user_source_user(
+                        user_source=user_source,
+                        user_id=3,
+                        email="test3@mail.com",
+                        username="user3",
+                    ),
+                ]
+        return []
+
+    url = reverse(
+        "api:user_sources:list_user_source_users",
+        kwargs={"application_id": application.id},
+    )
+    with stub_user_source_registry(list_users_return=list_users_return):
+        response = api_client.get(
+            url,
+            {"search": "first"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "users_per_user_sources" in response_json
+    assert response_json["users_per_user_sources"] == {
+        str(user_source1.id): [
+            {
+                "id": 1,
+                "email": "test1@mail.com",
+                "username": "user1",
+                "user_source_id": user_source1.id,
+            },
+            {
+                "id": 2,
+                "email": "test2@mail.com",
+                "username": "user2",
+                "user_source_id": user_source1.id,
+            },
+        ],
+        str(user_source2.id): [],
+    }
+
+    with stub_user_source_registry(list_users_return=list_users_return):
+        response = api_client.get(
+            url,
+            {"search": "second"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "users_per_user_sources" in response_json
+    assert response_json["users_per_user_sources"] == {
+        str(user_source1.id): [],
+        str(user_source2.id): [
+            {
+                "id": 3,
+                "email": "test3@mail.com",
+                "username": "user3",
+                "user_source_id": user_source2.id,
+            }
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_get_user_source_users_missing_application(
+    api_client, data_fixture, stub_user_source_registry
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    user_source1 = data_fixture.create_user_source_with_first_type(
+        application=application
+    )
+
+    url = reverse(
+        "api:user_sources:list_user_source_users",
+        kwargs={"application_id": 0},
+    )
+    with stub_user_source_registry():
+        response = api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_404_NOT_FOUND

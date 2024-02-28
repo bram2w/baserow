@@ -285,7 +285,16 @@ def load_test_data():
                 "name": "Details",
                 "type": "link",
                 "config": {
-                    "url": f"concat('/product/', get('current_record.id'), '/', get('current_record.{field_name.db_column}'))",
+                    "navigation_type": "page",
+                    "navigate_to_page_id": product_detail.id,
+                    "navigate_to_url": None,
+                    "page_parameters": [
+                        {"name": "id", "value": "get('current_record.id')"},
+                        {
+                            "name": "name",
+                            "value": f"get('current_record.{field_name.db_column}')",
+                        },
+                    ],
                     "link_name": f"get('current_record.{field_name.db_column}')",
                 },
             },

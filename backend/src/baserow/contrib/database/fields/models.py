@@ -38,6 +38,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from baserow.core.utils import remove_special_characters, to_snake_case
 
@@ -83,6 +84,7 @@ class Field(
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
+    WithRegistry,
     models.Model,
 ):
     """
@@ -126,6 +128,12 @@ class Field(
             "-primary",
             "order",
         )
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import field_type_registry
+
+        return field_type_registry
 
     def get_parent(self):
         return self.table

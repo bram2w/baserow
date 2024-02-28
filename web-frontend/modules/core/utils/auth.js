@@ -2,18 +2,21 @@ import { isSecureURL } from '@baserow/modules/core/utils/string'
 import jwtDecode from 'jwt-decode'
 
 const cookieTokenName = 'jwt_token'
+export const userSourceCookieTokenName = 'user_source_token'
 
 export const setToken = (
   { $config, $cookies },
   token,
-  key = cookieTokenName
+  key = cookieTokenName,
+  configuration = { sameSite: null }
 ) => {
   if (process.SERVER_BUILD) return
   const secure = isSecureURL($config.PUBLIC_WEB_FRONTEND_URL)
   $cookies.set(key, token, {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
-    sameSite: $config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
+    sameSite:
+      configuration.sameSite || $config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
     secure,
   })
 }

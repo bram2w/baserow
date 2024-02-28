@@ -1,30 +1,7 @@
 .table-element {
-  width: 100%;
-  border: 1px solid $black;
-  border-spacing: 0;
-  text-align: left;
-  font-size: 12px;
-}
-
-.table-element__header-row {
-  background-color: $palette-neutral-200;
-}
-
-.table-element__header-cell,
-.table-element__cell {
-  padding: 12px 20px 10px 20px;
-}
-
-.table-element__header-cell {
-  font-weight: 600;
-  border-bottom: 1px solid $black;
-}
-
-.table-element__cell {
-  border-bottom: 1px solid $black;
-
-  .table-element__row:last-child & {
-    border-bottom: none;
+  .element--read-only & {
+    pointer-events: none;
+    user-select: none;
   }
 }
 

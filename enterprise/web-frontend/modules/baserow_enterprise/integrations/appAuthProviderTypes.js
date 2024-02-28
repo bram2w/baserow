@@ -1,5 +1,9 @@
 import { AppAuthProviderType } from '@baserow/modules/core/appAuthProviderTypes'
 import LocalBaserowUserSourceForm from '@baserow_enterprise/integrations/localBaserow/components/appAuthProviders/LocalBaserowPasswordAppAuthProviderForm'
+import {
+  TextFieldType,
+  LongTextFieldType,
+} from '@baserow/modules/database/fieldTypes'
 
 export class LocalBaserowPasswordAppAuthProviderType extends AppAuthProviderType {
   static getType() {
@@ -12,6 +16,14 @@ export class LocalBaserowPasswordAppAuthProviderType extends AppAuthProviderType
 
   get formComponent() {
     return LocalBaserowUserSourceForm
+  }
+
+  /**
+   * Returns the allowed field type list for the password field.
+   * It's defined here so that it can be changed by a plugin.
+   */
+  get allowedPasswordFieldTypes() {
+    return [TextFieldType.getType(), LongTextFieldType.getType()]
   }
 
   getOrder() {

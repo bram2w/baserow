@@ -32,3 +32,11 @@ class UpdateUserSourceOperationType(UserSourceOperationType):
 
 class ReadUserSourceOperationType(UserSourceOperationType):
     type = "application.user_source.read"
+
+
+class AuthenticateUserSourceOperationType(UserSourceOperationType):
+    type = "application.user_source.authenticate"
+
+
+class LoginUserSourceOperationType(UserSourceOperationType):
+    type = "application.user_source.login"

@@ -16,6 +16,7 @@
             :image="getIntegrationType(integration).image"
             :title="integration.name"
             :subtitle="getIntegrationType(integration).getSummary(integration)"
+            :rounded-icon="false"
             avatar-color="transparent"
             style="flex: 1"
           />

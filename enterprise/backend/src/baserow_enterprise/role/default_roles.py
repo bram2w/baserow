@@ -198,9 +198,11 @@ from baserow.core.trash.operations import (
     ReadWorkspaceTrashOperationType,
 )
 from baserow.core.user_sources.operations import (
+    AuthenticateUserSourceOperationType,
     CreateUserSourceOperationType,
     DeleteUserSourceOperationType,
     ListUserSourcesApplicationOperationType,
+    LoginUserSourceOperationType,
     OrderUserSourcesOperationType,
     ReadUserSourceOperationType,
     UpdateUserSourceOperationType,
@@ -427,6 +429,8 @@ default_roles[BUILDER_ROLE_UID].extend(
         ReadUserSourceOperationType,
         UpdateUserSourceOperationType,
         OrderUserSourcesOperationType,
+        AuthenticateUserSourceOperationType,
+        LoginUserSourceOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

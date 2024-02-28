@@ -1,3 +1,6 @@
+import uuid
+from unittest.mock import patch
+
 import pytest
 
 from baserow.contrib.builder.application_types import BuilderApplicationType
@@ -107,9 +110,12 @@ def test_builder_application_export(data_fixture):
         application=builder, authorized_user=user, name="test"
     )
 
-    user_source = data_fixture.create_user_source_with_first_type(
-        application=builder, user=user, integration=integration
-    )
+    with patch(
+        "uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")
+    ):
+        user_source = data_fixture.create_user_source_with_first_type(
+            application=builder, user=user, integration=integration
+        )
 
     auth_provider = data_fixture.create_app_auth_provider_with_first_type(
         user_source=user_source
@@ -399,6 +405,7 @@ def test_builder_application_export(data_fixture):
                 "order": "1.00000000000000000000",
                 "table_id": None,
                 "type": "local_baserow",
+                "uid": "12345678123456781234567812345678",
                 "auth_providers": [
                     {
                         "id": auth_provider.id,

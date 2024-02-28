@@ -9,6 +9,7 @@ class UserSourceDict(TypedDict):
     name: str
     order: int
     type: str
+    uid: str
     integration_id: int
     auth_providers: List[AppAuthProvider]
 

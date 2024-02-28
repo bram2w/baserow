@@ -413,7 +413,6 @@ def test_verify_token_is_invalidated_after_password_change(api_client, data_fixt
             format="json",
         )
         response_json = response.json()
-        print(response_json)
         assert response.status_code == HTTP_401_UNAUTHORIZED
         assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
 

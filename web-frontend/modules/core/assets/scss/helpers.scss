@@ -179,6 +179,10 @@
   position: relative;
 }
 
+.inline-block {
+  display: inline-block;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);
