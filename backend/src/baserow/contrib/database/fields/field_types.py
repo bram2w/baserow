@@ -65,6 +65,7 @@ from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer,
     ListOrStringField,
     MustBeEmptyField,
+    PasswordSerializer,
     SelectOptionSerializer,
 )
 from baserow.contrib.database.db.functions import RandomUUID
@@ -173,6 +174,7 @@ from .models import (
     MultipleCollaboratorsField,
     MultipleSelectField,
     NumberField,
+    PasswordField,
     PhoneNumberField,
     RatingField,
     RollupField,
@@ -5780,3 +5782,65 @@ class AutonumberFieldType(ReadOnlyFieldType):
         self, formula_type: BaserowFormulaNumberType
     ) -> NumberField:
         return NumberField(number_decimal_places=0, number_negative=False)
+
+
+class PasswordFieldType(FieldType):
+    """
+    Password fields are write only and store the hash of the provided value. This
+    can be used for authentication.
+    """
+
+    type = "password"
+    model_class = PasswordField
+    can_be_in_form_view = True
+    keep_data_on_duplication = True
+    _can_order_by = False
+    can_be_primary_field = False
+    can_get_unique_values = False
+
+    def get_serializer_field(self, instance, **kwargs):
+        # If a string value is provided, the password will be set. If `None` is
+        # provided, the password will be cleared. If `True` is provided, it will be
+        # ignored because this is what will be in the response and we can't do
+        # anything with that value.
+        return PasswordSerializer(
+            **{
+                "required": False,
+                "allow_null": True,
+                "allow_blank": True,
+                **kwargs,
+            }
+        )
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        # For the response it must be a BooleanField because we never want to expose
+        # the password, this will make it respond with `True` if set, and `null` is not.
+        return serializers.BooleanField(required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "Allows setting a write only password value. Providing a string will set "
+            "the password, `null` will unset it, `true` will be ignored. The response "
+            "will respond with `true` is a password is set, but will never expose the "
+            "password itself."
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.CharField(null=True, max_length=128)
+
+    def get_human_readable_value(self, value: Any, field_object: "FieldObject") -> str:
+        # We don't want to expose the hash of the password, so we just show `True` or
+        # `False` as string depending on whether the value is set.
+        return bool(value)
+
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
+        # We don't want to expose the hash of the password, so we just show `True` or
+        # `False` as string depending on whether the value is set.
+        return bool(value)
+
+    def prepare_row_history_value_from_action_meta_data(self, value):
+        # We don't want to expose the hash of the password, so we just show `True` or
+        # `False` as string depending on whether the value is set.
+        return bool(value)

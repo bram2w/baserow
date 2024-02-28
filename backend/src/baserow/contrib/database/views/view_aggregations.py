@@ -31,6 +31,7 @@ from baserow.contrib.database.fields.field_types import (
     LongTextFieldType,
     MultipleSelectFieldType,
     NumberFieldType,
+    PasswordFieldType,
     PhoneNumberFieldType,
     RatingFieldType,
     SingleSelectFieldType,
@@ -93,6 +94,7 @@ class EmptyCountViewAggregationType(ViewAggregationType):
         PhoneNumberFieldType.type,
         SingleSelectFieldType.type,
         MultipleSelectFieldType.type,
+        PasswordFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,

@@ -728,6 +728,10 @@ class AutonumberField(Field):
     pass
 
 
+class PasswordField(Field):
+    pass
+
+
 class DuplicateFieldJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):

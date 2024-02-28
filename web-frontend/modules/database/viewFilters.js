@@ -1917,6 +1917,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'multiple_collaborators',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -1978,6 +1979,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'multiple_collaborators',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',

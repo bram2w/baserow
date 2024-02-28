@@ -91,8 +91,20 @@ class RowHistoryHandler:
         if not changed_fields:
             return None
 
-        before_fields = {k: v for k, v in before_values.items() if k in changed_fields}
-        after_fields = {k: v for k, v in after_values.items() if k in changed_fields}
+        before_fields = {
+            k: field_type_registry.get(
+                fields_metadata[k]["type"]
+            ).prepare_row_history_value_from_action_meta_data(v)
+            for k, v in before_values.items()
+            if k in changed_fields
+        }
+        after_fields = {
+            k: field_type_registry.get(
+                fields_metadata[k]["type"]
+            ).prepare_row_history_value_from_action_meta_data(v)
+            for k, v in after_values.items()
+            if k in changed_fields
+        }
         return RowChangeDiff(list(changed_fields), before_fields, after_fields)
 
     @classmethod

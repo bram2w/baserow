@@ -29,6 +29,7 @@ import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDa
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 import FieldCollaboratorSubForm from '@baserow/modules/database/components/field/FieldCollaboratorSubForm'
+import FieldPasswordSubForm from '@baserow/modules/database/components/field/FieldPasswordSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
@@ -50,6 +51,7 @@ import GridViewFieldMultipleCollaborators from '@baserow/modules/database/compon
 import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
 import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
 import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
+import GridViewFieldPassword from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPassword'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
@@ -68,6 +70,7 @@ import FunctionalGridViewFieldURL from '@baserow/modules/database/components/vie
 import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
 import FunctionalGridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber'
 import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
+import FunctionalGridVIewFieldPassword from '@baserow/modules/database/components/view/grid/fields/FunctionalGridVIewFieldPassword.vue'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -89,6 +92,7 @@ import RowEditFieldMultipleCollaborators from '@baserow/modules/database/compone
 import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
 import RowEditFieldAutonumber from '@baserow/modules/database/components/row/RowEditFieldAutonumber'
 import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
+import RowEditFieldPassword from '@baserow/modules/database/components/row/RowEditFieldPassword'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -108,6 +112,7 @@ import RowCardFieldMultipleCollaborators from '@baserow/modules/database/compone
 import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
 import RowCardFieldAutonumber from '@baserow/modules/database/components/card/RowCardFieldAutonumber'
 import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
+import RowCardFieldPassword from '@baserow/modules/database/components/card/RowCardFieldPassword'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
@@ -119,6 +124,7 @@ import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/
 import RowHistoryFieldSingleSelect from '@baserow/modules/database/components/row/RowHistoryFieldSingleSelect'
 import RowHistoryFieldBoolean from '@baserow/modules/database/components/row/RowHistoryFieldBoolean'
 import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/RowHistoryFieldLinkRow'
+import RowHistoryFieldPassword from '@baserow/modules/database/components/row/RowHistoryFieldPassword'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
@@ -4026,5 +4032,87 @@ export class AutonumberFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
+  }
+}
+
+export class PasswordFieldType extends FieldType {
+  static getType() {
+    return 'password'
+  }
+
+  getIconClass() {
+    return 'iconoir-lock'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.password')
+  }
+
+  getFormComponent() {
+    return FieldPasswordSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldPassword
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridVIewFieldPassword
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldPassword
+  }
+
+  getCardComponent() {
+    return RowCardFieldPassword
+  }
+
+  getDocsDataType(field) {
+    return 'bool'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.password')
+  }
+
+  getDocsRequestExample(field) {
+    return 'true'
+  }
+
+  getCanSortInView(field) {
+    return false
+  }
+
+  getValidationError(field, value) {
+    if (value === null) {
+      return null
+    }
+
+    const stringValue = value.toString()
+    if (stringValue.length < 1) {
+      return this.app.i18n.t('fieldErrors.minChars', { min: 1 })
+    }
+    if (stringValue.length > 128) {
+      return this.app.i18n.t('fieldErrors.maxChars', { max: 128 })
+    }
+    return null
+  }
+
+  prepareValueForCopy(field, value) {
+    return ''
+  }
+
+  getCanBePrimaryField() {
+    return false
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return value ? '••••••••••' : ''
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldPassword
   }
 }

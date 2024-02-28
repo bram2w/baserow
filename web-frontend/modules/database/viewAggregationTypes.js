@@ -128,6 +128,7 @@ export class EmptyCountViewAggregationType extends ViewAggregationType {
       'multiple_select',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -173,6 +174,7 @@ export class NotEmptyCountViewAggregationType extends ViewAggregationType {
       'multiple_select',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -283,6 +285,7 @@ export class EmptyPercentageViewAggregationType extends ViewAggregationType {
       'multiple_select',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -340,6 +343,7 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
       'multiple_select',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
