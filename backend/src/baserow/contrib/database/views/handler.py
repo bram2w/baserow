@@ -27,7 +27,6 @@ from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
     AdvancedFilterBuilder,
     FilterBuilder,
 )
@@ -84,10 +83,7 @@ from baserow.contrib.database.views.registries import (
     ViewType,
     view_ownership_type_registry,
 )
-from baserow.contrib.database.views.view_filter_groups import (
-    ViewGroupedFiltersAdapter,
-    construct_filter_builder_from_grouped_api_filters,
-)
+from baserow.contrib.database.views.view_filter_groups import ViewGroupedFiltersAdapter
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
@@ -3239,11 +3235,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         group_by: str = None,
         include_fields: str = None,
         exclude_fields: str = None,
-        filter_type: str = None,
-        filter_object: dict = None,
+        adhoc_filters: Optional[AdHocFilters] = None,
         table_model: Type[GeneratedTableModel] = None,
         view_type=None,
-        api_filters: Optional[Dict[str, Any]] = None,
     ):
         """
         This function constructs a queryset which applies all the filters
@@ -3260,13 +3254,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param group_by: A string group the rows by.
         :param include_fields: A comma separated list of field_ids to include.
         :param exclude_fields: A comma separated list of field_ids to exclude.
-        :param filter_type: The type of filter to apply.
-        :param filter_object: A dictionary to filter the rows by.
+        :param adhoc_filters: Optional ad hoc filters to apply.
         :param table_model: A model which can be passed if it's already instantiated.
         :param view_type: The view_type which can be passed if it's already
             instantiated.
-        :param api_filters: A dictionary of filters and group of filters to
-            apply to the queryset.
         :return: A tuple containing:
             - A queryset of rows.
             - A list of field_ids of the fields that are visible.
@@ -3279,11 +3270,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view_type is None:
             view_type = view_type_registry.get_by_model(view)
 
-        if filter_type is None:
-            filter_type = FILTER_TYPE_AND
-
-        if filter_object is None:
-            filter_object = {}
+        if adhoc_filters is None:
+            adhoc_filters = AdHocFilters()
 
         publicly_visible_field_options = view_type.get_visible_field_options_in_order(
             view
@@ -3318,23 +3306,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 order_by, False, publicly_visible_field_ids
             )
 
-        # If the new way of filtering is used with filters and groups, we use
-        # it, otherwise we use the old way. The new way consist in a nested JSON
-        # structure of filters (see `PublicViewGroupedFiltersAdapter` for more
-        # info). The old way of filtering is a list of query params with the
-        # filter__{field}__{type}=[value] format.
-
-        if api_filters and len(api_filters):
-            filter_builder = construct_filter_builder_from_grouped_api_filters(
-                api_filters,
-                table_model,
-                only_filter_by_field_ids=publicly_visible_field_ids,
-            )
-            queryset = filter_builder.apply_to_queryset(queryset)
-        else:
-            queryset = queryset.filter_by_fields_object(
-                filter_object, filter_type, publicly_visible_field_ids
-            )
+        if adhoc_filters.has_any_filters:
+            adhoc_filters.only_filter_by_field_ids = publicly_visible_field_ids
+            queryset = adhoc_filters.apply_to_queryset(table_model, queryset)
 
         if search:
             queryset = queryset.search_all_fields(

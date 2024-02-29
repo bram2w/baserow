@@ -37,20 +37,13 @@ from baserow.contrib.database.api.views.errors import (
 from baserow.contrib.database.api.views.gallery.serializers import (
     GalleryViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.api.views.serializers import (
-    FieldOptionsField,
-    validate_api_grouped_filters,
-)
+from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
-)
-from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
-    FILTER_TYPE_OR,
 )
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
@@ -60,6 +53,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
 )
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryView
 from baserow.contrib.database.views.registries import (
@@ -460,18 +454,7 @@ class PublicGalleryViewRowsView(APIView):
         order_by = request.GET.get("order_by")
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
-        filter_type = (
-            FILTER_TYPE_OR
-            if request.GET.get("filter_type", "AND").upper() == "OR"
-            else FILTER_TYPE_AND
-        )
-        filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
-
-        # Advanced filters are provided as a JSON string in the `filters` parameter.
-        # If provided, all other filter parameters are ignored.
-        api_filters = None
-        if (filters := filter_object.get("filters", None)) and len(filters) > 0:
-            api_filters = validate_api_grouped_filters(filters[0])
+        adhoc_filters = AdHocFilters.from_request(request)
 
         count = "count" in request.GET
 
@@ -495,12 +478,10 @@ class PublicGalleryViewRowsView(APIView):
             order_by=order_by,
             include_fields=include_fields,
             exclude_fields=exclude_fields,
-            filter_type=filter_type,
-            filter_object=filter_object,
+            adhoc_filters=adhoc_filters,
             table_model=model,
             view_type=view_type,
             search_mode=search_mode,
-            api_filters=api_filters,
         )
 
         if count:

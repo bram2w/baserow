@@ -42,6 +42,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
     ViewTypeDoesNotExist,
 )
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import (
     PublicViewRows,
     ViewHandler,
@@ -2298,13 +2299,17 @@ def test_get_public_rows_queryset_and_field_ids_filter(data_fixture):
     model.objects.create(**{f"field_{field.id}": 2})
     model.objects.create(**{f"field_{field.id}": 3})
 
+    adhoc_filters = AdHocFilters(
+        filter_object={f"filter__field_{field.id}__equal": "2"}
+    )
+
     (
         queryset,
         field_ids,
         publicly_visible_field_options,
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(
         grid_view,
-        filter_object={f"filter__field_{field.id}__equal": "2"},
+        adhoc_filters=adhoc_filters,
     )
 
     assert queryset.count() == 1
@@ -2326,12 +2331,15 @@ def test_get_public_rows_queryset_and_field_ids_filters_stack(data_fixture):
     model.objects.create(**{f"field_{field.id}": 2, f"field_{field_2.id}": "b"})
     model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": "c"})
 
+    adhoc_filters = AdHocFilters(filter_object={f"field_{field.id}": 2})
+
     (
         queryset,
         field_ids,
         publicly_visible_field_options,
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(
-        grid_view, filter_object={f"field_{field.id}": 2}
+        grid_view,
+        adhoc_filters=adhoc_filters,
     )
 
     assert queryset.count() == 1
