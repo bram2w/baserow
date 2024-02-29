@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Use the correct `get_human_readable_value` when creating row related notifications.",
+  "issue_number": 2345,
+  "bullet_points": [],
+  "created_at": "2024-02-27"
+}

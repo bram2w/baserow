@@ -40,7 +40,7 @@ class RowCommentNotificationData:
             table_id=row_comment.table_id,
             table_name=row_comment.table.name,
             row_id=int(row_comment.row_id),
-            row_name=row.name_or_id,
+            row_name=str(row),
             comment_id=row_comment.id,
             message=row_comment.message,
         )
