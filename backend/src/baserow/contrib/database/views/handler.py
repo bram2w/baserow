@@ -39,6 +39,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.exceptions import ViewOwnershipTypeDoesNotExist
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
@@ -2703,6 +2704,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view: View,
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
+        adhoc_filters: Optional[AdHocFilters] = None,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
@@ -2721,6 +2723,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
+        :param adhoc_filters: The filters that can be optionally applied
+            instead of the view's own filters.
         :param search: the search string to considerate. If the search parameter is
             defined, we don't use the cache so we recompute aggregation on the fly.
         :param search_mode: the search mode that the search is using.
@@ -2737,6 +2741,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             allow_if_template=True,
         )
 
+        if not adhoc_filters:
+            adhoc_filters = AdHocFilters()
+
         view_type = view_type_registry.get_by_model(view.specific_class)
 
         # Check if view supports field aggregation
@@ -2750,7 +2757,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         (
             values,
             need_computation,
-        ) = self._get_aggregations_to_compute(view, aggregations, no_cache=search)
+        ) = self._get_aggregations_to_compute(
+            view, aggregations, no_cache=search or adhoc_filters.has_any_filters
+        )
 
         use_lock = hasattr(cache, "lock")
         used_lock = False
@@ -2781,11 +2790,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 ],
                 model,
                 with_total=with_total,
+                adhoc_filters=adhoc_filters,
                 search=search,
                 search_mode=search_mode,
             )
 
-            if not search:
+            if not search and not adhoc_filters.has_any_filters:
                 to_cache = {}
                 for key, value in db_result.items():
                     # We don't cache total value
@@ -2818,6 +2828,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         aggregations: Iterable[Tuple[django_models.Field, str]],
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
+        adhoc_filters: Optional[AdHocFilters] = None,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
@@ -2834,6 +2845,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
+        :param adhoc_filters: The filters that can be optionally applied
+            instead of the view's own filters.
         :param search: the search string to consider.
         :param search: the mode that the search is in.
         :raises FieldAggregationNotSupported: When the view type doesn't support
@@ -2854,6 +2867,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if model is None:
             model = view.table.get_model()
 
+        if adhoc_filters is None:
+            adhoc_filters = AdHocFilters()
+
         queryset = model.objects.all().enhance_by_fields()
 
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -2866,7 +2882,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Apply filters and search to have accurate aggregations
         if view_type.can_filter:
-            queryset = self.apply_filters(view, queryset)
+            queryset = (
+                adhoc_filters.apply_to_queryset(model, queryset)
+                if adhoc_filters.has_any_filters
+                else self.apply_filters(view, queryset)
+            )
+
         if search is not None:
             queryset = queryset.search_all_fields(search, search_mode=search_mode)
 

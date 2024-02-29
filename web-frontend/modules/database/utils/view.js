@@ -453,26 +453,35 @@ export function getOrderBy(rootGetters, viewId) {
   }
 }
 
-export function getFilters(rootGetters, viewId) {
+export function isadhocFiltering(app, workspace, view, publicView) {
+  return (
+    publicView ||
+    (app.$hasPermission(
+      'database.table.view.list_filter',
+      view,
+      workspace.id
+    ) &&
+      !app.$hasPermission(
+        'database.table.view.create_filter',
+        view,
+        workspace.id
+      ))
+  )
+}
+
+export function getFilters(view, adhocFiltering) {
   const payload = {}
-
-  if (rootGetters['page/view/public/getIsPublic']) {
-    const view = rootGetters['view/get'](viewId)
-
-    if (!view.filters_disabled) {
-      const {
-        filter_type: filterType,
-        filter_groups: filterGroups,
-        filters,
-      } = view
-      const filterTree = createFiltersTree(filterType, filters, filterGroups)
-      if (filterTree.hasFilters()) {
-        const serializedTree = filterTree.getFiltersTreeSerialized()
-        payload.filters = [JSON.stringify(serializedTree)]
-      }
-    }
-    return payload
+  if (adhocFiltering && !view.filters_disabled) {
+    const {
+      filter_type: filterType,
+      filter_groups: filterGroups,
+      filters,
+    } = view
+    const filterTree = createFiltersTree(filterType, filters, filterGroups)
+    const serializedTree = filterTree.getFiltersTreeSerialized()
+    payload.filters = [JSON.stringify(serializedTree)]
   }
+  return payload
 }
 
 /**

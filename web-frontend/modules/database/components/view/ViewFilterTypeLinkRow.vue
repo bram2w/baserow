@@ -62,7 +62,7 @@ export default {
       return isNumeric(this.filter.value)
     },
     isDropdown() {
-      return this.readOnly && this.view
+      return this.readOnly && this.view && this.isPublicView
     },
   },
   watch: {

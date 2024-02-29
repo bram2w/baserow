@@ -22,6 +22,7 @@
           :ref="`condition-${filter.id}`"
           :filter="filter"
           :view="view"
+          :is-public-view="isPublicView"
           :fields="fields"
           :disable-filter="disableFilter"
           :read-only="readOnly"
@@ -71,6 +72,7 @@
                 :ref="`condition-${filter.id}`"
                 :filter="filter"
                 :view="view"
+                :is-public-view="isPublicView"
                 :fields="fields"
                 :disable-filter="disableFilter"
                 :read-only="readOnly"
@@ -197,6 +199,11 @@ export default {
       type: Object,
       required: false,
       default: () => {},
+    },
+    isPublicView: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     readOnly: {
       type: Boolean,

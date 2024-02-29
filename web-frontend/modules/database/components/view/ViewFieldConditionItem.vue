@@ -56,6 +56,7 @@
           ref="filter-value"
           :filter="filter"
           :view="view"
+          :is-public-view="isPublicView"
           :fields="fields"
           :disabled="disableFilter"
           :read-only="readOnly"
@@ -111,6 +112,11 @@ export default {
       type: Object,
       required: false,
       default: () => {},
+    },
+    isPublicView: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     disableFilter: {
       type: Boolean,
