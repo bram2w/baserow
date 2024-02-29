@@ -97,7 +97,7 @@ def test_notification_creation_on_creating_row_comment_mention(
                     "table_id": table.id,
                     "table_name": table.name,
                     "row_id": rows[0].id,
-                    "row_name": rows[0].name_or_id,
+                    "row_name": str(rows[0]),
                     "comment_id": comment_id,
                     "message": message,
                 },
@@ -187,7 +187,7 @@ def test_notify_only_new_mentions_when_updating_a_comment(
                     "table_id": table.id,
                     "table_name": table.name,
                     "row_id": rows[0].id,
-                    "row_name": rows[0].name_or_id,
+                    "row_name": str(rows[0]),
                     "comment_id": comment_id,
                     "message": new_message,
                 },
@@ -250,7 +250,7 @@ def test_email_notifications_are_created_correctly(
     expected_context = {
         "notifications": [
             {
-                "title": f"User 1 mentioned you in row {row.name_or_id} in {table.name}.",
+                "title": f"User 1 mentioned you in row {str(row)} in {table.name}.",
                 "description": "@User 2",
             }
         ],
@@ -360,7 +360,7 @@ def test_user_receive_notification_if_subscribed_for_comments_on_a_row(
         "read": False,
         "data": {
             "row_id": rows[0].id,
-            "row_name": rows[0].name_or_id,
+            "row_name": str(rows[0]),
             "table_id": table.id,
             "table_name": table.name,
             "database_id": database.id,
@@ -631,7 +631,7 @@ def test_row_comment_notification_type_can_be_rendered_as_email(
 
     assert (
         RowCommentNotificationType.get_notification_title_for_email(notification, {})
-        == f"{commenter.first_name} posted a comment in row {rows[0].name_or_id} in {table.name}."
+        == f"{commenter.first_name} posted a comment in row {str(rows[0])} in {table.name}."
     )
     assert (
         RowCommentNotificationType.get_notification_description_for_email(

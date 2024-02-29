@@ -1650,8 +1650,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         field_objects_to_always_update = model.get_field_objects_to_always_update()
         rows_relationships = []
         for obj in rows_to_update:
-            # The `updated_on` field is not updated with `bulk_update`,
-            # so we manually set the value here.
+            # The `updated_on` field is not updated with `bulk_update`, so we manually
+            # set the value here.
             obj.updated_on = model._meta.get_field("updated_on").pre_save(
                 obj, add=False
             )
@@ -1806,6 +1806,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         updated_rows_to_return = list(
             model.objects.all().enhance_by_fields().filter(id__in=row_ids)
         )
+
         rows_updated.send(
             self,
             rows=updated_rows_to_return,
