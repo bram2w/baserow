@@ -70,7 +70,9 @@ export class KanbanViewType extends PremiumViewType {
     return KanbanView
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isPublic
     // If the single select field is `null` we can't fetch the initial data anyway,
     // we don't have to do anything. The KanbanView component will handle it by
     // showing a form to choose or create a single select field.
@@ -80,23 +82,28 @@ export class KanbanViewType extends PremiumViewType {
       await store.dispatch(storePrefix + 'view/kanban/fetchInitial', {
         kanbanId: view.id,
         singleSelectFieldId: view.single_select_field,
+        adhocFiltering,
       })
     }
   }
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',
     includeFieldOptions = false,
     sourceEvent = null
   ) {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isPublic
     try {
       await store.dispatch(storePrefix + 'view/kanban/fetchInitial', {
         kanbanId: view.id,
         singleSelectFieldId: view.single_select_field,
         includeFieldOptions,
+        adhocFiltering,
       })
     } catch (error) {
       if (

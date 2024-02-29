@@ -89,6 +89,8 @@ export const state = () => ({
   multiSelectStartFieldIndex: -1,
   // The last used grid id.
   lastGridId: -1,
+  // If true, ad hoc filtering is used instead of persistent one
+  adhocFiltering: false,
   // Contains the custom field options per view. Things like the field width are
   // stored here.
   fieldOptions: {},
@@ -155,6 +157,9 @@ export const mutations = {
   },
   SET_LAST_GRID_ID(state, gridId) {
     state.lastGridId = gridId
+  },
+  SET_ADHOC_FILTERING(state, adhocFiltering) {
+    state.adhocFiltering = adhocFiltering
   },
   SET_SCROLL_TOP(state, scrollTop) {
     state.scrollTop = scrollTop
@@ -612,6 +617,7 @@ export const actions = {
   ) {
     const windowHeight = getters.getWindowHeight
     const gridId = getters.getLastGridId
+    const view = rootGetters['view/get'](getters.getLastGridId)
 
     // Calculate what the middle row index of the visible window based on the scroll
     // top.
@@ -719,7 +725,7 @@ export const actions = {
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           groupBy: getGroupBy(rootGetters, getters.getLastGridId),
           orderBy: getOrderBy(rootGetters, getters.getLastGridId),
-          filters: getFilters(rootGetters, getters.getLastGridId),
+          filters: getFilters(view, getters.getAdhocFiltering),
         })
         .then(({ data }) => {
           data.results.forEach((row) => {
@@ -858,7 +864,7 @@ export const actions = {
    */
   async fetchInitial(
     { dispatch, commit, getters, rootGetters },
-    { gridId, fields }
+    { gridId, fields, adhocFiltering }
   ) {
     // Reset scrollTop when switching table
     fireScrollTop.distance = 0
@@ -870,7 +876,9 @@ export const actions = {
       hideRowsNotMatchingSearch: true,
     })
     commit('SET_LAST_GRID_ID', gridId)
+    commit('SET_ADHOC_FILTERING', adhocFiltering)
 
+    const view = rootGetters['view/get'](getters.getLastGridId)
     const limit = getters.getBufferRequestSize * 2
     const { data } = await GridService(this.$client).fetchRows({
       gridId,
@@ -883,7 +891,7 @@ export const actions = {
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       groupBy: getGroupBy(rootGetters, getters.getLastGridId),
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
-      filters: getFilters(rootGetters, getters.getLastGridId),
+      filters: getFilters(view, adhocFiltering),
     })
     data.results.forEach((row) => {
       const metadata = extractRowMetadata(data, row.id)
@@ -917,8 +925,9 @@ export const actions = {
    */
   refresh(
     { dispatch, commit, getters, rootGetters },
-    { view, fields, includeFieldOptions = false }
+    { view, fields, adhocFiltering, includeFieldOptions = false }
   ) {
+    commit('SET_ADHOC_FILTERING', adhocFiltering)
     const gridId = getters.getLastGridId
 
     if (lastRefreshRequest !== null) {
@@ -933,7 +942,7 @@ export const actions = {
         signal: lastRefreshRequestController.signal,
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-        filters: getFilters(rootGetters, getters.getLastGridId),
+        filters: getFilters(view, adhocFiltering),
       })
       .then((response) => {
         const count = response.data.count
@@ -960,7 +969,7 @@ export const actions = {
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
             groupBy: getGroupBy(rootGetters, getters.getLastGridId),
             orderBy: getOrderBy(rootGetters, getters.getLastGridId),
-            filters: getFilters(rootGetters, getters.getLastGridId),
+            filters: getFilters(view, adhocFiltering),
           })
           .then(({ data }) => ({
             data,
@@ -1164,6 +1173,7 @@ export const actions = {
         this.$client
       ).fetchFieldAggregations({
         gridId: view.id,
+        filters: getFilters(view, getters.getAdhocFiltering),
         search,
         searchMode: getDefaultSearchModeFromEnv(this.$config),
         signal: lastAggregationRequest.controller.signal,
@@ -1632,6 +1642,7 @@ export const actions = {
     }
 
     const gridId = getters.getLastGridId
+    const view = rootGetters['view/get'](getters.getLastGridId)
     const { data } = await GridService(this.$client).fetchRows({
       gridId,
       offset: startIndex,
@@ -1642,7 +1653,7 @@ export const actions = {
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       groupBy: getGroupBy(rootGetters, getters.getLastGridId),
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
-      filters: getFilters(rootGetters, getters.getLastGridId),
+      filters: getFilters(view, getters.getAdhocFiltering),
       includeFields: fields,
       excludeFields,
     })
@@ -3101,6 +3112,9 @@ export const getters = {
   },
   getGroupByMetadata(state) {
     return state.groupByMetadata
+  },
+  getAdhocFiltering(state) {
+    return state.adhocFiltering
   },
 }
 

@@ -80,7 +80,7 @@
           v-if="
             hasSelectedView &&
             view._.type.canFilter &&
-            (readOnly ||
+            (adhocFiltering ||
               $hasPermission(
                 'database.table.view.create_filter',
                 view,
@@ -91,8 +91,9 @@
         >
           <ViewFilter
             :view="view"
+            :is-public-view="isPublic"
             :fields="fields"
-            :read-only="readOnly"
+            :read-only="adhocFiltering"
             :disable-filter="disableFilter"
             @changed="refresh()"
           ></ViewFilter>
@@ -375,6 +376,25 @@ export default {
         )
       )
     },
+    adhocFiltering() {
+      if (this.readOnly) {
+        return true
+      }
+
+      return (
+        this.view.type === 'grid' &&
+        this.$hasPermission(
+          'database.table.view.list_filter',
+          this.view,
+          this.database.workspace.id
+        ) &&
+        !this.$hasPermission(
+          'database.table.view.create_filter',
+          this.view,
+          this.database.workspace.id
+        )
+      )
+    },
     ...mapGetters({
       isPublic: 'page/view/public/getIsPublic',
     }),
@@ -457,6 +477,7 @@ export default {
       try {
         await type.refresh(
           { store: this.$store },
+          this.database,
           this.view,
           fieldsToRefresh,
           this.storePrefix,

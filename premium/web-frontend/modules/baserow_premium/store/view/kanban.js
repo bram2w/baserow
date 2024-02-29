@@ -49,6 +49,8 @@ export const state = () => ({
   draggingRow: null,
   draggingOriginalStackId: null,
   draggingOriginalBefore: null,
+  // If true, ad hoc filtering is used instead of persistent one
+  adhocFiltering: false,
 })
 
 export const mutations = {
@@ -178,6 +180,9 @@ export const mutations = {
     const currentValue = row._.metadata[rowMetadataType]
     Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
+  SET_ADHOC_FILTERING(state, adhocFiltering) {
+    state.adhocFiltering = adhocFiltering
+  },
 }
 
 export const actions = {
@@ -194,8 +199,15 @@ export const actions = {
    */
   async fetchInitial(
     { dispatch, commit, getters, rootGetters },
-    { kanbanId, singleSelectFieldId, includeFieldOptions = true }
+    {
+      kanbanId,
+      singleSelectFieldId,
+      adhocFiltering,
+      includeFieldOptions = true,
+    }
   ) {
+    commit('SET_ADHOC_FILTERING', adhocFiltering)
+    const view = rootGetters['view/get'](kanbanId)
     const { data } = await KanbanService(this.$client).fetchRows({
       kanbanId,
       limit: getters.getBufferRequestSize,
@@ -204,7 +216,7 @@ export const actions = {
       selectOptions: [],
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-      filters: getFilters(rootGetters, kanbanId),
+      filters: getFilters(view, adhocFiltering),
     })
     Object.keys(data.rows).forEach((key) => {
       populateStack(data.rows[key], data)
@@ -226,6 +238,7 @@ export const actions = {
     { selectOptionId }
   ) {
     const stack = getters.getStack(selectOptionId)
+    const view = rootGetters['view/get'](getters.getLastKanbanId)
     const { data } = await KanbanService(this.$client).fetchRows({
       kanbanId: getters.getLastKanbanId,
       limit: getters.getBufferRequestSize,
@@ -240,7 +253,7 @@ export const actions = {
       ],
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-      filters: getFilters(rootGetters, getters.getLastKanbanId),
+      filters: getFilters(view, getters.getAdhocFiltering),
     })
     const count = data.rows[selectOptionId].count
     const rows = data.rows[selectOptionId].results
@@ -1037,6 +1050,9 @@ export const getters = {
         }
       }
     }
+  },
+  getAdhocFiltering(state) {
+    return state.adhocFiltering
   },
 }
 

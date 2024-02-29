@@ -10,6 +10,11 @@ export default {
       required: false,
       default: undefined,
     },
+    isPublicView: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     filter: {
       type: Object,
       required: true,

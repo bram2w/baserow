@@ -146,6 +146,7 @@ export default {
           const type = this.$registry.get('view', view.type)
           await type.fetch(
             { store: this.$store },
+            this.database,
             view,
             this.fields,
             'template/'

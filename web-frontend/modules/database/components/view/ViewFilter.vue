@@ -24,6 +24,7 @@
       <ViewFilterForm
         :fields="fields"
         :view="view"
+        :is-public-view="isPublicView"
         :read-only="readOnly"
         :disable-filter="disableFilter"
         @changed="$emit('changed')"
@@ -46,6 +47,11 @@ export default {
     view: {
       type: Object,
       required: true,
+    },
+    isPublicView: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     readOnly: {
       type: Boolean,

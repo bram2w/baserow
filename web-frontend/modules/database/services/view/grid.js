@@ -130,11 +130,18 @@ export default (client) => {
     },
     fetchFieldAggregations({
       gridId,
+      filters = {},
       search = '',
       searchMode = '',
       signal = null,
     }) {
       const params = new URLSearchParams()
+
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
 
       if (search) {
         params.append('search', search)

@@ -19,6 +19,7 @@
       :filter-type="view.filter_type"
       :fields="fields"
       :view="view"
+      :is-public-view="isPublicView"
       :read-only="readOnly"
       :add-condition-string="$t('viewFilterContext.addFilter')"
       class="filters__items--with-padding filters__items--scrollable"
@@ -73,6 +74,11 @@ export default {
     view: {
       type: Object,
       required: true,
+    },
+    isPublicView: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     readOnly: {
       type: Boolean,
