@@ -387,7 +387,7 @@ export class FormDataProviderType extends DataProviderType {
             parseInt(elementId)
           )
           const elementType = this.app.$registry.get('element', element.type)
-          const name = elementType.getFormDataName(element, applicationContext)
+          const name = elementType.getDisplayName(element, applicationContext)
           const order = this.app.store.getters['element/getElementPosition'](
             page,
             element

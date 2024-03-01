@@ -5,7 +5,9 @@
     "wrong": "Something went wrong",
     "none": "None",
     "free": "Free",
-    "comingSoon": "Coming soon..."
+    "comingSoon": "Coming soon...",
+    "table": "Table",
+    "link": "Link"
   },
   "action": {
     "upload": "Upload",
