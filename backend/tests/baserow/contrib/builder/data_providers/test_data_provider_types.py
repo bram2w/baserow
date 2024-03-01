@@ -439,9 +439,12 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 
     dispatch_context = BuilderDispatchContext(fake_request, page)
 
-    data_source_provider.get_data_chunk(
-        dispatch_context, [data_source.id, fields[1].db_column]
-    ) == "Blue"
+    assert (
+        data_source_provider.get_data_chunk(
+            dispatch_context, [data_source.id, fields[1].db_column]
+        )
+        == "Blue"
+    )
 
 
 @pytest.mark.django_db
@@ -584,6 +587,22 @@ def test_data_source_formula_import_list_row_datasource_and_field(data_fixture):
     )
 
     assert result == f"get('data_source.{data_source2.id}.10.field_{field_2.id}')"
+
+
+@pytest.mark.django_db
+def test_data_source_formula_import_missing_get_row_datasource(data_fixture):
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["builder_data_sources"] = {}
+
+    result = import_formula(f"get('data_source.42.field_24')", id_mapping)
+
+    assert result == f"get('data_source.42.field_24')"
+
+    id_mapping["builder_data_sources"] = {42: 42}
+
+    result = import_formula(f"get('data_source.42.field_24')", id_mapping)
+
+    assert result == f"get('data_source.42.field_24')"
 
 
 @pytest.mark.django_db
