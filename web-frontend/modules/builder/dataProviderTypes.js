@@ -217,7 +217,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     const { page } = applicationContext
 
     await Promise.all(
-      page.elements.map((element) => {
+      page.elements.map(async (element) => {
         if (element.data_source_id) {
           const dataSource = this.app.store.getters[
             'dataSource/getPageDataSourceById'
@@ -228,15 +228,22 @@ export class CurrentRecordDataProviderType extends DataProviderType {
             { ...applicationContext, element }
           )
 
-          // fetch the initial content
-          return this.app.store.dispatch('elementContent/fetchElementContent', {
-            element,
-            dataSource,
-            data: dispatchContext,
-            range: [0, element.items_per_page],
-          })
+          try {
+            // fetch the initial content
+            return await this.app.store.dispatch(
+              'elementContent/fetchElementContent',
+              {
+                element,
+                dataSource,
+                data: dispatchContext,
+                range: [0, element.items_per_page],
+              }
+            )
+          } catch (e) {
+            // We don't want to block next dispatches so we do nothing, a notification
+            // will be displayed by the component itself.
+          }
         }
-        return Promise.resolve()
       })
     )
   }

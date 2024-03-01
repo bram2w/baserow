@@ -4,6 +4,7 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
 from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
@@ -136,13 +137,14 @@ class DataSourceDataProviderType(DataProviderType):
         data_source_id, *rest = path
 
         if "builder_data_sources" in id_mapping:
-            data_source_id = str(
-                id_mapping["builder_data_sources"].get(
-                    int(data_source_id), int(data_source_id)
-                )
-            )
+            try:
+                data_source_id = id_mapping["builder_data_sources"][int(data_source_id)]
+                data_source = DataSourceHandler().get_data_source(data_source_id)
+            except (KeyError, DataSourceDoesNotExist):
+                # The data source have probably been deleted so we return the
+                # initial path
+                return [str(data_source_id), *rest]
 
-            data_source = DataSourceHandler().get_data_source(data_source_id)
             service_type = data_source.service.specific.get_type()
             rest = service_type.import_path(rest, id_mapping)
 

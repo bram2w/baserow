@@ -55,6 +55,8 @@ const actions = {
     const serviceType = this.app.$registry.get('service', dataSource.type)
 
     const previousContent = [...getters.getElementContent(element)]
+    commit('SET_LOADING', { element, value: true })
+
     try {
       if (serviceType.isValid(dataSource)) {
         let rangeToFetch = range
@@ -73,7 +75,6 @@ const actions = {
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]
         }
 
-        commit('SET_LOADING', { element, value: true })
         const {
           data: { results, has_next_page: hasNextPage },
         } = await DataSourceService(this.app.$client).dispatch(
@@ -81,6 +82,7 @@ const actions = {
           dispatchContext,
           { range: rangeToFetch }
         )
+
         if (replace) {
           commit('CLEAR_CONTENT', {
             element,
@@ -102,14 +104,20 @@ const actions = {
       }
     } catch (e) {
       commit('SET_CONTENT', { element, value: previousContent, range })
+      commit('SET_HAS_MORE_PAGE', {
+        element,
+        value: false,
+      })
       throw e
+    } finally {
+      commit('SET_LOADING', { element, value: false })
     }
-    commit('SET_LOADING', { element, value: false })
   },
 
   clearElementContent({ commit }, { element }) {
     commit('CLEAR_CONTENT', { element })
   },
+
   triggerElementContentReset({ commit }, { element }) {
     commit('TRIGGER_RESET', { element })
   },

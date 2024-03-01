@@ -17,6 +17,7 @@ import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import _ from 'lodash'
 
 export default {
   components: { PageContent, Toasts },
@@ -151,14 +152,16 @@ export default {
       /**
        * Update data source content on dispatch context changes
        */
-      handler(newValue) {
-        this.$store.dispatch(
-          'dataSourceContent/debouncedFetchPageDataSourceContent',
-          {
-            page: this.page,
-            data: newValue,
-          }
-        )
+      handler(newDispatchContext, oldDispatchContext) {
+        if (!_.isEqual(newDispatchContext, oldDispatchContext)) {
+          this.$store.dispatch(
+            'dataSourceContent/debouncedFetchPageDataSourceContent',
+            {
+              page: this.page,
+              data: newDispatchContext,
+            }
+          )
+        }
       },
     },
   },

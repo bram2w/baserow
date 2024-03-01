@@ -461,6 +461,10 @@
     "defaultTitle": "Event error",
     "defaultMessage": "An error occurred triggering this event."
   },
+  "dispatchDataSourceError": {
+    "defaultTitle": "Data loading error",
+    "defaultMessage": "An error occurred while loading data for the page."
+  },
   "upsertRowWorkflowActionForm": {
     "integrationDropdownLabel": "Integration",
     "rowIdLabel": "Row ID",

@@ -22,6 +22,7 @@ import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import _ from 'lodash'
 
 const mode = 'editing'
 
@@ -158,14 +159,16 @@ export default {
       /**
        * Update data source content on backend context changes
        */
-      handler(newBackendContext) {
-        this.$store.dispatch(
-          'dataSourceContent/debouncedFetchPageDataSourceContent',
-          {
-            page: this.page,
-            data: newBackendContext,
-          }
-        )
+      handler(newDispatchContext, oldDispatchContext) {
+        if (!_.isEqual(newDispatchContext, oldDispatchContext)) {
+          this.$store.dispatch(
+            'dataSourceContent/debouncedFetchPageDataSourceContent',
+            {
+              page: this.page,
+              data: newDispatchContext,
+            }
+          )
+        }
       },
     },
   },

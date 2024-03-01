@@ -321,7 +321,7 @@ def test_local_baserow_list_rows_service_dispatch_data_permission_denied(
         PermissionException
     ):
         LocalBaserowListRowsUserServiceType().dispatch_data(
-            service, {}, FakeDispatchContext()
+            service, {"table": table}, FakeDispatchContext()
         )
 
 
@@ -672,7 +672,7 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
         PermissionException
     ):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, {}, FakeDispatchContext()
+            service, {"table": table}, FakeDispatchContext()
         )
 
 
@@ -1047,7 +1047,9 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
         table=table, integration=integration
     )
 
-    dispatch_data = service_type.dispatch_data(service, {}, FakeDispatchContext())
+    dispatch_data = service_type.dispatch_data(
+        service, {"table": table}, FakeDispatchContext()
+    )
 
     assert len(dispatch_data["results"]) == 10
     assert dispatch_data["has_next_page"] is False
@@ -1057,28 +1059,28 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
     fake_dispatch.range = Mock()
     fake_dispatch.range.return_value = [0, 5]
 
-    dispatch_data = service_type.dispatch_data(service, {}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is True
 
     fake_dispatch.range.return_value = [5, 3]
 
-    dispatch_data = service_type.dispatch_data(service, {}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
 
     assert len(dispatch_data["results"]) == 3
     assert dispatch_data["has_next_page"] is True
 
     fake_dispatch.range.return_value = [5, 5]
 
-    dispatch_data = service_type.dispatch_data(service, {}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is False
 
     fake_dispatch.range.return_value = [5, 10]
 
-    dispatch_data = service_type.dispatch_data(service, {}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is False
@@ -1088,11 +1090,40 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
 def test_local_baserow_table_service_before_dispatch_validation_error(
     data_fixture,
 ):
-    service = Mock(table=None)
     cls = LocalBaserowTableServiceType
     cls.model_class = Mock()
-    with pytest.raises(ServiceImproperlyConfigured):
-        cls().resolve_service_formulas(service, FakeDispatchContext())
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    trashed_table = data_fixture.create_database_table(
+        user, database=database, trashed=True
+    )
+    trashed_database = data_fixture.create_database_application(
+        workspace=workspace, trashed=True
+    )
+    table_in_trashed_database = data_fixture.create_database_table(
+        user, database=trashed_database
+    )
+
+    service_without_table = Mock(table_id=None)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        cls().resolve_service_formulas(service_without_table, FakeDispatchContext())
+    assert exc.value.args[0] == "The table property is missing."
+
+    service_with_trashed_table = Mock(table_id=trashed_table.id)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        cls().resolve_service_formulas(
+            service_with_trashed_table, FakeDispatchContext()
+        )
+    assert exc.value.args[0] == "The specified table is trashed"
+
+    service_with_table_in_trashed_database = Mock(table_id=table_in_trashed_database.id)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        cls().resolve_service_formulas(
+            service_with_table_in_trashed_database, FakeDispatchContext()
+        )
+    assert exc.value.args[0] == "The specified table is trashed"
 
 
 @pytest.mark.django_db
@@ -1997,13 +2028,13 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
 
     service.field_mappings.create(field=boolean_field, value="'Horse'")
     with pytest.raises(DRFValidationError) as exc:
-        service_type.dispatch_data(service, {}, dispatch_context)
+        service_type.dispatch_data(service, {"table": table}, dispatch_context)
 
     service.field_mappings.all().delete()
 
     service.field_mappings.create(field=single_field, value="'99999999999'")
     with pytest.raises(ServiceImproperlyConfigured) as exc:
-        service_type.dispatch_data(service, {}, dispatch_context)
+        service_type.dispatch_data(service, {"table": table}, dispatch_context)
 
     assert exc.value.args[0] == (
         "The result value of the formula is not valid for the "
@@ -2043,7 +2074,8 @@ def test_local_baserow_upsert_row_service_resolve_service_formulas(
     # We're creating a row.
     assert service.row_id == ""
     assert service_type.resolve_service_formulas(service, dispatch_context) == {
-        "row_id": ""
+        "row_id": "",
+        "table": table,
     }
 
     # We're updating a row, but the ID isn't an integer
