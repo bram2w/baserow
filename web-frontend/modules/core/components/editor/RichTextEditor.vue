@@ -1,14 +1,19 @@
 <template>
   <div>
     <RichTextEditorMentionsList
-      v-if="editable && enableMentions"
+      v-if="enableMentions"
       ref="mentionsList"
       :show-search="false"
       :add-empty-item="false"
     />
     <EditorContent
-      class="rich-text-editor"
-      :class="[editorClass]"
+      class="rich-text-editor__content"
+      :class="[
+        {
+          'rich-text-editor__content--scaled': contentScaled,
+        },
+        editorClass,
+      ]"
       :editor="editor"
     />
   </div>
@@ -135,6 +140,10 @@ export default {
     editorClass: {
       type: String,
       default: '',
+    },
+    contentScaled: {
+      type: Boolean,
+      default: false,
     },
     enableMentions: {
       type: Boolean,

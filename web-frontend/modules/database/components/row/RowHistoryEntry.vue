@@ -86,10 +86,11 @@ export default {
       return field
     },
     getEntryComponent(fieldIdentifier) {
-      const type = this.entry.fields_metadata[fieldIdentifier].type
+      const fieldMetadata = this.entry.fields_metadata[fieldIdentifier]
+      const type = fieldMetadata.type
       const fieldType = this.$registry.get('field', type)
       if (fieldType) {
-        return fieldType.getRowHistoryEntryComponent()
+        return fieldType.getRowHistoryEntryComponent(fieldMetadata)
       }
       return null
     },

@@ -133,6 +133,7 @@ from .exceptions import (
     InvalidRollupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
+    RichTextFieldCannotBePrimaryField,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .expressions import extract_jsonb_array_values_to_single_string
@@ -406,7 +407,28 @@ class LongTextFieldType(CollationSortMixin, FieldType):
     model_class = LongTextField
     allowed_fields = ["long_text_enable_rich_text"]
     serializer_field_names = ["long_text_enable_rich_text"]
-    _can_group_by = True
+
+    def check_can_group_by(self, field: Field) -> bool:
+        return not field.long_text_enable_rich_text
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        # Disallow rich text fields from being primary fields as they can be difficult
+        # to render in some email notifications, as linked rows and possibly other
+        # places.
+        if primary and field_kwargs.get("long_text_enable_rich_text", False):
+            raise RichTextFieldCannotBePrimaryField(
+                "A rich text field cannot be the primary field."
+            )
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
+        if from_field.primary and to_field_values.get(
+            "long_text_enable_rich_text", False
+        ):
+            raise RichTextFieldCannotBePrimaryField(
+                "A rich text field cannot be the primary field."
+            )
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -418,6 +440,18 @@ class LongTextFieldType(CollationSortMixin, FieldType):
                 **kwargs,
             }
         )
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+        return {
+            **base,
+            "long_text_enable_rich_text": field.long_text_enable_rich_text,
+        }
 
     def get_model_field(self, instance, **kwargs):
         return models.TextField(blank=True, null=True, **kwargs)

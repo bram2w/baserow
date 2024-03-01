@@ -5,22 +5,14 @@
     :class="{ editing: opened }"
     @contextmenu="stopContextIfEditing($event)"
   >
-    <div v-if="!opened" class="grid-field-long-text">
-      {{ value }}
-    </div>
-    <div
-      v-else-if="editing"
-      v-prevent-parent-scroll
-      class="grid-field-long-text__textarea"
-    >
+    <div v-prevent-parent-scroll="opened && editing" :class="classNames">
       <RichTextEditor
         ref="input"
         v-model="richCopy"
+        :editable="editing"
+        :content-scaled="!opened || !editing"
         :enable-rich-text-formatting="true"
       ></RichTextEditor>
-    </div>
-    <div v-else class="grid-field-long-text__textarea">
-      {{ richCopy }}
     </div>
   </div>
 </template>
@@ -39,12 +31,28 @@ export default {
       richCopy: '',
     }
   },
+  computed: {
+    classNames() {
+      if (!this.opened) {
+        return 'grid-field-long-text'
+      } else if (this.editing) {
+        return 'grid-field-long-text__textarea grid-field-long-text__textarea--rich-editor'
+      } else {
+        return 'grid-field-long-text__textarea'
+      }
+    },
+  },
   watch: {
     value: {
       handler(value) {
         this.richCopy = value || ''
       },
       immediate: true,
+    },
+    editing(editing) {
+      if (!editing) {
+        this.richCopy = this.value || ''
+      }
     },
   },
   methods: {

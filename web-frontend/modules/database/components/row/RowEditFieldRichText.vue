@@ -4,7 +4,10 @@
       ref="input"
       v-model="richCopy"
       class="input field-rich-text"
-      :class="{ 'input--error': touched && !valid, active: editing }"
+      :class="{
+        'input--error': touched && !isValid(),
+        active: editing,
+      }"
       :disabled="readOnly"
       :editable="!readOnly"
       :enable-rich-text-formatting="true"
@@ -12,8 +15,8 @@
       @blur="unselect()"
     ></RichTextEditor>
 
-    <div v-show="touched && !valid" class="error">
-      {{ error }}
+    <div v-show="touched && !isValid()" class="error">
+      {{ getError() }}
     </div>
   </div>
 </template>
@@ -32,10 +35,22 @@ export default {
       richCopy: '',
     }
   },
-  created() {
-    this.richCopy = this.value || ''
+  watch: {
+    value: {
+      handler(value) {
+        this.richCopy = value || ''
+      },
+      immediate: true,
+    },
   },
   methods: {
+    getError() {
+      return this.getValidationError(this.$refs.input?.serializeToMarkdown())
+    },
+    unselect() {
+      this.$super(rowEditFieldInput).unselect()
+      this.editing = false
+    },
     beforeSave() {
       return this.$refs.input.serializeToMarkdown()
     },
