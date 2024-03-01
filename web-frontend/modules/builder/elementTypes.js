@@ -86,6 +86,17 @@ export class ElementType extends Registerable {
     return []
   }
 
+  /**
+   * Returns a display name for this element, so it can be distinguished from
+   * other elements of the same type.
+   * @param {object} element - The element we want to get a display name for.
+   * @param {object} applicationContext - The context of the current application
+   * @returns {string} this element's display name.
+   */
+  getDisplayName(element, applicationContext) {
+    return this.name
+  }
+
   getEvents() {
     return this.events.map((EventType) => new EventType(this.app))
   }
@@ -277,25 +288,21 @@ export class FormElementType extends ElementType {
   }
 
   /**
-   * This name is used by the data explorer to show the form element.
-   *
-   * @param element - The form element instance
-   * @param applicationContext - The context of the current application
-   * @returns {string} - The name of the form element
+   * Returns a display name for this element, so it can be distinguished from
+   * other elements of the same type.
+   * @param {object} element - The element we want to get a display name for.
+   * @param {object} applicationContext
+   * @returns {string} this element's display name.
    */
-  getFormDataName(element, applicationContext) {
+  getDisplayName(element, applicationContext) {
     if (element.label) {
-      return this.resolveFormula(element.label, applicationContext)
+      const resolvedName = this.resolveFormula(
+        element.label,
+        applicationContext
+      )
+      return resolvedName.length ? resolvedName : this.name
     }
-
-    return this.generateFromDataName(element, applicationContext)
-  }
-
-  generateFromDataName(element, applicationContext) {
-    const elementPosition = this.app.store.getters[
-      'element/getElementPosition'
-    ](applicationContext.page, element, true)
-    return `${this.name} ${elementPosition}`
+    return this.name
   }
 
   afterCreate(element, page) {
@@ -348,6 +355,17 @@ export class InputTextElementType extends FormElementType {
     return 'string'
   }
 
+  getDisplayName(element, applicationContext) {
+    const displayValue =
+      element.label || element.default_value || element.placeholder
+
+    if (displayValue && displayValue.length) {
+      const resolvedName = this.resolveFormula(displayValue, applicationContext)
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
+  }
+
   getInitialFormDataValue(element, applicationContext) {
     return this.resolveFormula(element.default_value, {
       element,
@@ -380,6 +398,17 @@ export class HeadingElementType extends ElementType {
   get generalFormComponent() {
     return HeadingElementForm
   }
+
+  getDisplayName(element, applicationContext) {
+    if (element.value && element.value.length) {
+      const resolvedName = this.resolveFormula(
+        element.value,
+        applicationContext
+      )
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
+  }
 }
 
 export class TextElementType extends ElementType {
@@ -405,6 +434,17 @@ export class TextElementType extends ElementType {
 
   get generalFormComponent() {
     return TextElementForm
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.value && element.value.length) {
+      const resolvedName = this.resolveFormula(
+        element.value,
+        applicationContext
+      )
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
   }
 }
 
@@ -436,6 +476,37 @@ export class LinkElementType extends ElementType {
   isInError({ element, builder }) {
     return pathParametersInError(element, builder)
   }
+
+  getDisplayName(element, applicationContext) {
+    let displayValue = ''
+    let destination = ''
+    if (element.navigation_type === 'page') {
+      const builder = applicationContext.builder
+      const destinationPage = builder.pages.find(
+        ({ id }) => id === element.navigate_to_page_id
+      )
+      if (destinationPage) {
+        destination = `${destinationPage.name}`
+      }
+    } else if (element.navigation_type === 'custom') {
+      destination = this.resolveFormula(
+        element.navigate_to_url,
+        applicationContext
+      )
+    }
+
+    if (destination) {
+      destination = ` -> ${destination}`
+    }
+
+    if (element.value) {
+      displayValue = this.resolveFormula(element.value, applicationContext)
+    }
+
+    return displayValue
+      ? `${displayValue}${destination}`
+      : `${this.name}${destination}`
+  }
 }
 
 export class ImageElementType extends ElementType {
@@ -461,6 +532,17 @@ export class ImageElementType extends ElementType {
 
   get generalFormComponent() {
     return ImageElementForm
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.alt_text && element.alt_text.length) {
+      const resolvedName = this.resolveFormula(
+        element.alt_text,
+        applicationContext
+      )
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
   }
 }
 
@@ -491,6 +573,17 @@ export class ButtonElementType extends ElementType {
 
   get events() {
     return [ClickEvent]
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.value && element.value.length) {
+      const resolvedName = this.resolveFormula(
+        element.value,
+        applicationContext
+      )
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
   }
 }
 
@@ -559,6 +652,19 @@ export class TableElementType extends ElementType {
     })
     return collectionFieldsInError.includes(true)
   }
+
+  getDisplayName(element, { page }) {
+    let displayValue = ''
+    if (element.data_source_id) {
+      const dataSource = this.app.store.getters[
+        'dataSource/getPageDataSourceById'
+      ](page, element.data_source_id)
+      displayValue = dataSource
+        ? `${dataSource.name} ${this.name.toLowerCase()}`
+        : ''
+    }
+    return displayValue.length ? displayValue : this.name
+  }
 }
 
 export class DropdownElementType extends FormElementType {
@@ -595,6 +701,17 @@ export class DropdownElementType extends FormElementType {
       element,
       ...applicationContext,
     })
+  }
+
+  getDisplayName(element, applicationContext) {
+    const displayValue =
+      element.label || element.default_value || element.placeholder
+
+    if (displayValue && displayValue.length) {
+      const resolvedName = this.resolveFormula(displayValue, applicationContext)
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
   }
 }
 
@@ -702,5 +819,13 @@ export class IFrameElementType extends ElementType {
 
   get generalFormComponent() {
     return IFrameElementForm
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.url && element.url.length) {
+      const resolvedName = this.resolveFormula(element.url, applicationContext)
+      return resolvedName.length ? resolvedName : this.name
+    }
+    return this.name
   }
 }
