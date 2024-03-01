@@ -117,7 +117,7 @@ export default {
   },
   methods: {
     getCardComponent(field) {
-      return this.$registry.get('field', field.type).getCardComponent()
+      return this.$registry.get('field', field.type).getCardComponent(field)
     },
   },
 }

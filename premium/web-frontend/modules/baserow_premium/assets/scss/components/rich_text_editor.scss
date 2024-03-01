@@ -1,4 +1,8 @@
 .rich-text-editor {
+  height: 100%;
+}
+
+.rich-text-editor__content {
   width: 100%;
   height: 100%;
   text-align: left;
@@ -30,9 +34,9 @@
   }
 }
 
-.rich-text-editor__comment {
-  max-height: 60vh;
-  overflow-y: auto;
+.rich-text-editor__content--comment {
+  max-height: 50vh;
+  overflow: auto;
   background-color: white;
 }
 
@@ -67,4 +71,54 @@
   color: $color-neutral-500;
   pointer-events: none;
   height: 0;
+}
+
+
+.rich-text-editor__content--scaled {
+  overflow: hidden;
+
+  h1, h2, h3, p, a, ul, ol, li, blockquote, pre, code {
+  
+    @include fixed-height(32px, 13px);
+
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    color: revert;
+  }
+  
+  h1, h2, h3, p, a, blockquote, pre, code {
+    @extend %ellipsis;
+  }
+
+  ul {
+    list-style-type: disc;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  li {
+    margin-left: 20px;
+  }
+
+  pre {
+    display: flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 2px;
+    width: fit-content;
+    margin-top: 5px;
+    max-width: 100%;
+  }
+
+  blockquote {
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+    height: 22px;
+    padding-left: 6px;
+    width: fit-content;
+    margin-top: 5px;
+    max-width: 100%;
+  }
 }

@@ -56,6 +56,7 @@ import GridViewFieldPassword from '@baserow/modules/database/components/view/gri
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
+import FunctionalGridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRichText'
 import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
 import FunctionalGridViewFieldRating from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRating'
@@ -107,6 +108,7 @@ import RowCardFieldRating from '@baserow/modules/database/components/card/RowCar
 import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
 import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
+import RowCardFieldRichText from '@baserow/modules/database/components/card/RowCardFieldRichText'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
@@ -115,6 +117,7 @@ import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/car
 import RowCardFieldPassword from '@baserow/modules/database/components/card/RowCardFieldPassword'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
+import RowHistoryFieldRichText from '@baserow/modules/database/components/row/RowHistoryFieldRichText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
 import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
 import RowHistoryFieldDuration from '@baserow/modules/database/components/row/RowHistoryFieldDuration'
@@ -201,7 +204,7 @@ export class FieldType extends Registerable {
    * components are much faster. When a user clicks on the cell it will be replaced
    * with the real component.
    */
-  getFunctionalGridViewFieldComponent() {
+  getFunctionalGridViewFieldComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -243,7 +246,7 @@ export class FieldType extends Registerable {
    * This component should represent the field's value in a row card display. To
    * improve performance, this component should be a functional component.
    */
-  getCardComponent() {
+  getCardComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -254,8 +257,8 @@ export class FieldType extends Registerable {
    * improve performance, this component should be a functional component. The card
    * component almost always compatible here, so we're returning that one by default.
    */
-  getGroupByComponent() {
-    return this.getCardComponent()
+  getGroupByComponent(field) {
+    return this.getCardComponent(field)
   }
 
   /**
@@ -272,7 +275,7 @@ export class FieldType extends Registerable {
    * different height in the card, it must be returned here.
    */
   getCardValueHeight(field) {
-    return this.getCardComponent().height || 0
+    return this.getCardComponent(field).height || 0
   }
 
   /**
@@ -868,8 +871,12 @@ export class LongTextFieldType extends FieldType {
     }
   }
 
-  getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldLongText
+  getFunctionalGridViewFieldComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return FunctionalGridViewFieldRichText
+    } else {
+      return FunctionalGridViewFieldLongText
+    }
   }
 
   getRowEditFieldComponent(field) {
@@ -880,12 +887,20 @@ export class LongTextFieldType extends FieldType {
     }
   }
 
-  getCardComponent() {
-    return RowCardFieldText
+  getCardComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return RowCardFieldRichText
+    } else {
+      return RowCardFieldText
+    }
   }
 
-  getRowHistoryEntryComponent() {
-    return RowHistoryFieldText
+  getRowHistoryEntryComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return RowHistoryFieldRichText
+    } else {
+      return RowHistoryFieldText
+    }
   }
 
   getEmptyValue(field) {
@@ -934,7 +949,7 @@ export class LongTextFieldType extends FieldType {
   }
 
   getCanGroupByInView(field) {
-    return true
+    return !field.long_text_enable_rich_text
   }
 }
 

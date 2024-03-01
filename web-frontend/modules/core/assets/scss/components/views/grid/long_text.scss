@@ -24,6 +24,26 @@
   min-width: 100%;
   background-color: $white;
 
+  /* scrollbar */
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: $color-neutral-500;
+    -webkit-box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.2);
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+
   &:focus {
     outline: 0;
   }
@@ -31,31 +51,16 @@
   .grid-view__column--matches-search & {
     background-color: $color-primary-100;
   }
+
+  &::-webkit-scrollbar-thumb:window-inactive {
+    background-color: $color-neutral-500;
+  }
 }
 
-.grid-field-long-text--uniform {
-  & h1,
-  h2,
-  h3,
-  p,
-  a,
-  ul,
-  ol,
-  li,
-  blockquote,
-  pre,
-  code {
-    @extend %ellipsis;
-
-    @include fixed-height(32px, 13px);
-
-    padding: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    color: revert;
-  }
-
-  li::marker {
-    content: initial;
-  }
+.grid-field-long-text__textarea--rich-editor {
+  padding: 5px 30px 5px 10px;
+  resize: both;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  height: 22px * 5 + 10px;
 }

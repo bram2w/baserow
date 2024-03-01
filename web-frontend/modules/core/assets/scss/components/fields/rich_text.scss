@@ -7,7 +7,7 @@
     border-color: $palette-blue-500;
   }
 
-  & .rich-text-editor[conteteditable='false'] {
+  & .rich-text-editor__content[conteteditable='false'] {
     background-color: $palette-neutral-700;
   }
 }

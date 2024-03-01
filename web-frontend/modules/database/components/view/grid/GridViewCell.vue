@@ -93,7 +93,7 @@ export default {
     getFunctionalComponent(parent, props) {
       return parent.$registry
         .get('field', props.field.type)
-        .getFunctionalGridViewFieldComponent()
+        .getFunctionalGridViewFieldComponent(props.field)
     },
     /**
      * Returns the component related to the field type. This component will only be

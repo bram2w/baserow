@@ -3981,11 +3981,11 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
     queryset = model.objects.all()
     rows = list(queryset)
     handler = ViewHandler()
-    all_fields = list(table.field_set.all())
+    all_fields = [f.specific for f in table.field_set.all()]
     fields_to_group_by = [
         field
         for field in all_fields
-        if field_type_registry.get_by_model(field.specific).check_can_group_by(field)
+        if field_type_registry.get_by_model(field).check_can_group_by(field)
     ]
 
     actual_result_per_field_name = {}

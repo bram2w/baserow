@@ -258,3 +258,9 @@ class ReadOnlyFieldHasNoInternalDbValueError(Exception):
     This is because there is no valid value that can be returned which can then pass
     through "prepare_value_for_db" for a read_only field."
     """
+
+
+class RichTextFieldCannotBePrimaryField(Exception):
+    """
+    Raised when a rich text field is attempted to be set as the primary field.
+    """
