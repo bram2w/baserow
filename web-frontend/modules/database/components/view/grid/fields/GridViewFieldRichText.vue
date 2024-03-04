@@ -1,19 +1,20 @@
 <template>
   <div
     ref="cell"
+    v-prevent-parent-scroll="opened && editing"
     class="grid-view__cell grid-field-long-text__cell active"
     :class="{ editing: opened }"
     @contextmenu="stopContextIfEditing($event)"
   >
-    <div v-prevent-parent-scroll="opened && editing" :class="classNames">
-      <RichTextEditor
-        ref="input"
-        v-model="richCopy"
-        :editable="editing"
-        :content-scaled="!opened || !editing"
-        :enable-rich-text-formatting="true"
-      ></RichTextEditor>
-    </div>
+    <RichTextEditor
+      ref="input"
+      v-model="richCopy"
+      :class="classNames"
+      :editable="editing"
+      :content-scaled="!opened || !editing"
+      :enable-rich-text-formatting="true"
+      :thin-scrollbar="true"
+    ></RichTextEditor>
   </div>
 </template>
 
@@ -34,11 +35,11 @@ export default {
   computed: {
     classNames() {
       if (!this.opened) {
-        return 'grid-field-long-text'
+        return 'grid-field-rich-text'
       } else if (this.editing) {
-        return 'grid-field-long-text__textarea grid-field-long-text__textarea--rich-editor'
+        return 'grid-field-rich-text__textarea grid-field-rich-text__textarea--rich-editor'
       } else {
-        return 'grid-field-long-text__textarea'
+        return 'grid-field-rich-text__textarea'
       }
     },
   },
@@ -56,6 +57,15 @@ export default {
     },
   },
   methods: {
+    scrollHeight() {
+      return {
+        sh: this.$refs.container.scrollHeight,
+        st: this.$refs.container.scrollTop,
+      }
+    },
+    cancel() {
+      return this.save()
+    },
     beforeSave() {
       return this.$refs.input.serializeToMarkdown()
     },
@@ -66,6 +76,18 @@ export default {
     },
     canSaveByPressingEnter(event) {
       return false
+    },
+    canUnselectByClickingOutside(event) {
+      // The RichTextEditorBubbleMenuContext component is a context menu and so it's not
+      // a direct child of the RichTextEditorBubbleMenu component. This means that the
+      // when you click on an item, we have to prevent the next unselect event from
+      // happening otherwise the cell will lose focus and the editor will close.
+      if (this.editing && this.preventNextUnselect) {
+        this.preventNextUnselect = false
+        return false
+      }
+
+      return !this.editing || !this.$refs.input?.isEventTargetInside(event)
     },
   },
 }

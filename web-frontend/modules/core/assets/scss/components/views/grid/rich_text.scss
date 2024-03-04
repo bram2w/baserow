@@ -1,0 +1,17 @@
+.grid-field-rich-text {
+  @extend .grid-field-long-text;
+
+  height: inherit;
+}
+
+.grid-field-rich-text__textarea {
+  @extend .grid-field-long-text__textarea;
+}
+
+.grid-field-rich-text__textarea--rich-editor {
+  padding: 5px 30px 5px 10px;
+  resize: both;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  height: 22px * 5 + 10px;
+}
