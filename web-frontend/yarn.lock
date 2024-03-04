@@ -4307,6 +4307,13 @@
   dependencies:
     tippy.js "^6.3.7"
 
+"@tiptap/extension-floating-menu@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-floating-menu/-/extension-floating-menu-2.2.4.tgz#a97becec8cedfa1fb282a7a52caed35a80098581"
+  integrity sha512-U25l7PEzOmlAPugNRl8t8lqyhQZS6W/+3f92+FdwW9qXju3i62iX/3OGCC3Gv+vybmQ4fbZmMjvl+VDfenNi3A==
+  dependencies:
+    tippy.js "^6.3.7"
+
 "@tiptap/extension-hard-break@2.2.3":
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-hard-break/-/extension-hard-break-2.2.3.tgz#7d7b8e7bcf99be5f518a705c65ebcc1dacaaa514"
@@ -4378,6 +4385,16 @@
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-superscript/-/extension-superscript-2.2.3.tgz#51cb2bde41656688ea6088e02d89d43195f6c1c6"
   integrity sha512-4V4PoXPuxCiiISFxz1StP/5azQqUmlwCECJg8ketrQ6WFfUf54lzCEjMeo9RwwdBbfpL6dhwJ8mmv6qil4j1KA==
+
+"@tiptap/extension-task-item@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-task-item/-/extension-task-item-2.2.4.tgz#303a561a315c13cc983ab1c4283e256c2cde000d"
+  integrity sha512-Ixzv7bPcgrWelSD0Jy6yAlHxmGWpD5lPt6Ey4POYy7u98duyUFOBMHLcsV24ipQsRacuB+htgmuqOrkiL+hg7w==
+
+"@tiptap/extension-task-list@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-task-list/-/extension-task-list-2.2.4.tgz#138ebeeb8f0bedd58926094d0e0f52ab36dd7548"
+  integrity sha512-URh1Yzj/YZBOMkobK4/U8s1QYwIIqHm4b0YadLPPZx9IzTjyV/2bvIakphCmBtxWxeTXW5TbO9eNod3qatq21w==
 
 "@tiptap/extension-text@2.2.3":
   version "2.2.3"
