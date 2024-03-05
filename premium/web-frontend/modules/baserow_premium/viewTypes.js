@@ -281,7 +281,7 @@ export class CalendarViewType extends PremiumViewType {
     return CalendarView
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
     await store.dispatch(storePrefix + 'view/calendar/resetAndFetchInitial', {
       calendarId: view.id,
       dateFieldId: view.date_field,
@@ -291,6 +291,7 @@ export class CalendarViewType extends PremiumViewType {
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',
