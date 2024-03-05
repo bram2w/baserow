@@ -85,11 +85,6 @@ export default {
       type: Object,
       required: true,
     },
-    readOnly: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     storePrefix: {
       type: String,
       required: true,
@@ -100,13 +95,10 @@ export default {
   },
   computed: {
     userCanMakeAggregations() {
-      return (
-        !this.readOnly ||
-        this.$hasPermission(
-          'database.table.view.update_field_options',
-          this.view,
-          this.database.workspace.id
-        )
+      return this.$hasPermission(
+        'database.table.view.update_field_options',
+        this.view,
+        this.database.workspace.id
       )
     },
     aggregationType() {
@@ -201,11 +193,7 @@ export default {
           {
             field: this.field,
             values,
-            readOnly: !this.$hasPermission(
-              'database.table.view.update_field_options',
-              this.view,
-              this.database.workspace.id
-            ),
+            readOnly: !this.userCanMakeAggregations,
           }
         )
       } finally {
