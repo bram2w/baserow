@@ -13,6 +13,7 @@ from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 from baserow.contrib.database.fields.models import Field, SingleSelectField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 
@@ -23,6 +24,7 @@ def get_rows_grouped_by_single_select_field(
     option_settings: Dict[str, Dict[str, int]] = None,
     default_limit: int = 40,
     default_offset: int = 0,
+    adhoc_filters: Optional[AdHocFilters] = None,
     model: Optional[GeneratedTableModel] = None,
     base_queryset: Optional[QuerySet] = None,
 ) -> Dict[str, Dict[str, Union[int, list]]]:
@@ -52,6 +54,8 @@ def get_rows_grouped_by_single_select_field(
         specific settings for that field have been provided.
     :param default_offset: The default offset that applies to all options if no
         specific settings for that field have been provided.
+    :param adhoc_filters: The optional ad hoc filters if they should be used
+        instead of view filters.
     :param model: Additionally, an existing model can be provided so that it doesn't
         have to be generated again.
     :param base_queryset: Optionally an alternative base queryset can be provided
@@ -71,7 +75,14 @@ def get_rows_grouped_by_single_select_field(
     if base_queryset is None:
         base_queryset = model.objects.all().enhance_by_fields().order_by("order", "id")
 
-    base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
+    if adhoc_filters is None:
+        adhoc_filters = AdHocFilters()
+
+    if adhoc_filters.has_any_filters:
+        base_option_queryset = adhoc_filters.apply_to_queryset(model, base_queryset)
+    else:
+        base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
+
     all_filters = Q()
     count_aggregates = {}
     all_options = list(single_select_field.select_options.all())
