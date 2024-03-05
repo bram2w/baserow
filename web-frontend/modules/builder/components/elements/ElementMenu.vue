@@ -6,7 +6,7 @@
     <a v-else class="element-preview__menu-item" @click="$emit('duplicate')">
       <i class="iconoir-copy"></i>
       <span class="element-preview__menu-item-description">
-        {{ $t('action.duplicate') }}
+        {{ $t('action.duplicate') }} (d)
       </span>
     </a>
     <a
@@ -16,7 +16,7 @@
     >
       <i class="iconoir-scale-frame-enlarge"></i>
       <span class="element-preview__menu-item-description">
-        {{ $t('elementMenu.selectParent') }}
+        {{ $t('elementMenu.selectParent') }} (p)
       </span>
     </a>
     <a
@@ -89,7 +89,7 @@
     <a class="element-preview__menu-item" @click="$emit('delete')">
       <i class="iconoir-bin"></i>
       <span class="element-preview__menu-item-description">
-        {{ $t('action.delete') }}
+        {{ $t('action.delete') }} (del)
       </span>
     </a>
   </div>
