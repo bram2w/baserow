@@ -9,7 +9,6 @@
       placement: 'left',
       appendTo,
       getReferenceClientRect: updateReferenceClientRect,
-      onClickOutside,
       onShow,
       onHidden,
     }"
@@ -224,9 +223,6 @@ export default {
     },
     appendTo() {
       return document.body
-    },
-    onClickOutside() {
-      // this.open = false
     },
     checkIfVisibleInContainer(boundingRect) {
       const containerBoundingRect = this.getScrollableAreaBoundingRect()

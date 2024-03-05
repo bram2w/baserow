@@ -186,6 +186,24 @@ export default {
         reader.readAsArrayBuffer(event.target.files[0])
       }
     },
+    unescapeValue(value) {
+      if (value === null || value === undefined) {
+        return ''
+      }
+      if (typeof value === 'number') {
+        return value
+      }
+
+      value = String(value)
+      if (
+        value.startsWith("'") &&
+        ['@', '+', '-', '=', '|', '%'].includes(value[1]) &&
+        !/^[-0-9,.]+$/.test(value.slice(1))
+      ) {
+        value = value.slice(1)
+      }
+      return value
+    },
     /**
      * Parses the raw data with the user configured delimiter. If all looks good the
      * data is stored as a string because all the entries don't have to be reactive.
@@ -224,7 +242,7 @@ export default {
               complete: (parsedResult) => {
                 if (this.firstRowHeader) {
                   const [, ...data] = parsedResult.data
-                  resolve(data)
+                  resolve(data.map((row) => row.map(this.unescapeValue)))
                 } else {
                   resolve(parsedResult.data)
                 }
@@ -253,7 +271,9 @@ export default {
           this.handleImporterError(this.$t('tableCSVImporter.emptyCSV'))
         } else {
           // Store the data to reload the preview without reparsing.
-          this.parsedData = [...parsedResult.data]
+          this.parsedData = parsedResult.data.map((row) =>
+            row.map(this.unescapeValue)
+          )
           this.reloadPreview()
           this.state = null
           this.$emit('getData', getData)

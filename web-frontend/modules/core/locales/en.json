@@ -601,6 +601,7 @@
         "heading3": "Heading 3",
         "orderedList": "Numbered list",
         "unorderedList": "Bullet list",
-        "code": "Code"
+        "code": "Code",
+        "taskList": "Task list"
     }
 }

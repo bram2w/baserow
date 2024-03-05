@@ -36,6 +36,12 @@ export default {
       }
     },
     /**
+     * Returns if the modal is open or not.
+     */
+    isOpen() {
+      return this.open
+    },
+    /**
      * Show the modal.
      */
     show() {

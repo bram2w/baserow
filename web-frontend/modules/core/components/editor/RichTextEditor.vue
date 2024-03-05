@@ -90,7 +90,9 @@ const richTextEditorExtensions = [
   Subscript,
   Superscript,
   // Extensions
-  Markdown,
+  Markdown.configure({
+    breaks: true,
+  }),
 ]
 
 export default {
@@ -249,14 +251,19 @@ export default {
           this.$emit('input', this.editor.getJSON())
         },
         onFocus: ({ editor, event }) => {
+          if (this.editable && !this.bubbleMenuOpen) {
+            this.floatingMenuOpen = true
+          }
           this.$emit('focus')
         },
         onBlur: ({ editor, event }) => {
-          if (!this.isEventTargetInside(event)) {
-            this.bubbleMenuOpen = false
-            this.floatingMenuOpen = false
-            this.$emit('blur')
+          if (this.isEventFromMenu(event)) {
+            return // Do not emit blur event if the event is from one of the editor's menu.
           }
+
+          this.bubbleMenuOpen = false
+          this.floatingMenuOpen = false
+          this.$emit('blur')
         },
         onSelectionUpdate: ({ editor }) => {
           if (this.editable && this.enableRichTextFormatting) {
@@ -278,6 +285,7 @@ export default {
     setupEditor() {
       if (this.editable) {
         this.focus()
+        this.floatingMenuOpen = true
 
         this.registerResizeObserver()
         this.registerAutoCollapseFloatingMenuHandler()
@@ -336,12 +344,14 @@ export default {
     serializeToMarkdown() {
       return this.editor.storage.markdown.getMarkdown()
     },
-    isEventTargetInside(event) {
+    isEventFromMenu(event) {
       return (
-        isElement(this.$el, event.target) ||
         this.$refs.bubbleMenu?.isEventTargetInside(event) ||
         this.$refs.floatingMenu?.isEventTargetInside(event)
       )
+    },
+    isEventTargetInside(event) {
+      return isElement(this.$el, event.target) || this.isEventFromMenu(event)
     },
   },
 }
