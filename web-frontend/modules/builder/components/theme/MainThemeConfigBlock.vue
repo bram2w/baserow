@@ -106,15 +106,18 @@
           </div>
         </div>
         <div class="theme_settings__section-preview">
-          <h1
-            class="heading-element margin-bottom-2 theme_settings__section-ellipsis"
+          <component
+            :is="`h${i}`"
+            class="margin-bottom-2 theme_settings__section-ellipsis"
+            :class="`ab-heading--h${i}`"
             :style="{
-              '--color': builder.theme[`heading_${i}_color`],
-              '--font-size': builder.theme[`heading_${i}_font_size`] + 'px',
+              [`--heading-h${i}--color`]: builder.theme[`heading_${i}_color`],
+              [`--heading-h${i}--font-size`]:
+                builder.theme[`heading_${i}_font_size`] + 'px',
             }"
           >
             {{ $t('mainThemeConfigBlock.headingValue', { i }) }}
-          </h1>
+          </component>
         </div>
       </div>
     </div>

@@ -296,6 +296,7 @@
     "localBaserowPassword": "Email/Password"
   },
   "localBaserowPasswordAppAuthProviderForm": {
-    "passwordFieldLabel": "Select password field"
+    "passwordFieldLabel": "Select password field",
+    "noFields": "No compatible fields"
   }
 }

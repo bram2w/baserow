@@ -8,9 +8,12 @@
     <component
       :is="`h${element.level}`"
       class="heading-element__heading"
-      :class="{ [`ab-heading--h${element.level}`]: true }"
+      :class="`ab-heading--h${element.level}`"
       :style="{
-        '--color': resolveColor(element.font_color, headingColorVariables),
+        [`--heading-h${element.level}--color`]: resolveColor(
+          element.font_color,
+          headingColorVariables
+        ),
       }"
     >
       {{ resolvedValue || $t('headingElement.noValue') }}

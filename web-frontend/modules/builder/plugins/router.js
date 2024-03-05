@@ -5,11 +5,6 @@ import {
   routerOptions as defaultRouterOptions,
 } from './defaultRouter'
 
-import {
-  featureFlagIsEnabled,
-  getFeatureFlags,
-} from '@baserow/modules/core/utils/env'
-
 /**
  * Replace the official Nuxt `createRouter` function. If the request hostname is equal
  * to the `PUBLIC_WEB_FRONTEND_URL` hostname, the router will contain only routes that
@@ -37,11 +32,8 @@ export function createRouter(ssrContext, config) {
     ).hostname
     const requestHostname = new URL(`http://${req.headers.host}`).hostname
 
-    const featureFlags = getFeatureFlags(runtimeConfig.public)
     // We allow published routes only if the builder feature flag is on
-    isWebFrontendHostname =
-      frontendHostname === requestHostname ||
-      !featureFlagIsEnabled(featureFlags, 'builder')
+    isWebFrontendHostname = frontendHostname === requestHostname
 
     // Send the variable to the frontend using the `__NUXT__` property
     ssrContext.nuxt.isWebFrontendHostname = isWebFrontendHostname

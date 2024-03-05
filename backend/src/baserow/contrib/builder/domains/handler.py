@@ -107,6 +107,10 @@ class DomainHandler:
 
         prepared_values = domain_type.prepare_values(allowed_values)
 
+        # Save only lower case domain
+        if "domain_name" in prepared_values:
+            prepared_values["domain_name"] = prepared_values["domain_name"].lower()
+
         domain = model_class(builder=builder, order=last_order, **prepared_values)
         domain.save()
 
@@ -137,6 +141,10 @@ class DomainHandler:
         )
 
         prepared_values = domain_type.prepare_values(allowed_values)
+
+        # Save only lower case domain
+        if "domain_name" in prepared_values:
+            prepared_values["domain_name"] = prepared_values["domain_name"].lower()
 
         for key, value in prepared_values.items():
             setattr(domain, key, value)

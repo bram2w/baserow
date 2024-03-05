@@ -48,6 +48,9 @@
         :label="$t('linkNavigationSelection.url')"
         :placeholder="$t('linkNavigationSelection.urlPlaceholder')"
         :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+        :application-context-additions="{
+          element,
+        }"
       />
     </FormGroup>
 
