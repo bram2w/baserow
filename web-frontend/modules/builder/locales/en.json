@@ -70,7 +70,7 @@
     "heading": "Heading",
     "headingDescription": "Page heading title",
     "text": "Text",
-    "textDescription": "Single line text",
+    "textDescription": "Multi-line text",
     "link": "Link",
     "linkDescription": "A link to page/URL",
     "image": "Image",
@@ -286,7 +286,7 @@
   },
   "horizontalAlignmentSelector": {
     "alignment": "Horizontal alignment",
-    "alignmentLeft": "Link",
+    "alignmentLeft": "Left",
     "alignmentCenter": "Center",
     "alignmentRight": "Right"
   },

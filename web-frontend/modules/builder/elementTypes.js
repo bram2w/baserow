@@ -13,7 +13,10 @@ import TableElement from '@baserow/modules/builder/components/elements/component
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm'
 
 import { ELEMENT_EVENTS } from '@baserow/modules/builder/enums'
-import { ensureBoolean } from '@baserow/modules/core/utils/validator'
+import {
+  ensureBoolean,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -296,11 +299,10 @@ export class FormElementType extends ElementType {
    */
   getDisplayName(element, applicationContext) {
     if (element.label) {
-      const resolvedName = this.resolveFormula(
-        element.label,
-        applicationContext
-      )
-      return resolvedName.length ? resolvedName : this.name
+      const resolvedName = ensureString(
+        this.resolveFormula(element.label, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -359,9 +361,11 @@ export class InputTextElementType extends FormElementType {
     const displayValue =
       element.label || element.default_value || element.placeholder
 
-    if (displayValue && displayValue.length) {
-      const resolvedName = this.resolveFormula(displayValue, applicationContext)
-      return resolvedName.length ? resolvedName : this.name
+    if (displayValue?.trim()) {
+      const resolvedName = ensureString(
+        this.resolveFormula(displayValue, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -401,11 +405,10 @@ export class HeadingElementType extends ElementType {
 
   getDisplayName(element, applicationContext) {
     if (element.value && element.value.length) {
-      const resolvedName = this.resolveFormula(
-        element.value,
-        applicationContext
-      )
-      return resolvedName.length ? resolvedName : this.name
+      const resolvedName = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -437,12 +440,11 @@ export class TextElementType extends ElementType {
   }
 
   getDisplayName(element, applicationContext) {
-    if (element.value && element.value.length) {
-      const resolvedName = this.resolveFormula(
-        element.value,
-        applicationContext
-      )
-      return resolvedName.length ? resolvedName : this.name
+    if (element.value) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -489,10 +491,9 @@ export class LinkElementType extends ElementType {
         destination = `${destinationPage.name}`
       }
     } else if (element.navigation_type === 'custom') {
-      destination = this.resolveFormula(
-        element.navigate_to_url,
-        applicationContext
-      )
+      destination = ensureString(
+        this.resolveFormula(element.navigate_to_url, applicationContext)
+      ).trim()
     }
 
     if (destination) {
@@ -500,7 +501,9 @@ export class LinkElementType extends ElementType {
     }
 
     if (element.value) {
-      displayValue = this.resolveFormula(element.value, applicationContext)
+      displayValue = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
     }
 
     return displayValue
@@ -535,12 +538,11 @@ export class ImageElementType extends ElementType {
   }
 
   getDisplayName(element, applicationContext) {
-    if (element.alt_text && element.alt_text.length) {
-      const resolvedName = this.resolveFormula(
-        element.alt_text,
-        applicationContext
-      )
-      return resolvedName.length ? resolvedName : this.name
+    if (element.alt_text) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.alt_text, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -576,12 +578,11 @@ export class ButtonElementType extends ElementType {
   }
 
   getDisplayName(element, applicationContext) {
-    if (element.value && element.value.length) {
-      const resolvedName = this.resolveFormula(
-        element.value,
-        applicationContext
-      )
-      return resolvedName.length ? resolvedName : this.name
+    if (element.value) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -654,16 +655,17 @@ export class TableElementType extends ElementType {
   }
 
   getDisplayName(element, { page }) {
-    let displayValue = ''
+    let suffix = ''
+
     if (element.data_source_id) {
       const dataSource = this.app.store.getters[
         'dataSource/getPageDataSourceById'
       ](page, element.data_source_id)
-      displayValue = dataSource
-        ? `${dataSource.name} ${this.name.toLowerCase()}`
-        : ''
+
+      suffix = dataSource ? ` - ${dataSource.name}` : ''
     }
-    return displayValue.length ? displayValue : this.name
+
+    return `${this.name}${suffix}`
   }
 }
 
@@ -707,9 +709,11 @@ export class DropdownElementType extends FormElementType {
     const displayValue =
       element.label || element.default_value || element.placeholder
 
-    if (displayValue && displayValue.length) {
-      const resolvedName = this.resolveFormula(displayValue, applicationContext)
-      return resolvedName.length ? resolvedName : this.name
+    if (displayValue) {
+      const resolvedName = ensureString(
+        this.resolveFormula(displayValue, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
     return this.name
   }
@@ -823,8 +827,10 @@ export class IFrameElementType extends ElementType {
 
   getDisplayName(element, applicationContext) {
     if (element.url && element.url.length) {
-      const resolvedName = this.resolveFormula(element.url, applicationContext)
-      return resolvedName.length ? resolvedName : this.name
+      const resolvedName = ensureString(
+        this.resolveFormula(element.url, applicationContext)
+      )
+      return resolvedName || this.name
     }
     return this.name
   }

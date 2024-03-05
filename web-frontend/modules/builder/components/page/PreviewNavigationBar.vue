@@ -23,7 +23,7 @@
         />
         <div
           v-else
-          :key="pathPart.key"
+          :key="`else_${pathPart.key}`"
           class="preview-navigation-bar__address-bar-path"
         >
           {{ pathPart.value }}

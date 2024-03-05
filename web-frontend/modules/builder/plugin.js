@@ -96,10 +96,6 @@ import {
 export default (context) => {
   const { store, app, isDev } = context
 
-  if (!app.$featureFlagIsEnabled('builder')) {
-    return
-  }
-
   // Allow locale file hot reloading in dev
   if (isDev && app.i18n) {
     const { i18n } = app
@@ -152,12 +148,10 @@ export default (context) => {
     new DomainsBuilderSettingsType(context)
   )
 
-  if (app.$featureFlagIsEnabled('builder-user-source')) {
-    app.$registry.register(
-      'builderSettings',
-      new UserSourcesBuilderSettingsType(context)
-    )
-  }
+  app.$registry.register(
+    'builderSettings',
+    new UserSourcesBuilderSettingsType(context)
+  )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
 

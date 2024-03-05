@@ -197,7 +197,7 @@ describe('elementTypes tests', () => {
       }
       expect(
         elementType.getDisplayName({ data_source_id: 1 }, applicationContext)
-      ).toBe('Customers elementtype.table')
+      ).toBe('elementType.table - Customers')
 
       // In the event we don't find the data source.
       expect(

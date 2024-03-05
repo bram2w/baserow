@@ -213,7 +213,7 @@ def test_is_page_path_valid_raises():
 def test_find_unused_page_path(data_fixture):
     page = data_fixture.create_builder_page(path="/test")
 
-    assert PageHandler().find_unused_page_path(page.builder, "/test") == "/test2"
+    assert PageHandler().find_unused_page_path(page.builder, "/test") == "/test/2"
 
 
 @pytest.mark.django_db
