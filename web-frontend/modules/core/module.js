@@ -182,6 +182,9 @@ export default function CoreModule(options) {
   this.addPlugin({ src: path.resolve(__dirname, 'plugins/global.js') })
   this.addPlugin({ src: path.resolve(__dirname, 'plugins/vuelidate.js') })
   this.addPlugin({
+    src: path.resolve(__dirname, 'plugins/vue2-smooth-scroll.js'),
+  })
+  this.addPlugin({
     src: path.resolve(__dirname, 'plugins/vueDatepicker.js'),
     ssr: false,
   })

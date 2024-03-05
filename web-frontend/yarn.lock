@@ -18944,6 +18944,11 @@ vue-ts-types@^1.6.0:
   resolved "https://registry.yarnpkg.com/vue-ts-types/-/vue-ts-types-1.6.1.tgz#6d11c59faf2a9da6366858d82e10f43320164f26"
   integrity sha512-Fee0nT2LSm/Drf7Gghpy8ssK4eGWtNgsPjgvC691lkMFWFtWRvgrD2+nFjRvd6aKJQhjcvY+SIPUCJpQpsyScA==
 
+vue2-smooth-scroll@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/vue2-smooth-scroll/-/vue2-smooth-scroll-1.6.0.tgz#293a46171d2a7ddd3719e0339db753392105b7c9"
+  integrity sha512-4MvpWJf8jsJUEy9m1OnlzNJj/a3Tj1C3wgRKXpCIGiGFEVrmRppgVAijq01/WKnGA3MAGD9Ynupe64fxxwZ//g==
+
 vue@^2.7.10:
   version "2.7.15"
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.7.15.tgz#94cd34e6e9f22cd2d35a02143f96a5beac1c1f54"
