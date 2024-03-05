@@ -9,7 +9,7 @@ import FormViewHeader from '@baserow/modules/database/components/view/form/FormV
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 import {
   newFieldMatchesActiveSearchTerm,
-  isadhocFiltering,
+  isAdhocFiltering,
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
 export const maxPossibleOrderValue = 32767
@@ -390,7 +390,7 @@ export class GridViewType extends ViewType {
 
   async fetch({ store }, database, view, fields, storePrefix = '') {
     const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
-    const adhocFiltering = isadhocFiltering(
+    const adhocFiltering = isAdhocFiltering(
       this.app,
       database.workspace,
       view,
@@ -420,7 +420,7 @@ export class GridViewType extends ViewType {
     sourceEvent = null
   ) {
     const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
-    const adhocFiltering = isadhocFiltering(
+    const adhocFiltering = isAdhocFiltering(
       this.app,
       database.workspace,
       view,
@@ -612,7 +612,12 @@ class BaseBufferedRowView extends ViewType {
 
   async fetch({ store }, database, view, fields, storePrefix = '') {
     const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
-    const adhocFiltering = isPublic
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(`${storePrefix}view/${this.getType()}/fetchInitial`, {
       viewId: view.id,
       fields,
@@ -630,7 +635,12 @@ class BaseBufferedRowView extends ViewType {
     sourceEvent = null
   ) {
     const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
-    const adhocFiltering = isPublic
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
       fields,
       includeFieldOptions,

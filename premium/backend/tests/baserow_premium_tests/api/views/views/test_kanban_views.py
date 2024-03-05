@@ -657,6 +657,485 @@ def test_kanban_filter_specific_options_limit_offset(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
+def test_list_kanban_rows_adhoc_filtering_query_param_filter(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    text_field = premium_data_fixture.create_text_field(table=table, name="normal")
+    # hidden field should behave the same as normal one
+    text_field_hidden = premium_data_fixture.create_text_field(
+        table=table, name="hidden"
+    )
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select_field, value="B", color="green"
+    )
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, single_select_field=single_select_field
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, text_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, text_field_hidden, hidden=True
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"normal": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"normal": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    get_params = [f"filter__field_{text_field.id}__contains=a"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 1
+    assert response_json["rows"]["null"]["results"][0]["id"] == first_row.id
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    get_params = [
+        f"filter__field_{text_field.id}__contains=a",
+        f"filter__field_{text_field.id}__contains=b",
+        f"filter_type=OR",
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 2
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    get_params = [f"filter__field_{text_field_hidden.id}__contains=y"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 1
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    get_params = [f"filter__field_{text_field.id}__random=y"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    get_params = [f"filter__field_{text_field.id}__higher_than=1"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_kanban_rows_adhoc_filtering_invalid_advanced_filters(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    text_field = premium_data_fixture.create_text_field(table=table, name="text_field")
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select_field, value="B", color="green"
+    )
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, single_select_field=single_select_field
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, text_field, hidden=False
+    )
+
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+
+    expected_errors = [
+        (
+            "invalid_json",
+            {
+                "error": "The provided filters are not valid JSON.",
+                "code": "invalid_json",
+            },
+        ),
+        (
+            json.dumps({"filter_type": "invalid"}),
+            {
+                "filter_type": [
+                    {
+                        "error": '"invalid" is not a valid choice.',
+                        "code": "invalid_choice",
+                    }
+                ]
+            },
+        ),
+        (
+            json.dumps(
+                {"filter_type": "OR", "filters": "invalid", "groups": "invalid"}
+            ),
+            {
+                "filters": [
+                    {
+                        "error": 'Expected a list of items but got type "str".',
+                        "code": "not_a_list",
+                    }
+                ],
+                "groups": {
+                    "non_field_errors": [
+                        {
+                            "error": 'Expected a list of items but got type "str".',
+                            "code": "not_a_list",
+                        }
+                    ],
+                },
+            },
+        ),
+    ]
+
+    for filters, error_detail in expected_errors:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(
+            f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"
+        assert response_json["detail"] == error_detail
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_list_kanban_rows_adhoc_filtering_advanced_filters_are_preferred_to_other_filter_query_params(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    text_field = premium_data_fixture.create_text_field(table=table, name="text_field")
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select_field, value="B", color="green"
+    )
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, single_select_field=single_select_field
+    )
+    premium_data_fixture.create_kanban_view_field_option(kanban_view, text_field)
+
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+    get_params = [
+        "filters=" + json.dumps(advanced_filters),
+        f"filter__field_{text_field.id}__equal=z",
+        f"filter_type=AND",
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 2
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_list_kanban_rows_adhoc_filtering_overrides_existing_filters(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    text_field = premium_data_fixture.create_text_field(table=table, name="text_field")
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select_field, value="B", color="green"
+    )
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, single_select_field=single_select_field
+    )
+    # in usual scenario this filter would filtered out all rows
+    equal_filter = premium_data_fixture.create_view_filter(
+        view=kanban_view, field=text_field, type="equal", value="y"
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+
+    get_params = [
+        "filters=" + json.dumps(advanced_filters),
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 2
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_list_kanban_rows_adhoc_filtering_advanced_filters(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    # hidden fields should behave like normal ones
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select_field, value="B", color="green"
+    )
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, single_select_field=single_select_field
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban_view.id})
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "contains",
+                "value": "a",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 1
+    assert response_json["rows"]["null"]["results"][0]["id"] == first_row.id
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "OR",
+                "filters": [
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "b",
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 2
+
+    # groups can be arbitrarily nested
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "",
+                    },
+                ],
+                "groups": [
+                    {
+                        "filter_type": "OR",
+                        "filters": [
+                            {
+                                "field": public_field.id,
+                                "type": "contains",
+                                "value": "a",
+                            },
+                            {
+                                "field": public_field.id,
+                                "type": "contains",
+                                "value": "b",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 2
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": hidden_field.id,
+                "type": "contains",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]["null"]["results"]) == 1
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "random",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "higher_than",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+    for filters in [
+        "invalid_json",
+        json.dumps({"filter_type": "invalid"}),
+        json.dumps({"filter_type": "OR", "filters": "invalid"}),
+    ]:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(
+            f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_list_all_invalid_select_option_parameter(api_client, premium_data_fixture):
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True

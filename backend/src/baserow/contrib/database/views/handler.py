@@ -2759,7 +2759,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         use_lock = hasattr(cache, "lock")
         used_lock = False
-        if not search and use_lock and (need_computation or with_total):
+        if (
+            not search
+            and use_lock
+            and (need_computation or with_total)
+            and not adhoc_filters.has_any_filters
+        ):
             # Lock the cache to avoid many updates when many queries arrive at same
             # times which happens when multiple users are on the same view.
             # This lock is optional. It avoid processing but doesn't break anything

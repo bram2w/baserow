@@ -382,7 +382,6 @@ export default {
       }
 
       return (
-        this.view.type === 'grid' &&
         this.$hasPermission(
           'database.table.view.list_filter',
           this.view,

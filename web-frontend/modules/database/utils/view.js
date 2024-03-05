@@ -453,7 +453,7 @@ export function getOrderBy(rootGetters, viewId) {
   }
 }
 
-export function isadhocFiltering(app, workspace, view, publicView) {
+export function isAdhocFiltering(app, workspace, view, publicView) {
   return (
     publicView ||
     (app.$hasPermission(

@@ -112,6 +112,58 @@ class KanbanViewView(APIView):
                     "option id `1` with a limit of `10` and and offset of `20`."
                 ),
             ),
+            OpenApiParameter(
+                name="filters",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "A JSON serialized string containing the filter tree to apply "
+                    "to this view. The filter tree is a nested structure containing "
+                    "the filters that need to be applied. \n\n"
+                    "An example of a valid filter tree is the following:"
+                    '`{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
+                    '"value": "test"}]}`.\n\n'
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                    "Please note that by passing the filters parameter the "
+                    "view filters saved for the view itself will be ignored."
+                ),
+            ),
+            OpenApiParameter(
+                name="filter__{field}__{filter}",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    f"The rows can optionally be filtered by the same view filters "
+                    f"available for the views. Multiple filters can be provided if "
+                    f"they follow the same format. The field and filter variable "
+                    f"indicate how to filter and the value indicates where to filter "
+                    f"on.\n\n"
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
+                    f"For example if you provide the following GET parameter "
+                    f"`filter__field_1__equal=test` then only rows where the value of "
+                    f"field_1 is equal to test are going to be returned.\n\n"
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                    "Please note that by passing the filter parameters the "
+                    "view filters saved for the view itself will be ignored."
+                ),
+            ),
+            OpenApiParameter(
+                name="filter_type",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "`AND`: Indicates that the rows must match all the provided "
+                    "filters.\n"
+                    "`OR`: Indicates that the rows only have to match one of the "
+                    "filters.\n\n"
+                    "This works only if two or more filters are provided."
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
+                ),
+            ),
         ],
         tags=["Database table kanban view"],
         operation_id="list_database_table_kanban_view_rows",
@@ -130,6 +182,10 @@ class KanbanViewView(APIView):
                     "ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD",
                     "ERROR_INVALID_SELECT_OPTION_PARAMETER",
                     "ERROR_FEATURE_NOT_AVAILABLE",
+                    "ERROR_FILTER_FIELD_NOT_FOUND",
+                    "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
+                    "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
+                    "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
                 ]
             ),
             404: get_error_schema(["ERROR_KANBAN_DOES_NOT_EXIST"]),
@@ -143,11 +199,16 @@ class KanbanViewView(APIView):
                 ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD
             ),
             InvalidSelectOptionParameter: ERROR_INVALID_SELECT_OPTION_PARAMETER,
+            FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+            ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
         }
     )
     @allowed_includes("field_options", "row_metadata")
     def get(self, request, view_id, field_options, row_metadata):
         """Responds with the rows grouped by the view's select option field value."""
+
+        adhoc_filters = AdHocFilters.from_request(request)
 
         view_handler = ViewHandler()
         view = view_handler.get_view_as_user(request.user, view_id, KanbanView)
@@ -187,6 +248,7 @@ class KanbanViewView(APIView):
         )
         rows = get_rows_grouped_by_single_select_field(
             view=view,
+            adhoc_filters=adhoc_filters,
             single_select_field=single_select_option_field,
             option_settings=included_select_options,
             default_limit=default_limit,
