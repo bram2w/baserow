@@ -109,7 +109,6 @@ from ..formula.types.formula_types import (
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
 )
-from ..search.handler import SearchHandler
 from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
@@ -4395,44 +4394,61 @@ class FormulaFieldType(ReadOnlyFieldType):
         update_collector: "Optional[FieldUpdateCollector]" = None,
         field_cache: "Optional[FieldCache]" = None,
         via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+        all_updated_fields: Optional[List[Field]] = None,
     ):
         from baserow.contrib.database.fields.dependencies.update_collector import (
             FieldUpdateCollector,
         )
 
-        should_send_signals_at_end = False
+        is_root_update_call = False
 
         if update_collector is None:
-            # We are the outermost call, and so we should send all the signals
+            # We are the outermost root call, and so we should send all the signals
             # when we finish.
-            should_send_signals_at_end = True
+            is_root_update_call = True
             update_collector = FieldUpdateCollector(field.table)
 
         if field_cache is None:
             field_cache = FieldCache()
         if via_path_to_starting_table is None:
             via_path_to_starting_table = []
+        if all_updated_fields is None:
+            all_updated_fields = []
+
+        new_all_updated_fields = all_updated_fields.copy()
+
+        # If the field is already in the `all_updated_fields` list, we must not do
+        # anything because otherwise the field will be updated for a second time,
+        # and there is no need for that.
+        if field.id in [f.id for f in new_all_updated_fields]:
+            return new_all_updated_fields
 
         self._refresh_row_values(
             field, update_collector, field_cache, via_path_to_starting_table
         )
+
+        # Add the field to the `all_updated_fields` to avoid that it will be updated
+        # twice.
+        new_all_updated_fields.append(field)
 
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.run_periodic_update(
+            new_all_updated_fields = dependant_field_type.run_periodic_update(
                 dependant_field,
                 update_collector,
                 field_cache,
                 path_to_starting_table,
+                new_all_updated_fields,
             )
 
-        if should_send_signals_at_end:
+        if is_root_update_call:
             update_collector.apply_updates_and_get_updated_fields(field_cache)
-            SearchHandler().entire_field_values_changed_or_created(field.table, [field])
             update_collector.send_force_refresh_signals_for_all_updated_tables()
+
+        return new_all_updated_fields
 
     def row_of_dependency_updated(
         self,
