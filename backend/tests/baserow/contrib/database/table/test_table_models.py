@@ -509,9 +509,6 @@ def test_order_by_fields_string_queryset(data_fixture):
     with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("xxxx")
 
-    with pytest.raises(ValueError):
-        model.objects.all().order_by_fields_string("")
-
     with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("id")
 

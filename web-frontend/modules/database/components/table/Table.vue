@@ -102,7 +102,7 @@
           v-if="
             hasSelectedView &&
             view._.type.canSort &&
-            (readOnly ||
+            (adhocSorting ||
               $hasPermission(
                 'database.table.view.create_sort',
                 view,
@@ -114,7 +114,7 @@
           <ViewSort
             :view="view"
             :fields="fields"
-            :read-only="readOnly"
+            :read-only="adhocSorting"
             :disable-sort="disableSort"
             @changed="refresh()"
           ></ViewSort>
@@ -389,6 +389,24 @@ export default {
         ) &&
         !this.$hasPermission(
           'database.table.view.create_filter',
+          this.view,
+          this.database.workspace.id
+        )
+      )
+    },
+    adhocSorting() {
+      if (this.readOnly) {
+        return true
+      }
+
+      return (
+        this.$hasPermission(
+          'database.table.view.list_sort',
+          this.view,
+          this.database.workspace.id
+        ) &&
+        !this.$hasPermission(
+          'database.table.view.create_sort',
           this.view,
           this.database.workspace.id
         )

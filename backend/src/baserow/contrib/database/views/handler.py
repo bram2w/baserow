@@ -2547,6 +2547,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         model: Optional[GeneratedTableModel] = None,
         only_sort_by_field_ids: Optional[Iterable[int]] = None,
         only_search_by_field_ids: Optional[Iterable[int]] = None,
+        apply_sorts: bool = True,
         apply_filters: bool = True,
         search_mode: Optional[SearchModes] = None,
     ) -> QuerySet:
@@ -2566,6 +2567,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             fields provide those field ids in this optional iterable. Other fields
              not present in the iterable will not be searched and filtered down by the
              search term.
+        :param apply_sorts: Whether to apply view sorts to the resulting queryset.
         :param apply_filters: Whether to apply view filters to the resulting queryset.
         :param search_mode: The type of search to perform if a search term is provided.
         :return: The appropriate queryset for the provided view.
@@ -2579,7 +2581,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_type = view_type_registry.get_by_model(view.specific_class)
         if view_type.can_filter and apply_filters:
             queryset = self.apply_filters(view, queryset)
-        if view_type.can_sort:
+        if view_type.can_sort and apply_sorts:
             queryset = self.apply_sorting(
                 view,
                 queryset,

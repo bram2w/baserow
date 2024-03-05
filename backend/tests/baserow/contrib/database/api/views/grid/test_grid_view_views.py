@@ -2718,6 +2718,66 @@ def test_list_rows_public_with_query_param_advanced_filters(api_client, data_fix
 
 
 @pytest.mark.django_db
+def test_list_rows_with_query_param_order(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    text_field = data_fixture.create_text_field(table=table, name="text")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, text_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(grid_view, link_row_field, hidden=False)
+    first_row = RowHandler().create_row(
+        user, table, values={"text": "a", "hidden": "a"}, user_field_names=True
+    )
+    second_row = RowHandler().create_row(
+        user, table, values={"text": "b", "hidden": "b"}, user_field_names=True
+    )
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+
+    # adhoc sorting
+    response = api_client.get(
+        f"{url}?order_by=-field_{text_field.id}",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == second_row.id
+    assert response_json["results"][1]["id"] == first_row.id
+
+    # adhoc sorting on hidden field
+    response = api_client.get(
+        f"{url}?order_by=field_{hidden_field.id}",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == first_row.id
+    assert response_json["results"][1]["id"] == second_row.id
+
+    # sorting on unsupported field
+    response = api_client.get(
+        f"{url}?order_by=field_{link_row_field.id}",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE"
+
+
+@pytest.mark.django_db
 def test_list_rows_public_with_query_param_order(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)

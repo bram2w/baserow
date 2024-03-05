@@ -100,6 +100,15 @@ class GalleryViewView(APIView):
                 ),
             ),
             OpenApiParameter(
+                name="order_by",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Optionally the rows can be ordered by provided field ids "
+                "separated by comma. By default a field is ordered in ascending (A-Z) "
+                "order, but by prepending the field with a '-' it can be ordered "
+                "descending (Z-A).",
+            ),
+            OpenApiParameter(
                 name="limit",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
@@ -202,6 +211,8 @@ class GalleryViewView(APIView):
                     "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
                     "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
                     "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
+                    "ERROR_ORDER_BY_FIELD_NOT_FOUND",
+                    "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE",
                 ]
             ),
             404: get_error_schema(["ERROR_GALLERY_DOES_NOT_EXIST"]),
@@ -214,6 +225,8 @@ class GalleryViewView(APIView):
             FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
+            OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
         }
     )
     @allowed_includes("field_options", "row_metadata")
@@ -230,6 +243,7 @@ class GalleryViewView(APIView):
 
         adhoc_filters = AdHocFilters.from_request(request)
 
+        order_by = request.GET.get("order_by")
         view_handler = ViewHandler()
         view = view_handler.get_view_as_user(
             request.user,
@@ -257,11 +271,14 @@ class GalleryViewView(APIView):
             search,
             model,
             search_mode=search_mode,
+            apply_sorts=order_by is None,
             apply_filters=not adhoc_filters.has_any_filters,
         )
 
         if adhoc_filters.has_any_filters:
             queryset = adhoc_filters.apply_to_queryset(model, queryset)
+        if order_by is not None:
+            queryset = queryset.order_by_fields_string(order_by, False)
 
         if "count" in request.GET:
             return Response({"count": queryset.count()})

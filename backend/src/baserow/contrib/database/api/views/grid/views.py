@@ -216,6 +216,15 @@ class GridViewView(APIView):
                 ),
             ),
             OpenApiParameter(
+                name="order_by",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Optionally the rows can be ordered by provided field ids "
+                "separated by comma. By default a field is ordered in ascending (A-Z) "
+                "order, but by prepending the field with a '-' it can be ordered "
+                "descending (Z-A).",
+            ),
+            OpenApiParameter(
                 name="include_fields",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
@@ -278,6 +287,8 @@ class GridViewView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_ORDER_BY_FIELD_NOT_FOUND",
+                    "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE",
                     "ERROR_FILTER_FIELD_NOT_FOUND",
                     "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
                     "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
@@ -293,6 +304,8 @@ class GridViewView(APIView):
         {
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
+            OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
+            OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
             FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
@@ -314,6 +327,7 @@ class GridViewView(APIView):
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
         adhoc_filters = AdHocFilters.from_request(request)
+        order_by = request.GET.get("order_by")
 
         view_handler = ViewHandler()
         view = view_handler.get_view_as_user(
@@ -341,11 +355,15 @@ class GridViewView(APIView):
         model = view.table.get_model()
         queryset = view_handler.get_queryset(
             view,
+            apply_sorts=order_by is None,
             apply_filters=not adhoc_filters.has_any_filters,
             search=query_params.get("search"),
             search_mode=query_params.get("search_mode"),
             model=model,
         )
+
+        if order_by is not None:
+            queryset = queryset.order_by_fields_string(order_by, False)
 
         if adhoc_filters.has_any_filters:
             queryset = adhoc_filters.apply_to_queryset(model, queryset)

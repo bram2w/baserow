@@ -4237,3 +4237,41 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
     for field_name, expected in expected_result.items():
         actual = actual_result_per_field_name[field_name]
         assert actual == unordered(expected), f"{field_name}: {actual} != {expected}"
+
+
+@pytest.mark.django_db
+def test_get_queryset_apply_sorts(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
+    sort = data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
+    view_handler = ViewHandler()
+    model = table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "c",
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "b",
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "a",
+        }
+    )
+
+    # Don't apply view sorting
+    rows = view_handler.get_queryset(grid_view, apply_sorts=False)
+
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id]
+
+    # Apply view sorting
+    rows = view_handler.get_queryset(grid_view, apply_sorts=True)
+
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_2.id, row_1.id]
