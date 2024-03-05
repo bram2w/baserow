@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Sanitize filter values to remove nul characters",
+    "issue_number": 2398,
+    "bullet_points": [],
+    "created_at": "2024-03-05"
+}
