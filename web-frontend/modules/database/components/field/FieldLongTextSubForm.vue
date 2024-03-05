@@ -1,9 +1,6 @@
 <template>
   <div>
-    <div
-      v-if="$featureFlagIsEnabled('rich-text-field') && !primary"
-      class="control"
-    >
+    <div v-if="!primary" class="control">
       <div class="control__elements">
         <Checkbox v-model="values.long_text_enable_rich_text">{{
           $t('fieldLongTextSubForm.enableRichTextFormatting')

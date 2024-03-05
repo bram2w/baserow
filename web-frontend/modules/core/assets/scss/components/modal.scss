@@ -50,6 +50,13 @@
     padding: 15px;
   }
 
+  &.modal__box--right {
+    margin-right: 20px;
+    @media (max-width: 720px) {
+      max-width: calc(100% - 50px);
+    }
+  }
+
   .box__title {
     margin-top: 0;
   }

@@ -55,7 +55,7 @@ export default function (
         })
       },
       babel: { compact: true },
-      transpile: ['axios', 'tiptap-markdown'],
+      transpile: ['axios', 'tiptap-markdown', 'markdown-it'],
     },
   }
 }

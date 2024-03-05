@@ -76,7 +76,10 @@ export default {
   },
   methods: {
     isEventTargetInside(event) {
-      return isElement(this.$el, event.target)
+      return (
+        isElement(this.$el, event.target) ||
+        isElement(this.$el, event.relatedTarget)
+      )
     },
   },
 }
