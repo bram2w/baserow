@@ -14,7 +14,7 @@ export default (client) => {
       publicUrl = false,
       publicAuthToken = null,
       groupBy = '',
-      orderBy = '',
+      orderBy = null,
       filters = {},
       includeFields = [],
       excludeFields = [],
@@ -50,7 +50,7 @@ export default (client) => {
         params.append('group_by', groupBy)
       }
 
-      if (orderBy) {
+      if (orderBy || orderBy === '') {
         params.append('order_by', orderBy)
       }
 

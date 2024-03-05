@@ -300,9 +300,6 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
 
         order_by = split_comma_separated_string(order_string)
 
-        if len(order_by) == 0:
-            raise ValueError("At least one field must be provided.")
-
         if user_field_names:
             field_object_dict = {
                 o["field"].name: o for o in self.model._field_objects.values()

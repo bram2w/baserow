@@ -10,6 +10,7 @@ import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 import {
   newFieldMatchesActiveSearchTerm,
   isAdhocFiltering,
+  isAdhocSorting,
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
 export const maxPossibleOrderValue = 32767
@@ -396,10 +397,17 @@ export class GridViewType extends ViewType {
       view,
       isPublic
     )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
       gridId: view.id,
       fields,
       adhocFiltering,
+      adhocSorting,
     })
     // The grid view store keeps a copy of the group bys that must only be updated
     // after the refresh of the page. This is because the group by depends on the rows
@@ -426,11 +434,18 @@ export class GridViewType extends ViewType {
       view,
       isPublic
     )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/grid/refresh', {
       view,
       fields,
       includeFieldOptions,
       adhocFiltering,
+      adhocSorting,
     })
   }
 
@@ -618,10 +633,17 @@ class BaseBufferedRowView extends ViewType {
       view,
       isPublic
     )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(`${storePrefix}view/${this.getType()}/fetchInitial`, {
       viewId: view.id,
       fields,
       adhocFiltering,
+      adhocSorting,
     })
   }
 
@@ -641,10 +663,17 @@ class BaseBufferedRowView extends ViewType {
       view,
       isPublic
     )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
       fields,
       includeFieldOptions,
       adhocFiltering,
+      adhocSorting,
     })
   }
 

@@ -13,7 +13,7 @@ export default (client) => {
       signal = null,
       publicUrl = false,
       publicAuthToken = null,
-      orderBy = '',
+      orderBy = null,
       filters = {},
       includeFields = [],
       excludeFields = [],
@@ -47,7 +47,7 @@ export default (client) => {
         }
       }
 
-      if (orderBy) {
+      if (orderBy || orderBy === '') {
         params.append('order_by', orderBy)
       }
 

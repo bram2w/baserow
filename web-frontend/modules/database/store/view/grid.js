@@ -91,6 +91,8 @@ export const state = () => ({
   lastGridId: -1,
   // If true, ad hoc filtering is used instead of persistent one
   adhocFiltering: false,
+  // If true, ad hoc sorting is used
+  adhocSorting: false,
   // Contains the custom field options per view. Things like the field width are
   // stored here.
   fieldOptions: {},
@@ -160,6 +162,9 @@ export const mutations = {
   },
   SET_ADHOC_FILTERING(state, adhocFiltering) {
     state.adhocFiltering = adhocFiltering
+  },
+  SET_ADHOC_SORTING(state, adhocSorting) {
+    state.adhocSorting = adhocSorting
   },
   SET_SCROLL_TOP(state, scrollTop) {
     state.scrollTop = scrollTop
@@ -724,7 +729,7 @@ export const actions = {
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           groupBy: getGroupBy(rootGetters, getters.getLastGridId),
-          orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+          orderBy: getOrderBy(view, getters.getAdhocSorting),
           filters: getFilters(view, getters.getAdhocFiltering),
         })
         .then(({ data }) => {
@@ -864,7 +869,7 @@ export const actions = {
    */
   async fetchInitial(
     { dispatch, commit, getters, rootGetters },
-    { gridId, fields, adhocFiltering }
+    { gridId, fields, adhocFiltering, adhocSorting }
   ) {
     // Reset scrollTop when switching table
     fireScrollTop.distance = 0
@@ -877,6 +882,7 @@ export const actions = {
     })
     commit('SET_LAST_GRID_ID', gridId)
     commit('SET_ADHOC_FILTERING', adhocFiltering)
+    commit('SET_ADHOC_SORTING', adhocSorting)
 
     const view = rootGetters['view/get'](getters.getLastGridId)
     const limit = getters.getBufferRequestSize * 2
@@ -890,7 +896,7 @@ export const actions = {
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       groupBy: getGroupBy(rootGetters, getters.getLastGridId),
-      orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+      orderBy: getOrderBy(view, adhocSorting),
       filters: getFilters(view, adhocFiltering),
     })
     data.results.forEach((row) => {
@@ -925,9 +931,10 @@ export const actions = {
    */
   refresh(
     { dispatch, commit, getters, rootGetters },
-    { view, fields, adhocFiltering, includeFieldOptions = false }
+    { view, fields, adhocFiltering, adhocSorting, includeFieldOptions = false }
   ) {
     commit('SET_ADHOC_FILTERING', adhocFiltering)
+    commit('SET_ADHOC_SORTING', adhocSorting)
     const gridId = getters.getLastGridId
 
     if (lastRefreshRequest !== null) {
@@ -968,7 +975,7 @@ export const actions = {
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
             groupBy: getGroupBy(rootGetters, getters.getLastGridId),
-            orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+            orderBy: getOrderBy(view, adhocSorting),
             filters: getFilters(view, adhocFiltering),
           })
           .then(({ data }) => ({
@@ -1652,7 +1659,7 @@ export const actions = {
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       groupBy: getGroupBy(rootGetters, getters.getLastGridId),
-      orderBy: getOrderBy(rootGetters, getters.getLastGridId),
+      orderBy: getOrderBy(view, getters.getAdhocSorting),
       filters: getFilters(view, getters.getAdhocFiltering),
       includeFields: fields,
       excludeFields,
@@ -3115,6 +3122,9 @@ export const getters = {
   },
   getAdhocFiltering(state) {
     return state.adhocFiltering
+  },
+  getAdhocSorting(state) {
+    return state.adhocSorting
   },
 }
 

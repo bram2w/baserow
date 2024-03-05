@@ -440,16 +440,27 @@ export function getGroupBy(rootGetters, viewId) {
   }
 }
 
-export function getOrderBy(rootGetters, viewId) {
-  if (rootGetters['page/view/public/getIsPublic']) {
-    const view = rootGetters['view/get'](viewId)
+export function isAdhocSorting(app, workspace, view, publicView) {
+  return (
+    publicView ||
+    (app.$hasPermission('database.table.view.list_sort', view, workspace.id) &&
+      !app.$hasPermission(
+        'database.table.view.create_sort',
+        view,
+        workspace.id
+      ))
+  )
+}
+
+export function getOrderBy(view, adhocSorting) {
+  if (adhocSorting) {
     return view.sortings
       .map((sort) => {
         return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
       })
       .join(',')
   } else {
-    return ''
+    return null
   }
 }
 
