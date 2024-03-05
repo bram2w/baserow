@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Iterable, Literal, Optional
 
 from baserow.contrib.database.api.views.serializers import validate_api_grouped_filters
 from baserow.contrib.database.fields.field_filters import (
@@ -22,8 +22,17 @@ class AdHocFilters:
     filter_type: Literal["OR", "AND"] = "OR"
     filter_object: Optional[dict] = None
 
+    # optional params
+    user_field_names: bool = False
+    only_filter_by_field_ids: Optional[Iterable[int]] = None
+
     @classmethod
-    def from_request(cls, request):
+    def from_request(
+        cls,
+        request,
+        user_field_names: bool = False,
+        only_filter_by_field_ids: Optional[list[int]] = None,
+    ):
         filter_type = (
             FILTER_TYPE_OR
             if request.GET.get("filter_type", "AND").upper() == "OR"
@@ -32,12 +41,16 @@ class AdHocFilters:
         filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
         api_filters = None
         if (filters := filter_object.get("filters", None)) and len(filters) > 0:
-            api_filters = validate_api_grouped_filters(filters[0])
+            api_filters = validate_api_grouped_filters(
+                filters[0], user_field_names=user_field_names
+            )
 
         return AdHocFilters(
             api_filters=api_filters,
             filter_type=filter_type,
             filter_object=filter_object,
+            user_field_names=user_field_names,
+            only_filter_by_field_ids=only_filter_by_field_ids,
         )
 
     @property
@@ -57,12 +70,17 @@ class AdHocFilters:
             filter_builder = construct_filter_builder_from_grouped_api_filters(
                 self.api_filters,
                 model,
+                user_field_names=self.user_field_names,
+                only_filter_by_field_ids=self.only_filter_by_field_ids,
             )
             return filter_builder.apply_to_queryset(queryset)
 
         if self.filter_object:
             return queryset.filter_by_fields_object(
-                self.filter_object, self.filter_type, None
+                self.filter_object,
+                self.filter_type,
+                user_field_names=self.user_field_names,
+                only_filter_by_field_ids=self.only_filter_by_field_ids,
             )
 
         return queryset

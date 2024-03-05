@@ -52,16 +52,11 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
 )
-from baserow.contrib.database.api.views.serializers import validate_api_grouped_filters
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
-)
-from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
-    FILTER_TYPE_OR,
 )
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
@@ -93,12 +88,10 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
 )
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_filter_type_registry
-from baserow.contrib.database.views.view_filter_groups import (
-    construct_filter_builder_from_grouped_api_filters,
-)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
@@ -382,38 +375,17 @@ class RowsView(APIView):
             queryset = view_handler.apply_filters(view, queryset)
             queryset = view_handler.apply_sorting(view, queryset)
 
+        adhoc_filters = AdHocFilters.from_request(
+            request, user_field_names=user_field_names
+        )
+        if adhoc_filters.has_any_filters:
+            queryset = adhoc_filters.apply_to_queryset(model, queryset)
+
         if search:
             queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
         if order_by:
             queryset = queryset.order_by_fields_string(order_by, user_field_names)
-
-        # Advanced filters are provided as a JSON string in the `filters` parameter.
-        # If provided, all other filter parameters are ignored.
-        api_filters = None
-        if (filters := request.GET.get("filters", None)) is not None:
-            api_filters = validate_api_grouped_filters(
-                filters, user_field_names=user_field_names
-            )
-
-        if api_filters is not None:
-            filter_builder = construct_filter_builder_from_grouped_api_filters(
-                api_filters, model, user_field_names=user_field_names
-            )
-            queryset = filter_builder.apply_to_queryset(queryset)
-        else:
-            filter_type_query_param = query_params.get("filter_type")
-            filter_type = (
-                FILTER_TYPE_OR
-                if filter_type_query_param.upper() == "OR"
-                else FILTER_TYPE_AND
-            )
-            filter_object = {
-                key: request.GET.getlist(key) for key in request.GET.keys()
-            }
-            queryset = queryset.filter_by_fields_object(
-                filter_object, filter_type, user_field_names=user_field_names
-            )
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
