@@ -9,6 +9,7 @@ const populateElement = (element) => {
     content: [],
     hasNextPage: false,
     reset: 0,
+    shouldBeFocused: false,
   }
 
   return element
@@ -272,7 +273,7 @@ const actions = {
     return elements
   },
   async move(
-    { dispatch, getters },
+    { commit, dispatch, getters },
     {
       page,
       elementId,
@@ -313,7 +314,7 @@ const actions = {
       throw error
     }
   },
-  async duplicate({ dispatch, getters }, { page, elementId }) {
+  async duplicate({ commit, dispatch, getters }, { page, elementId }) {
     const {
       data: { elements, workflow_actions: workflowActions },
     } = await ElementService(this.$client).duplicate(elementId)
@@ -337,7 +338,7 @@ const actions = {
         parentId === elementToDuplicate.parent_element_id
     )
 
-    dispatch('select', { page, element: elementToSelect })
+    commit('SELECT_ITEM', { element: elementToSelect })
 
     return elements
   },
