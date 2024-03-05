@@ -11,6 +11,14 @@ from baserow.contrib.database.views.view_filter_groups import (
 )
 
 
+def sanitize_filter_value(value: str):
+    return value.replace("\x00", "")
+
+
+def sanitize_filter_values(values: Iterable[str]):
+    return [sanitize_filter_value(val) for val in values]
+
+
 @dataclass
 class AdHocFilters:
     """Dataclass that can hold data for basic and grouped filters at the same time."""
@@ -38,7 +46,11 @@ class AdHocFilters:
             if request.GET.get("filter_type", "AND").upper() == "OR"
             else FILTER_TYPE_AND
         )
-        filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
+        filter_object = {
+            key: sanitize_filter_values(request.GET.getlist(key))
+            for key in request.GET.keys()
+        }
+
         api_filters = None
         if (filters := filter_object.get("filters", None)) and len(filters) > 0:
             api_filters = validate_api_grouped_filters(
