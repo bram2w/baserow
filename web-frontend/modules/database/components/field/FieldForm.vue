@@ -75,6 +75,7 @@
         :table="table"
         :field-type="values.type"
         :view="view"
+        :primary="primary"
         :name="values.name"
         :default-values="defaultValues"
         @validate="$v.$touch"

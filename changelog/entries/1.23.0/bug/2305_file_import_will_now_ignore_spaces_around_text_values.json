@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "File import will now ignore spaces around text values",
+    "issue_number": 2305,
+    "bullet_points": [],
+    "created_at": "2024-02-02"
+}

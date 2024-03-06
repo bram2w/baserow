@@ -6,9 +6,7 @@ from django.db import transaction
 from celery_singleton import DuplicateTaskError
 from loguru import logger
 
-from baserow.contrib.database.table.tasks import setup_periodic_tasks
-
-__all__ = ["setup_periodic_tasks", "enqueue_task_on_commit_swallowing_any_exceptions"]
+__all__ = ["enqueue_task_on_commit_swallowing_any_exceptions"]
 
 
 def enqueue_task_on_commit_swallowing_any_exceptions(on_commit_callable):

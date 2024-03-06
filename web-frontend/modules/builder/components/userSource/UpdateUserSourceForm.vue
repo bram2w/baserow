@@ -1,5 +1,5 @@
 <template>
-  <form>
+  <form @submit.prevent="submit">
     <FormRow>
       <FormInput
         v-model="$v.values.name.$model"
@@ -26,7 +26,36 @@
       :default-values="defaultValues"
       :application="builder"
       :integration="integration"
+      @values-changed="emitChange"
     />
+    <div v-if="integration">
+      <h4>{{ $t('updateUserSourceForm.authTitle') }}</h4>
+
+      <div v-for="appAuthType in appAuthProviderTypes" :key="appAuthType.type">
+        <Checkbox
+          :checked="hasAtLeastOneOfThisType(appAuthType)"
+          @input="onSelect(appAuthType)"
+        >
+          {{ appAuthType.name }}
+        </Checkbox>
+        <div
+          v-for="appAuthProvider in appAuthProviderPerTypes[appAuthType.type]"
+          :key="appAuthProvider.id"
+          class="update-user-source-form__auth-provider-form"
+        >
+          <component
+            :is="appAuthType.formComponent"
+            v-if="hasAtLeastOneOfThisType(appAuthType)"
+            :integration="integration"
+            :current-user-source="fullValues"
+            :default-values="appAuthProvider"
+            excluded-form
+            @values-changed="updateAuthProvider(appAuthProvider, $event)"
+          />
+        </div>
+      </div>
+    </div>
+    <input type="submit" hidden />
   </form>
 </template>
 
@@ -34,6 +63,7 @@
 import form from '@baserow/modules/core/mixins/form'
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import { required, maxLength } from 'vuelidate/lib/validators'
+import { uuid } from '@baserow/modules/core/utils/string'
 
 export default {
   components: { IntegrationDropdown },
@@ -58,8 +88,9 @@ export default {
       values: {
         integration_id: null,
         name: '',
+        auth_providers: [],
       },
-      allowedValues: ['integration_id', 'name'],
+      fullValues: this.getFormValues(),
     }
   },
   computed: {
@@ -71,8 +102,67 @@ export default {
         ({ id }) => id === this.values.integration_id
       )
     },
+    appAuthProviderTypes() {
+      return this.$registry.getOrderedList('appAuthProvider')
+    },
+    appAuthProviderPerTypes() {
+      return Object.fromEntries(
+        this.appAuthProviderTypes.map((authType) => {
+          return [
+            authType.type,
+            this.values.auth_providers.filter(
+              ({ type }) => type === authType.type
+            ),
+          ]
+        })
+      )
+    },
   },
   methods: {
+    // Override the default getChildFormValues to exclude the provider forms from
+    // final values as they are handled directly by this component
+    getChildFormsValues() {
+      return Object.assign(
+        {},
+        ...this.$children
+          .filter(
+            (child) =>
+              'getChildFormsValues' in child &&
+              child.$attrs['excluded-form'] === undefined
+          )
+          .map((child) => {
+            return child.getFormValues()
+          })
+      )
+    },
+    hasAtLeastOneOfThisType(appAuthProviderType) {
+      return this.appAuthProviderPerTypes[appAuthProviderType.type]?.length > 0
+    },
+    onSelect(appAuthProviderType) {
+      if (this.hasAtLeastOneOfThisType(appAuthProviderType)) {
+        this.values.auth_providers = this.values.auth_providers.filter(
+          ({ type }) => type !== appAuthProviderType.type
+        )
+      } else {
+        this.values.auth_providers.push({
+          type: appAuthProviderType.type,
+          id: uuid(),
+        })
+      }
+    },
+    updateAuthProvider(authProviderToChange, values) {
+      this.values.auth_providers = this.values.auth_providers.map(
+        (authProvider) => {
+          if (authProvider.id === authProviderToChange.id) {
+            return { ...authProvider, ...values }
+          }
+          return authProvider
+        }
+      )
+    },
+    emitChange() {
+      this.fullValues = this.getFormValues()
+    },
     getError(fieldName) {
       if (!this.$v.values[fieldName].$dirty) {
         return ''

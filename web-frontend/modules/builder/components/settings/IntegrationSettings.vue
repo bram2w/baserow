@@ -16,7 +16,8 @@
             :image="getIntegrationType(integration).image"
             :title="integration.name"
             :subtitle="getIntegrationType(integration).getSummary(integration)"
-            avatar-color="ghost"
+            :rounded-icon="false"
+            avatar-color="transparent"
             style="flex: 1"
           />
           <div class="integration_settings__integration-actions">

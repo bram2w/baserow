@@ -8,7 +8,6 @@
       ref="textarea"
       class="input-element"
       style="resize: none"
-      :readonly="isEditMode"
       :value="resolvedDefaultValue"
       :required="element.required"
       :placeholder="resolvedPlaceholder"
@@ -22,7 +21,6 @@
       v-else
       type="text"
       class="input-element"
-      :readonly="isEditMode"
       :value="resolvedDefaultValue"
       :required="element.required"
       :placeholder="resolvedPlaceholder"

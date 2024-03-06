@@ -14,7 +14,7 @@ export default (client) => {
       publicUrl = false,
       publicAuthToken = null,
       groupBy = '',
-      orderBy = '',
+      orderBy = null,
       filters = {},
       includeFields = [],
       excludeFields = [],
@@ -50,7 +50,7 @@ export default (client) => {
         params.append('group_by', groupBy)
       }
 
-      if (orderBy) {
+      if (orderBy || orderBy === '') {
         params.append('order_by', orderBy)
       }
 
@@ -130,11 +130,18 @@ export default (client) => {
     },
     fetchFieldAggregations({
       gridId,
+      filters = {},
       search = '',
       searchMode = '',
       signal = null,
     }) {
       const params = new URLSearchParams()
+
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
 
       if (search) {
         params.append('search', search)

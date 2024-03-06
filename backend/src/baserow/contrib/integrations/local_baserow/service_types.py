@@ -36,6 +36,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.table.service import TableService
 from baserow.contrib.database.views.service import ViewService
@@ -176,13 +177,21 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         :param dispatch_context: The dispatch_context instance used to
             resolve formulas (if any).
         :raises ServiceImproperlyConfigured: When we try and dispatch a service that
-            has no `Table` associated with it.
+            has no `Table` associated with it, or if the table/database is trashed.
         """
 
-        if service.table is None:
+        if service.table_id is None:
             raise ServiceImproperlyConfigured("The table property is missing.")
 
-        return super().resolve_service_formulas(service, dispatch_context)
+        try:
+            table = TableHandler().get_table(service.table_id)
+        except TableDoesNotExist as e:
+            raise ServiceImproperlyConfigured("The specified table is trashed") from e
+
+        resolved_values = super().resolve_service_formulas(service, dispatch_context)
+        resolved_values["table"] = table
+
+        return resolved_values
 
     def serialize_property(self, service: ServiceSubClass, prop_name: str):
         """
@@ -199,6 +208,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                     "field_id": f.field_id,
                     "type": f.type,
                     "value": f.value,
+                    "value_is_formula": f.value_is_formula,
                 }
                 for f in service.service_filters.all()
             ]
@@ -613,10 +623,16 @@ class LocalBaserowListRowsUserServiceType(
             return [
                 {
                     **f,
-                    "value": import_formula(f["value"], id_mapping),
-                    "field_id": id_mapping["database_fields"][f["field_id"]]
-                    if "database_fields" in id_mapping
-                    else f["field_id"],
+                    "value": (
+                        import_formula(f["value"], id_mapping)
+                        if f["value_is_formula"]
+                        else f["value"]
+                    ),
+                    "field_id": (
+                        id_mapping["database_fields"][f["field_id"]]
+                        if "database_fields" in id_mapping
+                        else f["field_id"]
+                    ),
                 }
                 for f in value
             ]
@@ -641,7 +657,8 @@ class LocalBaserowListRowsUserServiceType(
         :return: The list of rows.
         """
 
-        table = service.table
+        table = resolved_values["table"]
+
         integration = service.integration.specific
 
         CoreHandler().check_permissions(
@@ -817,10 +834,16 @@ class LocalBaserowGetRowUserServiceType(
             return [
                 {
                     **f,
-                    "value": import_formula(f["value"], id_mapping),
-                    "field_id": id_mapping["database_fields"][f["field_id"]]
-                    if "database_fields" in id_mapping
-                    else f["field_id"],
+                    "value": (
+                        import_formula(f["value"], id_mapping)
+                        if f["value_is_formula"]
+                        else f["value"]
+                    ),
+                    "field_id": (
+                        id_mapping["database_fields"][f["field_id"]]
+                        if "database_fields" in id_mapping
+                        else f["field_id"]
+                    ),
                 }
                 for f in value
             ]
@@ -906,7 +929,7 @@ class LocalBaserowGetRowUserServiceType(
         :return: The rows.
         """
 
-        table = service.table
+        table = resolved_values["table"]
         integration = service.integration.specific
 
         CoreHandler().check_permissions(
@@ -1073,9 +1096,11 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             return [
                 {
                     "value": import_formula(item["value"], id_mapping),
-                    "field_id": id_mapping["database_fields"][item["field_id"]]
-                    if "database_fields" in id_mapping
-                    else item["field_id"],
+                    "field_id": (
+                        id_mapping["database_fields"][item["field_id"]]
+                        if "database_fields" in id_mapping
+                        else item["field_id"]
+                    ),
                 }
                 for item in value
             ]
@@ -1186,7 +1211,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         :return: The created or updated rows.
         """
 
-        table = service.table
+        table = resolved_values["table"]
         integration = service.integration.specific
 
         field_values = {}

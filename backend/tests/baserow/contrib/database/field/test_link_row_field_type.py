@@ -55,6 +55,43 @@ def test_call_apps_registry_pending_operations(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.field_link_row
+def test_link_row_field_type_prepare_value_for_db_in_bulk_whitespace(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="db")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    cars_table = data_fixture.create_database_table(name="Cars", database=database)
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    customers_row_1 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    cars_primary_field = field_handler.create_field(
+        user=user, table=cars_table, type_name="text", name="Name", primary=True
+    )
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=cars_table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+
+    values_by_row = {0: [1, "John", " John", "John "]}
+
+    LinkRowFieldType().prepare_value_for_db_in_bulk(
+        link_field_1, values_by_row, continue_on_error=False
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_link_row_field_type(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")

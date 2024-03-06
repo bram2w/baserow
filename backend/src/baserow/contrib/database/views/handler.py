@@ -27,7 +27,6 @@ from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
     AdvancedFilterBuilder,
     FilterBuilder,
 )
@@ -39,6 +38,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.exceptions import ViewOwnershipTypeDoesNotExist
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
@@ -83,10 +83,7 @@ from baserow.contrib.database.views.registries import (
     ViewType,
     view_ownership_type_registry,
 )
-from baserow.contrib.database.views.view_filter_groups import (
-    ViewGroupedFiltersAdapter,
-    construct_filter_builder_from_grouped_api_filters,
-)
+from baserow.contrib.database.views.view_filter_groups import ViewGroupedFiltersAdapter
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
@@ -2550,6 +2547,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         model: Optional[GeneratedTableModel] = None,
         only_sort_by_field_ids: Optional[Iterable[int]] = None,
         only_search_by_field_ids: Optional[Iterable[int]] = None,
+        apply_sorts: bool = True,
         apply_filters: bool = True,
         search_mode: Optional[SearchModes] = None,
     ) -> QuerySet:
@@ -2569,6 +2567,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             fields provide those field ids in this optional iterable. Other fields
              not present in the iterable will not be searched and filtered down by the
              search term.
+        :param apply_sorts: Whether to apply view sorts to the resulting queryset.
         :param apply_filters: Whether to apply view filters to the resulting queryset.
         :param search_mode: The type of search to perform if a search term is provided.
         :return: The appropriate queryset for the provided view.
@@ -2582,7 +2581,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_type = view_type_registry.get_by_model(view.specific_class)
         if view_type.can_filter and apply_filters:
             queryset = self.apply_filters(view, queryset)
-        if view_type.can_sort:
+        if view_type.can_sort and apply_sorts:
             queryset = self.apply_sorting(
                 view,
                 queryset,
@@ -2703,6 +2702,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view: View,
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
+        adhoc_filters: Optional[AdHocFilters] = None,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
@@ -2721,6 +2721,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
+        :param adhoc_filters: The filters that can be optionally applied
+            instead of the view's own filters.
         :param search: the search string to considerate. If the search parameter is
             defined, we don't use the cache so we recompute aggregation on the fly.
         :param search_mode: the search mode that the search is using.
@@ -2737,6 +2739,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             allow_if_template=True,
         )
 
+        if not adhoc_filters:
+            adhoc_filters = AdHocFilters()
+
         view_type = view_type_registry.get_by_model(view.specific_class)
 
         # Check if view supports field aggregation
@@ -2750,11 +2755,18 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         (
             values,
             need_computation,
-        ) = self._get_aggregations_to_compute(view, aggregations, no_cache=search)
+        ) = self._get_aggregations_to_compute(
+            view, aggregations, no_cache=search or adhoc_filters.has_any_filters
+        )
 
         use_lock = hasattr(cache, "lock")
         used_lock = False
-        if not search and use_lock and (need_computation or with_total):
+        if (
+            not search
+            and use_lock
+            and (need_computation or with_total)
+            and not adhoc_filters.has_any_filters
+        ):
             # Lock the cache to avoid many updates when many queries arrive at same
             # times which happens when multiple users are on the same view.
             # This lock is optional. It avoid processing but doesn't break anything
@@ -2781,11 +2793,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 ],
                 model,
                 with_total=with_total,
+                adhoc_filters=adhoc_filters,
                 search=search,
                 search_mode=search_mode,
             )
 
-            if not search:
+            if not search and not adhoc_filters.has_any_filters:
                 to_cache = {}
                 for key, value in db_result.items():
                     # We don't cache total value
@@ -2818,6 +2831,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         aggregations: Iterable[Tuple[django_models.Field, str]],
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
+        adhoc_filters: Optional[AdHocFilters] = None,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
@@ -2834,6 +2848,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
+        :param adhoc_filters: The filters that can be optionally applied
+            instead of the view's own filters.
         :param search: the search string to consider.
         :param search: the mode that the search is in.
         :raises FieldAggregationNotSupported: When the view type doesn't support
@@ -2854,6 +2870,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if model is None:
             model = view.table.get_model()
 
+        if adhoc_filters is None:
+            adhoc_filters = AdHocFilters()
+
         queryset = model.objects.all().enhance_by_fields()
 
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -2866,7 +2885,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Apply filters and search to have accurate aggregations
         if view_type.can_filter:
-            queryset = self.apply_filters(view, queryset)
+            queryset = (
+                adhoc_filters.apply_to_queryset(model, queryset)
+                if adhoc_filters.has_any_filters
+                else self.apply_filters(view, queryset)
+            )
+
         if search is not None:
             queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
@@ -3218,11 +3242,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         group_by: str = None,
         include_fields: str = None,
         exclude_fields: str = None,
-        filter_type: str = None,
-        filter_object: dict = None,
+        adhoc_filters: Optional[AdHocFilters] = None,
         table_model: Type[GeneratedTableModel] = None,
         view_type=None,
-        api_filters: Optional[Dict[str, Any]] = None,
     ):
         """
         This function constructs a queryset which applies all the filters
@@ -3239,13 +3261,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param group_by: A string group the rows by.
         :param include_fields: A comma separated list of field_ids to include.
         :param exclude_fields: A comma separated list of field_ids to exclude.
-        :param filter_type: The type of filter to apply.
-        :param filter_object: A dictionary to filter the rows by.
+        :param adhoc_filters: Optional ad hoc filters to apply.
         :param table_model: A model which can be passed if it's already instantiated.
         :param view_type: The view_type which can be passed if it's already
             instantiated.
-        :param api_filters: A dictionary of filters and group of filters to
-            apply to the queryset.
         :return: A tuple containing:
             - A queryset of rows.
             - A list of field_ids of the fields that are visible.
@@ -3258,11 +3277,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view_type is None:
             view_type = view_type_registry.get_by_model(view)
 
-        if filter_type is None:
-            filter_type = FILTER_TYPE_AND
-
-        if filter_object is None:
-            filter_object = {}
+        if adhoc_filters is None:
+            adhoc_filters = AdHocFilters()
 
         publicly_visible_field_options = view_type.get_visible_field_options_in_order(
             view
@@ -3297,23 +3313,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 order_by, False, publicly_visible_field_ids
             )
 
-        # If the new way of filtering is used with filters and groups, we use
-        # it, otherwise we use the old way. The new way consist in a nested JSON
-        # structure of filters (see `PublicViewGroupedFiltersAdapter` for more
-        # info). The old way of filtering is a list of query params with the
-        # filter__{field}__{type}=[value] format.
-
-        if api_filters and len(api_filters):
-            filter_builder = construct_filter_builder_from_grouped_api_filters(
-                api_filters,
-                table_model,
-                only_filter_by_field_ids=publicly_visible_field_ids,
-            )
-            queryset = filter_builder.apply_to_queryset(queryset)
-        else:
-            queryset = queryset.filter_by_fields_object(
-                filter_object, filter_type, publicly_visible_field_ids
-            )
+        if adhoc_filters.has_any_filters:
+            adhoc_filters.only_filter_by_field_ids = publicly_visible_field_ids
+            queryset = adhoc_filters.apply_to_queryset(table_model, queryset)
 
         if search:
             queryset = queryset.search_all_fields(

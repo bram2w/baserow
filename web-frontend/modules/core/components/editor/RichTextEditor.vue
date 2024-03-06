@@ -1,11 +1,37 @@
 <template>
-  <div>
+  <div
+    class="rich-text-editor"
+    :class="{ 'rich-text-editor--scrollbar-thin': thinScrollbar }"
+  >
     <RichTextEditorMentionsList
+      v-if="editable && enableMentions"
       ref="mentionsList"
       :show-search="false"
       :add-empty-item="false"
     />
-    <EditorContent :editor="editor" />
+    <div v-if="editable && enableRichTextFormatting">
+      <RichTextEditorBubbleMenu
+        v-show="bubbleMenuOpen"
+        ref="bubbleMenu"
+        :editor="editor"
+      />
+      <RichTextEditorFloatingMenu
+        v-show="floatingMenuOpen"
+        ref="floatingMenu"
+        :editor="editor"
+        :get-scrollable-area-bounding-rect="scrollableAreaBoundingRect"
+      />
+    </div>
+    <EditorContent
+      class="rich-text-editor__content"
+      :class="[
+        {
+          'rich-text-editor__content--scaled': contentScaled,
+        },
+        editorClass,
+      ]"
+      :editor="editor"
+    />
   </div>
 </template>
 
@@ -18,55 +44,63 @@ import { Mention } from '@tiptap/extension-mention'
 import { Document } from '@tiptap/extension-document'
 import { Paragraph } from '@tiptap/extension-paragraph'
 import { HardBreak } from '@tiptap/extension-hard-break'
+import { Heading } from '@tiptap/extension-heading'
+import { ListItem } from '@tiptap/extension-list-item'
+import { BulletList } from '@tiptap/extension-bullet-list'
+import { OrderedList } from '@tiptap/extension-ordered-list'
+import { Bold } from '@tiptap/extension-bold'
+import { Italic } from '@tiptap/extension-italic'
+import { Strike } from '@tiptap/extension-strike'
+import { Underline } from '@tiptap/extension-underline'
+import { Subscript } from '@tiptap/extension-subscript'
+import { Superscript } from '@tiptap/extension-superscript'
+import { Blockquote } from '@tiptap/extension-blockquote'
+import { CodeBlock } from '@tiptap/extension-code-block'
+import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
+import { TaskItem } from '@tiptap/extension-task-item'
+import { TaskList } from '@tiptap/extension-task-list'
 import { Text } from '@tiptap/extension-text'
-import { Extension, mergeAttributes } from '@tiptap/core'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { mergeAttributes } from '@tiptap/core'
+
+import { Markdown } from 'tiptap-markdown'
 
 import RichTextEditorMentionsList from '@baserow/modules/core/components/editor/RichTextEditorMentionsList'
+import RichTextEditorBubbleMenu from '@baserow/modules/core/components/editor/RichTextEditorBubbleMenu'
+import RichTextEditorFloatingMenu from '@baserow/modules/core/components/editor/RichTextEditorFloatingMenu'
+import EnterStopEditExtension from '@baserow/modules/core/components/editor/extensions/EnterStopEditExtension'
 import suggestion from '@baserow/modules/core/editor/suggestion'
+import { isElement } from '@baserow/modules/core/utils/dom'
 
-// Please, note that we need to remap Enter to Shift-Enter for every extension
-// relying on it in order to emit an event when the user presses Enter.
-const EnterKeyExtension = Extension.create({
-  name: 'enterKeyEventHandler',
-
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: new PluginKey('enterKeyEventHandler'),
-        props: {
-          handleKeyDown: (view, event) => {
-            const { doc } = view.state
-
-            function isDocEmpty() {
-              let isEmpty = true
-              doc.descendants((node) => {
-                const textNodes = ['text', 'paragraph', 'hardBreak']
-                if (!textNodes.includes(node.type.name) || node.text?.trim()) {
-                  isEmpty = false
-                }
-              })
-              return isEmpty
-            }
-
-            if (event.key === 'Enter' && !event.shiftKey) {
-              if (!isDocEmpty()) {
-                this.options.vueComponent.$emit('entered')
-              }
-              return true
-            }
-            return false
-          },
-        },
-      }),
-    ]
-  },
-})
+const richTextEditorExtensions = [
+  // Nodes
+  Heading.configure({ levels: [1, 2, 3] }),
+  ListItem,
+  OrderedList,
+  BulletList,
+  CodeBlock,
+  Blockquote,
+  HorizontalRule,
+  TaskItem,
+  TaskList,
+  // Marks
+  Bold,
+  Italic,
+  Strike,
+  Underline,
+  Subscript,
+  Superscript,
+  // Extensions
+  Markdown.configure({
+    breaks: true,
+  }),
+]
 
 export default {
   components: {
     EditorContent,
+    RichTextEditorBubbleMenu,
     RichTextEditorMentionsList,
+    RichTextEditorFloatingMenu,
   },
   props: {
     value: {
@@ -81,92 +115,244 @@ export default {
       type: Boolean,
       default: true,
     },
+    editorClass: {
+      type: String,
+      default: '',
+    },
+    contentScaled: {
+      type: Boolean,
+      default: false,
+    },
+    enableMentions: {
+      type: Boolean,
+      default: false,
+    },
+    enterStopEdit: {
+      type: Boolean,
+      default: false,
+    },
+    shiftEnterStopEdit: {
+      type: Boolean,
+      default: false,
+    },
+    enableRichTextFormatting: {
+      type: Boolean,
+      default: false,
+    },
+    scrollableAreaElement: {
+      type: Object,
+      default: null,
+    },
+    thinScrollbar: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
       editor: null,
+      resizeObserver: null,
+      bubbleMenuOpen: false,
+      floatingMenuOpen: false,
     }
   },
   computed: {
     ...mapGetters({
       loggedUserId: 'auth/getUserId',
       workspace: 'workspace/getSelected',
-      isUserIdMemberOfSelectedWorkspace:
-        'workspace/isUserIdMemberOfSelectedWorkspace',
     }),
+    scrollableAreaBoundingRect() {
+      if (this.scrollableAreaElement !== null) {
+        return this.scrollableAreaElement.getBoundingClientRect()
+      }
+      return () => this.$el.getBoundingClientRect()
+    },
   },
   watch: {
-    editable(editable) {
-      this.editor.setOptions({
-        editable,
-      })
-      this.editor.commands.focus('end')
+    editable: {
+      handler(editable) {
+        this.editor.setOptions({
+          editable,
+        })
+        this.setupEditor()
+      },
     },
     value(value) {
-      const jsonContent = this.editor.getJSON()
-
-      if (_.isEqual(jsonContent, value)) {
-        return
+      if (!_.isEqual(value, this.editor.getJSON())) {
+        this.editor.commands.setContent(value, false)
       }
-
-      this.editor.commands.setContent(value, false)
     },
   },
   mounted() {
-    const loggedUserId = this.loggedUserId
-    const originalRenderHTML = Mention.config.renderHTML
-    const isUserInWorkspace =
-      this.$store.getters['workspace/isUserIdMemberOfSelectedWorkspace']
-    const mentionsExt = Mention.extend({
-      renderHTML({ node, HTMLAttributes }) {
+    const extensions = this.getConfiguredExtensions()
+    this.createEditor(extensions)
+  },
+  unmount() {
+    if (this.editor) {
+      this.editor.destroy()
+    }
+    this.unregisterResizeObserver()
+  },
+  methods: {
+    registerResizeObserver() {
+      const resizeObserver = new ResizeObserver(() => {
+        this.$refs.floatingMenu?.updateReferenceClientRect()
+        this.bubbleMenuOpen = false
+      })
+      resizeObserver.observe(this.$el)
+      this.resizeObserver = resizeObserver
+    },
+    unregisterResizeObserver() {
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect()
+        this.resizeObserver = null
+      }
+    },
+    getConfiguredExtensions() {
+      const extensions = [Document, Paragraph, Text, HardBreak]
+
+      if (this.enableRichTextFormatting) {
+        extensions.push(...richTextEditorExtensions)
+      }
+
+      if (this.enterStopEdit || this.shiftEnterStopEdit) {
+        const enterKeyExt = EnterStopEditExtension.configure({
+          vueComponent: this,
+          shiftKey: this.shiftEnterStopEdit,
+        })
+        extensions.push(enterKeyExt)
+      }
+      if (this.enableMentions) {
+        const renderHTML = this.customRenderHTMLForMentions()
+        const mentionsExt = Mention.configure({
+          renderHTML,
+          suggestion: suggestion({
+            component: this.$refs.mentionsList,
+          }),
+        })
+        extensions.push(mentionsExt)
+      }
+
+      if (this.placeholder) {
+        extensions.push(
+          Placeholder.configure({
+            placeholder: this.placeholder,
+          })
+        )
+      }
+      return extensions
+    },
+    createEditor(extensions) {
+      this.editor = new Editor({
+        content: this.value,
+        editable: this.editable,
+        extensions,
+        onUpdate: () => {
+          this.$emit('input', this.editor.getJSON())
+        },
+        onFocus: ({ editor, event }) => {
+          if (this.editable && !this.bubbleMenuOpen) {
+            this.floatingMenuOpen = true
+          }
+          this.$emit('focus')
+        },
+        onBlur: ({ editor, event }) => {
+          if (this.isEventFromMenu(event)) {
+            return // Do not emit blur event if the event is from one of the editor's menu.
+          }
+
+          this.bubbleMenuOpen = false
+          this.floatingMenuOpen = false
+          this.$emit('blur')
+        },
+        onSelectionUpdate: ({ editor }) => {
+          if (this.editable && this.enableRichTextFormatting) {
+            const hasValidSelection = editor.state.selection.empty === false
+            const codeBlockActive = editor.isActive('codeBlock')
+
+            if (hasValidSelection && !codeBlockActive) {
+              this.bubbleMenuOpen = true
+              this.floatingMenuOpen = false
+            } else {
+              this.bubbleMenuOpen = false
+              this.floatingMenuOpen = true
+            }
+          }
+        },
+      })
+      this.setupEditor()
+    },
+    setupEditor() {
+      if (this.editable) {
+        this.focus()
+        this.floatingMenuOpen = true
+
+        this.registerResizeObserver()
+        this.registerAutoCollapseFloatingMenuHandler()
+        this.registerAutoHideBubbleMenuHandler()
+      } else {
+        this.unregisterResizeObserver()
+      }
+    },
+    registerAutoCollapseFloatingMenuHandler() {
+      const $refs = this.$refs
+
+      const handler = () => {
+        $refs.floatingMenu?.collapse()
+      }
+
+      this.$el.addEventListener('mousedown', handler)
+      this.$once('hook:unmounted', () => {
+        this.$el.removeEventListener('mousedown', handler)
+      })
+    },
+    registerAutoHideBubbleMenuHandler() {
+      const _this = this
+
+      const handler = (event) => {
+        _this.bubbleMenuOpen = false
+      }
+
+      const elem = this.scrollableAreaElement ?? this.$el
+
+      elem.addEventListener('scroll', handler)
+      this.$once('hook:unmounted', () => {
+        elem.removeEventListener('scroll', handler)
+      })
+    },
+    customRenderHTMLForMentions() {
+      const loggedUserId = this.loggedUserId
+      const isUserInWorkspace =
+        this.$store.getters['workspace/isUserIdMemberOfSelectedWorkspace']
+      return ({ node, options }) => {
         let className = 'rich-text-editor__mention'
         if (node.attrs.id === loggedUserId) {
           className += ' rich-text-editor__mention--current-user'
         } else if (!isUserInWorkspace(node.attrs.id)) {
           className += ' rich-text-editor__mention--user-gone'
         }
-        return originalRenderHTML.call(this, {
-          node,
-          HTMLAttributes: mergeAttributes(HTMLAttributes, { class: className }),
-        })
-      },
-    }).configure({
-      suggestion: suggestion({
-        component: this.$refs.mentionsList,
-      }),
-    })
-    const enterKeyExt = EnterKeyExtension.configure({ vueComponent: this })
-    const extensions = [
-      Document,
-      Paragraph,
-      Text,
-      HardBreak,
-      enterKeyExt,
-      mentionsExt,
-    ]
-    if (this.placeholder) {
-      extensions.push(
-        Placeholder.configure({
-          placeholder: this.placeholder,
-        })
+        return [
+          'span',
+          mergeAttributes({ class: className }, this.HTMLAttributes),
+          `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`,
+        ]
+      }
+    },
+    focus() {
+      this.editor.commands.focus('end')
+    },
+    serializeToMarkdown() {
+      return this.editor.storage.markdown.getMarkdown()
+    },
+    isEventFromMenu(event) {
+      return (
+        this.$refs.bubbleMenu?.isEventTargetInside(event) ||
+        this.$refs.floatingMenu?.isEventTargetInside(event)
       )
-    }
-    this.editor = new Editor({
-      content: this.value,
-      editable: this.editable,
-      editorProps: {
-        attributes: {
-          class: this.editable ? 'rich-text-editor' : null,
-        },
-      },
-      extensions,
-      onUpdate: () => {
-        this.$emit('input', this.editor.getJSON())
-      },
-    })
-  },
-  beforeDestroy() {
-    this.editor.destroy()
+    },
+    isEventTargetInside(event) {
+      return isElement(this.$el, event.target) || this.isEventFromMenu(event)
+    },
   },
 }
 </script>

@@ -107,6 +107,10 @@ class DomainHandler:
 
         prepared_values = domain_type.prepare_values(allowed_values)
 
+        # Save only lower case domain
+        if "domain_name" in prepared_values:
+            prepared_values["domain_name"] = prepared_values["domain_name"].lower()
+
         domain = model_class(builder=builder, order=last_order, **prepared_values)
         domain.save()
 
@@ -137,6 +141,10 @@ class DomainHandler:
         )
 
         prepared_values = domain_type.prepare_values(allowed_values)
+
+        # Save only lower case domain
+        if "domain_name" in prepared_values:
+            prepared_values["domain_name"] = prepared_values["domain_name"].lower()
 
         for key, value in prepared_values.items():
             setattr(domain, key, value)
@@ -201,6 +209,14 @@ class DomainHandler:
         exported_builder = builder_application_type.export_serialized(
             builder, import_export_config, None, default_storage
         )
+
+        # Update user_source uid to have something stable per domain.
+        # This is mainly because we want a token generated for one version of a site
+        # to still be valid if we redeploy the website.
+        exported_builder["user_sources"] = [
+            {**user_source, "uid": f"domain_{domain.id}__{user_source['uid']}"}
+            for user_source in exported_builder["user_sources"]
+        ]
 
         progress.increment(by=50)
 

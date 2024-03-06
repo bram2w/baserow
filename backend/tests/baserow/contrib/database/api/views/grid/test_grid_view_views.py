@@ -1192,6 +1192,249 @@ def test_view_aggregations(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_view_aggregations_no_adhoc_filtering_uses_view_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    # this filter would filters out all rows
+    equal_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="equal", value="y"
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid_view.id},
+    )
+
+    # without ad hoc filters the view filter is applied
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {text_field.db_column: 0}
+
+
+@pytest.mark.django_db
+def test_view_aggregations_adhoc_filtering_overrides_existing_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    # in usual scenario this filter would filtered out all rows
+    equal_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="equal", value="y"
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid_view.id},
+    )
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+        ],
+    }
+    get_params = [f"filters={json.dumps(advanced_filters)}"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {text_field.db_column: 1}
+
+
+@pytest.mark.django_db
+def test_view_aggregations_adhoc_filtering_advanced_filters_are_preferred_to_other_filter_query_params(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid_view.id},
+    )
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+    get_params = [
+        "filters=" + json.dumps(advanced_filters),
+        f"filter__field_{text_field.id}__equal=z",
+        f"filter_type=AND",
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {text_field.db_column: 2}
+
+
+@pytest.mark.django_db
+def test_view_aggregations_adhoc_filtering_invalid_advanced_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid_view.id},
+    )
+
+    expected_errors = [
+        (
+            "invalid_json",
+            {
+                "error": "The provided filters are not valid JSON.",
+                "code": "invalid_json",
+            },
+        ),
+        (
+            json.dumps({"filter_type": "invalid"}),
+            {
+                "filter_type": [
+                    {
+                        "error": '"invalid" is not a valid choice.',
+                        "code": "invalid_choice",
+                    }
+                ]
+            },
+        ),
+        (
+            json.dumps(
+                {"filter_type": "OR", "filters": "invalid", "groups": "invalid"}
+            ),
+            {
+                "filters": [
+                    {
+                        "error": 'Expected a list of items but got type "str".',
+                        "code": "not_a_list",
+                    }
+                ],
+                "groups": {
+                    "non_field_errors": [
+                        {
+                            "error": 'Expected a list of items but got type "str".',
+                            "code": "not_a_list",
+                        }
+                    ],
+                },
+            },
+        ),
+    ]
+
+    for filters, error_detail in expected_errors:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(
+            f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"
+        assert response_json["detail"] == error_detail
+
+
+@pytest.mark.django_db
 def test_view_aggregations_cache_invalidation_with_dependant_fields(
     api_client, data_fixture
 ):
@@ -2475,6 +2718,66 @@ def test_list_rows_public_with_query_param_advanced_filters(api_client, data_fix
 
 
 @pytest.mark.django_db
+def test_list_rows_with_query_param_order(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    text_field = data_fixture.create_text_field(table=table, name="text")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, text_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(grid_view, link_row_field, hidden=False)
+    first_row = RowHandler().create_row(
+        user, table, values={"text": "a", "hidden": "a"}, user_field_names=True
+    )
+    second_row = RowHandler().create_row(
+        user, table, values={"text": "b", "hidden": "b"}, user_field_names=True
+    )
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+
+    # adhoc sorting
+    response = api_client.get(
+        f"{url}?order_by=-field_{text_field.id}",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == second_row.id
+    assert response_json["results"][1]["id"] == first_row.id
+
+    # adhoc sorting on hidden field
+    response = api_client.get(
+        f"{url}?order_by=field_{hidden_field.id}",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == first_row.id
+    assert response_json["results"][1]["id"] == second_row.id
+
+    # sorting on unsupported field
+    response = api_client.get(
+        f"{url}?order_by=field_{link_row_field.id}",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE"
+
+
+@pytest.mark.django_db
 def test_list_rows_public_with_query_param_order(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -3193,3 +3496,448 @@ def test_list_rows_public_advanced_filters_are_preferred_to_other_filter_query_p
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json["results"]) == 2
+
+
+@pytest.mark.django_db
+def test_list_grid_rows_adhoc_filtering_query_param_filter(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="normal")
+    # hidden field should behave the same as normal one
+    text_field_hidden = data_fixture.create_text_field(table=table, name="hidden")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, text_field, hidden=False)
+    data_fixture.create_grid_view_field_option(
+        grid_view, text_field_hidden, hidden=True
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"normal": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"normal": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    get_params = [f"filter__field_{text_field.id}__contains=a"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == first_row.id
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    get_params = [
+        f"filter__field_{text_field.id}__contains=a",
+        f"filter__field_{text_field.id}__contains=b",
+        f"filter_type=OR",
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    get_params = [f"filter__field_{text_field_hidden.id}__contains=y"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    get_params = [f"filter__field_{text_field.id}__random=y"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    get_params = [f"filter__field_{text_field.id}__higher_than=1"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_grid_rows_adhoc_filtering_query_param_null_character(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="normal")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, create_options=False
+    )
+    first_row = RowHandler().create_row(
+        user, table, values={"normal": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(user, table, values={"normal": "b"}, user_field_names=True)
+
+    str_with_null_character = "a\0"
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    get_params = [f"filter__field_{text_field.id}__contains={str_with_null_character}"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == first_row.id
+
+
+@pytest.mark.django_db
+def test_list_grid_rows_adhoc_filtering_invalid_advanced_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, text_field, hidden=False)
+
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+
+    expected_errors = [
+        (
+            "invalid_json",
+            {
+                "error": "The provided filters are not valid JSON.",
+                "code": "invalid_json",
+            },
+        ),
+        (
+            json.dumps({"filter_type": "invalid"}),
+            {
+                "filter_type": [
+                    {
+                        "error": '"invalid" is not a valid choice.',
+                        "code": "invalid_choice",
+                    }
+                ]
+            },
+        ),
+        (
+            json.dumps(
+                {"filter_type": "OR", "filters": "invalid", "groups": "invalid"}
+            ),
+            {
+                "filters": [
+                    {
+                        "error": 'Expected a list of items but got type "str".',
+                        "code": "not_a_list",
+                    }
+                ],
+                "groups": {
+                    "non_field_errors": [
+                        {
+                            "error": 'Expected a list of items but got type "str".',
+                            "code": "not_a_list",
+                        }
+                    ],
+                },
+            },
+        ),
+    ]
+
+    for filters, error_detail in expected_errors:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(
+            f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"
+        assert response_json["detail"] == error_detail
+
+
+@pytest.mark.django_db
+def test_list_grid_rows_adhoc_filtering_advanced_filters_are_preferred_to_other_filter_query_params(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, text_field)
+
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+    get_params = [
+        "filters=" + json.dumps(advanced_filters),
+        f"filter__field_{text_field.id}__equal=z",
+        f"filter_type=AND",
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+
+@pytest.mark.django_db
+def test_list_grid_rows_adhoc_filtering_overrides_existing_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    # in usual scenario this filter would filtered out all rows
+    equal_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="equal", value="y"
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+
+    get_params = [
+        "filters=" + json.dumps(advanced_filters),
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+
+@pytest.mark.django_db
+def test_list_grid_rows_adhoc_filtering_advanced_filters(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    # hidden fields should behave like normal ones
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "contains",
+                "value": "a",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == first_row.id
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "OR",
+                "filters": [
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "b",
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+    # groups can be arbitrarily nested
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "",
+                    },
+                ],
+                "groups": [
+                    {
+                        "filter_type": "OR",
+                        "filters": [
+                            {
+                                "field": public_field.id,
+                                "type": "contains",
+                                "value": "a",
+                            },
+                            {
+                                "field": public_field.id,
+                                "type": "contains",
+                                "value": "b",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": hidden_field.id,
+                "type": "contains",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "random",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "higher_than",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+    for filters in [
+        "invalid_json",
+        json.dumps({"filter_type": "invalid"}),
+        json.dumps({"filter_type": "OR", "filters": "invalid"}),
+    ]:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(
+            f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"

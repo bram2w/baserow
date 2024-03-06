@@ -171,8 +171,16 @@
   flex-basis: 100%;
 }
 
+.align-items-center {
+  align-items: center;
+}
+
 .position-relative {
   position: relative;
+}
+
+.inline-block {
+  display: inline-block;
 }
 
 @keyframes spin {

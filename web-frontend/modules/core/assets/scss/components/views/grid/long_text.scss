@@ -31,4 +31,8 @@
   .grid-view__column--matches-search & {
     background-color: $color-primary-100;
   }
+
+  &::-webkit-scrollbar-thumb:window-inactive {
+    background-color: $color-neutral-500;
+  }
 }

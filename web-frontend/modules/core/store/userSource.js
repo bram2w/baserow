@@ -1,9 +1,7 @@
 import UserSourceService from '@baserow/modules/core/services/userSource'
+import _ from 'lodash'
 
-const state = {
-  // The loaded userSources
-  userSources: [],
-}
+const state = {}
 
 const updateContext = {
   updateTimeout: null,
@@ -12,107 +10,134 @@ const updateContext = {
 }
 
 const mutations = {
-  ADD_ITEM(state, { userSource, beforeId = null }) {
+  ADD_ITEM(state, { application, userSource, beforeId = null }) {
     if (beforeId === null) {
-      state.userSources.push(userSource)
+      application.user_sources.push(userSource)
     } else {
-      const insertionIndex = state.userSources.findIndex(
+      const insertionIndex = application.user_sources.findIndex(
         (e) => e.id === beforeId
       )
-      state.userSources.splice(insertionIndex, 0, userSource)
+      application.user_sources.splice(insertionIndex, 0, userSource)
     }
   },
-  UPDATE_ITEM(state, { userSource: userSourceToUpdate, values }) {
-    state.userSources.forEach((userSource) => {
+  UPDATE_ITEM(state, { application, userSource: userSourceToUpdate, values }) {
+    application.user_sources.forEach((userSource) => {
       if (userSource.id === userSourceToUpdate.id) {
         Object.assign(userSource, values)
       }
     })
   },
-  DELETE_ITEM(state, { userSourceId }) {
-    const index = state.userSources.findIndex(
+  DELETE_ITEM(state, { application, userSourceId }) {
+    const index = application.user_sources.findIndex(
       (userSource) => userSource.id === userSourceId
     )
     if (index > -1) {
-      state.userSources.splice(index, 1)
+      application.user_sources.splice(index, 1)
     }
   },
-  MOVE_ITEM(state, { index, oldIndex }) {
-    state.userSources.splice(index, 0, state.userSources.splice(oldIndex, 1)[0])
+  MOVE_ITEM(state, { application, index, oldIndex }) {
+    application.user_sources.splice(
+      index,
+      0,
+      application.user_sources.splice(oldIndex, 1)[0]
+    )
   },
-  CLEAR_ITEMS(state) {
-    state.userSources = []
+  CLEAR_ITEMS(state, { application }) {
+    application.user_sources = []
   },
 }
 
 const actions = {
-  forceCreate({ commit }, { userSource, beforeId = null }) {
-    commit('ADD_ITEM', { userSource, beforeId })
+  forceCreate({ commit }, { application, userSource, beforeId = null }) {
+    commit('ADD_ITEM', { application, userSource, beforeId })
   },
-  forceUpdate({ commit }, { userSource, values }) {
-    commit('UPDATE_ITEM', { userSource, values })
+  forceUpdate({ commit }, { application, userSource, values }) {
+    commit('UPDATE_ITEM', { application, userSource, values })
   },
-  forceDelete({ commit, getters }, { userSourceId }) {
-    commit('DELETE_ITEM', { userSourceId })
+  forceDelete({ commit }, { application, userSourceId }) {
+    commit('DELETE_ITEM', { application, userSourceId })
   },
-  forceMove({ commit, getters }, { userSourceId, beforeUserSourceId }) {
-    const currentOrder = getters.getUserSources.map(
-      (userSource) => userSource.id
-    )
+  forceMove(
+    { commit, getters },
+    { application, userSourceId, beforeUserSourceId }
+  ) {
+    const currentOrder = getters
+      .getUserSources(application)
+      .map((userSource) => userSource.id)
     const oldIndex = currentOrder.findIndex((id) => id === userSourceId)
     const index = beforeUserSourceId
       ? currentOrder.findIndex((id) => id === beforeUserSourceId)
-      : getters.getUserSources.length
+      : getters.getUserSources(application).length
 
     // If the userSource is before the beforeUserSource we must decrease the target index by
     // one to compensate the removed userSource.
     if (oldIndex < index) {
-      commit('MOVE_ITEM', { index: index - 1, oldIndex })
+      commit('MOVE_ITEM', { application, index: index - 1, oldIndex })
     } else {
-      commit('MOVE_ITEM', { index, oldIndex })
+      commit('MOVE_ITEM', { application, index, oldIndex })
     }
   },
   async create(
     { dispatch },
-    { applicationId, userSourceType, values, beforeId = null }
+    { application, userSourceType, values, beforeId = null }
   ) {
     const { data: userSource } = await UserSourceService(this.$client).create(
-      applicationId,
+      application.id,
       userSourceType,
       values,
       beforeId
     )
 
-    await dispatch('forceCreate', { userSource, beforeId })
+    await dispatch('forceCreate', { application, userSource, beforeId })
 
     return userSource
   },
-  async update({ dispatch, getters }, { userSourceId, values }) {
-    const userSourcesOfPage = getters.getUserSources
+  async update({ dispatch, getters }, { application, userSourceId, values }) {
+    const userSourcesOfPage = getters.getUserSources(application)
     const userSource = userSourcesOfPage.find(({ id }) => id === userSourceId)
+
     const oldValues = {}
     const newValues = {}
+
     Object.keys(values).forEach((name) => {
-      if (Object.prototype.hasOwnProperty.call(userSource, name)) {
+      if (!_.isEqual(userSource[name], values[name])) {
         oldValues[name] = userSource[name]
         newValues[name] = values[name]
       }
     })
 
-    await dispatch('forceUpdate', { userSource, values: newValues })
+    await dispatch('forceUpdate', {
+      application,
+      userSource,
+      values: newValues,
+    })
 
     try {
-      await UserSourceService(this.$client).update(userSource.id, values)
+      const { data: newUserSource } = await UserSourceService(
+        this.$client
+      ).update(userSource.id, newValues)
+      await dispatch('forceUpdate', {
+        application,
+        userSource,
+        values: newUserSource,
+      })
     } catch (error) {
-      await dispatch('forceUpdate', { userSource, values: oldValues })
+      await dispatch('forceUpdate', {
+        application,
+        userSource,
+        values: oldValues,
+      })
       throw error
     }
   },
 
-  async debouncedUpdate({ dispatch, getters }, { userSourceId, values }) {
-    const userSource = getters.getUserSources.find(
-      ({ id }) => id === userSourceId
-    )
+  async debouncedUpdate(
+    { dispatch, getters },
+    { application, userSourceId, values }
+  ) {
+    const userSource = getters
+      .getUserSources(application)
+      .find(({ id }) => id === userSourceId)
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -122,7 +147,11 @@ const actions = {
       }
     })
 
-    await dispatch('forceUpdate', { userSource, values: newValues })
+    await dispatch('forceUpdate', {
+      application,
+      userSource,
+      values: newValues,
+    })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
@@ -133,6 +162,7 @@ const actions = {
         } catch (error) {
           // Revert to old values on error
           await dispatch('forceUpdate', {
+            application,
             userSource,
             values: updateContext.lastUpdatedValues,
           })
@@ -155,8 +185,8 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  async delete({ dispatch, getters }, { userSourceId }) {
-    const userSourcesOfPage = getters.getUserSources
+  async delete({ dispatch, getters }, { application, userSourceId }) {
+    const userSourcesOfPage = getters.getUserSources(application)
     const userSourceIndex = userSourcesOfPage.findIndex(
       (userSource) => userSource.id === userSourceId
     )
@@ -166,33 +196,36 @@ const actions = {
         ? userSourcesOfPage[userSourceIndex + 1].id
         : null
 
-    await dispatch('forceDelete', { userSourceId })
+    await dispatch('forceDelete', { application, userSourceId })
 
     try {
       await UserSourceService(this.$client).delete(userSourceId)
     } catch (error) {
       await dispatch('forceCreate', {
+        application,
         userSource: userSourceToDelete,
         beforeId,
       })
       throw error
     }
   },
-  async fetch({ dispatch, commit }, { applicationId }) {
-    commit('CLEAR_ITEMS')
-
+  async fetch({ dispatch, commit }, { application }) {
     const { data: userSources } = await UserSourceService(
       this.$client
-    ).fetchAll(applicationId)
+    ).fetchAll(application.id)
 
+    commit('CLEAR_ITEMS')
     await Promise.all(
-      userSources.map((userSource) => dispatch('forceCreate', { userSource }))
+      userSources.map((userSource) =>
+        dispatch('forceCreate', { application, userSource })
+      )
     )
 
     return userSources
   },
-  async move({ dispatch }, { userSourceId, beforeUserSourceId }) {
+  async move({ dispatch }, { application, userSourceId, beforeUserSourceId }) {
     await dispatch('forceMove', {
+      application,
       userSourceId,
       beforeUserSourceId,
     })
@@ -204,16 +237,19 @@ const actions = {
       )
     } catch (error) {
       await dispatch('forceMove', {
+        application,
         userSourceId: beforeUserSourceId,
         beforeUserSourceId: userSourceId,
       })
       throw error
     }
   },
-  async duplicate({ getters, dispatch }, { userSourceId, applicationId }) {
-    const userSource = getters.getUserSources.find((e) => e.id === userSourceId)
+  async duplicate({ getters, dispatch }, { application, userSourceId }) {
+    const userSource = getters
+      .getUserSources(application)
+      .find((e) => e.id === userSourceId)
     await dispatch('create', {
-      applicationId,
+      application,
       userSourceType: userSource.type,
       beforeId: userSource.id,
     })
@@ -221,8 +257,11 @@ const actions = {
 }
 
 const getters = {
-  getUserSources: (state) => {
-    return state.userSources
+  getUserSources: (state) => (application) => {
+    return application.user_sources
+  },
+  getUserSourceById: (state) => (application, userSourceId) => {
+    return application.user_sources.find(({ id }) => id === userSourceId)
   },
 }
 

@@ -6,6 +6,7 @@
       type="text"
       class="select__search-input"
       v-bind="$attrs"
+      :placeholder="placeholder || $t('action.search')"
       @input="$emit('input', $event.target.value)"
     />
   </div>
@@ -19,6 +20,11 @@ export default {
       type: String,
       required: false,
       default: null,
+    },
+    placeholder: {
+      type: String,
+      required: false,
+      default: '',
     },
   },
 }

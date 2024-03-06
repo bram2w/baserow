@@ -65,6 +65,7 @@ from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer,
     ListOrStringField,
     MustBeEmptyField,
+    PasswordSerializer,
     SelectOptionSerializer,
 )
 from baserow.contrib.database.db.functions import RandomUUID
@@ -108,7 +109,6 @@ from ..formula.types.formula_types import (
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
 )
-from ..search.handler import SearchHandler
 from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
@@ -132,6 +132,7 @@ from .exceptions import (
     InvalidRollupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
+    RichTextFieldCannotBePrimaryField,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .expressions import extract_jsonb_array_values_to_single_string
@@ -173,6 +174,7 @@ from .models import (
     MultipleCollaboratorsField,
     MultipleSelectField,
     NumberField,
+    PasswordField,
     PhoneNumberField,
     RatingField,
     RollupField,
@@ -402,7 +404,30 @@ class TextFieldType(CollationSortMixin, FieldType):
 class LongTextFieldType(CollationSortMixin, FieldType):
     type = "long_text"
     model_class = LongTextField
-    _can_group_by = True
+    allowed_fields = ["long_text_enable_rich_text"]
+    serializer_field_names = ["long_text_enable_rich_text"]
+
+    def check_can_group_by(self, field: Field) -> bool:
+        return not field.long_text_enable_rich_text
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        # Disallow rich text fields from being primary fields as they can be difficult
+        # to render in some email notifications, as linked rows and possibly other
+        # places.
+        if primary and field_kwargs.get("long_text_enable_rich_text", False):
+            raise RichTextFieldCannotBePrimaryField(
+                "A rich text field cannot be the primary field."
+            )
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
+        if from_field.primary and to_field_values.get(
+            "long_text_enable_rich_text", False
+        ):
+            raise RichTextFieldCannotBePrimaryField(
+                "A rich text field cannot be the primary field."
+            )
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -414,6 +439,18 @@ class LongTextFieldType(CollationSortMixin, FieldType):
                 **kwargs,
             }
         )
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+        return {
+            **base,
+            "long_text_enable_rich_text": field.long_text_enable_rich_text,
+        }
 
     def get_model_field(self, instance, **kwargs):
         return models.TextField(blank=True, null=True, **kwargs)
@@ -1959,6 +1996,13 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         # Create a map {value -> row_indexes} for ids and strings
         name_map = defaultdict(list)
         invalid_values = []
+
+        def preprocess_value(val):
+            return val.strip() if isinstance(val, str) else val
+
+        for row_index, values in values_by_row.items():
+            values_by_row[row_index] = [preprocess_value(val) for val in values]
+
         for row_index, values in values_by_row.items():
             for row_name_or_id in values:
                 if isinstance(row_name_or_id, int):
@@ -2257,19 +2301,23 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         # Store the current table's model into the manytomany_models object so that the
         # related ManyToMany field can use that one. Otherwise we end up in a recursive
         # loop.
-        model.baserow_m2m_models[instance.table_id] = model
+        model_name = model._meta.model_name
+        model.baserow_models[model_name] = model
 
-        # Check if the related table model is already in the model.baserow_m2m_model.
+        # Check if the related table model is already in the model.baserow_models.
         if instance.is_self_referencing:
             related_model = model
         else:
-            related_model = model.baserow_m2m_models.get(instance.link_row_table_id)
+            related_model_name = Table.get_table_model_name(
+                instance.link_row_table_id
+            ).lower()
+            related_model = model.baserow_models.get(related_model_name)
             # If we do not have a related table model already we can generate a new one.
             if related_model is None:
                 related_model = instance.link_row_table.get_model(
-                    manytomany_models=model.baserow_m2m_models
+                    manytomany_models=model.baserow_models
                 )
-                model.baserow_m2m_models[instance.link_row_table_id] = related_model
+                model.baserow_models[related_model_name] = related_model
 
         instance._related_model = related_model
         related_name = f"reversed_field_{instance.id}"
@@ -2290,8 +2338,6 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
                     related_name = related_field["name"]
                     break
 
-        # Note that the through model will not be registered with the apps because
-        # of the `DatabaseConfig.prevent_generated_model_for_registering` hack.
         models.ManyToManyField(
             to=related_model,
             related_name=related_name,
@@ -2300,20 +2346,6 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             db_table=instance.through_table_name,
             db_constraint=False,
         ).contribute_to_class(model, field_name)
-
-        model_field = model._meta.get_field(field_name)
-        through_model = model_field.remote_field.through
-
-        # Trigger the newly created pending operations of all the models related to the
-        # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because every time a table model is generated, it will
-        # register new pending operations.
-        apps = model._meta.apps
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(related_model)
-        apps.do_pending_operations(through_model)
-        apps.clear_cache()
 
     def prepare_values(self, values, user):
         """
@@ -3923,21 +3955,6 @@ class MultipleSelectFieldType(
             to=model, related_name=field_name, **shared_kwargs
         ).contribute_to_class(select_option_model, related_name)
 
-        # Trigger the newly created pending operations of all the models related to the
-        # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because everytime a table model is generated, it will
-        # register new pending operations.
-        apps = model._meta.apps
-        model_field = model._meta.get_field(field_name)
-        select_option_field = select_option_model._meta.get_field(related_name)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(select_option_model)
-        apps.do_pending_operations(model_field.remote_field.through)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(select_option_field.remote_field.through)
-        apps.clear_cache()
-
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         cache_entry = f"{field_name}_relations"
         if cache_entry not in cache:
@@ -4377,44 +4394,61 @@ class FormulaFieldType(ReadOnlyFieldType):
         update_collector: "Optional[FieldUpdateCollector]" = None,
         field_cache: "Optional[FieldCache]" = None,
         via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+        all_updated_fields: Optional[List[Field]] = None,
     ):
         from baserow.contrib.database.fields.dependencies.update_collector import (
             FieldUpdateCollector,
         )
 
-        should_send_signals_at_end = False
+        is_root_update_call = False
 
         if update_collector is None:
-            # We are the outermost call, and so we should send all the signals
+            # We are the outermost root call, and so we should send all the signals
             # when we finish.
-            should_send_signals_at_end = True
+            is_root_update_call = True
             update_collector = FieldUpdateCollector(field.table)
 
         if field_cache is None:
             field_cache = FieldCache()
         if via_path_to_starting_table is None:
             via_path_to_starting_table = []
+        if all_updated_fields is None:
+            all_updated_fields = []
+
+        new_all_updated_fields = all_updated_fields.copy()
+
+        # If the field is already in the `all_updated_fields` list, we must not do
+        # anything because otherwise the field will be updated for a second time,
+        # and there is no need for that.
+        if field.id in [f.id for f in new_all_updated_fields]:
+            return new_all_updated_fields
 
         self._refresh_row_values(
             field, update_collector, field_cache, via_path_to_starting_table
         )
+
+        # Add the field to the `all_updated_fields` to avoid that it will be updated
+        # twice.
+        new_all_updated_fields.append(field)
 
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
         ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.run_periodic_update(
+            new_all_updated_fields = dependant_field_type.run_periodic_update(
                 dependant_field,
                 update_collector,
                 field_cache,
                 path_to_starting_table,
+                new_all_updated_fields,
             )
 
-        if should_send_signals_at_end:
+        if is_root_update_call:
             update_collector.apply_updates_and_get_updated_fields(field_cache)
-            SearchHandler().entire_field_values_changed_or_created(field.table, [field])
             update_collector.send_force_refresh_signals_for_all_updated_tables()
+
+        return new_all_updated_fields
 
     def row_of_dependency_updated(
         self,
@@ -5376,21 +5410,6 @@ class MultipleCollaboratorsFieldType(
             **shared_kwargs,
         ).contribute_to_class(user_model, related_name)
 
-        # Trigger the newly created pending operations of all the models related to the
-        # created CollaboratorField. They need to be called manually because normally
-        # they are triggered when a new model is registered. Not triggering them
-        # can cause a memory leak because everytime a table model is generated, it will
-        # register new pending operations.
-        apps = model._meta.apps
-        model_field = model._meta.get_field(field_name)
-        collaborator_field = user_model._meta.get_field(related_name)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(user_model)
-        apps.do_pending_operations(model_field.remote_field.through)
-        apps.do_pending_operations(model)
-        apps.do_pending_operations(collaborator_field.remote_field.through)
-        apps.clear_cache()
-
     def enhance_queryset(self, queryset, field, name):
         return queryset.prefetch_related(name)
 
@@ -5813,3 +5832,65 @@ class AutonumberFieldType(ReadOnlyFieldType):
         self, formula_type: BaserowFormulaNumberType
     ) -> NumberField:
         return NumberField(number_decimal_places=0, number_negative=False)
+
+
+class PasswordFieldType(FieldType):
+    """
+    Password fields are write only and store the hash of the provided value. This
+    can be used for authentication.
+    """
+
+    type = "password"
+    model_class = PasswordField
+    can_be_in_form_view = True
+    keep_data_on_duplication = True
+    _can_order_by = False
+    can_be_primary_field = False
+    can_get_unique_values = False
+
+    def get_serializer_field(self, instance, **kwargs):
+        # If a string value is provided, the password will be set. If `None` is
+        # provided, the password will be cleared. If `True` is provided, it will be
+        # ignored because this is what will be in the response and we can't do
+        # anything with that value.
+        return PasswordSerializer(
+            **{
+                "required": False,
+                "allow_null": True,
+                "allow_blank": True,
+                **kwargs,
+            }
+        )
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        # For the response it must be a BooleanField because we never want to expose
+        # the password, this will make it respond with `True` if set, and `null` is not.
+        return serializers.BooleanField(required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "Allows setting a write only password value. Providing a string will set "
+            "the password, `null` will unset it, `true` will be ignored. The response "
+            "will respond with `true` is a password is set, but will never expose the "
+            "password itself."
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.CharField(null=True, max_length=128)
+
+    def get_human_readable_value(self, value: Any, field_object: "FieldObject") -> str:
+        # We don't want to expose the hash of the password, so we just show `True` or
+        # `False` as string depending on whether the value is set.
+        return bool(value)
+
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
+        # We don't want to expose the hash of the password, so we just show `True` or
+        # `False` as string depending on whether the value is set.
+        return bool(value)
+
+    def prepare_row_history_value_from_action_meta_data(self, value):
+        # We don't want to expose the hash of the password, so we just show `True` or
+        # `False` as string depending on whether the value is set.
+        return bool(value)

@@ -17,12 +17,49 @@
       :fields="dataSourceFields"
       :read-only="false"
       class="filters__items"
+      :prepare-value="prepareValue"
       @deleteFilter="deleteFilter($event)"
       @updateFilter="updateFilter($event)"
       @selectOperator="$emit('update:filterType', $event)"
     >
-      <template #filterInputComponent="{ slotProps }">
-        <slot name="filterInputComponent" :slot-props="slotProps"></slot>
+      <template
+        #filterInputComponent="{
+          slotProps: { filter, filterType: propFilterType },
+        }"
+      >
+        <InjectedFormulaInputGroup
+          v-if="filter.value_is_formula && propFilterType.hasEditableValue"
+          v-model="filter.value"
+          class="filters__value--formula-input"
+          small
+          :placeholder="
+            $t(
+              'localBaserowTableServiceConditionalForm.formulaFilterInputPlaceholder'
+            )
+          "
+        />
+      </template>
+      <template
+        #afterValueInput="{
+          slotProps: { filter, filterType: propFilterType, emitUpdate },
+        }"
+      >
+        <a
+          v-if="propFilterType.hasEditableValue"
+          :title="
+            !filter.value_is_formula
+              ? $t('localBaserowTableServiceConditionalForm.useFormulaForValue')
+              : $t('localBaserowTableServiceConditionalForm.useDefaultForValue')
+          "
+          class="filters__value--formula-toggle"
+          :class="{
+            'filters__value--formula-toggle--disabled':
+              !filter.value_is_formula,
+          }"
+          @click="handleFormulaToggleClick(filter, emitUpdate)"
+        >
+          <i class="iconoir-sigma-function"></i>
+        </a>
       </template>
     </ViewFieldConditionsForm>
     <div class="filters_footer">
@@ -39,11 +76,17 @@ import ViewFieldConditionsForm from '@baserow/modules/database/components/view/V
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { v1 as uuidv1 } from 'uuid'
+import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup.vue'
+import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'LocalBaserowTableServiceConditionalForm',
   components: {
+    InjectedFormulaInputGroup,
     ViewFieldConditionsForm,
+  },
+  provide() {
+    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
   },
   props: {
     value: {
@@ -134,6 +177,7 @@ export default {
             field: field.id,
             type: 'equal',
             value: '',
+            value_is_formula: false,
           })
           this.$emit('input', newFilters)
         }
@@ -161,6 +205,40 @@ export default {
         return filterConf
       })
       this.$emit('input', newFilters)
+    },
+    /*
+     * When the formula toggle is clicked, this is responsible for flipping
+     * the `value_is_formula` value and then tweaking the filter value, depending
+     * on the current state of `value_is_formula`.
+     */
+    handleFormulaToggleClick(filter, emitUpdate) {
+      // If we're changing from a formula to a non-formula, we'll reset the value.
+      // If we're changing from a non-formula to a formula, we'll convert the value.
+      let newValue = filter.value
+      if (filter.value_is_formula) {
+        newValue = ''
+      } else if (filter.value) {
+        newValue = `'${filter.value}'`
+      }
+      emitUpdate({
+        value: newValue,
+        value_is_formula: !filter.value_is_formula,
+      })
+    },
+    /*
+     * Responsible for bypassing the `ViewFieldConditionsForm` component's
+     * `updateFilter` method behaviour if the field is a formula. By default,
+     * when a filter is updated, `filterType.prepareValue` is called. This is
+     * problematic because when formulas are introduced to filters, we don't
+     * want any additional processing to happen when the value is reset. For example,
+     * when a filter on a date is added, `LocalizedDateViewFilterType.prepareValue`
+     * will always add the timezone and `DATE_FILTER_TIMEZONE_VALUE_SEPARATOR`.
+     */
+    prepareValue(value, filter, field, filterType) {
+      // When a filter is not editable (e.g. empty/not empty), ordinarily the
+      // value is reset to a blank string by prepareValue. As we want to skip
+      // this function, we have to reset manually here.
+      return filterType.hasEditableValue ? value : ''
     },
   },
 }

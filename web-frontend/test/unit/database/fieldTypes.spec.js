@@ -324,6 +324,15 @@ const mockedFields = {
     type: 'duration',
     testingRowData: [null, 60],
   },
+  password: {
+    id: 25,
+    name: 'password',
+    order: 25,
+    primary: false,
+    table_id: 42,
+    type: 'password',
+    testingRowData: [null, true, 'test'],
+  },
 }
 
 const valuesToCall = [null, undefined]

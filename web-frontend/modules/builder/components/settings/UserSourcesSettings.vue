@@ -26,7 +26,8 @@
           :image="getUserSourceType(userSource).image"
           :title="userSource.name"
           :subtitle="getUserSourceType(userSource).getSummary(userSource)"
-          avatar-color="ghost"
+          :rounded-icon="false"
+          avatar-color="transparent"
           style="flex: 1"
         />
         <div class="user-source-settings__user-source-actions">
@@ -60,9 +61,10 @@
     <Presentation
       :image="getUserSourceType(editedUserSource).image"
       :title="getUserSourceType(editedUserSource).name"
-      avatar-color="ghost"
+      :rounded-icon="false"
+      avatar-color="transparent"
       style="flex: 1; margin-bottom: 18px"
-      icon-size="tiny"
+      icon-size="medium"
     />
 
     <UpdateUserSourceForm
@@ -154,7 +156,6 @@ export default {
   async fetch() {
     try {
       await this.actionFetchIntegrations({ applicationId: this.builder.id })
-      await this.actionFetchUserSources({ applicationId: this.builder.id })
       this.hideError()
     } catch (error) {
       this.handleError(error)
@@ -162,9 +163,11 @@ export default {
   },
   computed: {
     ...mapGetters({
-      userSources: 'userSource/getUserSources',
       integrations: 'integration/getIntegrations',
     }),
+    userSources() {
+      return this.$store.getters['userSource/getUserSources'](this.builder)
+    },
     userSourceTypes() {
       return this.$registry.getAll('userSource')
     },
@@ -172,7 +175,6 @@ export default {
   methods: {
     ...mapActions({
       actionFetchIntegrations: 'integration/fetch',
-      actionFetchUserSources: 'userSource/fetch',
       actionCreateUserSource: 'userSource/create',
       actionUpdateUserSource: 'userSource/update',
       actionDeleteUserSource: 'userSource/delete',
@@ -203,7 +205,7 @@ export default {
       const { type, ...rest } = values
       try {
         const createdUserSource = await this.actionCreateUserSource({
-          applicationId: this.builder.id,
+          application: this.builder,
           userSourceType: type,
           values: rest,
         })
@@ -220,6 +222,7 @@ export default {
       this.actionInProgress = true
       try {
         await this.actionUpdateUserSource({
+          application: this.builder,
           page: this.page,
           userSourceId: this.editedUserSource.id,
           values: clone(newValues),
@@ -234,7 +237,10 @@ export default {
     },
     async deleteUserSource(userSource) {
       try {
-        await this.actionDeleteUserSource({ userSourceId: userSource.id })
+        await this.actionDeleteUserSource({
+          application: this.builder,
+          userSourceId: userSource.id,
+        })
       } catch (error) {
         notifyIf(error)
       }

@@ -72,6 +72,14 @@ export class ViewFilterType extends Registerable {
   }
 
   /**
+    Informs forms whether the component returned by getInputComponent
+    is user configurable, or just displays static data which they can't alter.
+   */
+  get hasEditableValue() {
+    return true
+  }
+
+  /**
    * Should return the default value when a new filter of this type is created. In
    * almost all cases this should be an empty string, but with timezone sensitive
    * filters we might want use the current timezone.
@@ -943,6 +951,10 @@ export class DateEqualsTodayViewFilterType extends DateCompareTodayViewFilterTyp
     return i18n.t('viewFilter.isToday')
   }
 
+  get hasEditableValue() {
+    return false
+  }
+
   isDateMatching(rowValue, today) {
     const minTime = today.clone().startOf('day')
     const maxtime = today.clone().endOf('day')
@@ -960,6 +972,10 @@ export class DateBeforeTodayViewFilterType extends DateCompareTodayViewFilterTyp
     return i18n.t('viewFilter.beforeToday')
   }
 
+  get hasEditableValue() {
+    return false
+  }
+
   isDateMatching(rowValue, today) {
     const minTime = today.clone().startOf('day')
     return rowValue.isBefore(minTime)
@@ -974,6 +990,10 @@ export class DateAfterTodayViewFilterType extends DateCompareTodayViewFilterType
   getName() {
     const { i18n } = this.app
     return i18n.t('viewFilter.afterToday')
+  }
+
+  get hasEditableValue() {
+    return false
   }
 
   isDateMatching(rowValue, today) {
@@ -1402,6 +1422,10 @@ export class IsEvenAndWholeViewFilterType extends ViewFilterType {
 
   getExample() {
     return 'true'
+  }
+
+  get hasEditableValue() {
+    return false
   }
 
   getCompatibleFieldTypes() {
@@ -1867,6 +1891,10 @@ export class EmptyViewFilterType extends ViewFilterType {
     return ''
   }
 
+  get hasEditableValue() {
+    return false
+  }
+
   prepareValue(value) {
     return ''
   }
@@ -1889,6 +1917,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'multiple_collaborators',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -1924,6 +1953,10 @@ export class NotEmptyViewFilterType extends ViewFilterType {
     return ''
   }
 
+  get hasEditableValue() {
+    return false
+  }
+
   prepareValue(value) {
     return ''
   }
@@ -1946,6 +1979,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'multiple_collaborators',
       'phone_number',
       'duration',
+      'password',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',

@@ -7,9 +7,12 @@ import GalleryViewHeader from '@baserow/modules/database/components/view/gallery
 import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
-import { newFieldMatchesActiveSearchTerm } from '@baserow/modules/database/utils/view'
+import {
+  newFieldMatchesActiveSearchTerm,
+  isAdhocFiltering,
+  isAdhocSorting,
+} from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
-
 export const maxPossibleOrderValue = 32767
 
 export class ViewType extends Registerable {
@@ -185,6 +188,7 @@ export class ViewType extends Registerable {
    */
   refresh(
     context,
+    database,
     view,
     fields,
     storePrefix = '',
@@ -385,10 +389,25 @@ export class GridViewType extends ViewType {
     return 'database-public-grid-view'
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
       gridId: view.id,
       fields,
+      adhocFiltering,
+      adhocSorting,
     })
     // The grid view store keeps a copy of the group bys that must only be updated
     // after the refresh of the page. This is because the group by depends on the rows
@@ -401,16 +420,32 @@ export class GridViewType extends ViewType {
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',
     includeFieldOptions = false,
     sourceEvent = null
   ) {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/grid/refresh', {
       view,
       fields,
       includeFieldOptions,
+      adhocFiltering,
+      adhocSorting,
     })
   }
 
@@ -590,24 +625,55 @@ class BaseBufferedRowView extends ViewType {
     return {}
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(`${storePrefix}view/${this.getType()}/fetchInitial`, {
       viewId: view.id,
       fields,
+      adhocFiltering,
+      adhocSorting,
     })
   }
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',
     includeFieldOptions = false,
     sourceEvent = null
   ) {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
+    const adhocSorting = isAdhocSorting(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
       fields,
       includeFieldOptions,
+      adhocFiltering,
+      adhocSorting,
     })
   }
 
@@ -879,6 +945,7 @@ export class FormViewType extends ViewType {
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',
@@ -927,7 +994,7 @@ export class FormViewType extends ViewType {
     )
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
     await store.dispatch(storePrefix + 'view/form/fetchInitial', {
       formId: view.id,
     })

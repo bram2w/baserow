@@ -97,13 +97,11 @@ INSTALLED_APPS = [
     "baserow.api",
     "baserow.ws",
     "baserow.contrib.database",
+    "baserow.contrib.integrations",
+    "baserow.contrib.builder",
     *BASEROW_BUILT_IN_PLUGINS,
 ]
 
-
-if "builder" in FEATURE_FLAGS:
-    INSTALLED_APPS.append("baserow.contrib.builder")
-    INSTALLED_APPS.append("baserow.contrib.integrations")
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:
@@ -120,6 +118,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "baserow.api.user_sources.middleware.AddUserSourceUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "baserow.middleware.BaserowCustomHttp404Middleware",
@@ -404,6 +403,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "baserow.api.user_sources.authentication.UserSourceJSONWebTokenAuthentication",
         "baserow.api.authentication.JSONWebTokenAuthentication",
     ),
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
@@ -445,11 +445,14 @@ CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER = "ClientUndoRedoActionGroupId"
 MAX_UNDOABLE_ACTIONS_PER_ACTION_GROUP = 20
 WEBSOCKET_ID_HEADER = "WebsocketId"
 
+USER_SOURCE_AUTHENTICATION_HEADER = "UserSourceAuthorization"
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     WEBSOCKET_ID_HEADER,
     PUBLIC_VIEW_AUTHORIZATION_HEADER,
     CLIENT_SESSION_ID_HEADER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_HEADER,
+    USER_SOURCE_AUTHENTICATION_HEADER,
 ]
 
 ACCESS_TOKEN_LIFETIME = datetime.timedelta(
@@ -482,7 +485,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.22.3",
+    "VERSION": "1.23.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -595,20 +598,6 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-if "builder" not in FEATURE_FLAGS:
-    SPECTACULAR_SETTINGS["TAGS"] = [
-        t
-        for t in SPECTACULAR_SETTINGS["TAGS"]
-        if t["name"]
-        not in [
-            "Integrations",
-            "Builder pages",
-            "Builder elements",
-            "Builder domains",
-            "Builder public",
-            "Builder data sources",
-        ]
-    ]
 
 # Allows accessing and setting values on a dictionary like an object. Using this
 # we can pass plugin authors and other functions a `settings` object which can modify
@@ -849,11 +838,6 @@ BASEROW_SEAT_USAGE_JOB_CRONTAB = get_crontab_from_env(
     "BASEROW_SEAT_USAGE_JOB_CRONTAB", default_crontab=ONE_AM_CRONTRAB_STR
 )
 
-THREE_AM_CRONTAB_STR = "0 3 * * *"
-BASEROW_ROW_COUNT_JOB_CRONTAB = get_crontab_from_env(
-    "BASEROW_ROW_COUNT_JOB_CRONTAB", default_crontab=THREE_AM_CRONTAB_STR
-)
-
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
 if os.getenv("EMAIL_SMTP", ""):
@@ -1087,8 +1071,7 @@ if "baserow_enterprise" not in INSTALLED_APPS:
     PERMISSION_MANAGERS.remove("role")
 if "baserow_premium" not in INSTALLED_APPS:
     PERMISSION_MANAGERS.remove("view_ownership")
-if "builder" not in FEATURE_FLAGS:
-    PERMISSION_MANAGERS.remove("allow_public_builder")
+
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
@@ -1111,21 +1094,6 @@ LOGGING = {
         },
     },
     "loggers": {
-        "gunicorn": {
-            "level": BASEROW_BACKEND_LOG_LEVEL,
-            "handlers": ["console"],
-            "propagate": True,
-        },
-        "django": {
-            "handlers": ["console"],
-            "level": BASEROW_BACKEND_LOG_LEVEL,
-            "propagate": True,
-        },
-        "django.request": {
-            "handlers": ["console"],
-            "level": BASEROW_BACKEND_LOG_LEVEL,
-            "propagate": True,
-        },
         "django.db.backends": {
             "handlers": ["console"],
             "level": BASEROW_BACKEND_DATABASE_LOG_LEVEL,

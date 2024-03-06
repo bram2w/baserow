@@ -48,9 +48,14 @@ export default function (
     build: {
       extend(config, ctx) {
         config.node = { fs: 'empty' }
+        config.module.rules.push({
+          test: /\.(m|c)js$/,
+          include: /node_modules/,
+          type: 'javascript/auto',
+        })
       },
       babel: { compact: true },
-      transpile: ['axios'],
+      transpile: ['axios', 'tiptap-markdown', 'markdown-it'],
     },
   }
 }

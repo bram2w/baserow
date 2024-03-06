@@ -26,7 +26,7 @@ export default {
     getFieldComponent(type) {
       return this.$registry
         .get('field', type)
-        .getFunctionalGridViewFieldComponent()
+        .getFunctionalGridViewFieldComponent(this.field)
     },
   },
 }

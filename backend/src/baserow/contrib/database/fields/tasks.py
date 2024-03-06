@@ -1,4 +1,5 @@
 import traceback
+from itertools import groupby
 from typing import Optional
 
 from django.conf import settings
@@ -10,6 +11,7 @@ from opentelemetry import trace
 
 from baserow.config.celery import app
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.search.handler import SearchHandler
 from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import add_baserow_trace_attrs, baserow_trace
 
@@ -74,6 +76,8 @@ def _run_periodic_field_type_update_per_workspace(
         workspace.refresh_now()
     add_baserow_trace_attrs(update_now=update_now, workspace_id=workspace.id)
 
+    all_updated_fields = []
+
     for field in qs.filter(
         table__database__workspace_id=workspace.id,
         table__trashed=False,
@@ -81,7 +85,9 @@ def _run_periodic_field_type_update_per_workspace(
     ):
         # noinspection PyBroadException
         try:
-            _run_periodic_field_update(field, field_type_instance)
+            all_updated_fields = _run_periodic_field_update(
+                field, field_type_instance, all_updated_fields
+            )
         except Exception:
             tb = traceback.format_exc()
             logger.error(
@@ -91,12 +97,21 @@ def _run_periodic_field_type_update_per_workspace(
             )
             continue
 
+    # After a successful periodic update of all fields, we would need to update the
+    # search index for all of them in one function per table to avoid ending up in a
+    # deadlock because rows are updated simultaneously.
+    for table_id, fields in groupby(all_updated_fields, lambda x: x.table_id):
+        fields = list(fields)
+        SearchHandler().entire_field_values_changed_or_created(fields[0].table, fields)
+
 
 @baserow_trace(tracer)
-def _run_periodic_field_update(field, field_type_instance):
+def _run_periodic_field_update(field, field_type_instance, all_updated_fields):
     add_baserow_trace_attrs(field_id=field.id)
     with transaction.atomic():
-        field_type_instance.run_periodic_update(field)
+        return field_type_instance.run_periodic_update(
+            field, all_updated_fields=all_updated_fields
+        )
 
 
 @app.on_after_finalize.connect

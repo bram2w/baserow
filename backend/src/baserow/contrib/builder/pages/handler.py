@@ -228,9 +228,13 @@ class PageHandler:
         :return: A unique path to use
         """
 
+        page_path = proposed_path
+        if page_path.endswith("/"):
+            page_path = page_path[:-1]
+
         existing_paths = list(builder.page_set.values_list("path", flat=True))
         return find_unused_name(
-            [proposed_path], existing_paths, max_length=255, suffix="{0}"
+            [page_path], existing_paths, max_length=255, suffix="/{0}"
         )
 
     def is_page_path_valid(

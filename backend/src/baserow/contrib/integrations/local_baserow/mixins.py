@@ -12,6 +12,7 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
+from baserow.core.formula.validator import ensure_string
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 
@@ -62,18 +63,21 @@ class LocalBaserowTableServiceFilterableMixin:
             model_field = model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(service_filter.type)
 
-            try:
-                resolved_value = str(
-                    resolve_formula(
-                        service_filter.value,
-                        formula_runtime_function_registry,
-                        dispatch_context,
+            if service_filter.value_is_formula:
+                try:
+                    resolved_value = str(
+                        resolve_formula(
+                            service_filter.value,
+                            formula_runtime_function_registry,
+                            dispatch_context,
+                        )
                     )
-                )
-            except Exception as exc:
-                raise ServiceImproperlyConfigured(
-                    f"The {field_name} service filter formula can't be resolved: {exc}"
-                ) from exc
+                except Exception as exc:
+                    raise ServiceImproperlyConfigured(
+                        f"The {field_name} service filter formula can't be resolved: {exc}"
+                    ) from exc
+            else:
+                resolved_value = service_filter.value
 
             service_filter_builder.filter(
                 view_filter_type.get_filter(
@@ -141,10 +145,13 @@ class LocalBaserowTableServiceSearchableMixin:
         """
 
         try:
-            return resolve_formula(
-                service.search_query,
-                formula_runtime_function_registry,
-                dispatch_context,
+            return ensure_string(
+                resolve_formula(
+                    service.search_query,
+                    formula_runtime_function_registry,
+                    dispatch_context,
+                ),
+                allow_empty=True,
             )
         except Exception as exc:
             raise ServiceImproperlyConfigured(

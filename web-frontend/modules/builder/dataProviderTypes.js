@@ -217,7 +217,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     const { page } = applicationContext
 
     await Promise.all(
-      page.elements.map((element) => {
+      page.elements.map(async (element) => {
         if (element.data_source_id) {
           const dataSource = this.app.store.getters[
             'dataSource/getPageDataSourceById'
@@ -228,15 +228,22 @@ export class CurrentRecordDataProviderType extends DataProviderType {
             { ...applicationContext, element }
           )
 
-          // fetch the initial content
-          return this.app.store.dispatch('elementContent/fetchElementContent', {
-            element,
-            dataSource,
-            data: dispatchContext,
-            range: [0, element.items_per_page],
-          })
+          try {
+            // fetch the initial content
+            return await this.app.store.dispatch(
+              'elementContent/fetchElementContent',
+              {
+                element,
+                dataSource,
+                data: dispatchContext,
+                range: [0, element.items_per_page],
+              }
+            )
+          } catch (e) {
+            // We don't want to block next dispatches so we do nothing, a notification
+            // will be displayed by the component itself.
+          }
         }
-        return Promise.resolve()
       })
     )
   }
@@ -380,7 +387,7 @@ export class FormDataProviderType extends DataProviderType {
             parseInt(elementId)
           )
           const elementType = this.app.$registry.get('element', element.type)
-          const name = elementType.getFormDataName(element, applicationContext)
+          const name = elementType.getDisplayName(element, applicationContext)
           const order = this.app.store.getters['element/getElementPosition'](
             page,
             element
@@ -412,5 +419,49 @@ export class FormDataProviderType extends DataProviderType {
     }
 
     return super.getPathTitle(applicationContext, pathParts)
+  }
+}
+
+export class UserDataProviderType extends DataProviderType {
+  static getType() {
+    return 'user'
+  }
+
+  get name() {
+    return this.app.i18n.t('dataProviderType.user')
+  }
+
+  getDispatchContext(applicationContext) {
+    const { isAuthenticated, id } = this.getDataContent(applicationContext)
+
+    if (isAuthenticated) {
+      return id
+    } else {
+      return null
+    }
+  }
+
+  getDataChunk(applicationContext, path) {
+    const content = this.getDataContent(applicationContext)
+    return _.get(content, path.join('.'))
+  }
+
+  getDataContent(applicationContext) {
+    return {
+      isAuthenticated: this.app.store.getters['userSourceUser/isAuthenticated'],
+      ...this.app.store.getters['userSourceUser/getUser'],
+    }
+  }
+
+  getDataSchema(applicationContext) {
+    return {
+      type: 'object',
+      properties: {
+        is_authenticated: { title: 'isAuthenticated', type: 'boolean' },
+        id: { type: 'number', title: 'id' },
+        email: { type: 'string', title: 'email' },
+        username: { type: 'string', title: 'username' },
+      },
+    }
   }
 }

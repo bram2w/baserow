@@ -425,6 +425,9 @@
     "formulaInputPlaceholder": "Click to edit the formula",
     "refreshFormulaOptions": "Refresh formula options"
   },
+  "fieldLongTextSubForm": {
+    "enableRichTextFormatting": "Enable rich text formatting"
+  },
   "formulaFieldItemDescription": {
     "syntax": "Syntax",
     "examples": "Examples"
@@ -815,5 +818,16 @@
     "name": "History",
     "empty": "No changes yet. You'll be able to track any changes to this row here.",
     "you": "You"
+  },
+  "fieldPasswordSubForm": {
+    "description": "It's not yet possible to directly do anything with the password field, this is only used by the user authentication in the application builder."
+  },
+  "rowEditFieldPassword": {
+    "setPassword": "Set password"
+  },
+  "rowHistoryFieldPassword": {
+    "passwordSet": "The password was set",
+    "passwordUpdated": "The password was updated",
+    "passwordDeleted": "The password was deleted"
   }
 }

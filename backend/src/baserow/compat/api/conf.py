@@ -4,7 +4,7 @@ from baserow.compat.api.utils import prefix_schema_description_deprecated
 
 # When will `Group` be removed in favor of `Workspace`?
 deprecation_tz = timezone.utc
-GROUP_DEPRECATION = datetime(2024, 3, 1, tzinfo=deprecation_tz)
+GROUP_DEPRECATION = datetime(2024, 4, 1, tzinfo=deprecation_tz)
 
 # Deprecation warnings prefixed to the group endpoint descriptions.
 GROUP_DEPRECATION_PREFIXES = {

@@ -3,6 +3,7 @@
     :style="{
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
+    class="table-element"
   >
     <BaserowTable :fields="element.fields" :rows="rows">
       <template #cell-content="{ field, value }">
@@ -38,6 +39,8 @@ import { uuid } from '@baserow/modules/core/utils/string'
 import { mapActions, mapGetters } from 'vuex'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import _ from 'lodash'
 
 export default {
   name: 'TableElement',
@@ -61,6 +64,7 @@ export default {
       // The first page has been loaded by the data provider at page load already
       currentOffset: this.element.items_per_page,
       resetTimeout: null,
+      errorNotified: false,
     }
   },
   computed: {
@@ -129,6 +133,12 @@ export default {
     collectionFieldTypes() {
       return this.$registry.getAll('collectionField')
     },
+    dispatchContext() {
+      return DataProviderType.getAllDispatchContext(
+        this.$registry.getAll('builderDataProvider'),
+        this.applicationContext
+      )
+    },
   },
   watch: {
     reset() {
@@ -139,6 +149,14 @@ export default {
     },
     'element.items_per_page'() {
       this.debouncedReset()
+    },
+    dispatchContext: {
+      handler(newValue, prevValue) {
+        if (!_.isEqual(newValue, prevValue)) {
+          this.debouncedReset()
+        }
+      },
+      deep: true,
     },
   },
   async mounted() {
@@ -152,22 +170,25 @@ export default {
       clearElementContent: 'elementContent/clearElementContent',
     }),
     async fetchContent(range, replace) {
-      const dispatchContext = DataProviderType.getAllDispatchContext(
-        this.$registry.getAll('builderDataProvider'),
-        this.applicationContext
-      )
-
-      await this.fetchElementContent({
-        element: this.element,
-        dataSource: this.dataSource,
-        data: dispatchContext,
-        range,
-        replace,
-      })
+      try {
+        await this.fetchElementContent({
+          element: this.element,
+          dataSource: this.dataSource,
+          data: this.dispatchContext,
+          range,
+          replace,
+        })
+      } catch (error) {
+        if (!this.errorNotified) {
+          this.errorNotified = true
+          notifyIf(error)
+        }
+      }
     },
     debouncedReset() {
       clearTimeout(this.resetTimeout)
       this.resetTimeout = setTimeout(() => {
+        this.errorNotified = false
         this.currentOffset = 0
         this.loadMore(true)
       }, 500)

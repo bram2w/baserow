@@ -1,0 +1,13 @@
+.field-rich-text {
+  @extend .field-long-text;
+
+  overflow-y: auto;
+
+  &.active {
+    border-color: $palette-blue-500;
+  }
+
+  & .rich-text-editor__content[conteteditable='false'] {
+    background-color: $palette-neutral-700;
+  }
+}

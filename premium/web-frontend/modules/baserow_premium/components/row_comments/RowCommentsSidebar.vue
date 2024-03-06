@@ -85,8 +85,11 @@
           >
             <RichTextEditor
               v-model="comment"
+              editor-class="rich-text-editor__content--comment"
+              :enable-mentions="true"
               :placeholder="$t('rowCommentSidebar.comment')"
-              @entered="postComment()"
+              :enter-stop-edit="true"
+              @stop-edit="postComment()"
             />
           </div>
         </div>

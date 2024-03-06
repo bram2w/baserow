@@ -19,6 +19,7 @@ from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import PostgresLexer
 from pyinstrument import Profiler
+from rest_framework.test import APIRequestFactory
 from sqlparse import format
 
 from baserow.compat.api.conf import GROUP_DEPRECATION
@@ -71,6 +72,15 @@ def api_client():
     from rest_framework.test import APIClient
 
     return APIClient()
+
+
+@pytest.fixture
+def api_request_factory():
+    """
+    Returns an instance of the DRF APIRequestFactory.
+    """
+
+    return APIRequestFactory()
 
 
 @pytest.fixture
@@ -170,6 +180,17 @@ def mutable_builder_data_provider_registry():
 
 
 @pytest.fixture()
+def mutable_user_source_registry():
+    from baserow.core.user_sources.registries import user_source_type_registry
+
+    before = user_source_type_registry.registry.copy()
+    user_source_type_registry.get_for_class.cache_clear()
+    yield user_source_type_registry
+    user_source_type_registry.get_for_class.cache_clear()
+    user_source_type_registry.registry = before
+
+
+@pytest.fixture()
 def mutable_builder_workflow_action_registry():
     from baserow.contrib.builder.workflow_actions.registries import (
         builder_workflow_action_type_registry,
@@ -180,6 +201,69 @@ def mutable_builder_workflow_action_registry():
     yield builder_workflow_action_type_registry
     builder_workflow_action_type_registry.get_for_class.cache_clear()
     builder_workflow_action_type_registry.registry = before
+
+
+@pytest.fixture()
+def stub_user_source_registry(data_fixture, mutable_user_source_registry, fake):
+    from baserow.core.user_sources.registries import UserSourceType
+
+    @contextlib.contextmanager
+    def stubbed_user_source_registry_first_type(
+        authenticate_return=None,
+        get_user_return=None,
+        list_users_return=None,
+        gen_uid_return=None,
+    ):
+        """
+        Replace first user_source type with the stub class
+        """
+
+        from baserow.core.user_sources.registries import user_source_type_registry
+
+        user_source_type = list(mutable_user_source_registry.get_all())[0]
+
+        class StubbedUserSourceType(UserSourceType):
+            type = user_source_type.type
+            model_class = user_source_type.model_class
+
+            def gen_uid(self, user_source):
+                if gen_uid_return:
+                    if callable(gen_uid_return):
+                        return gen_uid_return(user_source)
+                    return gen_uid_return
+
+                return str(fake.uuid4())
+
+            def list_users(self, user_source, count: int = 5, search: str = ""):
+                if list_users_return:
+                    if callable(list_users_return):
+                        return list_users_return(user_source, count, search)
+                    return list_users_return
+
+                return [data_fixture.create_user_source_user(user_source=user_source)]
+
+            def get_user(self, user_source, **kwargs):
+                if get_user_return:
+                    if callable(get_user_return):
+                        return get_user_return(user_source, **kwargs)
+                    return get_user_return
+                return data_fixture.create_user_source_user(user_source=user_source)
+
+            def authenticate(self, user_source, **kwargs):
+                if authenticate_return:
+                    if callable(authenticate_return):
+                        return authenticate_return(user_source, **kwargs)
+                    return authenticate_return
+                return data_fixture.create_user_source_user(user_source=user_source)
+
+        mutable_user_source_registry.registry[
+            user_source_type.type
+        ] = StubbedUserSourceType()
+        user_source_type_registry.get_for_class.cache_clear()
+
+        yield user_source_type_registry
+
+    return stubbed_user_source_registry_first_type
 
 
 @pytest.fixture()
@@ -437,10 +521,12 @@ def bypass_check_permissions(
     """
 
     stub_core_permission_manager = StubbedCorePermissionManagerType()
-    first_manager = django_settings.PERMISSION_MANAGERS[0]
-    mutable_permission_manager_registry.registry[
-        first_manager
-    ] = stub_core_permission_manager
+
+    for perm_manager in django_settings.PERMISSION_MANAGERS:
+        mutable_permission_manager_registry.registry[
+            perm_manager
+        ] = stub_core_permission_manager
+
     yield stub_core_permission_manager
 
 

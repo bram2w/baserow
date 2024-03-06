@@ -22,7 +22,7 @@
           "
         >
           <DropdownItem
-            v-for="field in selectedTable?.fields || []"
+            v-for="field in emailFields"
             :key="field.id"
             :name="field.name"
             :value="field.id"
@@ -45,7 +45,7 @@
           :placeholder="$t('localBaserowUserSourceForm.nameFieldPlaceholder')"
         >
           <DropdownItem
-            v-for="field in selectedTable?.fields || []"
+            v-for="field in nameFields"
             :key="field.id"
             :name="field.name"
             :value="field.id"
@@ -90,6 +90,9 @@ export default {
     }
   },
   computed: {
+    userSourceType() {
+      return this.$registry.get('userSource', 'local_baserow')
+    },
     databases() {
       return this.integration.context_data.databases
     },
@@ -123,6 +126,23 @@ export default {
         }
       }
       return null
+    },
+    fields() {
+      if (!this.selectedTable) {
+        return []
+      } else {
+        return this.selectedTable.fields
+      }
+    },
+    emailFields() {
+      return this.fields.filter(({ type }) =>
+        this.userSourceType.allowedEmailFieldTypes.includes(type)
+      )
+    },
+    nameFields() {
+      return this.fields.filter(({ type }) =>
+        this.userSourceType.allowedNameFieldTypes.includes(type)
+      )
     },
   },
   methods: {

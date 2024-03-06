@@ -9,6 +9,7 @@ import KanbanViewHeader from '@baserow_premium/components/views/kanban/KanbanVie
 import CalendarViewHeader from '@baserow_premium/components/views/calendar/CalendarViewHeader'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
 import PremiumFeatures from '@baserow_premium/features'
+import { isAdhocFiltering } from '@baserow/modules/database/utils/view'
 
 class PremiumViewType extends ViewType {
   getDeactivatedText() {
@@ -70,7 +71,14 @@ export class KanbanViewType extends PremiumViewType {
     return KanbanView
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     // If the single select field is `null` we can't fetch the initial data anyway,
     // we don't have to do anything. The KanbanView component will handle it by
     // showing a form to choose or create a single select field.
@@ -80,23 +88,33 @@ export class KanbanViewType extends PremiumViewType {
       await store.dispatch(storePrefix + 'view/kanban/fetchInitial', {
         kanbanId: view.id,
         singleSelectFieldId: view.single_select_field,
+        adhocFiltering,
       })
     }
   }
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',
     includeFieldOptions = false,
     sourceEvent = null
   ) {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     try {
       await store.dispatch(storePrefix + 'view/kanban/fetchInitial', {
         kanbanId: view.id,
         singleSelectFieldId: view.single_select_field,
         includeFieldOptions,
+        adhocFiltering,
       })
     } catch (error) {
       if (
@@ -263,7 +281,7 @@ export class CalendarViewType extends PremiumViewType {
     return CalendarView
   }
 
-  async fetch({ store }, view, fields, storePrefix = '') {
+  async fetch({ store }, database, view, fields, storePrefix = '') {
     await store.dispatch(storePrefix + 'view/calendar/resetAndFetchInitial', {
       calendarId: view.id,
       dateFieldId: view.date_field,
@@ -273,6 +291,7 @@ export class CalendarViewType extends PremiumViewType {
 
   async refresh(
     { store },
+    database,
     view,
     fields,
     storePrefix = '',

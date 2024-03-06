@@ -26,7 +26,7 @@ export default {
     }
   },
   mounted() {
-    Object.assign(this.values, this.values, this.getDefaultValues())
+    this.values = Object.assign({}, this.values, this.getDefaultValues())
   },
   watch: {
     values: {
@@ -132,7 +132,8 @@ export default {
      * calling the submitted event.
      */
     getFormValues() {
-      return Object.assign({}, this.values, this.getChildFormsValues())
+      const result = Object.assign({}, this.values, this.getChildFormsValues())
+      return result
     },
     /**
      * Returns an object containing the values of the child forms.

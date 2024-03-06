@@ -148,6 +148,10 @@ export default ({ service, customPopulateRow }) => {
     requestSize: 100,
     // The current view id.
     viewId: -1,
+    // If true, ad hoc filtering is used instead of persistent one
+    adhocFiltering: false,
+    // If true, ad hoc sorting is used
+    adhocSorting: false,
     // Indicates whether the store is currently fetching another batch of rows.
     fetching: false,
     // A list of all the rows in the table. The ones that haven't been fetched yet
@@ -266,6 +270,12 @@ export default ({ service, customPopulateRow }) => {
       const currentValue = row._.metadata[rowMetadataType]
       Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
     },
+    SET_ADHOC_FILTERING(state, adhocFiltering) {
+      state.adhocFiltering = adhocFiltering
+    },
+    SET_ADHOC_SORTING(state, adhocSorting) {
+      state.adhocSorting = adhocSorting
+    },
   }
 
   const actions = {
@@ -276,13 +286,16 @@ export default ({ service, customPopulateRow }) => {
      */
     async fetchInitialRows(
       context,
-      { viewId, fields, initialRowArguments = {} }
+      { viewId, fields, adhocFiltering, adhocSorting, initialRowArguments = {} }
     ) {
       const { commit, getters, rootGetters } = context
       commit('SET_VIEW_ID', viewId)
       commit('SET_SEARCH', {
         activeSearchTerm: '',
       })
+      commit('SET_ADHOC_FILTERING', adhocFiltering)
+      commit('SET_ADHOC_SORTING', adhocSorting)
+      const view = rootGetters['view/get'](viewId)
       const { data } = await service(this.$client).fetchRows({
         viewId,
         offset: 0,
@@ -291,8 +304,8 @@ export default ({ service, customPopulateRow }) => {
         searchMode: getDefaultSearchModeFromEnv(this.$config),
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-        orderBy: getOrderBy(rootGetters, getters.getViewId),
-        filters: getFilters(rootGetters, getters.getViewId),
+        orderBy: getOrderBy(view, adhocSorting),
+        filters: getFilters(view, adhocFiltering),
         ...initialRowArguments,
       })
       const rows = Array(data.count).fill(null)
@@ -351,6 +364,8 @@ export default ({ service, customPopulateRow }) => {
         return
       }
 
+      const view = rootGetters['view/get'](getters.getViewId)
+
       // We can only make one request at the same time, so we're going to set the
       // fetching state to `true` to prevent multiple requests being fired
       // simultaneously.
@@ -366,8 +381,8 @@ export default ({ service, customPopulateRow }) => {
           searchMode: getDefaultSearchModeFromEnv(this.$config),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-          orderBy: getOrderBy(rootGetters, getters.getViewId),
-          filters: getFilters(rootGetters, getters.getViewId),
+          orderBy: getOrderBy(view, getters.getAdhocSorting),
+          filters: getFilters(view, getters.getAdhocFiltering),
         })
         commit('UPDATE_ROWS', {
           offset: rangeToFetch.offset,
@@ -399,8 +414,10 @@ export default ({ service, customPopulateRow }) => {
      */
     async refresh(
       { dispatch, commit, getters, rootGetters },
-      { fields, includeFieldOptions = false }
+      { fields, adhocFiltering, adhocSorting, includeFieldOptions = false }
     ) {
+      commit('SET_ADHOC_FILTERING', adhocFiltering)
+      commit('SET_ADHOC_SORTING', adhocSorting)
       // If another refresh or fetch request is currently running, we need to cancel
       // it because the response is most likely going to be outdated and we don't
       // need it anymore.
@@ -409,7 +426,7 @@ export default ({ service, customPopulateRow }) => {
       }
 
       lastRequestController = new AbortController()
-
+      const view = rootGetters['view/get'](getters.getViewId)
       try {
         // We first need to fetch the count of all rows because we need to know how
         // many rows there are in total to estimate what are new visible range it
@@ -424,7 +441,7 @@ export default ({ service, customPopulateRow }) => {
           searchMode: getDefaultSearchModeFromEnv(this.$config),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-          filters: getFilters(rootGetters, getters.getViewId),
+          filters: getFilters(view, adhocFiltering),
         })
 
         // Create a new empty array containing un-fetched rows.
@@ -468,8 +485,8 @@ export default ({ service, customPopulateRow }) => {
             searchMode: getDefaultSearchModeFromEnv(this.$config),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
-            orderBy: getOrderBy(rootGetters, getters.getViewId),
-            filters: getFilters(rootGetters, getters.getViewId),
+            orderBy: getOrderBy(view, adhocSorting),
+            filters: getFilters(view, adhocFiltering),
           })
 
           results.forEach((row, index) => {
@@ -1077,6 +1094,12 @@ export default ({ service, customPopulateRow }) => {
     },
     isHidingRowsNotMatchingSearch(state) {
       return true
+    },
+    getAdhocFiltering(state) {
+      return state.adhocFiltering
+    },
+    getAdhocSorting(state) {
+      return state.adhocSorting
     },
   }
 

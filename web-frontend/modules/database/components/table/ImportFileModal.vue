@@ -3,7 +3,6 @@
     :right-sidebar="!isTableCreation"
     :right-sidebar-scrollable="true"
     :close-button="false"
-    :full-screen="dataLoaded && !isTableCreation"
     :content-scrollable="true"
     @show=";[(importer = ''), reset()]"
     @hide="stopPollIfRunning()"
@@ -26,7 +25,7 @@
         </div>
       </div>
 
-      <div v-if="!dataLoaded" class="control">
+      <div class="control">
         <label class="control__label">
           {{ $t('importFileModal.importLabel') }}
         </label>
@@ -130,14 +129,6 @@
           :status="humanReadableState"
         />
         <div class="align-right">
-          <button
-            v-if="dataLoaded && !(jobIsFinished || importInProgress)"
-            class="button button--large button--ghost margin-right-1"
-            @click=";[(importer = ''), reset()]"
-          >
-            <i class="button__icon iconoir-arrow-left"></i>
-            {{ $t('action.back') }}
-          </button>
           <button
             class="button button--large"
             :class="{
@@ -466,7 +457,7 @@ export default {
           return [index, foundField ? foundField.id : 0]
         })
       )
-      this.dataLoaded = true
+      this.dataLoaded = header.length > 0 || previewData.length > 0
     },
     onGetData(getData) {
       this.getData = getData

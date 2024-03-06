@@ -1,5 +1,33 @@
 # Changelog
 
+## Released 1.23.0
+
+### New features
+* Introduced new password field type. [#2123](https://gitlab.com/baserow/baserow/-/issues/2123)
+* Support ad hoc filtering in grid view for editor roles and lower [#2329](https://gitlab.com/baserow/baserow/-/issues/2329)
+* Support ad hoc sorting in grid and gallery views [#2361](https://gitlab.com/baserow/baserow/-/issues/2361)
+* Add ad hoc filtering support for editor and lower for gallery and kanban views [#2375](https://gitlab.com/baserow/baserow/-/issues/2375)
+* Add rich text formatting and Markdown support to the long text field. [#622](https://gitlab.com/baserow/baserow/-/issues/622)
+
+### Bug fixes
+* Fix the number of workspaces in the admin dashboard. [#1195](https://gitlab.com/baserow/baserow/-/issues/1195)
+* File import will now ignore spaces around text values [#2305](https://gitlab.com/baserow/baserow/-/issues/2305)
+* Resolve the issue where table import options vanish upon interacting with the form that displays these options, disrupting the table import process. [#2326](https://gitlab.com/baserow/baserow/-/issues/2326)
+* Fix bug blocking grid view access after creating a lookup to a duration field. [#2333](https://gitlab.com/baserow/baserow/-/issues/2333)
+* Adjusted the title height in the row modal to accommodate long text. [#2334](https://gitlab.com/baserow/baserow/-/issues/2334)
+* Fix a bug blocking users to add row color conditions if the primary field has no compatible filters. [#2341](https://gitlab.com/baserow/baserow/-/issues/2341)
+* Use the correct `get_human_readable_value` when creating row related notifications. [#2345](https://gitlab.com/baserow/baserow/-/issues/2345)
+* Return an empty body instead of a string with a HTTP 204 status code [#2348](https://gitlab.com/baserow/baserow/-/issues/2348)
+* Prevent editor and lower roles from creating aggregations [#2369](https://gitlab.com/baserow/baserow/-/issues/2369)
+* Sanitize filter values to remove nul characters [#2398](https://gitlab.com/baserow/baserow/-/issues/2398)
+* Fix bug where the period field update can result in a deadlock when it has multiple dependencies.
+
+### Refactors
+* Optimize usage counters tasks to run only for updated tables. [#1297](https://gitlab.com/baserow/baserow/-/issues/1297)
+* Refactored cache clearing logic to target only dynamic models, preserving the global cache for all models.
+* Update axios and posthog-jw frontend libraries
+
+
 ## Released 1.22.3
 
 ### New features

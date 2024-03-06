@@ -11,7 +11,7 @@
 
 <script>
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
-import ThemeProvider from '@baserow/modules/builder/components/theme/ThemeProvider.vue'
+import ThemeProvider from '@baserow/modules/builder/components/theme/ThemeProvider'
 
 export default {
   components: { ThemeProvider, PageElement },

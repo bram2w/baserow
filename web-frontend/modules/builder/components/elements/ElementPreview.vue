@@ -1,5 +1,6 @@
 <template>
   <div
+    :key="element.id"
     class="element-preview"
     :class="{
       'element-preview--active': isSelected,
@@ -7,7 +8,11 @@
       'element-preview--in-error': inError,
       'element-preview--first-element': isFirstElement,
     }"
+    tabindex="0"
     @click="onSelect"
+    @keyup.d.stop="duplicateElement"
+    @keyup.delete.stop="deleteElement"
+    @keyup.p.stop="selectParentElement"
   >
     <InsertElementButton
       v-show="isSelected"
@@ -26,12 +31,7 @@
       @select-parent="actionSelectElement({ element: parentElement })"
     />
 
-    <PageElement
-      v-if="isRootElement"
-      :element="element"
-      :mode="mode"
-    ></PageElement>
-    <PageElement v-else :element="element" :mode="mode" />
+    <PageElement :element="element" :mode="mode" class="element--read-only" />
 
     <InsertElementButton
       v-show="isSelected"
@@ -105,6 +105,16 @@ export default {
     return {
       isDuplicating: false,
     }
+  },
+  watch: {
+    /**
+     * Focuses the element if the element has been selected.
+     */
+    isSelected(newValue, old) {
+      if (newValue && !old) {
+        this.$el.focus()
+      }
+    },
   },
   computed: {
     ...mapGetters({
@@ -216,6 +226,11 @@ export default {
         })
       } catch (error) {
         notifyIf(error)
+      }
+    },
+    selectParentElement() {
+      if (this.parentElement) {
+        this.actionSelectElement({ element: this.parentElement })
       }
     },
   },

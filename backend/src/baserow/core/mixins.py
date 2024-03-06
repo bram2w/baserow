@@ -338,7 +338,7 @@ class WithRegistry:
     def get_type(self) -> Instance:
         """Returns the type for this model instance"""
 
-        return self.get_type_registry().get_by_model(self)
+        return self.get_type_registry().get_by_model(self.specific_class)
 
 
 class CreatedAndUpdatedOnMixin(models.Model):

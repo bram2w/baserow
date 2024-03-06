@@ -5,6 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 
 import pytest
+from pytest_unordered import unordered
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
@@ -124,55 +125,66 @@ def test_workspace_created(mock_broadcast_to_workspace, data_fixture):
 @patch("baserow.ws.signals.broadcast_to_users")
 @pytest.mark.websockets
 def test_workspace_restored(mock_broadcast_to_users, data_fixture):
-    user = data_fixture.create_user()
+    admin_user = data_fixture.create_user()
     member_user = data_fixture.create_user()
     # This user should not be sent the restore signal
     not_included_user = data_fixture.create_user()
     workspace = data_fixture.create_workspace()
     workspace_user = data_fixture.create_user_workspace(
-        user=user, workspace=workspace, permissions=WORKSPACE_USER_PERMISSION_ADMIN
+        user=admin_user,
+        workspace=workspace,
+        permissions=WORKSPACE_USER_PERMISSION_ADMIN,
     )
     member_workspace_user = data_fixture.create_user_workspace(
         user=member_user,
         workspace=workspace,
         permissions=WORKSPACE_USER_PERMISSION_MEMBER,
     )
-    database = data_fixture.create_database_application(user=user, workspace=workspace)
-    TrashHandler.trash(user, workspace, None, workspace)
+    database = data_fixture.create_database_application(
+        user=admin_user, workspace=workspace
+    )
+    TrashHandler.trash(admin_user, workspace, None, workspace)
 
-    TrashHandler.restore_item(user, "workspace", workspace.id)
+    TrashHandler.restore_item(admin_user, "workspace", workspace.id)
 
     args = mock_broadcast_to_users.delay.call_args_list
-    assert len(args) == 2
-    member_call = args[1][0]
-    admin_call = args[0][0]
-    assert member_call[0] == [member_user.id]
-    assert member_call[1]["type"] == "group_restored"
-    # GroupDeprecation
-    assert member_call[1]["group"]["id"] == member_workspace_user.workspace_id
-    assert member_call[1]["group"]["permissions"] == "MEMBER"
-    assert member_call[1]["workspace"]["id"] == member_workspace_user.workspace_id
-    assert member_call[1]["workspace"]["permissions"] == "MEMBER"
-    expected_workspace_json = {
+    expected_database_json = {
         "id": database.id,
         "name": database.name,
         "order": 0,
         "type": "database",
-        "group": {"id": workspace.id, "name": workspace.name},  # GroupDeprecation
+        "group": {
+            "id": workspace.id,
+            "name": workspace.name,
+        },  # GroupDeprecation
         "workspace": {"id": workspace.id, "name": workspace.name},
         "tables": [],
     }
-    assert member_call[1]["applications"] == [expected_workspace_json]
-    assert admin_call[0] == [user.id]
-    assert admin_call[1]["type"] == "group_restored"
+    assert len(args) == 2
+    call_1 = args[1][0]
+    call_2 = args[0][0]
+    assert [call_1[0], call_2[0]] == unordered([[member_user.id], [admin_user.id]])
+    permissions = unordered(["MEMBER", "ADMIN"])
+    assert [
+        call_1[1]["group"]["permissions"],
+        call_2[1]["group"]["permissions"],
+    ] == permissions
+    assert [
+        call_1[1]["workspace"]["permissions"],
+        call_2[1]["workspace"]["permissions"],
+    ] == permissions
+
+    assert call_1[1]["type"] == "group_restored"
     # GroupDeprecation
-    assert admin_call[1]["group"]["id"] == workspace_user.workspace_id
-    assert admin_call[1]["group"]["permissions"] == "ADMIN"
-    assert admin_call[1]["group"]["id"] == workspace_user.workspace_id
-    assert admin_call[1]["workspace"]["id"] == workspace_user.workspace_id
-    assert admin_call[1]["workspace"]["permissions"] == "ADMIN"
-    assert admin_call[1]["workspace"]["id"] == workspace_user.workspace_id
-    assert admin_call[1]["applications"] == [expected_workspace_json]
+    assert call_1[1]["group"]["id"] == member_workspace_user.workspace_id
+    assert call_1[1]["workspace"]["id"] == member_workspace_user.workspace_id
+    assert call_1[1]["applications"] == [expected_database_json]
+
+    assert call_2[1]["type"] == "group_restored"
+    # GroupDeprecation
+    assert call_2[1]["group"]["id"] == workspace_user.workspace_id
+    assert call_2[1]["workspace"]["id"] == workspace_user.workspace_id
+    assert call_2[1]["applications"] == [expected_database_json]
 
 
 @pytest.mark.django_db(transaction=True)

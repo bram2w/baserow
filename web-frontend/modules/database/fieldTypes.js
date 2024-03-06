@@ -24,13 +24,16 @@ import FieldAutonumberSubForm from '@baserow/modules/database/components/field/F
 import FieldDurationSubForm from '@baserow/modules/database/components/field/FieldDurationSubForm'
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
+import FieldLongTextSubForm from '@baserow/modules/database/components/field/FieldLongTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 import FieldCollaboratorSubForm from '@baserow/modules/database/components/field/FieldCollaboratorSubForm'
+import FieldPasswordSubForm from '@baserow/modules/database/components/field/FieldPasswordSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
+import GridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldRichText'
 import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL'
 import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/fields/GridViewFieldEmail'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkRow'
@@ -48,10 +51,12 @@ import GridViewFieldMultipleCollaborators from '@baserow/modules/database/compon
 import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
 import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
 import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
+import GridViewFieldPassword from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPassword'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
+import FunctionalGridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRichText'
 import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
 import FunctionalGridViewFieldRating from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRating'
@@ -66,9 +71,11 @@ import FunctionalGridViewFieldURL from '@baserow/modules/database/components/vie
 import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
 import FunctionalGridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber'
 import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
+import FunctionalGridVIewFieldPassword from '@baserow/modules/database/components/view/grid/fields/FunctionalGridVIewFieldPassword.vue'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
+import RowEditFieldRichText from '@baserow/modules/database/components/row/RowEditFieldRichText'
 import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
 import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
@@ -86,6 +93,7 @@ import RowEditFieldMultipleCollaborators from '@baserow/modules/database/compone
 import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
 import RowEditFieldAutonumber from '@baserow/modules/database/components/row/RowEditFieldAutonumber'
 import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
+import RowEditFieldPassword from '@baserow/modules/database/components/row/RowEditFieldPassword'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -100,13 +108,16 @@ import RowCardFieldRating from '@baserow/modules/database/components/card/RowCar
 import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
 import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
+import RowCardFieldRichText from '@baserow/modules/database/components/card/RowCardFieldRichText'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
 import RowCardFieldAutonumber from '@baserow/modules/database/components/card/RowCardFieldAutonumber'
 import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
+import RowCardFieldPassword from '@baserow/modules/database/components/card/RowCardFieldPassword'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
+import RowHistoryFieldRichText from '@baserow/modules/database/components/row/RowHistoryFieldRichText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
 import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
 import RowHistoryFieldDuration from '@baserow/modules/database/components/row/RowHistoryFieldDuration'
@@ -116,6 +127,7 @@ import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/
 import RowHistoryFieldSingleSelect from '@baserow/modules/database/components/row/RowHistoryFieldSingleSelect'
 import RowHistoryFieldBoolean from '@baserow/modules/database/components/row/RowHistoryFieldBoolean'
 import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/RowHistoryFieldLinkRow'
+import RowHistoryFieldPassword from '@baserow/modules/database/components/row/RowHistoryFieldPassword'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
@@ -170,7 +182,7 @@ export class FieldType extends Registerable {
    * example if we are creating a number fields this component should contain
    * the inputs to choose of it is an integer of decimal.
    */
-  getFormComponent() {
+  getFormComponent(field) {
     return null
   }
 
@@ -179,7 +191,7 @@ export class FieldType extends Registerable {
    * type. It will only be used in the grid view and it also responsible for editing
    * the value.
    */
-  getGridViewFieldComponent() {
+  getGridViewFieldComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -192,7 +204,7 @@ export class FieldType extends Registerable {
    * components are much faster. When a user clicks on the cell it will be replaced
    * with the real component.
    */
-  getFunctionalGridViewFieldComponent() {
+  getFunctionalGridViewFieldComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -234,7 +246,7 @@ export class FieldType extends Registerable {
    * This component should represent the field's value in a row card display. To
    * improve performance, this component should be a functional component.
    */
-  getCardComponent() {
+  getCardComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -245,8 +257,8 @@ export class FieldType extends Registerable {
    * improve performance, this component should be a functional component. The card
    * component almost always compatible here, so we're returning that one by default.
    */
-  getGroupByComponent() {
-    return this.getCardComponent()
+  getGroupByComponent(field) {
+    return this.getCardComponent(field)
   }
 
   /**
@@ -263,7 +275,7 @@ export class FieldType extends Registerable {
    * different height in the card, it must be returned here.
    */
   getCardValueHeight(field) {
-    return this.getCardComponent().height || 0
+    return this.getCardComponent(field).height || 0
   }
 
   /**
@@ -847,24 +859,48 @@ export class LongTextFieldType extends FieldType {
     return i18n.t('fieldType.longText')
   }
 
-  getGridViewFieldComponent() {
-    return GridViewFieldLongText
+  getFormComponent() {
+    return FieldLongTextSubForm
   }
 
-  getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldLongText
+  getGridViewFieldComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return GridViewFieldRichText
+    } else {
+      return GridViewFieldLongText
+    }
+  }
+
+  getFunctionalGridViewFieldComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return FunctionalGridViewFieldRichText
+    } else {
+      return FunctionalGridViewFieldLongText
+    }
   }
 
   getRowEditFieldComponent(field) {
-    return RowEditFieldLongText
+    if (field?.long_text_enable_rich_text) {
+      return RowEditFieldRichText
+    } else {
+      return RowEditFieldLongText
+    }
   }
 
-  getCardComponent() {
-    return RowCardFieldText
+  getCardComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return RowCardFieldRichText
+    } else {
+      return RowCardFieldText
+    }
   }
 
-  getRowHistoryEntryComponent() {
-    return RowHistoryFieldText
+  getRowHistoryEntryComponent(field) {
+    if (field?.long_text_enable_rich_text) {
+      return RowHistoryFieldRichText
+    } else {
+      return RowHistoryFieldText
+    }
   }
 
   getEmptyValue(field) {
@@ -913,7 +949,7 @@ export class LongTextFieldType extends FieldType {
   }
 
   getCanGroupByInView(field) {
-    return true
+    return !field.long_text_enable_rich_text
   }
 }
 
@@ -4011,5 +4047,87 @@ export class AutonumberFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
+  }
+}
+
+export class PasswordFieldType extends FieldType {
+  static getType() {
+    return 'password'
+  }
+
+  getIconClass() {
+    return 'iconoir-lock'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.password')
+  }
+
+  getFormComponent() {
+    return FieldPasswordSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldPassword
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridVIewFieldPassword
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldPassword
+  }
+
+  getCardComponent() {
+    return RowCardFieldPassword
+  }
+
+  getDocsDataType(field) {
+    return 'bool'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.password')
+  }
+
+  getDocsRequestExample(field) {
+    return 'true'
+  }
+
+  getCanSortInView(field) {
+    return false
+  }
+
+  getValidationError(field, value) {
+    if (value === null) {
+      return null
+    }
+
+    const stringValue = value.toString()
+    if (stringValue.length < 1) {
+      return this.app.i18n.t('fieldErrors.minChars', { min: 1 })
+    }
+    if (stringValue.length > 128) {
+      return this.app.i18n.t('fieldErrors.maxChars', { max: 128 })
+    }
+    return null
+  }
+
+  prepareValueForCopy(field, value) {
+    return ''
+  }
+
+  getCanBePrimaryField() {
+    return false
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return value ? '••••••••••' : ''
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldPassword
   }
 }

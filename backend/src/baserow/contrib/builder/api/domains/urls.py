@@ -1,16 +1,18 @@
 from django.urls import re_path
 
+from baserow.contrib.builder.api.domains.public_views import (
+    PublicBuilderByDomainNameView,
+    PublicBuilderByIdView,
+    PublicBuilderWorkflowActionsView,
+    PublicDataSourcesView,
+    PublicElementsView,
+)
 from baserow.contrib.builder.api.domains.views import (
     AskPublicBuilderDomainExistsView,
     AsyncPublishDomainView,
     DomainsView,
     DomainView,
     OrderDomainsView,
-    PublicBuilderByDomainNameView,
-    PublicBuilderByIdView,
-    PublicBuilderWorkflowActionsView,
-    PublicDataSourcesView,
-    PublicElementsView,
 )
 
 app_name = "baserow.contrib.builder.api.domains"

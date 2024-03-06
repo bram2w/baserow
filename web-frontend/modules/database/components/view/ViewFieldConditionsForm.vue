@@ -22,6 +22,7 @@
           :ref="`condition-${filter.id}`"
           :filter="filter"
           :view="view"
+          :is-public-view="isPublicView"
           :fields="fields"
           :disable-filter="disableFilter"
           :read-only="readOnly"
@@ -30,6 +31,9 @@
         >
           <template #filterInputComponent="{ slotProps }">
             <slot name="filterInputComponent" :slot-props="slotProps"></slot>
+          </template>
+          <template #afterValueInput="{ slotProps }">
+            <slot name="afterValueInput" :slot-props="slotProps"></slot>
           </template>
         </ViewFieldConditionItem>
       </div>
@@ -68,6 +72,7 @@
                 :ref="`condition-${filter.id}`"
                 :filter="filter"
                 :view="view"
+                :is-public-view="isPublicView"
                 :fields="fields"
                 :disable-filter="disableFilter"
                 :read-only="readOnly"
@@ -79,6 +84,9 @@
                     name="filterInputComponent"
                     :slot-props="slotProps"
                   ></slot>
+                </template>
+                <template #afterValueInput="{ slotProps }">
+                  <slot name="afterValueInput" :slot-props="slotProps"></slot>
                 </template>
               </ViewFieldConditionItem>
             </div>
@@ -192,6 +200,11 @@ export default {
       required: false,
       default: () => {},
     },
+    isPublicView: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     readOnly: {
       type: Boolean,
       required: true,
@@ -215,6 +228,18 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    /*
+     * Allows the parent component to provide a function that will be called
+     * when a filter is updated. This is useful for components that need to
+     * do additional processing when a filter is updated.
+     */
+    prepareValue: {
+      type: Function,
+      required: false,
+      default: (value, filter, field, filterType) => {
+        return filterType.prepareValue(value, field, true)
+      },
     },
   },
   data() {
@@ -329,7 +354,8 @@ export default {
       ) {
         const filterType = this.$registry.get('viewFilter', type)
         const field = this.fields.find(({ id }) => id === fieldId)
-        values.value = filterType.prepareValue(value, field, true)
+
+        values.value = this.prepareValue(value, filter, field, filterType)
       }
 
       this.$emit('updateFilter', { filter, values })

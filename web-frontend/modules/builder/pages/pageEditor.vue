@@ -22,6 +22,9 @@ import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import _ from 'lodash'
+
+const mode = 'editing'
 
 export default {
   name: 'PageEditor',
@@ -30,9 +33,28 @@ export default {
     return {
       builder: this.builder,
       page: this.page,
-      mode: 'editing',
+      mode,
       formulaComponent: ApplicationBuilderFormulaInputGroup,
     }
+  },
+  /**
+   * When the route isupdate we want to unselect the element
+   */
+  beforeRouteUpdate(to, from, next) {
+    // Unselect previously selected element
+    this.$store.dispatch(
+      'element/select',
+      {
+        element: null,
+      },
+      { root: true }
+    )
+    if (from.params.builderId !== to.params?.builderId) {
+      // When we switch from one application to another we want to logoff the current
+      // user
+      this.$store.dispatch('userSourceUser/logoff')
+    }
+    next()
   },
   /**
    * When the user leaves to another page we want to unselect the selected page. This
@@ -40,6 +62,15 @@ export default {
    */
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch('page/unselect')
+    // Unselect previously selected element
+    this.$store.dispatch(
+      'element/select',
+      {
+        element: null,
+      },
+      { root: true }
+    )
+    this.$store.dispatch('userSourceUser/logoff')
     next()
   },
   layout: 'app',
@@ -67,7 +98,7 @@ export default {
       await DataProviderType.initAll($registry.getAll('builderDataProvider'), {
         builder,
         page,
-        mode: 'editing',
+        mode,
       })
 
       // And finally select the page to display it
@@ -94,7 +125,7 @@ export default {
       return {
         builder: this.builder,
         page: this.page,
-        mode: 'editing',
+        mode,
       }
     },
     dataSources() {
@@ -128,14 +159,16 @@ export default {
       /**
        * Update data source content on backend context changes
        */
-      handler(newBackendContext) {
-        this.$store.dispatch(
-          'dataSourceContent/debouncedFetchPageDataSourceContent',
-          {
-            page: this.page,
-            data: newBackendContext,
-          }
-        )
+      handler(newDispatchContext, oldDispatchContext) {
+        if (!_.isEqual(newDispatchContext, oldDispatchContext)) {
+          this.$store.dispatch(
+            'dataSourceContent/debouncedFetchPageDataSourceContent',
+            {
+              page: this.page,
+              data: newDispatchContext,
+            }
+          )
+        }
       },
     },
   },

@@ -5,6 +5,7 @@ from baserow.contrib.database.views.usage_types import FormViewWorkspaceStorageU
 from baserow.core.models import Workspace
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.usage.handler import UsageHandler
+from baserow.core.usage.registries import USAGE_UNIT_MB
 
 
 @pytest.mark.django_db
@@ -18,8 +19,8 @@ def test_form_view_workspace_storage_usage_item(data_fixture):
 
     assert usage == 0
 
-    cover_image = data_fixture.create_user_file(is_image=True, size=200)
-    logo_image = data_fixture.create_user_file(is_image=True, size=400)
+    cover_image = data_fixture.create_user_file(is_image=True, size=2 * USAGE_UNIT_MB)
+    logo_image = data_fixture.create_user_file(is_image=True, size=4 * USAGE_UNIT_MB)
 
     data_fixture.create_form_view(
         table=table,
@@ -29,7 +30,7 @@ def test_form_view_workspace_storage_usage_item(data_fixture):
 
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
 
-    assert usage == 600
+    assert usage == 6
 
 
 @pytest.mark.django_db
@@ -38,8 +39,8 @@ def test_form_view_workspace_storage_usage_item_trashed_database(data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
-    cover_image = data_fixture.create_user_file(is_image=True, size=200)
-    logo_image = data_fixture.create_user_file(is_image=True, size=400)
+    cover_image = data_fixture.create_user_file(is_image=True, size=2 * USAGE_UNIT_MB)
+    logo_image = data_fixture.create_user_file(is_image=True, size=4 * USAGE_UNIT_MB)
 
     data_fixture.create_form_view(
         table=table,
@@ -49,7 +50,7 @@ def test_form_view_workspace_storage_usage_item_trashed_database(data_fixture):
 
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
 
-    assert usage == 600
+    assert usage == 6
 
     TrashHandler().trash(user, workspace, database, database)
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
@@ -62,8 +63,8 @@ def test_form_view_workspace_storage_usage_item_trashed_table(data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
-    cover_image = data_fixture.create_user_file(is_image=True, size=200)
-    logo_image = data_fixture.create_user_file(is_image=True, size=400)
+    cover_image = data_fixture.create_user_file(is_image=True, size=2 * USAGE_UNIT_MB)
+    logo_image = data_fixture.create_user_file(is_image=True, size=4 * USAGE_UNIT_MB)
 
     data_fixture.create_form_view(
         table=table,
@@ -73,7 +74,7 @@ def test_form_view_workspace_storage_usage_item_trashed_table(data_fixture):
 
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
 
-    assert usage == 600
+    assert usage == 6
 
     TrashHandler().trash(user, workspace, database, table)
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
@@ -87,7 +88,7 @@ def test_form_view_workspace_storage_usage_item_duplicate_ids(data_fixture):
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
 
-    image = data_fixture.create_user_file(is_image=True, size=200)
+    image = data_fixture.create_user_file(is_image=True, size=2 * USAGE_UNIT_MB)
 
     data_fixture.create_form_view(
         table=table,
@@ -97,7 +98,7 @@ def test_form_view_workspace_storage_usage_item_duplicate_ids(data_fixture):
 
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
 
-    assert usage == 200  # Instead of 400
+    assert usage == 2  # Instead of 4
 
 
 @pytest.mark.django_db
@@ -109,8 +110,8 @@ def test_form_view_workspace_storage_usage_item_duplicate_ids_within_image_categ
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
 
-    cover_image = data_fixture.create_user_file(is_image=True, size=200)
-    logo_image = data_fixture.create_user_file(is_image=True, size=400)
+    cover_image = data_fixture.create_user_file(is_image=True, size=2 * USAGE_UNIT_MB)
+    logo_image = data_fixture.create_user_file(is_image=True, size=4 * USAGE_UNIT_MB)
 
     data_fixture.create_form_view(
         table=table,
@@ -126,7 +127,7 @@ def test_form_view_workspace_storage_usage_item_duplicate_ids_within_image_categ
 
     usage = FormViewWorkspaceStorageUsageItem().calculate_storage_usage(workspace.id)
 
-    assert usage == 600  # Instead of 1200
+    assert usage == 6  # Instead of 12
 
 
 @pytest.mark.django_db
@@ -143,8 +144,12 @@ def test_form_view_workspace_storage_usage_item_performance(data_fixture):
     table = data_fixture.create_database_table(user=user, database=database)
 
     for i in range(form_views_amount):
-        cover_image = data_fixture.create_user_file(is_image=True, size=200)
-        logo_image = data_fixture.create_user_file(is_image=True, size=400)
+        cover_image = data_fixture.create_user_file(
+            is_image=True, size=2 * USAGE_UNIT_MB
+        )
+        logo_image = data_fixture.create_user_file(
+            is_image=True, size=4 * USAGE_UNIT_MB
+        )
 
         data_fixture.create_form_view(
             table=table,
@@ -159,7 +164,7 @@ def test_form_view_workspace_storage_usage_item_performance(data_fixture):
 
     print(profiler.output_text(unicode=True, color=True))
 
-    assert usage == form_views_amount * 600
+    assert usage == form_views_amount * 6
 
 
 @pytest.mark.django_db
@@ -175,7 +180,7 @@ def test_get_workspace_row_count_annotation_sums_all_database_tables_row_counts(
     # One with a mix of tables with and without the count
     database = data_fixture.create_database_application(workspace=workspace)
     data_fixture.create_database_table(user=user, database=database, row_count=10)
-    data_fixture.create_database_table(user=user, database=database, row_count=None)
+    data_fixture.create_database_table(user=user, database=database)
 
     # One with a single table
     database_single_table = data_fixture.create_database_application(
@@ -195,7 +200,7 @@ def test_get_workspace_row_count_annotation_sums_all_database_tables_row_counts(
     )
 
     annotated_workspaces = Workspace.objects.annotate(
-        row_count=UsageHandler().get_workspace_row_count_annotation()
+        row_count=UsageHandler.get_workspace_row_count_annotation()
     )
     with django_assert_num_queries(1):
         assert list(annotated_workspaces.values("id", "row_count")) == [
@@ -215,10 +220,10 @@ def test_get_workspace_row_count_annotation_ignores_trashed_databases(
         workspace=workspace, trashed=True
     )
     data_fixture.create_database_table(user=user, database=database, row_count=10)
-    data_fixture.create_database_table(user=user, database=database, row_count=None)
+    data_fixture.create_database_table(user=user, database=database)
 
     annotated_workspaces = Workspace.objects.annotate(
-        row_count=UsageHandler().get_workspace_row_count_annotation()
+        row_count=UsageHandler.get_workspace_row_count_annotation()
     )
     with django_assert_num_queries(1):
         assert list(annotated_workspaces.values("id", "row_count")) == [
@@ -235,13 +240,13 @@ def test_get_workspace_row_count_annotation_ignores_trashed_tables(
 
     database = data_fixture.create_database_application(workspace=workspace)
     data_fixture.create_database_table(user=user, database=database, row_count=10)
-    data_fixture.create_database_table(user=user, database=database, row_count=None)
+    data_fixture.create_database_table(user=user, database=database)
     data_fixture.create_database_table(
         user=user, database=database, row_count=20, trashed=True
     )
 
     annotated_workspaces = Workspace.objects.annotate(
-        row_count=UsageHandler().get_workspace_row_count_annotation()
+        row_count=UsageHandler.get_workspace_row_count_annotation()
     )
     with django_assert_num_queries(1):
         assert list(annotated_workspaces.values("id", "row_count")) == [

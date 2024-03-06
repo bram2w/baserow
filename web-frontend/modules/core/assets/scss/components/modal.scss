@@ -22,7 +22,7 @@
   &.modal__box--with-sidebar {
     display: flex;
     padding: 0;
-    max-width: 860px;
+    max-width: 960px;
   }
 
   &.modal__box--full-screen {
@@ -48,6 +48,13 @@
   &.modal__box--tiny {
     max-width: 320px;
     padding: 15px;
+  }
+
+  &.modal__box--right {
+    margin-right: 20px;
+    @media (max-width: 720px) {
+      max-width: calc(100% - 50px);
+    }
   }
 
   .box__title {

@@ -1,12 +1,14 @@
 from datetime import timedelta
 from typing import Optional
 
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.serializers import SkipField, empty
 
 from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
 from baserow.api.user_files.validators import user_file_name_validator
@@ -307,3 +309,16 @@ class DurationFieldSerializer(serializers.Field):
             return value
         else:
             return value.total_seconds()
+
+
+class PasswordSerializer(serializers.CharField):
+    def run_validation(self, data=empty):
+        if isinstance(data, bool) and data:
+            raise SkipField()
+        return super().run_validation(data=data)
+
+    def to_internal_value(self, data) -> Optional[str]:
+        if data is None or data == "":
+            return None
+
+        return make_password(data)

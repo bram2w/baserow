@@ -1,0 +1,61 @@
+.grid-field-rich-text__cell {
+  @extend .grid-field-long-text__cell;
+
+  &.grid-field-rich-text__cell--preview {
+    @extend .rich-text-editor__content.rich-text-editor__content--scaled;
+
+    padding: 0 10px;
+
+    pre {
+      background-color: $color-neutral-100;
+      border-radius: $rounded;
+    }
+
+    ul.contains-task-list {
+      list-style-type: none;
+
+      li {
+        margin-left: 0;
+
+        label {
+          @extend %ellipsis;
+          @include fixed-height(32px, 13px);
+
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+    }
+  }
+}
+
+.grid-field-rich-text {
+  @extend .grid-field-long-text;
+}
+
+.grid-field-rich-text__textarea {
+  @extend .grid-field-long-text__textarea;
+}
+
+.grid-field-rich-text__textarea--resizable {
+  padding: 5px 15px 5px 10px;
+  resize: both;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  height: 22px * 5 + 10px;
+}
+
+.grid-field-rich-text__textarea-expand-icon {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 12px;
+  background-color: white;
+
+  &:hover {
+    color: $color-primary-600;
+  }
+}

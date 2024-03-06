@@ -409,6 +409,28 @@ def test_list_rows(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_rows_adhoc_filtering_query_param_null_character(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="normal")
+    first_row = RowHandler().create_row(
+        user, table, values={"normal": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(user, table, values={"normal": "b"}, user_field_names=True)
+
+    str_with_null_character = "a\0"
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [f"filter__field_{text_field.id}__contains={str_with_null_character}"]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}', HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == first_row.id
+
+
+@pytest.mark.django_db
 def test_list_rows_user_field_names(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"

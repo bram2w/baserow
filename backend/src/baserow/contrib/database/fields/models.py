@@ -38,6 +38,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from baserow.core.utils import remove_special_characters, to_snake_case
 
@@ -83,6 +84,7 @@ class Field(
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
+    WithRegistry,
     models.Model,
 ):
     """
@@ -126,6 +128,12 @@ class Field(
             "-primary",
             "order",
         )
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import field_type_registry
+
+        return field_type_registry
 
     def get_parent(self):
         return self.table
@@ -257,7 +265,9 @@ class TextField(Field):
 
 
 class LongTextField(Field):
-    pass
+    long_text_enable_rich_text = models.BooleanField(
+        default=False, null=True, help_text="Enable rich text formatting for the field."
+    )  # TODO: Remove null=True in a future release.
 
 
 class URLField(Field):
@@ -723,6 +733,10 @@ class UUIDField(Field):
 
 
 class AutonumberField(Field):
+    pass
+
+
+class PasswordField(Field):
     pass
 
 

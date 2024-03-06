@@ -12,6 +12,7 @@ from baserow.core.user_sources.operations import (
     CreateUserSourceOperationType,
     DeleteUserSourceOperationType,
     ListUserSourcesApplicationOperationType,
+    LoginUserSourceOperationType,
     ReadUserSourceOperationType,
     UpdateUserSourceOperationType,
 )
@@ -30,21 +31,60 @@ class UserSourceService:
     def __init__(self):
         self.handler = UserSourceHandler()
 
-    def get_user_source(self, user: AbstractUser, user_source_id: int) -> UserSource:
+    def get_user_source(
+        self, user: AbstractUser, user_source_id: int, for_authentication: bool = False
+    ) -> UserSource:
         """
         Returns an user_source instance from the database. Also checks the user
         permissions.
 
         :param user: The user trying to get the user_source.
         :param user_source_id: The ID of the user_source.
+        :param for_authentication: If true we check a different permission.
         :return: The user_source instance.
         """
 
         user_source = self.handler.get_user_source(user_source_id)
 
+        operation = (
+            LoginUserSourceOperationType.type
+            if for_authentication
+            else ReadUserSourceOperationType.type
+        )
+
         CoreHandler().check_permissions(
             user,
-            ReadUserSourceOperationType.type,
+            operation,
+            workspace=user_source.application.workspace,
+            context=user_source,
+        )
+
+        return user_source
+
+    def get_user_source_by_uid(
+        self, user: AbstractUser, user_source_uid: str, for_authentication: bool = False
+    ) -> UserSource:
+        """
+        Returns an user_source instance from the database. Also checks the user
+        permissions.
+
+        :param user: The user trying to get the user_source.
+        :param user_source_id: The ID of the user_source.
+        :param for_authentication: If true we check a different permission.
+        :return: The user_source instance.
+        """
+
+        user_source = self.handler.get_user_source_by_uid(user_source_uid)
+
+        operation = (
+            LoginUserSourceOperationType.type
+            if for_authentication
+            else ReadUserSourceOperationType.type
+        )
+
+        CoreHandler().check_permissions(
+            user,
+            operation,
             workspace=user_source.application.workspace,
             context=user_source,
         )

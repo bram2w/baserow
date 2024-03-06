@@ -240,6 +240,7 @@ def setup_interesting_test_table(
             {"id": user3.id, "name": user3.first_name},
         ],
         "phone_number": "+4412345678",
+        "password": "test",
     }
 
     with freeze_time("2020-02-01 01:23"):

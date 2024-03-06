@@ -1,472 +1,500 @@
 {
-    "dataProviderType": {
-        "dataSource": "Data",
-        "pageParameter": "Parameter",
-        "currentRecord": "Data source",
-        "formData": "Form data"
-    },
-    "formDataProviderType": {
-        "nodeMissing": "Missing"
-    },
-    "builderForm": {
-        "submit": "Add application"
-    },
-    "sidebarComponentBuilder": {
-        "settings": "Settings",
-        "createPage": "Create page"
-    },
-    "builderSettingsModal": {
-        "title": "Application"
-    },
-    "builderSettingTypes": {
-        "integrationsName": "Integrations",
-        "themeName": "Theme",
-        "domainsName": "Domains",
-        "userSourcesName": "Users"
-    },
-    "createPageModal": {
-        "header": "Create page",
-        "submit": "Add page"
-    },
-    "pageErrors": {
-        "errorNameNotUnique": "A page with this name already exists",
-        "errorPathNotUnique": "A path with this name already exists",
-        "errorStartingSlash": "A path needs to start with a '/'",
-        "errorValidPathCharacters": "The path contains invalid characters",
-        "errorUniquePathParams": "Path parameters have to be unique."
-    },
-    "pageHeaderItemTypes": {
-        "labelElements": "Elements",
-        "labelDataSource": "Data",
-        "labelVariables": "Variables",
-        "labelSettings": "Page settings"
-    },
-    "pageActionTypes": {
-        "preview": "Preview",
-        "publish": "Publish"
-    },
-    "publishActionModal": {
-        "title": "Publish",
-        "description": "Take your app live by publishing to one of the domains. Note that your application can have multiple domains, each running a different version of the application.",
-        "publish": "Publish",
-        "publishSucceedTitle": "Site published",
-        "publishSucceedDescription": "The site has been successfully published.",
-        "publishFailedTitle": "Site publishing failed",
-        "publishFailedDescription": "The site publishing has failed. Please try again later.",
-        "openInNewTab": "Open in a new tab",
-        "importingState": "Importing",
-        "noDomain": "You need to have at least one domain in order to publish your application."
-    },
-    "lastPublishedDomainDate": {
-        "neverPublished": "never",
-        "lastPublished": "Last published:"
-    },
-    "elementsContext": {
-        "searchPlaceholder": "Search elements",
-        "noElements": "No elements found"
-    },
-    "elementType": {
-        "heading": "Heading",
-        "headingDescription": "Page heading title",
-        "text": "Text",
-        "textDescription": "Single line text",
-        "link": "Link",
-        "linkDescription": "A link to page/URL",
-        "image": "Image",
-        "imageDescription": "Display image",
-        "inputText": "Text input",
-        "inputTextDescription": "A text input field",
-        "column": "Columns",
-        "columnDescription": "Columns container",
-        "button": "Button",
-        "buttonDescription": "A button element",
-        "table": "Table",
-        "tableDescription": "A table element",
-        "formContainer": "Form",
-        "formContainerDescription": "A form element",
-        "dropdown": "Dropdown",
-        "dropdownDescription": "Dropdown element",
-        "checkbox": "Checkbox",
-        "checkboxDescription": "Checkbox element",
-        "iframe": "IFrame",
-        "iframeDescription": "Inline frame"
-    },
-    "addElementButton": {
-        "label": "Element"
-    },
-    "addElementModal": {
-        "title": "Add new element",
-        "searchPlaceholder": "Search elements"
-    },
-    "elementMenu": {
-        "moveUp": "Move up",
-        "moveDown": "Move down",
-        "moveLeft": "Move left",
-        "moveRight": "Move right",
-        "selectParent": "Select parent"
-    },
-    "duplicatePageJobType": {
-        "duplicating": "Duplicating",
-        "duplicatedTitle": "Page duplicated"
-    },
-    "pageSidePanelType": {
-        "general": "General",
-        "style": "Style",
-        "visibility": "Visibility",
-        "events": "Events",
-        "eventsTabDeactivatedNoEvents": "This element doesn't support any events"
-    },
-    "emptySidePanelState": {
-        "message": "Click on one of the elements to see more details"
-    },
-    "pagePreview": {
-        "emptyMessage": "Click to create first element"
-    },
-    "elementForms": {
-        "textInputPlaceholder": "Enter text...",
-        "urlInputPlaceholder": "Enter url...",
-        "invalidFormula": "The formula is invalid"
-    },
-    "headingElement": {
-        "noValue": "No title..."
-    },
-    "headingElementForm": {
-        "levelTitle": "Level",
-        "textTitle": "Text",
-        "textPlaceholder": "Enter text...",
-        "headingName": "Heading {level} <h{level}>",
-        "textError": "The value is invalid."
-    },
-    "textElement": {
-        "noValue": "Empty text..."
-    },
-    "textElementForm": {
-        "textTitle": "Text",
-        "textPlaceholder": "Enter text...",
-        "textError": "The value is invalid.",
-        "textFormatTypeLabel": "Format",
-        "textFormatTypePlain": "Plain text",
-        "textFormatTypeMarkdown": "Markdown"
-    },
-    "imageElement": {
-        "emptyState": "No alt text defined..."
-    },
-    "generalForm": {
-        "labelTitle": "Label",
-        "labelPlaceholder": "Enter a label (optional)",
-        "valueTitle": "Default value",
-        "valuePlaceholder": "Enter a default value (optional)",
-        "placeholderTitle": "Placeholder",
-        "placeholderPlaceholder": "Enter a placeholder (optional)",
-        "requiredTitle": "Required"
-    },
-    "inputTextElementForm": {
-      "multilineTitle": "Multiline",
-      "rowsTitle": "Number of lines",
-      "rowsPlaceholder": "Enter the number of rows of this input"
-    },
-    "imageElementForm": {
-        "fileLabel": "Image file",
-        "invalidUrlError": "URL is invalid",
-        "altTextTitle": "Alt text",
-        "altTextDescription": "Is used by screen readers and displayed if the image can't load",
-        "fileSourceTypeUpload": "Upload",
-        "fileSourceTypeURL": "URL",
-        "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
-        "uploadFileButton": "Upload file",
-        "maxWidthLabel": "Max width",
-        "maxHeightLabel": "Max height",
-        "maxHeightPlaceholder": "Enter a maximum height in pixels.",
-        "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
-        "imageConstraintsLabel": "Constraints",
-        "imageConstraintFullWidth": "Extend to max width",
-        "imageConstraintCover": "Cover",
-        "imageConstraintCoverDisabled": "Unavailable with empty max height.",
-        "imageConstraintContain": "Contain",
-        "imageConstraintContainDisabled": "Unavailable with a max height."
-    },
-    "iframeElementForm": {
-      "empty": "Empty IFrame...",
-      "sourceTypeLabel": "Source type",
-      "urlLabel": "URL",
-      "urlPlaceholder": "Link to the external resource to be embedded",
-      "urlHelp": "Note: please make sure that you have control over, or trust the url entered.",
-      "embedLabel": "Embed",
-      "embedPlaceholder": "Raw HTML content to be embedded",
-      "heightLabel": "Height (px)",
-      "heightPlaceholder": "Height in pixels"
-    },
-    "columnElementForm": {
-        "columnAmountTitle": "Layout",
-        "columnAmountName": "no columns | 1 column | {columnAmount} columns",
-        "columnGapTitle": "Space between columns",
-        "columnGapPlaceholder": "Enter space between columns..."
-    },
-    "domainSettings": {
-        "titleOverview": "Domains",
-        "titleAddDomain": "Add domain",
-        "addDomain": "Add domain",
-        "noDomainMessage": "You have not yet associated a domain with this application. You must add a domain to be able to publish your application. You can publish different versions of your application for each domain listed here."
-    },
-    "userSourceSettings": {
-      "titleAddUserSource": "New user source",
-      "titleUpdateUserSource": "Edit user source",
-      "noUserSourceMessage": "You have not yet add a user source to this application. You must add a user source if you want users being able to authenticate your application.",
-      "titleOverview": "User sources",
-      "addUserSource": "Add user source"
-    },
-    "dnsStatus": {
-        "description": "Visit your domains' DNS settings and make the following changes",
-        "typeHeader": "Type",
-        "hostHeader": "Host",
-        "valueHeader": "Value"
-    },
-    "domainForm": {
-      "invalidDomain": "The provided domain name is invalid",
-      "notUniqueDomain": "The provided domain is already used"
-    },
-    "customDomainForm": {
-        "domainNameLabel": "Domain name"
-    },
-    "subDomainForm": {
-        "domainNameLabel": "Domain name"
-    },
-    "subDomainDetails": {
-      "text": "The DNS settings of the domain have already been configured and checked. It works without making any additional changes."
-    },
-    "domainCard": {
-        "refresh": "Refresh settings",
-        "detailLabel": "Show details"
-    },
-    "domainTypes": {
-        "customName": "Custom domain",
-        "subDomainName": "Subdomain",
-        "subDomain": "Subdomain of {domain}"
-    },
-    "linkElement": {
-        "noValue": "Unnamed..."
-    },
-    "linkNavigationSelection": {
-      "navigateTo": "Navigate to",
-      "navigateToCustom": "Custom URL",
-      "paramPlaceholder": "Enter a value...",
-      "urlPlaceholder": "Enter an URL...",
-      "url": "Destination URL",
-      "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
-      "paramsInErrorButton": "Update parameters"
-    },
-    "linkElementForm": {
-      "text": "Text",
-      "textPlaceholder": "Enter text...",
-      "variant": "Variant",
-      "variantLink": "Link",
-      "variantButton": "Button",
-      "target": "Open in...",
-      "targetSelf": "Same tab",
-      "targetNewTab": "New tab",
-      "buttonColor": "Button color"
-    },
-    "widthSelector": {
-        "width": "Width",
-        "widthAuto": "Auto",
-        "widthFull": "Full width"
-    },
-    "backgroundTypes": {
-      "none": "None",
-      "color": "Color"
-    },
-    "widthTypes": {
-      "full": "Full width",
-      "normal": "Normal",
-      "medium": "Medium",
-      "small": "Small"
-    },
-    "horizontalAlignmentSelector": {
-        "alignment": "Horizontal alignment",
-        "alignmentLeft": "Link",
-        "alignmentCenter": "Center",
-        "alignmentRight": "Right"
-    },
-    "verticalAlignmentSelector": {
-        "alignment": "Vertical alignment",
-        "alignmentTop": "Top",
-        "alignmentCenter": "Middle",
-        "alignmentBottom": "Bottom"
-    },
-    "pageSettingsTypes": {
-        "pageName": "Page"
-    },
-    "pageSettings": {
-        "title": "Page",
-        "pageUpdatedTitle": "Changed",
-        "pageUpdatedDescription": "The page settings have been updated."
-    },
-    "pageForm": {
-        "defaultName": "Page",
-        "nameTitle": "Name",
-        "nameSubtitle": "Unique name of the page",
-        "pathTitle": "Path",
-        "pathSubtitle": "A parameter can be added via :parameter",
-        "pathParamsTitle": "Path parameters",
-        "pathParamsSubtitle": "Are defined by :parameter in the path",
-        "pathParamsSubtitleTutorial": "Path parameters can be used to dynamically load data, depending on the provided parameter. Add :parameter to the path to add one."
-    },
-    "pathParamTypes": {
-        "textName": "Text",
-        "numericName": "Numeric"
-    },
-    "publicPage": {
-        "siteNotFound": "Site not found",
-        "pageNotFound": "Page not found"
-    },
-    "integrationSettings": {
-        "title": "Integrations",
-        "noIntegrationMessage": "You have not yet created any connection. They can be created by adding data source, action or user authentication.",
-        "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
-    },
-    "dataSourceForm": {
-        "namePlaceholder": "Source name",
-        "servicePlaceholder": "Select a service",
-        "integrationPlaceholder": "Select an integration",
-        "errorUniqueName": "Data source name must be unique."
-    },
-    "dataSourceContext": {
-        "addDataSource": "Add new data source",
-        "noDataSourceTitle": "This page has no data sources.",
-        "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
-    },
-    "defaultStyleForm": {
-      "boxTop": "Top",
-      "boxBottom": "Bottom",
-      "boxLeft": "Left",
-      "boxRight": "Right",
-      "backgroundLabel": "Background",
-      "backgroundColor": "Background color",
-      "widthLabel": "Width"
-    },
-    "styleBoxForm": {
-        "borderLabel": "Border",
-        "paddingLabel": "Padding"
-    },
-    "mainThemeConfigBlock": {
-      "colorsLabel": "Colors",
-      "primaryColor": "Primary",
-      "secondaryColor": "Secondary",
-      "typography": "Typography",
-      "headingLabel": "Heading {i} (h{i})",
-      "headingValue": "Heading <h{i}>"
-    },
-    "buttonElementForm": {
-      "valueLabel": "Text",
-      "valuePlaceholder": "Enter text...",
-      "buttonColor": "Button color"
-    },
-    "buttonElement": {
-        "noValue": "Unnamed..."
-    },
-    "eventTypes": {
-        "clickLabel": "On click",
-        "submitLabel": "On submit"
-    },
-    "getFormulaComponent": {
-        "errorTooltip": "Invalid reference"
-    },
-    "fontSidePanelForm": {
-      "label": "Font"
-    },
-    "tableElementForm": {
-      "dataSource": "Data source",
-      "fields": "Fields",
-      "fieldValueLabel": "Value",
-      "addField": "add field",
-      "fieldValuePlaceholder": "Enter value...",
-      "itemsPerPage": "Items per page",
-      "fieldDefaultName": "Column",
-      "fieldType": "Type",
-      "itemsPerPagePlaceholder": "Enter value...",
-      "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
-      "buttonColor": "Button color"
-    },
-    "tableElement": {
-      "empty": "No items have been found.",
-      "showMore": "Show more"
-    },
-    "currentRecordDataProviderType": {
-      "index": "Index",
-      "firstPartName": "Data source: {name}"
-    },
-    "workflowActionTypes": {
-      "notificationLabel": "Show Notification",
-      "openPageLabel": "Open Page",
-      "createRowLabel": "Create Row",
-      "updateRowLabel": "Update Row"
-    },
-    "notificationWorkflowActionForm": {
-      "titleLabel": "Title",
-      "titlePlaceholder": "Enter text...",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Enter text..."
-    },
-    "openPageWorkflowActionForm": {
-      "urlLabel": "URL",
-      "urlPlaceholder": "Enter text..."
-    },
-    "event": {
-      "addAction": "add action"
-    },
-    "collectionFieldType": {
-      "text": "Text",
-      "link": "Link"
-    },
-    "textFieldForm": {
-      "fieldValueLabel": "Value",
-      "fieldValuePlaceholder": "Enter value..."
-    },
-    "linkFieldForm": {
-      "fieldValueLabel": "Url",
-      "fieldValuePlaceholder": "Enter value...",
-      "fieldLinkNameLabel": "Link text",
-      "fieldLinkNamePlaceholder": "Enter value...",
-      "buttonColor": "Button color"
-    },
-    "linkField": {
-      "details": "Details"
-    },
-    "createUserSourceForm": {
-      "userSourceType":"Type",
-      "userSourceIntegration": "Integration",
-      "userSourceName": "Name"
-    },
-    "updateUserSourceForm": {
-      "nameFieldLabel": "Name",
-      "nameFieldPlaceholder": "Enter a name...",
-      "integrationFieldLabel": "Integration"
-    },
-    "formContainerElementForm": {
-      "submitButtonLabel": "Submit button",
-      "submitButtonPlaceholder": "Enter value...",
-      "buttonColor": "Button color"
-    },
-    "dropdownOptionSelector": {
-        "label": "Options",
-        "value": "Value",
-        "name": "Name",
-        "addOption": "add option"
-    },
-    "dispatchWorkflowActionError": {
-        "defaultTitle": "Event error",
-        "defaultMessage": "An error occurred triggering this event."
-    },
-    "upsertRowWorkflowActionForm": {
-        "integrationDropdownLabel": "Integration",
-        "rowIdLabel": "Row ID",
-        "rowIdPlaceholder": "Select a row ID",
-        "fieldMappingPlaceholder": "Choose a field value",
-        "noTableSelectedMessage": "Choose a table to begin configuring your fields."
-    },
-    "checkboxElementForm": {
-      "labelTitle": "Label",
-      "valueTitle": "Default value",
-      "requiredTitle": "Required"
-    }
+  "dataProviderType": {
+    "dataSource": "Data",
+    "pageParameter": "Parameter",
+    "currentRecord": "Data source",
+    "formData": "Form data",
+    "user": "User"
+  },
+  "formDataProviderType": {
+    "nodeMissing": "Missing"
+  },
+  "builderForm": {
+    "submit": "Add application"
+  },
+  "sidebarComponentBuilder": {
+    "settings": "Settings",
+    "createPage": "Create page"
+  },
+  "builderSettingsModal": {
+    "title": "Application"
+  },
+  "builderSettingTypes": {
+    "integrationsName": "Integrations",
+    "themeName": "Theme",
+    "domainsName": "Domains",
+    "userSourcesName": "Users"
+  },
+  "createPageModal": {
+    "header": "Create page",
+    "submit": "Add page"
+  },
+  "pageErrors": {
+    "errorNameNotUnique": "A page with this name already exists",
+    "errorPathNotUnique": "A path with this name already exists",
+    "errorStartingSlash": "A path needs to start with a '/'",
+    "errorValidPathCharacters": "The path contains invalid characters",
+    "errorUniquePathParams": "Path parameters have to be unique."
+  },
+  "pageHeaderItemTypes": {
+    "labelElements": "Elements",
+    "labelDataSource": "Data",
+    "labelVariables": "Variables",
+    "labelSettings": "Page settings"
+  },
+  "pageActionTypes": {
+    "preview": "Preview",
+    "publish": "Publish"
+  },
+  "publishActionModal": {
+    "title": "Publish",
+    "description": "Take your app live by publishing to one of the domains. Note that your application can have multiple domains, each running a different version of the application.",
+    "publish": "Publish",
+    "publishSucceedTitle": "Site published",
+    "publishSucceedDescription": "The site has been successfully published.",
+    "publishFailedTitle": "Site publishing failed",
+    "publishFailedDescription": "The site publishing has failed. Please try again later.",
+    "openInNewTab": "Open in a new tab",
+    "importingState": "Importing",
+    "noDomain": "You need to have at least one domain in order to publish your application."
+  },
+  "lastPublishedDomainDate": {
+    "neverPublished": "never",
+    "lastPublished": "Last published:"
+  },
+  "elementsContext": {
+    "searchPlaceholder": "Search elements",
+    "noElements": "No elements found"
+  },
+  "elementType": {
+    "heading": "Heading",
+    "headingDescription": "Page heading title",
+    "text": "Text",
+    "textDescription": "Multi-line text",
+    "link": "Link",
+    "linkDescription": "A link to page/URL",
+    "image": "Image",
+    "imageDescription": "Display image",
+    "inputText": "Text input",
+    "inputTextDescription": "A text input field",
+    "column": "Columns",
+    "columnDescription": "Columns container",
+    "button": "Button",
+    "buttonDescription": "A button element",
+    "table": "Table",
+    "tableDescription": "A table element",
+    "formContainer": "Form",
+    "formContainerDescription": "A form element",
+    "dropdown": "Dropdown",
+    "dropdownDescription": "Dropdown element",
+    "checkbox": "Checkbox",
+    "checkboxDescription": "Checkbox element",
+    "iframe": "IFrame",
+    "iframeDescription": "Inline frame",
+    "authForm": "Login form",
+    "authFormDescription": "A user login form"
+  },
+  "addElementButton": {
+    "label": "Element"
+  },
+  "addElementModal": {
+    "title": "Add new element",
+    "searchPlaceholder": "Search elements"
+  },
+  "elementMenu": {
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "selectParent": "Select parent"
+  },
+  "duplicatePageJobType": {
+    "duplicating": "Duplicating",
+    "duplicatedTitle": "Page duplicated"
+  },
+  "pageSidePanelType": {
+    "general": "General",
+    "style": "Style",
+    "visibility": "Visibility",
+    "events": "Events",
+    "eventsTabDeactivatedNoEvents": "This element doesn't support any events"
+  },
+  "emptySidePanelState": {
+    "message": "Click on one of the elements to see more details"
+  },
+  "pagePreview": {
+    "emptyMessage": "Click to create first element"
+  },
+  "elementForms": {
+    "textInputPlaceholder": "Enter text...",
+    "urlInputPlaceholder": "Enter url...",
+    "invalidFormula": "The formula is invalid"
+  },
+  "headingElement": {
+    "noValue": "No title..."
+  },
+  "headingElementForm": {
+    "levelTitle": "Level",
+    "textTitle": "Text",
+    "textPlaceholder": "Enter text...",
+    "headingName": "Heading {level} <h{level}>",
+    "textError": "The value is invalid."
+  },
+  "textElement": {
+    "noValue": "Empty text..."
+  },
+  "textElementForm": {
+    "textTitle": "Text",
+    "textPlaceholder": "Enter text...",
+    "textError": "The value is invalid.",
+    "textFormatTypeLabel": "Format",
+    "textFormatTypePlain": "Plain text",
+    "textFormatTypeMarkdown": "Markdown"
+  },
+  "imageElement": {
+    "emptyState": "No alt text defined..."
+  },
+  "generalForm": {
+    "labelTitle": "Label",
+    "labelPlaceholder": "Enter a label (optional)",
+    "valueTitle": "Default value",
+    "valuePlaceholder": "Enter a default value (optional)",
+    "placeholderTitle": "Placeholder",
+    "placeholderPlaceholder": "Enter a placeholder (optional)",
+    "requiredTitle": "Required"
+  },
+  "inputTextElementForm": {
+    "multilineTitle": "Multiline",
+    "rowsTitle": "Number of lines",
+    "rowsPlaceholder": "Enter the number of rows of this input"
+  },
+  "imageElementForm": {
+    "fileLabel": "Image file",
+    "invalidUrlError": "URL is invalid",
+    "altTextTitle": "Alt text",
+    "altTextDescription": "Is used by screen readers and displayed if the image can't load",
+    "fileSourceTypeUpload": "Upload",
+    "fileSourceTypeURL": "URL",
+    "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
+    "uploadFileButton": "Upload file",
+    "maxWidthLabel": "Max width",
+    "maxHeightLabel": "Max height",
+    "maxHeightPlaceholder": "Enter a maximum height in pixels.",
+    "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
+    "imageConstraintsLabel": "Constraints",
+    "imageConstraintFullWidth": "Extend to max width",
+    "imageConstraintCover": "Cover",
+    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
+    "imageConstraintContain": "Contain",
+    "imageConstraintContainDisabled": "Unavailable with a max height."
+  },
+  "iframeElementForm": {
+    "empty": "Empty IFrame...",
+    "sourceTypeLabel": "Source type",
+    "urlLabel": "URL",
+    "urlPlaceholder": "Link to the external resource to be embedded",
+    "urlHelp": "Note: please make sure that you have control over, or trust the url entered.",
+    "embedLabel": "Embed",
+    "embedPlaceholder": "Raw HTML content to be embedded",
+    "heightLabel": "Height (px)",
+    "heightPlaceholder": "Height in pixels"
+  },
+  "columnElementForm": {
+    "columnAmountTitle": "Layout",
+    "columnAmountName": "no columns | 1 column | {columnAmount} columns",
+    "columnGapTitle": "Space between columns",
+    "columnGapPlaceholder": "Enter space between columns..."
+  },
+  "domainSettings": {
+    "titleOverview": "Domains",
+    "titleAddDomain": "Add domain",
+    "addDomain": "Add domain",
+    "noDomainMessage": "You have not yet associated a domain with this application. You must add a domain to be able to publish your application. You can publish different versions of your application for each domain listed here."
+  },
+  "userSourceSettings": {
+    "titleAddUserSource": "New user source",
+    "titleUpdateUserSource": "Edit user source",
+    "noUserSourceMessage": "You have not yet add a user source to this application. You must add a user source if you want users being able to authenticate your application.",
+    "titleOverview": "User sources",
+    "addUserSource": "Add user source"
+  },
+  "dnsStatus": {
+    "description": "Visit your domains' DNS settings and make the following changes",
+    "typeHeader": "Type",
+    "hostHeader": "Host",
+    "valueHeader": "Value"
+  },
+  "domainForm": {
+    "invalidDomain": "The provided domain name is invalid",
+    "notUniqueDomain": "The provided domain is already used"
+  },
+  "customDomainForm": {
+    "domainNameLabel": "Domain name"
+  },
+  "subDomainForm": {
+    "domainNameLabel": "Domain name"
+  },
+  "subDomainDetails": {
+    "text": "The DNS settings of the domain have already been configured and checked. It works without making any additional changes."
+  },
+  "domainCard": {
+    "refresh": "Refresh settings",
+    "detailLabel": "Show details"
+  },
+  "domainTypes": {
+    "customName": "Custom domain",
+    "subDomainName": "Subdomain",
+    "subDomain": "Subdomain of {domain}"
+  },
+  "linkElement": {
+    "noValue": "Unnamed..."
+  },
+  "linkNavigationSelection": {
+    "navigateTo": "Navigate to",
+    "navigateToCustom": "Custom URL",
+    "paramPlaceholder": "Enter a value...",
+    "urlPlaceholder": "Enter an URL...",
+    "url": "Destination URL",
+    "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
+    "paramsInErrorButton": "Update parameters"
+  },
+  "linkElementForm": {
+    "text": "Text",
+    "textPlaceholder": "Enter text...",
+    "variant": "Variant",
+    "variantLink": "Link",
+    "variantButton": "Button",
+    "target": "Open in...",
+    "targetSelf": "Same tab",
+    "targetNewTab": "New tab",
+    "buttonColor": "Button color"
+  },
+  "widthSelector": {
+    "width": "Width",
+    "widthAuto": "Auto",
+    "widthFull": "Full width"
+  },
+  "backgroundTypes": {
+    "none": "None",
+    "color": "Color"
+  },
+  "widthTypes": {
+    "full": "Full width",
+    "normal": "Normal",
+    "medium": "Medium",
+    "small": "Small"
+  },
+  "horizontalAlignmentSelector": {
+    "alignment": "Horizontal alignment",
+    "alignmentLeft": "Left",
+    "alignmentCenter": "Center",
+    "alignmentRight": "Right"
+  },
+  "verticalAlignmentSelector": {
+    "alignment": "Vertical alignment",
+    "alignmentTop": "Top",
+    "alignmentCenter": "Middle",
+    "alignmentBottom": "Bottom"
+  },
+  "pageSettingsTypes": {
+    "pageName": "Page"
+  },
+  "pageSettings": {
+    "title": "Page",
+    "pageUpdatedTitle": "Changed",
+    "pageUpdatedDescription": "The page settings have been updated."
+  },
+  "pageForm": {
+    "defaultName": "Page",
+    "nameTitle": "Name",
+    "nameSubtitle": "Unique name of the page",
+    "pathTitle": "Path",
+    "pathSubtitle": "A parameter can be added via :parameter",
+    "pathParamsTitle": "Path parameters",
+    "pathParamsSubtitle": "Are defined by :parameter in the path",
+    "pathParamsSubtitleTutorial": "Path parameters can be used to dynamically load data, depending on the provided parameter. Add :parameter to the path to add one."
+  },
+  "pathParamTypes": {
+    "textName": "Text",
+    "numericName": "Numeric"
+  },
+  "publicPage": {
+    "siteNotFound": "Site not found",
+    "pageNotFound": "Page not found"
+  },
+  "integrationSettings": {
+    "title": "Integrations",
+    "noIntegrationMessage": "You have not yet created any connection. They can be created by adding data source, action or user authentication.",
+    "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
+  },
+  "dataSourceForm": {
+    "namePlaceholder": "Source name",
+    "servicePlaceholder": "Select a service",
+    "integrationPlaceholder": "Select an integration",
+    "errorUniqueName": "Data source name must be unique."
+  },
+  "dataSourceContext": {
+    "addDataSource": "Add new data source",
+    "noDataSourceTitle": "This page has no data sources.",
+    "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
+  },
+  "defaultStyleForm": {
+    "boxTop": "Top",
+    "boxBottom": "Bottom",
+    "boxLeft": "Left",
+    "boxRight": "Right",
+    "backgroundLabel": "Background",
+    "backgroundColor": "Background color",
+    "widthLabel": "Width"
+  },
+  "styleBoxForm": {
+    "borderLabel": "Border",
+    "paddingLabel": "Padding"
+  },
+  "mainThemeConfigBlock": {
+    "colorsLabel": "Colors",
+    "primaryColor": "Primary",
+    "secondaryColor": "Secondary",
+    "typography": "Typography",
+    "headingLabel": "Heading {i} (h{i})",
+    "headingValue": "Heading <h{i}>"
+  },
+  "buttonElementForm": {
+    "valueLabel": "Text",
+    "valuePlaceholder": "Enter text...",
+    "buttonColor": "Button color"
+  },
+  "buttonElement": {
+    "noValue": "Unnamed..."
+  },
+  "eventTypes": {
+    "clickLabel": "On click",
+    "submitLabel": "On submit"
+  },
+  "getFormulaComponent": {
+    "errorTooltip": "Invalid reference"
+  },
+  "fontSidePanelForm": {
+    "label": "Font"
+  },
+  "tableElementForm": {
+    "dataSource": "Data source",
+    "fields": "Fields",
+    "fieldValueLabel": "Value",
+    "addField": "add field",
+    "fieldValuePlaceholder": "Enter value...",
+    "itemsPerPage": "Items per page",
+    "fieldDefaultName": "Column",
+    "fieldType": "Type",
+    "itemsPerPagePlaceholder": "Enter value...",
+    "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
+    "buttonColor": "Button color"
+  },
+  "tableElement": {
+    "empty": "No items have been found.",
+    "showMore": "Show more"
+  },
+  "currentRecordDataProviderType": {
+    "index": "Index",
+    "firstPartName": "Data source: {name}"
+  },
+  "workflowActionTypes": {
+    "notificationLabel": "Show Notification",
+    "openPageLabel": "Open Page",
+    "createRowLabel": "Create Row",
+    "updateRowLabel": "Update Row"
+  },
+  "notificationWorkflowActionForm": {
+    "titleLabel": "Title",
+    "titlePlaceholder": "Enter text...",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter text..."
+  },
+  "openPageWorkflowActionForm": {
+    "urlLabel": "URL",
+    "urlPlaceholder": "Enter text..."
+  },
+  "event": {
+    "addAction": "add action"
+  },
+  "collectionFieldType": {
+    "text": "Text",
+    "link": "Link"
+  },
+  "textFieldForm": {
+    "fieldValueLabel": "Value",
+    "fieldValuePlaceholder": "Enter value..."
+  },
+  "linkFieldForm": {
+    "fieldValueLabel": "Url",
+    "fieldValuePlaceholder": "Enter value...",
+    "fieldLinkNameLabel": "Link text",
+    "fieldLinkNamePlaceholder": "Enter value...",
+    "buttonColor": "Button color"
+  },
+  "linkField": {
+    "details": "Details"
+  },
+  "createUserSourceForm": {
+    "userSourceType": "Type",
+    "userSourceIntegration": "Integration",
+    "userSourceName": "Name"
+  },
+  "updateUserSourceForm": {
+    "nameFieldLabel": "Name",
+    "nameFieldPlaceholder": "Enter a name...",
+    "authTitle": "Authentication",
+    "integrationFieldLabel": "Integration"
+  },
+  "formContainerElementForm": {
+    "submitButtonLabel": "Submit button",
+    "submitButtonPlaceholder": "Enter value...",
+    "buttonColor": "Button color"
+  },
+  "dropdownOptionSelector": {
+    "label": "Options",
+    "value": "Value",
+    "name": "Name",
+    "addOption": "add option"
+  },
+  "dispatchWorkflowActionError": {
+    "defaultTitle": "Event error",
+    "defaultMessage": "An error occurred triggering this event."
+  },
+  "dispatchDataSourceError": {
+    "defaultTitle": "Data loading error",
+    "defaultMessage": "An error occurred while loading data for the page."
+  },
+  "upsertRowWorkflowActionForm": {
+    "integrationDropdownLabel": "Integration",
+    "rowIdLabel": "Row ID",
+    "rowIdPlaceholder": "Select a row ID",
+    "fieldMappingPlaceholder": "Choose a field value",
+    "noTableSelectedMessage": "Choose a table to begin configuring your fields."
+  },
+  "checkboxElementForm": {
+    "labelTitle": "Label",
+    "valueTitle": "Default value",
+    "requiredTitle": "Required"
+  },
+  "authFormElementForm": {
+    "userSource": "User source"
+  },
+  "authFormElement": {
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "Enter your email...",
+    "passwordPlaceholder": "Enter your password...",
+    "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
+  },
+  "userSourceUsersContext": {
+    "searchPlaceholder": "Search user",
+    "anonymous": "Anonymous",
+    "unnamed": "Unnamed",
+    "noEmail": "No email"
+  },
+  "userSelector": {
+    "viewAs": "View as: {user}",
+    "anonymous": "Anonymous"
+  }
 }

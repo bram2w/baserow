@@ -16,25 +16,15 @@ def test_flush_expired_tokens(data_fixture):
             email="test@test.nl", password="password", first_name="Test1"
         )
         token_1 = str(RefreshToken.for_user(user))
-        UserHandler().blacklist_refresh_token(
-            user, token_1, datetime(2020, 1, 1, 13, 00)
-        )
+        UserHandler().blacklist_refresh_token(token_1, datetime(2020, 1, 1, 13, 00))
         token_2 = str(RefreshToken.for_user(user))
-        UserHandler().blacklist_refresh_token(
-            user, token_2, datetime(2020, 1, 2, 13, 00)
-        )
+        UserHandler().blacklist_refresh_token(token_2, datetime(2020, 1, 2, 13, 00))
         token_3 = str(RefreshToken.for_user(user))
-        UserHandler().blacklist_refresh_token(
-            user, token_3, datetime(2020, 1, 9, 13, 00)
-        )
+        UserHandler().blacklist_refresh_token(token_3, datetime(2020, 1, 9, 13, 00))
         token_4 = str(RefreshToken.for_user(user))
-        UserHandler().blacklist_refresh_token(
-            user, token_4, datetime(2020, 1, 10, 13, 00)
-        )
+        UserHandler().blacklist_refresh_token(token_4, datetime(2020, 1, 10, 13, 00))
         token_5 = str(RefreshToken.for_user(user))
-        UserHandler().blacklist_refresh_token(
-            user, token_5, datetime(2020, 1, 11, 13, 00)
-        )
+        UserHandler().blacklist_refresh_token(token_5, datetime(2020, 1, 11, 13, 00))
 
     assert BlacklistedToken.objects.all().count() == 5
 

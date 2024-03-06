@@ -217,69 +217,6 @@ def test_get_table_model_to_str(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_primary_field_object(data_fixture):
-    table = data_fixture.create_database_table()
-    table_without_primary = data_fixture.create_database_table()
-    text_field = data_fixture.create_text_field(table=table, primary=True)
-    number_field = data_fixture.create_number_field(table=table)
-
-    model = table.get_model()
-    assert model.get_primary_field_object()["field"] == text_field
-    assert model.get_primary_field_object()["name"] == f"field_{text_field.id}"
-
-    model_without_primary = table_without_primary.get_model()
-    assert model_without_primary.get_primary_field_object() is None
-
-
-@pytest.mark.django_db
-def test_name_property(data_fixture):
-    table = data_fixture.create_database_table()
-    text_field = data_fixture.create_text_field(table=table, primary=True)
-    number_field = data_fixture.create_number_field(table=table)
-    model = table.get_model()
-    table_without_primary = data_fixture.create_database_table()
-    text_field_no_primary = data_fixture.create_text_field(table=table_without_primary)
-    model_without_primary = table_without_primary.get_model()
-
-    row_no_name = model.objects.create(**{f"field_{text_field.id}": None})
-    row_empty_name = model.objects.create(**{f"field_{text_field.id}": ""})
-    row_john = model.objects.create(**{f"field_{text_field.id}": "John"})
-
-    assert row_no_name.name is None
-    assert row_empty_name.name == ""
-    assert row_john.name == "John"
-
-    row_no_name = model_without_primary.objects.create(
-        **{f"field_{text_field_no_primary.id}": None}
-    )
-    row_empty_name = model_without_primary.objects.create(
-        **{f"field_{text_field_no_primary.id}": ""}
-    )
-    row_john = model_without_primary.objects.create(
-        **{f"field_{text_field_no_primary.id}": "John"}
-    )
-
-    assert row_no_name.name is None
-    assert row_empty_name.name is None
-    assert row_john.name is None
-
-
-@pytest.mark.django_db
-def test_name_or_id_property(data_fixture):
-    table = data_fixture.create_database_table()
-    text_field = data_fixture.create_text_field(table=table, primary=True)
-    model = table.get_model()
-
-    row_no_name = model.objects.create(**{f"field_{text_field.id}": None})
-    row_empty_name = model.objects.create(**{f"field_{text_field.id}": ""})
-    row_john = model.objects.create(**{f"field_{text_field.id}": "John"})
-
-    assert row_no_name.name_or_id == str(row_no_name.id)
-    assert row_empty_name.name_or_id == str(row_empty_name.id)
-    assert row_john.name_or_id == "John"
-
-
-@pytest.mark.django_db
 def test_enhance_by_fields_queryset(data_fixture):
     table = data_fixture.create_database_table(name="Cars")
     field = data_fixture.create_text_field(table=table, order=0, name="Color")
@@ -571,9 +508,6 @@ def test_order_by_fields_string_queryset(data_fixture):
 
     with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("xxxx")
-
-    with pytest.raises(ValueError):
-        model.objects.all().order_by_fields_string("")
 
     with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("id")

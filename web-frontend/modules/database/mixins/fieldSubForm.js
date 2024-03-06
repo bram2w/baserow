@@ -13,5 +13,9 @@ export default {
       type: Object,
       required: true,
     },
+    primary: {
+      type: Boolean,
+      required: true,
+    },
   },
 }

@@ -53,6 +53,7 @@ import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
 import userSourceStore from '@baserow/modules/core/store/userSource'
 import notificationStore from '@baserow/modules/core/store/notification'
+import userSourceUserStore from '@baserow/modules/core/store/userSourceUser'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -101,6 +102,11 @@ export default (context, inject) => {
   registry.registerNamespace('runtimeFormulaFunction')
   registry.registerNamespace('notification')
   registry.registerNamespace('workflowAction')
+  registry.registerNamespace('integration')
+  registry.registerNamespace('service')
+  registry.registerNamespace('userSource')
+  registry.registerNamespace('appAuthProvider')
+
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new EmailNotificationsSettingsType(context))
@@ -142,11 +148,8 @@ export default (context, inject) => {
   store.registerModule('undoRedo', undoRedoStore)
   store.registerModule('integration', integrationStore)
   store.registerModule('userSource', userSourceStore)
-
-  registry.registerNamespace('integration')
-  registry.registerNamespace('service')
-  registry.registerNamespace('userSource')
   store.registerModule('notification', notificationStore)
+  store.registerModule('userSourceUser', userSourceUserStore)
 
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))

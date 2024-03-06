@@ -1,295 +1,302 @@
 {
-    "clientHandler": {
-        "cannotDisableAllAuthProvidersTitle": "Last enabled provider",
-        "cannotDisableAllAuthProvidersDescription": "It is not possible to disable or delete last enabled provider."
+  "clientHandler": {
+    "cannotDisableAllAuthProvidersTitle": "Last enabled provider",
+    "cannotDisableAllAuthProvidersDescription": "It is not possible to disable or delete last enabled provider."
+  },
+  "enterprise": {
+    "license": "Enterprise",
+    "sidebarTooltip": "Your account has access to the enterprise features globally",
+    "rbac": "RBAC",
+    "sso": "SSO",
+    "deactivated": "Available in advanced/enterprise",
+    "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any workspace then they will use a paid seat automatically.",
+    "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each workspaces members page."
+  },
+  "trashType": {
+    "team": "team"
+  },
+  "createTeamModal": {
+    "title": "Create team",
+    "invalidNameTitle": "Please use a different name",
+    "invalidNameMessage": "This team name is already in use in the specified workspace."
+  },
+  "updateTeamModal": {
+    "title": "Update {teamName}",
+    "invalidNameTitle": "Please use a different name",
+    "invalidNameMessage": "This team name is already in use in the specified workspace."
+  },
+  "manageTeamModals": {
+    "subheading": "Teams allow you to give or restrict permissions in bulk to multiple people."
+  },
+  "manageTeamForm": {
+    "submit": "Save",
+    "nameTitle": "Name",
+    "roleTitle": "Default role",
+    "inviteMembers": "Add members",
+    "membersTitle": "Members",
+    "noSubjectsSelected": "Click '{buttonLabel}' to optionally add team users.",
+    "roleHelpText": "User specific roles will always override Team roles."
+  },
+  "editTeamContext": {
+    "edit": "Edit team",
+    "remove": "Delete team"
+  },
+  "teamsTable": {
+    "title": "{teamCount} teams in {workspaceName}",
+    "createNew": "Create team",
+    "nameColumn": "Name",
+    "createdColumn": "Created on",
+    "subjectsColumn": "Members",
+    "roleColumn": "Default role",
+    "roleHelpText": "Can be overriden with roles on databases and tables."
+  },
+  "subjectSampleField": {
+    "titleAttr": "{subjectCount} members in this team."
+  },
+  "teamsSettings": {
+    "teamsTabTitle": "Teams"
+  },
+  "adminType": {
+    "AuditLog": "Audit log",
+    "Authentication": "Authentication"
+  },
+  "auditLog": {
+    "adminTitle": "Audit log",
+    "workspaceTitle": "Audit log - {workspaceName}",
+    "filterUserTitle": "User",
+    "filterWorkspaceTitle": "Workspace",
+    "filterActionTypeTitle": "Event Type",
+    "filterFromTimestampTitle": "From Date",
+    "filterFromTimestamp": "From Date",
+    "filterToTimestampTitle": "To Date",
+    "filterToTimestamp": "To Date",
+    "user": "User",
+    "workspace": "Workspace",
+    "actionType": "Event Type",
+    "description": "Description",
+    "timestamp": "Timestamp",
+    "ip_address": "IP Address",
+    "exportToCsv": "Export to CSV",
+    "exportModalTitle": "Export to CSV",
+    "clearFilters": "Clear",
+    "allUsers": "All Users",
+    "allWorkspaces": "All Workspaces",
+    "allActionTypes": "All Event Types"
+  },
+  "auditLogExportModal": {
+    "title": "Export to CSV",
+    "exportFilename": "Admin Audit Log Export - {date}",
+    "exportWorkspaceFilename": " Workspace ({workspaceId}) Audit Log Export - {date}",
+    "cancelledTitle": "Export failed",
+    "cancelledDescription": "Something went wrong while exporting the audit log. Please try again."
+  },
+  "authProviders": {
+    "title": "Authentication Providers",
+    "noProviders": "No authentication providers configured yet.",
+    "addProvider": "Add provider"
+  },
+  "authProviderTypes": {
+    "password": "Email and password authentication"
+  },
+  "editAuthProviderMenuContext": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "samlSettingsForm": {
+    "domain": "Domain",
+    "domainPlaceholder": "Insert the company domain name...",
+    "invalidDomain": "Invalid domain name",
+    "domainAlreadyExists": "A SAML provider for this domain already exists",
+    "metadata": "Metadata",
+    "metadataPlaceholder": "Paste the Identity Provider metadata...",
+    "invalidMetadata": "Invalid XML metadata for the Identity Provider",
+    "relayStateUrl": "Default Relay State URL",
+    "acsUrl": "Single Sign On URL",
+    "providerIsVerified": "The provider has been verified"
+  },
+  "createSettingsAuthProviderModal": {
+    "title": "Add a new {type}"
+  },
+  "updateSettingsAuthProviderModal": {
+    "title": "Edit {name}"
+  },
+  "deleteAuthProviderModal": {
+    "title": "Delete {name}",
+    "comment": "Do you really want to delete this {type}?"
+  },
+  "loginWithSaml": {
+    "signInWithSaml": "Login with SAML SSO",
+    "redirecting": "Redirecting to the Identity Provider...",
+    "continueWithSaml": "Continue to the SAML SSO provider",
+    "requestError": "This domain is not configured with SAML SSO",
+    "loginText": "Already have a password?"
+  },
+  "loginError": {
+    "title": "Something went wrong:",
+    "loginText": "Already have an account?",
+    "help": "Please contact your administrator for help.",
+    "defaultErrorMessage": "it was not possible to complete the SSO login flow.",
+    "errorSsoFeatureNotActive": "SSO feature is not active. Please contact your administrator.",
+    "errorInvalidSamlRequest": "SAML request is invalid.",
+    "errorInvalidSamlResponse": "SAML response is invalid.",
+    "errorUserDeactivated": "user has been disabled.",
+    "errorProviderDoesNotExist": "this authentication provider doesn't exist or is not available.",
+    "errorAuthFlowError": "an error occurred during the authentication flow with the selected provider.",
+    "errorDifferentProvider": "please use the provider that you originally signed up with.",
+    "errorWorkspaceInvitationEmailMismatch": "your email address does not match with the invitation.",
+    "errorSignupDisabled": "sign up has been disabled by the administrator."
+  },
+  "roles": {
+    "admin": {
+      "name": "Admin",
+      "description": "Can fully configure and edit workspaces and applications."
     },
-    "enterprise": {
-        "license": "Enterprise",
-        "sidebarTooltip": "Your account has access to the enterprise features globally",
-        "rbac": "RBAC",
-        "sso": "SSO",
-        "deactivated": "Available in advanced/enterprise",
-        "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any workspace then they will use a paid seat automatically.",
-        "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each workspaces members page."
+    "builder": {
+      "name": "Builder",
+      "description": "Can fully configure and edit applications."
     },
-    "trashType": {
-        "team": "team"
+    "editor": {
+      "name": "Editor",
+      "description": "Can fully edit data but not configure applications or workspaces."
     },
-    "createTeamModal": {
-        "title": "Create team",
-        "invalidNameTitle": "Please use a different name",
-        "invalidNameMessage": "This team name is already in use in the specified workspace."
+    "commenter": {
+      "name": "Commenter",
+      "description": "Can only read and comment on data."
     },
-    "updateTeamModal": {
-        "title": "Update {teamName}",
-        "invalidNameTitle": "Please use a different name",
-        "invalidNameMessage": "This team name is already in use in the specified workspace."
+    "viewer": {
+      "name": "Viewer",
+      "description": "Can only read data."
     },
-    "manageTeamModals": {
-        "subheading": "Teams allow you to give or restrict permissions in bulk to multiple people."
+    "noAccess": {
+      "name": "No access",
+      "description": "Can't access anything."
     },
-    "manageTeamForm": {
-        "submit": "Save",
-        "nameTitle": "Name",
-        "roleTitle": "Default role",
-        "inviteMembers": "Add members",
-        "membersTitle": "Members",
-        "noSubjectsSelected": "Click '{buttonLabel}' to optionally add team users.",
-        "roleHelpText": "User specific roles will always override Team roles."
-    },
-    "editTeamContext": {
-        "edit": "Edit team",
-        "remove": "Delete team"
-    },
-    "teamsTable": {
-        "title": "{teamCount} teams in {workspaceName}",
-        "createNew": "Create team",
-        "nameColumn": "Name",
-        "createdColumn": "Created on",
-        "subjectsColumn": "Members",
-        "roleColumn": "Default role",
-        "roleHelpText": "Can be overriden with roles on databases and tables."
-    },
-    "subjectSampleField": {
-        "titleAttr": "{subjectCount} members in this team."
-    },
-    "teamsSettings": {
-        "teamsTabTitle": "Teams"
-    },
-    "adminType": {
-        "AuditLog": "Audit log",
-        "Authentication": "Authentication"
-    },
-    "auditLog": {
-        "adminTitle": "Audit log",
-        "workspaceTitle": "Audit log - {workspaceName}",
-        "filterUserTitle": "User",
-        "filterWorkspaceTitle": "Workspace",
-        "filterActionTypeTitle": "Event Type",
-        "filterFromTimestampTitle": "From Date",
-        "filterFromTimestamp": "From Date",
-        "filterToTimestampTitle": "To Date",
-        "filterToTimestamp": "To Date",
-        "user": "User",
-        "workspace": "Workspace",
-        "actionType": "Event Type",
-        "description": "Description",
-        "timestamp": "Timestamp",
-        "ip_address": "IP Address",
-        "exportToCsv": "Export to CSV",
-        "exportModalTitle": "Export to CSV",
-        "clearFilters": "Clear",
-        "allUsers": "All Users",
-        "allWorkspaces": "All Workspaces",
-        "allActionTypes": "All Event Types"
-    },
-    "auditLogExportModal": {
-        "title": "Export to CSV",
-        "exportFilename": "Admin Audit Log Export - {date}",
-        "exportWorkspaceFilename": " Workspace ({workspaceId}) Audit Log Export - {date}",
-        "cancelledTitle": "Export failed",
-        "cancelledDescription": "Something went wrong while exporting the audit log. Please try again."
-    },
-    "authProviders": {
-        "title": "Authentication Providers",
-        "noProviders": "No authentication providers configured yet.",
-        "addProvider": "Add provider"
-    },
-    "authProviderTypes": {
-        "password": "Email and password authentication"
-    },
-    "editAuthProviderMenuContext": {
-        "edit": "Edit",
-        "delete": "Delete"
-    },
-    "samlSettingsForm": {
-        "domain": "Domain",
-        "domainPlaceholder": "Insert the company domain name...",
-        "invalidDomain": "Invalid domain name",
-        "domainAlreadyExists": "A SAML provider for this domain already exists",
-        "metadata": "Metadata",
-        "metadataPlaceholder": "Paste the Identity Provider metadata...",
-        "invalidMetadata": "Invalid XML metadata for the Identity Provider",
-        "relayStateUrl": "Default Relay State URL",
-        "acsUrl": "Single Sign On URL",
-        "providerIsVerified": "The provider has been verified"
-    },
-    "createSettingsAuthProviderModal": {
-        "title": "Add a new {type}"
-    },
-    "updateSettingsAuthProviderModal": {
-        "title": "Edit {name}"
-    },
-    "deleteAuthProviderModal": {
-        "title": "Delete {name}",
-        "comment": "Do you really want to delete this {type}?"
-    },
-    "loginWithSaml": {
-        "signInWithSaml": "Login with SAML SSO",
-        "redirecting": "Redirecting to the Identity Provider...",
-        "continueWithSaml": "Continue to the SAML SSO provider",
-        "requestError": "This domain is not configured with SAML SSO",
-        "loginText": "Already have a password?"
-    },
-    "loginError": {
-        "title": "Something went wrong:",
-        "loginText": "Already have an account?",
-        "help": "Please contact your administrator for help.",
-        "defaultErrorMessage": "it was not possible to complete the SSO login flow.",
-        "errorSsoFeatureNotActive": "SSO feature is not active. Please contact your administrator.",
-        "errorInvalidSamlRequest": "SAML request is invalid.",
-        "errorInvalidSamlResponse": "SAML response is invalid.",
-        "errorUserDeactivated": "user has been disabled.",
-        "errorProviderDoesNotExist": "this authentication provider doesn't exist or is not available.",
-        "errorAuthFlowError": "an error occurred during the authentication flow with the selected provider.",
-        "errorDifferentProvider": "please use the provider that you originally signed up with.",
-        "errorWorkspaceInvitationEmailMismatch": "your email address does not match with the invitation.",
-        "errorSignupDisabled": "sign up has been disabled by the administrator."
-    },
-    "roles": {
-        "admin": {
-            "name": "Admin",
-            "description": "Can fully configure and edit workspaces and applications."
-        },
-        "builder": {
-            "name": "Builder",
-            "description": "Can fully configure and edit applications."
-        },
-        "editor": {
-            "name": "Editor",
-            "description": "Can fully edit data but not configure applications or workspaces."
-        },
-        "commenter": {
-            "name": "Commenter",
-            "description": "Can only read and comment on data."
-        },
-        "viewer": {
-            "name": "Viewer",
-            "description": "Can only read data."
-        },
-        "noAccess": {
-            "name": "No access",
-            "description": "Can't access anything."
-        },
-        "noRoleLowPriority": {
-            "name": "No role",
-            "description": "Get default workspace role from their teams."
-        }
-    },
-    "memberRolesModal": {
-        "memberRolesDatabaseTabTitle": "Database",
-        "memberRolesTableTabTitle": "Current Table",
-        "error": {
-            "title": "Could not fetch data",
-            "description": "An error occurred while fetching the member data."
-        }
-    },
-    "memberRolesTab": {
-        "database": {
-            "title": "{name} database",
-            "selectMembers": "Select members",
-            "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
-            "onlyYouHaveAccess": "Only you can access this database.",
-            "warningTitle": "Other users might inherit access!",
-            "warningMessage": "Other users might inherit access via their respective roles on the parent workspace.",
-            "headerTooltip": "Database roles will override workspace roles."
-        },
-        "table": {
-            "title": "{name} table",
-            "selectMembers": "Select members",
-            "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
-            "onlyYouHaveAccess": "Only you can access this table.",
-            "warningTitle": "Other users might inherit access!",
-            "warningMessage": "Other users might inherit access via their respective roles on the parent database or workspace.",
-            "headerTooltip": "Table roles will override workspace and database roles."
-        }
-    },
-    "memberRolesShareToggle": {
-        "label": "Share with everyone at {name}",
-        "subLabel": "{totalUserAmount} workspace members"
-    },
-    "memberRolesDatabaseContexItem": {
-        "label": "Manage members"
-    },
-    "memberRolesTableContexItem": {
-        "label": "Manage members"
-    },
-    "memberRolesMembersList": {
-        "remove": "Remove",
-        "teamMembersCount": "{count} team members",
-        "adminHelpText": "Admins can restrict other admins roles.",
-        "noMembers": "No members have been selected. Use the select button to add one."
-    },
-    "roleAssignmentModal": {
-        "membersTab": "Members",
-        "teamsTab": "Teams",
-        "subjectTypeNameMembers": "members",
-        "subjectTypeNameTeams": "teams"
-    },
-    "selectMembersList": {
-        "searchPlaceholder": "Find members...",
-        "selectedAmountLabel": "{count} members selected"
-    },
-    "selectTeamsList": {
-        "searchPlaceholder": "Find teams...",
-        "selectedAmountLabel": "{count} teams selected"
-    },
-    "selectSubjectsListFooter": {
-        "invite": "Invite {count} {type}",
-        "types": {
-            "members": "members",
-            "teams": "teams"
-        },
-        "helpTooltip": "Member role assignments override team role assignments."
-    },
-    "membersRoleField": {
-        "noAccessHelpText": "This user requires explicit access to resources.",
-        "adminHelpText": "Admins can restrict other admins roles."
-    },
-    "membersPagePlugin": {
-        "roleHelpText": "Can be overriden with roles on databases and tables."
-    },
-    "oauthSettingsForm": {
-        "providerName": "Name",
-        "providerNamePlaceholder": "Custom provider name",
-        "clientId": "Client ID",
-        "clientIdPlaceholder": "Provider's client ID",
-        "secret": "Secret",
-        "secretPlaceholder": "Provider's secret",
-        "baseUrl": "URL",
-        "baseUrlPlaceholder": "Provider's base URL",
-        "invalidBaseUrl": "The entered URL is not a valid provider URL",
-        "callbackUrl": "Callback URL"
-    },
-    "loginButton": {
-        "continueWith": "Continue with"
-    },
-    "enterpriseFeatures": {
-        "sso": "Single Sign On",
-        "rbac": "Role-based access control"
-    },
-    "chatwootSupportSidebarWorkspace": {
-        "directSupport": "Direct support"
-    },
-    "userTeamsField": {
-        "no_records": "No teams"
-    },
-    "snapshotModalWarning": {
-        "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
-    },
-    "auditLogSidebarWorkspace": {
-        "title": "Audit log",
-        "deactivated": "Available in advanced/enterprise"
-    },
-    "localBaserowUserSourceType": {
-      "notConfigured": "Not configured"
-    },
-    "localBaserowUserSourceForm": {
-      "description": "Every row in the table is a user account. Please select the matching fields in the table. The email field will be used to identify.",
-      "emailFieldLabel": "Select email field",
-      "emailFieldLabelPlaceholder": "Select a field...",
-      "noFields": "No fields",
-      "nameFieldLabel": "Select name field",
-      "nameFieldPlaceholder": "Select a field..."
+    "noRoleLowPriority": {
+      "name": "No role",
+      "description": "Get default workspace role from their teams."
     }
+  },
+  "memberRolesModal": {
+    "memberRolesDatabaseTabTitle": "Database",
+    "memberRolesTableTabTitle": "Current Table",
+    "error": {
+      "title": "Could not fetch data",
+      "description": "An error occurred while fetching the member data."
+    }
+  },
+  "memberRolesTab": {
+    "database": {
+      "title": "{name} database",
+      "selectMembers": "Select members",
+      "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
+      "onlyYouHaveAccess": "Only you can access this database.",
+      "warningTitle": "Other users might inherit access!",
+      "warningMessage": "Other users might inherit access via their respective roles on the parent workspace.",
+      "headerTooltip": "Database roles will override workspace roles."
+    },
+    "table": {
+      "title": "{name} table",
+      "selectMembers": "Select members",
+      "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
+      "onlyYouHaveAccess": "Only you can access this table.",
+      "warningTitle": "Other users might inherit access!",
+      "warningMessage": "Other users might inherit access via their respective roles on the parent database or workspace.",
+      "headerTooltip": "Table roles will override workspace and database roles."
+    }
+  },
+  "memberRolesShareToggle": {
+    "label": "Share with everyone at {name}",
+    "subLabel": "{totalUserAmount} workspace members"
+  },
+  "memberRolesDatabaseContexItem": {
+    "label": "Manage members"
+  },
+  "memberRolesTableContexItem": {
+    "label": "Manage members"
+  },
+  "memberRolesMembersList": {
+    "remove": "Remove",
+    "teamMembersCount": "{count} team members",
+    "adminHelpText": "Admins can restrict other admins roles.",
+    "noMembers": "No members have been selected. Use the select button to add one."
+  },
+  "roleAssignmentModal": {
+    "membersTab": "Members",
+    "teamsTab": "Teams",
+    "subjectTypeNameMembers": "members",
+    "subjectTypeNameTeams": "teams"
+  },
+  "selectMembersList": {
+    "searchPlaceholder": "Find members...",
+    "selectedAmountLabel": "{count} members selected"
+  },
+  "selectTeamsList": {
+    "searchPlaceholder": "Find teams...",
+    "selectedAmountLabel": "{count} teams selected"
+  },
+  "selectSubjectsListFooter": {
+    "invite": "Invite {count} {type}",
+    "types": {
+      "members": "members",
+      "teams": "teams"
+    },
+    "helpTooltip": "Member role assignments override team role assignments."
+  },
+  "membersRoleField": {
+    "noAccessHelpText": "This user requires explicit access to resources.",
+    "adminHelpText": "Admins can restrict other admins roles."
+  },
+  "membersPagePlugin": {
+    "roleHelpText": "Can be overriden with roles on databases and tables."
+  },
+  "oauthSettingsForm": {
+    "providerName": "Name",
+    "providerNamePlaceholder": "Custom provider name",
+    "clientId": "Client ID",
+    "clientIdPlaceholder": "Provider's client ID",
+    "secret": "Secret",
+    "secretPlaceholder": "Provider's secret",
+    "baseUrl": "URL",
+    "baseUrlPlaceholder": "Provider's base URL",
+    "invalidBaseUrl": "The entered URL is not a valid provider URL",
+    "callbackUrl": "Callback URL"
+  },
+  "loginButton": {
+    "continueWith": "Continue with"
+  },
+  "enterpriseFeatures": {
+    "sso": "Single Sign On",
+    "rbac": "Role-based access control"
+  },
+  "chatwootSupportSidebarWorkspace": {
+    "directSupport": "Direct support"
+  },
+  "userTeamsField": {
+    "no_records": "No teams"
+  },
+  "snapshotModalWarning": {
+    "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
+  },
+  "auditLogSidebarWorkspace": {
+    "title": "Audit log",
+    "deactivated": "Available in advanced/enterprise"
+  },
+  "localBaserowUserSourceType": {
+    "notConfigured": "Not configured"
+  },
+  "localBaserowUserSourceForm": {
+    "description": "Every row in the table is a user account. Please select the matching fields in the table. The email field will be used to identify.",
+    "emailFieldLabel": "Select email field",
+    "emailFieldLabelPlaceholder": "Select a field...",
+    "noFields": "No fields",
+    "nameFieldLabel": "Select name field",
+    "nameFieldPlaceholder": "Select a field..."
+  },
+  "appAuthProviderType": {
+    "localBaserowPassword": "Email/Password"
+  },
+  "localBaserowPasswordAppAuthProviderForm": {
+    "passwordFieldLabel": "Select password field",
+    "noFields": "No compatible fields"
+  }
 }

@@ -42,6 +42,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
     ViewTypeDoesNotExist,
 )
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import (
     PublicViewRows,
     ViewHandler,
@@ -2298,13 +2299,17 @@ def test_get_public_rows_queryset_and_field_ids_filter(data_fixture):
     model.objects.create(**{f"field_{field.id}": 2})
     model.objects.create(**{f"field_{field.id}": 3})
 
+    adhoc_filters = AdHocFilters(
+        filter_object={f"filter__field_{field.id}__equal": "2"}
+    )
+
     (
         queryset,
         field_ids,
         publicly_visible_field_options,
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(
         grid_view,
-        filter_object={f"filter__field_{field.id}__equal": "2"},
+        adhoc_filters=adhoc_filters,
     )
 
     assert queryset.count() == 1
@@ -2326,12 +2331,15 @@ def test_get_public_rows_queryset_and_field_ids_filters_stack(data_fixture):
     model.objects.create(**{f"field_{field.id}": 2, f"field_{field_2.id}": "b"})
     model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": "c"})
 
+    adhoc_filters = AdHocFilters(filter_object={f"field_{field.id}": 2})
+
     (
         queryset,
         field_ids,
         publicly_visible_field_options,
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(
-        grid_view, filter_object={f"field_{field.id}": 2}
+        grid_view,
+        adhoc_filters=adhoc_filters,
     )
 
     assert queryset.count() == 1
@@ -3981,11 +3989,11 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
     queryset = model.objects.all()
     rows = list(queryset)
     handler = ViewHandler()
-    all_fields = list(table.field_set.all())
+    all_fields = [f.specific for f in table.field_set.all()]
     fields_to_group_by = [
         field
         for field in all_fields
-        if field_type_registry.get_by_model(field.specific).check_can_group_by(field)
+        if field_type_registry.get_by_model(field).check_can_group_by(field)
     ]
 
     actual_result_per_field_name = {}
@@ -4229,3 +4237,41 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
     for field_name, expected in expected_result.items():
         actual = actual_result_per_field_name[field_name]
         assert actual == unordered(expected), f"{field_name}: {actual} != {expected}"
+
+
+@pytest.mark.django_db
+def test_get_queryset_apply_sorts(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
+    sort = data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
+    view_handler = ViewHandler()
+    model = table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "c",
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "b",
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "a",
+        }
+    )
+
+    # Don't apply view sorting
+    rows = view_handler.get_queryset(grid_view, apply_sorts=False)
+
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id]
+
+    # Apply view sorting
+    rows = view_handler.get_queryset(grid_view, apply_sorts=True)
+
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_2.id, row_1.id]

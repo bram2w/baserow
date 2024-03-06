@@ -9,6 +9,7 @@ import {
   DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
+  UserSourcesBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
@@ -76,6 +77,7 @@ import {
   DataSourceDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
+  UserDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
@@ -93,10 +95,6 @@ import {
 
 export default (context) => {
   const { store, app, isDev } = context
-
-  if (!app.$featureFlagIsEnabled('builder')) {
-    return
-  }
 
   // Allow locale file hot reloading in dev
   if (isDev && app.i18n) {
@@ -150,6 +148,11 @@ export default (context) => {
     new DomainsBuilderSettingsType(context)
   )
 
+  app.$registry.register(
+    'builderSettings',
+    new UserSourcesBuilderSettingsType(context)
+  )
+
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
 
   app.$registry.register('element', new HeadingElementType(context))
@@ -196,6 +199,10 @@ export default (context) => {
   app.$registry.register('pageAction', new PublishPageActionType(context))
   app.$registry.register('pageAction', new PreviewPageActionType(context))
 
+  app.$registry.register(
+    'builderDataProvider',
+    new UserDataProviderType(context)
+  )
   app.$registry.register(
     'builderDataProvider',
     new CurrentRecordDataProviderType(context)

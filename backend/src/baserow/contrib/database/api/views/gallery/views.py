@@ -37,20 +37,13 @@ from baserow.contrib.database.api.views.errors import (
 from baserow.contrib.database.api.views.gallery.serializers import (
     GalleryViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.api.views.serializers import (
-    FieldOptionsField,
-    validate_api_grouped_filters,
-)
+from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
-)
-from baserow.contrib.database.fields.field_filters import (
-    FILTER_TYPE_AND,
-    FILTER_TYPE_OR,
 )
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
@@ -60,6 +53,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
 )
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryView
 from baserow.contrib.database.views.registries import (
@@ -106,6 +100,15 @@ class GalleryViewView(APIView):
                 ),
             ),
             OpenApiParameter(
+                name="order_by",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Optionally the rows can be ordered by provided field ids "
+                "separated by comma. By default a field is ordered in ascending (A-Z) "
+                "order, but by prepending the field with a '-' it can be ordered "
+                "descending (Z-A).",
+            ),
+            OpenApiParameter(
                 name="limit",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
@@ -125,6 +128,58 @@ class GalleryViewView(APIView):
                 type=OpenApiTypes.STR,
                 description="If provided only rows with data that matches the search "
                 "query are going to be returned.",
+            ),
+            OpenApiParameter(
+                name="filters",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "A JSON serialized string containing the filter tree to apply "
+                    "to this view. The filter tree is a nested structure containing "
+                    "the filters that need to be applied. \n\n"
+                    "An example of a valid filter tree is the following:"
+                    '`{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
+                    '"value": "test"}]}`.\n\n'
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                    "Please note that by passing the filters parameter the "
+                    "view filters saved for the view itself will be ignored."
+                ),
+            ),
+            OpenApiParameter(
+                name="filter__{field}__{filter}",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    f"The rows can optionally be filtered by the same view filters "
+                    f"available for the views. Multiple filters can be provided if "
+                    f"they follow the same format. The field and filter variable "
+                    f"indicate how to filter and the value indicates where to filter "
+                    f"on.\n\n"
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
+                    f"For example if you provide the following GET parameter "
+                    f"`filter__field_1__equal=test` then only rows where the value of "
+                    f"field_1 is equal to test are going to be returned.\n\n"
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                    "Please note that by passing the filter parameters the "
+                    "view filters saved for the view itself will be ignored."
+                ),
+            ),
+            OpenApiParameter(
+                name="filter_type",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "`AND`: Indicates that the rows must match all the provided "
+                    "filters.\n"
+                    "`OR`: Indicates that the rows only have to match one of the "
+                    "filters.\n\n"
+                    "This works only if two or more filters are provided."
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
+                ),
             ),
             SEARCH_MODE_API_PARAM,
         ],
@@ -149,7 +204,17 @@ class GalleryViewView(APIView):
                 },
                 serializer_name="PaginationSerializerWithGalleryViewFieldOptions",
             ),
-            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_FILTER_FIELD_NOT_FOUND",
+                    "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
+                    "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
+                    "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
+                    "ERROR_ORDER_BY_FIELD_NOT_FOUND",
+                    "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE",
+                ]
+            ),
             404: get_error_schema(["ERROR_GALLERY_DOES_NOT_EXIST"]),
         },
     )
@@ -157,6 +222,11 @@ class GalleryViewView(APIView):
         {
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GALLERY_DOES_NOT_EXIST,
+            FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+            ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
+            OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
         }
     )
     @allowed_includes("field_options", "row_metadata")
@@ -171,6 +241,9 @@ class GalleryViewView(APIView):
     ):
         """Lists the rows for the gallery view."""
 
+        adhoc_filters = AdHocFilters.from_request(request)
+
+        order_by = request.GET.get("order_by")
         view_handler = ViewHandler()
         view = view_handler.get_view_as_user(
             request.user,
@@ -194,8 +267,18 @@ class GalleryViewView(APIView):
 
         model = view.table.get_model()
         queryset = view_handler.get_queryset(
-            view, search, model, search_mode=search_mode
+            view,
+            search,
+            model,
+            search_mode=search_mode,
+            apply_sorts=order_by is None,
+            apply_filters=not adhoc_filters.has_any_filters,
         )
+
+        if adhoc_filters.has_any_filters:
+            queryset = adhoc_filters.apply_to_queryset(model, queryset)
+        if order_by is not None:
+            queryset = queryset.order_by_fields_string(order_by, False)
 
         if "count" in request.GET:
             return Response({"count": queryset.count()})
@@ -460,18 +543,7 @@ class PublicGalleryViewRowsView(APIView):
         order_by = request.GET.get("order_by")
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
-        filter_type = (
-            FILTER_TYPE_OR
-            if request.GET.get("filter_type", "AND").upper() == "OR"
-            else FILTER_TYPE_AND
-        )
-        filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
-
-        # Advanced filters are provided as a JSON string in the `filters` parameter.
-        # If provided, all other filter parameters are ignored.
-        api_filters = None
-        if (filters := filter_object.get("filters", None)) and len(filters) > 0:
-            api_filters = validate_api_grouped_filters(filters[0])
+        adhoc_filters = AdHocFilters.from_request(request)
 
         count = "count" in request.GET
 
@@ -495,12 +567,10 @@ class PublicGalleryViewRowsView(APIView):
             order_by=order_by,
             include_fields=include_fields,
             exclude_fields=exclude_fields,
-            filter_type=filter_type,
-            filter_object=filter_object,
+            adhoc_filters=adhoc_filters,
             table_model=model,
             view_type=view_type,
             search_mode=search_mode,
-            api_filters=api_filters,
         )
 
         if count:

@@ -56,24 +56,28 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
   }
 
   static getDefaultFilterConf(registry, { fields, filterGroupId = null }) {
-    const field = fields[0]
-    const filter = { field: field.id }
+    for (const field of fields) {
+      const filter = { field: field.id }
 
-    const viewFilterTypes = registry.getAll('viewFilter')
-    const compatibleType = Object.values(viewFilterTypes).find(
-      (viewFilterType) => {
-        return viewFilterType.fieldIsCompatible(field)
+      const viewFilterTypes = registry.getAll('viewFilter')
+      const compatibleType = Object.values(viewFilterTypes).find(
+        (viewFilterType) => {
+          return viewFilterType.fieldIsCompatible(field)
+        }
+      )
+      if (!compatibleType) {
+        continue
       }
-    )
 
-    filter.type = compatibleType.type
-    const viewFilterType = registry.get('viewFilter', filter.type)
-    filter.value = viewFilterType.getDefaultValue(field)
-    filter.preload_values = {}
-    filter.id = uuid()
-    filter.group = filterGroupId
+      filter.type = compatibleType.type
+      const viewFilterType = registry.get('viewFilter', filter.type)
+      filter.value = viewFilterType.getDefaultValue(field)
+      filter.preload_values = {}
+      filter.id = uuid()
+      filter.group = filterGroupId
 
-    return filter
+      return filter
+    }
   }
 
   static getDefaultFilterGroupConf() {

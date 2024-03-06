@@ -5,7 +5,9 @@
     "wrong": "Something went wrong",
     "none": "None",
     "free": "Free",
-    "comingSoon": "Coming soon..."
+    "comingSoon": "Coming soon...",
+    "table": "Table",
+    "link": "Link"
   },
   "action": {
     "upload": "Upload",
@@ -14,6 +16,7 @@
     "signUp": "Sign up",
     "signIn": "Sign in",
     "login": "Login",
+    "logout": "Logout",
     "createNew": "Create new",
     "create": "Create",
     "edit": "Edit",
@@ -26,6 +29,7 @@
     "makeChoice": "Make a choice",
     "cancel": "Cancel",
     "save": "Save",
+    "set": "Set",
     "retry": "Retry",
     "search": "Search",
     "copy": "Copy",
@@ -114,7 +118,8 @@
     "multipleSelectCheckboxes": "Checkboxes",
     "singleSelectDropdown": "Dropdown",
     "singleSelectRadios": "Radios",
-    "autonumber": "Autonumber"
+    "autonumber": "Autonumber",
+    "password": "Password"
   },
   "fieldErrors": {
     "invalidNumber": "Invalid number",
@@ -124,12 +129,14 @@
     "invalidEmail": "Invalid email",
     "invalidPhoneNumber": "Invalid Phone Number",
     "invalidDuration": "Invalid format ({durationFormat}).",
-    "overflowDuration": "Value is too large."
+    "overflowDuration": "Value is too large.",
+    "maxChars": "Max {max} chars.",
+    "minChars": "Min {min} chars."
   },
   "fieldDocs": {
     "readOnly": "This is a read only field.",
     "text": "Accepts single line text.",
-    "longText": "Accepts multi line text.",
+    "longText": "Accepts multi line text. If the rich text formatting is enabled, you can use markdown to format the text.",
     "linkRow": "Accepts an array containing the identifiers or main field text values of the related rows from table id {table}. All identifiers must be provided every time the relations are updated. If an empty array is provided all relations will be deleted. In case of a text value instead of an identifier, a row with the matching value for its main field will be searched. If more than one match is found, the first one in the order of the table is selected. You can send a string with names separated by comma in which case the string is converted into an array of row names.",
     "number": "Accepts a number.",
     "numberPositive": "Accepts a positive number.",
@@ -158,7 +165,8 @@
     "lookup": "A read-only field connected to a link to table field which returns an array of values and row ids from the chosen lookup field in the linked table.",
     "multipleCollaborators": "Accepts an array of objects where each object contains a user's id.",
     "uuid": "A read-only unique and persistent uuid.",
-    "autonumber": "A read-only field that automatically increments a number for each new row."
+    "autonumber": "A read-only field that automatically increments a number for each new row.",
+    "password": "A write-only field that holds a hashed password. The value will be `null` if not set, or `true` if it has been set. It accepts a string to set it."
   },
   "viewFilter": {
     "contains": "contains",

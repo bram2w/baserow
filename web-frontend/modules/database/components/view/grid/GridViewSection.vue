@@ -128,7 +128,6 @@
               :field="field"
               :view="view"
               :store-prefix="storePrefix"
-              :read-only="readOnly"
             />
           </div>
         </template>

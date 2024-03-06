@@ -15,7 +15,7 @@ export default {
     getComponent(field, registry) {
       return registry
         .get('formula_type', field.formula_type)
-        .getGridViewFieldComponent()
+        .getGridViewFieldComponent(field)
     },
   },
 }

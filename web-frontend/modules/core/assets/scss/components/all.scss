@@ -25,6 +25,7 @@
 @import 'fields/number';
 @import 'fields/rating';
 @import 'fields/long_text';
+@import 'fields/rich_text';
 @import 'fields/date';
 @import 'fields/link_row';
 @import 'fields/file';
@@ -33,12 +34,14 @@
 @import 'fields/last_modified_by.scss';
 @import 'fields/array';
 @import 'fields/duration';
+@import 'fields/password';
 @import 'card';
 @import 'card/all';
 @import 'views/grid';
 @import 'views/grid/button';
 @import 'views/grid/text';
 @import 'views/grid/long_text';
+@import 'views/grid/rich_text';
 @import 'views/grid/number';
 @import 'views/grid/rating';
 @import 'views/grid/boolean';
@@ -52,9 +55,11 @@
 @import 'views/grid/aggregation';
 @import 'views/grid/simple_grid';
 @import 'views/grid/duration';
+@import 'views/grid/password';
 @import 'views/gallery';
 @import 'views/sharing';
 @import 'views/public';
+@import 'views/rich_text_modal';
 @import 'view_ownership_select';
 @import 'decorator/list';
 @import 'decorator/item';

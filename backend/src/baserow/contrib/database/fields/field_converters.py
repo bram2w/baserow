@@ -16,6 +16,7 @@ from .models import (
     LinkRowField,
     MultipleCollaboratorsField,
     MultipleSelectField,
+    PasswordField,
     SelectOption,
     SingleSelectField,
 )
@@ -59,6 +60,18 @@ class AutonumberFieldConverter(RecreateFieldConverter):
         from_autonumber = isinstance(from_field, AutonumberField)
         to_autonumber = isinstance(to_field, AutonumberField)
         return to_autonumber and not from_autonumber
+
+
+class PasswordFieldConverter(RecreateFieldConverter):
+    type = "password"
+
+    def is_applicable(self, from_model, from_field, to_field):
+        # For now, we always want to recreate the whole field is it's changed to or
+        # from a password field because it can take quite long to create many hashed
+        # when converting from a text to a password field.
+        from_password = isinstance(from_field, PasswordField)
+        to_password = isinstance(to_field, PasswordField)
+        return to_password or from_password
 
 
 class LinkRowFieldConverter(RecreateFieldConverter):

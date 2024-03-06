@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import include, path
 
 from drf_spectacular.views import SpectacularRedocView
@@ -58,22 +57,15 @@ urlpatterns = (
             "templates/", include(templates_compat_urls, namespace="templates_compat")
         ),
         path("notifications/", include(notifications_urls, namespace="notifications")),
+        path(
+            "",
+            include(integrations_urls, namespace="integrations"),
+        ),
+        path(
+            "",
+            include(user_source_urls, namespace="user_sources"),
+        ),
     ]
     + application_type_registry.api_urls
     + plugin_registry.api_urls
 )
-
-
-if "builder" in settings.FEATURE_FLAGS:
-    urlpatterns.append(
-        path(
-            "",
-            include(integrations_urls, namespace="integrations"),
-        )
-    )
-    urlpatterns.append(
-        path(
-            "",
-            include(user_source_urls, namespace="user_sources"),
-        )
-    )

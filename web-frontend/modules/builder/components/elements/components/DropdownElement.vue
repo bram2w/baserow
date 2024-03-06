@@ -8,7 +8,6 @@
       class="dropdown-element"
       :placeholder="placeholderResolved"
       :show-search="false"
-      :disabled="mode === 'editing'"
     >
       <DropdownItem
         v-for="option in element.options"

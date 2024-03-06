@@ -440,39 +440,59 @@ export function getGroupBy(rootGetters, viewId) {
   }
 }
 
-export function getOrderBy(rootGetters, viewId) {
-  if (rootGetters['page/view/public/getIsPublic']) {
-    const view = rootGetters['view/get'](viewId)
+export function isAdhocSorting(app, workspace, view, publicView) {
+  return (
+    publicView ||
+    (app.$hasPermission('database.table.view.list_sort', view, workspace.id) &&
+      !app.$hasPermission(
+        'database.table.view.create_sort',
+        view,
+        workspace.id
+      ))
+  )
+}
+
+export function getOrderBy(view, adhocSorting) {
+  if (adhocSorting) {
     return view.sortings
       .map((sort) => {
         return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
       })
       .join(',')
   } else {
-    return ''
+    return null
   }
 }
 
-export function getFilters(rootGetters, viewId) {
+export function isAdhocFiltering(app, workspace, view, publicView) {
+  return (
+    publicView ||
+    (app.$hasPermission(
+      'database.table.view.list_filter',
+      view,
+      workspace.id
+    ) &&
+      !app.$hasPermission(
+        'database.table.view.create_filter',
+        view,
+        workspace.id
+      ))
+  )
+}
+
+export function getFilters(view, adhocFiltering) {
   const payload = {}
-
-  if (rootGetters['page/view/public/getIsPublic']) {
-    const view = rootGetters['view/get'](viewId)
-
-    if (!view.filters_disabled) {
-      const {
-        filter_type: filterType,
-        filter_groups: filterGroups,
-        filters,
-      } = view
-      const filterTree = createFiltersTree(filterType, filters, filterGroups)
-      if (filterTree.hasFilters()) {
-        const serializedTree = filterTree.getFiltersTreeSerialized()
-        payload.filters = [JSON.stringify(serializedTree)]
-      }
-    }
-    return payload
+  if (adhocFiltering && !view.filters_disabled) {
+    const {
+      filter_type: filterType,
+      filter_groups: filterGroups,
+      filters,
+    } = view
+    const filterTree = createFiltersTree(filterType, filters, filterGroups)
+    const serializedTree = filterTree.getFiltersTreeSerialized()
+    payload.filters = [JSON.stringify(serializedTree)]
   }
+  return payload
 }
 
 /**

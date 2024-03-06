@@ -1,5 +1,5 @@
 <template>
-  <div :style="style">
+  <div :style="style" @click.self="$emit('click', $event)">
     <slot></slot>
   </div>
 </template>
@@ -14,6 +14,9 @@ export default {
         '--primary-color': this.builder.theme.primary_color,
         '--secondary-color': this.builder.theme.secondary_color,
       }
+      const buttonColors = {
+        '--button-color': this.builder.theme.primary_color,
+      }
       const headings = Array.from([1, 2, 3, 4, 5, 6]).reduce(
         (headings, level) => ({
           [`--heading-h${level}--font-size`]: `${
@@ -25,7 +28,7 @@ export default {
         }),
         {}
       )
-      return { ...colors, ...headings }
+      return { ...colors, ...headings, ...buttonColors }
     },
   },
 }

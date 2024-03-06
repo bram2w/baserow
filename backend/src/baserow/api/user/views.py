@@ -88,7 +88,6 @@ from .errors import (
     ERROR_USER_NOT_FOUND,
 )
 from .exceptions import ClientSessionIdHeaderNotSetException
-from .jwt import get_user_from_token
 from .schemas import (
     authenticate_user_schema,
     create_user_response_schema,
@@ -192,6 +191,7 @@ class VerifyJSONWebToken(TokenVerifyView):
 class BlacklistJSONWebToken(TokenBlacklistView):
     permission_classes = ()
     authentication_classes = ()
+    token_class = RefreshToken
 
     @extend_schema(
         tags=["User"],
@@ -215,9 +215,8 @@ class BlacklistJSONWebToken(TokenBlacklistView):
     @validate_body(TokenBlacklistSerializer)
     def post(self, request, data):
         refresh_token = data["refresh_token"]
-        user = get_user_from_token(refresh_token, token_class=RefreshToken)
-        expires_at = datetime_from_epoch(RefreshToken(refresh_token)["exp"])
-        UserHandler().blacklist_refresh_token(user, refresh_token, expires_at)
+        expires_at = datetime_from_epoch(self.token_class(refresh_token)["exp"])
+        UserHandler().blacklist_refresh_token(refresh_token, expires_at)
         return Response(status=204)
 
 
@@ -353,7 +352,7 @@ class SendResetPasswordEmailView(APIView):
         except UserNotFound:
             pass
 
-        return Response("", status=204)
+        return Response(status=204)
 
 
 class ResetPasswordView(APIView):
@@ -400,7 +399,7 @@ class ResetPasswordView(APIView):
             data["token"], data["password"]
         )
 
-        return Response("", status=204)
+        return Response(status=204)
 
 
 class ChangePasswordView(APIView):
@@ -441,7 +440,7 @@ class ChangePasswordView(APIView):
             request.user, data["old_password"], data["new_password"]
         )
 
-        return Response("", status=204)
+        return Response(status=204)
 
 
 class AccountView(APIView):

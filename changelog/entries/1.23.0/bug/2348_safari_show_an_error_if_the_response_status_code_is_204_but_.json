@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Return an empty body instead of a string with a HTTP 204 status code",
+    "issue_number": 2348,
+    "bullet_points": [],
+    "created_at": "2024-02-14"
+}

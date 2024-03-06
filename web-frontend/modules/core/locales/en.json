@@ -585,5 +585,23 @@
     "dataExplorer": {
         "noMatchingNodesText": "No matching data providers were found.",
         "noProvidersText": "No data providers were found. To get started you can, for example, add a data source or page parameter."
+    },
+    "richTextEditorBubbleMenu": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "strikethrough": "Strike"
+    },
+    "richTextEditorFloatingMenu": {
+        "hierarchy": "Hierarchy",
+        "lists": "Lists",
+        "paragraph": "Paragraph",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "orderedList": "Numbered list",
+        "unorderedList": "Bullet list",
+        "code": "Code",
+        "taskList": "Task list"
     }
 }

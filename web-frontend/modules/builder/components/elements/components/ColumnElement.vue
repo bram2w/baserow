@@ -15,15 +15,12 @@
       <template v-if="childrenInColumn.length > 0">
         <div
           v-for="(childCurrent, rowIndex) in childrenInColumn"
-          :key="rowIndex"
+          :key="childCurrent.id"
           class="column-element__element"
         >
           <ElementPreview
             v-if="mode === 'editing'"
-            class="element"
             :element="childCurrent"
-            :active="childCurrent.id === elementSelectedId"
-            :index="rowIndex"
             :placements="[
               PLACEMENTS.BEFORE,
               PLACEMENTS.AFTER,
@@ -167,10 +164,11 @@ export default {
       // the click event select the container because the element is removed from the
       // DOM too quickly
       await flushPromises()
+
       if (placement === PLACEMENTS.AFTER || placement === PLACEMENTS.BEFORE) {
-        this.moveVertical(element, rowIndex, columnIndex, placement)
+        await this.moveVertical(element, rowIndex, columnIndex, placement)
       } else {
-        this.moveHorizontal(element, columnIndex, placement)
+        await this.moveHorizontal(element, columnIndex, placement)
       }
     },
     async moveVertical(element, rowIndex, columnIndex, placement) {

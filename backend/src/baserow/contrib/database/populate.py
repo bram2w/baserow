@@ -1,6 +1,7 @@
 from io import BytesIO
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.db import transaction
 
 from faker import Faker
@@ -253,4 +254,104 @@ def load_test_data():
 
         RowHandler().import_rows(
             user, retailers_table, data, send_realtime_update=False
+        )
+
+    try:
+        user_accounts_table = Table.objects.get(name="User Accounts", database=database)
+    except Table.DoesNotExist:
+        user_accounts_table = TableHandler().create_table_and_fields(
+            user,
+            database,
+            name="User Accounts",
+            fields=[
+                ("Username", "text", {}),
+                ("Email", "email", {}),
+                ("Password", "password", {}),
+                ("Date Joined", "date", {}),
+                ("Subscription Type", "single_select", {}),
+                ("Profile Picture", "file", {}),
+                ("Bio", "long_text", {"field_options": {"width": 400}}),
+            ],
+        )
+
+        for i in range(20):
+            image = fake.image()
+            UserFileHandler().upload_user_file(
+                user, f"profile_pic_{i}.png", BytesIO(image)
+            )
+
+        select_field = Field.objects.get(
+            table=user_accounts_table, name="Subscription Type"
+        )
+        for order, option in enumerate(
+            [
+                {"color": "gold", "value": "Gold"},
+                {"color": "silver", "value": "Silver"},
+                {"color": "bronze", "value": "Bronze"},
+            ]
+        ):
+            SelectOption.objects.create(
+                field=select_field,
+                order=order,
+                value=option["value"],
+                color=option["color"],
+            )
+
+        subscription_by_name = {
+            p.value: p.id for p in select_field.select_options.all()
+        }
+
+        image_field = Field.objects.get(
+            table=user_accounts_table, name="Profile Picture"
+        )
+        file_field_type = field_type_registry.get("file")
+
+        cache = {}
+
+        random_file_1 = file_field_type.random_value(image_field, fake, cache)
+        random_file_2 = file_field_type.random_value(image_field, fake, cache)
+        random_file_3 = file_field_type.random_value(image_field, fake, cache)
+        random_file_4 = file_field_type.random_value(image_field, fake, cache)
+
+        data = [
+            (
+                "user1",
+                "user1@baserow.io",
+                make_password("password"),
+                "2020-01-01",
+                subscription_by_name["Gold"],
+                random_file_1,
+                "Just a user bio.",
+            ),
+            (
+                "user2",
+                "user2@baserow.io",
+                make_password("password"),
+                "2021-02-02",
+                subscription_by_name["Silver"],
+                random_file_2,
+                "Another user bio.",
+            ),
+            (
+                "user3",
+                "user3@baserow.io",
+                make_password("password"),
+                "2022-03-03",
+                subscription_by_name["Bronze"],
+                random_file_3,
+                "",
+            ),
+            (
+                "user4",
+                "user4@baserow.io",
+                make_password("password"),
+                "2023-04-04",
+                subscription_by_name["Gold"],
+                random_file_4,
+                "Loves coding and cats.",
+            ),
+        ]
+
+        RowHandler().import_rows(
+            user, user_accounts_table, data, send_realtime_update=False
         )

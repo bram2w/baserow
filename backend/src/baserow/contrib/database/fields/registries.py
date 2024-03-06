@@ -75,7 +75,6 @@ class FieldType(
     ModelInstanceMixin,
     Instance,
 ):
-
     """
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
@@ -209,6 +208,15 @@ class FieldType(
         """
 
         return getattr(row, field_name)
+
+    def prepare_row_history_value_from_action_meta_data(self, value):
+        """
+        Prepare the row action update action meta data value for the row history.
+        This can be used to change the value to a different format if needed. It's
+        for example used by the password field to mask the hash.
+        """
+
+        return value
 
     def prepare_value_for_db_in_bulk(
         self,
@@ -1193,6 +1201,7 @@ class FieldType(
         update_collector: "Optional[FieldUpdateCollector]" = None,
         field_cache: "Optional[FieldCache]" = None,
         via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+        all_updated_fields: Optional[List[Field]] = None,
     ):
         """
         This method is called periodically for all the fields of the same type
@@ -1206,9 +1215,12 @@ class FieldType(
         :param field_cache: A field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the row was created.
+        :param all_updated_fields: A list of fields that have already been updated
+            before. That can happen because it was a dependency of another field for
+            example.
         """
 
-        pass
+        return all_updated_fields
 
     def restore_failed(self, field_instance, restore_exception):
         """

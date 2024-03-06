@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-from django.conf import settings
 from django.db import transaction
 
 from loguru import logger
@@ -12,7 +11,6 @@ from baserow.contrib.database.table.operations import (
 )
 from baserow.contrib.database.ws.pages import TablePageType
 from baserow.core.exceptions import PermissionException
-from baserow.core.handler import CoreHandler
 from baserow.core.mixins import TrashableModelMixin
 from baserow.core.models import Workspace
 from baserow.core.object_scopes import WorkspaceObjectScopeType
@@ -23,27 +21,6 @@ from baserow.core.registries import (
 )
 from baserow.core.subjects import UserSubjectType
 from baserow.ws.tasks import send_message_to_channel_group
-
-
-@app.task(queue="export")
-def run_row_count_job():
-    """
-    Runs the row count job to keep track of how many rows
-    are being used by each table.
-    """
-
-    from baserow.contrib.database.table.handler import TableHandler
-
-    if CoreHandler().get_settings().track_workspace_usage:
-        TableHandler.count_rows()
-
-
-@app.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(
-        settings.BASEROW_ROW_COUNT_JOB_CRONTAB,
-        run_row_count_job.s(),
-    )
 
 
 def unsubscribe_subject_from_tables_currently_subscribed_to(
@@ -173,7 +150,7 @@ def setup_new_background_update_and_search_columns(self, table_id: int):
         try:
             SearchHandler.sync_tsvector_columns(table)
         except PostgresFullTextSearchDisabledException:
-            logger.debug(f"Postgres full-text search is disabled.")
+            logger.debug("Postgres full-text search is disabled.")
 
     try:
         # The `update_tsvectors_for_changed_rows_only` is set to `True` here because
@@ -184,7 +161,7 @@ def setup_new_background_update_and_search_columns(self, table_id: int):
             table, update_tsvectors_for_changed_rows_only=True
         )
     except PostgresFullTextSearchDisabledException:
-        logger.debug(f"Postgres full-text search is disabled.")
+        logger.debug("Postgres full-text search is disabled.")
 
 
 @app.task(bind=True, queue="export")
@@ -194,3 +171,17 @@ def setup_created_by_and_last_modified_by_column(self, table_id: int):
     with transaction.atomic():
         table = TableHandler().get_table_for_update(table_id)
         TableHandler().create_created_by_and_last_modified_by_fields(table)
+
+
+@app.task(bind=True)
+def update_table_usage(self, table_id: int, row_count: int = 0):
+    from baserow.contrib.database.table.handler import TableUsageHandler
+
+    TableUsageHandler.mark_table_for_usage_update(table_id, row_count)
+
+
+@app.task(bind=True)
+def create_tables_usage_for_new_database(self, database_id: int):
+    from baserow.contrib.database.table.handler import TableUsageHandler
+
+    TableUsageHandler.create_tables_usage_for_new_database(database_id)

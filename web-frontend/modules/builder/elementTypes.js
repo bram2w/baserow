@@ -1,19 +1,22 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import TextElement from '@baserow/modules/builder/components/elements/components/TextElement.vue'
+import TextElement from '@baserow/modules/builder/components/elements/components/TextElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
-import TextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TextElementForm.vue'
+import TextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TextElementForm'
 import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/general/HeadingElementForm'
 import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkElementForm'
 import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ImageElementForm'
 import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
-import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement.vue'
-import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/InputTextElementForm.vue'
-import TableElement from '@baserow/modules/builder/components/elements/components/TableElement.vue'
-import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm.vue'
+import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement'
+import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/InputTextElementForm'
+import TableElement from '@baserow/modules/builder/components/elements/components/TableElement'
+import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm'
 
 import { ELEMENT_EVENTS } from '@baserow/modules/builder/enums'
-import { ensureBoolean } from '@baserow/modules/core/utils/validator'
+import {
+  ensureBoolean,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -84,6 +87,17 @@ export class ElementType extends Registerable {
 
   get events() {
     return []
+  }
+
+  /**
+   * Returns a display name for this element, so it can be distinguished from
+   * other elements of the same type.
+   * @param {object} element - The element we want to get a display name for.
+   * @param {object} applicationContext - The context of the current application
+   * @returns {string} this element's display name.
+   */
+  getDisplayName(element, applicationContext) {
+    return this.name
   }
 
   getEvents() {
@@ -277,25 +291,20 @@ export class FormElementType extends ElementType {
   }
 
   /**
-   * This name is used by the data explorer to show the form element.
-   *
-   * @param element - The form element instance
-   * @param applicationContext - The context of the current application
-   * @returns {string} - The name of the form element
+   * Returns a display name for this element, so it can be distinguished from
+   * other elements of the same type.
+   * @param {object} element - The element we want to get a display name for.
+   * @param {object} applicationContext
+   * @returns {string} this element's display name.
    */
-  getFormDataName(element, applicationContext) {
+  getDisplayName(element, applicationContext) {
     if (element.label) {
-      return this.resolveFormula(element.label, applicationContext)
+      const resolvedName = ensureString(
+        this.resolveFormula(element.label, applicationContext)
+      ).trim()
+      return resolvedName || this.name
     }
-
-    return this.generateFromDataName(element, applicationContext)
-  }
-
-  generateFromDataName(element, applicationContext) {
-    const elementPosition = this.app.store.getters[
-      'element/getElementPosition'
-    ](applicationContext.page, element, true)
-    return `${this.name} ${elementPosition}`
+    return this.name
   }
 
   afterCreate(element, page) {
@@ -348,6 +357,19 @@ export class InputTextElementType extends FormElementType {
     return 'string'
   }
 
+  getDisplayName(element, applicationContext) {
+    const displayValue =
+      element.label || element.default_value || element.placeholder
+
+    if (displayValue?.trim()) {
+      const resolvedName = ensureString(
+        this.resolveFormula(displayValue, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
+  }
+
   getInitialFormDataValue(element, applicationContext) {
     return this.resolveFormula(element.default_value, {
       element,
@@ -380,6 +402,16 @@ export class HeadingElementType extends ElementType {
   get generalFormComponent() {
     return HeadingElementForm
   }
+
+  getDisplayName(element, applicationContext) {
+    if (element.value && element.value.length) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
+  }
 }
 
 export class TextElementType extends ElementType {
@@ -405,6 +437,16 @@ export class TextElementType extends ElementType {
 
   get generalFormComponent() {
     return TextElementForm
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.value) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
   }
 }
 
@@ -436,6 +478,38 @@ export class LinkElementType extends ElementType {
   isInError({ element, builder }) {
     return pathParametersInError(element, builder)
   }
+
+  getDisplayName(element, applicationContext) {
+    let displayValue = ''
+    let destination = ''
+    if (element.navigation_type === 'page') {
+      const builder = applicationContext.builder
+      const destinationPage = builder.pages.find(
+        ({ id }) => id === element.navigate_to_page_id
+      )
+      if (destinationPage) {
+        destination = `${destinationPage.name}`
+      }
+    } else if (element.navigation_type === 'custom') {
+      destination = ensureString(
+        this.resolveFormula(element.navigate_to_url, applicationContext)
+      ).trim()
+    }
+
+    if (destination) {
+      destination = ` -> ${destination}`
+    }
+
+    if (element.value) {
+      displayValue = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+    }
+
+    return displayValue
+      ? `${displayValue}${destination}`
+      : `${this.name}${destination}`
+  }
 }
 
 export class ImageElementType extends ElementType {
@@ -461,6 +535,16 @@ export class ImageElementType extends ElementType {
 
   get generalFormComponent() {
     return ImageElementForm
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.alt_text) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.alt_text, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
   }
 }
 
@@ -491,6 +575,16 @@ export class ButtonElementType extends ElementType {
 
   get events() {
     return [ClickEvent]
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.value) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.value, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
   }
 }
 
@@ -559,6 +653,20 @@ export class TableElementType extends ElementType {
     })
     return collectionFieldsInError.includes(true)
   }
+
+  getDisplayName(element, { page }) {
+    let suffix = ''
+
+    if (element.data_source_id) {
+      const dataSource = this.app.store.getters[
+        'dataSource/getPageDataSourceById'
+      ](page, element.data_source_id)
+
+      suffix = dataSource ? ` - ${dataSource.name}` : ''
+    }
+
+    return `${this.name}${suffix}`
+  }
 }
 
 export class DropdownElementType extends FormElementType {
@@ -595,6 +703,19 @@ export class DropdownElementType extends FormElementType {
       element,
       ...applicationContext,
     })
+  }
+
+  getDisplayName(element, applicationContext) {
+    const displayValue =
+      element.label || element.default_value || element.placeholder
+
+    if (displayValue) {
+      const resolvedName = ensureString(
+        this.resolveFormula(displayValue, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
   }
 }
 
@@ -702,5 +823,15 @@ export class IFrameElementType extends ElementType {
 
   get generalFormComponent() {
     return IFrameElementForm
+  }
+
+  getDisplayName(element, applicationContext) {
+    if (element.url && element.url.length) {
+      const resolvedName = ensureString(
+        this.resolveFormula(element.url, applicationContext)
+      )
+      return resolvedName || this.name
+    }
+    return this.name
   }
 }

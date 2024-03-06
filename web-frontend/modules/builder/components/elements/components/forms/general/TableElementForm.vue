@@ -242,7 +242,6 @@ export default {
       })
     },
     changeFieldType(fieldToUpdate, newType) {
-      console.log('newType', newType)
       this.values.fields = this.values.fields.map((field) => {
         if (field.id === fieldToUpdate.id) {
           return { id: field.id, name: field.name, type: newType }

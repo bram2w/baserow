@@ -93,7 +93,7 @@ export default {
     getFunctionalComponent(parent, props) {
       return parent.$registry
         .get('field', props.field.type)
-        .getFunctionalGridViewFieldComponent()
+        .getFunctionalGridViewFieldComponent(props.field)
     },
     /**
      * Returns the component related to the field type. This component will only be
@@ -102,7 +102,7 @@ export default {
     getComponent(parent, props) {
       return parent.$registry
         .get('field', props.field.type)
-        .getGridViewFieldComponent()
+        .getGridViewFieldComponent(props.field)
     },
     /**
      * If the grid field component emits an update event then this method will be

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Adjusted the title height in the row modal to accommodate long text.",
+    "issue_number": 2334,
+    "bullet_points": [],
+    "created_at": "2024-02-06"
+}

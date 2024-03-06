@@ -1,16 +1,19 @@
 from typing import Any, Dict, Optional, Tuple
 
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.models import AbstractUser
 
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
+from baserow.contrib.database.fields.field_types import PasswordFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.app_auth_providers.auth_provider_types import AppAuthProviderType
 from baserow.core.app_auth_providers.types import AppAuthProviderTypeDict
 from baserow.core.auth_provider.types import AuthProviderModelSubClass
 from baserow.core.user_sources.types import UserSourceSubClass
+from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow_enterprise.integrations.local_baserow.models import (
     LocalBaserowPasswordAppAuthProvider,
 )
@@ -23,6 +26,9 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
     type = "local_baserow_password"
     model_class = LocalBaserowPasswordAppAuthProvider
     compatible_user_source_types = [LocalBaserowUserSourceType.type]
+    field_types_allowed_as_password = [
+        PasswordFieldType.type,
+    ]
 
     serializer_field_names = ["password_field_id"]
     allowed_fields = ["password_field"]
@@ -110,6 +116,18 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
                             ]
                         }
                     )
+                if field.get_type().type not in self.field_types_allowed_as_password:
+                    raise RequestBodyValidationException(
+                        {
+                            "password_field_id": [
+                                {
+                                    "detail": "This field type can't be used as "
+                                    "password.",
+                                    "code": "invalid_field",
+                                }
+                            ]
+                        }
+                    )
                 values["password_field"] = field
             else:
                 values["password_field"] = None
@@ -146,3 +164,35 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
         """
         Not implemented yet.
         """
+
+    def is_configured(self, auth_provider: AuthProviderModelSubClass):
+        """
+        Returns True if the auth_provider is configured properly. False otherwise.
+        """
+
+        return bool(auth_provider.password_field_id)
+
+    def authenticate(
+        self,
+        auth_provider: AuthProviderModelSubClass,
+        email: str,
+        password: str,
+    ) -> UserSourceUser:
+        """
+        Authenticates the user with given email using the select password field.
+        """
+
+        user_source = auth_provider.user_source.specific
+
+        user = user_source.get_type().get_user(user_source, email=email)
+
+        password_field = auth_provider.password_field
+        encoded_password = getattr(user.original_user, password_field.db_column)
+
+        if check_password(password, encoded_password):
+            return user
+        else:
+            raise exceptions.AuthenticationFailed(
+                "Your credentials are invalid.",
+                "invalid_credentials",
+            )

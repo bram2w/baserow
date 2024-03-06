@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug blocking users to add row color conditions if the primary field has no compatible filters.",
+    "issue_number": 2341,
+    "bullet_points": [],
+    "created_at": "2024-02-08"
+}
