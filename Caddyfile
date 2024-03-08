@@ -5,47 +5,47 @@
         burst 5
     }
 
-    {$BASEROW_CADDY_AUTO_REDIRECT}
-
     {$BASEROW_CADDY_GLOBAL_CONF}
 }
 
 {$BASEROW_CADDY_ADDRESSES} {
-	handle /api/* {
-		reverse_proxy {$PRIVATE_BACKEND_URL:localhost:8000}
-	}
-
-	handle /ws/* {
-		reverse_proxy {$PRIVATE_BACKEND_URL:localhost:8000}
-	}
-
-	handle_path /media/* {
-		@downloads {
-			query dl=*
-		}
-		header @downloads Content-disposition "attachment; filename={query.dl}"
-
-		file_server {
-			root {$MEDIA_ROOT:/baserow/media/}
-		}
-	}
-
-	handle_path /static/* {
-		file_server {
-			root {$STATIC_ROOT:/baserow/static/}
-		}
-	}
-
-	reverse_proxy {$PRIVATE_WEB_FRONTEND_URL:localhost:3000}
-}
-
-{$BASEROW_CADDY_HTTP_CATCH_ALL} {
-    reverse_proxy {$PRIVATE_WEB_FRONTEND_URL:localhost:3000}
-}
-
-:443 {
     tls {
         on_demand
+    }
+
+    vars {
+        full_uri "{http.request.scheme}://{http.request.host}"
+    }
+
+    @is_baserow_tool {
+        expression {vars.full_uri}.startsWith("{$BASEROW_PUBLIC_URL}")
+    }
+
+    handle @is_baserow_tool {
+        handle /api/* {
+            reverse_proxy {$PRIVATE_BACKEND_URL:localhost:8000}
+        }
+
+        handle /ws/* {
+            reverse_proxy {$PRIVATE_BACKEND_URL:localhost:8000}
+        }
+
+        handle_path /media/* {
+            @downloads {
+                query dl=*
+            }
+            header @downloads Content-disposition "attachment; filename={query.dl}"
+
+            file_server {
+                root {$MEDIA_ROOT:/baserow/media/}
+            }
+        }
+
+        handle_path /static/* {
+            file_server {
+                root {$STATIC_ROOT:/baserow/static/}
+            }
+        }
     }
 
     reverse_proxy {$PRIVATE_WEB_FRONTEND_URL:localhost:3000}

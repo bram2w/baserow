@@ -32,7 +32,7 @@ docker run \
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
   external access.
-* Add `-e BASEROW_CADDY_ADDRESSES=https://YOUR_DOMAIN` to enable
+* Add `-e BASEROW_CADDY_ADDRESSES=:443` to enable
   [automatic Caddy HTTPS](https://caddyserver.com/docs/automatic-https)
   .
 * Optionally add `-e DATABASE_URL=postgresql://user:pwd@host:port/db` to use an external
@@ -151,7 +151,7 @@ docker run \
   -d \
   --name baserow \
   -e BASEROW_PUBLIC_URL=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
-  -e BASEROW_CADDY_ADDRESSES=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
+  -e BASEROW_CADDY_ADDRESSES=:443 \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
@@ -330,13 +330,15 @@ docker exec -it baserow cat /baserow/data/.pgpass
 
 The build in Caddy server is configured to automatically handle additional application
 builder domains. Depending on the environment variables, it will also automatically
-fetch SSL certificates for those domains.
+fetch SSL certificates for those domains. Note that the `BASEROW_CADDY_ADDRESSES`
+environment variable must be `:80` or `:443` to allow multiple domains. If you have set
+a URL there, it won't work.
 
 By default, it will accept requests of any domain over the http protocol, which is
 perfect if you have a proxy in front of Baserow. If `BASEROW_CADDY_ADDRESSES` starts
-with `https` protocol, then it will redirect http requests to https, and will handle
-the SSL certificate part automatically. This is recommended when the container is
-directly exposed to the internet.
+with `https` protocol or is `:443`, then it will redirect http requests to https, and
+will handle the SSL certificate part automatically. This is recommended when the
+container is directly exposed to the internet.
 
 ### Run a one off command on the database
 
