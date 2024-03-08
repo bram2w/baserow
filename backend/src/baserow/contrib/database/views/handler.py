@@ -1323,6 +1323,13 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         for view_type in view_type_registry.get_all():
             view_type.after_field_update(updated_fields)
 
+        for field in updated_fields:
+            field_type = field_type_registry.get_by_model(field.specific_class)
+            # Check whether the updated field is still compatible with the group by.
+            # If not, it must be deleted.
+            if not field_type.check_can_group_by(field):
+                ViewGroupBy.objects.filter(field=field).delete()
+
     def get_filter_builder(
         self, view: View, model: Type[GeneratedTableModel]
     ) -> FilterBuilder:

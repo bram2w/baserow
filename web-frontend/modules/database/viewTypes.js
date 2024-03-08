@@ -533,6 +533,16 @@ export class GridViewType extends ViewType {
         root: true,
       }
     )
+    // If a field is updated, it can happen that the group by was deleted because
+    // it's not compatible anymore. This will make sure that's also reflected in the
+    // active group bys.
+    await dispatch(
+      storePrefix + 'view/grid/updateActiveGroupBys',
+      clone(rootGetters['view/getSelected'].group_bys),
+      {
+        root: true,
+      }
+    )
   }
 
   async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
