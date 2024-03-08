@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Delete group by if the field is changed to an incompatible type.",
+  "issue_number": null,
+  "bullet_points": [],
+  "created_at": "2024-03-07"
+}

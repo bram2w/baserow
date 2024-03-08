@@ -207,6 +207,45 @@ def test_create_view_group_by(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_cannot_created_group_by(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    field_1 = data_fixture.create_long_text_field(long_text_enable_rich_text=True)
+    view_1 = data_fixture.create_grid_view(user=user)
+
+    response = api_client.post(
+        reverse("api:database:views:list_group_bys", kwargs={"view_id": view_1.id}),
+        {
+            "field": field_1.id,
+            "order": "ASC",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED"
+
+
+@pytest.mark.django_db
+def test_update_field_to_incompatible_group_by_deletes_group(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    field_1 = data_fixture.create_long_text_field(
+        user=user, long_text_enable_rich_text=False
+    )
+    view_1 = data_fixture.create_grid_view(user=user)
+    data_fixture.create_view_group_by(field=field_1, view=view_1)
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": field_1.id})
+    response = api_client.patch(
+        url,
+        {"long_text_enable_rich_text": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert ViewGroupBy.objects.all().count() == 0
+
+
+@pytest.mark.django_db
 def test_get_view_group_by(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     group_by_1 = data_fixture.create_view_group_by(user=user, order="DESC")
