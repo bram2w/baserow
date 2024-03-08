@@ -36,24 +36,6 @@ export BASEROW_PUBLIC_URL="${BASEROW_PUBLIC_URL:-http://localhost}"
 export BASEROW_CADDY_ADDRESSES="${BASEROW_CADDY_ADDRESSES:-":80"}"
 export BASEROW_CADDY_GLOBAL_CONF="${BASEROW_CADDY_GLOBAL_CONF:-}"
 
-# By default, we don't want Caddy to redirect to https because we're not automatically
-# fetching SSL certificates.
-export BASEROW_CADDY_AUTO_REDIRECT="auto_https disable_redirects"
-
-# By default, we don't need to catch all because the main `BASEROW_CADDY_ADDRESSES` is
-# already listening on port 80 for all domains.
-export BASEROW_CADDY_HTTP_CATCH_ALL="localhost.doesnotexist.baserow"
-
-# If the provided caddy address starts with https we want to remove the disable
-# redirects setting because then we do want to redirect to https.
-if [[ $BASEROW_CADDY_ADDRESSES = https://*  ]]; then
-    export BASEROW_CADDY_AUTO_REDIRECT=""
-# else if the provided caddy address is not listening on port 80 like the default, then
-# we do need the catch all to listen on port 80 for the application builder domains.
-elif [[ ! $BASEROW_CADDY_ADDRESSES == ":80"  ]]; then
-    export BASEROW_CADDY_HTTP_CATCH_ALL=":80"
-fi
-
 export PRIVATE_BACKEND_URL='http://localhost:8000'
 export PRIVATE_WEB_FRONTEND_URL='http://localhost:3000'
 export BASEROW_BACKEND_BIND_ADDRESS=127.0.0.1

@@ -213,7 +213,7 @@ Caddy.
 
 ```bash
 BASEROW_PUBLIC_URL=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
-BASEROW_CADDY_ADDRESSES=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
+BASEROW_CADDY_ADDRESSES=:443 \
 docker-compose up
 ```
 
