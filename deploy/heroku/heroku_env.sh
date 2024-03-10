@@ -18,6 +18,11 @@ export DISABLE_VOLUME_CHECK=yes
 export BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-1}
 export BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-$BASEROW_AMOUNT_OF_WORKERS}
 
+# Disable auto https redirect because otherwise it will make Caddy bind on port 80.
+# This is not allowed by Heroku, and will prevent it from starting.
+export BASEROW_CADDY_GLOBAL_CONF="auto_https disable_redirects
+http_port $PORT"
+
 export EMAIL_SMTP="true"
 export EMAIL_SMTP_USE_TLS=""
 export FROM_EMAIL="no-reply@$MAILGUN_DOMAIN"
