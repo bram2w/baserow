@@ -2936,6 +2936,65 @@ def test_list_rows_public_with_query_param_group_by(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_rows_public_with_query_param_group_by_and_empty_order_by(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    public_field_2 = data_fixture.create_text_field(table=table, name="public2")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, public_field_2, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(grid_view, link_row_field, hidden=False)
+
+    first_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": "b", "public2": "2", "hidden": "y"},
+        user_field_names=True,
+    )
+    second_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": "a", "public2": "2", "hidden": "y"},
+        user_field_names=True,
+    )
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?group_by=field_{public_field.id}&order_by=",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == second_row.id
+    assert response_json["results"][1]["id"] == first_row.id
+    assert response_json["group_by_metadata"] == {
+        f"field_{public_field.id}": unordered(
+            [
+                {"count": 1, f"field_{public_field.id}": "a"},
+                {"count": 1, f"field_{public_field.id}": "b"},
+            ]
+        )
+    }
+
+
+@pytest.mark.django_db
 def test_list_rows_public_filters_by_visible_and_hidden_columns(
     api_client, data_fixture
 ):
