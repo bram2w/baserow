@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Ensure the dispatch datasources endpoint handles missing pages properly.",
+    "issue_number": 2417,
+    "bullet_points": [],
+    "created_at": "2024-03-12"
+}

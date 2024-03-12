@@ -483,6 +483,7 @@ class DispatchDataSourcesView(APIView):
                     "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
                     "ERROR_IN_DISPATCH_CONTEXT",
                     "ERROR_DATA_DOES_NOT_EXIST",
+                    "ERROR_PAGE_DOES_NOT_EXIST",
                 ]
             ),
         },
@@ -490,6 +491,7 @@ class DispatchDataSourcesView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
             ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
