@@ -327,7 +327,7 @@ def applications_reordered(sender, workspace, order, user, **kwargs):
     )
 
 
-@receiver(signals.workspace_invitation_created)
+@receiver(signals.workspace_invitation_updated_or_created)
 def notify_workspace_invitation_created(
     sender, invitation, invited_user=None, **kwargs
 ):
@@ -337,7 +337,7 @@ def notify_workspace_invitation_created(
             lambda: broadcast_to_users.delay(
                 [invited_user.id],
                 {
-                    "type": "workspace_invitation_created",
+                    "type": "workspace_invitation_updated_or_created",
                     "invitation": serialized_data,
                 },
             )

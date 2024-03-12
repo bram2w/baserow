@@ -344,6 +344,7 @@ class WorkspaceInvitation(
 
     class Meta:
         ordering = ("id",)
+        unique_together = [["workspace", "email"]]
 
 
 class Application(

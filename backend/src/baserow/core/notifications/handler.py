@@ -1,3 +1,4 @@
+import inspect
 from typing import Any, Dict, List, NamedTuple, Optional
 
 from django.conf import settings
@@ -100,10 +101,27 @@ class NotificationHandler:
             Q(recipient=user, cleared=False) | unread_broadcast
         ).values("notification_id")
 
-        try:
-            return Notification.objects.filter(id__in=notification_ids, **kwargs).get()
-        except Notification.DoesNotExist:
-            raise NotificationDoesNotExist("Notification does not exist.")
+        result = Notification.objects.filter(id__in=notification_ids, **kwargs)
+
+        # Get the caller function, skipping the otel wrapper
+        caller = inspect.stack()[2].function
+
+        if len(result) == 0:
+            raise NotificationDoesNotExist(
+                f"No notification found from {caller} for user {user.email} with the given filters."
+            )
+        elif len(result) > 1:
+            # This means that there are multiple notifications matching the
+            # given filters. This should not happen but it shouldn't be a
+            # problem to return any of them, so we just return the first one
+            # and log the event.
+            # Get the caller function
+            logger.error(
+                f"{len(result)} notifications found from {caller} for user {user.email} "
+                f"with the given filters {kwargs}. This should not happen, but it shouldn't "
+                "be a problem to return any of them. Returning the first one.",
+            )
+        return result[0]
 
     @classmethod
     @baserow_trace(tracer)

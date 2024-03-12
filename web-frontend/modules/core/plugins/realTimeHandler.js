@@ -362,9 +362,15 @@ export class RealTimeHandler {
     })
 
     // invitations
-    this.registerEvent('workspace_invitation_created', ({ store }, data) => {
-      store.dispatch('auth/forceCreateWorkspaceInvitation', data.invitation)
-    })
+    this.registerEvent(
+      'workspace_invitation_updated_or_created',
+      ({ store }, data) => {
+        store.dispatch(
+          'auth/forceUpdateOrCreateWorkspaceInvitation',
+          data.invitation
+        )
+      }
+    )
 
     this.registerEvent('workspace_invitation_accepted', ({ store }, data) => {
       store.dispatch('auth/forceAcceptWorkspaceInvitation', data.invitation)
