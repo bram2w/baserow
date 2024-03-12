@@ -328,7 +328,11 @@ class LocalBaserowUserSourceType(UserSourceType):
         Returns True if the user source is configured properly. False otherwise.
         """
 
-        return user_source.email_field_id and user_source.name_field_id
+        return (
+            user_source.email_field_id is not None
+            and user_source.name_field_id is not None
+            and user_source.table_id is not None
+        )
 
     def gen_uid(self, user_source):
         """
@@ -346,12 +350,12 @@ class LocalBaserowUserSourceType(UserSourceType):
         Returns the users from the table selected with the user source.
         """
 
+        if not self.is_configured(user_source):
+            return []
+
         UserModel = self.get_user_model(user_source)
 
         queryset = UserModel.objects.all()
-
-        if not self.is_configured(user_source):
-            return []
 
         if search:
             search_mode = SearchHandler.get_default_search_mode_for_table(
