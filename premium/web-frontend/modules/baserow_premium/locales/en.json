@@ -309,8 +309,8 @@
         "title": "Colors"
     },
     "redirectToBaserowModal": {
-        "title": "Redirecting to http://baserow.io",
-        "content": "You are leaving your self hosted instance and you are being redirected to http://baserow.io."
+        "title": "Redirecting to https://baserow.io",
+        "content": "You are leaving your self hosted instance and you are being redirected to https://baserow.io."
     },
     "premiumTopSidebar": {
         "impersonateDescription": "This account is impersonated. A page refresh will stop it.",
