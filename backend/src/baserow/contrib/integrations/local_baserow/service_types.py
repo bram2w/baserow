@@ -585,7 +585,14 @@ class LocalBaserowListRowsUserServiceType(
         Updates the field ids in the path.
         """
 
-        row, field_dbname, *rest = path
+        # If the path length is greater or equal to two, then we have
+        # the current data source formula format of row, and field.
+        if len(path) >= 2:
+            row, field_dbname, *rest = path
+        else:
+            # In any other scenario, we have a formula that is not a format we
+            # can currently import properly, so we return the path as is.
+            return path
 
         if field_dbname == "id":
             return path
