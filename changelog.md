@@ -8,6 +8,7 @@
 * Support ad hoc sorting in grid and gallery views [#2361](https://gitlab.com/baserow/baserow/-/issues/2361)
 * Add ad hoc filtering support for editor and lower for gallery and kanban views [#2375](https://gitlab.com/baserow/baserow/-/issues/2375)
 * Add rich text formatting and Markdown support to the long text field. [#622](https://gitlab.com/baserow/baserow/-/issues/622)
+* Add the application builder
 
 ### Bug fixes
 * Fix the number of workspaces in the admin dashboard. [#1195](https://gitlab.com/baserow/baserow/-/issues/1195)
