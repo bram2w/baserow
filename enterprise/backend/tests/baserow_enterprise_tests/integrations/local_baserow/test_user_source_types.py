@@ -14,6 +14,10 @@ from baserow.core.user_sources.exceptions import UserSourceImproperlyConfigured
 from baserow.core.user_sources.handler import UserSourceHandler
 from baserow.core.user_sources.registries import user_source_type_registry
 from baserow.core.utils import MirrorDict, Progress
+from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
+from baserow_enterprise.integrations.local_baserow.user_source_types import (
+    LocalBaserowUserSourceType,
+)
 
 from .helpers import populate_local_baserow_test_data
 
@@ -1146,3 +1150,37 @@ def test_local_baserow_user_source_authentication_list_users_not_configured(
     result = user_source_type.list_users(user_source)
 
     assert len(result) == 0
+
+
+def test_local_baserow_user_source_authentication_is_configured(
+    data_fixture,
+):
+    user_source_type = LocalBaserowUserSourceType()
+    # All configured fields.
+    # fmt: off
+    assert user_source_type.is_configured(LocalBaserowUserSource(
+        email_field_id=1,
+        name_field_id=2,
+        table_id=3,
+    )) is True
+    # Missing email field.
+    # fmt: off
+    assert user_source_type.is_configured(LocalBaserowUserSource(
+        email_field_id=None,
+        name_field_id=2,
+        table_id=3,
+    )) is False
+    # Missing name field.
+    # fmt: off
+    assert user_source_type.is_configured(LocalBaserowUserSource(
+        email_field_id=1,
+        name_field_id=None,
+        table_id=3,
+    )) is False
+    # Missing table field.
+    # fmt: off
+    assert user_source_type.is_configured(LocalBaserowUserSource(
+        email_field_id=1,
+        name_field_id=2,
+        table_id=None,
+    )) is False
