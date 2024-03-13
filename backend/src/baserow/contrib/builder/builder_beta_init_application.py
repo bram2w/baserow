@@ -170,21 +170,8 @@ class BuilderApplicationTypeInitApplication:
                     "type": "text",
                     "config": {"value": "'Some notes about this user.'"},
                 },
-                {
-                    "name": "View in table",
-                    "type": "link",
-                    "config": {
-                        "page_parameters": [],
-                        "navigation_type": "custom",
-                        "navigate_to_page_id": None,
-                        "link_name": f"concat('More of ', "
-                        f"get('current_record.{first_name_field.db_column}'))",
-                        "navigate_to_url": f"'/database/{table.database_id}/table/{table.id}/'",
-                    },
-                },
             ],
         )
-        return integration, first_name_field, last_name_field
 
     def create_form_element(
         self, page: "Page", integration: "Integration", table: "Table" = None
