@@ -38,8 +38,11 @@
                   :description="role.description"
                 >
                   {{ role.name }}
+                  <Badge v-if="role.isBillable" color="cyan" size="small" bold
+                    >{{ $t('common.billable') }}
+                  </Badge>
                   <Badge
-                    v-if="!role.isBillable && atLeastOneBillableRole"
+                    v-else-if="!role.isBillable && atLeastOneBillableRole"
                     color="yellow"
                     size="small"
                     bold

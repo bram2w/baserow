@@ -2201,7 +2201,7 @@ class ViewGroupBysView(APIView):
         """Creates a new group by for the provided view."""
 
         view = ViewHandler().get_view(view_id)
-        field = FieldHandler().get_field(data["field"])
+        field = FieldHandler().get_field(data["field"]).specific
 
         view_group_by = action_type_registry.get_by_type(
             CreateViewGroupByActionType

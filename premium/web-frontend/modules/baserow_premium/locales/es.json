@@ -318,7 +318,8 @@
         "personal": "Personal"
     },
     "rowCommentMentionNotification": {
-        "title": "{enviador} te mencionó en la fila {fila} en {tabla}"
+        "title": "{enviador} te mencionó en la fila {fila} en {tabla}",
+        "deletedUser": "Un usuario eliminado"
     },
     "calendarDateSelector": {
         "today": "Hoy"
@@ -350,7 +351,8 @@
         "save": "Guardar"
     },
     "rowCommentNotification": {
-        "title": "{enviador} ha publicado un comentario en la fila {fila} de {tabla}"
+        "title": "{enviador} ha publicado un comentario en la fila {fila} de {tabla}",
+        "deletedUser": "Un usuario eliminado"
     },
     "RowEditModalCommentNotificationMode": {
         "modeMentionsDesc": "Sólo recibirás notificaciones cuando te mencionen.",

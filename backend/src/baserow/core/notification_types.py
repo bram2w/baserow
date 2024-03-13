@@ -15,8 +15,8 @@ from baserow.core.notifications.registries import (
 
 from .signals import (
     workspace_invitation_accepted,
-    workspace_invitation_created,
     workspace_invitation_rejected,
+    workspace_invitation_updated_or_created,
 )
 
 
@@ -46,7 +46,7 @@ class WorkspaceInvitationCreatedNotificationType(NotificationType):
     type = "workspace_invitation_created"
 
     @classmethod
-    def create_invitation_created_notification(cls, invitation, invited_user):
+    def create_notification(cls, invitation, invited_user):
         NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=[invited_user],
@@ -59,12 +59,10 @@ class WorkspaceInvitationCreatedNotificationType(NotificationType):
         )
 
 
-@receiver(workspace_invitation_created)
-def handle_workspace_invitation_created(
-    sender, invitation, invited_user=None, **kwargs
-):
-    if invited_user:
-        WorkspaceInvitationCreatedNotificationType.create_invitation_created_notification(
+@receiver(workspace_invitation_updated_or_created)
+def notify_invited_user(sender, invitation, invited_user, created, **kwargs):
+    if invited_user is not None and created:
+        WorkspaceInvitationCreatedNotificationType.create_notification(
             invitation, invited_user
         )
 

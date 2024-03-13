@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an issue where an application's user sources would try and list users when no table had been selected.",
+    "issue_number": 2415,
+    "bullet_points": [],
+    "created_at": "2024-03-12"
+}

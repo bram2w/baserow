@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-26 15:50+0000\n"
-"PO-Revision-Date: 2023-12-19 12:33+0000\n"
+"PO-Revision-Date: 2024-01-31 13:43+0000\n"
 "Last-Translator: SWEETGOOD <cs@sweetgood.de>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/baserow/"
 "enterprise-backend/de/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.3\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: audit_log/job_types.py:143
 msgid "User Email"
@@ -56,13 +56,12 @@ msgid "DONE"
 msgstr "FERTIG"
 
 #: audit_log/models.py:31
-#, fuzzy
 msgid "UNDONE"
-msgstr "RÜCKGÄNGIG MACHEN"
+msgstr "RÜCKGÄNGIG"
 
 #: audit_log/models.py:32
 msgid "REDONE"
-msgstr "ERNEUERT"
+msgstr "WIEDERHOLT"
 
 #: role/actions.py:28
 msgid "Assign multiple roles"
@@ -73,14 +72,14 @@ msgid "Multiple roles have been assigned"
 msgstr "Es wurden mehrere Rollen zugewiesen"
 
 #: role/actions.py:32
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Role %(role_uid)s assigned to subject type \"%(subject_type_name)s"
 "\" (%(subject_id)s) on scope type \"%(scope_type_name)s\" (%(scope_id)s)."
 msgstr ""
-"Die Rolle %(role_uid)s auf dem Geltungsbereichstyp \"%(scope_type_name)s\" "
-"(%(scope_id)s) ist dem Subjekttyp \"%(subject_type_name)s\" (%(subject_id)s) "
-"zugeordnet."
+"Die Rolle %(role_uid)s wurde dem Subjekt-Typ \"%(subject_type_name)s\" "
+"(%(subject_id)s) auf dem Geltungsbereichstyp \"%(scope_type_name)s\" "
+"(%(scope_id)s) zugeordnet."
 
 #: teams/actions.py:21
 #, python-format

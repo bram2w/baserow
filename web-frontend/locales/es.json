@@ -4,7 +4,10 @@
         "no": "no",
         "wrong": "Algo salió mal",
         "none": "Ninguno",
-        "free": "Gratis"
+        "free": "Gratis",
+        "comingSoon": "Pronto...",
+        "link": "Enlace",
+        "table": "Tabla"
     },
     "action": {
         "upload": "Subir",
@@ -33,7 +36,9 @@
         "login": "Iniciar sesión",
         "download": "Descargar",
         "copyToClipboard": "Copiar al portapapeles",
-        "reset": "Restablecer"
+        "reset": "Restablecer",
+        "logout": "Cerrar sesión",
+        "set": "Establecer"
     },
     "adminType": {
         "settings": "Ajustes",
@@ -72,7 +77,8 @@
         "requiredField": "Este campo es requerido.",
         "integerField": "El campo debe ser un número entero.",
         "minValueField": "El campo debe ser mayor o igual que {mínimo}.",
-        "maxValueField": "El campo debe ser menor o igual que {máximo}."
+        "maxValueField": "El campo debe ser menor o igual que {máximo}.",
+        "minMaxValueField": "El valor del campo debe estar comprendido entre {min} y {max}."
     },
     "permission": {
         "admin": "Admin",
@@ -111,7 +117,9 @@
         "createdBy": "Creado por",
         "singleSelectRadios": "Radios",
         "lastModifiedBy": "Última modificación por",
-        "multipleSelectCheckboxes": "Casillas"
+        "multipleSelectCheckboxes": "Casillas",
+        "duration": "Duración",
+        "password": "Contraseña"
     },
     "fieldErrors": {
         "invalidNumber": "Número invalido",
@@ -119,13 +127,17 @@
         "invalidUrl": "URL invalida",
         "max254Chars": "Max 254 caract",
         "invalidEmail": "Email inválido",
-        "invalidPhoneNumber": "Número de teléfono invalido"
+        "invalidPhoneNumber": "Número de teléfono invalido",
+        "invalidDuration": "Formato no válido ({duraciónFormato}).",
+        "overflowDuration": "El valor es demasiado grande.",
+        "maxChars": "Máximo {max} caracteres.",
+        "minChars": "Mínimo {min} caracteres."
     },
     "fieldDocs": {
         "readOnly": "Este es un campo de sólo lectura.",
         "text": "Acepta texto de una sola línea.",
-        "longText": "Acepta texto de varias líneas.",
-        "linkRow": "Acepta una matriz que contiene los identificadores o los valores de texto del campo principal de las filas relacionadas del id de la tabla {tabla}. Todos los identificadores deben proporcionarse cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones. En el caso de un valor de texto en lugar de un identificador, se buscará una fila con el valor coincidente para su campo principal. Si se encuentra más de una coincidencia, se selecciona la primera en el orden de la tabla.",
+        "longText": "Acepta texto multilínea. Si el formato de texto enriquecido está activado, puedes utilizar markdown para dar formato al texto.",
+        "linkRow": "Acepta una matriz que contiene los identificadores o los valores de texto del campo principal de las filas relacionadas del id de tabla {table}. Deben proporcionarse todos los identificadores cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones. En caso de que se proporcione un valor de texto en lugar de un identificador, se buscará una fila con el valor coincidente para su campo principal. Si se encuentra más de una coincidencia, se seleccionará la primera en el orden de la tabla. Puedes enviar una cadena con nombres separados por coma, en cuyo caso la cadena se convierte en una matriz de nombres de fila.",
         "number": "Acepta un número.",
         "numberPositive": "Acepta un número positivo.",
         "decimal": "Acepta un decimal con {places} decimales después del punto.",
@@ -142,7 +154,7 @@
         "email": "Acepta una cadena que debe ser una dirección de correo electrónico.",
         "file": "Acepta una matriz de objetos que contienen al menos el nombre del archivo de usuario.",
         "singleSelect": "Acepta un número entero o un valor de texto que representa el ID de la opción seleccionada o el valor de la opción. Un valor nulo significa que no se ha seleccionado ninguno. En el caso de un valor de texto, se selecciona la primera opción coincidente.",
-        "multipleSelect": "Acepta una matriz de enteros mixtos o valores de texto, cada uno de los cuales representa el ID o el valor de la opción de selección elegida. En el caso de un valor de texto, se selecciona la primera opción coincidente.",
+        "multipleSelect": "Acepta una matriz de enteros mixtos o valores de texto, cada uno de los cuales representa el id o el valor de la opción de selección elegida. En el caso de un valor de texto, se selecciona la primera opción que coincida. Puedes enviar una cadena con nombres separados por comas como valor, en cuyo caso la cadena se convierte en una matriz de nombres de opciones.",
         "phoneNumber": "Acepta un número de teléfono que tenga una longitud máxima de 100 caracteres que consista únicamente en dígitos, espacios y los siguientes caracteres: Nx,._+*()#=;/- .",
         "formula": "Un campo de solo lectura definido por una fórmula escrita en el lenguaje de fórmulas de Baserow.",
         "lookup": "Un campo de sólo lectura conectado a un campo de enlace a tabla que devuelve una matriz de valores e ids de fila del campo de búsqueda elegido en la tabla enlazada.",
@@ -152,7 +164,9 @@
         "lastModifiedBy": "El campo \"Última modificación por\" es un campo de sólo lectura.",
         "autonumber": "Campo de sólo lectura que incrementa automáticamente un número por cada nueva fila.",
         "uuid": "Un UUID único y persistente de sólo lectura.",
-        "createdBy": "El campo \"Creado por\" es un campo de sólo lectura que muestra el usuario que creó la fila."
+        "createdBy": "El campo \"Creado por\" es un campo de sólo lectura que muestra el usuario que creó la fila.",
+        "duration": "Acepta una duración basada en el tiempo como una cadena con el formato {formato} o como un número que representa el número total de segundos.",
+        "password": "Un campo de sólo escritura que contiene una contraseña con hash. El valor será \"nulo\" si no se ha establecido, o \"verdadero\" si se ha establecido. Acepta una cadena para establecerla."
     },
     "viewFilter": {
         "contains": "contiene",

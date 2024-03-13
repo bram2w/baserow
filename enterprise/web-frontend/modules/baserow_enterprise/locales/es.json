@@ -293,5 +293,12 @@
     },
     "localBaserowUserSourceType": {
         "notConfigured": "No configurado"
+    },
+    "appAuthProviderType": {
+        "localBaserowPassword": "Correo electrónico/contraseña"
+    },
+    "localBaserowPasswordAppAuthProviderForm": {
+        "passwordFieldLabel": "Seleccionar campo de contraseña",
+        "noFields": "No hay campos compatibles"
     }
 }

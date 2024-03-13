@@ -282,5 +282,23 @@
     "auditLogSidebarWorkspace": {
         "title": "Audit log",
         "deactivated": "Disponibile con licenza advanced/enterprise"
+    },
+    "localBaserowUserSourceForm": {
+        "nameFieldLabel": "Scegli il campo nome",
+        "nameFieldPlaceholder": "Scegli un campo...",
+        "description": "Ogni riga nella tabella è un utente. Scegli i campi corrispondenti nella tabella. Il campo email sarà utilizzato per identificare l'utente.",
+        "emailFieldLabel": "Scegli il campo email",
+        "emailFieldLabelPlaceholder": "Scegli un campo...",
+        "noFields": "Nessuno campo"
+    },
+    "localBaserowUserSourceType": {
+        "notConfigured": "Non configurato"
+    },
+    "appAuthProviderType": {
+        "localBaserowPassword": "Email/Password"
+    },
+    "localBaserowPasswordAppAuthProviderForm": {
+        "passwordFieldLabel": "Scegli il campo password",
+        "noFields": "Nessun campo compatibile"
     }
 }

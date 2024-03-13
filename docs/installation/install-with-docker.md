@@ -27,12 +27,12 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
   external access.
-* Add `-e BASEROW_CADDY_ADDRESSES=https://YOUR_DOMAIN` to enable
+* Add `-e BASEROW_CADDY_ADDRESSES=:443` to enable
   [automatic Caddy HTTPS](https://caddyserver.com/docs/automatic-https)
   .
 * Optionally add `-e DATABASE_URL=postgresql://user:pwd@host:port/db` to use an external
@@ -50,7 +50,7 @@ docker run \
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.23.0` image by default runs all of Baserow's various services in
+The `baserow/baserow:1.23.1` image by default runs all of Baserow's various services in
 a single container for maximum ease of use.
 
 > This image is designed for simple single server deployments or simple container
@@ -151,12 +151,12 @@ docker run \
   -d \
   --name baserow \
   -e BASEROW_PUBLIC_URL=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
-  -e BASEROW_CADDY_ADDRESSES=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
+  -e BASEROW_CADDY_ADDRESSES=:443 \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### Behind a reverse proxy already handling ssl
@@ -169,7 +169,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### On a nonstandard HTTP port
@@ -182,7 +182,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 3001:80 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### With an external PostgresSQL server
@@ -201,7 +201,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### With an external Redis server
@@ -220,7 +220,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### With an external email server
@@ -240,7 +240,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### With a Postgresql server running on the same host as the Baserow docker container
@@ -278,7 +278,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### Supply secrets using files
@@ -305,7 +305,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 ### Start just the embedded database
@@ -318,7 +318,7 @@ docker run -it \
   --name baserow \
   -p 5432:5432 \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.23.0 \
+  baserow/baserow:1.23.1 \
   start-only-db
 # Now get the password from
 docker exec -it baserow cat /baserow/data/.pgpass
@@ -330,13 +330,15 @@ docker exec -it baserow cat /baserow/data/.pgpass
 
 The build in Caddy server is configured to automatically handle additional application
 builder domains. Depending on the environment variables, it will also automatically
-fetch SSL certificates for those domains.
+fetch SSL certificates for those domains. Note that the `BASEROW_CADDY_ADDRESSES`
+environment variable must be `:80` or `:443` to allow multiple domains. If you have set
+a URL there, it won't work.
 
 By default, it will accept requests of any domain over the http protocol, which is
 perfect if you have a proxy in front of Baserow. If `BASEROW_CADDY_ADDRESSES` starts
-with `https` protocol, then it will redirect http requests to https, and will handle
-the SSL certificate part automatically. This is recommended when the container is
-directly exposed to the internet.
+with `https` protocol or is `:443`, then it will redirect http requests to https, and
+will handle the SSL certificate part automatically. This is recommended when the
+container is directly exposed to the internet.
 
 ### Run a one off command on the database
 
@@ -348,7 +350,7 @@ docker run -it \
   --rm \
   --name baserow \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.23.0 \
+  baserow/baserow:1.23.1 \
   backend-cmd-with-db manage dbshell
 ```
 
@@ -471,19 +473,19 @@ the command below.
 
 ```bash
 # First read the help message for this command
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.23.0 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.23.1 \
    backend-cmd-with-db backup --help
 
 # Stop Baserow instance
 docker stop baserow
 
 # The command below backs up Baserow to the backups folder in the baserow_data volume:
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.23.0 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.23.1 \
    backend-cmd-with-db backup -f /baserow/data/backups/backup.tar.gz
 
 # Or backup to a file on your host instead run something like:
 docker run -it --rm -v baserow_data:/baserow/data -v $PWD:/baserow/host \
-   baserow/baserow:1.23.0 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
+   baserow/baserow:1.23.1 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
 ```
 
 ### Restore only Baserow's Postgres Database
@@ -499,13 +501,13 @@ docker stop baserow
 docker run -it --rm \
   -v old_baserow_data_volume_containing_the_backup_tar_gz:/baserow/old_data \
   -v new_baserow_data_volume_to_restore_into:/baserow/data \
-  baserow/baserow:1.23.0 backend-cmd-with-db restore -f /baserow/old_data/backup.tar.gz
+  baserow/baserow:1.23.1 backend-cmd-with-db restore -f /baserow/old_data/backup.tar.gz
 
 # Or to restore from a file on your host instead run something like:
 docker run -it --rm \
   -v baserow_data:/baserow/data -v \
   $(pwd):/baserow/host \
-  baserow/baserow:1.23.0 backend-cmd-with-db restore -f /baserow/host/backup.tar.gz
+  baserow/baserow:1.23.1 backend-cmd-with-db restore -f /baserow/host/backup.tar.gz
 ```
 
 ## Running healthchecks on Baserow
@@ -556,7 +558,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.0
+  baserow/baserow:1.23.1
 ```
 
 Or you can just store it directly in the volume at `baserow_data/env` meaning it will be
@@ -565,7 +567,7 @@ loaded whenever you mount in this data volume.
 ### Building your own image from Baserow
 
 ```dockerfile
-FROM baserow/baserow:1.23.0
+FROM baserow/baserow:1.23.1
 
 # Any .sh files found in /baserow/supervisor/env/ will be sourced and loaded at startup
 # useful for storing your own environment variable overrides.

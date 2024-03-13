@@ -16,7 +16,7 @@ version: "3.4"
 services:
   baserow:
     container_name: baserow
-    image: baserow/baserow:1.23.0
+    image: baserow/baserow:1.23.1
     environment:
       BASEROW_PUBLIC_URL: 'http://localhost'
     ports:
@@ -213,7 +213,7 @@ Caddy.
 
 ```bash
 BASEROW_PUBLIC_URL=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
-BASEROW_CADDY_ADDRESSES=https://www.REPLACE_WITH_YOUR_DOMAIN.com \
+BASEROW_CADDY_ADDRESSES=:443 \
 docker-compose up
 ```
 

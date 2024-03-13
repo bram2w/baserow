@@ -80,7 +80,7 @@
         "freeUsers": "Kostenlose Benutzer",
         "seatsTaken": "Sitze besetzt",
         "storageUsage": "Verwendeter Speicherplatz (MB)",
-        "usageHelpText": "Wird nachts berechnet, wenn die Einstellung für die Nutzung von Trackgruppen aktiviert ist."
+        "usageHelpText": "Wird nachts berechnet, wenn die Einstellung \"Arbeitsbereichsnutzung verfolgen\" aktiviert ist"
     },
     "editWorkspaceContext": {
         "delete": "Dauerhaft löschen"
@@ -250,7 +250,7 @@
         "leftBorderColorDescription": "Färbe den linken Rand der Zeile",
         "backgroundColor": "Hintergrundfarbe",
         "backgroundColorDescription": "Färbe den Hintergrund einer Spalte",
-        "onlyForPremium": "Verfügbar in der premium Version",
+        "onlyForPremium": "Verfügbar in der Premium-Version",
         "onlyOneDecoratorPerView": "Du kannst nur eine Verzierung von dieser Art pro Ansicht haben"
     },
     "decoratorValueProviderType": {
@@ -262,7 +262,11 @@
     "conditionalColorValueProviderForm": {
         "addColor": "Farbe hinzufügen",
         "addCondition": "Bedingung hinzufügen",
-        "colorAlwaysApply": "Diese Farbe gilt standardmäßig. Sie können Bedingungen hinzufügen, indem Sie auf den \"Bedingung hinzufügen\" Knopf klicken."
+        "colorAlwaysApply": "Sie können Bedingungen hinzufügen, indem Sie auf den Button \"Bedingung hinzufügen\" klicken.",
+        "addConditionGroup": "Bedingungsgruppe hinzufügen",
+        "colorAlwaysApplyTitle": "Diese Farbe wird standardmäßig angewendet.",
+        "deleteColor": "Farbe löschen",
+        "title": "Farben"
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "Welches Einzelauswahlfeld soll zum färben der Zeile verwendet werden?"
@@ -335,7 +339,8 @@
         "hiddenRowsCount": "0 | 1 mehr... | {hiddenRowsCount} mehr..."
     },
     "rowCommentMentionNotification": {
-        "title": "{sender} hat Sie in Zeile {row} in {table} erwähnt"
+        "title": "{sender} hat Sie in Zeile {row} in {table} erwähnt",
+        "deletedUser": "Gelöschter Benutzer"
     },
     "trashType": {
         "row_comment": "Zeilenkommentar"
@@ -345,6 +350,13 @@
         "edit": "Kommentar bearbeiten"
     },
     "rowCommentNotification": {
-        "title": "{sender} hat einen Kommentar in Tabelle {table}, Zeile {row} geschrieben"
+        "title": "{sender} hat einen Kommentar in Tabelle {table}, Zeile {row} geschrieben",
+        "deletedUser": "Gelöschter Benutzer"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsDesc": "Sie werden nur benachrichtigt, wenn Sie erwähnt werden.",
+        "modeAllDesc": "Sie erhalten Benachrichtigungen für alle Kommentare in dieser Zeile.",
+        "modeMentionsTitle": "Nur Erwähnungen",
+        "modeAllTitle": "Alle Kommentare"
     }
 }

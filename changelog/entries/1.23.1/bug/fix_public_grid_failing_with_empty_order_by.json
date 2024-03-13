@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fixed public grid view failing is empty order_by parameter was provided.",
+  "issue_number": null,
+  "bullet_points": [],
+  "created_at": "2024-03-11"
+}

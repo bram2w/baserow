@@ -1323,6 +1323,13 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         for view_type in view_type_registry.get_all():
             view_type.after_field_update(updated_fields)
 
+        for field in updated_fields:
+            field_type = field_type_registry.get_by_model(field.specific_class)
+            # Check whether the updated field is still compatible with the group by.
+            # If not, it must be deleted.
+            if not field_type.check_can_group_by(field):
+                ViewGroupBy.objects.filter(field=field).delete()
+
     def get_filter_builder(
         self, view: View, model: Type[GeneratedTableModel]
     ) -> FilterBuilder:
@@ -3297,18 +3304,20 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         queryset = self.apply_filters(view, queryset)
 
         if view_type.can_group_by:
+            has_group_by = group_by is not None and group_by != ""
+            has_order_by = order_by is not None and order_by != ""
             # If both the group by and order by string is set, then we must merge the
             # two so that it will be sorted the right way because the grouping is
             # basically just sorting for the backend. However, the group by will take
             # precedence.
-            if group_by is not None and order_by is not None:
+            if has_group_by and has_order_by:
                 order_by = f"{group_by},{order_by}"
             # If only the group_by is set, then we can simply replace the order_by
             # because that must be applied to the queryset.
-            elif group_by is not None:
+            elif has_group_by:
                 order_by = group_by
 
-        if order_by is not None:
+        if order_by is not None and order_by != "":
             queryset = queryset.order_by_fields_string(
                 order_by, False, publicly_visible_field_ids
             )

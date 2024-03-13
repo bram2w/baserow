@@ -89,8 +89,8 @@ from .signals import (
     workspace_created,
     workspace_deleted,
     workspace_invitation_accepted,
-    workspace_invitation_created,
     workspace_invitation_rejected,
+    workspace_invitation_updated_or_created,
     workspace_updated,
     workspace_user_added,
     workspace_user_deleted,
@@ -1032,7 +1032,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 f"The user {email} is already part of the workspace."
             )
 
-        invitation, _ = WorkspaceInvitation.objects.update_or_create(
+        invitation, created = WorkspaceInvitation.objects.update_or_create(
             workspace=workspace,
             email=email,
             defaults={
@@ -1049,8 +1049,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         except User.DoesNotExist:
             invited_user = None
 
-        workspace_invitation_created.send(
-            sender=self, invitation=invitation, invited_user=invited_user
+        workspace_invitation_updated_or_created.send(
+            sender=self,
+            invitation=invitation,
+            invited_user=invited_user,
+            created=created,
         )
 
         self.send_workspace_invitation_email(invitation, base_url)

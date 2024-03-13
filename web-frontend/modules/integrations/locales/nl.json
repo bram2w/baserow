@@ -25,7 +25,10 @@
         "noFilterText": "Met gegevensbronfilters kun je rijen in de Baserow tabel weergeven die van toepassing zijn op je voorwaarden.",
         "filterTypeNotFound": "Het filtertype is niet compatibel.",
         "noCompatibleFilterTypesErrorTitle": "Geen passende filtertypes",
-        "noCompatibleFilterTypesErrorMessage": "Geen van uw velden heeft passende filtertypen"
+        "noCompatibleFilterTypesErrorMessage": "Geen van uw velden heeft passende filtertypen",
+        "formulaFilterInputPlaceholder": "Tekst invoeren...",
+        "useFormulaForValue": "Gebruik een formule voor dit filter",
+        "useDefaultForValue": "Gebruik het standaardfilter voor dit veld"
     },
     "localBaserowTableSelector": {
         "databaseFieldLabel": "Database",

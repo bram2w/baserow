@@ -99,8 +99,15 @@ export const mutations = {
   SET_WORKSPACE_INVIATIONS(state, invitations) {
     state.workspaceInvitations = invitations
   },
-  ADD_WORKSPACE_INVITATION(state, invitation) {
-    state.workspaceInvitations.push(invitation)
+  ADD_OR_UPDATE_WORKSPACE_INVITATION(state, invitation) {
+    const existingIndex = state.workspaceInvitations.findIndex(
+      (c) => c.id === invitation.id
+    )
+    if (existingIndex !== -1) {
+      state.workspaceInvitations.splice(existingIndex, 1, invitation)
+    } else {
+      state.workspaceInvitations.push(invitation)
+    }
   },
   REMOVE_WORKSPACE_INVITATION(state, invitationId) {
     const existingIndex = state.workspaceInvitations.findIndex(
@@ -275,8 +282,8 @@ export const actions = {
     commit('SET_WORKSPACE_INVIATIONS', data.workspace_invitations)
     return data.workspace_invitations
   },
-  forceCreateWorkspaceInvitation({ commit }, invitation) {
-    commit('ADD_WORKSPACE_INVITATION', invitation)
+  forceUpdateOrCreateWorkspaceInvitation({ commit }, invitation) {
+    commit('ADD_OR_UPDATE_WORKSPACE_INVITATION', invitation)
   },
   async acceptWorkspaceInvitation({ commit }, invitationId) {
     const { data: workspace } = await WorkspaceService(

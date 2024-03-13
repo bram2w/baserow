@@ -47,7 +47,9 @@ const mutations = {
   },
   SET_ITEM(state, { page, workflowAction: workflowActionToSet, values }) {
     page.workflowActions = page.workflowActions.map((workflowAction) =>
-      workflowAction.id === workflowActionToSet.id ? values : workflowAction
+      workflowAction.id === workflowActionToSet.id
+        ? populateWorkflowAction(values)
+        : workflowAction
     )
   },
   ORDER_ITEMS(state, { page, order }) {
@@ -225,7 +227,7 @@ const getters = {
       .sort((a, b) => a.order - b.order)
   },
   getLoading: (state) => (workflowAction) => {
-    return workflowAction._.loading
+    return workflowAction._?.loading
   },
 }
 

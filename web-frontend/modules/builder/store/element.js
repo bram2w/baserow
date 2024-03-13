@@ -27,13 +27,45 @@ const updateContext = {
   valuesToUpdate: {},
 }
 
+const getOrder = (element) => {
+  return element?.order ? new BigNumber(element.order) : null
+}
+
+/** Recursively order the elements from up to down and left to right */
+const orderElements = (elements, parentElementId = null) => {
+  return elements
+    .filter(
+      ({ parent_element_id: curentParentElementId }) =>
+        curentParentElementId === parentElementId
+    )
+    .sort((a, b) => {
+      if (a.place_in_container !== b.place_in_container) {
+        return a.place_in_container > b.place_in_container ? 1 : -1
+      }
+
+      return getOrder(a).gt(getOrder(b)) ? 1 : -1
+    })
+    .map((element) => [element, ...orderElements(elements, element.id)])
+    .flat()
+}
+
+const updateCachedValues = (page) => {
+  page.elementMap = Object.fromEntries(
+    page.elements.map((element) => [element.id, element])
+  )
+  page.orderedElements = orderElements(page.elements)
+}
+
 const mutations = {
   SET_ITEMS(state, { page, elements }) {
     state.selected = null
     page.elements = elements.map(populateElement)
+    updateCachedValues(page)
   },
   ADD_ITEM(state, { page, element, beforeId = null }) {
-    page.elements.push(populateElement(element))
+    const populatedElement = populateElement(element)
+    page.elements.push(populatedElement)
+    updateCachedValues(page)
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
     page.elements.forEach((element) => {
@@ -44,12 +76,14 @@ const mutations = {
     if (state.selected?.id === elementToUpdate.id) {
       Object.assign(state.selected, values)
     }
+    updateCachedValues(page)
   },
   DELETE_ITEM(state, { page, elementId }) {
     const index = page.elements.findIndex((element) => element.id === elementId)
     if (index > -1) {
       page.elements.splice(index, 1)
     }
+    updateCachedValues(page)
   },
   MOVE_ITEM(state, { page, index, oldIndex }) {
     page.elements.splice(index, 0, page.elements.splice(oldIndex, 1)[0])
@@ -97,14 +131,15 @@ const actions = {
     { page, elementId, beforeElementId, parentElementId, placeInContainer }
   ) {
     const beforeElement = getters.getElementById(page, beforeElementId)
-    const afterOrder = beforeElement?.order || null
-    const beforeOrder =
+    const afterOrder = getOrder(beforeElement)
+    const beforeOrder = getOrder(
       getters.getPreviousElement(
         page,
         beforeElement,
         parentElementId,
         placeInContainer
-      )?.order || null
+      )
+    )
     const tempOrder = calculateTempOrder(beforeOrder, afterOrder)
 
     commit('UPDATE_ITEM', {
@@ -352,36 +387,15 @@ const actions = {
   },
 }
 
-/** Recursively order the elements from up to down and left to right */
-const orderElements = (elements, parentElementId = null) => {
-  return elements
-    .filter(
-      ({ parent_element_id: curentParentElementId }) =>
-        curentParentElementId === parentElementId
-    )
-    .sort((a, b) => {
-      if (a.place_in_container !== b.place_in_container) {
-        return a.place_in_container > b.place_in_container ? 1 : -1
-      }
-
-      return a.order.gt(b.order) ? 1 : -1
-    })
-    .map((element) => [element, ...orderElements(elements, element.id)])
-    .flat()
-}
-
 const getters = {
   getElements: (state) => (page) => {
-    return page.elements.map((element) => ({
-      ...element,
-      order: new BigNumber(element.order),
-    }))
+    return page.elements
   },
   getElementById: (state, getters) => (page, id) => {
-    return getters.getElements(page).find((e) => e.id === id)
+    return page.elementMap[id]
   },
   getElementsOrdered: (state, getters) => (page) => {
-    return orderElements(getters.getElements(page))
+    return page.orderedElements
   },
   getRootElements: (state, getters) => (page) => {
     return getters
@@ -448,10 +462,19 @@ const getters = {
         placeInContainer
       )
       return before
-        ? elementsInPlace.reverse().find((e) => e.order.lt(before.order)) ||
-            null
+        ? elementsInPlace
+            .reverse()
+            .find((e) => getOrder(e).lt(getOrder(before))) || null
         : elementsInPlace.at(-1)
     },
+  getNextElement: (state, getters) => (page, element) => {
+    const elementsInPlace = getters.getElementsInPlace(
+      page,
+      element.parent_element_id,
+      element.place_in_container
+    )
+    return elementsInPlace.find((e) => getOrder(e).gt(getOrder(element)))
+  },
   getSelected(state) {
     return state.selected
   },

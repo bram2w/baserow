@@ -21,6 +21,7 @@
 
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'DropdownElement',
@@ -46,17 +47,17 @@ export default {
   },
   computed: {
     labelResolved() {
-      return this.resolveFormula(this.element.label)
+      return ensureString(this.resolveFormula(this.element.label))
     },
     placeholderResolved() {
-      return this.resolveFormula(this.element.placeholder).toString()
+      return ensureString(this.resolveFormula(this.element.placeholder))
     },
     defaultValueResolved() {
       // We need to make sure this is always a string since the options aren't formulas
       // and therefore can only be strings. In order to match the default value to
       // an option the default value therefore must be a string as well.
       // true has to match "true" essentially.
-      return this.resolveFormula(this.element.default_value).toString()
+      return ensureString(this.resolveFormula(this.element.default_value))
     },
   },
   watch: {

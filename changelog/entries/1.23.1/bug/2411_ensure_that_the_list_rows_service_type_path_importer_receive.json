@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "ensure that the list rows service type path importer receives no row or field it doesn't fail.",
+    "issue_number": 2411,
+    "bullet_points": [],
+    "created_at": "2024-03-11"
+}

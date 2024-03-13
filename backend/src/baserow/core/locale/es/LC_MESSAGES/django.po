@@ -3,16 +3,16 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-18 13:32+0000\n"
-"PO-Revision-Date: 2023-01-19 13:51+0000\n"
-"Last-Translator: gallegonovato <fran-carro@hotmail.es>\n"
-"Language-Team: Spanish <https://hosted.weblate.org/projects/baserow/backend-"
-"core/es/>\n"
+"PO-Revision-Date: 2024-03-13 14:32+0000\n"
+"Last-Translator: Hiram <hiramfromthechi@users.noreply.hosted.weblate.org>\n"
+"Language-Team: Spanish <https://hosted.weblate.org/projects/baserow/"
+"backend-core/es/>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.15.1\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: src/baserow/core/action/scopes.py:9
 #, python-format
@@ -132,10 +132,8 @@ msgstr ""
 "IDs %(installed_application_ids)s"
 
 #: src/baserow/core/actions.py:738
-#, fuzzy
-#| msgid "Create group"
 msgid "Create group invitation"
-msgstr "Crear grupo"
+msgstr "Crear invitación de grupo"
 
 #: src/baserow/core/actions.py:740
 #, python-format
@@ -143,12 +141,12 @@ msgid ""
 "Group invitation created for \"%(email)s\" to join \"%(group_name)s"
 "\" (%(group_id)s) as %(permissions)s."
 msgstr ""
+"Invitación de grupo creada para que \"%(correo electrónico)s\" se una a \""
+"%(nombre_grupo)s\" (%(id_grupo)s) como %(permisos)s."
 
 #: src/baserow/core/actions.py:791
-#, fuzzy
-#| msgid "Delete group"
 msgid "Delete group invitation"
-msgstr "Borrar grupo"
+msgstr "Borrar invitación de grupo"
 
 #: src/baserow/core/actions.py:793
 #, python-format
@@ -156,12 +154,13 @@ msgid ""
 "Group invitation (%(invitation_id)s) deleted for \"%(email)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s."
 msgstr ""
+"Invitación de grupo (%(invitación_id)s) eliminada para que \"%(correo "
+"electrónico)s\" se una a \"%(nombre_grupo)s\" (%(grupo_id)s) como "
+"%(permisos)s."
 
 #: src/baserow/core/actions.py:846
-#, fuzzy
-#| msgid "Accept invitation"
 msgid "Accept group invitation"
-msgstr "Aceptar la invitación"
+msgstr "Aceptar invitación de grupo"
 
 #: src/baserow/core/actions.py:848
 #, python-format
@@ -169,12 +168,12 @@ msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was accepted."
 msgstr ""
+"La invitación (%(invitación_id)s) enviada por \"%(remitente)s\" para unirse "
+"a \"%(nombre_grupo)s\" (%(grupo_id)s) como %(permisos)s ha sido aceptada."
 
 #: src/baserow/core/actions.py:901
-#, fuzzy
-#| msgid "Accept invitation"
 msgid "Reject group invitation"
-msgstr "Aceptar la invitación"
+msgstr "Rechazar invitación de grupo"
 
 #: src/baserow/core/actions.py:903
 #, python-format
@@ -182,10 +181,12 @@ msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was rejected."
 msgstr ""
+"La invitación (%(invitación_id)s) enviada por \"%(remitente)s\" para unirse "
+"a \"%(nombre_grupo)s\" (%(grupo_id)s) como %(permisos)s ha sido rechazada."
 
 #: src/baserow/core/actions.py:956
 msgid "Update group invitation permissions"
-msgstr ""
+msgstr "Actualizar los permisos de invitación a grupos"
 
 #: src/baserow/core/actions.py:958
 #, python-format
@@ -194,43 +195,46 @@ msgid ""
 "%(original_permissions)s to %(permissions)s for %(email)s  on group "
 "\"%(group_name)s\" (%(group_id)s)."
 msgstr ""
+"Los permisos de invitación (%(invitación_id)s) cambiaron de "
+"%(permisos_originales)s a %(permisos)s para %(email)s en el grupo \""
+"%(nombre_grupo)s\" (%(id_grupo)s)."
 
 #: src/baserow/core/actions.py:1015
-#, fuzzy
-#| msgid "Create group"
 msgid "Leave group"
-msgstr "Crear grupo"
+msgstr "Dejar grupo"
 
 #: src/baserow/core/actions.py:1016
-#, fuzzy, python-format
-#| msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
+#, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
-msgstr "Grupo \"%(group_name)s\" (%(group_id)s) borrado."
+msgstr "Grupo \"%(nombre_grupo)s\" (%(id_grupo)s) a la izquierda."
 
 #: src/baserow/core/emails.py:103
-#, fuzzy, python-format
-#| msgid "%(by)s invited you to %(group_name)s - Baserow"
+#, python-format
 msgid "%(by)s invited you to %(workspace_name)s - Baserow"
-msgstr "%(by)s le invitó a %(group_name)s - Baserow"
+msgstr "%(por)s te ha invitado a %(nombre_espacio_de_trabajo)s - Baserow"
 
 #: src/baserow/core/emails.py:136
 msgid "You have 1 new notification - Baserow"
-msgstr ""
+msgstr "Tienes 1 notificación nueva - Baserow"
 
 #: src/baserow/core/emails.py:138
 #, python-format
 msgid "You have %(count)d new notifications - Baserow"
-msgstr ""
+msgstr "Tienes %(cuenta)d notificaciones nuevas - Baserow"
 
 #: src/baserow/core/notification_types.py:94
 #, python-format
 msgid "%(user)s accepted your invitation to collaborate to %(workspace_name)s."
 msgstr ""
+"%(usuario)s ha aceptado tu invitación para colaborar en "
+"%(nombre_espacio_de_trabajo)s."
 
 #: src/baserow/core/notification_types.py:135
 #, python-format
 msgid "%(user)s rejected your invitation to collaborate to %(workspace_name)s."
 msgstr ""
+"%(usuario)s ha rechazado tu invitación para colaborar en "
+"%(nombre_espacio_de_trabajo)s."
 
 #: src/baserow/core/snapshots/actions.py:21
 msgid "Create Snapshot"
@@ -312,19 +316,19 @@ msgstr ""
 #, python-format
 msgid "You have %(counter)s new notification"
 msgid_plural "You have %(counter)s new notifications"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Tienes %(contador)s nueva notificación"
+msgstr[1] "Tienes %(contador) nuevas notificaciónes"
 
 #: src/baserow/core/templates/baserow/core/notifications_summary.html:187
 #, python-format
 msgid "Plus %(counter)s more notification."
 msgid_plural "Plus %(counter)s more notifications."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Más %(contador) notificación."
+msgstr[1] "Más %(contador) notificaciónes."
 
 #: src/baserow/core/templates/baserow/core/notifications_summary.html:198
 msgid "View in Baserow"
-msgstr ""
+msgstr "Ver en Baserow"
 
 #: src/baserow/core/templates/baserow/core/user/account_deleted.html:144
 msgid "Account permanently deleted"
@@ -403,32 +407,26 @@ msgstr ""
 "caducará en %(hours)s horas."
 
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:149
-#, fuzzy, python-format
-#| msgid ""
-#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-#| "%(group_name)s</strong>."
+#, python-format
 msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
 "%(workspace_name)s</strong>."
 msgstr ""
-"<strong>%(first_name)s</strong> te ha invitado a colaborar en <strong>"
-"%(group_name)s</strong>."
+"<strong>%(nombre)s</strong> te ha invitado a colaborar en <strong>%( "
+"nombre_espacio_de_trabajo)s</strong>."
 
 #: src/baserow/core/trash/actions.py:20
 msgid "Empty trash"
-msgstr ""
+msgstr "Vaciar la basura"
 
 #: src/baserow/core/trash/actions.py:22
-#, fuzzy, python-format
-#| msgid ""
-#| "Application \"%(application_name)s\" (%(application_id)s) of type "
-#| "%(application_type)s deleted"
+#, python-format
 msgid ""
 "Trash for application \"%(application_name)s\" (%(application_id)s) has been "
 "emptied"
 msgstr ""
-"Aplicación \"%(application_name)s\" (%(application_id)s) de tipo "
-"%(application_type)s borrada"
+"Se ha vaciado la papelera de la aplicación \"%(nombre_aplicación)s\" "
+"(%(id_aplicación)s)"
 
 #: src/baserow/core/trash/actions.py:79
 #, python-format
@@ -436,35 +434,35 @@ msgid ""
 "Trash for workspace \"%(workspace_name)s\" (%(workspace_id)s) has been "
 "emptied."
 msgstr ""
+"Se ha vaciado la papelera del espacio de trabajo \""
+"%(nombre_espacio_de_trabajo)s\" (%(id_espacio_de_trabajo)s)."
 
 #: src/baserow/core/trash/actions.py:90
-#, fuzzy
-#| msgid "Restore Snapshot"
 msgid "Restore from trash"
-msgstr "Restaurar instantánea"
+msgstr "Restaurar desde la basura"
 
 #: src/baserow/core/trash/actions.py:91
 #, python-format
 msgid ""
 "Item of type \"%(item_type)s\" (%(item_id)s) has been restored from trash"
 msgstr ""
+"El elemento de tipo \"%(tipo_elemento)s\" (%(id_elemento)s) se ha recuperado "
+"de la basura."
 
 #: src/baserow/core/user/actions.py:23
 msgid "Create User"
 msgstr "Crear usuario"
 
 #: src/baserow/core/user/actions.py:25
-#, fuzzy, python-format
-#| msgid ""
-#| "User \"%(user_email)s\" (%(user_id)s) created (via invitation: "
-#| "%(with_invitation_token)s, from template: %(template_id)s)"
+#, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) created via \"%(auth_provider_type)s"
 "\" (%(auth_provider_id)s) auth provider (invitation: "
 "%(with_invitation_token)s)"
 msgstr ""
-"Usuario \"%(user_email)s\" (%(user_id)s) creado (vía invitación: "
-"%(with_invitation_token)s, desde plantilla: %(template_id)s)"
+"Usuario \"%(correo_usuario)s\" (%(id_usuario)s) creado a través del "
+"proveedor de autenticación \"%(tipo_proveedor_aut)s\" (%(id_proveedor_aut)s) "
+"(invitación: %(con_token_invitación)s)"
 
 #: src/baserow/core/user/actions.py:110
 msgid "Update User"
@@ -503,55 +501,47 @@ msgstr ""
 
 #: src/baserow/core/user/actions.py:229
 msgid "Sign In User"
-msgstr ""
+msgstr "Iniciar sesión de usuario"
 
 #: src/baserow/core/user/actions.py:231
-#, fuzzy, python-format
-#| msgid ""
-#| "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
-#| "process"
+#, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) signed in via \"%(auth_provider_type)s"
 "\" (%(auth_provider_id)s) auth provider"
 msgstr ""
-"El usuario \"%(user_email)s\" (%(user_id)s) ha iniciado sesión, lo que ha "
-"cancelado el proceso de eliminación"
+"El usuario \"%(correo_usuario)s\" (%(id_usuario)s) ha iniciado sesión a "
+"través del proveedor de autenticación \"%(tipo_proveedor_aut)s\" "
+"(%(id_proveedor_aut)s)."
 
 #: src/baserow/core/user/actions.py:283
-#, fuzzy
-#| msgid "Reset password"
 msgid "Send reset user password"
-msgstr "Restablecer contraseña"
+msgstr "Enviar restablecimiento de contraseña de usuario"
 
 #: src/baserow/core/user/actions.py:284
-#, fuzzy, python-format
-#| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
+#, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
-msgstr "Usuario \"%(user_email)s\" (%(user_id)s) actualizado"
+msgstr ""
+"El usuario \"%(correo_usuario)s\" (%(id_usuario)s) ha solicitado restablecer "
+"la contraseña."
 
 #: src/baserow/core/user/actions.py:314
-#, fuzzy
-#| msgid "Reset password"
 msgid "Change user password"
-msgstr "Restablecer contraseña"
+msgstr "Cambiar la contraseña de usuario"
 
 #: src/baserow/core/user/actions.py:315
-#, fuzzy, python-format
-#| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
+#, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
-msgstr "Usuario \"%(user_email)s\" (%(user_id)s) actualizado"
+msgstr ""
+"El usuario \"%(usuario_email)s\" (%(usuario_id)s) ha cambiado la contraseña"
 
 #: src/baserow/core/user/actions.py:351
-#, fuzzy
-#| msgid "Reset password"
 msgid "Reset user password"
-msgstr "Restablecer contraseña"
+msgstr "Restablecer contraseña de usuario"
 
 #: src/baserow/core/user/actions.py:352
-#, fuzzy, python-format
-#| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
+#, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
-msgstr "Usuario \"%(user_email)s\" (%(user_id)s) actualizado"
+msgstr "Usuario \"%(correo_usuario)s\" (%(id_usuario)s) restablecer contraseña"
 
 #: src/baserow/core/user/emails.py:16
 msgid "Reset password - Baserow"
@@ -570,10 +560,9 @@ msgid "Account deletion cancelled - Baserow"
 msgstr "Cancelación de la eliminación de la cuenta - Baserow"
 
 #: src/baserow/core/user/handler.py:248
-#, fuzzy, python-format
-#| msgid "%(name)s's group"
+#, python-format
 msgid "%(name)s's workspace"
-msgstr "%(name)s grupo"
+msgstr "Espacio de trabajo de %(nombre)s"
 
 #, fuzzy
 #~| msgid ""

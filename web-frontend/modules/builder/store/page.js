@@ -13,6 +13,8 @@ export function populatePage(page) {
     },
     dataSources: [],
     elements: [],
+    elementMap: {},
+    orderedElements: [],
     workflowActions: [],
   }
 }

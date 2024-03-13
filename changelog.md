@@ -1,5 +1,27 @@
 # Changelog
 
+## Released 1.23.1
+
+### New features
+* Copy single value to all selected cells [#2238](https://gitlab.com/baserow/baserow/-/issues/2238)
+* Added templates: Net Promoter score, Project Management, OOO Management, Agile Product Roadmap
+
+### Bug fixes
+* Resolved an issue causing duplicate notifications and improved handling of multiple WorkspaceInvitations for the same user. [#2350](https://gitlab.com/baserow/baserow/-/issues/2350)
+* Tweaked the application builder Examples page table element columns. [#2382](https://gitlab.com/baserow/baserow/-/issues/2382)
+* Fix port binding problem in the all in one image. [#2403](https://gitlab.com/baserow/baserow/-/issues/2403)
+* ensure that the list rows service type path importer receives no row or field it doesn't fail. [#2411](https://gitlab.com/baserow/baserow/-/issues/2411)
+* Fix error for invalid formulas in DropdownElement default value [#2414](https://gitlab.com/baserow/baserow/-/issues/2414)
+* Resolved an issue where an application's user sources would try and list users when no table had been selected. [#2415](https://gitlab.com/baserow/baserow/-/issues/2415)
+* Ensure the dispatch datasources endpoint handles missing pages properly. [#2417](https://gitlab.com/baserow/baserow/-/issues/2417)
+* Fix error fro workflow actions with no loading indicator [#2418](https://gitlab.com/baserow/baserow/-/issues/2418)
+* Resolved an issue with the update row workflow action throwing an error if an invalid row ID was provided. [#2419](https://gitlab.com/baserow/baserow/-/issues/2419)
+* Improve page editor performances when using lots of input elements [#2420](https://gitlab.com/baserow/baserow/-/issues/2420)
+* Delete group by if the field is changed to an incompatible type.
+* Fixed public grid view failing is empty order_by parameter was provided.
+* Show billable badge to billable roles.
+
+
 ## Released 1.23.0
 
 ### New features
@@ -8,6 +30,7 @@
 * Support ad hoc sorting in grid and gallery views [#2361](https://gitlab.com/baserow/baserow/-/issues/2361)
 * Add ad hoc filtering support for editor and lower for gallery and kanban views [#2375](https://gitlab.com/baserow/baserow/-/issues/2375)
 * Add rich text formatting and Markdown support to the long text field. [#622](https://gitlab.com/baserow/baserow/-/issues/622)
+* Add the application builder
 
 ### Bug fixes
 * Fix the number of workspaces in the admin dashboard. [#1195](https://gitlab.com/baserow/baserow/-/issues/1195)

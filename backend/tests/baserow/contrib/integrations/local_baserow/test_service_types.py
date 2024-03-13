@@ -21,6 +21,9 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
 from baserow.contrib.builder.data_sources.service import DataSourceService
+from baserow.contrib.builder.elements.registries import element_type_registry
+from baserow.contrib.builder.elements.service import ElementService
+from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
@@ -1944,6 +1947,29 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_with_unknown_row_id(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    table = data_fixture.create_database_table(user=user)
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        row_id="'9999999999999'",
+        integration=integration,
+    )
+    service_type = service.get_type()
+    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        service_type.dispatch_data(service, dispatch_values, dispatch_context)
+    assert exc.value.args[0] == "The row with id 9999999999999 does not exist."
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_transform(
     data_fixture,
 ):
@@ -2223,3 +2249,39 @@ def test_local_baserow_upsert_row_service_after_update(data_fixture):
     service.refresh_from_db()
     assert service.table_id == table2.id
     assert service.field_mappings.count() == 0
+
+
+@pytest.mark.django_db
+def test_import_datasource_provider_formula_using_list_rows_service_containing_no_row_or_field_fails_silently(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, authorized_user=user
+    )
+    table = data_fixture.create_database_table(database=database)
+    page = data_fixture.create_builder_page(builder=builder)
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        table=table,
+    )
+    data_source = DataSourceService().create_data_source(
+        user, service_type=service.get_type(), page=page
+    )
+    ElementService().create_element(
+        user,
+        element_type_registry.get("input_text"),
+        page=page,
+        data_source_id=data_source.id,
+        placeholder=f"get('data_source.{data_source.id}')",
+    )
+    duplicated_page = PageService().duplicate_page(user, page)
+    duplicated_element = duplicated_page.element_set.first()
+    duplicated_data_source = duplicated_page.datasource_set.first()
+    assert (
+        duplicated_element.specific.placeholder
+        == f"get('data_source.{duplicated_data_source.id}')"
+    )

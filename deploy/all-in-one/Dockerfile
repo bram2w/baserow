@@ -72,7 +72,7 @@ RUN apt-get update && \
     # ========================
     # Install Caddy
     # ======================== \
-    curl -o caddy.tar.gz -sL "https://github.com/caddyserver/caddy/releases/download/v2.4.6/caddy_2.4.6_linux_$(dpkg --print-architecture).tar.gz" && \
+    curl -o caddy.tar.gz -sL "https://github.com/caddyserver/caddy/releases/download/v2.7.6/caddy_2.7.6_linux_$(dpkg --print-architecture).tar.gz" && \
     tar -xf caddy.tar.gz && \
     mv caddy /usr/bin/ && \
     rm caddy.tar.gz && \

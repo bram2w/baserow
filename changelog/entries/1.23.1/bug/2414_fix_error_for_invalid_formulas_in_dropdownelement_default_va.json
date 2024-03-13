@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix error for invalid formulas in DropdownElement default value",
+    "issue_number": 2414,
+    "bullet_points": [],
+    "created_at": "2024-03-12"
+}

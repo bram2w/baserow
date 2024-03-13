@@ -3,16 +3,16 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-18 13:32+0000\n"
-"PO-Revision-Date: 2023-04-01 12:37+0000\n"
-"Last-Translator: Davide Silvestri <davide@baserow.io>\n"
-"Language-Team: Italian <https://hosted.weblate.org/projects/baserow/backend-"
-"core/it/>\n"
+"PO-Revision-Date: 2024-03-13 14:32+0000\n"
+"Last-Translator: Andrea Disarò <andrea@baserow.io>\n"
+"Language-Team: Italian <https://hosted.weblate.org/projects/baserow/"
+"backend-core/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.17-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: src/baserow/core/action/scopes.py:9
 #, python-format
@@ -134,10 +134,8 @@ msgstr ""
 "applicazioni con ID %(installed_application_ids)s"
 
 #: src/baserow/core/actions.py:738
-#, fuzzy
-#| msgid "Accept group invitation"
 msgid "Create group invitation"
-msgstr "Accetta invito"
+msgstr "Crea invito di gruppo"
 
 #: src/baserow/core/actions.py:740
 #, python-format
@@ -149,10 +147,8 @@ msgstr ""
 "\"%(group_name)s\" (%(group_id)s) come %(permissions)s."
 
 #: src/baserow/core/actions.py:791
-#, fuzzy
-#| msgid "Accept group invitation"
 msgid "Delete group invitation"
-msgstr "Accetta invito"
+msgstr "Elimina invito di gruppo"
 
 #: src/baserow/core/actions.py:793
 #, python-format
@@ -178,10 +174,8 @@ msgstr ""
 "accettato."
 
 #: src/baserow/core/actions.py:901
-#, fuzzy
-#| msgid "Accept group invitation"
 msgid "Reject group invitation"
-msgstr "Accetta invito"
+msgstr "Rifiuta invito di gruppo"
 
 #: src/baserow/core/actions.py:903
 #, python-format
@@ -225,32 +219,22 @@ msgstr ""
 
 #: src/baserow/core/emails.py:136
 msgid "You have 1 new notification - Baserow"
-msgstr ""
+msgstr "Hai 1 nuova notifica - Baserow"
 
 #: src/baserow/core/emails.py:138
 #, python-format
 msgid "You have %(count)d new notifications - Baserow"
-msgstr ""
+msgstr "Hai %(count)d nuove notifiche - Baserow"
 
 #: src/baserow/core/notification_types.py:94
-#, fuzzy, python-format
-#| msgid ""
-#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-#| "%(workspace_name)s</strong>."
+#, python-format
 msgid "%(user)s accepted your invitation to collaborate to %(workspace_name)s."
-msgstr ""
-"<strong>%(first_name)s</strong> ti ha invitato a collaborare a <strong>"
-"%(workspace_name)s</strong>."
+msgstr "%(user)s ha accettato il tuo invito a collaborare a %(workspace_name)s."
 
 #: src/baserow/core/notification_types.py:135
-#, fuzzy, python-format
-#| msgid ""
-#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-#| "%(workspace_name)s</strong>."
+#, python-format
 msgid "%(user)s rejected your invitation to collaborate to %(workspace_name)s."
-msgstr ""
-"<strong>%(first_name)s</strong> ti ha invitato a collaborare a <strong>"
-"%(workspace_name)s</strong>."
+msgstr "%(user)s ha rifiutato il tuo invito a collaborare a %(workspace_name)s."
 
 #: src/baserow/core/snapshots/actions.py:21
 msgid "Create Snapshot"
@@ -300,16 +284,13 @@ msgid "Invitation"
 msgstr "Invito"
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:149
-#, fuzzy, python-format
-#| msgid ""
-#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-#| "%(workspace_name)s</strong>."
+#, python-format
 msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
 "%(group_name)s</strong>."
 msgstr ""
-"<strong>%(first_name)s</strong> ti ha invitato a collaborare a <strong>"
-"%(workspace_name)s</strong>."
+"<strong>%(first_name)s</strong> ti ha invitato a collaborare a "
+"<strong>%(group_name)s</strong>."
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:163
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:167
@@ -336,19 +317,19 @@ msgstr ""
 #, python-format
 msgid "You have %(counter)s new notification"
 msgid_plural "You have %(counter)s new notifications"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Hai %(counter)s nuova notifica"
+msgstr[1] "Hai %(counter)s nuove notifiche"
 
 #: src/baserow/core/templates/baserow/core/notifications_summary.html:187
 #, python-format
 msgid "Plus %(counter)s more notification."
 msgid_plural "Plus %(counter)s more notifications."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Più %(counter)s notifica aggiuntiva."
+msgstr[1] "Più %(counter)s notifiche aggiuntive."
 
 #: src/baserow/core/templates/baserow/core/notifications_summary.html:198
 msgid "View in Baserow"
-msgstr ""
+msgstr "Vedi in Baserow"
 
 #: src/baserow/core/templates/baserow/core/user/account_deleted.html:144
 msgid "Account permanently deleted"
@@ -577,4 +558,4 @@ msgstr "Cancellazione account interrotta - Baserow"
 #: src/baserow/core/user/handler.py:248
 #, python-format
 msgid "%(name)s's workspace"
-msgstr "%(name)s del progetto"
+msgstr "Progetto di %(name)s"
