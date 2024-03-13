@@ -2262,6 +2262,31 @@ export const actions = {
       fieldIndex,
     }
   ) {
+    const copiedRowsCount = textData.length
+    const copiedCellsInRowsCount = textData[0].length
+    const isSingleCellCopied =
+      copiedRowsCount === 1 && copiedCellsInRowsCount === 1
+
+    if (isSingleCellCopied) {
+      // the textData and jsonData are recreated
+      // to fill the entire multi selection
+      const selectedRowsCount =
+        getters.getMultiSelectTailRowIndex -
+        getters.getMultiSelectHeadRowIndex +
+        1
+      const selectedFieldsCount =
+        getters.getMultiSelectTailFieldIndex -
+        getters.getMultiSelectHeadFieldIndex +
+        1
+      const rowTextArray = Array(selectedFieldsCount).fill(textData[0][0])
+      textData = Array(selectedRowsCount).fill(rowTextArray)
+
+      if (jsonData) {
+        const rowJsonArray = Array(selectedFieldsCount).fill(jsonData[0][0])
+        jsonData = Array(selectedRowsCount).fill(rowJsonArray)
+      }
+    }
+
     // If the origin row and field index are not provided, we need to use the
     // head indexes of the multiple select.
     const rowHeadIndex = rowIndex ?? getters.getMultiSelectHeadRowIndex
@@ -2270,10 +2295,20 @@ export const actions = {
     // Based on the data, we can figure out in which cells we must paste. Here we find
     // the maximum tail indexes.
     let rowTailIndex =
-      Math.min(getters.getCount, rowHeadIndex + textData.length) - 1
-    const fieldTailIndex =
-      Math.min(allVisibleFields.length, fieldHeadIndex + textData[0].length) - 1
-    const newRowsCount = textData.length - (rowTailIndex - rowHeadIndex + 1)
+      Math.min(getters.getCount, rowHeadIndex + copiedRowsCount) - 1
+    let fieldTailIndex =
+      Math.min(
+        allVisibleFields.length,
+        fieldHeadIndex + copiedCellsInRowsCount
+      ) - 1
+
+    if (isSingleCellCopied) {
+      // we want the tail indexes to follow the multi select exactly
+      rowTailIndex = getters.getMultiSelectTailRowIndex
+      fieldTailIndex = getters.getMultiSelectTailFieldIndex
+    }
+
+    const newRowsCount = copiedRowsCount - (rowTailIndex - rowHeadIndex + 1)
 
     // Create extra missing rows
     if (newRowsCount > 0) {
@@ -2289,16 +2324,19 @@ export const actions = {
       rowTailIndex = rowTailIndex + newRowsCount
     }
 
-    // Expand the selection of the multiple select to the cells that we're going to
-    // paste in, so the user can see which values have been updated. This is because
-    // it could be that there are more or less values in the clipboard compared to
-    // what was originally selected.
-    await dispatch('setMultipleSelect', {
-      rowHeadIndex,
-      fieldHeadIndex,
-      rowTailIndex,
-      fieldTailIndex,
-    })
+    if (!isSingleCellCopied) {
+      // Expand the selection of the multiple select to the cells that we're going to
+      // paste in, so the user can see which values have been updated. This is because
+      // it could be that there are more or less values in the clipboard compared to
+      // what was originally selected.
+
+      await dispatch('setMultipleSelect', {
+        rowHeadIndex,
+        fieldHeadIndex,
+        rowTailIndex,
+        fieldTailIndex,
+      })
+    }
 
     // Figure out which rows are already in the buffered and temporarily store them
     // in an array.
