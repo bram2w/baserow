@@ -13,12 +13,8 @@
         on_demand
     }
 
-    vars {
-        full_uri "{http.request.scheme}://{http.request.host}"
-    }
-
     @is_baserow_tool {
-        expression {vars.full_uri}.startsWith("{$BASEROW_PUBLIC_URL}")
+        expression "{$BASEROW_PUBLIC_URL}".contains({http.request.host})
     }
 
     handle @is_baserow_tool {
