@@ -106,16 +106,6 @@ export default {
       isDuplicating: false,
     }
   },
-  watch: {
-    /**
-     * Focuses the element if the element has been selected.
-     */
-    isSelected(newValue, old) {
-      if (newValue && !old) {
-        this.$el.focus()
-      }
-    },
-  },
   computed: {
     ...mapGetters({
       elementSelected: 'element/getSelected',
@@ -156,17 +146,10 @@ export default {
         ? this.$registry.get('element', this.parentElement?.type)
         : null
     },
-    siblingElements() {
-      return this.$store.getters['element/getSiblings'](this.page, this.element)
-    },
-    samePlaceInContainerElements() {
-      return this.siblingElements.filter(
-        (e) => e.place_in_container === this.element.place_in_container
-      )
-    },
     nextElement() {
-      return [...this.samePlaceInContainerElements].find((e) =>
-        e.order.gt(this.element.order)
+      return this.$store.getters['element/getNextElement'](
+        this.page,
+        this.element
       )
     },
     inError() {
@@ -174,6 +157,16 @@ export default {
         element: this.element,
         builder: this.builder,
       })
+    },
+  },
+  watch: {
+    /**
+     * Focuses the element if the element has been selected.
+     */
+    isSelected(newValue, old) {
+      if (newValue && !old) {
+        this.$el.focus()
+      }
     },
   },
   methods: {

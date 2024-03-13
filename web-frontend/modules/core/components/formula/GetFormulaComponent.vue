@@ -43,9 +43,10 @@ export default {
   inject: ['applicationContext'],
   computed: {
     availableData() {
-      return Object.values(this.$registry.getAll('builderDataProvider')).map(
-        (dataProvider) => dataProvider.getNodes(this.applicationContext)
-      )
+      if (!this.dataProviderType) {
+        return []
+      }
+      return [this.dataProviderType.getNodes(this.applicationContext)]
     },
     isInvalid() {
       return this.findNode(this.availableData, _.toPath(this.path)) === null
@@ -56,22 +57,21 @@ export default {
     isSelected() {
       return this.node.attrs.isSelected
     },
+    rawPathParts() {
+      return _.toPath(this.path)
+    },
+    dataProviderType() {
+      return this.$registry.get('builderDataProvider', this.rawPathParts[0])
+    },
     pathParts() {
-      const pathParts = _.toPath(this.path)
-
-      const dataProviderType = this.$registry.get(
-        'builderDataProvider',
-        pathParts[0]
-      )
-
-      const translatedPathPart = pathParts.map((_, index) =>
-        dataProviderType.getPathTitle(
+      const translatedPathPart = this.rawPathParts.map((_, index) =>
+        this.dataProviderType.getPathTitle(
           this.applicationContext,
-          pathParts.slice(0, index + 1)
+          this.rawPathParts.slice(0, index + 1)
         )
       )
 
-      translatedPathPart[0] = dataProviderType.name
+      translatedPathPart[0] = this.dataProviderType.name
       return translatedPathPart
     },
   },
