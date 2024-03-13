@@ -27,6 +27,12 @@ const updateContext = {
   valuesToUpdate: {},
 }
 
+/**
+ * As the store data come first from the SSR generated version, we don't have the
+ * BigNumber anymore so we need to make sure we use BigNumber when we compare things.
+ * @param {Object} element
+ * @returns a BigNumber object or null if the element or the order is missing.
+ */
 const getOrder = (element) => {
   return element?.order ? new BigNumber(element.order) : null
 }
