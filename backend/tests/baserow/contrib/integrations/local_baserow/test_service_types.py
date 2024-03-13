@@ -1947,6 +1947,29 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_with_unknown_row_id(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    table = data_fixture.create_database_table(user=user)
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        row_id="'9999999999999'",
+        integration=integration,
+    )
+    service_type = service.get_type()
+    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
+        service_type.dispatch_data(service, dispatch_values, dispatch_context)
+    assert exc.value.args[0] == "The row with id 9999999999999 does not exist."
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_transform(
     data_fixture,
 ):

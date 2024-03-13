@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an issue with the update row workflow action throwing an error if an invalid row ID was provided.",
+    "issue_number": 2419,
+    "bullet_points": [],
+    "created_at": "2024-03-12"
+}

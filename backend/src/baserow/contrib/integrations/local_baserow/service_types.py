@@ -32,6 +32,7 @@ from baserow.contrib.database.api.rows.serializers import (
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
@@ -1249,13 +1250,18 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 ) from exc
 
         if resolved_values["row_id"]:
-            row = RowHandler().update_row_by_id(
-                integration.authorized_user,
-                table,
-                row_id=resolved_values["row_id"],
-                values=field_values,
-                values_already_prepared=True,
-            )
+            try:
+                row = RowHandler().update_row_by_id(
+                    integration.authorized_user,
+                    table,
+                    row_id=resolved_values["row_id"],
+                    values=field_values,
+                    values_already_prepared=True,
+                )
+            except RowDoesNotExist:
+                raise ServiceImproperlyConfigured(
+                    f"The row with id {resolved_values['row_id']} does not exist."
+                )
         else:
             row = RowHandler().create_row(
                 user=integration.authorized_user,
