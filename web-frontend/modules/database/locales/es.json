@@ -692,7 +692,7 @@
         "snapshotDeletedErrorTitle": "Se ha producido un error",
         "snapshotDeletedErrorMessage": "La imagen no ha podido ser eliminada. Favor de intentarlo otra vez mas tarde.",
         "title": "imágenes",
-        "description": "Las imágenes instantáneas son una copia completa de su base de datos del momento en que fueron creadas. Al restaurarlas se creará una duplicación de esos datos. Las instantáneas se eliminan automáticamente después de un año.",
+        "description": "Las instantáneas son una copia completa de tu {nombre_aplicacion_tipo} del momento en que fueron creadas. Al restaurarlas se creará una duplicación de esos datos. Las instantáneas se eliminan automáticamente al cabo de un año.",
         "descriptionLimits": "Puedes tener un máximo de {n} instantáneas por espacio de trabajo. | Puedes tener un máximo de {n} instantáneas por espacio de trabajo. | Puedes tener un máximo de {n} instantáneas por espacio de trabajo.",
         "snapshot": "Imagen",
         "limitReached": "Se ha alcanzado el límite de imágenes máximas.",
@@ -819,7 +819,8 @@
         "noGroupByText": "Agrupar filas por un campo."
     },
     "collaboratorAddedToRowNotification": {
-        "title": "{remitente} te asignó a {nombreDeCampo} en la fila {rowId} en {nombreDeTabla}."
+        "title": "{remitente} te asignó a {nombreDeCampo} en la fila {rowId} en {nombreDeTabla}.",
+        "deletedUser": "Un usuario eliminado"
     },
     "fieldCollaboratorSubForm": {
         "notifyUserWhenAdded": "Notificar al usuario cuando se añade"
@@ -830,5 +831,22 @@
     "formSubmittedNotification": {
         "title": "Se ha enviado {nombreDelFormulario} en la tabla {nombreDeLaTabla}:",
         "moreValues": "0 | y 1 campo más. | y {cuenta} campos más."
+    },
+    "fieldDurationSubForm": {
+        "durationFormatLabel": "Formato de duración"
+    },
+    "fieldPasswordSubForm": {
+        "description": "Todavía no es posible hacer nada directamente con el campo de contraseña, esto sólo es utilizado por la autenticación de usuario en el constructor de aplicaciones."
+    },
+    "rowEditFieldPassword": {
+        "setPassword": "Establecer contraseña"
+    },
+    "rowHistoryFieldPassword": {
+        "passwordSet": "Se ha establecido la contraseña",
+        "passwordUpdated": "Se ha actualizado la contraseña",
+        "passwordDeleted": "Se ha borrado la contraseña"
+    },
+    "fieldLongTextSubForm": {
+        "enableRichTextFormatting": "Activar el formato de texto enriquecido"
     }
 }

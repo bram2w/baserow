@@ -819,7 +819,8 @@
         "noGroupByText": "Groepeer rijen op een veld."
     },
     "collaboratorAddedToRowNotification": {
-        "title": "{sender} heeft u toegewezen aan {fieldName} in rij {rowId} in {tableName}"
+        "title": "{sender} heeft u toegewezen aan {fieldName} in rij {rowId} in {tableName}",
+        "deletedUser": "Een verwijderde gebruiker"
     },
     "fieldCollaboratorSubForm": {
         "notifyUserWhenAdded": "Gebruiker op de hoogte stellen wanneer toegevoegd"
@@ -830,5 +831,22 @@
     "formSubmittedNotification": {
         "title": "{formName} is verstuurd in tabel {tableName}:",
         "moreValues": "0 | en nog 1 veld. | en {count} meer velden."
+    },
+    "fieldDurationSubForm": {
+        "durationFormatLabel": "Duur format"
+    },
+    "fieldPasswordSubForm": {
+        "description": "Het is nog niet mogelijk om direct iets te doen met het wachtwoordveld, dit wordt alleen gebruikt door de gebruikersauthenticatie in de applicatiebouwer."
+    },
+    "rowEditFieldPassword": {
+        "setPassword": "Stel een wachtwoord in"
+    },
+    "rowHistoryFieldPassword": {
+        "passwordSet": "Het wachtwoord is ingesteld",
+        "passwordUpdated": "Het wachtwoord is bijgewerkt",
+        "passwordDeleted": "Het wachtwoord is verwijderd"
+    },
+    "fieldLongTextSubForm": {
+        "enableRichTextFormatting": "Opmaak met rijke tekst inschakelen"
     }
 }

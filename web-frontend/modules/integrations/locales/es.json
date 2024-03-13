@@ -1,1 +1,67 @@
-{}
+{
+    "localBaserowGetRowForm": {
+        "rowFieldHelpText": "Deja este valor vacío para devolver la primera fila.",
+        "noTableChosenForSorting": "Elige una tabla para empezar a utilizar la ordenación de fuentes de datos.",
+        "rowFieldLabel": "ID de fila",
+        "invalidFormula": "La fórmula es inválida",
+        "rowFieldPlaceHolder": "Seleccionar un ID de fila",
+        "searchFieldPlaceHolder": "Introduce un término de búsqueda...",
+        "noTableChosenForFiltering": "Elige una tabla para empezar a utilizar los filtros de fuentes de datos.",
+        "searchTabTitle": "Búsqueda",
+        "filterTabTitle": "Filtros"
+    },
+    "localBaserowListRowsForm": {
+        "filterTabTitle": "Filtros",
+        "searchTabTitle": "Buscar en",
+        "searchFieldPlaceHolder": "Introduce un término de búsqueda...",
+        "noTableChosenForFiltering": "Elige una tabla para empezar a utilizar los filtros de fuentes de datos.",
+        "sortTabTitle": "Ordenar",
+        "noTableChosenForSorting": "Elige una tabla para empezar a utilizar la ordenación de fuentes de datos."
+    },
+    "localBaserowTableServiceConditionalForm": {
+        "addFilter": "Añadir filtro adicional",
+        "relatedFieldNotFound": "No se encuentra el campo relacionado.",
+        "filterTypeNotFound": "El tipo de filtro no es compatible.",
+        "noCompatibleFilterTypesErrorTitle": "No hay tipos de filtro compatibles",
+        "noCompatibleFilterTypesErrorMessage": "Ninguno de tus campos tiene ningún tipo de filtro compatible",
+        "formulaFilterInputPlaceholder": "Introducir texto...",
+        "useFormulaForValue": "Utiliza una fórmula para este filtro",
+        "noFilterTitle": "Aún no has creado un filtro de fuente de datos",
+        "noFilterText": "Los filtros de fuente de datos le permiten mostrar las filas de la tabla Baserow que se aplican a tus condiciones.",
+        "useDefaultForValue": "Utiliza el filtro por defecto para este campo"
+    },
+    "localBaserowTableServiceSortForm": {
+        "noTableChosenForSorting": "Elige una tabla para empezar a utilizar la ordenación de fuentes de datos.",
+        "noSortText": "Las clasificaciones permiten ordenar las filas por un campo.",
+        "noSortTitle": "Aún no has creado un tipo de fuente de datos",
+        "sortBy": "Ordenar por",
+        "thenBy": "Luego por",
+        "addSort": "Añadir ordenación adicional"
+    },
+    "dataProviderType": {
+        "dataSource": "Fuente de datos",
+        "pageParameter": "Parámetro"
+    },
+    "localBaserowTableSelector": {
+        "chooseNoView": "No seleccionado",
+        "viewFieldLabel": "Vista",
+        "tableFieldLabel": "Tabla",
+        "databaseFieldLabel": "Base de datos"
+    },
+    "integrationType": {
+        "localBaserow": "Baserow local",
+        "localBaserowSummary": "Local Baserow - {nombre}, {nombre de usuario}",
+        "localBaserowWarning": "Autorizar tu cuenta da a todos los que tienen permisos de edición en la aplicación acceso completo a los datos a los que tú tienes acceso. Es posible crear un segundo usuario, darle los permisos adecuados y utilizarlo."
+    },
+    "serviceType": {
+        "localBaserowGetRow": "Obtener una fila",
+        "localBaserowListRows": "Listar filas"
+    },
+    "userSourceType": {
+        "localBaserow": "Autenticación de la tabla de Baserow"
+    },
+    "localBaserowForm": {
+        "user": "Usuario",
+        "userMessage": "Al crear esta conexión, está autorizando a la aplicación a utilizar su cuenta para realizar cambios en su espacio de trabajo local Baserow."
+    }
+}

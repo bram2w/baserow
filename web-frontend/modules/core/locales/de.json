@@ -600,7 +600,8 @@
         "paddingError": "Der Wert muss eine ganze Zahl zwischen 0 und 200 sein."
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{sender} hat Ihre Einladung zur Teilnahme an {workspaceName} abgelehnt"
+        "title": "{sender} hat Ihre Einladung zur Teilnahme an {workspaceName} abgelehnt",
+        "deletedUser": "Gelöschter Benutzer"
     },
     "authorizationErrorToast": {
         "content": "Anscheinend sind Sie nicht berechtigt, diese Ressource anzuzeigen.",
@@ -623,10 +624,12 @@
         "notFound": "Keine Benutzer gefunden"
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} hat Ihre Einladung angenommen, {workspaceName} beizutreten"
+        "title": "{sender} hat Ihre Einladung angenommen, {workspaceName} beizutreten",
+        "deletedUser": "Gelöschter Benutzer"
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{sender} hat Sie eingeladen, {workspaceName} beizutreten"
+        "title": "{sender} hat Sie eingeladen, {workspaceName} beizutreten",
+        "deletedUser": "Gelöschter Benutzer"
     },
     "versionUpgradeNotification": {
         "title": "{version} ist da! Sehen Sie sich an, was es Neues gibt."
@@ -646,7 +649,9 @@
         "instant": "Sofort"
     },
     "dataExplorer": {
-        "emptyText": "Keine Daten gefunden"
+        "emptyText": "Keine Daten gefunden",
+        "noMatchingNodesText": "Es wurden keine passenden Datenanbieter gefunden.",
+        "noProvidersText": "Es wurden keine Datenanbieter gefunden. Um loszulegen, können Sie zum Beispiel eine Datenquelle oder einen Seitenparameter hinzufügen."
     },
     "integrationDropdown": {
         "noIntegrations": "Keine Integrationen gefunden.",

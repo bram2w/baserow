@@ -47,10 +47,15 @@ test-parallel:
 test-compat-parallel:
 	pytest tests/baserow/compat --run-disabled-in-ci -n 10 || exit;
 
-translations:
+make-translations:
 	django-admin makemessages -l en && \
 	cd /baserow/premium/backend && django-admin makemessages -l en && \
 	cd /baserow/enterprise/backend/src && django-admin makemessages -l en
+
+compile-translations:
+	django-admin compilemessages && \
+    	cd /baserow/premium/backend && django-admin compilemessages && \
+    	cd /baserow/enterprise/backend/src && django-admin compilemessages
 
 
 PYTEST_SPLITS:=1

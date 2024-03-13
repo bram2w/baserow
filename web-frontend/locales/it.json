@@ -4,7 +4,10 @@
         "no": "no",
         "wrong": "Si è verificato un errore",
         "none": "Nessuno",
-        "free": "Gratuito"
+        "free": "Gratuito",
+        "comingSoon": "In arrivo...",
+        "table": "Tabella",
+        "link": "Collegamento"
     },
     "action": {
         "upload": "Carica",
@@ -33,7 +36,9 @@
         "login": "Login",
         "download": "Download",
         "copyToClipboard": "Copia nella clipboard",
-        "reset": "Reset"
+        "reset": "Reset",
+        "set": "Imposta",
+        "logout": "Esci"
     },
     "adminType": {
         "settings": "Impostazioni",
@@ -72,7 +77,8 @@
         "requiredField": "Questo campo è obbligatorio.",
         "integerField": "Il campo deve essere un intero.",
         "minValueField": "Il campo deve essere maggior o uguale a {min}.",
-        "maxValueField": "Il campo deve essere minore o uguale a {max}."
+        "maxValueField": "Il campo deve essere minore o uguale a {max}.",
+        "minMaxValueField": "Il valore del campo deve essere fra {min} e {max}."
     },
     "permission": {
         "admin": "Admin",
@@ -103,7 +109,17 @@
         "rollup": "Rollup",
         "linkRowMultiple": "Multiple",
         "defaultFormViewComponent": "Default",
-        "linkRowSingle": "Singolo"
+        "linkRowSingle": "Singolo",
+        "multipleSelectCheckboxes": "Checkbox",
+        "createdBy": "Creato da",
+        "multipleSelectDropdown": "Lista",
+        "uuid": "UUID",
+        "singleSelectRadios": "Radio",
+        "duration": "Durata",
+        "singleSelectDropdown": "Lista",
+        "password": "Password",
+        "autonumber": "Numerazione automatica",
+        "lastModifiedBy": "Ultima modifica di"
     },
     "fieldErrors": {
         "invalidNumber": "Numero non valido",
@@ -111,13 +127,17 @@
         "invalidUrl": "URL non valido",
         "max254Chars": "Massimo 254 caratteri",
         "invalidEmail": "E-mail non valida",
-        "invalidPhoneNumber": "Numero di telefono non valido"
+        "invalidPhoneNumber": "Numero di telefono non valido",
+        "overflowDuration": "Il valore è troppo grande.",
+        "invalidDuration": "Formato non valido ({durationFormat}).",
+        "maxChars": "Max {max} caratteri.",
+        "minChars": "Min {min} caratteri."
     },
     "fieldDocs": {
         "readOnly": "Questo è un campo di sola lettura.",
         "text": "Accetta testo a linea singola.",
-        "longText": "Accetta un testo a linea multipla.",
-        "linkRow": "Accetta una matrice contenente gli identificatori delle righe relative dalla tabella id {table}. Tutti gli identificatori devono essere forniti ogni volta che le relazioni vengono aggiornate. Se viene fornita una matrice vuota, tutte le relazioni saranno eliminate.",
+        "longText": "Accetta un testo a linea multipla. Se la formattazione avanzata del testo è abilitata, puoi usare markdown per formattare il testo.",
+        "linkRow": "Accetta una matrice contenente gli identificatori o i valori testuali dei principali campi delle righe relative dalla tabella id {table}. Tutti gli identificatori devono essere forniti ogni volta che le relazioni vengono aggiornate. Se viene fornita una matrice vuota, tutte le relazioni saranno eliminate. In caso di un valore di testo invece di un identificatore, verrà cercata una riga con il valore corrispondente per il suo campo principale. Se viene trovata più di una corrispondenza, viene selezionata la prima nell'ordine della tabella. Puoi inviare una stringa con nomi separati da virgola, nel qual caso la stringa viene convertita in una matrice di nomi di riga.",
         "number": "Accetta un numero.",
         "numberPositive": "Accetta un numero positivo.",
         "decimal": "Accetta un decimale con {places} decimali dopo il punto.",
@@ -134,13 +154,19 @@
         "email": "Accetta una stringa che deve essere un indirizzo e-mail.",
         "file": "Accetta una matrice di oggetti contenente almeno il nome del file utente. Puoi anche inviare file, utilizzando la chiamata appropriata. La risposta alle tue chiamate verrà mostrata direttamente qui come oggetto. Le diverse possibili chiamate sono mostrate nella barra di navigazione di sinistra.",
         "singleSelect": "Accetta un intero che rappresenta l'id dell'opzione di selezione scelta o nullo se nessuna è selezionata.",
-        "multipleSelect": "Accetta una matrice di interi, ognuno dei quali rappresenta l'id dell'opzione di selezione scelta.",
+        "multipleSelect": "Accetta una matrice di interi o valori testuali, ognuno dei quali rappresenta l'id o il valore dell'opzione di selezione scelta. In caso di valore testuale, verrà selezionata la prima opzione corrispondente. Puoi mandare una stringa con nomi separati da virgola come valore, in questo caso la stringa viene convertita in una matrice di nomi di opzioni.",
         "phoneNumber": "Accetta un numero di telefono che ha una lunghezza massima di 100 caratteri composto unicamente da cifre, spazi e dai seguenti caratteri: Nx,._+*()#=;/- .",
         "formula": "Un campo di sola lettura definito da una formula scritta nel linguaggio delle formule Baserow.",
         "lookup": "Un campo di sola lettura collegato a un campo di tipo \"Collega a tabella\" che restituisce una matrice di valori e id di riga dal campo di ricerca scelto nella tabella collegata.",
         "multipleCollaborators": "Accetta una lista di oggetti contenenti l'id dell'utente.",
         "rollup": "Un campo in sola lettura connesso ad un campo di tipo \"Collega a tabella\" che esegue la funzione prescelta sulla tabella collegata.",
-        "count": "Un campo in sola lettura connesso ad un campo di tipo \"Collega a tabella\" che conta il numero di elementi inseriti."
+        "count": "Un campo in sola lettura connesso ad un campo di tipo \"Collega a tabella\" che conta il numero di elementi inseriti.",
+        "duration": "Accetta una string nel format {format} o un numero che rappresenta la durata in secondi.",
+        "uuid": "Un identificatore univoco e persistente in sola lettura.",
+        "lastModifiedBy": "Il campo 'Ultima modifica di' è un campo in sola lettura.",
+        "createdBy": "Il campo 'Creato da' è un campo in sola lettura che mostra l'utente che ha creato la riga.",
+        "autonumber": "Un campo in sola lettura che assegna un numero crescente ad ogni nuova riga automaticamente.",
+        "password": "Un campo di sola scrittura che contiene una password cifrata. Il valore sarà `null` se non compilata, altrimenti `true`. Accetta una stringa."
     },
     "viewFilter": {
         "contains": "contiene",
@@ -290,7 +316,9 @@
         "notificationDoesNotExistDescription": "L'azione non può essere completata perchè la relativa notifica non esiste più.",
         "notificationDoesNotExistTitle": "La notifica non esiste.",
         "adminAlreadyExistsDescription": "Il nome utente non può essere usato perché esiste già.",
-        "adminAlreadyExistsTitle": "Non puoi usare questo nome utente"
+        "adminAlreadyExistsTitle": "Non puoi usare questo nome utente",
+        "cannotCreateFieldTypeDescription": "Il tipo di campo richiesto non può essere creato al momento. Potrebbe essere un problema temporaneo con tabelle create in precedenza. Si prega di riprovare più tardi.",
+        "cannotCreateFieldTypeTitle": "Impossibile creare il campo"
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -436,7 +464,8 @@
         "getFileCountDescription": "Ritorna il numero di file presenti nel campo file",
         "encodeUriDescription": "Ritorna un URI codificato a partire dalla stringa data.",
         "getIsImageDescription": "Ritorna vero se il file è un'immagine, falso altrimenti. Utilizzare la funzione index per estrarre una singola immagine da un campo file.",
-        "getFileMimeTypeDescription": "Ritorna il mime type del file. Utilizzare la funzione index per estrarre un singolo file da un campo file."
+        "getFileMimeTypeDescription": "Ritorna il mime type del file. Utilizzare la funzione index per estrarre un singolo file da un campo file.",
+        "hasOptionDescription": "Ritorna true se il nome dell'opzione fornito come secondo argomento è presente nel campo fornito come primo argomento."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

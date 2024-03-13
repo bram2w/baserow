@@ -343,13 +343,15 @@
         "delete": "Opmerking verwijderen"
     },
     "rowCommentMentionNotification": {
-        "title": "{sender} noemde je in rij {row} in {table}"
+        "title": "{sender} noemde je in rij {row} in {table}",
+        "deletedUser": "Een verwijderde gebruiker"
     },
     "trashType": {
         "row_comment": "rij opmerking"
     },
     "rowCommentNotification": {
-        "title": "{sender} heeft een reactie geplaatst in rij {row} in {table}"
+        "title": "{sender} heeft een reactie geplaatst in rij {row} in {table}",
+        "deletedUser": "Een verwijderde gebruiker"
     },
     "RowEditModalCommentNotificationMode": {
         "modeMentionsDesc": "Je ontvangt alleen meldingen wanneer je wordt genoemd.",

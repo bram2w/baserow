@@ -611,10 +611,12 @@
         "restore": "Herstel verwijderd {type}"
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{sender} heeft uw uitnodiging om lid te worden van {workspaceName} afgewezen"
+        "title": "{sender} heeft uw uitnodiging om lid te worden van {workspaceName} afgewezen",
+        "deletedUser": "Een verwijderde gebruiker"
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{sender} heeft je uitgenodigd om lid te worden van {workspaceName}"
+        "title": "{sender} heeft je uitgenodigd om lid te worden van {workspaceName}",
+        "deletedUser": "Een verwijderde gebruiker"
     },
     "dropdown": {
         "empty": "Geen items beschikbaar"
@@ -623,7 +625,8 @@
         "paddingError": "De waarde moet een geheel getal zijn tussen 0 en 200."
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} heeft uw uitnodiging om lid te worden van {workspaceName} geaccepteerd"
+        "title": "{sender} heeft uw uitnodiging om lid te worden van {workspaceName} geaccepteerd",
+        "deletedUser": "Een verwijderde gebruiker"
     },
     "richTextEditorMentionsList": {
         "notFound": "Geen gebruikers gevonden"
@@ -658,5 +661,23 @@
         "addIntegration": "Nieuwe integratie toevoegen",
         "integrationPlaceholder": "Selecteer een integratie",
         "selectTypeFirst": "Kies het type eerst"
+    },
+    "richTextEditorBubbleMenu": {
+        "underline": "Onderstreep",
+        "bold": "Vet",
+        "italic": "Cursief",
+        "strikethrough": "Doorstreept"
+    },
+    "richTextEditorFloatingMenu": {
+        "hierarchy": "Hiërarchie",
+        "heading1": "Kop 1",
+        "heading2": "Kop 2",
+        "heading3": "Kop 3",
+        "orderedList": "Genummerde lijst",
+        "unorderedList": "Bullet lijst",
+        "code": "Code",
+        "taskList": "Takenlijst",
+        "lists": "Lijsten",
+        "paragraph": "Paragraaf"
     }
 }

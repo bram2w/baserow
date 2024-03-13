@@ -20,7 +20,14 @@
         "errorValidPathCharacters": "Der Pfad enthält ungültige Zeichen",
         "errorStartingSlash": "Ein Pfad muss mit einem '/' beginnen",
         "pathLabel": "Pfad",
-        "errorPathNotUnique": "Ein Pfad mit diesem Namen existiert bereits"
+        "errorPathNotUnique": "Ein Pfad mit diesem Namen existiert bereits",
+        "pathSubtitle": "Ein Parameter kann über :parameter hinzugefügt werden",
+        "pathTitle": "Pfad",
+        "nameSubtitle": "Eindeutiger Name der Seite",
+        "pathParamsTitle": "Pfad-Parameter",
+        "nameTitle": "Name",
+        "pathParamsSubtitle": "Werden durch :parameter im Pfad definiert",
+        "pathParamsSubtitleTutorial": "Pfad-Parameter können verwendet werden, um Daten dynamisch zu laden, abhängig von dem angegebenen Parameter. Fügen Sie :parameter zum Pfad hinzu, um einen hinzuzufügen."
     },
     "builderSettingTypes": {
         "integrationsName": "Integrationen",
@@ -43,7 +50,16 @@
         "column": "Spalten",
         "imageDescription": "Bild anzeigen",
         "buttonDescription": "Ein Button-Element",
-        "linkDescription": "Ein Link zu einer Seite/URL"
+        "linkDescription": "Ein Link zu einer Seite/URL",
+        "button": "Button",
+        "link": "Verknüpfung",
+        "formContainerDescription": "Ein Formular-Element",
+        "dropdownDescription": "Dropdown-Element",
+        "checkboxDescription": "Kontrollkästchen-Element",
+        "iframe": "iFrame",
+        "iframeDescription": "Inline-Frame",
+        "checkbox": "Kontrollkästchen",
+        "dropdown": "Dropdown"
     },
     "addElementButton": {
         "label": "Element"
@@ -68,13 +84,17 @@
     },
     "elementMenu": {
         "moveUp": "Nach oben verschieben",
-        "moveDown": "Nach unten verschieben"
+        "moveDown": "Nach unten verschieben",
+        "moveRight": "Nach rechts verschieben",
+        "moveLeft": "Nach links verschieben",
+        "selectParent": "Übergeordnetes Element auswählen"
     },
     "pageSidePanelType": {
         "general": "Allgemein",
         "style": "Style",
         "visibility": "Sichtbarkeit",
-        "events": "Ereignisse"
+        "events": "Ereignisse",
+        "eventsTabDeactivatedNoEvents": "Dieses Element unterstützt keinerlei Ereignisse"
     },
     "emptySidePanelState": {
         "message": "Klicken Sie auf eines der Elemente, um weitere Details zu sehen"
@@ -144,7 +164,8 @@
     },
     "domainTypes": {
         "subDomain": "Subdomain von {domain}",
-        "customName": "Benutzerdefinierte Domäne"
+        "customName": "Benutzerdefinierte Domäne",
+        "subDomainName": "Subdomain"
     },
     "domainForm": {
         "notUniqueDomain": "Die angegebene Domäne wird bereits verwendet",
@@ -161,6 +182,284 @@
         "domainNameLabel": "Domänen-Name"
     },
     "dnsStatus": {
-        "description": "Rufe die DNS-Einstellungen deiner Domäne auf und mache folgende Änderungen"
+        "description": "Rufe die DNS-Einstellungen deiner Domäne auf und mache folgende Änderungen",
+        "hostHeader": "Host",
+        "valueHeader": "Wert",
+        "typeHeader": "Art"
+    },
+    "pathParamTypes": {
+        "textName": "Text",
+        "numericName": "Numerisch"
+    },
+    "currentRecordDataProviderType": {
+        "index": "Index",
+        "firstPartName": "Datenquelle: {name}"
+    },
+    "updateUserSourceForm": {
+        "integrationFieldLabel": "Integration",
+        "nameFieldPlaceholder": "Einen Namen eingeben...",
+        "nameFieldLabel": "Name"
+    },
+    "upsertRowWorkflowActionForm": {
+        "rowIdPlaceholder": "Wählen Sie eine Zeilen-ID aus",
+        "noTableSelectedMessage": "Wählen Sie eine Tabelle, um mit der Konfiguration Ihrer Felder zu beginnen.",
+        "rowIdLabel": "Zeilen-ID",
+        "fieldMappingPlaceholder": "Wählen Sie einen Feldwert",
+        "integrationDropdownLabel": "Integration"
+    },
+    "checkboxElementForm": {
+        "labelTitle": "Bezeichnung",
+        "valueTitle": "Standardwert",
+        "requiredTitle": "Erforderlich"
+    },
+    "linkElementForm": {
+        "target": "Öffnen in...",
+        "targetSelf": "Gleicher Tab",
+        "targetNewTab": "Neuer Tab",
+        "text": "Text",
+        "textPlaceholder": "Text eingeben...",
+        "variant": "Variante",
+        "variantLink": "Verknüpfung",
+        "buttonColor": "Buttonfarbe",
+        "variantButton": "Button"
+    },
+    "dataSourceForm": {
+        "namePlaceholder": "Quellenname",
+        "servicePlaceholder": "Wählen Sie einen Dienst aus",
+        "integrationPlaceholder": "Wählen Sie eine Integration aus",
+        "errorUniqueName": "Der Name der Datenquelle muss eindeutig sein."
+    },
+    "dataSourceContext": {
+        "addDataSource": "Neue Datenquelle hinzufügen",
+        "noDataSourceTitle": "Diese Seite hat keine Datenquellen.",
+        "noDataSourceMessage": "Datenquellen können verwendet werden, um Daten aus internen oder externen Quellen abzurufen und auf der Seite anzuzeigen."
+    },
+    "imageElement": {
+        "emptyState": "Kein alternativer Text festgelegt..."
+    },
+    "imageElementForm": {
+        "fileSourceTypeURL": "URL",
+        "fileLabel": "Bilddatei",
+        "invalidUrlError": "URL ist ungültig",
+        "fileSourceTypeUpload": "Hochladen",
+        "altTextTitle": "Alternativer Text",
+        "uploadFileButton": "Datei hochladen",
+        "altTextDescription": "Wird von Screen-Readern verwendet und angezeigt, wenn das Bild nicht geladen werden kann",
+        "urlWarning": "Hinweis: Bitte vergewissern Sie sich, dass Sie die Kontrolle über die eingegebene URL haben oder dieser vertrauen."
+    },
+    "columnElementForm": {
+        "columnAmountTitle": "Layout",
+        "columnGapPlaceholder": "Geben Sie den Abstand zwischen den Spalten ein...",
+        "columnAmountName": "keine Spalten | 1 Spalte | {columnAmount} Spalten",
+        "columnGapTitle": "Abstand zwischen den Spalten"
+    },
+    "linkElement": {
+        "noValue": "Unbenannt..."
+    },
+    "horizontalAlignmentSelector": {
+        "alignmentRight": "Rechtsbündig",
+        "alignmentCenter": "Zentrieren",
+        "alignmentLeft": "Verknüpfung",
+        "alignment": "Horizontale Ausrichtung"
+    },
+    "verticalAlignmentSelector": {
+        "alignment": "Vertikale Ausrichtung",
+        "alignmentTop": "Oben",
+        "alignmentBottom": "Unten",
+        "alignmentCenter": "Mittig"
+    },
+    "elementForms": {
+        "textInputPlaceholder": "Text eingeben...",
+        "invalidFormula": "Die Formel ist ungültig",
+        "urlInputPlaceholder": "URL eingeben..."
+    },
+    "userSourceSettings": {
+        "addUserSource": "Benutzerquelle hinzufügen",
+        "titleUpdateUserSource": "Benutzerquelle bearbeiten",
+        "titleOverview": "Benutzerquellen",
+        "noUserSourceMessage": "Sie haben noch keine Benutzerquelle zu dieser Anwendung hinzugefügt. Sie müssen eine Benutzerquelle hinzufügen, wenn Sie möchten, dass die Benutzer Ihre Anwendung authentifizieren können.",
+        "titleAddUserSource": "Neue Benutzerquelle"
+    },
+    "widthSelector": {
+        "widthAuto": "Auto",
+        "width": "Breite",
+        "widthFull": "Volle Breite"
+    },
+    "backgroundTypes": {
+        "none": "Kein",
+        "color": "Farbe"
+    },
+    "widthTypes": {
+        "full": "Volle Breite",
+        "normal": "Normal",
+        "small": "Schmal",
+        "medium": "Mittel"
+    },
+    "pageSettingsTypes": {
+        "pageName": "Seite"
+    },
+    "pageSettings": {
+        "pageUpdatedDescription": "Die Seiteneinstellungen wurden geändert.",
+        "title": "Seite",
+        "pageUpdatedTitle": "Geändert"
+    },
+    "publicPage": {
+        "siteNotFound": "Seite nicht gefunden",
+        "pageNotFound": "Seite nicht gefunden"
+    },
+    "defaultStyleForm": {
+        "backgroundLabel": "Hintergrund",
+        "backgroundColor": "Hintergrundfarbe",
+        "widthLabel": "Breite",
+        "boxTop": "Oben",
+        "boxBottom": "Unten",
+        "boxLeft": "Links",
+        "boxRight": "Rechts"
+    },
+    "styleBoxForm": {
+        "borderLabel": "Rahmen",
+        "paddingLabel": "Innenabstand"
+    },
+    "mainThemeConfigBlock": {
+        "colorsLabel": "Farben",
+        "primaryColor": "Primär",
+        "headingLabel": "Überschrift {i} (h{i})",
+        "secondaryColor": "Sekundär",
+        "typography": "Typografie",
+        "headingValue": "Überschrift <h{i}>"
+    },
+    "tableElementForm": {
+        "itemsPerPage": "Elemente pro Seite",
+        "fieldValuePlaceholder": "Wert eingeben...",
+        "fields": "Felder",
+        "fieldDefaultName": "Spalte",
+        "dataSource": "Datenquelle",
+        "fieldValueLabel": "Wert",
+        "addField": "Feld hinzufügen",
+        "fieldType": "Typ",
+        "itemsPerPagePlaceholder": "Wert eingeben...",
+        "selectSourceFirst": "Wählen Sie eine Listen-Datenquelle, um mit der Konfiguration Ihrer Felder zu beginnen.",
+        "buttonColor": "Buttonfarbe"
+    },
+    "tableElement": {
+        "empty": "Es wurden keine Elemente gefunden.",
+        "showMore": "Mehr anzeigen"
+    },
+    "workflowActionTypes": {
+        "createRowLabel": "Zeile erstellen",
+        "openPageLabel": "Seite öffnen",
+        "updateRowLabel": "Zeile aktualisieren",
+        "notificationLabel": "Benachrichtigung anzeigen"
+    },
+    "notificationWorkflowActionForm": {
+        "titleLabel": "Titel",
+        "titlePlaceholder": "Text eingeben...",
+        "descriptionLabel": "Beschreibung",
+        "descriptionPlaceholder": "Text eingeben..."
+    },
+    "openPageWorkflowActionForm": {
+        "urlPlaceholder": "Text eingeben...",
+        "urlLabel": "URL"
+    },
+    "event": {
+        "addAction": "Aktion hinzufügen"
+    },
+    "collectionFieldType": {
+        "text": "Text",
+        "link": "Verknüpfung"
+    },
+    "linkFieldForm": {
+        "fieldLinkNamePlaceholder": "Wert eingeben...",
+        "fieldValueLabel": "URL",
+        "fieldLinkNameLabel": "Verknüpfungstext",
+        "fieldValuePlaceholder": "Wert eingeben...",
+        "buttonColor": "Buttonfarbe"
+    },
+    "createUserSourceForm": {
+        "userSourceType": "Typ",
+        "userSourceIntegration": "Integration",
+        "userSourceName": "Name"
+    },
+    "formContainerElementForm": {
+        "submitButtonLabel": "Absenden-Button",
+        "submitButtonPlaceholder": "Wert eingeben...",
+        "buttonColor": "Buttonfarbe"
+    },
+    "dispatchWorkflowActionError": {
+        "defaultTitle": "Ereignisfehler",
+        "defaultMessage": "Beim Auslösen des Ereignisses ist ein Fehler aufgetreten."
+    },
+    "textFieldForm": {
+        "fieldValuePlaceholder": "Wert eingeben...",
+        "fieldValueLabel": "Wert"
+    },
+    "generalForm": {
+        "valuePlaceholder": "Geben Sie einen Standardwert ein (optional)",
+        "placeholderPlaceholder": "Geben Sie einen Platzhalter ein (optional)",
+        "requiredTitle": "Erforderlich",
+        "labelPlaceholder": "Geben Sie eine Bezeichnung ein (optional)",
+        "labelTitle": "Bezeichnung",
+        "valueTitle": "Standardwert",
+        "placeholderTitle": "Platzhalter"
+    },
+    "iframeElementForm": {
+        "urlHelp": "Hinweis: Bitte vergewissern Sie sich, dass Sie die Kontrolle über die eingegebene URL haben oder dieser vertrauen.",
+        "empty": "Leerer iFrame...",
+        "sourceTypeLabel": "Quellen-Typ",
+        "urlPlaceholder": "Link zur externen Ressource, welche eingebettet werden soll",
+        "embedLabel": "Einbetten",
+        "embedPlaceholder": "Reiner HTML-Inhalt, der eingebettet werden soll",
+        "heightLabel": "Höhe (px)",
+        "heightPlaceholder": "Höhe in Pixeln",
+        "urlLabel": "URL"
+    },
+    "linkNavigationSelection": {
+        "navigateToCustom": "Benutzerdefinierte URL",
+        "paramPlaceholder": "Geben Sie einen Wert ein...",
+        "urlPlaceholder": "Geben Sie eine URL ein...",
+        "navigateTo": "Navigieren zu",
+        "url": "Ziel-URL",
+        "paramsInErrorDescription": "Die gespeicherten Parameter stimmen nicht mit den Seitenparametern überein. Die Seite wurde wahrscheinlich gelöscht oder aktualisiert.",
+        "paramsInErrorButton": "Parameter aktualisieren"
+    },
+    "integrationSettings": {
+        "noIntegrationMessage": "Sie haben noch keine Verbindung erstellt. Sie können durch Hinzufügen von Datenquelle, Aktion oder Benutzerauthentifizierung erstellt werden.",
+        "title": "Integrationen",
+        "integrationMessage": "Sie können neue Integrationen erstellen, indem Sie Datenquellen, Aktionen oder Benutzerauthentifizierungen hinzufügen."
+    },
+    "pagePreview": {
+        "emptyMessage": "Anklicken, um das erste Element zu erstellen"
+    },
+    "inputTextElementForm": {
+        "multilineTitle": "Mehrzeilig",
+        "rowsTitle": "Zeilenanzahl",
+        "rowsPlaceholder": "Geben Sie die Anzahl der Zeilen für diese Eingabe ein"
+    },
+    "buttonElementForm": {
+        "valuePlaceholder": "Text eingeben...",
+        "buttonColor": "Buttonfarbe",
+        "valueLabel": "Text"
+    },
+    "buttonElement": {
+        "noValue": "Unbenannt..."
+    },
+    "eventTypes": {
+        "clickLabel": "Bei Klick",
+        "submitLabel": "Beim Absenden"
+    },
+    "getFormulaComponent": {
+        "errorTooltip": "Ungültiger Bezug"
+    },
+    "fontSidePanelForm": {
+        "label": "Schriftart"
+    },
+    "dropdownOptionSelector": {
+        "label": "Optionen",
+        "value": "Wert",
+        "addOption": "Option hinzufügen",
+        "name": "Name"
+    },
+    "linkField": {
+        "details": "Details"
     }
 }
