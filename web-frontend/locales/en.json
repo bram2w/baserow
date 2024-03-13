@@ -7,7 +7,8 @@
     "free": "Free",
     "comingSoon": "Coming soon...",
     "table": "Table",
-    "link": "Link"
+    "link": "Link",
+    "billable": "Billable"
   },
   "action": {
     "upload": "Upload",
