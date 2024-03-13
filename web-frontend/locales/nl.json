@@ -5,7 +5,9 @@
         "wrong": "Er is iets misgegaan",
         "none": "Geen",
         "free": "Gratis",
-        "comingSoon": "Binnenkort..."
+        "comingSoon": "Binnenkort...",
+        "table": "Tabel",
+        "link": "Link"
     },
     "action": {
         "upload": "Uploaden",
@@ -34,7 +36,9 @@
         "login": "Inloggen",
         "download": "Downloaden",
         "copyToClipboard": "Naar klembord kopiëren",
-        "reset": "Reset"
+        "reset": "Reset",
+        "logout": "Uitloggen",
+        "set": "Stel in"
     },
     "adminType": {
         "settings": "Instellingen",
@@ -113,7 +117,9 @@
         "createdBy": "Gemaakt door",
         "singleSelectRadios": "Radio's",
         "lastModifiedBy": "Laatst gewijzigd door",
-        "multipleSelectCheckboxes": "Selectievakjes"
+        "multipleSelectCheckboxes": "Selectievakjes",
+        "duration": "Duur",
+        "password": "Wachtwoord"
     },
     "fieldErrors": {
         "invalidNumber": "Ongeldig nummer",
@@ -121,7 +127,11 @@
         "invalidUrl": "Ongeldige URL",
         "max254Chars": "Max 254 karakters",
         "invalidEmail": "Ongeldig e-mailadres",
-        "invalidPhoneNumber": "Ongeldig telefoonnummer"
+        "invalidPhoneNumber": "Ongeldig telefoonnummer",
+        "invalidDuration": "Ongeldig formaat ({durationFormat}).",
+        "overflowDuration": "Waarde is te groot.",
+        "minChars": "Min {min} tekens.",
+        "maxChars": "Max {max} tekens."
     },
     "fieldDocs": {
         "readOnly": "Dit is een alleen-lezen veld.",
@@ -154,7 +164,9 @@
         "lastModifiedBy": "Het 'laatst gewijzigd door' veld is een alleen-lezen veld.",
         "autonumber": "Een alleen-lezen veld dat automatisch een getal verhoogt voor elke nieuwe rij.",
         "uuid": "Een alleen-lezen uniek en blijvende uuid.",
-        "createdBy": "Het aangemaakt door veld is een alleen-lezen veld dat de gebruiker toont die de rij heeft aangemaakt."
+        "createdBy": "Het aangemaakt door veld is een alleen-lezen veld dat de gebruiker toont die de rij heeft aangemaakt.",
+        "duration": "Accepteert een tijdsduur als text in het formaat {format} of als een getal dat het totale aantal seconden weergeeft.",
+        "password": "Een alleen schrijven veld dat een gehasht wachtwoord bevat. De waarde is `null` als het niet is ingesteld, of `true` als het is ingesteld. Het accepteert een tekenreeks om het in te stellen."
     },
     "viewFilter": {
         "contains": "bevat",

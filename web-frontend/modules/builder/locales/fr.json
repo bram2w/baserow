@@ -48,7 +48,7 @@
     "elementType": {
         "heading": "Titre",
         "text": "texte",
-        "textDescription": "Texte simple",
+        "textDescription": "Texte multiligne",
         "headingDescription": "Titre de page",
         "link": "Lien",
         "linkDescription": "Un lien vers une page/URL",
@@ -69,7 +69,9 @@
         "checkbox": "Case à cocher",
         "checkboxDescription": "Une case à cocher",
         "iframe": "IFrame",
-        "iframeDescription": "Un element IFrame"
+        "iframeDescription": "Un element IFrame",
+        "authForm": "Formulaire de connexion",
+        "authFormDescription": "Formulaire de connexion pour les utilisateurs"
     },
     "elementMenu": {
         "moveDown": "Descendre",
@@ -115,7 +117,10 @@
     "textElementForm": {
         "textTitle": "Texte",
         "textPlaceholder": "Saisir le texte...",
-        "textError": "La valeur est invalide."
+        "textError": "La valeur est invalide.",
+        "textFormatTypeLabel": "Format",
+        "textFormatTypePlain": "Texte simple",
+        "textFormatTypeMarkdown": "Markdown"
     },
     "pageErrors": {
         "errorPathNotUnique": "Un chemin similaire existe déjà",
@@ -160,7 +165,17 @@
         "uploadFileButton": "Envoyer un fichier",
         "fileSourceTypeUpload": "Envoyer",
         "fileSourceTypeURL": "URL",
-        "altTextDescription": "Est utilisé par les lecteurs d'écran et affiché si l'image ne peut pas être chargée"
+        "altTextDescription": "Est utilisé par les lecteurs d'écran et affiché si l'image ne peut pas être chargée",
+        "maxWidthLabel": "Largeur maximale",
+        "maxHeightLabel": "Hauteur maximale",
+        "maxHeightPlaceholder": "Saisir une hauteur maximale en pixels.",
+        "imageConstraintsLabel": "Contraintes",
+        "imageConstraintCover": "Couvrir",
+        "imageConstraintCoverDisabled": "Indisponible avec une hauteur maximale vide.",
+        "imageConstraintContain": "Contenir",
+        "imageConstraintContainDisabled": "Indisponible avec une hauteur maximale.",
+        "maxWidthPlaceholder": "Saisir une largeur maximale en pourcentage.",
+        "imageConstraintFullWidth": "Extension à la largeur maximale"
     },
     "domainSettings": {
         "titleOverview": "Domaines",
@@ -347,7 +362,8 @@
         "currentRecord": "Source de données",
         "pageParameter": "Paramètre",
         "dataSource": "Données",
-        "formData": "Données de formulaire"
+        "formData": "Données de formulaire",
+        "user": "Utilisateur"
     },
     "openPageWorkflowActionForm": {
         "urlLabel": "URL",
@@ -398,7 +414,8 @@
     "updateUserSourceForm": {
         "nameFieldLabel": "Nom",
         "nameFieldPlaceholder": "Saisir un nom...",
-        "integrationFieldLabel": "Intégration"
+        "integrationFieldLabel": "Intégration",
+        "authTitle": "Authentification"
     },
     "widthTypes": {
         "full": "Pleine largeur",
@@ -494,5 +511,29 @@
         "labelTitle": "Label",
         "valueTitle": "Valeur par défaut",
         "requiredTitle": "Obligatoire"
+    },
+    "authFormElement": {
+        "emailPlaceholder": "Saisissez votre courriel...",
+        "passwordPlaceholder": "Saisissez votre mot de passe...",
+        "selectOrConfigureUserSourceFirst": "Choisissez une source d'utilisateurs pour commencer à utiliser ce formulaire d'authentification.",
+        "email": "Courriel",
+        "password": "Mot de passe"
+    },
+    "userSourceUsersContext": {
+        "searchPlaceholder": "Rechercher un utilisateur",
+        "anonymous": "Anonyme",
+        "unnamed": "Sans nom",
+        "noEmail": "Pas de courriel"
+    },
+    "userSelector": {
+        "viewAs": "Voir en tant que : {user}",
+        "anonymous": "Anonyme"
+    },
+    "dispatchDataSourceError": {
+        "defaultTitle": "Erreur de chargement des données",
+        "defaultMessage": "Une erreur s'est produite lors du chargement des données de la page."
+    },
+    "authFormElementForm": {
+        "userSource": "Source d'utilisateur"
     }
 }

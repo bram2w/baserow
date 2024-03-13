@@ -1,6 +1,6 @@
 {
     "paginator": {
-        "page": "página",
+        "page": "Página",
         "of": "de {pages}"
     },
     "copied": {
@@ -585,10 +585,12 @@
         "paddingTop": "Acolchado superior"
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{enviador} ha aceptado su invitación para unirse a {nombreDeEspacioDeTrabajo}"
+        "title": "{enviador} ha aceptado su invitación para unirse a {nombreDeEspacioDeTrabajo}",
+        "deletedUser": "Un usuario eliminado"
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{enviador} te ha invitado a unirte a {nombreDelEspacioDeTrabajo}"
+        "title": "{enviador} te ha invitado a unirte a {nombreDelEspacioDeTrabajo}",
+        "deletedUser": "Un usuario eliminado"
     },
     "notificationPanel": {
         "clearAll": "Borrar todo",
@@ -626,7 +628,8 @@
         "notFound": "No se encontraron usuarios"
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{enviador} ha rechazado su invitación para unirse a {nombreDeEspacioDeTrabajo}"
+        "title": "{enviador} ha rechazado su invitación para unirse a {nombreDeEspacioDeTrabajo}",
+        "deletedUser": "Un usuario eliminado"
     },
     "versionUpgradeNotification": {
         "title": "{versión} ¡ya está aquí! Descubre qué hay de nuevo."
@@ -646,7 +649,9 @@
         "instant": "Al instante"
     },
     "dataExplorer": {
-        "emptyText": "No hay datos"
+        "emptyText": "No hay datos",
+        "noMatchingNodesText": "No se han encontrado proveedores de datos coincidentes.",
+        "noProvidersText": "No se han encontrado proveedores de datos. Para empezar puedes, por ejemplo, añadir una fuente de datos o un parámetro de página."
     },
     "formulaInputField": {
         "errorInvalidFormula": "La fórmula es inválida."
@@ -656,5 +661,23 @@
         "addIntegration": "Añadir nueva integración",
         "integrationPlaceholder": "Selecciona una integración",
         "selectTypeFirst": "Primero elige el tipo"
+    },
+    "richTextEditorBubbleMenu": {
+        "bold": "Negrita",
+        "italic": "Cursiva",
+        "underline": "Subraye",
+        "strikethrough": "Tachado"
+    },
+    "richTextEditorFloatingMenu": {
+        "hierarchy": "Jerarquía",
+        "lists": "Listas",
+        "paragraph": "Párrafo",
+        "heading1": "Título 1",
+        "heading2": "Título 2",
+        "heading3": "Título 3",
+        "orderedList": "Lista numerada",
+        "unorderedList": "Lista de puntos",
+        "code": "Código",
+        "taskList": "Lista de tareas"
     }
 }

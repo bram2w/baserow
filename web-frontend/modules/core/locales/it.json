@@ -1,6 +1,6 @@
 {
     "paginator": {
-        "page": "pagina",
+        "page": "Pagina",
         "of": "di {pages}"
     },
     "copied": {
@@ -384,7 +384,8 @@
                 "title": "Come nascondere un campo"
             }
         },
-        "prefillOrHideInfoLink": "Precompila o nascondi automaticamente"
+        "prefillOrHideInfoLink": "Precompila o nascondi automaticamente",
+        "notifyUserOnSubmit": "Ricevi una notifica quando un nuovo form viene inviato"
     },
     "deleteAccountSettings": {
         "title": "Elimina account",
@@ -604,10 +605,12 @@
         "empty": "Nessun elemento disponibile"
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} ha accettato il tuo invito per far parte di {workspaceName}"
+        "title": "{sender} ha accettato il tuo invito per far parte di {workspaceName}",
+        "deletedUser": "Un utente rimosso"
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{sender} ti ha invitato a far parte di {workspaceName}"
+        "title": "{sender} ti ha invitato a far parte di {workspaceName}",
+        "deletedUser": "Un utente rimosso"
     },
     "versionUpgradeNotification": {
         "title": "{version} è qui! Clicca per vedere le novità."
@@ -628,7 +631,8 @@
         "notFound": "Nessun utente trovato"
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{sender} ha rifiutato il tuo invito per far parte di {workspaceName}"
+        "title": "{sender} ha rifiutato il tuo invito per far parte di {workspaceName}",
+        "deletedUser": "Un utente rimosso"
     },
     "emailNotifications": {
         "submitButton": "Aggiorna frequenza",
@@ -641,9 +645,39 @@
         "instant": "Immediatamente"
     },
     "dataExplorer": {
-        "emptyText": "Nessun dato trovato"
+        "emptyText": "Nessun dato trovato",
+        "noMatchingNodesText": "Non è stato trovato nessun provider di dati adatto.",
+        "noProvidersText": "Nessun provider di dati trovato. Per iniziare, per esempio, aggiungi una fonte dati o un parametro di pagina."
     },
     "formulaInputField": {
         "errorInvalidFormula": "La formula non è valida"
+    },
+    "integrationDropdown": {
+        "addIntegration": "Aggiungi nuova integrazione",
+        "noIntegrations": "Nessuna integrazione trovata.",
+        "selectTypeFirst": "Scegli prima il tipo",
+        "integrationPlaceholder": "Scegli una integrazione"
+    },
+    "userPasswordChangedToast": {
+        "title": "Password modificata",
+        "content": "La tua password é stata modificata. Per favore, effettua nuovamente il login."
+    },
+    "richTextEditorBubbleMenu": {
+        "underline": "Sottolineato",
+        "bold": "Grassetto",
+        "italic": "Corsivo",
+        "strikethrough": "Barrato"
+    },
+    "richTextEditorFloatingMenu": {
+        "lists": "Liste",
+        "heading1": "Titolo 1",
+        "heading2": "Titolo 2",
+        "heading3": "Titolo 3",
+        "orderedList": "Elenco numerato",
+        "unorderedList": "Elenco puntato",
+        "code": "Codice",
+        "taskList": "Elenco attività",
+        "hierarchy": "Gerarchia",
+        "paragraph": "Paragrafo"
     }
 }

@@ -76,7 +76,9 @@
         "dropdown": "Dropdown",
         "checkbox": "Checkbox",
         "checkboxDescription": "Checkbox element",
-        "iframe": "IFrame"
+        "iframe": "IFrame",
+        "authForm": "Inlogformulier",
+        "authFormDescription": "Een login formulier voor gebruikers"
     },
     "addElementButton": {
         "label": "Element"
@@ -115,7 +117,10 @@
     "textElementForm": {
         "textTitle": "Tekst",
         "textPlaceholder": "Tekst invoeren...",
-        "textError": "De waarde is ongeldig."
+        "textError": "De waarde is ongeldig.",
+        "textFormatTypeLabel": "Format",
+        "textFormatTypePlain": "Platte tekst",
+        "textFormatTypeMarkdown": "Markdown"
     },
     "pageErrors": {
         "errorPathNotUnique": "Een pad met deze naam bestaat al",
@@ -152,7 +157,17 @@
         "fileSourceTypeURL": "URL",
         "fileSourceTypeUpload": "Uploaden",
         "urlWarning": "Opmerking: zorg ervoor dat u controle heeft over de ingevoerde URL of deze vertrouwt.",
-        "uploadFileButton": "Upload bestand"
+        "uploadFileButton": "Upload bestand",
+        "maxWidthLabel": "Max breedte",
+        "maxHeightLabel": "Max hoogte",
+        "maxHeightPlaceholder": "Voer een maximale hoogte in pixels in.",
+        "maxWidthPlaceholder": "Voer een maximale breedte in als percentage.",
+        "imageConstraintsLabel": "Beperkingen",
+        "imageConstraintFullWidth": "Uitbreiden tot max breedte",
+        "imageConstraintCover": "Omslag",
+        "imageConstraintCoverDisabled": "Niet beschikbaar met lege maximumhoogte.",
+        "imageConstraintContain": "Bevat",
+        "imageConstraintContainDisabled": "Niet beschikbaar met een maximale hoogte."
     },
     "domainSettings": {
         "titleOverview": "Domeinen",
@@ -259,7 +274,8 @@
         "currentRecord": "Gegevensbron",
         "pageParameter": "Parameter",
         "dataSource": "Data",
-        "formData": "Formuliergegevens"
+        "formData": "Formuliergegevens",
+        "user": "Gebruiker"
     },
     "tableElementForm": {
         "addField": "veld toevoegen",
@@ -305,7 +321,8 @@
     "updateUserSourceForm": {
         "nameFieldLabel": "Naam",
         "nameFieldPlaceholder": "Voer een naam in...",
-        "integrationFieldLabel": "Integratie"
+        "integrationFieldLabel": "Integratie",
+        "authTitle": "Authenticatie"
     },
     "mainThemeConfigBlock": {
         "colorsLabel": "Kleuren",
@@ -492,5 +509,29 @@
         "labelTitle": "Label",
         "valueTitle": "Standaardwaarde",
         "requiredTitle": "Verplicht"
+    },
+    "dispatchDataSourceError": {
+        "defaultMessage": "Er is een fout opgetreden tijdens het laden van gegevens voor de pagina.",
+        "defaultTitle": "Fout bij het laden van gegevens"
+    },
+    "authFormElementForm": {
+        "userSource": "Gebruiker bron"
+    },
+    "authFormElement": {
+        "email": "E-mail",
+        "passwordPlaceholder": "Voer je wachtwoord in...",
+        "selectOrConfigureUserSourceFirst": "Kies een gebruikersbron om dit aanmeldingselement te gaan gebruiken.",
+        "password": "Wachtwoord",
+        "emailPlaceholder": "Voer uw e-mailadres in..."
+    },
+    "userSourceUsersContext": {
+        "searchPlaceholder": "Gebruiker zoeken",
+        "noEmail": "Geen e-mail",
+        "anonymous": "Anoniem",
+        "unnamed": "Naamloos"
+    },
+    "userSelector": {
+        "viewAs": "Weergeven als: {user}",
+        "anonymous": "Anoniem"
     }
 }

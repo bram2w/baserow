@@ -344,9 +344,20 @@
         "delete": "Cancella il commento"
     },
     "rowCommentMentionNotification": {
-        "title": "{sender} ti ha taggato nella riga {row} in {table}"
+        "title": "{sender} ti ha taggato nella riga {row} in {table}",
+        "deletedUser": "Un utente rimosso"
     },
     "trashType": {
         "row_comment": "commento"
+    },
+    "rowCommentNotification": {
+        "title": "{sender} ha postato un commento nella riga {row} in {table}",
+        "deletedUser": "Un utente rimosso"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsTitle": "Solo se menzionato",
+        "modeMentionsDesc": "Riceverai le notifiche solo se vieni menzionato in un commento.",
+        "modeAllTitle": "Tutti i commenti",
+        "modeAllDesc": "Riceverai una notifica per ogni commento pubblicato su questa riga."
     }
 }

@@ -293,5 +293,12 @@
     },
     "localBaserowUserSourceType": {
         "notConfigured": "Niet geconfigureerd"
+    },
+    "appAuthProviderType": {
+        "localBaserowPassword": "E-mail/wachtwoord"
+    },
+    "localBaserowPasswordAppAuthProviderForm": {
+        "passwordFieldLabel": "Selecteer wachtwoordveld",
+        "noFields": "Geen compatibele velden"
     }
 }

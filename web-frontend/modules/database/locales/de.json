@@ -66,7 +66,8 @@
         "createTable": "Erstellen einer Tabelle"
     },
     "sidebarItem": {
-        "exportTable": "Exportieren der Tabelle"
+        "exportTable": "Exportieren der Tabelle",
+        "webhooks": "Webhooks"
     },
     "apiToken": {
         "create": "erstellen",
@@ -139,12 +140,14 @@
         "userFieldNames": "Wenn für den GET-Parameter \"user_field_names\" ein beliebiger Wert angegeben wird, sind die von diesem Endpunkt zurückgegebenen Feldnamen die tatsächlichen Namen der Felder.\n\n Wenn der GET-Parameter \"user_field_names\" nicht angegeben wird, lauten alle zurückgegebenen Feldnamen \"field_\", gefolgt von der ID des Feldes. Zum Beispiel bezieht sich \"field_1\" auf das Feld mit der ID \"1\".\n\n Wenn `user_field_names` gesetzt ist, ändert sich außerdem das Verhalten der anderen GET-Parameter `order_by`, `include` und `exclude`. Sie erwarten stattdessen kommagetrennte Listen mit den tatsächlichen Feldnamen.",
         "search": "Wenn angegeben, werden nur Zeilen mit Daten zurückgegeben, die der Suchanfrage entsprechen.",
         "orderBy": "Optional können die Zeilen nach durch Komma getrennten Feldern geordnet werden. Standardmäßig oder wenn einem Feld ein '+' vorangestellt wird, ist es aufsteigend (A-Z) geordnet, aber durch Voranstellen eines '-' kann es absteigend (Z-A) geordnet werden.\n #### Mit`user_field_names`:\n\n `order_by`sollte eine durch ein Komma getrennte Liste der Feldnamen sein, nach denen geordnet werden soll. Wenn Sie beispielsweise den folgenden GET-Parameter angeben: `order_by=My Field,-My Field 2`, werden die Zeilen nach dem Feld mit der Bezeichnung `My Field`in aufsteigender Reihenfolge geordnet. Wenn einige Felder denselben Wert haben, wird diese Teilmenge nach dem Feld `My Field 2` in absteigender Reihenfolge geordnet.\n\n Stellen Sie sicher, dass Feldern, deren Namen mit einem `+` oder `-` beginnen, ausdrücklich ein weiteres `+` oder `-` vorangestellt wird. Z.B.`+-Name`.\n\n\n Feldnamen, die Kommas enthalten, müssen in Anführungszeichen eingeschlossen werden: `\"Name ,\"`. Wenn Feldnamen Anführungszeichen enthalten, müssen sie mit dem Zeichen `\\` geschützt werden. Beispiel: `Name `.\n\n#### Ohne `user_field_names`:\n\n `order_by` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, nach dem geordnet werden soll. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `order_by=field_1,-field_2`, werden die Zeilen nach `field_1` in aufsteigender Reihenfolge geordnet. Wenn einige Felder denselben Wert haben, wird diese Teilmenge nach `field_2` in absteigender Reihenfolge geordnet.",
-        "filter": "Die Zeilen können optional nach denselben Ansichtsfiltern gefiltert werden, die auch für die Ansichten verfügbar sind. Es können mehrere Filter angegeben werden, wenn sie demselben Format folgen. Die Variablen `field` und `filter` geben an, wie gefiltert werden soll, und der Wert gibt an, worauf gefiltert werden soll.\n\n Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `filter__field_1__equal=test`, werden nur Zeilen zurückgegeben, in denen der Wert von field_1 gleich test ist.",
+        "filter": "Die Zeilen können optional mit denselben Ansichtsfiltern gefiltert werden, die auch für die Ansichten verfügbar sind. Es können mehrere Filter angewandt werden, wenn sie das gleiche Format haben. Die Variablen `field` und `filter` geben an, wie bzw. wo der Filter angewendet werden soll.\n\n#### Mit `user_field_names`:\n\nWenn Sie zum Beispiel optional den folgenden GET-Parameter angeben: `filter__Name__equal=test`, werden nur Zeilen zurückgegeben, in denen der Wert von `Name` gleich 'test' ist. Diese Methode ist abwärtskompatibel und prüft gegen `field_id`, wenn sie am Namen fehlschlägt.\n\n#### Ohne `user_field_names`:\n\nWenn Sie zum Beispiel optional den folgenden GET-Parameter angeben: `filter__field_1__equal=test`, werden nur Zeilen zurückgegeben, bei denen der Wert von `field_1` gleich 'test' ist.\n\nBitte beachten Sie, dass dieser Parameter ignoriert wird, wenn der Parameter filters angegeben wird. ",
         "filterLink": "Eine Liste mit allen Filtern finden Sie hier.",
         "filterType": "- `AND`: Gibt an, dass die Zeilen allen angegebenen Filtern entsprechen müssen.\n- `OR`: Gibt an, dass die Zeilen nur einem der Filter entsprechen müssen.\n\n Dies funktioniert nur, wenn zwei oder mehr Filter vorhanden sind.",
-        "include": "Alle Felder werden standardmäßig in die Antwort aufgenommen. Sie können eine Teilmenge der einzuschließenden Felder auswählen, indem Sie den Abfrageparameter include angeben.\n\n #### Mit `user_field_names`:\n\n Include\" sollte eine durch das Komma getrennte Liste von Feldnamen sein, die in die Ergebnisse aufgenommen werden sollen. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `include=My Field,-My Field 2`, dann werden nur diese Felder eingeschlossen (es sei denn, sie werden ausdrücklich ausgeschlossen).\n\n Der Name des Feldes, das die Felder enthält, muss mit einem Hinweis versehen werden: `name ,'. Enthält der Feldname Schrägstriche, so müssen diese unter Verwendung des Zeichens `\\` geschützt werden. Ex : `name \\'.\n\n #### Ohne `user_field_names`:\n\n `include` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, das in die Ergebnisse aufgenommen werden soll. Zum Beispiel: Wenn Sie den folgenden GET-Parameter `exclude=field_1,field_2` angeben, werden nur die Felder mit der ID `1` und der ID `2` einbezogen (es sei denn, sie werden ausdrücklich ausgeschlossen).",
+        "include": "Alle Felder werden standardmäßig in die Antwort aufgenommen. Sie können eine Teilmenge der einzuschließenden Felder auswählen, indem Sie den Abfrageparameter include angeben.\n\n #### Mit `user_field_names`:\n\n Include\" sollte eine durch das Komma getrennte Liste von Feldnamen sein, die in die Ergebnisse aufgenommen werden sollen. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `include=My Field,-My Field 2`, dann werden nur diese Felder eingeschlossen (es sei denn, sie werden ausdrücklich ausgeschlossen).\n\n Der Name des Feldes, das die Felder enthält, muss mit einem Hinweis versehen werden: `name ,'. Enthält der Feldname Schrägstriche, so müssen diese unter Verwendung des Zeichens `\\` geschützt werden. Ex : `Name \\'.\n\n #### Ohne `user_field_names`:\n\n `include` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, das in die Ergebnisse aufgenommen werden soll. Zum Beispiel: Wenn Sie den folgenden GET-Parameter `include=field_1,field_2` angeben, werden nur die Felder mit der ID `1` und der ID `2` einbezogen (es sei denn, sie werden ausdrücklich ausgeschlossen).",
         "exclude": "Alle Felder werden standardmäßig in die Antwort aufgenommen. Sie können eine Untergruppe von Feldern auswählen, die ausgeschlossen werden sollen, indem Sie den Abfrageparameter exclude angeben.\n\n #### Mit \"user_field_names\":\n\n`exclude` sollte eine durch das Komma getrennte Liste von Feldern sein, die von den Ergebnissen ausgeschlossen werden sollen. Wenn Sie zum Beispiel den folgenden GET-Parameter angeben: `exclude=My Field,-My Field 2` dann werden diese Felder ausgeschlossen.\n\n Der Name des Feldes, das die Felder enthält, muss mit einem Hinweis versehen sein: \"name,\". Wenn der Feldname Schrägstriche enthält, müssen diese ebenfalls mit dem Zeichen \"name\" geschützt werden. Ex : `name\\\"`.\n\n #### Ohne `user_field_names`:\n\n `exclude` sollte eine durch das Komma getrennte Liste von `field_` sein, gefolgt von der ID des Feldes, das von den Ergebnissen ausgeschlossen werden soll. Zum Beispiel: Wenn Sie den folgenden GET-Parameter `exclude=field_1,field_2` angeben, werden die Felder mit der id `1` und id `2` ausgeschlossen.",
-        "viewId": "Standardmäßig werden keine Filter und Sortierungen außerhalb der in den Abfrageparametern definierten angewendet. Sie können die Filter und Sortierungen einer Ansicht hinzufügen, indem Sie deren `id` im GET-Parameter `view_id` angeben. Wenn Sie z. B. den folgenden GET-Parameter angeben: \"view_id=1\", werden die in der Ansicht mit der ID \"1\" definierten Filter und Sortierungen angewandt. Sie können die `view_id` im Kontextmenü einer beliebigen Ansicht finden. Es ist die Zahl in Klammern hinter dem Namen der Ansicht. \n\n #### Mit `filter__{field}__{filter}` \n\n Es werden sowohl der im Abfrageparameter angegebene Filter als auch die in der Ansicht definierten Filter angewendet.\n\n #### Mit `order_by` \n\n Wenn `order_by` angegeben wird, wird die in der Ansicht definierte Sortierung ignoriert."
+        "viewId": "Standardmäßig werden keine Filter und Sortierungen außerhalb der in den Abfrageparametern definierten angewendet. Sie können die Filter und Sortierungen einer Ansicht hinzufügen, indem Sie deren `id` im GET-Parameter `view_id` angeben. Wenn Sie z. B. den folgenden GET-Parameter angeben: \"view_id=1\", werden die in der Ansicht mit der ID \"1\" definierten Filter und Sortierungen angewandt. Sie können die `view_id` im Kontextmenü einer beliebigen Ansicht finden. Es ist die Zahl in Klammern hinter dem Namen der Ansicht. \n\n #### Mit `filter__{field}__{filter}` \n\n Es werden sowohl der im Abfrageparameter angegebene Filter als auch die in der Ansicht definierten Filter angewendet.\n\n #### Mit `order_by` \n\n Wenn `order_by` angegeben wird, wird die in der Ansicht definierte Sortierung ignoriert.",
+        "filtersBuilder": "Öffnet den Filter-Parameter-Builder",
+        "filters": "Die Zeilen können optional mit denselben Ansichtsfiltern gefiltert werden, die auch für die Ansichten verfügbar sind. Dieser Parameter akzeptiert eine serialisierte JSON-Zeichenkette, die den Filterbaum enthält, der auf diese Ansicht anzuwenden ist. Der Filterbaum ist eine verschachtelte Struktur, die die anzuwendenden Filter enthält. \n\n#### Mit `user_field_names`:\n\nEin Beispiel für einen gültigen Filterbaum ist der Folgende: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\"}]}`.\n\n#### Ohne `user_field_names`:\n\nWenn Sie zum Beispiel optional den folgenden GET-Parameter angeben: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`\n\nBitte beachten Sie, dass bei Angabe dieses Parameters alle anderen `filter__{field}__{filter}` ignoriert werden, ebenso wie der Parameter \"filter_type\"."
     },
     "apiDocsIntro": {
         "intro": "Die Datenbank {name} bietet eine einfache Möglichkeit, die Daten in ein beliebiges externes System zu integrieren. Die API folgt der REST-Semantik, verwendet JSON zur Kodierung von Objekten und stützt sich auf Standard-HTTP-Codes sowie maschinen- und menschenlesbare Fehler zur Signalisierung von Operationsergebnissen.",
@@ -397,7 +400,8 @@
         "relatedFieldNotFound": "Das zugehörige Feld wurde nicht gefunden.",
         "filterTypeNotFound": "Der Filtertyp ist nicht kompatibel.",
         "noCompatibleFilterTypesErrorTitle": "Keine kompatiblen Filtertypen",
-        "noCompatibleFilterTypesErrorMessage": "Keines Ihrer Felder hat einen kompatiblen Filtertyp"
+        "noCompatibleFilterTypesErrorMessage": "Keines Ihrer Felder hat einen kompatiblen Filtertyp",
+        "addFilterGroup": "Filtergruppe hinzufügen"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "Bild",
@@ -453,7 +457,9 @@
         "deleteView": "Ansicht löschen",
         "webhooks": "Webhooks",
         "duplicateView": "Ansicht duplizieren",
-        "importFile": "Datei importieren"
+        "importFile": "Datei importieren",
+        "toCollaborative": "Zu Kollaborativ",
+        "toPersonal": "Zu Persönlich"
     },
     "deleteViewModal": {
         "title": "Löschen {name}",
@@ -494,7 +500,12 @@
         "deleteRows": "Zeilen löschen",
         "copyCells": "Zellen kopieren",
         "hiddenRowsInsertedTitle": "Zeilen hinzugefügt",
-        "hiddenRowsInsertedMessage": "{number} neu hinzugefügte Zeilen wurden hinzugefügt, sind aber wegen der aktiven Filter nicht sichtbar."
+        "hiddenRowsInsertedMessage": "{number} neu hinzugefügte Zeilen wurden hinzugefügt, sind aber wegen der aktiven Filter nicht sichtbar.",
+        "tooManyItemsDescription": "Es ist nicht möglich, mehr als {limit} Zeilen auf einmal zu aktualisieren, also wurde nur die erste Zeile aktualisiert.",
+        "copyRowURL": "Zeilen-URL kopieren",
+        "copiedRowURL": "Zeilen-URL kopiert",
+        "copiedRowURLMessage": "Die URL aus Zeile {id} wurde in die Zwischenablage kopiert.",
+        "tooManyItemsTitle": "Zu viele Elemente"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
@@ -595,7 +606,7 @@
         "linkError": "Der Link sollte wie folgt aussehen: https://airtable.com/shrxxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "einzelnes Auswahlfeld hinzufügen",
+        "addSelectField": "Einzelnes Auswahlfeld hinzufügen",
         "warningWhenNothingToChooseOrCreate": "Es gibt keine einzelnen Auswahlfelder, aus denen Sie auswählen können, und Sie haben keine Berechtigung, eines zu erstellen."
     },
     "shareViewEnablePasswordModal": {
@@ -656,7 +667,9 @@
         "required": "erforderlich",
         "showWhenMatchingConditions": "anzeigen, wenn die Bedingungen erfüllt sind",
         "addCondition": "Bedingung hinzufügen",
-        "descriptionPlaceholder": "Beschreibung"
+        "descriptionPlaceholder": "Beschreibung",
+        "addConditionGroup": "Bedingungsgruppe hinzufügen",
+        "showFieldAs": "Feld anzeigen als"
     },
     "duplicateFieldContext": {
         "duplicate": "Feld duplizieren",
@@ -667,7 +680,7 @@
     "snapshotsModal": {
         "descriptionLimits": "Sie können maximal {n} Snapshots pro Arbeitsbereich haben. | Sie können maximal {n} Snapshots pro Arbeitsbereich haben. | Sie können maximal {n} Snapshots pro Arbeitsbereich haben.",
         "createLabel": "Erstelle einen neuen Snapshot",
-        "description": "Snapshots sind eine vollständige Kopie Ihrer Datenbank zu dem Zeitpunkt, an dem sie erstellt wurden. Bei der Wiederherstellung wird ein Duplikat dieser Daten erstellt. Snapshots werden nach einem Jahr automatisch gelöscht.",
+        "description": "Snapshots sind eine vollständige Kopie von {applicationTypeName} zu dem Zeitpunkt, an dem sie erstellt wurde. Bei der Wiederherstellung wird ein Duplikat dieser Daten erstellt. Snapshots werden nach einem Jahr automatisch gelöscht.",
         "create": "Snapshot erstellen",
         "snapshotRestoredErrorTitle": "Ein Fehler ist aufgetreten",
         "title": "snapshots",
@@ -783,5 +796,43 @@
     "fieldRollupSubForm": {
         "selectTargetFieldLabel": "Wählen Sie ein Feld aus, für das ein Rollup durchgeführt werden soll",
         "label": "Rollup-Funktion"
+    },
+    "viewGroupByContext": {
+        "noGroupByText": "Zeilen nach einem Feld gruppieren.",
+        "groupBy": "Gruppieren nach",
+        "thenBy": "dann nach",
+        "addGroupBy": "Wählen Sie ein Feld, nach dem gruppiert werden soll",
+        "noGroupByTitle": "Sie haben noch keine Gruppierungen erstellt"
+    },
+    "viewGroupBy": {
+        "groupBy": "Gruppieren | Gruppieren nach 1 Feld | Gruppieren nach {count} Feldern"
+    },
+    "apiDocsFiltersBuilderModal": {
+        "userFieldNames": "Benutzerfeld-Namen",
+        "queryParameter": "Abfrageparameter",
+        "json": "JSON",
+        "title": "Filter-Parameter-Builder"
+    },
+    "rowHistorySidebar": {
+        "name": "Historie",
+        "empty": "Noch keine Änderungen. Sie können alle Änderungen an dieser Zeile hier verfolgen.",
+        "you": "Sie"
+    },
+    "fieldDurationSubForm": {
+        "durationFormatLabel": "Format der Dauer"
+    },
+    "viewFieldConditionsForm": {
+        "addCondition": "Bedingung hinzufügen"
+    },
+    "fieldCollaboratorSubForm": {
+        "notifyUserWhenAdded": "Benutzer beim Hinzufügen benachrichtigen"
+    },
+    "collaboratorAddedToRowNotification": {
+        "title": "{sender} hat Sie dem {fieldName} in Zeile {rowId} in {tableName} zugewiesen",
+        "deletedUser": "Gelöschter Benutzer"
+    },
+    "formSubmittedNotification": {
+        "title": "{formName} wurde in Tabelle {tableName} abgesendet:",
+        "moreValues": "0 | und 1 weiteres Feld. | und {count} weitere Felder."
     }
 }

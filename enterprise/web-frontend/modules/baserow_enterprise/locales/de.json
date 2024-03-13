@@ -73,10 +73,11 @@
         "adminTitle": "Audit-Log"
     },
     "auditLogExportModal": {
-        "exportFilename": "Audit Log Export - {date}",
+        "exportFilename": "Admin Audit-Log-Export - {date}",
         "cancelledTitle": "Export fehlgeschlagen",
         "cancelledDescription": "Etwas ging schief, während das Audit-Log exportiert wurde. Bitte versuchen Sie es noch mal.",
-        "title": "Exportieren in CSV"
+        "title": "Exportieren in CSV",
+        "exportWorkspaceFilename": " Arbeitsbereich ({workspaceId}) Audit-Log-Export - {date}"
     },
     "authProviders": {
         "title": "Authentifizierungsanbieter",
@@ -249,8 +250,8 @@
         "invalidBaseUrl": "Die eingegebene URL ist keine gültige Provider-URL",
         "callbackUrl": "Rückruf-URL",
         "providerName": "Name",
-        "secretPlaceholder": "Provider's secret",
-        "secret": "Secret",
+        "secretPlaceholder": "Provider-Geheimnis",
+        "secret": "Geheimnis",
         "clientId": "Client-ID",
         "clientIdPlaceholder": "Client-ID des Anbieters",
         "providerNamePlaceholder": "Benutzerdefinierter Anbietername"
@@ -259,8 +260,8 @@
         "continueWith": "Weitermachen mit"
     },
     "enterpriseFeatures": {
-        "sso": "Single Sign On",
-        "rbac": "Role-based access control"
+        "sso": "Single-Sign-On",
+        "rbac": "Rollenbasierte Zugangskontrolle"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Direkte Unterstützung"
@@ -277,5 +278,20 @@
     },
     "snapshotModalWarning": {
         "message": "Bitte beachten Sie, dass ein Snapshot alle Berechtigungen enthält, die für die Anwendung und ihre Tabellen festgelegt wurden."
+    },
+    "localBaserowUserSourceType": {
+        "notConfigured": "Nicht konfiguriert"
+    },
+    "localBaserowUserSourceForm": {
+        "emailFieldLabel": "Wählen Sie das E-Mail-Feld aus",
+        "emailFieldLabelPlaceholder": "Wählen Sie ein Feld aus...",
+        "noFields": "Keine Felder",
+        "nameFieldLabel": "Wählen Sie das Namensfeld aus",
+        "description": "Jede Zeile in der Tabelle ist ein Benutzerkonto. Bitte wählen Sie die passenden Felder in der Tabelle aus. Das Feld E-Mail wird zur Identifizierung verwendet.",
+        "nameFieldPlaceholder": "Wählen Sie ein Feld aus..."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Audit-Log",
+        "deactivated": "Verfügbar in Advanced/Enterprise"
     }
 }

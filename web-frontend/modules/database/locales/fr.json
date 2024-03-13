@@ -834,5 +834,19 @@
     },
     "fieldDurationSubForm": {
         "durationFormatLabel": "Format de la durée"
+    },
+    "fieldLongTextSubForm": {
+        "enableRichTextFormatting": "Activer la mise en forme riche du texte"
+    },
+    "rowEditFieldPassword": {
+        "setPassword": "Définir le mot de passe"
+    },
+    "rowHistoryFieldPassword": {
+        "passwordSet": "Le mot de passe a été défini",
+        "passwordDeleted": "Le mot de passe a été supprimé",
+        "passwordUpdated": "Le mot de passe a été mis à jour"
+    },
+    "fieldPasswordSubForm": {
+        "description": "Il n'est pas encore possible d'utiliser directement le champ du mot de passe, celui-ci est uniquement utilisé pour l'authentification dans d'une application."
     }
 }

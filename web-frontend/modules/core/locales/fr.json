@@ -661,5 +661,23 @@
         "addIntegration": "Ajouter une nouvelle intégration",
         "integrationPlaceholder": "Sélectionnez une intégration",
         "selectTypeFirst": "Choisir d'abord le type"
+    },
+    "richTextEditorBubbleMenu": {
+        "bold": "Gras",
+        "strikethrough": "Barrer",
+        "italic": "Italique",
+        "underline": "Souligner"
+    },
+    "richTextEditorFloatingMenu": {
+        "hierarchy": "Hiérarchie",
+        "lists": "Listes",
+        "paragraph": "Paragraphe",
+        "heading1": "Titre 1",
+        "heading2": "Titre 2",
+        "heading3": "Titre 3",
+        "orderedList": "Liste numérotée",
+        "unorderedList": "Liste à puces",
+        "code": "Code",
+        "taskList": "Liste de tâches"
     }
 }

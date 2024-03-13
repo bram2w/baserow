@@ -5,7 +5,9 @@
         "wrong": "Une erreur est survenue",
         "none": "Aucun(e)",
         "free": "Gratuit",
-        "comingSoon": "A venir..."
+        "comingSoon": "A venir...",
+        "link": "Lien",
+        "table": "Table"
     },
     "action": {
         "upload": "Envoyer",
@@ -34,7 +36,9 @@
         "login": "S'identifier",
         "download": "Télécharger",
         "copyToClipboard": "Copier dans le presse-papier",
-        "reset": "Réinitialiser"
+        "reset": "Réinitialiser",
+        "logout": "Déconnexion",
+        "set": "Définir"
     },
     "adminType": {
         "settings": "Paramètres",
@@ -114,7 +118,8 @@
         "singleSelectRadios": "Boutons radio",
         "lastModifiedBy": "Dernière modification par",
         "multipleSelectCheckboxes": "Cases à cocher",
-        "duration": "Durée"
+        "duration": "Durée",
+        "password": "Mot de passe"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -124,12 +129,14 @@
         "invalidEmail": "Adresse électronique invalide",
         "invalidPhoneNumber": "Num. téléphone invalide",
         "invalidDuration": "Format invalide ({durationFormat}).",
-        "overflowDuration": "La valeur est trop grande."
+        "overflowDuration": "La valeur est trop grande.",
+        "maxChars": "Max {max} caractères.",
+        "minChars": "Min {min} caractères."
     },
     "fieldDocs": {
         "readOnly": "Ce champ est en lecture seule.",
         "text": "Accepte une seule ligne de texte.",
-        "longText": "Accepte un texte multi-ligne.",
+        "longText": "Accepte le texte sur multi-lignes. Si le formatage de texte riche est activé, vous pouvez utiliser markdown pour formater le texte.",
         "linkRow": "Accepte un tableau contenant les identifiants ou les valeurs textuelles des champs principaux des lignes liées de la table {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont mises à jour. Si un tableau vide est fourni, toutes les relations seront supprimées. Dans le cas d'une valeur textuelle au lieu d'un identifiant, une ligne avec la valeur correspondante pour son champ principal sera recherchée. Si plusieurs correspondances sont trouvées, la première dans l'ordre du tableau est sélectionnée. Vous pouvez également envoyer un chaine de caractères avec les noms séparés par des virgules, dans ce cas la chaine sera convertie en une liste de noms.",
         "number": "Accepte un entier.",
         "numberPositive": "Accepte un entier positive.",
@@ -158,7 +165,8 @@
         "autonumber": "Un champ en lecture seule qui dont la valeur s'incrémente automatiquement pour chaque nouvelle ligne.",
         "uuid": "Un UUID unique et persistant en lecture seule.",
         "createdBy": "Le champ « Créé par » est un champ en lecture seule qui indique l'utilisateur qui a créé la ligne.",
-        "duration": "Accepte une durée temporelle sous la forme d'une chaîne au format {format} ou d'un nombre représentant le nombre total de secondes."
+        "duration": "Accepte une durée temporelle sous la forme d'une chaîne au format {format} ou d'un nombre représentant le nombre total de secondes.",
+        "password": "Un champ en écriture seule qui contient un mot de passe haché. La valeur sera `null` s'il n'est pas défini, ou `true` s'il a été défini. Il accepte une chaîne de caractères pour le définir."
     },
     "viewFilter": {
         "contains": "contient",
