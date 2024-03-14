@@ -1,5 +1,11 @@
 # Changelog
 
+## Released 1.23.2
+
+### Bug fixes
+* Fix thread safety bug of the table get_model method. [#2421](https://gitlab.com/baserow/baserow/-/issues/2421)
+
+
 ## Released 1.23.1
 
 ### New features
