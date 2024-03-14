@@ -2315,7 +2315,8 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             # If we do not have a related table model already we can generate a new one.
             if related_model is None:
                 related_model = instance.link_row_table.get_model(
-                    manytomany_models=model.baserow_models
+                    manytomany_models=model.baserow_models,
+                    app_label=model._meta.app_label,
                 )
                 model.baserow_models[related_model_name] = related_model
 

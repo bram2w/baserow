@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fix thread safety bug of the table get_model method.",
+  "issue_number": 2421,
+  "bullet_points": [],
+  "created_at": "2024-03-14"
+}
