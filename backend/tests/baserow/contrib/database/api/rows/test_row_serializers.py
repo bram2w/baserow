@@ -372,7 +372,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "label": "label",
                     "url": "https://google.com",
                 },
-                "uuid": "00000000-0000-4000-8000-000000000002",
+                "uuid": "00000000-0000-4000-8000-000000000003",
                 "autonumber": 2,
                 "password": True,
             }

@@ -1,5 +1,6 @@
 import itertools
 import re
+import uuid
 from collections import defaultdict
 from types import MethodType
 from typing import Generator, Iterable, List, Optional, Type, TypedDict
@@ -681,9 +682,9 @@ class GeneratedModelAppsProxy:
     necessary.
     """
 
-    def __init__(self, baserow_models=None):
+    def __init__(self, baserow_models=None, app_label=None):
         self.baserow_models = baserow_models or {}
-        self.baserow_app_label = "database_table"
+        self.baserow_app_label = app_label or "database_table"
 
     def get_models(self, *args, **kwargs):
         """
@@ -734,11 +735,20 @@ class GeneratedModelAppsProxy:
 
         max_iterations = 3
         for _ in range(max_iterations):
-            for _, model_name in list(apps._pending_operations.keys()):
+            # Only do pending operations of models with the same app label because
+            # if we don't do that, and the same model is generated at the same time
+            # there can be conflicts because the `model_name` will be the same. The
+            # `app_label` is uniquely generated to avoid `model_name` conflicts.
+            pending_operations_for_app_label = [
+                (app_label, model_name)
+                for app_label, model_name in list(apps._pending_operations.keys())
+                if app_label == self.baserow_app_label
+            ]
+            for _, model_name in list(pending_operations_for_app_label):
                 model = self.baserow_models[model_name]
                 apps.do_pending_operations(model)
 
-            if not apps._pending_operations:
+            if not pending_operations_for_app_label:
                 break
 
     def __getattr__(self, attr):
@@ -908,6 +918,7 @@ class Table(
         managed=False,
         use_cache=True,
         force_add_tsvectors: bool = False,
+        app_label: Optional[str] = None,
     ) -> Type[GeneratedTableModel]:
         """
         Generates a temporary Django model based on available fields that belong to
@@ -931,8 +942,8 @@ class Table(
             recursion loop we cache the generated models and pass those along.
         :type manytomany_models: dict
         :param add_dependencies: When True will ensure any direct field dependencies
-            are included in the model. Otherwise only the exact fields you specify will
-            be added to the model.
+            are included in the model. Otherwise, only the exact fields you specify
+            will be added to the model.
         :param managed: Whether the created model should be managed by Django or not.
             Only in very specific limited situations should this be enabled as
             generally Baserow itself manages most aspects of returned generated models.
@@ -942,9 +953,21 @@ class Table(
         :param force_add_tsvectors: gtIndicates that we want to forcibly add the table's
             `tsvector` columns.
         :type force_add_tsvectors: bool
+        :param app_label: In some cases with related fields, the related models must
+            have the same app_label. If passed along in this parameter, then the
+            generated model will use that one instead of generating a unique one.
+        :type app_label: Optional[String]
         :return: The generated model.
         :rtype: Model
         """
+
+        if app_label is None:
+            # Generate a unique app_label to make the generation of the model thread
+            # safe. Related fields generate pending operations in the `apps`
+            # registry, but they're identified by the model class name. If the same
+            # model is generated at the same time, the pending operations can be
+            # executed in a wrong order. A unique app_label isolated in that case.
+            app_label = str(uuid.uuid4()) + "_database_table"
 
         filtered = field_names is not None or field_ids is not None
         model_name = self.get_table_model_name(self.pk)
@@ -963,8 +986,7 @@ class Table(
             )
         ]
 
-        apps = GeneratedModelAppsProxy(manytomany_models)
-        app_label = apps.baserow_app_label
+        apps = GeneratedModelAppsProxy(manytomany_models, app_label)
         meta = type(
             "Meta",
             (),
