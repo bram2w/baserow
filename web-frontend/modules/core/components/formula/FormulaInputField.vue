@@ -91,6 +91,7 @@ export default {
       dataNodeSelected: null,
       dataExplorerFocused: false,
       formulaInputFocused: false,
+      valueUpdateTimeout: null,
     }
   },
   computed: {
@@ -221,7 +222,14 @@ export default {
     },
     onUpdate() {
       this.unSelectNode()
-      this.emitChange()
+      this.debouncedValueUpdate()
+    },
+    // Improve performances as the input value is update immediately
+    debouncedValueUpdate() {
+      clearTimeout(this.valueUpdateTimeout)
+      this.valueUpdateTimeout = setTimeout(() => {
+        this.emitChange()
+      }, 500)
     },
     onFocus() {
       this.formulaInputFocused = true
