@@ -1,7 +1,16 @@
 <template>
   <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
     <div class="dashboard">
-      <DashboardHelp></DashboardHelp>
+      <DashboardHelp
+        v-if="dashboardHelpComponents.length === 0"
+      ></DashboardHelp>
+      <template v-else>
+        <component
+          :is="component"
+          v-for="(component, index) in dashboardHelpComponents"
+          :key="index"
+        ></component>
+      </template>
       <WorkspaceInvitation
         v-for="invitation in workspaceInvitations"
         :key="'invitation-' + invitation.id"
@@ -99,6 +108,15 @@ export default {
     }
   },
   computed: {
+    dashboardHelpComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .reduce(
+          (components, plugin) =>
+            components.concat(plugin.getDashboardHelpComponents()),
+          []
+        )
+        .filter((component) => component !== null)
+    },
     ...mapGetters({
       sortedWorkspaces: 'workspace/getAllSorted',
       workspaceInvitations: 'auth/getWorkspaceInvitations',

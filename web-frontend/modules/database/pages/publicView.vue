@@ -28,6 +28,7 @@ import { keyboardShortcutsToPriorityEventBus } from '@baserow/modules/core/utils
 export default {
   components: { Table, Toasts },
   mixins: [languageDetection],
+  middleware: ['settings'],
   async asyncData({ store, params, error, app, redirect, route }) {
     const slug = params.slug
 

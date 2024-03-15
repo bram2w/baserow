@@ -1,0 +1,17 @@
+.logo {
+  position: relative;
+  display: inline;
+}
+
+.logo__label {
+  font-size: 10px;
+  line-height: 11px;
+  padding: 0 2px;
+  background-color: rgba($white, 1);
+  color: $palette-neutral-1200;
+  border-radius: 14px;
+  border: 1px solid $palette-neutral-200;
+
+  @include absolute(-11px, -10px, auto, auto);
+  @include add-elevation($elevation-low);
+}

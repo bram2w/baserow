@@ -298,5 +298,14 @@
   "localBaserowPasswordAppAuthProviderForm": {
     "passwordFieldLabel": "Select password field",
     "noFields": "No compatible fields"
+  },
+  "enterpriseSettings": {
+    "branding": "Branding",
+    "showBaserowHelpMessage": "Show help message",
+    "showBaserowHelpMessageDescription": "Indicates whether the help request message should be shown on the dashboard.",
+    "deactivated": "Available in enterprise",
+    "coBrandingLogo": "Logo",
+    "coBrandingLogoDescription": "Replaces the Baserow logo for a custom co-branded alternative (176x29).",
+    "uploadFileButton": "Upload image"
   }
 }

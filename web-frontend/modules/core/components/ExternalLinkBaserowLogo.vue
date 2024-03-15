@@ -4,9 +4,8 @@
     target="_blank"
     title="Baserow - open source no-code database tool and Airtable alternative"
   >
-    <img
+    <Logo
       height="14"
-      src="@baserow/modules/core/static/img/logo.svg"
       alt="Baserow - open source no-code database tool and Airtable alternative"
     />
   </a>
@@ -14,6 +13,6 @@
 
 <script>
 export default {
-  name: 'BaserowLogo',
+  name: 'ExternalLinkBaserowLogo',
 }
 </script>

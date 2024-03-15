@@ -8,7 +8,7 @@
       <div v-show="tableLoading" class="header__loading"></div>
       <ul v-if="!tableLoading" class="header__filter">
         <li v-if="showLogo" class="header__filter-item">
-          <BaserowLogo class="header__filter-logo" />
+          <ExternalLinkBaserowLogo class="header__filter-logo" />
         </li>
         <li class="header__filter-item header__filter-item--grids">
           <a
@@ -232,7 +232,7 @@ import ViewDecoratorMenu from '@baserow/modules/database/components/view/ViewDec
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
-import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
+import ExternalLinkBaserowLogo from '@baserow/modules/core/components/ExternalLinkBaserowLogo'
 import ViewGroupBy from '@baserow/modules/database/components/view/ViewGroupBy.vue'
 
 /**
@@ -242,7 +242,7 @@ import ViewGroupBy from '@baserow/modules/database/components/view/ViewGroupBy.v
 export default {
   components: {
     ViewGroupBy,
-    BaserowLogo,
+    ExternalLinkBaserowLogo,
     ShareViewLink,
     EditableViewName,
     ViewsContext,

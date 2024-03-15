@@ -2,7 +2,7 @@
   <div>
     <div class="auth__logo">
       <nuxt-link :to="{ name: 'index' }">
-        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+        <Logo />
       </nuxt-link>
     </div>
     <div class="auth__head auth__head--more-margin">
