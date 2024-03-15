@@ -4,7 +4,7 @@ from django.dispatch import receiver
 
 from baserow.api.applications.serializers import (
     ApplicationSerializer,
-    get_application_serializer,
+    PolymorphicApplicationResponseSerializer,
 )
 from baserow.api.user.serializers import PublicUserSerializer
 from baserow.api.workspaces.invitations.serializers import (
@@ -222,7 +222,7 @@ def workspace_restored(sender, workspace_user, user, **kwargs):
     )
     applications_qs = specific_iterator(applications_qs)
     applications = [
-        get_application_serializer(
+        PolymorphicApplicationResponseSerializer(
             application, context={"user": workspace_user.user}
         ).data
         for application in applications_qs

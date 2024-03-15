@@ -7,8 +7,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.applications.serializers import get_application_serializer
-from baserow.api.applications.views import application_type_serializers
+from baserow.api.applications.serializers import (
+    PolymorphicApplicationResponseSerializer,
+)
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
@@ -19,7 +20,6 @@ from baserow.api.schemas import (
     get_error_schema,
 )
 from baserow.api.templates.serializers import TemplateCategoriesSerializer
-from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import InstallTemplateActionType
 from baserow.core.exceptions import (
@@ -97,9 +97,7 @@ class InstallTemplateView(APIView):
         ),
         request=None,
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers, many=True
-            ),
+            200: PolymorphicApplicationResponseSerializer(many=True),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_TEMPLATE_FILE_DOES_NOT_EXIST"]
             ),
@@ -128,7 +126,7 @@ class InstallTemplateView(APIView):
         ).do(request.user, workspace, template)
 
         data = [
-            get_application_serializer(application).data
+            PolymorphicApplicationResponseSerializer(application).data
             for application in installed_applications
         ]
         return Response(data)

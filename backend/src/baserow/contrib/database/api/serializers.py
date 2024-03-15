@@ -3,22 +3,25 @@ from typing import List
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.contrib.database.api.tables.serializers import TableSerializer
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
 from baserow.core.handler import CoreHandler
 
 
-class DatabaseSerializer(ApplicationSerializer):
+class DatabaseSerializer(serializers.ModelSerializer):
     tables = serializers.SerializerMethodField(
         help_text="This field is specific to the `database` application and contains "
         "an array of tables that are in the database."
     )
 
-    class Meta(ApplicationSerializer.Meta):
-        ref_name = "DatabaseApplication"
-        fields = ApplicationSerializer.Meta.fields + ("tables",)
+    class Meta:
+        model = Database
+        fields = (
+            "id",
+            "name",
+            "tables",
+        )
 
     @extend_schema_field(TableSerializer(many=True))
     def get_tables(self, instance: Database) -> List:

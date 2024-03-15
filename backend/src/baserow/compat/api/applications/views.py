@@ -5,9 +5,9 @@ from drf_spectacular.utils import extend_schema
 
 from baserow.api.applications.errors import ERROR_APPLICATION_NOT_IN_GROUP
 from baserow.api.applications.serializers import (
-    ApplicationCreateSerializer,
-    ApplicationSerializer,
     OrderApplicationsSerializer,
+    PolymorphicApplicationCreateSerializer,
+    PolymorphicApplicationResponseSerializer,
 )
 from baserow.api.applications.views import ApplicationsView, OrderApplicationsView
 from baserow.api.decorators import map_exceptions, validate_body
@@ -17,7 +17,6 @@ from baserow.api.schemas import (
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
     get_error_schema,
 )
-from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.compat.api.conf import (
     APPLICATION_DEPRECATION_PREFIXES as DEPRECATION_PREFIXES,
 )
@@ -26,14 +25,6 @@ from baserow.core.exceptions import (
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
 )
-from baserow.core.registries import application_type_registry
-
-application_type_serializers = {
-    application_type.type: (
-        application_type.instance_serializer_class or ApplicationSerializer
-    )
-    for application_type in application_type_registry.registry.values()
-}
 
 
 class ApplicationsCompatView(ApplicationsView):
@@ -59,9 +50,7 @@ class ApplicationsCompatView(ApplicationsView):
             "belongs to a single group."
         ),
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers, many=True
-            ),
+            200: PolymorphicApplicationResponseSerializer(many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
         },
@@ -103,11 +92,9 @@ class ApplicationsCompatView(ApplicationsView):
             "parameter. If the authorized user does not belong to the group an "
             "error will be returned."
         ),
-        request=ApplicationCreateSerializer,
+        request=PolymorphicApplicationCreateSerializer,
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers
-            ),
+            200: PolymorphicApplicationResponseSerializer(),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -115,7 +102,7 @@ class ApplicationsCompatView(ApplicationsView):
         },
     )
     @transaction.atomic
-    @validate_body(ApplicationCreateSerializer)
+    @validate_body(PolymorphicApplicationCreateSerializer)
     @map_exceptions(
         {
             WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,

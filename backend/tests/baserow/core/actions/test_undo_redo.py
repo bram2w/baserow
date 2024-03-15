@@ -778,16 +778,16 @@ def test_undo_redo_action_group_with_interleaved_actions(data_fixture):
 
     def _interleave_actions():
         user_1_app = action_type_registry.get_by_type(CreateApplicationActionType).do(
-            user_1, workspace=workspace, application_type="database", name="u1_a1"
+            user_1, workspace, application_type="database", name="u1_a1"
         )
         user_2_app = action_type_registry.get_by_type(CreateApplicationActionType).do(
-            user_2, workspace=workspace, application_type="database", name="u2_a1"
+            user_2, workspace, application_type="database", name="u2_a1"
         )
         action_type_registry.get_by_type(UpdateApplicationActionType).do(
-            user_1, application=user_1_app, name="u1_a2"
+            user_1, user_1_app, name="u1_a2"
         )
         action_type_registry.get_by_type(UpdateApplicationActionType).do(
-            user_2, application=user_2_app, name="u2_a2"
+            user_2, user_2_app, name="u2_a2"
         )
 
     _interleave_actions()

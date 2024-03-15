@@ -104,6 +104,7 @@ class PolymorphicSerializer(serializers.Serializer):
             instance_type.model_class,
             base_class=self.base_class,
             request=self.request,
+            context=self.context,
         )
 
         ret = serializer.to_representation(instance)
@@ -121,6 +122,7 @@ class PolymorphicSerializer(serializers.Serializer):
             instance_type.model_class,
             base_class=self.base_class,
             request=self.request,
+            context=self.context,
         )
 
         return serializer.to_internal_value(data)
@@ -132,6 +134,7 @@ class PolymorphicSerializer(serializers.Serializer):
             instance_type.model_class,
             base_class=self.base_class,
             request=self.request,
+            context=self.context,
         )
 
         return serializer.create(validated_data)
@@ -147,6 +150,7 @@ class PolymorphicSerializer(serializers.Serializer):
             instance_type.model_class,
             base_class=self.base_class,
             request=self.request,
+            context=self.context,
         )
 
         return serializer.update(instance, validated_data)
@@ -164,6 +168,8 @@ class PolymorphicSerializer(serializers.Serializer):
                 instance_type.model_class,
                 base_class=self.base_class,
                 request=self.request,
+                context=self.context,
+                data=self.data,
             )
         except serializers.ValidationError:
             child_valid = False
@@ -186,6 +192,7 @@ class PolymorphicSerializer(serializers.Serializer):
             instance_type.model_class,
             base_class=self.base_class,
             request=self.request,
+            context=self.context,
         )
 
         validated_data = serializer.run_validation(data)

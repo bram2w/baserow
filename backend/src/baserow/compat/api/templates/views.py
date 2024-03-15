@@ -3,7 +3,9 @@ from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 
-from baserow.api.applications.views import application_type_serializers
+from baserow.api.applications.serializers import (
+    PolymorphicApplicationResponseSerializer,
+)
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
@@ -23,7 +25,6 @@ from baserow.api.templates.views import (
     InstallTemplateView,
     TemplatesView,
 )
-from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.compat.api.conf import (
     TEMPLATES_DEPRECATION_PREFIXES as DEPRECATION_PREFIXES,
 )
@@ -86,9 +87,7 @@ class InstallTemplateCompatView(InstallTemplateView):
         ),
         request=None,
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers, many=True
-            ),
+            200: PolymorphicApplicationResponseSerializer(many=True),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_TEMPLATE_FILE_DOES_NOT_EXIST"]
             ),

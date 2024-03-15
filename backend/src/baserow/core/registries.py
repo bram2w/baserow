@@ -32,6 +32,8 @@ from .export_serialized import CoreExportSerializedStructure
 from .registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
+    CustomFieldsInstanceMixin,
+    CustomFieldsRegistryMixin,
     Instance,
     ModelInstanceMixin,
     ModelRegistryMixin,
@@ -211,6 +213,7 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
 class ApplicationType(
     APIUrlsInstanceMixin,
     ModelInstanceMixin["Application"],
+    CustomFieldsInstanceMixin,
     Instance,
 ):
     """
@@ -280,25 +283,24 @@ class ApplicationType(
         )
 
     def create_application(
-        self, user, workspace: "Workspace", name: str, init_with_data: bool = False
+        self, user, workspace: "Workspace", init_with_data: bool = False, **kwargs
     ) -> "Application":
         """
         Creates a new application instance of this type and returns it.
 
         :param user: The user that is creating the application.
         :param workspace: The workspace that the application will be created in.
-        :param name: The name of the application.
         :param init_with_data: Whether the application should be created with some
             initial data. Defaults to False.
+        :param kwargs: Additional parameters to pass to the application creation,
+            these values have already been validated by the view and are allowed.
         :return: The newly created application instance.
         """
 
         model = self.model_class
         last_order = model.get_last_order(workspace)
 
-        instance = model.objects.create(
-            workspace=workspace, order=last_order, name=name
-        )
+        instance = model.objects.create(workspace=workspace, order=last_order, **kwargs)
         if init_with_data:
             self.init_application(user, instance)
         return instance
@@ -486,6 +488,7 @@ class ApplicationTypeRegistry(
     APIUrlsRegistryMixin,
     ModelRegistryMixin[ApplicationSubClassInstance, ApplicationType],
     Registry[ApplicationType],
+    CustomFieldsRegistryMixin,
 ):
     """
     With the application registry it is possible to register new applications. An

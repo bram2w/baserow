@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from baserow.api.applications.errors import (
     ERROR_APPLICATION_DOES_NOT_EXIST,
     ERROR_APPLICATION_NOT_IN_GROUP,
+    ERROR_APPLICATION_TYPE_DOES_NOT_EXIST,
 )
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
@@ -22,7 +23,7 @@ from baserow.api.schemas import (
     get_error_schema,
 )
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
-from baserow.api.utils import DiscriminatorMappingSerializer
+from baserow.api.utils import validate_data
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     CreateApplicationActionType,
@@ -34,6 +35,7 @@ from baserow.core.db import specific_iterator
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInWorkspace,
+    ApplicationTypeDoesNotExist,
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
 )
@@ -51,19 +53,11 @@ from baserow.core.registries import application_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .serializers import (
-    ApplicationCreateSerializer,
-    ApplicationSerializer,
-    ApplicationUpdateSerializer,
     OrderApplicationsSerializer,
-    get_application_serializer,
+    PolymorphicApplicationCreateSerializer,
+    PolymorphicApplicationResponseSerializer,
+    PolymorphicApplicationUpdateSerializer,
 )
-
-application_type_serializers = {
-    application_type.type: (
-        application_type.instance_serializer_class or ApplicationSerializer
-    )
-    for application_type in application_type_registry.registry.values()
-}
 
 DuplicateApplicationJobTypeSerializer = job_type_registry.get(
     DuplicateApplicationJobType.type
@@ -86,9 +80,7 @@ class AllApplicationsView(APIView):
             "workspaces that the user has access to are going to be listed here."
         ),
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers, many=True
-            ),
+            200: PolymorphicApplicationResponseSerializer(many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
         },
     )
@@ -130,8 +122,8 @@ class AllApplicationsView(APIView):
         )
 
         data = [
-            get_application_serializer(
-                application, context={"request": request, "application": application}
+            PolymorphicApplicationResponseSerializer(
+                application, context={"request": request}
             ).data
             for application in applications
         ]
@@ -167,9 +159,7 @@ class ApplicationsView(APIView):
             "type. An application always belongs to a single workspace."
         ),
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers, many=True
-            ),
+            200: PolymorphicApplicationResponseSerializer(many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
         },
@@ -221,7 +211,9 @@ class ApplicationsView(APIView):
         )
 
         data = [
-            get_application_serializer(application, context={"request": request}).data
+            PolymorphicApplicationResponseSerializer(
+                application, context={"request": request}
+            ).data
             for application in applications
         ]
         return Response(data)
@@ -246,11 +238,9 @@ class ApplicationsView(APIView):
             "`workspace_id` parameter. If the authorized user does not belong to the workspace "
             "an error will be returned."
         ),
-        request=ApplicationCreateSerializer,
+        request=PolymorphicApplicationCreateSerializer,
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers
-            ),
+            200: PolymorphicApplicationResponseSerializer,
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -258,13 +248,14 @@ class ApplicationsView(APIView):
         },
     )
     @transaction.atomic
-    @validate_body(ApplicationCreateSerializer)
     @map_exceptions(
         {
             WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            ApplicationTypeDoesNotExist: ERROR_APPLICATION_TYPE_DOES_NOT_EXIST,
         }
     )
+    @validate_body(PolymorphicApplicationCreateSerializer)
     def post(self, request, data, workspace_id):
         """Creates a new application for a user."""
 
@@ -280,13 +271,14 @@ class ApplicationsView(APIView):
         application = action_type_registry.get_by_type(CreateApplicationActionType).do(
             request.user,
             workspace,
-            data["type"],
-            name=data["name"],
-            init_with_data=data["init_with_data"],
+            application_type=data.pop("type"),
+            **data,
         )
 
         return Response(
-            get_application_serializer(application, context={"request": request}).data
+            PolymorphicApplicationResponseSerializer(
+                application, context={"request": request}
+            ).data
         )
 
 
@@ -309,11 +301,9 @@ class ApplicationView(APIView):
             "application's workspace. The properties that belong to the application can "
             "differ per type."
         ),
-        request=ApplicationCreateSerializer,
+        request=PolymorphicApplicationCreateSerializer,
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers
-            ),
+            200: PolymorphicApplicationResponseSerializer,
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -334,7 +324,9 @@ class ApplicationView(APIView):
         )
 
         return Response(
-            get_application_serializer(application, context={"request": request}).data
+            PolymorphicApplicationResponseSerializer(
+                application, context={"request": request}
+            ).data
         )
 
     @extend_schema(
@@ -356,11 +348,9 @@ class ApplicationView(APIView):
             "workspace. It is not possible to change the type, but properties like the "
             "name can be changed."
         ),
-        request=ApplicationUpdateSerializer,
+        request=PolymorphicApplicationUpdateSerializer,
         responses={
-            200: DiscriminatorMappingSerializer(
-                "Applications", application_type_serializers
-            ),
+            200: PolymorphicApplicationResponseSerializer,
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -368,14 +358,14 @@ class ApplicationView(APIView):
         },
     )
     @transaction.atomic
-    @validate_body(ApplicationUpdateSerializer)
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            ApplicationTypeDoesNotExist: ERROR_APPLICATION_TYPE_DOES_NOT_EXIST,
         }
     )
-    def patch(self, request, data, application_id):
+    def patch(self, request, application_id):
         """Updates the application if the user belongs to the workspace."""
 
         application = (
@@ -387,12 +377,27 @@ class ApplicationView(APIView):
             .specific
         )
 
+        # We validate the data in the method here so that we can
+        # pass the application instance directly into the serializer.
+        # This ensures the `PolymorphicSerializer` can correctly determine
+        # the type of the instance, otherwise PATCH requests would need to
+        # include the `type` field in the request body.
+        data = validate_data(
+            PolymorphicApplicationUpdateSerializer,
+            request.data,
+            partial=True,
+            return_validated=True,
+            instance=application,
+        )
+
         application = action_type_registry.get_by_type(UpdateApplicationActionType).do(
-            request.user, application, name=data["name"]
+            request.user, application, **data
         )
 
         return Response(
-            get_application_serializer(application, context={"request": request}).data
+            PolymorphicApplicationResponseSerializer(
+                application, context={"request": request}
+            ).data
         )
 
     @extend_schema(

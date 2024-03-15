@@ -2,7 +2,9 @@ import pytest
 from asgiref.sync import sync_to_async
 from channels.testing import WebsocketCommunicator
 
-from baserow.api.applications.serializers import get_application_serializer
+from baserow.api.applications.serializers import (
+    PolymorphicApplicationResponseSerializer,
+)
 from baserow.config.asgi import application
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
@@ -158,6 +160,6 @@ async def test_workspace_restored_applications_arent_leaked(data_fixture):
     workspace_restored_message = await get_message(communicator, "group_restored")
     assert workspace_restored_message is not None
     assert workspace_restored_message["applications"] == [
-        get_application_serializer(database).data
+        PolymorphicApplicationResponseSerializer(database).data
     ]
     await communicator.disconnect()
