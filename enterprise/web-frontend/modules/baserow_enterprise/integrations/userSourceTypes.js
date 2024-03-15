@@ -58,10 +58,12 @@ export class LocalBaserowUserSourceType extends UserSourceType {
   }
 
   getSummary(userSource) {
-    const integrations = this.app.store.getters['integration/getIntegrations']
-    const integration = integrations.find(
-      ({ id }) => id === userSource.integration_id
+    const application = this.app.store.getters['application/get'](
+      userSource.application_id
     )
+    const integration = this.app.store.getters[
+      'integration/getIntegrationById'
+    ](application, userSource.integration_id)
 
     if (!integration) {
       return this.app.i18n.t('localBaserowUserSourceType.notConfigured')

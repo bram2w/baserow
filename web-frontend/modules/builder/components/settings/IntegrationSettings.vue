@@ -51,7 +51,7 @@
 
 <script>
 import IntegrationCreateEditModal from '@baserow/modules/core/components/integrations/IntegrationCreateEditModal'
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
@@ -64,27 +64,19 @@ export default {
     },
   },
   data() {
-    return { state: null }
+    return { state: 'loaded' }
   },
   computed: {
     integrationTypes() {
       return this.$registry.getOrderedList('integration')
     },
+    integrations() {
+      return this.$store.getters['integration/getIntegrations'](this.builder)
+    },
+  },
 
-    ...mapGetters({ integrations: 'integration/getIntegrations' }),
-  },
-  async mounted() {
-    this.state = 'pending'
-    try {
-      await this.actionFetchIntegrations({ applicationId: this.builder.id })
-    } catch (error) {
-      notifyIf(error)
-    }
-    this.state = 'loaded'
-  },
   methods: {
     ...mapActions({
-      actionFetchIntegrations: 'integration/fetch',
       actionDeleteIntegration: 'integration/delete',
     }),
     getIntegrationType(integration) {
@@ -92,7 +84,10 @@ export default {
     },
     async deleteIntegration(integration) {
       try {
-        await this.actionDeleteIntegration({ integrationId: integration.id })
+        await this.actionDeleteIntegration({
+          application: this.builder,
+          integrationId: integration.id,
+        })
       } catch (error) {
         notifyIf(error)
       }
