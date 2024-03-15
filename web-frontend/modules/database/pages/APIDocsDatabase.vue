@@ -2,7 +2,7 @@
   <div class="api-docs">
     <div ref="header" class="api-docs__header">
       <nuxt-link :to="{ name: 'index' }" class="api-docs__logo">
-        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+        <Logo />
       </nuxt-link>
       <a
         ref="databasesToggle"

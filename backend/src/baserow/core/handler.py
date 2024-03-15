@@ -131,7 +131,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         try:
-            return Settings.objects.all()[:1].get()
+            return Settings.objects.all().select_related("co_branding_logo")[:1].get()
         except Settings.DoesNotExist:
             return Settings.objects.create()
 
@@ -166,6 +166,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "allow_global_workspace_creation",
                 "account_deletion_grace_delay",
                 "track_workspace_usage",
+                "show_baserow_help_request",
+                "co_branding_logo",
             ],
             settings_instance,
         )

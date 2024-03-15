@@ -157,3 +157,58 @@ def test_update_settings(api_client, data_fixture):
     assert response_json["allow_new_signups"] is False
     assert "instance_id" not in response_json
     assert CoreHandler().get_settings().allow_new_signups is False
+
+
+@pytest.mark.django_db
+def test_update_co_branding_logo(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(is_staff=True)
+
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"co_branding_logo": {"name": file1.name}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["co_branding_logo"]["name"] == file1.name
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"allow_new_signups": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["co_branding_logo"]["name"] == file1.name
+
+
+@pytest.mark.django_db
+def test_update_show_baserow_help_request(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(is_staff=True)
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"show_baserow_help_request": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["show_baserow_help_request"] is False
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"allow_new_signups": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["show_baserow_help_request"] is False

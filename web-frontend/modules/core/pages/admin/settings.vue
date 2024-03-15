@@ -149,7 +149,12 @@
               }"
               type="number"
               class="input"
-              @input="$v.account_deletion_grace_delay.$touch()"
+              @input="
+                ;[
+                  $v.account_deletion_grace_delay.$touch(),
+                  updateAccountDeletionGraceDelay($event),
+                ]
+              "
             />
             <div v-if="$v.account_deletion_grace_delay.$error" class="error">
               {{ $t('settings.invalidAccountDeletionGraceDelay') }}
@@ -179,18 +184,22 @@
           </div>
         </div>
       </div>
+      <component
+        :is="component"
+        v-for="(component, index) in additionalSettingsComponents"
+        :key="index"
+      ></component>
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import { required, integer, between } from 'vuelidate/lib/validators'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsService from '@baserow/modules/core/services/settings'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
-
-import { required, integer, between } from 'vuelidate/lib/validators'
 
 export default {
   layout: 'app',
@@ -203,6 +212,15 @@ export default {
     return { account_deletion_grace_delay: null }
   },
   computed: {
+    additionalSettingsComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .reduce(
+          (components, plugin) =>
+            components.concat(plugin.getSettingsPageComponents()),
+          []
+        )
+        .filter((component) => component !== null)
+    },
     ...mapGetters({
       settings: 'settings/get',
     }),
@@ -210,9 +228,6 @@ export default {
   watch: {
     'settings.account_deletion_grace_delay'(value) {
       this.account_deletion_grace_delay = value
-    },
-    account_deletion_grace_delay(value) {
-      this.updateSettings({ account_deletion_grace_delay: value })
     },
   },
   mounted() {
@@ -233,6 +248,20 @@ export default {
     },
     copyToClipboard(value) {
       copyToClipboard(value)
+    },
+    updateAccountDeletionGraceDelay() {
+      const existingValue = this.settings.account_deletion_grace_delay
+
+      if (
+        !this.$v.account_deletion_grace_delay.$error &&
+        existingValue !== parseInt(this.account_deletion_grace_delay)
+      ) {
+        this.updateSettings({
+          account_deletion_grace_delay: parseInt(
+            this.account_deletion_grace_delay
+          ),
+        })
+      }
     },
   },
   validations: {

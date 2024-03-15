@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from baserow.api.user_files.serializers import UserFileField
 from baserow.core.models import Settings
 
 
@@ -18,6 +19,10 @@ class SettingsSerializer(serializers.ModelSerializer):
         "`allow_signups_via_workspace_invitations` instead as this attribute "
         "is being removed in the future.",
     )  # GroupDeprecation
+    co_branding_logo = UserFileField(
+        required=False,
+        help_text="Co-branding logo that's placed next to the Baserow logo (176x29).",
+    )
 
     class Meta:
         model = Settings
@@ -31,6 +36,8 @@ class SettingsSerializer(serializers.ModelSerializer):
             "account_deletion_grace_delay",
             "show_admin_signup_page",
             "track_workspace_usage",
+            "show_baserow_help_request",
+            "co_branding_logo",
         )
         extra_kwargs = {
             "allow_new_signups": {"required": False},
@@ -39,6 +46,7 @@ class SettingsSerializer(serializers.ModelSerializer):
             "allow_global_workspace_creation": {"required": False},
             "account_deletion_grace_delay": {"required": False},
             "track_workspace_usage": {"required": False},
+            "show_baserow_help_request": {"required": False},
         }
 
 

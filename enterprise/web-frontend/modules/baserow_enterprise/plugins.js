@@ -5,6 +5,9 @@ import MemberRolesDatabaseContextItem from '@baserow_enterprise/components/membe
 import MemberRolesTableContextItem from '@baserow_enterprise/components/member-roles/MemberRolesTableContextItem'
 import EnterpriseFeatures from '@baserow_enterprise/features'
 import SnapshotModalWarning from '@baserow_enterprise/components/SnapshotModalWarning'
+import EnterpriseSettings from '@baserow_enterprise/components/EnterpriseSettings'
+import EnterpriseSettingsOverrideDashboardHelp from '@baserow_enterprise/components/EnterpriseSettingsOverrideDashboardHelp'
+import EnterpriseLogo from '@baserow_enterprise/components/EnterpriseLogo'
 
 export class EnterprisePlugin extends BaserowPlugin {
   static getType() {
@@ -52,5 +55,29 @@ export class EnterprisePlugin extends BaserowPlugin {
       workspace.id
     )
     return rbacSupport ? SnapshotModalWarning : null
+  }
+
+  getSettingsPageComponents() {
+    return [EnterpriseSettings]
+  }
+
+  getDashboardHelpComponents() {
+    if (this.app.$hasFeature(EnterpriseFeatures.ENTERPRISE_SETTINGS)) {
+      return [EnterpriseSettingsOverrideDashboardHelp]
+    } else {
+      return []
+    }
+  }
+
+  getLogoComponent() {
+    if (this.app.$hasFeature(EnterpriseFeatures.ENTERPRISE_SETTINGS)) {
+      return EnterpriseLogo
+    } else {
+      return null
+    }
+  }
+
+  getLogoComponentOrder() {
+    return 100
   }
 }

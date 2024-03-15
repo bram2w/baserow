@@ -50,6 +50,7 @@ export default {
     Toasts,
     FormViewPoweredBy,
   },
+  middleware: ['settings'],
   async asyncData({ params, error, app, route, redirect, store }) {
     const slug = params.slug
     const publicAuthToken = await store.dispatch(
