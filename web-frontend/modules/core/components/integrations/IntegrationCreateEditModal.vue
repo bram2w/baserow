@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions } from 'vuex'
 import error from '@baserow/modules/core/mixins/error'
 import modal from '@baserow/modules/core/mixins/modal'
 import IntegrationEditForm from '@baserow/modules/core/components/integrations/IntegrationEditForm'
@@ -78,13 +78,18 @@ export default {
       }
       return this.$registry.get('integration', this.integration.type)
     },
-    ...mapGetters({ integrations: 'integration/getIntegrations' }),
+    integrations() {
+      return this.$store.getters['integration/getIntegrations'](
+        this.application
+      )
+    },
   },
   methods: {
     ...mapActions({
       actionUpdateIntegration: 'integration/update',
       actionCreateIntegration: 'integration/create',
     }),
+
     shown() {
       this.hideError()
     },
@@ -102,13 +107,14 @@ export default {
       try {
         if (this.create) {
           const newIntegration = await this.actionCreateIntegration({
-            applicationId: this.application.id,
+            application: this.application,
             integrationType: this.actualIntegrationType.type,
             values,
           })
           this.$emit('created', newIntegration)
         } else {
           await this.actionUpdateIntegration({
+            application: this.application,
             integrationId: this.integration.id,
             values,
           })

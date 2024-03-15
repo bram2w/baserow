@@ -4,7 +4,6 @@
     :class="{ 'context--loading-overlay': state === 'loading' }"
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
-    @shown="shown"
   >
     <template v-if="state === 'loaded'">
       <div v-if="dataSources.length > 0">
@@ -51,7 +50,7 @@
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import DataSourceForm from '@baserow/modules/builder/components/dataSource/DataSourceForm'
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions } from 'vuex'
 import _ from 'lodash'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -69,41 +68,27 @@ export default {
   },
   data() {
     return {
-      state: null,
+      state: 'loaded',
       creationInProgress: false,
       onGoingUpdate: {},
       dataSourcesLoading: [],
     }
   },
   computed: {
-    ...mapGetters({
-      integrations: 'integration/getIntegrations',
-    }),
+    integrations() {
+      return this.$store.getters['integration/getIntegrations'](this.builder)
+    },
     dataSources() {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
   },
   methods: {
     ...mapActions({
-      actionFetchIntegrations: 'integration/fetch',
       actionCreateDataSource: 'dataSource/create',
       actionUpdateDataSource: 'dataSource/debouncedUpdate',
       actionDeleteDataSource: 'dataSource/delete',
       actionFetchDataSources: 'dataSource/fetch',
     }),
-    async shown() {
-      this.state = 'loading'
-      try {
-        await Promise.all([
-          this.actionFetchIntegrations({
-            applicationId: this.builder.id,
-          }),
-        ])
-      } catch (error) {
-        notifyIf(error)
-      }
-      this.state = 'loaded'
-    },
     async createDataSource() {
       this.creationInProgress = true
       try {

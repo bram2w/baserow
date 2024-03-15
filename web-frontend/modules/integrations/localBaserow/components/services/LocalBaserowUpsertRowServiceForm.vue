@@ -8,7 +8,6 @@
         v-model="values.integration_id"
         :application="application"
         :integrations="integrations"
-        :disabled="$fetchState.pending"
         :integration-type="integrationType"
       />
     </FormGroup>
@@ -41,9 +40,7 @@
 
 <script>
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
-import { mapActions, mapGetters } from 'vuex'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldMappingForm from '@baserow/modules/integrations/localBaserow/components/services/FieldMappingForm'
 import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
@@ -87,21 +84,13 @@ export default {
       tableLoading: false,
     }
   },
-  async fetch() {
-    try {
-      await Promise.all([
-        this.actionFetchIntegrations({
-          applicationId: this.application.id,
-        }),
-      ])
-    } catch (error) {
-      notifyIf(error)
-    }
-  },
+
   computed: {
-    ...mapGetters({
-      integrations: 'integration/getIntegrations',
-    }),
+    integrations() {
+      return this.$store.getters['integration/getIntegrations'](
+        this.application
+      )
+    },
     workflowActionLoading() {
       return this.$store.getters['workflowAction/getLoading'](
         this.workflowAction
@@ -132,6 +121,7 @@ export default {
     },
     selectedIntegration() {
       return this.$store.getters['integration/getIntegrationById'](
+        this.application,
         this.values.integration_id
       )
     },
@@ -161,11 +151,6 @@ export default {
         }
       },
     },
-  },
-  methods: {
-    ...mapActions({
-      actionFetchIntegrations: 'integration/fetch',
-    }),
   },
 }
 </script>

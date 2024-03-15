@@ -1,9 +1,6 @@
 import IntegrationService from '@baserow/modules/core/services/integration'
 
-const state = {
-  // The loaded integrations
-  integrations: [],
-}
+const state = {}
 
 const updateContext = {
   updateTimeout: null,
@@ -12,57 +9,60 @@ const updateContext = {
 }
 
 const mutations = {
-  ADD_ITEM(state, { integration, beforeId = null }) {
+  ADD_ITEM(state, { application, integration, beforeId = null }) {
     if (beforeId === null) {
-      state.integrations.push(integration)
+      application.integrations.push(integration)
     } else {
-      const insertionIndex = state.integrations.findIndex(
+      const insertionIndex = application.integrations.findIndex(
         (e) => e.id === beforeId
       )
-      state.integrations.splice(insertionIndex, 0, integration)
+      application.integrations.splice(insertionIndex, 0, integration)
     }
   },
-  UPDATE_ITEM(state, { integration: integrationToUpdate, values }) {
-    state.integrations.forEach((integration) => {
+  UPDATE_ITEM(
+    state,
+    { application, integration: integrationToUpdate, values }
+  ) {
+    application.integrations.forEach((integration) => {
       if (integration.id === integrationToUpdate.id) {
         Object.assign(integration, values)
       }
     })
   },
-  DELETE_ITEM(state, { integrationId }) {
-    const index = state.integrations.findIndex(
+  DELETE_ITEM(state, { application, integrationId }) {
+    const index = application.integrations.findIndex(
       (integration) => integration.id === integrationId
     )
     if (index > -1) {
-      state.integrations.splice(index, 1)
+      application.integrations.splice(index, 1)
     }
   },
-  MOVE_ITEM(state, { index, oldIndex }) {
-    state.integrations.splice(
+  MOVE_ITEM(state, { application, index, oldIndex }) {
+    application.integrations.splice(
       index,
       0,
-      state.integrations.splice(oldIndex, 1)[0]
+      application.integrations.splice(oldIndex, 1)[0]
     )
-  },
-  CLEAR_ITEMS(state) {
-    state.integrations = []
   },
 }
 
 const actions = {
-  forceCreate({ commit }, { integration, beforeId = null }) {
-    commit('ADD_ITEM', { integration, beforeId })
+  forceCreate({ commit }, { application, integration, beforeId = null }) {
+    commit('ADD_ITEM', { application, integration, beforeId })
   },
-  forceUpdate({ commit }, { integration, values }) {
-    commit('UPDATE_ITEM', { integration, values })
+  forceUpdate({ commit }, { application, integration, values }) {
+    commit('UPDATE_ITEM', { application, integration, values })
   },
-  forceDelete({ commit, getters }, { integrationId }) {
-    commit('DELETE_ITEM', { integrationId })
+  forceDelete({ commit, getters }, { application, integrationId }) {
+    commit('DELETE_ITEM', { application, integrationId })
   },
-  forceMove({ commit, getters }, { integrationId, beforeIntegrationId }) {
-    const currentOrder = getters.getIntegrations.map(
-      (integration) => integration.id
-    )
+  forceMove(
+    { commit, getters },
+    { application, integrationId, beforeIntegrationId }
+  ) {
+    const currentOrder = getters
+      .getIntegrations(application)
+      .map((integration) => integration.id)
     const oldIndex = currentOrder.findIndex((id) => id === integrationId)
     const index = beforeIntegrationId
       ? currentOrder.findIndex((id) => id === beforeIntegrationId)
@@ -71,29 +71,29 @@ const actions = {
     // If the integration is before the beforeIntegration we must decrease the target index by
     // one to compensate the removed integration.
     if (oldIndex < index) {
-      commit('MOVE_ITEM', { index: index - 1, oldIndex })
+      commit('MOVE_ITEM', { application, index: index - 1, oldIndex })
     } else {
-      commit('MOVE_ITEM', { index, oldIndex })
+      commit('MOVE_ITEM', { application, index, oldIndex })
     }
   },
   async create(
     { dispatch },
-    { applicationId, integrationType, values, beforeId = null }
+    { application, integrationType, values, beforeId = null }
   ) {
     const { data: integration } = await IntegrationService(this.$client).create(
-      applicationId,
+      application.id,
       integrationType,
       values,
       beforeId
     )
 
-    await dispatch('forceCreate', { integration, beforeId })
+    await dispatch('forceCreate', { application, integration, beforeId })
 
     return integration
   },
-  async update({ dispatch, getters }, { integrationId, values }) {
-    const integrationsOfPage = getters.getIntegrations
-    const integration = integrationsOfPage.find(
+  async update({ dispatch, getters }, { application, integrationId, values }) {
+    const integrationsOfApplication = getters.getIntegrations(application)
+    const integration = integrationsOfApplication.find(
       ({ id }) => id === integrationId
     )
     const oldValues = {}
@@ -105,20 +105,31 @@ const actions = {
       }
     })
 
-    await dispatch('forceUpdate', { integration, values: newValues })
+    await dispatch('forceUpdate', {
+      application,
+      integration,
+      values: newValues,
+    })
 
     try {
       await IntegrationService(this.$client).update(integration.id, values)
     } catch (error) {
-      await dispatch('forceUpdate', { integration, values: oldValues })
+      await dispatch('forceUpdate', {
+        application,
+        integration,
+        values: oldValues,
+      })
       throw error
     }
   },
 
-  async debouncedUpdate({ dispatch, getters }, { integrationId, values }) {
-    const integration = getters.getIntegrations.find(
-      ({ id }) => id === integrationId
-    )
+  async debouncedUpdate(
+    { dispatch, getters },
+    { application, integrationId, values }
+  ) {
+    const integration = getters
+      .getIntegrations(application)
+      .find(({ id }) => id === integrationId)
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -128,7 +139,11 @@ const actions = {
       }
     })
 
-    await dispatch('forceUpdate', { integration, values: newValues })
+    await dispatch('forceUpdate', {
+      application,
+      integration,
+      values: newValues,
+    })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
@@ -139,6 +154,7 @@ const actions = {
         } catch (error) {
           // Revert to old values on error
           await dispatch('forceUpdate', {
+            application,
             integration,
             values: updateContext.lastUpdatedValues,
           })
@@ -161,46 +177,36 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  async delete({ dispatch, getters }, { integrationId }) {
-    const integrationsOfPage = getters.getIntegrations
-    const integrationIndex = integrationsOfPage.findIndex(
+  async delete({ dispatch, getters }, { application, integrationId }) {
+    const integrationsOfApplication = getters.getIntegrations(application)
+    const integrationIndex = integrationsOfApplication.findIndex(
       (integration) => integration.id === integrationId
     )
-    const integrationToDelete = integrationsOfPage[integrationIndex]
+    const integrationToDelete = integrationsOfApplication[integrationIndex]
     const beforeId =
-      integrationIndex !== integrationsOfPage.length - 1
-        ? integrationsOfPage[integrationIndex + 1].id
+      integrationIndex !== integrationsOfApplication.length - 1
+        ? integrationsOfApplication[integrationIndex + 1].id
         : null
 
-    await dispatch('forceDelete', { integrationId })
+    await dispatch('forceDelete', { application, integrationId })
 
     try {
       await IntegrationService(this.$client).delete(integrationId)
     } catch (error) {
       await dispatch('forceCreate', {
+        application,
         integration: integrationToDelete,
         beforeId,
       })
       throw error
     }
   },
-  async fetch({ dispatch, commit }, { applicationId }) {
-    commit('CLEAR_ITEMS')
-
-    const { data: integrations } = await IntegrationService(
-      this.$client
-    ).fetchAll(applicationId)
-
-    await Promise.all(
-      integrations.map((integration) =>
-        dispatch('forceCreate', { integration })
-      )
-    )
-
-    return integrations
-  },
-  async move({ dispatch }, { integrationId, beforeIntegrationId }) {
+  async move(
+    { dispatch },
+    { application, integrationId, beforeIntegrationId }
+  ) {
     await dispatch('forceMove', {
+      application,
       integrationId,
       beforeIntegrationId,
     })
@@ -212,18 +218,19 @@ const actions = {
       )
     } catch (error) {
       await dispatch('forceMove', {
+        application,
         integrationId: beforeIntegrationId,
         beforeIntegrationId: integrationId,
       })
       throw error
     }
   },
-  async duplicate({ getters, dispatch }, { integrationId, applicationId }) {
+  async duplicate({ getters, dispatch }, { application, integrationId }) {
     const integration = getters.getIntegrations.find(
       (e) => e.id === integrationId
     )
     await dispatch('create', {
-      applicationId,
+      application,
       integrationType: integration.type,
       beforeId: integration.id,
     })
@@ -231,11 +238,11 @@ const actions = {
 }
 
 const getters = {
-  getIntegrations: (state) => {
-    return state.integrations
+  getIntegrations: (state) => (application) => {
+    return application.integrations
   },
-  getIntegrationById: (state) => (id) => {
-    return state.integrations.find((integration) => integration.id === id)
+  getIntegrationById: (state) => (application, id) => {
+    return application.integrations.find((integration) => integration.id === id)
   },
 }
 
