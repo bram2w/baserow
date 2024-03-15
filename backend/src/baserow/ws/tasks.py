@@ -303,7 +303,9 @@ def broadcast_application_created(
     :return:
     """
 
-    from baserow.api.applications.serializers import get_application_serializer
+    from baserow.api.applications.serializers import (
+        PolymorphicApplicationResponseSerializer,
+    )
     from baserow.core.handler import CoreHandler
     from baserow.core.models import Application, WorkspaceUser
     from baserow.core.operations import ReadApplicationOperationType
@@ -332,7 +334,7 @@ def broadcast_application_created(
     payload_map = {}
     for user_id in user_ids:
         user = users_in_workspace_id_map[user_id]
-        application_serialized = get_application_serializer(
+        application_serialized = PolymorphicApplicationResponseSerializer(
             application, context={"user": user}
         ).data
 

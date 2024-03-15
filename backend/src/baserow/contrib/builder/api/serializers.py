@@ -3,7 +3,6 @@ from typing import List
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.api.user_sources.serializers import PolymorphicUserSourceSerializer
 from baserow.contrib.builder.api.pages.serializers import PageSerializer
 from baserow.contrib.builder.api.theme.serializers import (
@@ -16,7 +15,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.user_sources.operations import ListUserSourcesApplicationOperationType
 
 
-class BuilderSerializer(ApplicationSerializer):
+class BuilderSerializer(serializers.ModelSerializer):
     """
     The builder serializer.
 
@@ -37,9 +36,10 @@ class BuilderSerializer(ApplicationSerializer):
         "the theme settings."
     )
 
-    class Meta(ApplicationSerializer.Meta):
+    class Meta:
+        model = Builder
         ref_name = "BuilderApplication"
-        fields = ApplicationSerializer.Meta.fields + ("pages", "user_sources", "theme")
+        fields = ("id", "name", "pages", "theme", "user_sources")
 
     @extend_schema_field(PageSerializer(many=True))
     def get_pages(self, instance: Builder) -> List:

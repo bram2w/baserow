@@ -4,6 +4,7 @@ from drf_spectacular.openapi import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.polymorphic import PolymorphicSerializer
 from baserow.api.workspaces.serializers import WorkspaceSerializer
 from baserow.core.db import specific_iterator
 from baserow.core.models import Application
@@ -40,15 +41,13 @@ class ApplicationSerializer(serializers.ModelSerializer):
         return application_type_registry.get_by_model(instance.specific_class).type
 
 
-class SpecificApplicationSerializer(ApplicationSerializer):
-    def to_representation(self, instance):
-        specific_instance = instance.specific
-        return get_application_serializer(
-            specific_instance, context=self.context
-        ).to_representation(specific_instance)
+class PolymorphicApplicationResponseSerializer(PolymorphicSerializer):
+    base_class = ApplicationSerializer
+    registry = application_type_registry
+    request = False
 
 
-class ApplicationCreateSerializer(serializers.ModelSerializer):
+class BaseApplicationCreatePolymorphicSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(
         choices=lazy(application_type_registry.get_types, list)()
     )
@@ -59,10 +58,22 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
         fields = ("name", "type", "init_with_data")
 
 
-class ApplicationUpdateSerializer(serializers.ModelSerializer):
+class PolymorphicApplicationCreateSerializer(PolymorphicSerializer):
+    base_class = BaseApplicationCreatePolymorphicSerializer
+    registry = application_type_registry
+    request = True
+
+
+class BaseApplicationUpdatePolymorphicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
         fields = ("name",)
+
+
+class PolymorphicApplicationUpdateSerializer(PolymorphicSerializer):
+    base_class = BaseApplicationUpdatePolymorphicSerializer
+    registry = application_type_registry
+    request = True
 
 
 class OrderApplicationsSerializer(serializers.Serializer):
@@ -70,31 +81,6 @@ class OrderApplicationsSerializer(serializers.Serializer):
         child=serializers.IntegerField(),
         help_text="Application ids in the desired order.",
     )
-
-
-def get_application_serializer(instance, **kwargs):
-    """
-    Returns an instantiated serializer based on the instance class type. Custom
-    serializers can be defined per application type. This function will return the one
-    that is set else it will return the default one.
-
-    :param instance: The instance where a serializer is needed for.
-    :type instance: Application
-    :return: An instantiated serializer for the instance.
-    :rtype: ApplicationSerializer
-    """
-
-    application = application_type_registry.get_by_model(instance.specific_class)
-    serializer_class = application.instance_serializer_class
-
-    if not serializer_class:
-        serializer_class = ApplicationSerializer
-
-    context = kwargs.pop("context", {})
-
-    context["application"] = application
-
-    return serializer_class(instance, context=context, **kwargs)
 
 
 class InstallTemplateJobApplicationsSerializer(serializers.JSONField):
@@ -109,4 +95,6 @@ class InstallTemplateJobApplicationsSerializer(serializers.JSONField):
                 pk__in=application_ids, workspace__trashed=False
             )
         )
-        return [get_application_serializer(app).data for app in applications]
+        return [
+            PolymorphicApplicationResponseSerializer(app).data for app in applications
+        ]

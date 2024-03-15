@@ -134,12 +134,12 @@ def test_create_application_and_init_with_data(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     database_1 = core_handler.create_application(
-        user, workspace, "database", "Database 1"
+        user, workspace, "database", name="Database 1"
     )
     assert Table.objects.filter(database=database_1).count() == 0
 
     database_2 = core_handler.create_application(
-        user, workspace, "database", "Database 2", init_with_data=True
+        user, workspace, "database", True, name="Database 2"
     )
     assert Table.objects.filter(database=database_2).count() == 1
 

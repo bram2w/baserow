@@ -45,7 +45,12 @@ from .table.models import Table
 class DatabaseApplicationType(ApplicationType):
     type = "database"
     model_class = Database
+    serializer_mixins = [DatabaseSerializer]
     instance_serializer_class = DatabaseSerializer
+    serializer_field_names = ["tables"]
+    # Mark the request serializer field names as empty, otherwise
+    # the polymorphic request serializer will try and serialize tables.
+    request_serializer_field_names = []
 
     def pre_delete(self, database):
         """

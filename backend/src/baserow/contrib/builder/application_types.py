@@ -25,21 +25,29 @@ from baserow.core.user_sources.handler import UserSourceHandler
 from baserow.core.utils import ChildProgressBuilder
 
 
+# This lazy loads the serializer, which is needed because the `BuilderSerializer`
+# needs to decorate the `get_theme` with the `extend_schema_field` using a
+# generated serializer that needs the registry to be populated.
+def lazy_get_instance_serializer_class():
+    from baserow.contrib.builder.api.serializers import BuilderSerializer
+
+    return BuilderSerializer
+
+
 class BuilderApplicationType(ApplicationType):
     type = "builder"
     model_class = Builder
     supports_actions = False
     supports_integrations = True
     supports_user_sources = True
-
-    # This lazy loads the serializer, which is needed because the `BuilderSerializer`
-    # needs to decorate the `get_theme` with the `extend_schema_field` using a
-    # generated serializer that needs the registry to be populated.
-    @property
-    def instance_serializer_class(self):
-        from baserow.contrib.builder.api.serializers import BuilderSerializer
-
-        return BuilderSerializer
+    serializer_field_names = [
+        "name",
+        "pages",
+        "user_sources",
+        "theme",
+    ]
+    request_serializer_field_names = []
+    serializer_mixins = [lazy_get_instance_serializer_class]
 
     def get_api_urls(self):
         from .api import urls as api_urls

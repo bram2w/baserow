@@ -390,12 +390,7 @@ class CreateApplicationActionType(UndoableActionType):
 
     @classmethod
     def do(
-        cls,
-        user: AbstractUser,
-        workspace: Workspace,
-        application_type: str,
-        name: str,
-        init_with_data: bool = False,
+        cls, user: AbstractUser, workspace: Workspace, application_type: str, **kwargs
     ) -> Any:
         """
         Creates a new application based on the provided type. See
@@ -405,14 +400,13 @@ class CreateApplicationActionType(UndoableActionType):
         :param user: The user creating the application.
         :param workspace: The workspace to create the application in.
         :param application_type: The type of application to create.
-        :param name: The name of the new application.
-        :param init_with_data: Whether the application should be initialized with
-            some default data. Defaults to False.
+        :param kwargs: Additional parameters to pass to the application creation.
         :return: The created Application model instance.
         """
 
+        init_with_data = kwargs.get("init_with_data", False)
         application = CoreHandler().create_application(
-            user, workspace, application_type, name=name, init_with_data=init_with_data
+            user, workspace, application_type, **kwargs
         )
 
         application_type = application_type_registry.get_by_model(
@@ -548,7 +542,7 @@ class UpdateApplicationActionType(UndoableActionType):
         original_application_name: str
 
     @classmethod
-    def do(cls, user: AbstractUser, application: Application, name: str) -> Application:
+    def do(cls, user: AbstractUser, application: Application, **kwargs) -> Application:
         """
         Updates an existing application instance.
         See baserow.core.handler.CoreHandler.update_application for further details.
@@ -556,30 +550,34 @@ class UpdateApplicationActionType(UndoableActionType):
 
         :param user: The user on whose behalf the application is updated.
         :param application: The application instance that needs to be updated.
-        :param name: The new name of the application.
+        :param kwargs: Additional parameters to pass to the application update.
         :raises ValueError: If one of the provided parameters is invalid.
         :return: The updated application instance.
         """
 
         original_name = application.name
 
-        application = CoreHandler().update_application(user, application, name)
+        application = CoreHandler().update_application(user, application, **kwargs)
         application_type = application_type_registry.get_by_model(
             application.specific_class
         )
         workspace = application.workspace
 
-        params = cls.Params(
-            workspace.id,
-            workspace.name,
-            application_type.type,
-            application.id,
-            name,
-            original_name,
-        )
-        cls.register_action(
-            user, params, scope=cls.scope(workspace.id), workspace=workspace
-        )
+        # Only register an action if this application type supports actions.
+        # At the moment, the builder application doesn't use actions and need
+        # to bypass registering.
+        if application_type.supports_actions:
+            params = cls.Params(
+                workspace.id,
+                workspace.name,
+                application_type.type,
+                application.id,
+                kwargs["name"],
+                original_name,
+            )
+            cls.register_action(
+                user, params, scope=cls.scope(workspace.id), workspace=workspace
+            )
 
         return application
 
@@ -591,13 +589,15 @@ class UpdateApplicationActionType(UndoableActionType):
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
         application = CoreHandler().get_application(params.application_id).specific
         CoreHandler().update_application(
-            user, application, params.original_application_name
+            user, application, name=params.original_application_name
         )
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         application = CoreHandler().get_application(params.application_id).specific
-        CoreHandler().update_application(user, application, params.application_name)
+        CoreHandler().update_application(
+            user, application, name=params.application_name
+        )
 
 
 class DuplicateApplicationActionType(UndoableActionType):

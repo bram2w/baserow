@@ -160,7 +160,7 @@ def test_can_undo_update_application(data_fixture, django_assert_num_queries):
     )
 
     action_type_registry.get_by_type(UpdateApplicationActionType).do(
-        user, application, application_name_new
+        user, application, name=application_name_new
     )
 
     assert Application.objects.get(pk=application.id).name == application_name_new
@@ -187,7 +187,7 @@ def test_can_undo_redo_update_application(data_fixture, django_assert_num_querie
     )
 
     action_type_registry.get_by_type(UpdateApplicationActionType).do(
-        user, application, application_name_new
+        user, application, name=application_name_new
     )
 
     assert Application.objects.get(pk=application.id).name == application_name_new

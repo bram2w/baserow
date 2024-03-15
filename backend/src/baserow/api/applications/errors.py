@@ -16,3 +16,9 @@ ERROR_APPLICATION_OPERATION_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "The application does not support this operation.",
 )
+
+ERROR_APPLICATION_TYPE_DOES_NOT_EXIST = (
+    "ERROR_APPLICATION_TYPE_DOES_NOT_EXIST",
+    HTTP_400_BAD_REQUEST,
+    "{e}",
+)
