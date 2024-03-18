@@ -43,6 +43,7 @@ class BuilderApplicationType(ApplicationType):
     serializer_field_names = [
         "name",
         "pages",
+        "integrations",
         "user_sources",
         "theme",
     ]
