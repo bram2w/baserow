@@ -369,7 +369,8 @@
   },
   "eventTypes": {
     "clickLabel": "On click",
-    "submitLabel": "On submit"
+    "submitLabel": "On submit",
+    "afterLoginLabel": "After login"
   },
   "getFormulaComponent": {
     "errorTooltip": "Invalid reference"
