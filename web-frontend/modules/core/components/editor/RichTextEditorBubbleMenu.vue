@@ -78,7 +78,10 @@ export default {
     isEventTargetInside(event) {
       return (
         isElement(this.$el, event.target) ||
-        isElement(this.$el, event.relatedTarget)
+        isElement(this.$el, event.relatedTarget) ||
+        // Safari set the relatedTarget to the tippyjs popover that contains this.$el,
+        // but since we cannot access it by reference, try inverting the check.
+        isElement(event.relatedTarget, this.$el)
       )
     },
   },
