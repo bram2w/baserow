@@ -1264,7 +1264,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                
               <div
                 class="dropdown__items dropdown__items--fixed"
-                style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
+                style="left: 0px; min-width: 0px; top: 0px; max-height: calc(100vh - 20px);"
               >
                 <div
                   class="select__search"
@@ -1690,7 +1690,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                
               <div
                 class="dropdown__items hidden dropdown__items--fixed"
-                style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
+                style="left: 0px; min-width: 0px; top: 0px; max-height: calc(100vh - 20px);"
               >
                 <div
                   class="select__search"

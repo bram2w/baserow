@@ -272,10 +272,30 @@ export default {
         const updatePosition = () => {
           const element = this.$refs.itemsContainer
           const targetRect = this.$el.getBoundingClientRect()
-          element.style.top = targetRect.top + 'px'
+
           element.style.left = targetRect.left + 'px'
           element.style['min-width'] = targetRect.width + 'px'
-          element.style['max-height'] = `calc(100vh - ${targetRect.top + 20}px)`
+
+          // 140 is ~ the size of 1 item + optional footer
+          const minHeight = 140
+          let offset = 0
+
+          if (
+            // If the target is two low on the page
+            targetRect.top > window.innerHeight - minHeight &&
+            // and we have more space above
+            targetRect.bottom > window.innerHeight - targetRect.top
+          ) {
+            // if not enough space below the target, let's display the dropdown above
+            offset = window.innerHeight - targetRect.bottom
+            element.style.top = 'auto'
+            element.style.bottom = `${window.innerHeight - targetRect.bottom}px`
+          } else {
+            offset = Math.min(targetRect.top, window.innerHeight - minHeight)
+            element.style.top = `${offset}px`
+            element.style.bottom = 'auto'
+          }
+          element.style['max-height'] = `calc(100vh - ${offset + 20}px)`
         }
 
         // Delay the position update to the next tick to let the Context content
