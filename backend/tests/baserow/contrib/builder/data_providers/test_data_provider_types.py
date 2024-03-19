@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 import pytest
 
 from baserow.contrib.builder.data_providers.data_provider_types import (
+    CurrentRecordDataProviderType,
     DataSourceDataProviderType,
     FormDataProviderType,
     PageParameterDataProviderType,
@@ -697,3 +698,24 @@ def test_user_data_provider_get_data_chunk(data_fixture):
         user_data_provider_type.get_data_chunk(dispatch_context, ["email"]) == "e@ma.il"
     )
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 42
+
+
+@pytest.mark.django_db
+def test_current_record_provider_type_import_path(data_fixture):
+    # When a `current_record` provider is imported, and the path only contains the
+    # current record index (`__idx__`), then there is no need to update the path.
+    id_mapping = {"builder_page_elements": {}}
+    assert CurrentRecordDataProviderType().import_path(["__idx__"], id_mapping) == [
+        "__idx__"
+    ]
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source()
+    field_1 = data_fixture.create_text_field(order=1)
+    field_2 = data_fixture.create_text_field(order=2)
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["database_fields"] = {field_1.id: field_2.id}
+
+    assert CurrentRecordDataProviderType().import_path(
+        [field_1.db_column], id_mapping, data_source_id=data_source.id
+    ) == [field_2.db_column]

@@ -173,8 +173,8 @@ class CurrentRecordDataProviderType(DataProviderType):
         :return: The updated path.
         """
 
-        # We don't need to import the id
-        if len(path) == 1 and path[0] == "id":
+        # We don't need to import the row index (__idx__)
+        if len(path) == 1 and path[0] == "__idx__":
             return path
 
         data_source = DataSourceHandler().get_data_source(data_source_id)
