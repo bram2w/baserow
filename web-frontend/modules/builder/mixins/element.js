@@ -1,6 +1,10 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
-import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
+import {
+  ClickEvent,
+  SubmitEvent,
+  AfterLoginEvent,
+} from '@baserow/modules/builder/eventTypes'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
@@ -97,6 +101,9 @@ export default {
     },
     fireSubmitEvent() {
       this.fireEvent(SubmitEvent)
+    },
+    fireAfterLoginEvent() {
+      this.fireEvent(AfterLoginEvent)
     },
 
     resolveColor,

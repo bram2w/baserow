@@ -162,6 +162,7 @@ export default {
           this.values.password = ''
           this.values.email = ''
           this.$v.$reset()
+          this.fireAfterLoginEvent()
         } catch (error) {
           if (error.handler) {
             const response = error.handler.response

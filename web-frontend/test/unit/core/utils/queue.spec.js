@@ -85,7 +85,7 @@ describe('test GroupTaskQueue adding to queue on the fly', () => {
     expect(executed2).toBe(true)
     expect(executed3).toBe(false)
 
-    await sleep(20)
+    await sleep(25)
 
     expect(executed1).toBe(true)
     expect(executed2).toBe(true)

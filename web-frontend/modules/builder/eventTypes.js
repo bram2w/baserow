@@ -70,3 +70,13 @@ export class SubmitEvent extends Event {
     return this.i18n.t('eventTypes.submitLabel')
   }
 }
+
+export class AfterLoginEvent extends Event {
+  static getType() {
+    return 'after_login'
+  }
+
+  get label() {
+    return this.i18n.t('eventTypes.afterLoginLabel')
+  }
+}
