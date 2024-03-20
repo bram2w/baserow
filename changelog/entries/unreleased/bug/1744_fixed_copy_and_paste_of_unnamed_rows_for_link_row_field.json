@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed copy and paste of unnamed rows for link row field",
+    "issue_number": 1744,
+    "bullet_points": [],
+    "created_at": "2024-02-23"
+}
