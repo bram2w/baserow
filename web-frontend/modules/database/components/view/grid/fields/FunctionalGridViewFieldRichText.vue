@@ -6,7 +6,7 @@ export default {
   functional: true,
   render(createElement, context) {
     const { props } = context
-    const md = new Markdown({ html: true })
+    const md = new Markdown({ html: false })
 
     function parseMarkdown(value) {
       return md.use(taskLists, { label: true, enabled: true }).render(value)

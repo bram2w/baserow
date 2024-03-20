@@ -91,6 +91,7 @@ const richTextEditorExtensions = [
   Superscript,
   // Extensions
   Markdown.configure({
+    html: false,
     breaks: true,
   }),
 ]
