@@ -60,7 +60,7 @@ const DEFAULT_WORKFLOW_ACTION_TYPE = NotificationWorkflowActionType.getType()
 export default {
   name: 'Event',
   components: { WorkflowAction },
-  inject: ['page'],
+  inject: ['builder', 'page'],
   props: {
     event: {
       type: Event,
@@ -85,8 +85,20 @@ export default {
       addingAction: false,
     }
   },
+  async mounted() {
+    try {
+      await Promise.all([
+        this.actionFetchIntegrations({
+          application: this.builder,
+        }),
+      ])
+    } catch (error) {
+      notifyIf(error)
+    }
+  },
   methods: {
     ...mapActions({
+      actionFetchIntegrations: 'integration/fetch',
       actionCreateWorkflowAction: 'workflowAction/create',
       actionDeleteWorkflowAction: 'workflowAction/delete',
       actionOrderWorkflowActions: 'workflowAction/order',

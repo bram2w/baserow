@@ -74,9 +74,20 @@ export default {
       return this.$store.getters['integration/getIntegrations'](this.builder)
     },
   },
-
+  async mounted() {
+    try {
+      await Promise.all([
+        this.actionFetchIntegrations({
+          application: this.builder,
+        }),
+      ])
+    } catch (error) {
+      notifyIf(error)
+    }
+  },
   methods: {
     ...mapActions({
+      actionFetchIntegrations: 'integration/fetch',
       actionDeleteIntegration: 'integration/delete',
     }),
     getIntegrationType(integration) {
