@@ -9,18 +9,21 @@
       <WorkflowActionSelector
         :available-workflow-action-types="availableWorkflowActionTypes"
         :workflow-action="workflowAction"
+        :disabled="loading"
         @change="updateWorkflowAction({ type: $event })"
         @delete="$emit('delete')"
       />
     </div>
     <component
       :is="workflowActionType.form"
+      v-if="workflowActionType.form"
       ref="actionForm"
       :workflow-action="workflowAction"
       :default-values="workflowAction"
       class="margin-top-2"
       @values-changed="updateWorkflowAction($event)"
     ></component>
+    <div v-else class="workflow-action__placeholder" />
   </div>
 </template>
 
@@ -45,6 +48,9 @@ export default {
       default: null,
     },
   },
+  data() {
+    return { loading: false }
+  },
   computed: {
     workflowActionType() {
       return this.availableWorkflowActionTypes.find(
@@ -58,13 +64,16 @@ export default {
       actionUpdateWorkflowAction: 'workflowAction/updateDebounced',
     }),
     async updateWorkflowAction(values) {
-      if (!this.$refs.actionForm.isFormValid()) {
+      if (this.$refs.actionForm && !this.$refs.actionForm.isFormValid()) {
         return
       }
 
       // In this case there weren't any actual changes
       if (_.isMatch(this.workflowAction, values)) {
         return
+      }
+      if (values.type) {
+        this.loading = true
       }
 
       try {
@@ -74,9 +83,11 @@ export default {
           values,
         })
       } catch (error) {
-        this.$refs.actionForm.reset()
+        this.$refs.actionForm?.reset()
         notifyIf(error)
       }
+
+      this.loading = false
     },
   },
 }

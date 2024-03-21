@@ -403,7 +403,8 @@
     "notificationLabel": "Show Notification",
     "openPageLabel": "Open Page",
     "createRowLabel": "Create Row",
-    "updateRowLabel": "Update Row"
+    "updateRowLabel": "Update Row",
+    "logoutLabel": "Logout"
   },
   "notificationWorkflowActionForm": {
     "titleLabel": "Title",

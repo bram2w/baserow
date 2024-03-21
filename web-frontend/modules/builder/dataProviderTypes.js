@@ -448,7 +448,8 @@ export class UserDataProviderType extends DataProviderType {
 
   getDataContent(applicationContext) {
     return {
-      isAuthenticated: this.app.store.getters['userSourceUser/isAuthenticated'],
+      is_authenticated:
+        this.app.store.getters['userSourceUser/isAuthenticated'],
       ...this.app.store.getters['userSourceUser/getUser'],
     }
   }

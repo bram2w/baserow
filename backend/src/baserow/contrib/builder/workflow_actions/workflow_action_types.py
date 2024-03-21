@@ -12,6 +12,7 @@ from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import (
     LocalBaserowCreateRowWorkflowAction,
     LocalBaserowUpdateRowWorkflowAction,
+    LogoutWorkflowAction,
     NotificationWorkflowAction,
     OpenPageWorkflowAction,
 )
@@ -106,6 +107,17 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
             return import_formula(value, id_mapping)
 
         return super().deserialize_property(prop_name, value, id_mapping)
+
+
+class LogoutWorkflowActionType(BuilderWorkflowActionType):
+    type = "logout"
+    model_class = LogoutWorkflowAction
+
+    class SerializedDict(BuilderWorkflowActionDict):
+        ...
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {}
 
 
 class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):

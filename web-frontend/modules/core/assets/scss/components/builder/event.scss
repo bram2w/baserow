@@ -1,6 +1,7 @@
 .event__header {
   display: flex;
   justify-content: space-between;
+  padding-bottom: 10px;
 }
 
 .event__header-left {
@@ -30,6 +31,9 @@
   &.event__workflow-action--first {
     border-top: none;
     padding-top: 10px;
-    margin-top: 10px;
+  }
+
+  &:last-child {
+    clear: both;
   }
 }

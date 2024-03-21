@@ -68,6 +68,10 @@ class OpenPageWorkflowAction(BuilderWorkflowAction):
     url = FormulaField(default="")
 
 
+class LogoutWorkflowAction(BuilderWorkflowAction):
+    pass
+
+
 class BuilderWorkflowServiceAction(BuilderWorkflowAction):
     service = models.ForeignKey(
         Service,

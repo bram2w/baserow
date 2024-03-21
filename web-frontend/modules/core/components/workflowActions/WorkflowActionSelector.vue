@@ -4,6 +4,7 @@
       class="workflow-action-selector__options"
       :value="workflowActionType.getType()"
       :show-search="false"
+      :disabled="disabled"
       @change="$emit('change', $event)"
     >
       <DropdownItem
@@ -33,6 +34,11 @@ export default {
       type: Object,
       required: false,
       default: null,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   computed: {
