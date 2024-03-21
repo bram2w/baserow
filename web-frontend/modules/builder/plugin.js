@@ -86,6 +86,7 @@ import {
   NotificationWorkflowActionType,
   OpenPageWorkflowActionType,
   UpdateRowWorkflowActionType,
+  LogoutWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
@@ -228,6 +229,10 @@ export default (context) => {
   app.$registry.register(
     'workflowAction',
     new OpenPageWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new LogoutWorkflowActionType(context)
   )
   app.$registry.register(
     'workflowAction',

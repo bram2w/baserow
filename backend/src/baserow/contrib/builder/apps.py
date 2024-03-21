@@ -225,6 +225,7 @@ class BuilderConfig(AppConfig):
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
             CreateRowWorkflowActionType,
+            LogoutWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
             UpdateRowWorkflowActionType,
@@ -234,6 +235,7 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
         builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
 
         from .elements.collection_field_types import (
             LinkCollectionFieldType,

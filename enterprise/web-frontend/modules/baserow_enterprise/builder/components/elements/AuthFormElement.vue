@@ -4,53 +4,51 @@
     class="auth-form-element"
     @submit.prevent="onLogin"
   >
-    <template v-if="!isAuthenticated">
-      <Error :error="error"></Error>
-      <FormGroup
-        :label="$t('authFormElement.email')"
-        :error="
-          $v.values.email.$dirty
-            ? !$v.values.email.required
-              ? $t('error.requiredField')
-              : !$v.values.email.email
-              ? $t('error.invalidEmail')
-              : ''
+    <Error :error="error"></Error>
+    <FormGroup
+      :label="$t('authFormElement.email')"
+      :error="
+        $v.values.email.$dirty
+          ? !$v.values.email.required
+            ? $t('error.requiredField')
+            : !$v.values.email.email
+            ? $t('error.invalidEmail')
             : ''
-        "
-        :autocomplete="isEditMode ? 'off' : ''"
-      >
-        <input
-          v-model="values.email"
-          type="text"
-          class="input-element"
-          :class="{ 'input-element--error': $v.values.email.$error }"
-          required
-          :placeholder="$t('authFormElement.emailPlaceholder')"
-          @blur="$v.values.email.$touch()"
-        />
-      </FormGroup>
-      <FormGroup
-        :label="$t('authFormElement.password')"
-        :error="
-          $v.values.password.$dirty
-            ? !$v.values.password.required
-              ? $t('error.requiredField')
-              : ''
+          : ''
+      "
+      :autocomplete="isEditMode ? 'off' : ''"
+    >
+      <input
+        v-model="values.email"
+        type="text"
+        class="input-element"
+        :class="{ 'input-element--error': $v.values.email.$error }"
+        required
+        :placeholder="$t('authFormElement.emailPlaceholder')"
+        @blur="$v.values.email.$touch()"
+      />
+    </FormGroup>
+    <FormGroup
+      :label="$t('authFormElement.password')"
+      :error="
+        $v.values.password.$dirty
+          ? !$v.values.password.required
+            ? $t('error.requiredField')
             : ''
-        "
-      >
-        <input
-          ref="password"
-          v-model="values.password"
-          type="password"
-          class="input-element"
-          :class="{ 'input-element--error': $v.values.password.$error }"
-          required
-          :placeholder="$t('authFormElement.passwordPlaceholder')"
-          @blur="$v.values.password.$touch()"
-        />
-      </FormGroup>
-    </template>
+          : ''
+      "
+    >
+      <input
+        ref="password"
+        v-model="values.password"
+        type="password"
+        class="input-element"
+        :class="{ 'input-element--error': $v.values.password.$error }"
+        required
+        :placeholder="$t('authFormElement.passwordPlaceholder')"
+        @blur="$v.values.password.$touch()"
+      />
+    </FormGroup>
     <button
       class="ab-button ab-button--full-width ab-button--center ab-button--large"
       :class="{
@@ -58,7 +56,7 @@
       }"
       :disabled="$v.$error"
     >
-      {{ !isAuthenticated ? $t('action.login') : $t('action.logout') }}
+      {{ $t('action.login') }}
     </button>
   </form>
   <p v-else>{{ $t('authFormElement.selectOrConfigureUserSourceFirst') }}</p>

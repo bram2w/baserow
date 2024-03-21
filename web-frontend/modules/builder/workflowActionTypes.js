@@ -61,6 +61,24 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
   }
 }
 
+export class LogoutWorkflowActionType extends WorkflowActionType {
+  static getType() {
+    return 'logout'
+  }
+
+  get form() {
+    return null
+  }
+
+  get label() {
+    return this.app.i18n.t('workflowActionTypes.logoutLabel')
+  }
+
+  execute() {
+    return this.app.store.dispatch('userSourceUser/logoff')
+  }
+}
+
 export class WorkflowActionServiceType extends WorkflowActionType {
   async execute({
     workflowAction: { id },
