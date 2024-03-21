@@ -155,8 +155,20 @@ export default {
       return this.$registry.getAll('userSource')
     },
   },
+  async mounted() {
+    try {
+      await Promise.all([
+        this.actionFetchIntegrations({
+          application: this.builder,
+        }),
+      ])
+    } catch (error) {
+      notifyIf(error)
+    }
+  },
   methods: {
     ...mapActions({
+      actionFetchIntegrations: 'integration/fetch',
       actionCreateUserSource: 'userSource/create',
       actionUpdateUserSource: 'userSource/update',
       actionDeleteUserSource: 'userSource/delete',

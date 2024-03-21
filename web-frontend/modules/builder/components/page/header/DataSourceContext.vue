@@ -4,6 +4,7 @@
     :class="{ 'context--loading-overlay': state === 'loading' }"
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
+    @shown="shown"
   >
     <template v-if="state === 'loaded'">
       <div v-if="dataSources.length > 0">
@@ -84,11 +85,23 @@ export default {
   },
   methods: {
     ...mapActions({
+      actionFetchIntegrations: 'integration/fetch',
       actionCreateDataSource: 'dataSource/create',
       actionUpdateDataSource: 'dataSource/debouncedUpdate',
       actionDeleteDataSource: 'dataSource/delete',
       actionFetchDataSources: 'dataSource/fetch',
     }),
+    async shown() {
+      try {
+        await Promise.all([
+          this.actionFetchIntegrations({
+            application: this.builder,
+          }),
+        ])
+      } catch (error) {
+        notifyIf(error)
+      }
+    },
     async createDataSource() {
       this.creationInProgress = true
       try {
