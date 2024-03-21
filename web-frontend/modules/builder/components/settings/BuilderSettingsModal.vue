@@ -33,6 +33,7 @@
 
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
+import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
 
 export default {
   name: 'BuilderSettingsModal',
@@ -58,6 +59,13 @@ export default {
       if (!this.settingSelected) {
         this.settingSelected = this.registeredSettings[0]
       }
+
+      const builderApplicationType = this.$registry.get(
+        'application',
+        BuilderApplicationType.getType()
+      )
+      builderApplicationType.loadExtraData(this.builder)
+
       return modal.methods.show.call(this, ...args)
     },
   },

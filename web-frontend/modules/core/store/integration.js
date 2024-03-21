@@ -44,6 +44,9 @@ const mutations = {
       application.integrations.splice(oldIndex, 1)[0]
     )
   },
+  CLEAR_ITEMS(state, { application }) {
+    application.integrations = []
+  },
 }
 
 const actions = {
@@ -224,6 +227,20 @@ const actions = {
       })
       throw error
     }
+  },
+  async fetch({ dispatch, commit }, { application }) {
+    const { data: integrations } = await IntegrationService(
+      this.$client
+    ).fetchAll(application.id)
+
+    commit('CLEAR_ITEMS', { application })
+    await Promise.all(
+      integrations.map((integration) =>
+        dispatch('forceCreate', { application, integration })
+      )
+    )
+
+    return integrations
   },
   async duplicate({ getters, dispatch }, { application, integrationId }) {
     const integration = getters.getIntegrations.find(

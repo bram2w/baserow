@@ -168,8 +168,6 @@ def test_get_builder_application(api_client, data_fixture):
         "group": {"id": workspace.id, "name": workspace.name},
         "workspace": {"id": workspace.id, "name": workspace.name},
         "pages": [],
-        "integrations": [],
-        "user_sources": [],
         "theme": {
             "primary_color": "#5190efff",
             "secondary_color": "#0eaa42ff",
@@ -209,8 +207,6 @@ def test_list_builder_applications(api_client, data_fixture):
             "group": {"id": workspace.id, "name": workspace.name},
             "workspace": {"id": workspace.id, "name": workspace.name},
             "pages": [],
-            "integrations": [],
-            "user_sources": [],
             "theme": {
                 "primary_color": "#5190efff",
                 "secondary_color": "#0eaa42ff",
