@@ -718,6 +718,14 @@ class GeneratedModelAppsProxy:
         self.do_all_pending_operations()
         self._clear_baserow_models_cache()
 
+        # The `all_models` is a defaultdict, and will therefore have a residual empty
+        # key in with the app label because the app label is uniquely generated. This
+        # will make sure it's cleared.
+        try:
+            del apps.all_models[self.baserow_app_label]
+        except KeyError:
+            pass
+
     def _clear_baserow_models_cache(self):
         for model in self.baserow_models.values():
             model._meta._expire_cache()
