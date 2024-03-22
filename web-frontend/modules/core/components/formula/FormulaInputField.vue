@@ -222,14 +222,7 @@ export default {
     },
     onUpdate() {
       this.unSelectNode()
-      this.debouncedValueUpdate()
-    },
-    // Improve performances as the input value is update immediately
-    debouncedValueUpdate() {
-      clearTimeout(this.valueUpdateTimeout)
-      this.valueUpdateTimeout = setTimeout(() => {
-        this.emitChange()
-      }, 500)
+      this.emitChange()
     },
     onFocus() {
       this.formulaInputFocused = true
