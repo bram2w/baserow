@@ -18,22 +18,28 @@
       :placeholder="$t('generalForm.placeholderPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('generalForm.requiredTitle') }}
-      </label>
-      <div class="control__elements">
-        <Checkbox v-model="values.required"></Checkbox>
-      </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('inputTextElementForm.multilineTitle') }}
-      </label>
-      <div class="control__elements">
-        <Checkbox v-model="values.is_multiline"></Checkbox>
-      </div>
-    </FormElement>
+
+    <FormGroup :label="$t('generalForm.requiredTitle')">
+      <Checkbox v-model="values.required"></Checkbox>
+    </FormGroup>
+
+    <FormGroup :label="$t('generalForm.validationTitle')">
+      <Dropdown v-model="values.validation_type" :show-search="true">
+        <DropdownItem
+          v-for="validationType in validationTypes"
+          :key="validationType.name"
+          :name="validationType.label"
+          :value="validationType.name"
+          :description="validationType.description"
+        >
+        </DropdownItem>
+      </Dropdown>
+    </FormGroup>
+
+    <FormGroup :label="$t('inputTextElementForm.multilineTitle')">
+      <Checkbox v-model="values.is_multiline"></Checkbox>
+    </FormGroup>
+
     <FormElement v-if="values.is_multiline">
       <FormInput
         v-model="values.rows"
@@ -73,11 +79,39 @@ export default {
         label: '',
         default_value: '',
         required: false,
+        validation_type: 'any',
         placeholder: '',
         is_multiline: false,
         rows: 3,
       },
     }
+  },
+  computed: {
+    validationTypes() {
+      return [
+        {
+          name: 'any',
+          label: this.$t('inputTextElementForm.validationTypeAnyLabel'),
+          description: this.$t(
+            'inputTextElementForm.validationTypeAnyDescription'
+          ),
+        },
+        {
+          name: 'integer',
+          label: this.$t('inputTextElementForm.validationTypeIntegerLabel'),
+          description: this.$t(
+            'inputTextElementForm.validationTypeIntegerDescription'
+          ),
+        },
+        {
+          name: 'email',
+          label: this.$t('inputTextElementForm.validationTypeEmailLabel'),
+          description: this.$t(
+            'inputTextElementForm.validationTypeEmailDescription'
+          ),
+        },
+      ]
+    },
   },
   methods: {
     emitChange(newValues) {

@@ -1,13 +1,15 @@
 import abc
 from abc import ABC
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email, validate_integer
 from django.db.models import IntegerField, QuerySet
 from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
@@ -24,6 +26,7 @@ from baserow.contrib.builder.elements.models import (
     DropdownElementOption,
     Element,
     FormContainerElement,
+    FormElement,
     HeadingElement,
     HorizontalAlignments,
     IFrameElement,
@@ -124,7 +127,7 @@ class ContainerElementType(ElementType, ABC):
 
         :param place_in_container: The place in container being set
         :param instance: The instance of the container element
-        :raises ValidationError: If the place in container is invalid
+        :raises DRFValidationError: If the place in container is invalid
         """
 
 
@@ -169,7 +172,7 @@ class CollectionElementType(ElementType, ABC):
                     not data_source.service
                     or not data_source.service.specific.get_type().returns_list
                 ):
-                    raise ValidationError(
+                    raise DRFValidationError(
                         f"The data source with ID {data_source_id} doesn't return a "
                         "list."
                     )
@@ -330,6 +333,18 @@ class FormElementType(ElementType):
     # Form element types are imported second, after containers.
     import_element_priority = 1
 
+    def is_valid(self, element: Type[FormElement], value: Any) -> bool:
+        """
+        Given an element and form data value, returns whether it's valid.
+        Used by `FormDataProviderType` to determine if form data is valid.
+
+        :param element: The element we're trying to use form data in.
+        :param value: The form data value, which may be invalid.
+        :return: Whether the value is valid or not for this element.
+        """
+
+        return not (element.required and not value)
+
 
 class ColumnElementType(ContainerElementType):
     """
@@ -402,7 +417,7 @@ class ColumnElementType(ContainerElementType):
     ):
         max_place_in_container = instance.column_amount - 1
         if int(place_in_container) > max_place_in_container:
-            raise ValidationError(
+            raise DRFValidationError(
                 f"place_in_container can at most be {max_place_in_container}, ({place_in_container}, was given)"
             )
 
@@ -686,7 +701,8 @@ class LinkElementType(ElementType):
 
         :param path_params: The path params defined for the navigation event
         :param page: The page the element is navigating to
-        :raises ValidationError: If the param does not exist or the type does not match
+        :raises DRFValidationError: If the param does not exist or the
+            type does not match
         """
 
         parameter_types = {p["name"]: p["type"] for p in page.path_params}
@@ -696,7 +712,7 @@ class LinkElementType(ElementType):
             page_parameter_type = parameter_types.get(page_parameter_name, None)
 
             if page_parameter_type is None:
-                raise ValidationError(
+                raise DRFValidationError(
                     f"Page path parameter {page_parameter} does not exist."
                 )
 
@@ -844,6 +860,7 @@ class InputTextElementType(InputElementType):
         "label",
         "default_value",
         "required",
+        "validation_type",
         "placeholder",
         "is_multiline",
         "rows",
@@ -852,6 +869,7 @@ class InputTextElementType(InputElementType):
         "label",
         "default_value",
         "required",
+        "validation_type",
         "placeholder",
         "is_multiline",
         "rows",
@@ -860,6 +878,7 @@ class InputTextElementType(InputElementType):
     class SerializedDict(ElementDict):
         label: BaserowFormula
         required: bool
+        validation_type: str
         placeholder: str
         default_value: BaserowFormula
         is_multiline: bool
@@ -935,6 +954,28 @@ class InputTextElementType(InputElementType):
             "is_multiline": False,
             "rows": 1,
         }
+
+    def is_valid(self, element: InputTextElement, value: Any) -> bool:
+        """
+        :param element: The element we're trying to use form data in.
+        :param value: The form data value, which may be invalid.
+        :return: Whether the value is valid or not for this element.
+        """
+
+        if not value:
+            return element.required is False
+
+        if element.validation_type == "integer":
+            try:
+                validate_integer(value)
+            except ValidationError:
+                return False
+        elif element.validation_type == "email":
+            try:
+                validate_email(value)
+            except ValidationError:
+                return False
+        return True
 
 
 class ButtonElementType(ElementType):
@@ -1027,8 +1068,16 @@ class TableElementType(CollectionElementType):
 class FormContainerElementType(ContainerElementType):
     type = "form_container"
     model_class = FormContainerElement
-    allowed_fields = ["submit_button_label", "button_color"]
-    serializer_field_names = ["submit_button_label", "button_color"]
+    allowed_fields = [
+        "submit_button_label",
+        "button_color",
+        "reset_initial_values_post_submission",
+    ]
+    serializer_field_names = [
+        "submit_button_label",
+        "button_color",
+        "reset_initial_values_post_submission",
+    ]
 
     class SerializedDict(ElementDict):
         submit_button_label: BaserowFormula
@@ -1055,6 +1104,12 @@ class FormContainerElementType(ContainerElementType):
                 required=False,
                 default="primary",
                 help_text="Button color.",
+            ),
+            "reset_initial_values_post_submission": serializers.BooleanField(
+                help_text=FormContainerElement._meta.get_field(
+                    "reset_initial_values_post_submission"
+                ).help_text,
+                required=False,
             ),
         }
 
@@ -1285,6 +1340,20 @@ class DropdownElementType(FormElementType):
                     for option in options
                 ]
             )
+
+    def is_valid(self, element: DropdownElement, value: Any) -> bool:
+        """
+        Responsible for validating `DropdownElement` form data. We handle
+        this validation a little differently to ensure that if someone creates
+        an option with a blank value, it's considered valid.
+
+        :param element: The dropdown element.
+        :param value: The dropdown value we want to validate.
+        :return: Whether the value is valid or not for this element.
+        """
+
+        validOption = element.dropdownelementoption_set.filter(value=value).exists()
+        return not (element.required and not validOption)
 
 
 class IFrameElementType(ElementType):

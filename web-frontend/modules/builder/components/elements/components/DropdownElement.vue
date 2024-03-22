@@ -2,12 +2,22 @@
   <div class="control">
     <label v-if="element.label" class="control__label">
       {{ labelResolved }}
+      <span
+        v-if="element.label && element.required"
+        class="control__label--required"
+        :title="$t('error.requiredField')"
+        >*</span
+      >
     </label>
     <Dropdown
-      v-model="itemSelected"
+      v-model="inputValue"
       class="dropdown-element"
+      :class="{
+        'dropdown-element--error': displayFormDataError,
+      }"
       :placeholder="placeholderResolved"
       :show-search="false"
+      @hide="onFormElementTouch"
     >
       <DropdownItem
         v-for="option in element.options"
@@ -16,6 +26,10 @@
         :value="option.value"
       ></DropdownItem>
     </Dropdown>
+    <div v-if="displayFormDataError" class="error">
+      <i class="iconoir-warning-triangle"></i>
+      {{ $t('error.requiredField') }}
+    </div>
   </div>
 </template>
 
@@ -40,11 +54,6 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      itemSelected: null,
-    }
-  },
   computed: {
     labelResolved() {
       return ensureString(this.resolveFormula(this.element.label))
@@ -61,12 +70,9 @@ export default {
     },
   },
   watch: {
-    itemSelected(value) {
-      this.setFormData(value)
-    },
     defaultValueResolved: {
-      handler(value) {
-        this.itemSelected = value
+      handler(newValue) {
+        this.inputValue = newValue
       },
       immediate: true,
     },

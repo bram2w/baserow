@@ -69,8 +69,7 @@ const mutations = {
     updateCachedValues(page)
   },
   ADD_ITEM(state, { page, element, beforeId = null }) {
-    const populatedElement = populateElement(element)
-    page.elements.push(populatedElement)
+    page.elements.push(populateElement(element))
     updateCachedValues(page)
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
@@ -419,15 +418,15 @@ const getters = {
       .map((child) => [...getters.getChildren(page, child), child])
       .flat()
   },
+  getParent: (state, getters) => (page, element) => {
+    return getters.getElementById(page, element.parent_element_id)
+  },
   getAncestors: (state, getters) => (page, element) => {
     const getElementAncestors = (element) => {
       if (element.parent_element_id === null) {
         return []
       } else {
-        const parentElement = getters.getElementById(
-          page,
-          element.parent_element_id
-        )
+        const parentElement = getters.getParent(page, element)
         return [...getElementAncestors(parentElement), parentElement]
       }
     }

@@ -29,3 +29,7 @@
     user-select: none;
   }
 }
+
+.dropdown-element--error {
+  border-color: $color-error-300;
+}

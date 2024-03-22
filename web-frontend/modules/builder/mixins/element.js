@@ -83,15 +83,36 @@ export default {
           'workflowAction/getElementWorkflowActions'
         ](this.page, this.element.id)
 
-        await new EventType({
-          i18n: this.$i18n,
-          store: this.$store,
-          registry: this.$registry,
-        }).fire({
-          workflowActions,
-          resolveFormula: this.resolveFormula,
-          applicationContext: this.applicationContext,
-        })
+        try {
+          await new EventType({
+            i18n: this.$i18n,
+            store: this.$store,
+            registry: this.$registry,
+          }).fire({
+            workflowActions,
+            resolveFormula: this.resolveFormula,
+            applicationContext: this.applicationContext,
+          })
+        } catch (e) {
+          let toastTitle = this.$i18n.t(
+            'dispatchWorkflowActionError.defaultTitle'
+          )
+          let toastMessage = this.$i18n.t(
+            'dispatchWorkflowActionError.defaultMessage'
+          )
+          if (e.error !== 'ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID') {
+            toastTitle = this.$i18n.t(
+              'dispatchWorkflowActionError.formDataInvalidTitle'
+            )
+            toastMessage = this.$i18n.t(
+              'dispatchWorkflowActionError.formDataInvalidMessage'
+            )
+          }
+          return this.$store.dispatch('toast/error', {
+            title: toastTitle,
+            message: toastMessage,
+          })
+        }
 
         this.workflowActionsInProgress = false
       }

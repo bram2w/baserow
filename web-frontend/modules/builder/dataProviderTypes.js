@@ -349,9 +349,14 @@ export class FormDataProviderType extends DataProviderType {
 
     return formElements.map((element) => {
       const elementType = this.app.$registry.get('element', element.type)
+      const initialValue = elementType.getInitialFormDataValue(
+        element,
+        applicationContext
+      )
       const payload = {
-        value: elementType.getInitialFormDataValue(element, applicationContext),
+        value: initialValue,
         type: elementType.formDataType,
+        isValid: elementType.isValid(element, initialValue),
       }
       return this.app.store.dispatch('formData/setFormData', {
         page,

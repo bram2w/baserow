@@ -35,6 +35,7 @@ import CheckboxElementForm from '@baserow/modules/builder/components/elements/co
 import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
 import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
+import { isNumeric, isValidEmail } from '@baserow/modules/core/utils/string'
 
 export class ElementType extends Registerable {
   get name() {
@@ -281,6 +282,17 @@ export class FormElementType extends ElementType {
   }
 
   /**
+   * Given a form element, and a form data value, is responsible for validating
+   * this form element type against that value. Returns whether the value is valid.
+   * @param element - The form element
+   * @param value
+   * @returns {boolean}
+   */
+  isValid(element, value) {
+    return !(element.required && !value)
+  }
+
+  /**
    * Get the initial form data value of an element.
    * @param element - The form element
    * @param applicationContext - The context of the current application
@@ -308,9 +320,11 @@ export class FormElementType extends ElementType {
   }
 
   afterCreate(element, page) {
+    const initialValue = this.getInitialFormDataValue(element, { page })
     const payload = {
-      value: this.getInitialFormDataValue(element, { page }),
+      value: initialValue,
       type: this.formDataType,
+      isValid: this.isValid(element, initialValue),
     }
 
     return this.app.store.dispatch('formData/setFormData', {
@@ -331,6 +345,21 @@ export class FormElementType extends ElementType {
 export class InputTextElementType extends FormElementType {
   getType() {
     return 'input_text'
+  }
+
+  isValid(element, value) {
+    if (!value) {
+      return !element.required
+    }
+
+    switch (element.validation_type) {
+      case 'integer':
+        return isNumeric(value)
+      case 'email':
+        return isValidEmail(value)
+      default:
+        return true
+    }
   }
 
   get name() {
@@ -716,6 +745,19 @@ export class DropdownElementType extends FormElementType {
       return resolvedName || this.name
     }
     return this.name
+  }
+
+  /**
+   * Responsible for validating the dropdown form element. It behaves slightly
+   * differently so that dropdown options with blank values are valid. We simply
+   * test if the value is one of the dropdown's own values.
+   * @param element - The dropdown form element
+   * @param value - The value we are validating.
+   * @returns {boolean}
+   */
+  isValid(element, value) {
+    const validOption = element.options.find((option) => option.value === value)
+    return !(element.required && !validOption)
   }
 }
 

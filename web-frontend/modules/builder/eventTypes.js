@@ -32,21 +32,12 @@ export class Event {
         workflowAction.type
       )
 
-      try {
-        additionalContext[workflowAction.id] = await workflowActionType.execute(
-          {
-            workflowAction,
-            additionalContext,
-            applicationContext,
-            resolveFormula,
-          }
-        )
-      } catch (error) {
-        return this.store.dispatch('toast/error', {
-          title: this.i18n.t('dispatchWorkflowActionError.defaultTitle'),
-          message: this.i18n.t('dispatchWorkflowActionError.defaultMessage'),
-        })
-      }
+      additionalContext[workflowAction.id] = await workflowActionType.execute({
+        workflowAction,
+        additionalContext,
+        applicationContext,
+        resolveFormula,
+      })
     }
   }
 }

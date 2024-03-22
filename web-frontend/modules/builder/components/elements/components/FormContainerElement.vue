@@ -29,7 +29,7 @@
       </template>
     </div>
     <div class="form-container-element__submit-button margin-top-2">
-      <button class="ab-button" @click="fireSubmitEvent">
+      <button class="ab-button" @click="validateAndSubmitEvent">
         {{ submitButtonLabelResolved || $t('buttonElement.noValue') }}
       </button>
     </div>
@@ -50,7 +50,10 @@ export default {
   props: {
     /**
      * @type {Object}
+     * @property button_color - The submit button's color.
      * @property submit_button_label - The label of the submit button
+     * @property reset_initial_values_post_submission - Whether to reset the form
+     *  elements to their initial value or not, following a successful submission.
      */
     element: {
       type: Object,
@@ -65,8 +68,85 @@ export default {
         return ''
       }
     },
+    getFormElementDescendants() {
+      const descendants = this.$store.getters['element/getDescendants'](
+        this.page,
+        this.element
+      )
+      return descendants.filter((element) => {
+        const elementType = this.$registry.get('element', element.type)
+        return elementType.isFormElement
+      })
+    },
+    /*
+     * Responsible for determining if any of the form's form elements are invalid. They
+     * will be if: 1) they don't have any form data, or 2) they have form data but their
+     * value is invalid.
+     */
+    formElementChildrenAreInvalid() {
+      return this.getFormElementDescendants.some(
+        ({ id }) =>
+          !Object.prototype.hasOwnProperty.call(this.page.formData, id) ||
+          !this.page.formData[id].isValid
+      )
+    },
   },
   methods: {
+    /*
+     * Responsible for marking all form element descendents in this form container
+     * as touched, or not touched, depending on what we're achieving in validation.
+     */
+    setFormElementDescendantsTouched(wasTouched) {
+      this.getFormElementDescendants.forEach((descendant) => {
+        this.$store.dispatch('formData/setElementTouched', {
+          page: this.page,
+          wasTouched,
+          elementId: descendant.id,
+        })
+      })
+    },
+    /*
+     * Responsible for resetting a form container's elements, depending on
+     * value of the reset_initial_values_post_submission property. If true, the
+     * form elements will be reset to their initial values, if false, they will
+     * be left intact.
+     */
+    resetFormContainerElements() {
+      if (this.element.reset_initial_values_post_submission) {
+        this.getFormElementDescendants.forEach((element) => {
+          const elementType = this.$registry.get('element', element.type)
+          const initialValue = elementType.getInitialFormDataValue(
+            element,
+            this.applicationContext
+          )
+          const payload = {
+            touched: false,
+            value: initialValue,
+            type: elementType.formDataType,
+            isValid: elementType.isValid(element, initialValue),
+          }
+          this.$store.dispatch('formData/setFormData', {
+            page: this.page,
+            payload,
+            elementId: element.id,
+          })
+        })
+      } else {
+        // If we don't want to reset to initial values, we still
+        // want to mark the form elements as not touched.
+        this.setFormElementDescendantsTouched(false)
+      }
+    },
+    /*
+     * Responsible for validating the form container's elements and submitting the form.
+     */
+    validateAndSubmitEvent() {
+      this.setFormElementDescendantsTouched(true)
+      if (!this.formElementChildrenAreInvalid) {
+        this.fireSubmitEvent()
+        this.resetFormContainerElements()
+      }
+    },
     showAddElementModal() {
       this.$refs.addElementModal.show({
         placeInContainer: null,

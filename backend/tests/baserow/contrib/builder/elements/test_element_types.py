@@ -24,6 +24,7 @@ from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
 )
+from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
 from baserow.core.utils import MirrorDict
 
@@ -145,6 +146,34 @@ def test_input_text_element_import_export_formula(data_fixture):
 
 
 @pytest.mark.django_db
+def test_input_text_element_is_valid(data_fixture):
+    validity_tests = [
+        {"required": True, "type": "integer", "value": "", "result": False},
+        {"required": True, "type": "integer", "value": 42, "result": True},
+        {"required": True, "type": "integer", "value": "horse", "result": False},
+        {"required": False, "type": "integer", "value": "", "result": True},
+        {"required": True, "type": "email", "value": "foo@bar.com", "result": True},
+        {"required": True, "type": "email", "value": "foobar.com", "result": False},
+        {"required": False, "type": "email", "value": "", "result": True},
+        {"required": True, "type": "any", "value": "", "result": False},
+        {"required": True, "type": "any", "value": 42, "result": True},
+        {"required": True, "type": "any", "value": "horse", "result": True},
+        {"required": False, "type": "any", "value": "", "result": True},
+    ]
+    for test in validity_tests:
+        assert (
+            InputTextElementType().is_valid(
+                InputTextElement(
+                    validation_type=test["type"], required=test["required"]
+                ),
+                test["value"],
+            )
+        ) is test[
+            "result"
+        ], f"Failed InputTextElementType for validation_type={test['type']}, required={test['required']}, value={test['value']}"
+
+
+@pytest.mark.django_db
 def test_dropdown_element_import_serialized(data_fixture):
     parent = data_fixture.create_builder_page()
     dropdown_element = data_fixture.create_builder_dropdown_element(
@@ -170,6 +199,32 @@ def test_dropdown_element_import_serialized(data_fixture):
     assert options[0].value == "hello"
     assert options[0].name == "there"
     assert options[0].dropdown_id == dropdown_element_imported.id
+
+
+@pytest.mark.django_db
+def test_dropdown_element_is_valid(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    dropdown = ElementService().create_element(
+        user=user,
+        element_type=element_type_registry.get("dropdown"),
+        page=page,
+    )
+    dropdown.dropdownelementoption_set.create(value="uk", name="United Kingdom")
+
+    dropdown.required = True
+    assert DropdownElementType().is_valid(dropdown, "") is False
+    assert DropdownElementType().is_valid(dropdown, "uk") is True
+
+    dropdown.required = False
+    assert DropdownElementType().is_valid(dropdown, "") is True
+    assert DropdownElementType().is_valid(dropdown, "uk") is True
+
+    dropdown.dropdownelementoption_set.create(value="", name="Blank")
+    dropdown.required = True
+    assert DropdownElementType().is_valid(dropdown, "") is True
+    dropdown.required = False
+    assert DropdownElementType().is_valid(dropdown, "uk") is True
 
 
 def test_element_type_import_element_priority():
@@ -243,6 +298,18 @@ def test_checkbox_element_import_export_formula(data_fixture):
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.label == expected_formula
     assert imported_element.default_value == expected_formula
+
+
+@pytest.mark.django_db
+def test_checkbox_text_element_is_valid(data_fixture):
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=True), False) is False
+    )
+    assert CheckboxElementType().is_valid(CheckboxElement(required=True), True) is True
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), False) is True
+    )
+    assert CheckboxElementType().is_valid(CheckboxElement(required=False), True) is True
 
 
 @pytest.mark.django_db

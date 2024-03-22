@@ -24,6 +24,12 @@ ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED = (
     "The workflow_action configuration is incorrect: {e}",
 )
 
+ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID = (
+    "ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID",
+    HTTP_400_BAD_REQUEST,
+    "The form data provided to the workflow action contained invalid values.",
+)
+
 ERROR_DATA_DOES_NOT_EXIST = (
     "ERROR_DATA_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,
