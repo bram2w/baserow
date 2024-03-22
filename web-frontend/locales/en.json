@@ -69,6 +69,7 @@
   },
   "error": {
     "invalidEmail": "Please enter a valid e-mail address.",
+    "invalidNumber": "The field must be a number.",
     "notMatchingPassword": "This field must match your password field.",
     "minLength": "A minimum of {min} characters is required here.",
     "maxLength": "A maximum of {max} characters is allowed here.",

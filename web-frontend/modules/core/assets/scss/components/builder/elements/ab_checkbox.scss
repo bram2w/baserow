@@ -1,0 +1,21 @@
+.ab-checkbox__input {
+  cursor: pointer;
+  margin: 0;
+  height: 16px;
+  width: 16px;
+  border: 1px solid $black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ab-checkbox--error {
+  border-color: $color-error-300;
+}
+
+.ab-checkbox__label {
+  cursor: pointer;
+  color: $black;
+  user-select: none;
+  padding-bottom: 2px;
+}

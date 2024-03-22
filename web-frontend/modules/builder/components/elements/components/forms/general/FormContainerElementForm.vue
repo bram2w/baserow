@@ -11,6 +11,16 @@
       :label="$t('formContainerElementForm.buttonColor')"
       :color-variables="colorVariables"
     />
+    <FormGroup
+      :label="$t('formContainerElementForm.resetToInitialValuesTitle')"
+      :description="
+        $t('formContainerElementForm.resetToInitialValuesDescription')
+      "
+    >
+      <Checkbox
+        v-model="values.reset_initial_values_post_submission"
+      ></Checkbox>
+    </FormGroup>
   </form>
 </template>
 
@@ -26,6 +36,7 @@ export default {
     return {
       values: {
         submit_button_label: '',
+        reset_initial_values_post_submission: false,
       },
     }
   },

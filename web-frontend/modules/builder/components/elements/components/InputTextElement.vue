@@ -2,30 +2,40 @@
   <div>
     <label v-if="element.label" class="control__label">
       {{ resolvedLabel }}
+      <span
+        v-if="element.label && element.required"
+        class="control__label--required"
+        :title="$t('error.requiredField')"
+        >*</span
+      >
     </label>
     <textarea
       v-if="element.is_multiline === true"
       ref="textarea"
+      v-model="inputValue"
       class="input-element"
       style="resize: none"
-      :value="resolvedDefaultValue"
       :required="element.required"
       :placeholder="resolvedPlaceholder"
       :rows="element.rows"
-      @input="
-        setFormData($event.target.value)
-        updateTextareaHeight()
-      "
+      @blur="onFormElementTouch"
     ></textarea>
     <input
       v-else
+      v-model="inputValue"
       type="text"
       class="input-element"
-      :value="resolvedDefaultValue"
+      :class="{
+        'input-element--error': displayFormDataError,
+      }"
       :required="element.required"
       :placeholder="resolvedPlaceholder"
-      @input="setFormData($event.target.value)"
+      @blur="onFormElementTouch"
     />
+    <div v-if="displayFormDataError" class="error">
+      <i class="iconoir-warning-triangle"></i>
+      {{ errorForValidationType }}
+    </div>
   </div>
 </template>
 
@@ -50,6 +60,16 @@ export default {
     },
   },
   computed: {
+    errorForValidationType() {
+      switch (this.element.validation_type) {
+        case 'integer':
+          return this.$t('error.invalidNumber')
+        case 'email':
+          return this.$t('error.invalidEmail')
+        default:
+          return this.$t('error.requiredField')
+      }
+    },
     resolvedLabel() {
       return this.resolveFormula(this.element.label)
     },
@@ -61,14 +81,26 @@ export default {
     },
   },
   watch: {
-    async 'element.default_value'(value) {
-      this.setFormData(this.resolveFormula(value))
-      await this.$nextTick()
-      this.updateTextareaHeight()
+    resolvedDefaultValue: {
+      handler(value) {
+        this.inputValue = value
+      },
+      immediate: true,
     },
     async 'element.rows'(value) {
       await this.$nextTick()
       this.updateTextareaHeight()
+    },
+    async 'element.is_multiline'(value) {
+      await this.$nextTick()
+      this.updateTextareaHeight()
+    },
+    inputValue: {
+      async handler() {
+        await this.$nextTick()
+        this.updateTextareaHeight()
+      },
+      immediate: true,
     },
   },
   mounted() {

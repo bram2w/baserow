@@ -1,5 +1,5 @@
 from collections import defaultdict
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import AnonymousUser
 
@@ -11,6 +11,9 @@ from baserow.contrib.builder.data_providers.data_provider_types import (
     FormDataProviderType,
     PageParameterDataProviderType,
     UserDataProviderType,
+)
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
@@ -59,7 +62,10 @@ def test_page_parameter_data_provider_get_data_chunk():
     assert page_parameter_provider.get_data_chunk(dispatch_context, ["test"]) is None
 
 
-def test_form_data_provider_get_data_chunk():
+@patch(
+    "baserow.contrib.builder.data_providers.data_provider_types.FormDataProviderType.validate_data_chunk"
+)
+def test_form_data_provider_get_data_chunk(mock_validate):
     form_data_provider = FormDataProviderType()
 
     fake_request = MagicMock()
@@ -71,6 +77,26 @@ def test_form_data_provider_get_data_chunk():
     assert form_data_provider.get_data_chunk(dispatch_context, []) is None
     assert form_data_provider.get_data_chunk(dispatch_context, ["1", "test"]) is None
     assert form_data_provider.get_data_chunk(dispatch_context, ["test"]) is None
+
+
+@patch("baserow.contrib.builder.data_providers.data_provider_types.ElementHandler")
+def test_form_data_provider_validate_data_chunk(mock_handler):
+    mock_element = Mock()
+    mock_element_type = Mock()
+
+    mock_element.get_type.return_value = mock_element_type
+    mock_handler().get_element.return_value = mock_element
+
+    form_data_provider = FormDataProviderType()
+
+    mock_element_type.is_valid.return_value = True
+    assert form_data_provider.validate_data_chunk("1", "horse") is None
+
+    mock_element_type.is_valid.return_value = False
+    with pytest.raises(FormDataProviderChunkInvalidException) as exc:
+        assert form_data_provider.validate_data_chunk("1", 42)
+
+    assert exc.value.args[0] == "Form data 42 is invalid for its element."
 
 
 @pytest.mark.django_db

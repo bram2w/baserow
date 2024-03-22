@@ -1,4 +1,9 @@
-import { ElementType } from '@baserow/modules/builder/elementTypes'
+import {
+  ElementType,
+  CheckboxElementType,
+  DropdownElementType,
+  InputTextElementType,
+} from '@baserow/modules/builder/elementTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
 
 describe('elementTypes tests', () => {
@@ -221,6 +226,124 @@ describe('elementTypes tests', () => {
         )
       ).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
       expect(elementType.getDisplayName({}, {})).toBe(elementType.name)
+    })
+    test('InputTextElementType | required | no value.', () => {
+      const elementType = new InputTextElementType()
+      expect(elementType.isValid({ required: true }, '')).toBe(false)
+    })
+    test('InputTextElementType | required | integer | valid value.', () => {
+      const elementType = new InputTextElementType()
+      expect(
+        elementType.isValid({ required: true, validation_type: 'integer' }, 42)
+      ).toBe(true)
+    })
+    test('InputTextElementType | required | integer | invalid value.', () => {
+      const elementType = new InputTextElementType()
+      expect(
+        elementType.isValid(
+          { required: true, validation_type: 'integer' },
+          'horse'
+        )
+      ).toBe(false)
+    })
+    test('InputTextElementType | not required | integer | no value.', () => {
+      const elementType = new InputTextElementType()
+      expect(
+        elementType.isValid({ required: false, validation_type: 'integer' }, '')
+      ).toBe(true)
+    })
+    test('InputTextElementType | required | email | valid value.', () => {
+      const elementType = new InputTextElementType()
+      expect(
+        elementType.isValid(
+          { required: true, validation_type: 'email' },
+          'peter@baserow.io'
+        )
+      ).toBe(true)
+    })
+    test('InputTextElementType | required | email | invalid value.', () => {
+      const elementType = new InputTextElementType()
+      expect(
+        elementType.isValid(
+          { required: true, validation_type: 'email' },
+          'peterbaserow.io'
+        )
+      ).toBe(false)
+    })
+    test('InputTextElementType | not required | email | no value.', () => {
+      const elementType = new InputTextElementType()
+      expect(
+        elementType.isValid({ required: false, validation_type: 'email' }, '')
+      ).toBe(true)
+    })
+    test('InputTextElementType with any value.', () => {
+      const elementType = new InputTextElementType()
+      expect(elementType.isValid({ validation_type: 'any' }, 42)).toBe(true)
+      expect(elementType.isValid({ validation_type: 'any' }, 'horse')).toBe(
+        true
+      )
+      expect(
+        elementType.isValid({ validation_type: 'any' }, 'peter@baserow.io')
+      ).toBe(true)
+    })
+    test('CheckboxElementType | required | unchecked.', () => {
+      const elementType = new CheckboxElementType()
+      expect(elementType.isValid({ required: true }, false)).toBe(false)
+    })
+    test('CheckboxElementType | required | checked.', () => {
+      const elementType = new CheckboxElementType()
+      expect(elementType.isValid({ required: true }, true)).toBe(true)
+    })
+    test('CheckboxElementType | not required | unchecked.', () => {
+      const elementType = new CheckboxElementType()
+      expect(elementType.isValid({ required: false }, false)).toBe(true)
+    })
+    test('CheckboxElementType | not required | checked.', () => {
+      const elementType = new CheckboxElementType()
+      expect(elementType.isValid({ required: false }, true)).toBe(true)
+    })
+    test('DropdownElementType | required | no value.', () => {
+      const elementType = new DropdownElementType()
+      const element = {
+        required: true,
+        options: [{ id: 1, value: 'uk', name: 'UK' }],
+      }
+      expect(elementType.isValid(element, '')).toBe(false)
+    })
+    test('DropdownElementType | required | blank option.', () => {
+      const elementType = new DropdownElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: '', name: 'Blank' },
+          { id: 2, value: 'uk', name: 'UK' },
+        ],
+      }
+      expect(elementType.isValid(element, '')).toBe(true)
+    })
+    test('DropdownElementType | required | valid value.', () => {
+      const elementType = new DropdownElementType()
+      const element = {
+        required: true,
+        options: [{ id: 1, value: 'uk', name: 'UK' }],
+      }
+      expect(elementType.isValid(element, 'uk')).toBe(true)
+    })
+    test('DropdownElementType | not required | no value.', () => {
+      const elementType = new DropdownElementType()
+      const element = {
+        required: false,
+        options: [{ id: 1, value: 'uk', name: 'UK' }],
+      }
+      expect(elementType.isValid(element, '')).toBe(true)
+    })
+    test('DropdownElementType | not required | valid value.', () => {
+      const elementType = new DropdownElementType()
+      const element = {
+        required: false,
+        options: [{ id: 1, value: 'uk', name: 'UK' }],
+      }
+      expect(elementType.isValid(element, 'uk')).toBe(true)
     })
   })
 })
