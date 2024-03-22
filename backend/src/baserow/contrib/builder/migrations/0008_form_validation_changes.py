@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("builder", "0006_alter_builderworkflowaction_event"),
+        ("builder", "0007_logoutworkflowaction"),
     ]
 
     operations = [
