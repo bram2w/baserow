@@ -1,19 +1,15 @@
 <template>
-  <div class="card-rich-text">
-    <RichTextEditor
-      :content-scaled="true"
-      :editable="false"
-      :enable-rich-text-formatting="true"
-      :value="value"
-    ></RichTextEditor>
-  </div>
+  <!-- eslint-disable-next-line vue/no-v-html -->
+  <div
+    class="card-rich-text field-rich-text--preview"
+    v-html="formattedValue"
+  ></div>
 </template>
 
 <script>
-import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
+import { parseMarkdown } from '@baserow/modules/core/editor/markdown'
 
 export default {
-  components: { RichTextEditor },
   props: {
     value: {
       type: String,
@@ -22,8 +18,8 @@ export default {
   },
   height: 32,
   computed: {
-    richValue() {
-      return this.value || ''
+    formattedValue() {
+      return parseMarkdown(this.value || '')
     },
   },
 }
