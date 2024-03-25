@@ -24,12 +24,7 @@
     </div>
     <EditorContent
       class="rich-text-editor__content"
-      :class="[
-        {
-          'rich-text-editor__content--scaled': contentScaled,
-        },
-        editorClass,
-      ]"
+      :class="editorClass"
       :editor="editor"
     />
   </div>
@@ -119,10 +114,6 @@ export default {
     editorClass: {
       type: String,
       default: '',
-    },
-    contentScaled: {
-      type: Boolean,
-      default: false,
     },
     enableMentions: {
       type: Boolean,

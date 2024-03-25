@@ -20,60 +20,11 @@
     }
 }
 
-
-.rich-text-editor__content--scaled {
-  overflow: hidden;
-
-  h1, h2, h3, p, a, ul, ol, li, blockquote, pre, code {
-  
-    @include fixed-height(32px, 13px);
-
-    padding: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    color: revert;
-  }
-  
-  h1, h2, h3, p, a, blockquote, pre, code {
-    @extend %ellipsis;
-  }
-
-  ul {
-    list-style-type: disc;
-    margin-left: 0;
-    padding-left: 0;
-    
-  }
-
-  li {
-    margin-left: 20px;
-  }  
-
-  ul[data-type='taskList'] li {
-    margin-left: 0;
-  }
-
-  pre {
-    display: flex;
-    align-items: center;
-    height: 22px;
-    padding: 0 2px;
-    width: fit-content;
-    margin-top: 5px;
-    max-width: 100%;
-  }
-
-  blockquote {
-    margin-left: 0;
-    display: flex;
-    align-items: center;
-    height: 22px;
-    padding-left: 6px;
-    width: fit-content;
-    margin-top: 5px;
-    max-width: 100%;
-  }
-}
+.rich-text-editor__content-blockquote {
+    padding-left: 1rem;
+    color: $color-neutral-700;
+    border-left: 4px solid $color-neutral-300;
+ }
 
 .rich-text-editor__content {
   width: 100%;
@@ -112,10 +63,9 @@
   }
 
   blockquote {
+    @extend .rich-text-editor__content-blockquote;
+    
     margin: 1rem;
-    padding-left: 1rem;
-    color: $color-neutral-700;
-    border-left: 4px solid $color-neutral-300;
   }
 
   pre {
@@ -141,63 +91,6 @@
         align-items: center;
       }
     }
-  }
-}
-
-.rich-text-editor__content.rich-text-editor__content--scaled {
-  overflow: hidden;
-  height: 100%;
-
-  /* stylelint-disable-next-line no-descending-specificity */
-  h1, h2, h3, p, a, ul, ol, li, blockquote, pre, code {
-  
-    @include fixed-height(32px, 13px);
-
-    padding: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    color: revert;
-  }
-  
-  h1, h2, h3, p, a, blockquote, pre, code {
-    @extend %ellipsis;
-  }
-
-  ul {
-    list-style-type: disc;
-    margin-left: 0;
-    padding-left: 0;
-    
-  }
-
-  /* stylelint-disable-next-line no-descending-specificity */
-  li {
-    margin-left: 20px;
-  }  
-
-  ul[data-type='taskList'] li {
-    margin-left: 0;
-  }
-
-  pre {
-    display: flex;
-    align-items: center;
-    height: 22px;
-    padding: 0 2px;
-    width: fit-content;
-    margin-top: 5px;
-    max-width: 100%;
-  }
-
-  blockquote {
-    margin-left: 0;
-    display: flex;
-    align-items: center;
-    height: 22px;
-    padding-left: 6px;
-    width: fit-content;
-    margin-top: 5px;
-    max-width: 100%;
   }
 }
 
