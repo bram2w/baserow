@@ -216,8 +216,10 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   async init(applicationContext) {
     const { page } = applicationContext
 
+    const elements = this.app.store.getters['element/getElementsOrdered'](page)
+
     await Promise.all(
-      page.elements.map(async (element) => {
+      elements.map(async (element) => {
         if (element.data_source_id) {
           const dataSource = this.app.store.getters[
             'dataSource/getPageDataSourceById'
@@ -339,7 +341,9 @@ export class FormDataProviderType extends DataProviderType {
 
   async init(applicationContext) {
     const { page } = applicationContext
-    const elements = await this.app.store.getters['element/getElements'](page)
+    const elements = await this.app.store.getters['element/getElementsOrdered'](
+      page
+    )
     const formElementTypes = Object.values(this.app.$registry.getAll('element'))
       .filter((elementType) => elementType.isFormElement)
       .map((elementType) => elementType.getType())

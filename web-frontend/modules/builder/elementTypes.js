@@ -11,12 +11,11 @@ import InputTextElement from '@baserow/modules/builder/components/elements/compo
 import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/InputTextElementForm'
 import TableElement from '@baserow/modules/builder/components/elements/components/TableElement'
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm'
-
-import { ELEMENT_EVENTS } from '@baserow/modules/builder/enums'
 import {
   ensureBoolean,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
+import { ELEMENT_EVENTS, PLACEMENTS } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -185,6 +184,188 @@ export class ElementType extends Registerable {
    * @param page - The page the element belong to
    */
   afterUpdate(element, page) {}
+
+  /**
+   * Move a component in the same place.
+   * @param {Object} page - The page the element belongs to
+   * @param {Object} element - The element to move
+   * @param {String} placement - The direction of the move
+   */
+  async moveElementInSamePlace(page, element, placement) {
+    let beforeElementId = null
+
+    switch (placement) {
+      case PLACEMENTS.BEFORE: {
+        const previousElement = this.app.store.getters[
+          'element/getPreviousElement'
+        ](page, element)
+
+        beforeElementId = previousElement ? previousElement.id : null
+        break
+      }
+      case PLACEMENTS.AFTER: {
+        const nextElement = this.app.store.getters['element/getNextElement'](
+          page,
+          element
+        )
+
+        if (nextElement) {
+          const nextNextElement = this.app.store.getters[
+            'element/getNextElement'
+          ](page, nextElement)
+          beforeElementId = nextNextElement ? nextNextElement.id : null
+        }
+        break
+      }
+    }
+
+    await this.app.store.dispatch('element/move', {
+      page,
+      elementId: element.id,
+      beforeElementId,
+      parentElementId: element.parent_element_id
+        ? element.parent_element_id
+        : null,
+      placeInContainer: element.place_in_container,
+    })
+  }
+
+  /**
+   * Move an element according to the new placement.
+   * @param {Object} page - The page the element belongs to
+   * @param {Object} element - The element to move
+   * @param {String} placement - The direction of the move
+   */
+  async moveElement(page, element, placement) {
+    if (element.parent_element_id !== null) {
+      const parentElement = this.app.store.getters['element/getElementById'](
+        page,
+        element.parent_element_id
+      )
+
+      const parentElementType = this.app.$registry.get(
+        'element',
+        parentElement.type
+      )
+      await parentElementType.moveChildElement(
+        page,
+        parentElement,
+        element,
+        placement
+      )
+    } else {
+      await this.moveElementInSamePlace(page, element, placement)
+    }
+  }
+
+  /**
+   * Identify and select the next element according to the new placement.
+   *
+   * @param {Object} page - The page the element belongs to
+   * @param {Object} element - The element on which the selection should be based on
+   * @param {String} placement - The direction of the selection
+   */
+  async selectNextElement(page, element, placement) {
+    let elementToBeSelected = null
+    if (placement === PLACEMENTS.BEFORE) {
+      elementToBeSelected = this.app.store.getters[
+        'element/getPreviousElement'
+      ](page, element)
+    } else if (placement === PLACEMENTS.AFTER) {
+      elementToBeSelected = this.app.store.getters['element/getNextElement'](
+        page,
+        element
+      )
+    } else {
+      const containerElement = this.app.store.getters['element/getElementById'](
+        page,
+        element.parent_element_id
+      )
+      const containerElementType = this.app.$registry.get(
+        'element',
+        containerElement.type
+      )
+      elementToBeSelected =
+        containerElementType.getNextHorizontalElementToSelect(
+          page,
+          element,
+          placement
+        )
+    }
+
+    if (!elementToBeSelected) {
+      return
+    }
+
+    try {
+      await this.app.store.dispatch('element/select', {
+        element: elementToBeSelected,
+      })
+    } catch {}
+  }
+
+  /**
+   * Returns vertical placement disabled.
+   * @param {Object} page - The page the element belongs to
+   * @param {Object} element - The element to move
+   * @param {String} placement - The direction of the move
+   */
+  getVerticalPlacementsDisabled(page, element) {
+    const previousElement = this.app.store.getters[
+      'element/getPreviousElement'
+    ](page, element)
+    const nextElement = this.app.store.getters['element/getNextElement'](
+      page,
+      element
+    )
+
+    const placementsDisabled = []
+
+    if (!previousElement) {
+      placementsDisabled.push(PLACEMENTS.BEFORE)
+    }
+
+    if (!nextElement) {
+      placementsDisabled.push(PLACEMENTS.AFTER)
+    }
+
+    return placementsDisabled
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the element to move
+   * in their container (or root page).
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The element for which the placements should be
+   *  calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabled(page, element) {
+    // If the element has a parent, let the parent container type derive the
+    // disabled placements.
+    if (element.parent_element_id) {
+      const containerElement = this.app.store.getters['element/getElementById'](
+        page,
+        element.parent_element_id
+      )
+      const elementType = this.app.$registry.get(
+        'element',
+        containerElement.type
+      )
+      return elementType.getPlacementsDisabledForChild(
+        page,
+        containerElement,
+        element
+      )
+    }
+
+    return [
+      PLACEMENTS.LEFT,
+      PLACEMENTS.RIGHT,
+      ...this.getVerticalPlacementsDisabled(page, element),
+    ]
+  }
 }
 
 export class ContainerElementType extends ElementType {
@@ -227,6 +408,39 @@ export class ContainerElementType extends ElementType {
     // By default an element inside a container should have no left and right padding
     return { style_padding_left: 0, style_padding_right: 0 }
   }
+
+  /**
+   * Given a `page` and an `element`, move the child element of a container
+   * in the direction specified by the `placement`.
+   *
+   * The default implementation only supports moving the element vertically.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element to be moved.
+   * @param {String} placement The direction in which the element should move.
+   */
+  async moveChildElement(page, parentElement, element, placement) {
+    if (placement === PLACEMENTS.AFTER || placement === PLACEMENTS.BEFORE) {
+      await this.moveElementInSamePlace(page, element, placement)
+    }
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the elements to move
+   * in their container.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element for which the placements should
+   *    be calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabledForChild(page, containerElement, element) {
+    super.getPlacementsDisabled(page, element)
+  }
+
+  getNextHorizontalElementToSelect(page, element, placement) {
+    return null
+  }
 }
 
 export class ColumnElementType extends ContainerElementType {
@@ -266,6 +480,89 @@ export class ColumnElementType extends ContainerElementType {
 
   get defaultPlaceInContainer() {
     return '0'
+  }
+
+  /**
+   * Given a `page` and an `element`, move the child element of a container
+   * in the direction specified by the `placement`.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element to be moved.
+   * @param {String} placement The direction in which the element should move.
+   */
+  async moveChildElement(page, parentElement, element, placement) {
+    if (placement === PLACEMENTS.AFTER || placement === PLACEMENTS.BEFORE) {
+      await super.moveChildElement(page, parentElement, element, placement)
+    } else {
+      const placeInContainer = parseInt(element.place_in_container)
+      const newPlaceInContainer =
+        placement === PLACEMENTS.LEFT
+          ? placeInContainer - 1
+          : placeInContainer + 1
+
+      if (newPlaceInContainer >= 0) {
+        await this.app.store.dispatch('element/move', {
+          page,
+          elementId: element.id,
+          beforeElementId: null,
+          parentElementId: parentElement.id,
+          placeInContainer: `${newPlaceInContainer}`,
+        })
+      }
+    }
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the elements to move
+   * in their container.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element for which the placements should
+   *    be calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabledForChild(page, containerElement, element) {
+    const columnIndex = parseInt(element.place_in_container)
+
+    const placementsDisabled = []
+
+    if (columnIndex === 0) {
+      placementsDisabled.push(PLACEMENTS.LEFT)
+    }
+
+    if (columnIndex === containerElement.column_amount - 1) {
+      placementsDisabled.push(PLACEMENTS.RIGHT)
+    }
+
+    return [
+      ...placementsDisabled,
+      ...this.getVerticalPlacementsDisabled(page, element),
+    ]
+  }
+
+  getNextHorizontalElementToSelect(page, element, placement) {
+    const offset = placement === PLACEMENTS.LEFT ? -1 : 1
+    const containerElement = this.app.store.getters['element/getElementById'](
+      page,
+      element.parent_element_id
+    )
+
+    let elementsInPlace = []
+    let nextPlaceInContainer = parseInt(element.place_in_container)
+    for (let i = 0; i < containerElement.column_amount; i++) {
+      nextPlaceInContainer += offset
+      elementsInPlace = this.app.store.getters['element/getElementsInPlace'](
+        page,
+        containerElement.id,
+        nextPlaceInContainer.toString()
+      )
+
+      if (elementsInPlace.length) {
+        return elementsInPlace[elementsInPlace.length - 1]
+      }
+    }
+
+    return null
   }
 }
 
@@ -339,6 +636,10 @@ export class FormElementType extends ElementType {
       page,
       elementId: element.id,
     })
+  }
+
+  getNextHorizontalElementToSelect(page, element, placement) {
+    return null
   }
 }
 
@@ -796,6 +1097,23 @@ export class FormContainerElementType extends ContainerElementType {
 
   get childStylesForbidden() {
     return ['style_width']
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the elements to move
+   * in their container.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element for which the placements should
+   *    be calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabledForChild(page, containerElement, element) {
+    return [
+      PLACEMENTS.LEFT,
+      PLACEMENTS.RIGHT,
+      ...this.getVerticalPlacementsDisabled(page, element),
+    ]
   }
 }
 

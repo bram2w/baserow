@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add keyboard shortcuts to interact with Application Builder elements: c (select child), p (select parent), arrow keys (select elements), arrow keys + alt/option (move elements).",
+    "issue_number": 2198,
+    "bullet_points": [],
+    "created_at": "2024-03-20"
+}
