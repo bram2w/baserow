@@ -7,9 +7,15 @@
       'element-preview--parent-of-selected': isParentOfSelectedElement,
       'element-preview--in-error': inError,
       'element-preview--first-element': isFirstElement,
+      'element-preview--not-visible':
+        !isVisible && !isSelected && !isParentOfSelectedElement,
     }"
     @click="onSelect"
   >
+    <div v-if="isSelected" class="element-preview__name">
+      {{ elementType.name }}
+      <i v-if="!isVisible" class="iconoir-eye-off" />
+    </div>
     <InsertElementButton
       v-show="isSelected"
       class="element-preview__insert element-preview__insert--top"
@@ -97,6 +103,16 @@ export default {
       elementSelected: 'element/getSelected',
       elementAncestors: 'element/getAncestors',
     }),
+    isVisible() {
+      switch (this.element.visibility) {
+        case 'logged-in':
+          return this.$store.getters['userSourceUser/isAuthenticated']
+        case 'not-logged':
+          return !this.$store.getters['userSourceUser/isAuthenticated']
+        default:
+          return true
+      }
+    },
     PLACEMENTS: () => PLACEMENTS,
     placements() {
       return [

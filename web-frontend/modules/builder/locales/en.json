@@ -512,5 +512,10 @@
   "userSelector": {
     "viewAs": "View as: {user}",
     "anonymous": "Anonymous"
+  },
+  "visibilityForm": {
+    "allVisitors": "All visitors",
+    "loggedInVisitors": "Logged-in visitors",
+    "notLoggedInVisitors": "Logged-out visitors"
   }
 }

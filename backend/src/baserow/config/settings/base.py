@@ -1061,6 +1061,7 @@ PERMISSION_MANAGERS = [
     "setting_operation",
     "staff",
     "allow_public_builder",
+    "element_visibility",
     "member",
     "token",
     "role",

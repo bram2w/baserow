@@ -153,8 +153,10 @@ class BuilderConfig(AppConfig):
         from baserow.core.registries import permission_manager_type_registry
 
         from .domains.permission_manager import AllowPublicBuilderManagerType
+        from .elements.permission_manager import ElementVisibilityPermissionManager
 
         permission_manager_type_registry.register(AllowPublicBuilderManagerType())
+        permission_manager_type_registry.register(ElementVisibilityPermissionManager())
 
         from .elements.element_types import (
             ButtonElementType,

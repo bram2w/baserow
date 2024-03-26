@@ -84,6 +84,32 @@
       pointer-events: none;
     }
   }
+
+  :not(.element-preview--not-visible) &--not-visible .element__wrapper {
+    opacity: 0.5;
+    filter: blur(1px);
+  }
+}
+
+.element-preview__name {
+  @include add-elevation($elevation-low);
+  @include absolute(-26px, auto, auto, 5px);
+
+  @include button-style(
+    $palette-blue-500,
+    $palette-blue-800,
+    $palette-blue-700,
+    $white,
+    $palette-blue-100
+  );
+  @include rounded($rounded);
+
+  padding: 3px 6px;
+  z-index: 1;
+
+  .element-preview--first-element & {
+    @include absolute(auto, auto, -26px, 5px);
+  }
 }
 
 .element-preview__menu-item-description {
