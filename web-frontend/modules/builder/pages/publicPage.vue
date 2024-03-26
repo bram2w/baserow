@@ -145,6 +145,9 @@ export default {
         this.applicationContext
       )
     },
+    isAuthenticated() {
+      return this.$store.getters['userSourceUser/isAuthenticated']
+    },
   },
   watch: {
     dispatchContext: {
@@ -163,6 +166,12 @@ export default {
           )
         }
       },
+    },
+    isAuthenticated() {
+      // When the user login or logout, we need to refetch the elements and actions
+      // as they might have changed
+      this.$store.dispatch('element/fetchPublished', { page: this.page })
+      this.$store.dispatch('workflowAction/fetchPublished', { page: this.page })
     },
   },
 }

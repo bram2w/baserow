@@ -67,6 +67,11 @@ class Element(
     display an information or something the user can interact with.
     """
 
+    class VISIBILITY_TYPES(models.TextChoices):
+        ALL = "all"
+        LOGGED_IN = "logged-in"
+        NOT_LOGGED = "not-logged"
+
     page = models.ForeignKey("builder.Page", on_delete=models.CASCADE)
     order = models.DecimalField(
         help_text="Lowest first.",
@@ -99,6 +104,13 @@ class Element(
         default=None,
         max_length=255,
         help_text="The place in the container.",
+    )
+
+    visibility = models.CharField(
+        choices=VISIBILITY_TYPES.choices,
+        max_length=20,
+        default=VISIBILITY_TYPES.ALL,
+        db_index=True,
     )
 
     style_border_top_color = models.CharField(

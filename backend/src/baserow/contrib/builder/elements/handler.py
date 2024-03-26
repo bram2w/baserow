@@ -28,6 +28,7 @@ class ElementHandler:
     allowed_fields_create = [
         "parent_element_id",
         "place_in_container",
+        "visibility",
         "style_border_top_color",
         "style_border_top_size",
         "style_padding_top",
@@ -48,6 +49,7 @@ class ElementHandler:
     allowed_fields_update = [
         "parent_element_id",
         "place_in_container",
+        "visibility",
         "style_border_top_color",
         "style_border_top_size",
         "style_padding_top",

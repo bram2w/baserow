@@ -56,6 +56,7 @@ import {
   EventsPageSidePanelType,
   GeneralPageSidePanelType,
   StylePageSidePanelType,
+  VisibilityPageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
 import {
   CustomDomainType,
@@ -187,6 +188,10 @@ export default (context) => {
   )
   app.$registry.register('pageSidePanel', new GeneralPageSidePanelType(context))
   app.$registry.register('pageSidePanel', new StylePageSidePanelType(context))
+  app.$registry.register(
+    'pageSidePanel',
+    new VisibilityPageSidePanelType(context)
+  )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
 
   app.$registry.register('domain', new CustomDomainType(context))

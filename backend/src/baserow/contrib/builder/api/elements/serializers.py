@@ -51,6 +51,7 @@ class ElementSerializer(serializers.ModelSerializer):
             "order",
             "parent_element_id",
             "place_in_container",
+            "visibility",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",
@@ -106,6 +107,7 @@ class CreateElementSerializer(serializers.ModelSerializer):
             "type",
             "parent_element_id",
             "place_in_container",
+            "visibility",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",
@@ -128,6 +130,7 @@ class UpdateElementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Element
         fields = (
+            "visibility",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",
