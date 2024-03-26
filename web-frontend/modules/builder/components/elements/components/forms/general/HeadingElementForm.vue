@@ -50,13 +50,13 @@ export default {
       values: {
         value: '',
         level: 1,
-        font_color: '',
         alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
       },
       levels: [...Array(6).keys()].map((level) => ({
         name: this.$t('headingElementForm.headingName', { level: level + 1 }),
         value: level + 1,
       })),
+      allowedValues: ['value', 'level', 'alignment'],
     }
   },
 }

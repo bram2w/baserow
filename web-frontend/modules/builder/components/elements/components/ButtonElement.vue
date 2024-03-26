@@ -6,16 +6,13 @@
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
   >
-    <button
-      class="ab-button"
-      :class="{
-        'ab-button--full-width': element.width === WIDTHS.FULL.value,
-        'loading-spinner': workflowActionsInProgress,
-      }"
+    <ABButton
+      :full-width="element.width === WIDTHS.FULL.value"
+      :loading="workflowActionsInProgress"
       @click="fireClickEvent"
     >
       {{ resolvedValue || $t('buttonElement.noValue') }}
-    </button>
+    </ABButton>
   </div>
 </template>
 

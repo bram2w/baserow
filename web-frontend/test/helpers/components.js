@@ -2,6 +2,7 @@ import Vuelidate from '@baserow/node_modules/vuelidate/lib/index'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { setupVue } from '@baserow/modules/core/plugins/global'
+import { setupVueForAB } from '@baserow/modules/builder/plugins/global'
 
 const addVuex = (context) => {
   context.vuex = Vuex
@@ -52,6 +53,7 @@ export const bootstrapVueContext = (configureContext) => {
     }
     context.vue = context.vueTestUtils.createLocalVue()
     setupVue(context.vue)
+    setupVueForAB(context.vue)
 
     jest.doMock('vue', () => context.vue)
 

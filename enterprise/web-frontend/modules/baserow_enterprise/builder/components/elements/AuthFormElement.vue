@@ -5,9 +5,9 @@
     @submit.prevent="onLogin"
   >
     <Error :error="error"></Error>
-    <FormGroup
+    <ABFormGroup
       :label="$t('authFormElement.email')"
-      :error="
+      :error-message="
         $v.values.email.$dirty
           ? !$v.values.email.required
             ? $t('error.requiredField')
@@ -17,47 +17,36 @@
           : ''
       "
       :autocomplete="isEditMode ? 'off' : ''"
+      required
     >
-      <input
+      <ABInput
         v-model="values.email"
-        type="text"
-        class="input-element"
-        :class="{ 'input-element--error': $v.values.email.$error }"
-        required
         :placeholder="$t('authFormElement.emailPlaceholder')"
         @blur="$v.values.email.$touch()"
       />
-    </FormGroup>
-    <FormGroup
+    </ABFormGroup>
+    <ABFormGroup
       :label="$t('authFormElement.password')"
-      :error="
+      :error-message="
         $v.values.password.$dirty
           ? !$v.values.password.required
             ? $t('error.requiredField')
             : ''
           : ''
       "
+      required
     >
-      <input
-        ref="password"
+      <ABInput
+        ref="passwordRef"
         v-model="values.password"
         type="password"
-        class="input-element"
-        :class="{ 'input-element--error': $v.values.password.$error }"
-        required
         :placeholder="$t('authFormElement.passwordPlaceholder')"
         @blur="$v.values.password.$touch()"
       />
-    </FormGroup>
-    <button
-      class="ab-button ab-button--full-width ab-button--center ab-button--large"
-      :class="{
-        'loading-spinner': loading,
-      }"
-      :disabled="$v.$error"
-    >
+    </ABFormGroup>
+    <ABButton :disabled="$v.$error" full-width :loading="loading" size="large">
       {{ $t('action.login') }}
-    </button>
+    </ABButton>
   </form>
   <p v-else>{{ $t('authFormElement.selectOrConfigureUserSourceFirst') }}</p>
 </template>
@@ -84,7 +73,10 @@ export default {
     },
   },
   data() {
-    return { loading: false, values: { email: '', password: '' } }
+    return {
+      loading: false,
+      values: { email: '', password: '' },
+    }
   },
   computed: {
     selectedUserSource() {
@@ -167,7 +159,8 @@ export default {
             if (response && response.status === 401) {
               this.values.password = ''
               this.$v.$reset()
-              this.$refs.password.focus()
+              this.$v.$touch()
+              this.$refs.passwordRef.focus()
 
               if (response.data?.error === 'ERROR_INVALID_CREDENTIALS') {
                 this.showError(

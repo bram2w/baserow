@@ -1,4 +1,4 @@
-.input-element {
+.ab-input {
   appearance: none;
   width: 100%;
   display: block;
@@ -11,13 +11,4 @@
   &:focus {
     border-color: $black;
   }
-
-  .element--read-only & {
-    pointer-events: none;
-    user-select: none;
-  }
-}
-
-.input-element--error {
-  border-color: $palette-red-600;
 }

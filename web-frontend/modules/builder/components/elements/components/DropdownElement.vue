@@ -4,7 +4,6 @@
       {{ labelResolved }}
       <span
         v-if="element.label && element.required"
-        class="control__label--required"
         :title="$t('error.requiredField')"
         >*</span
       >

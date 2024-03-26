@@ -5,10 +5,8 @@
       [`element--alignment-horizontal-${element.alignment}`]: true,
     }"
   >
-    <component
-      :is="`h${element.level}`"
-      class="heading-element__heading"
-      :class="`ab-heading--h${element.level}`"
+    <ABHeading
+      :level="element.level"
       :style="{
         [`--heading-h${element.level}--color`]: resolveColor(
           element.font_color,
@@ -17,7 +15,7 @@
       }"
     >
       {{ resolvedValue || $t('headingElement.noValue') }}
-    </component>
+    </ABHeading>
   </div>
 </template>
 
@@ -42,11 +40,7 @@ export default {
   },
   computed: {
     resolvedValue() {
-      try {
-        return this.resolveFormula(this.element.value)
-      } catch (e) {
-        return ''
-      }
+      return this.resolveFormula(this.element.value)
     },
   },
 }

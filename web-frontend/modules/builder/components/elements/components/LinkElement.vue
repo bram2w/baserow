@@ -6,19 +6,15 @@
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
   >
-    <a
-      :class="{
-        'link-element__link': element.variant !== 'button',
-        'ab-button': element.variant === 'button',
-        'ab-button--full-width':
-          element.variant === 'button' && element.width === WIDTHS.FULL.value,
-      }"
+    <ABLink
       v-bind="extraAttr"
+      :full-width="element.width === WIDTHS.FULL.value"
       :target="`_${element.target}`"
+      :variant="element.variant"
       @click.prevent="onClick"
     >
       {{ resolvedValue || $t('linkElement.noValue') }}
-    </a>
+    </ABLink>
   </div>
 </template>
 
@@ -88,7 +84,7 @@ export default {
       } catch (e) {
         return {
           url: '',
-          isExternalUrl: false,
+          isExternalLink: false,
         }
       }
     },

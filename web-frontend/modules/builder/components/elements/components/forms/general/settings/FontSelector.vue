@@ -24,6 +24,13 @@ export default {
   data() {
     return { values: { font_color: 'primary' }, allowedValues: ['font_color'] }
   },
+  watch: {
+    'values.font_color': {
+      handler(value) {
+        this.$emit('input', value)
+      },
+    },
+  },
   methods: { resolveColor },
 }
 </script>

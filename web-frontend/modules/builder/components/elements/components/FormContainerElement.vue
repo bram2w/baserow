@@ -20,13 +20,18 @@
           :element="child"
           @move="moveElement(child, $event)"
         />
-        <PageElement v-else :key="child.id" :element="child" :mode="mode" />
+        <PageElement
+          v-else
+          :key="`${child.id}else`"
+          :element="child"
+          :mode="mode"
+        />
       </template>
     </div>
     <div class="form-container-element__submit-button margin-top-2">
-      <button class="ab-button" @click="validateAndSubmitEvent">
+      <ABButton @click="validateAndSubmitEvent">
         {{ submitButtonLabelResolved || $t('buttonElement.noValue') }}
-      </button>
+      </ABButton>
     </div>
   </div>
 </template>
@@ -43,7 +48,12 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'FormContainerElement',
-  components: { PageElement, ElementPreview, AddElementModal, AddElementZone },
+  components: {
+    PageElement,
+    ElementPreview,
+    AddElementModal,
+    AddElementZone,
+  },
   mixins: [containerElement],
   props: {
     /**

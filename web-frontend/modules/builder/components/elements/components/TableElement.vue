@@ -19,14 +19,9 @@
       </template>
     </BaserowTable>
     <div class="table-element__footer">
-      <button
-        v-if="hasMorePage"
-        class="ab-button"
-        :disabled="loading"
-        @click="loadMore()"
-      >
+      <ABButton v-if="hasMorePage" :disabled="loading" @click="loadMore()">
         {{ $t('tableElement.showMore') }}
-      </button>
+      </ABButton>
     </div>
   </div>
 </template>
