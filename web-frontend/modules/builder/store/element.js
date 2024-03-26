@@ -1,7 +1,8 @@
+import BigNumber from 'bignumber.js'
+
 import ElementService from '@baserow/modules/builder/services/element'
 import PublicBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 import { calculateTempOrder } from '@baserow/modules/core/utils/order'
-import BigNumber from 'bignumber.js'
 
 const populateElement = (element) => {
   element._ = {
@@ -25,6 +26,7 @@ const updateContext = {
   promiseResolve: null,
   lastUpdatedValues: null,
   valuesToUpdate: {},
+  moveTimeout: null,
 }
 
 /**
@@ -56,10 +58,10 @@ const orderElements = (elements, parentElementId = null) => {
 }
 
 const updateCachedValues = (page) => {
-  page.elementMap = Object.fromEntries(
-    page.elements.map((element) => [element.id, element])
-  )
   page.orderedElements = orderElements(page.elements)
+  page.elementMap = Object.fromEntries(
+    page.orderedElements.map((element) => [element.id, element])
+  )
 }
 
 const mutations = {
@@ -98,6 +100,7 @@ const mutations = {
   },
   CLEAR_ITEMS(state, { page }) {
     page.elements = []
+    updateCachedValues(page)
   },
 }
 
@@ -117,7 +120,7 @@ const actions = {
     elementType.afterUpdate(element, page)
   },
   forceDelete({ commit, getters }, { page, elementId }) {
-    const elementsOfPage = getters.getElements(page)
+    const elementsOfPage = getters.getElementsOrdered(page)
     const elementIndex = elementsOfPage.findIndex(
       (element) => element.id === elementId
     )
@@ -135,21 +138,33 @@ const actions = {
     { commit, getters },
     { page, elementId, beforeElementId, parentElementId, placeInContainer }
   ) {
-    const beforeElement = getters.getElementById(page, beforeElementId)
-    const afterOrder = getOrder(beforeElement)
-    const beforeOrder = getOrder(
-      getters.getPreviousElement(
+    const element = getters.getElementById(page, elementId)
+
+    let tempOrder = ''
+    // Compute temporary order while waiting for the update from the server
+    if (beforeElementId) {
+      // If we have a before element then we should place the element
+      // between the before element and the element before the before element.
+      const beforeElement = getters.getElementById(page, beforeElementId)
+      const beforeBeforeElement = getters.getPreviousElement(
         page,
-        beforeElement,
-        parentElementId,
-        placeInContainer
+        beforeElement
       )
-    )
-    const tempOrder = calculateTempOrder(beforeOrder, afterOrder)
+      const afterOrder = getOrder(beforeElement)
+      const beforeOrder = getOrder(beforeBeforeElement)
+      tempOrder = calculateTempOrder(beforeOrder, afterOrder)
+    } else {
+      // Otherwise it's should be placed as the last in the column so we get the last
+      // element and we just add one.
+      const lastElement = getters
+        .getElementsInPlace(page, parentElementId, placeInContainer)
+        .at(-1)
+      tempOrder = calculateTempOrder(getOrder(lastElement), null)
+    }
 
     commit('UPDATE_ITEM', {
       page,
-      element: getters.getElementById(page, elementId),
+      element,
       values: {
         order: tempOrder,
         parent_element_id: parentElementId,
@@ -261,7 +276,7 @@ const actions = {
     })
   },
   async delete({ dispatch, getters }, { page, elementId }) {
-    const elementsOfPage = getters.getElements(page)
+    const elementsOfPage = getters.getElementsOrdered(page)
     const elementIndex = elementsOfPage.findIndex(
       (element) => element.id === elementId
     )
@@ -332,27 +347,29 @@ const actions = {
       placeInContainer,
     })
 
-    try {
-      const { data: elementUpdated } = await ElementService(this.$client).move(
-        elementId,
-        beforeElementId,
-        parentElementId,
-        placeInContainer
-      )
+    const fire = async () => {
+      try {
+        const { data: elementUpdated } = await ElementService(
+          this.$client
+        ).move(elementId, beforeElementId, parentElementId, placeInContainer)
 
-      dispatch('forceUpdate', {
-        page,
-        element: elementUpdated,
-        values: { ...elementUpdated },
-      })
-    } catch (error) {
-      await dispatch('forceUpdate', {
-        page,
-        element,
-        values: element,
-      })
-      throw error
+        dispatch('forceUpdate', {
+          page,
+          element: elementUpdated,
+          values: { ...elementUpdated },
+        })
+      } catch (error) {
+        await dispatch('forceUpdate', {
+          page,
+          element,
+          values: element,
+        })
+        throw error
+      }
     }
+
+    clearTimeout(updateContext.moveTimeout)
+    updateContext.moveTimeout = setTimeout(fire, 1000)
   },
   async duplicate({ commit, dispatch, getters }, { page, elementId }) {
     const {
@@ -383,19 +400,24 @@ const actions = {
     return elements
   },
   emitElementEvent({ getters }, { event, page, ...rest }) {
-    const elements = getters.getElements(page)
+    const elements = getters.getElementsOrdered(page)
 
     elements.forEach((element) => {
       const elementType = this.$registry.get('element', element.type)
       elementType.onElementEvent(event, { page, element, ...rest })
     })
   },
+  async moveElement({ dispatch, getters }, { page, element, placement }) {
+    const elementType = this.$registry.get('element', element.type)
+    await elementType.moveElement(page, element, placement)
+  },
+  async selectNextElement({ dispatch, getters }, { page, element, placement }) {
+    const elementType = this.$registry.get('element', element.type)
+    await elementType.selectNextElement(page, element, placement)
+  },
 }
 
 const getters = {
-  getElements: (state) => (page) => {
-    return page.elements
-  },
   getElementById: (state, getters) => (page, id) => {
     return page.elementMap[id]
   },
@@ -459,29 +481,65 @@ const getters = {
             e.place_in_container === placeInContainer
         )
     },
-  getPreviousElement:
-    (state, getters) => (page, before, parentId, placeInContainer) => {
-      const elementsInPlace = getters.getElementsInPlace(
-        page,
-        parentId,
-        placeInContainer
-      )
-      return before
-        ? elementsInPlace
-            .reverse()
-            .find((e) => getOrder(e).lt(getOrder(before))) || null
-        : elementsInPlace.at(-1)
-    },
-  getNextElement: (state, getters) => (page, element) => {
+  getPreviousElement: (state, getters) => (page, before) => {
     const elementsInPlace = getters.getElementsInPlace(
       page,
-      element.parent_element_id,
-      element.place_in_container
+      before.parent_element_id,
+      before.place_in_container
     )
-    return elementsInPlace.find((e) => getOrder(e).gt(getOrder(element)))
+    return before
+      ? elementsInPlace
+          .reverse()
+          .find((e) => getOrder(e).lt(getOrder(before))) || null
+      : elementsInPlace.at(-1)
+  },
+  getNextElement: (state, getters) => (page, after) => {
+    const elementsInPlace = getters.getElementsInPlace(
+      page,
+      after.parent_element_id,
+      after.place_in_container
+    )
+
+    return elementsInPlace.find((e) => getOrder(e).gt(getOrder(after)))
   },
   getSelected(state) {
     return state.selected
+  },
+  /**
+   * Given an element, return its closest sibling element.
+   */
+  getClosestSiblingElement: (state, getters) => (page, element) => {
+    if (!element) {
+      return null
+    }
+
+    const siblings = getters.getSiblings(page, element)
+
+    // Exclude the element itself from the list of siblings
+    const otherSiblings = siblings.filter((el) => el.id !== element.id)
+
+    // If the element has siblings, return the closest previous sibling.
+    // Default to the first (zeroth) sibling.
+    if (otherSiblings.length) {
+      const index = siblings.findIndex((el) => el.id === element.id)
+      const nextIndex = Math.max(index - 1, 0)
+      return otherSiblings[nextIndex]
+    }
+
+    // Return the container element if the element has a parent
+    if (element.parent_element_id) {
+      return getters.getElementById(page, element.parent_element_id)
+    }
+
+    // Find root element
+    const rootElements = getters
+      .getRootElements(page)
+      .filter((el) => el.id !== element.id)
+    if (rootElements.length) {
+      return rootElements[0]
+    }
+
+    return null
   },
 }
 
