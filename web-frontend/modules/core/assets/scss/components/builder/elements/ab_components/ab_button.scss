@@ -1,11 +1,9 @@
 .ab-button {
-  font-size: 14px;
   cursor: pointer;
   display: inline-block;
   color: $white;
   background-color: var(--button-color, $black);
   line-height: 28px;
-  padding: 0 12px;
   border: none;
   white-space: nowrap;
   text-align: left;
@@ -21,8 +19,26 @@
     width: 100%;
   }
 
+  &--left {
+    text-align: left;
+  }
+
   &--center {
     text-align: center;
+  }
+
+  &--right {
+    text-align: right;
+  }
+
+  &--small {
+    font-size: 12px;
+    padding: 0 8px;
+  }
+
+  &--medium {
+    font-size: 14px;
+    padding: 0 12px;
   }
 
   &--large {

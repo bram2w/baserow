@@ -23,6 +23,7 @@ export default function BuilderModule(options) {
     src: path.resolve(__dirname, 'plugins/router.js'),
     fileName: 'router.js',
   })
+  this.addPlugin({ src: path.resolve(__dirname, 'plugins/global.js') })
 
   // Create a "fake" template with the existing Nuxt router file that can be used by the
   // `plugins/router.js` above.

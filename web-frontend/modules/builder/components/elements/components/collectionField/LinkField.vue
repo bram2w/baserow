@@ -1,11 +1,11 @@
 <template>
-  <a
-    class="ab-button"
+  <ABLink
+    variant="button"
     v-bind="extraAttr"
     @click.prevent="onButtonFieldClick($event)"
   >
     {{ realLinkName }}
-  </a>
+  </ABLink>
 </template>
 
 <script>

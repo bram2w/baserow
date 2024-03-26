@@ -22,7 +22,7 @@ export default function resolveElementUrl(
   let resolvedUrl = ''
   const resolvedContext = {
     url: '',
-    isExternalUrl: false,
+    isExternalLink: false,
   }
   if (element.navigation_type === 'page') {
     if (!isNaN(element.navigate_to_page_id)) {
@@ -59,7 +59,7 @@ export default function resolveElementUrl(
     element.navigation_type,
     editorMode
   )
-  resolvedContext.isExternalUrl = isExternalLink(
+  resolvedContext.isExternalLink = isExternalLink(
     resolvedContext.url,
     element.navigation_type
   )

@@ -383,7 +383,7 @@
     "errorTooltip": "Invalid reference"
   },
   "fontSidePanelForm": {
-    "label": "Font"
+    "label": "Font color"
   },
   "tableElementForm": {
     "dataSource": "Data source",

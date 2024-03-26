@@ -1,41 +1,20 @@
 <template>
   <div>
-    <label v-if="element.label" class="control__label">
-      {{ resolvedLabel }}
-      <span
-        v-if="element.label && element.required"
-        class="control__label--required"
-        :title="$t('error.requiredField')"
-        >*</span
-      >
-    </label>
-    <textarea
-      v-if="element.is_multiline === true"
-      ref="textarea"
-      v-model="inputValue"
-      class="input-element"
-      style="resize: none"
+    <ABFormGroup
+      :label="resolvedLabel"
+      :is-in-error="displayFormDataError"
+      :error-message="errorForValidationType"
+      :autocomplete="isEditMode ? 'off' : ''"
       :required="element.required"
-      :placeholder="resolvedPlaceholder"
-      :rows="element.rows"
-      @blur="onFormElementTouch"
-    ></textarea>
-    <input
-      v-else
-      v-model="inputValue"
-      type="text"
-      class="input-element"
-      :class="{
-        'input-element--error': displayFormDataError,
-      }"
-      :required="element.required"
-      :placeholder="resolvedPlaceholder"
-      @blur="onFormElementTouch"
-    />
-    <div v-if="displayFormDataError" class="error">
-      <i class="iconoir-warning-triangle"></i>
-      {{ errorForValidationType }}
-    </div>
+    >
+      <ABInput
+        v-model="inputValue"
+        :placeholder="resolvedPlaceholder"
+        :multiline="element.is_multiline"
+        :rows="element.rows"
+        @blur="onFormElementTouch"
+      />
+    </ABFormGroup>
   </div>
 </template>
 
@@ -73,9 +52,6 @@ export default {
     resolvedLabel() {
       return this.resolveFormula(this.element.label)
     },
-    resolvedDefaultValue() {
-      return this.resolveFormula(this.element.default_value)
-    },
     resolvedPlaceholder() {
       return this.resolveFormula(this.element.placeholder)
     },
@@ -86,33 +62,6 @@ export default {
         this.inputValue = value
       },
       immediate: true,
-    },
-    async 'element.rows'(value) {
-      await this.$nextTick()
-      this.updateTextareaHeight()
-    },
-    async 'element.is_multiline'(value) {
-      await this.$nextTick()
-      this.updateTextareaHeight()
-    },
-    inputValue: {
-      async handler() {
-        await this.$nextTick()
-        this.updateTextareaHeight()
-      },
-      immediate: true,
-    },
-  },
-  mounted() {
-    this.updateTextareaHeight()
-  },
-  methods: {
-    updateTextareaHeight() {
-      if (this.element.is_multiline && this.$refs.textarea) {
-        const textarea = this.$refs.textarea
-        textarea.style.height = 'auto'
-        textarea.style.height = `${textarea.scrollHeight + 2}px`
-      }
     },
   },
 }
