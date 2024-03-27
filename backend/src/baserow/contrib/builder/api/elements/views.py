@@ -20,6 +20,9 @@ from baserow.api.utils import (
     type_from_data_or_registry,
     validate_data_custom_fields,
 )
+from baserow.contrib.builder.api.data_sources.errors import (
+    ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+)
 from baserow.contrib.builder.api.elements.errors import (
     ERROR_ELEMENT_DOES_NOT_EXIST,
     ERROR_ELEMENT_NOT_IN_SAME_PAGE,
@@ -32,6 +35,7 @@ from baserow.contrib.builder.api.elements.serializers import (
     UpdateElementSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
+from baserow.contrib.builder.data_sources.exceptions import DataSourceDoesNotExist
 from baserow.contrib.builder.elements.exceptions import (
     ElementDoesNotExist,
     ElementNotInSamePage,
@@ -189,6 +193,7 @@ class ElementView(APIView):
     @map_exceptions(
         {
             ElementDoesNotExist: ERROR_ELEMENT_DOES_NOT_EXIST,
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
         }
     )
     def patch(self, request, element_id: int):
