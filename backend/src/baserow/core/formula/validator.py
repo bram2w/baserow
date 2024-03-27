@@ -2,6 +2,8 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 
+from baserow.core.utils import flatten
+
 
 def ensure_integer(value: Any) -> int:
     """
@@ -33,8 +35,10 @@ def ensure_string(value, allow_empty=True):
     :raises ValueError: If not allow_empty and the `value` is empty.
     """
 
-    if value is None or value == "":
+    if value is None or value == "" or value == []:
         if not allow_empty:
             raise ValueError("A valid String is required.")
         return ""
+    if isinstance(value, list):
+        return ",".join(flatten(value))
     return str(value)

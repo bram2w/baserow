@@ -22,6 +22,7 @@
 import element from '@baserow/modules/builder/mixins/element'
 import { WIDTHS } from '@baserow/modules/builder/enums'
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 /**
  * @typedef LinkElement
@@ -51,11 +52,7 @@ export default {
   computed: {
     WIDTHS: () => WIDTHS,
     resolvedValue() {
-      try {
-        return this.resolveFormula(this.element.value)
-      } catch {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.value))
     },
     classes() {
       return {

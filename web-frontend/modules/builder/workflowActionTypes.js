@@ -4,6 +4,7 @@ import OpenPageWorkflowActionForm from '@baserow/modules/builder/components/work
 import CreateRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/CreateRowWorkflowAction.vue'
 import UpdateRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/UpdateRowWorkflowAction.vue'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export class NotificationWorkflowActionType extends WorkflowActionType {
   static getType() {
@@ -20,8 +21,8 @@ export class NotificationWorkflowActionType extends WorkflowActionType {
 
   execute({ workflowAction: { title, description }, resolveFormula }) {
     return this.app.store.dispatch('toast/info', {
-      title: resolveFormula(title),
-      message: resolveFormula(description),
+      title: ensureString(resolveFormula(title)),
+      message: ensureString(resolveFormula(description)),
     })
   }
 }
@@ -44,7 +45,7 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
     applicationContext: { builder, mode },
     resolveFormula,
   }) {
-    let urlParsed = resolveFormula(url)
+    let urlParsed = ensureString(resolveFormula(url))
 
     if (urlParsed.startsWith('/')) {
       if (mode === 'preview') {

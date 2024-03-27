@@ -20,7 +20,7 @@ from baserow.core.utils import (
     extract_allowed,
     find_intermediate_order,
     find_unused_name,
-    get_nested_value_from_dict,
+    get_value_at_path,
     grouper,
     random_string,
     remove_invalid_surrogate_characters,
@@ -495,27 +495,60 @@ def test_to_path(path, expected_result):
         assert result == expected_result
 
 
-@pytest.fixture
-def nested_dict():
-    return {"a": {"b": {"c": 123}}, "list": [{"d": 456}, {"d": 789}]}
+@pytest.fixture(name="obj")
+def obj():
+    """A sample nested structure to test the `get_value_at_path` utility function."""
+
+    return {
+        "a": {"b": {"c": 123}},
+        "list": [
+            {"d": 456},
+            {"d": 789, "e": 111},
+        ],
+        "nested": [
+            {"nested": [{"a": 1}, {"a": 2}]},
+            {"nested": [{"a": 3}]},
+        ],
+    }
 
 
 @pytest.mark.parametrize(
-    "value_path, expected_result",
+    "path, expected_result",
     [
         ("a.b.c", 123),
         ("list.1.d", 789),
         ("list[1]d", 789),
         ("a.b.x", None),
         ("list.5.d", None),
-        ("", {"a": {"b": {"c": 123}}, "list": [{"d": 456}, {"d": 789}]}),
+        (
+            "",
+            {
+                "a": {"b": {"c": 123}},
+                "list": [
+                    {"d": 456},
+                    {"d": 789, "e": 111},
+                ],
+                "nested": [
+                    {"nested": [{"a": 1}, {"a": 2}]},
+                    {"nested": [{"a": 3}]},
+                ],
+            },
+        ),
         ("a.b", {"c": 123}),
         ("a[b]", {"c": 123}),
-        ("list", [{"d": 456}, {"d": 789}]),
+        ("list", [{"d": 456}, {"d": 789, "e": 111}]),
+        ("list.*", [{"d": 456}, {"d": 789, "e": 111}]),
+        ("list.*.c", None),
+        ("list.*.d", [456, 789]),
+        ("list.*.e", [111]),
+        ("nested.*.nested.*.a", [[1, 2], [3]]),
+        ("nested[*].nested[*].a", [[1, 2], [3]]),
+        ("nested.*.nested.0.a", [1, 3]),
+        ("nested.*.nested.1.a", [2]),
     ],
 )
-def test_get_nested_value_from_dict(nested_dict, value_path, expected_result):
-    result = get_nested_value_from_dict(nested_dict, value_path)
+def test_get_value_at_path(obj, path, expected_result):
+    result = get_value_at_path(obj, path)
     assert result == expected_result
 
 

@@ -22,6 +22,7 @@
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import headingElement from '@baserow/modules/builder/mixins/headingElement'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'HeadingElement',
@@ -40,7 +41,7 @@ export default {
   },
   computed: {
     resolvedValue() {
-      return this.resolveFormula(this.element.value)
+      return ensureString(this.resolveFormula(this.element.value))
     },
   },
 }

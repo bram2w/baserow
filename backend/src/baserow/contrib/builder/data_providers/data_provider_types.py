@@ -17,7 +17,7 @@ from baserow.contrib.builder.elements.models import FormElement
 from baserow.core.formula.exceptions import FormulaRecursion
 from baserow.core.formula.registries import DataProviderType
 from baserow.core.services.dispatch_context import DispatchContext
-from baserow.core.utils import get_nested_value_from_dict
+from baserow.core.utils import get_value_at_path
 
 
 class PageParameterDataProviderType(DataProviderType):
@@ -143,7 +143,7 @@ class DataSourceDataProviderType(DataProviderType):
         if data_source.service.get_type().returns_list:
             dispatch_result = dispatch_result["results"]
 
-        return get_nested_value_from_dict(dispatch_result, rest)
+        return get_value_at_path(dispatch_result, rest)
 
     def import_path(self, path, id_mapping, **kwargs):
         """
@@ -234,6 +234,4 @@ class UserDataProviderType(DataProviderType):
         else:
             user = {"id": 0, "username": "", "email": ""}
 
-        return get_nested_value_from_dict(
-            {"is_authenticated": is_authenticated, **user}, path
-        )
+        return get_value_at_path({"is_authenticated": is_authenticated, **user}, path)
