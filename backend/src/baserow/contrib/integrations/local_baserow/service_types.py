@@ -1225,14 +1225,21 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         field_values = {}
         field_mappings = service.field_mappings.select_related("field").all()
         for field_mapping in field_mappings:
+            field = field_mapping.field
+            field_type = field_type_registry.get_by_model(field.specific_class)
+
+            # Determine if the field type is read only, if so, skip it. This
+            # is here for defensive programming purposes, when a field is converted
+            # to a read only type, the field mapping is destroyed. This check is just
+            # in case a loophole is found.
+            if field_type.read_only:
+                continue
+
             resolved_value = resolve_formula(
                 field_mapping.value,
                 formula_runtime_function_registry,
                 dispatch_context,
             )
-
-            field = field_mapping.field
-            field_type = field_type_registry.get_by_model(field.specific_class)
 
             # Transform and validate the resolved value with the field type's DRF field.
             serializer_field = field_type.get_serializer_field(field.specific)
