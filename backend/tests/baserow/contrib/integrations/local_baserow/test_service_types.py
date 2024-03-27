@@ -2332,3 +2332,39 @@ def test_import_datasource_provider_formula_using_list_rows_service_containing_n
         duplicated_element.specific.placeholder
         == f"get('data_source.{duplicated_data_source.id}')"
     )
+
+
+@pytest.mark.django_db
+def test_import_datasource_provider_formula_using_get_row_service_containing_no_field_fails_silently(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, authorized_user=user
+    )
+    table = data_fixture.create_database_table(database=database)
+    page = data_fixture.create_builder_page(builder=builder)
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration,
+        table=table,
+    )
+    data_source = DataSourceService().create_data_source(
+        user, service_type=service.get_type(), page=page
+    )
+    ElementService().create_element(
+        user,
+        element_type_registry.get("input_text"),
+        page=page,
+        data_source_id=data_source.id,
+        placeholder=f"get('data_source.{data_source.id}')",
+    )
+    duplicated_page = PageService().duplicate_page(user, page)
+    duplicated_element = duplicated_page.element_set.first()
+    duplicated_data_source = duplicated_page.datasource_set.first()
+    assert (
+        duplicated_element.specific.placeholder
+        == f"get('data_source.{duplicated_data_source.id}')"
+    )
