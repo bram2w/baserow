@@ -1970,6 +1970,53 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_unknown_row_id(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_with_read_only_table_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("UUID", "uuid", {}),
+            ("Ingredient", "text", {}),
+        ],
+    )
+    uuid = table.field_set.get(name="UUID")
+    ingredient = table.field_set.get(name="Ingredient")
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=integration,
+        table=table,
+    )
+    service_type = service.get_type()
+    service.field_mappings.create(
+        field=uuid, value="'b52d8848-f2c2-4495-b8ef-94e1b4f3c49f'"
+    )
+    service.field_mappings.create(field=ingredient, value="'Potato'")
+
+    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    assert (
+        getattr(dispatch_data["data"], uuid.db_column)
+        != "b52d8848-f2c2-4495-b8ef-94e1b4f3c49f"
+    )
+    assert getattr(dispatch_data["data"], ingredient.db_column) == "Potato"
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_transform(
     data_fixture,
 ):

@@ -2059,24 +2059,27 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
 
             search_values = []
             for name, row_ids in name_map.items():
-                try:
-                    search_values.append(
-                        primary_field_type.prepare_value_for_db(
-                            primary_field["field"], name
+                if primary_field["type"].read_only:
+                    search_values.append(name)
+                else:
+                    try:
+                        search_values.append(
+                            primary_field_type.prepare_value_for_db(
+                                primary_field["field"], name
+                            )
                         )
-                    )
-                except ValidationError as e:
-                    error = ValidationError(
-                        f"The value '{name}' is an invalid value for the primary field "
-                        "of the linked table.",
-                        code="invalid_value",
-                    )
-                    if continue_on_error:
-                        # Replace values by error for failing rows
-                        for row_index in row_ids:
-                            values_by_row[row_index] = error
-                    else:
-                        raise e
+                    except ValidationError as e:
+                        error = ValidationError(
+                            f"The value '{name}' is an invalid value for the primary field "
+                            "of the linked table.",
+                            code="invalid_value",
+                        )
+                        if continue_on_error:
+                            # Replace values by error for failing rows
+                            for row_index in row_ids:
+                                values_by_row[row_index] = error
+                        else:
+                            raise e
 
             # Get all matching rows
             rows = related_model.objects.filter(
