@@ -810,7 +810,14 @@ class LocalBaserowGetRowUserServiceType(
         Updates the field ids in the path.
         """
 
-        field_dbname, *rest = path
+        # If the path length is greater or equal to one, then we have
+        # the GetRow data source formula format of `data_source.PK.field`.
+        if len(path) >= 1:
+            field_dbname, *rest = path
+        else:
+            # In any other scenario, we have a formula that is not a format we
+            # can currently import properly, so we return the path as is.
+            return path
 
         if field_dbname == "id":
             return path
