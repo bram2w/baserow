@@ -118,7 +118,7 @@ class UserSourceType(
         id_mapping: Dict[str, Dict[int, int]],
         **kwargs,
     ) -> Any:
-        if prop_name == "integration_id":
+        if prop_name == "integration_id" and value:
             return id_mapping["integrations"][value]
 
         if prop_name == "uid":
