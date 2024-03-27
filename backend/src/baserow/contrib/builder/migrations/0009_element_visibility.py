@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
                     ("not-logged", "Not Logged"),
                 ],
                 default="all",
+                null=True,
                 max_length=20,
                 db_index=True,
             ),
