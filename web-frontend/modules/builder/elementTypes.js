@@ -1029,10 +1029,12 @@ export class DropdownElementType extends FormElementType {
   }
 
   getInitialFormDataValue(element, applicationContext) {
-    return this.resolveFormula(element.default_value, {
-      element,
-      ...applicationContext,
-    })
+    return ensureString(
+      this.resolveFormula(element.default_value, {
+        element,
+        ...applicationContext,
+      })
+    )
   }
 
   getDisplayName(element, applicationContext) {

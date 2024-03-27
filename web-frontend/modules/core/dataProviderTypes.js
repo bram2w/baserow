@@ -1,5 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import { getIconForType } from '@baserow/modules/core/utils/icon'
+import _ from 'lodash'
 
 /**
  * A data provider gets data from the application context and populate the context for
@@ -143,18 +144,44 @@ export class DataProviderType extends Registerable {
     }
 
     if (schema.type === 'array') {
+      // When the current node is an array we append a new node to its children
+      // that represents the "whole" array.
+      // This is translated to '*' in the resulting formula and '[All]' in the
+      // data explorer name.
+      // The 'head' object contains all keys of the schema assigned to null
+      let fakeContent = null
+      if (schema.items.type === 'object') {
+        fakeContent = _.mapValues(schema.items.properties, () => null)
+        fakeContent = {}
+      }
+      if (schema.items.type === 'array') {
+        fakeContent = []
+      }
+
+      const head = {
+        ...this._toNode(
+          applicationContext,
+          [...pathParts, '*'],
+          fakeContent,
+          schema.items
+        ),
+        name: `[${this.app.i18n.t('common.all')}]`,
+      }
       return {
         name,
         identifier,
         icon: this.getIconForNode(schema),
-        nodes: (content || []).map((item, index) =>
-          this._toNode(
-            applicationContext,
-            [...pathParts, `${index}`],
-            item,
-            schema.items
-          )
-        ),
+        nodes: [
+          head,
+          ...(content || []).map((item, index) =>
+            this._toNode(
+              applicationContext,
+              [...pathParts, `${index}`],
+              item,
+              schema.items
+            )
+          ),
+        ],
       }
     }
 
@@ -218,7 +245,13 @@ export class DataProviderType extends Registerable {
     const [first, ...rest] = pathParts
 
     if (schemaNode.type === 'array') {
-      return this.getSchemaNode(schemaNode.items, rest)
+      const nodeSchema = this.getSchemaNode(schemaNode.items, rest)
+
+      if (pathParts.at(-1) === '*') {
+        return { ...nodeSchema, title: `[${this.app.i18n.t('common.all')}]` }
+      }
+
+      return nodeSchema
     }
 
     if (schemaNode.type === 'object') {

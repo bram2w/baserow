@@ -44,6 +44,7 @@ import containerElement from '@baserow/modules/builder/mixins/containerElement'
 import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal.vue'
 import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview.vue'
 import PageElement from '@baserow/modules/builder/components/page/PageElement.vue'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
@@ -70,11 +71,7 @@ export default {
   },
   computed: {
     submitButtonLabelResolved() {
-      try {
-        return this.resolveFormula(this.element.submit_button_label)
-      } catch (e) {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.submit_button_label))
     },
     getFormElementDescendants() {
       const descendants = this.$store.getters['element/getDescendants'](

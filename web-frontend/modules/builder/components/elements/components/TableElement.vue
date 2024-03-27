@@ -35,6 +35,7 @@ import { mapActions, mapGetters } from 'vuex'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 import _ from 'lodash'
 
 export default {
@@ -204,7 +205,9 @@ export default {
         }
       )
       try {
-        return resolveFormula(formula, this.formulaFunctions, formulaContext)
+        return ensureString(
+          resolveFormula(formula, this.formulaFunctions, formulaContext)
+        )
       } catch {
         return ''
       }

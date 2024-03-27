@@ -20,6 +20,7 @@
 
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'InputTextElement',
@@ -49,11 +50,14 @@ export default {
           return this.$t('error.requiredField')
       }
     },
+    resolvedDefaultValue() {
+      return this.resolveFormula(this.element.default_value)
+    },
     resolvedLabel() {
-      return this.resolveFormula(this.element.label)
+      return ensureString(this.resolveFormula(this.element.label))
     },
     resolvedPlaceholder() {
-      return this.resolveFormula(this.element.placeholder)
+      return ensureString(this.resolveFormula(this.element.placeholder))
     },
   },
   watch: {

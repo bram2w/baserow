@@ -23,7 +23,10 @@
 
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
-import { ensureBoolean } from '@baserow/modules/core/utils/validator'
+import {
+  ensureBoolean,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
 import ABCheckbox from '@baserow/modules/builder/components/elements/baseComponents/ABCheckbox'
 
 export default {
@@ -39,7 +42,7 @@ export default {
       }
     },
     resolvedLabel() {
-      return this.resolveFormula(this.element.label)
+      return ensureString(this.resolveFormula(this.element.label))
     },
   },
   watch: {

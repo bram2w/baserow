@@ -37,16 +37,24 @@ export const ensurePositiveInteger = (value) => {
 /**
  * Ensures that the value is a string or try to convert it.
  * @param {*} value - The value to ensure as a string.
- * @param {*} allowEmpty - Whether we should throw an error if `value` is empty.
+ * @param {Boolean} allowEmpty - Whether we should throw an error if `value` is empty.
  * @returns {string} The value as a string.
  * @throws {Error} If !allowEmpty and the `value` is empty.
  */
-export const ensureString = (value, allowEmpty = true) => {
-  if (value === null || value === undefined || value === '') {
+export const ensureString = (value, { allowEmpty = true } = {}) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (Array.isArray(value) && !value.length)
+  ) {
     if (!allowEmpty) {
       throw new Error('A valid String is required.')
     }
     return ''
+  }
+  if (Array.isArray(value)) {
+    return value.flat(Infinity).join(',')
   }
   return `${value}`
 }
@@ -57,8 +65,8 @@ export const ensureString = (value, allowEmpty = true) => {
  * @returns {string} The value as a string
  * @throws {Error} If `value` is empty.
  */
-export const ensureNonEmptyString = (value) => {
-  return ensureString(value, false)
+export const ensureNonEmptyString = (value, options) => {
+  return ensureString(value, { ...options, allowEmpty: false })
 }
 
 /**

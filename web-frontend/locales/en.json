@@ -6,7 +6,8 @@
     "none": "None",
     "free": "Free",
     "comingSoon": "Coming soon...",
-    "billable": "Billable"
+    "billable": "Billable",
+    "all": "All"
   },
   "action": {
     "upload": "Upload",

@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 /**
  * Clones the provided JavaScript object and returns that one.
  *
@@ -76,4 +78,38 @@ export function isPromise(p) {
     typeof p.then === 'function' &&
     typeof p.catch === 'function'
   )
+}
+
+/**
+ * Get the value at `path` of `obj`, similar to Lodash `get` function.
+ *
+ * @param {Object} obj The object that holds the value
+ * @param {string | Array[string]} path The path to the value or a list with the path parts
+ * @return {Object} The value held by the path
+ */
+export function getValueAtPath(obj, path) {
+  function _getValueAtPath(obj, keys) {
+    const [first, ...rest] = keys
+    if (!first) {
+      return obj
+    }
+    if (first in obj) {
+      return _getValueAtPath(obj[first], rest)
+    }
+    if (Array.isArray(obj) && first === '*') {
+      const results = obj
+        // Call recursively this function transforming the `*` in the path in a list
+        // of indexes present in the object, e.g:
+        // get(obj, "a.*.b") <=> [get(obj, "a.0.b"), get(obj, "a.1.b"), ...]
+        .map((_, index) => _getValueAtPath(obj, [index.toString(), ...rest]))
+        // Remove empty results
+        // Note: Don't exclude false values such as booleans, empty strings, etc.
+        .filter((result) => result !== null && result !== undefined)
+      // Return null in case there are no results
+      return results.length ? results : null
+    }
+    return null
+  }
+  const keys = typeof path === 'string' ? _.toPath(path) : path
+  return _getValueAtPath(obj, keys)
 }

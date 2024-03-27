@@ -1,6 +1,6 @@
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import { getValueAtPath } from '@baserow/modules/core/utils/object'
 
-import _ from 'lodash'
 import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
 
 export class DataSourceDataProviderType extends DataProviderType {
@@ -46,8 +46,8 @@ export class DataSourceDataProviderType extends DataProviderType {
     ](applicationContext.page, parseInt(dataSourceId))
 
     const content = this.getDataSourceContent(applicationContext, dataSource)
-
-    return content ? _.get(content, rest.join('.')) : null
+    const result = content ? getValueAtPath(content, rest.join('.')) : null
+    return result
   }
 
   getDataSourceContent(applicationContext, dataSource) {
@@ -162,7 +162,7 @@ export class PageParameterDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return _.get(content, path.join('.'))
+    return getValueAtPath(content, path.join('.'))
   }
 
   getDispatchContext(applicationContext) {
@@ -252,7 +252,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return _.get(content, path.join('.'))
+    return getValueAtPath(content, path.join('.'))
   }
 
   getDataContent(applicationContext) {
@@ -376,7 +376,7 @@ export class FormDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return _.get(content, path.join('')).value
+    return getValueAtPath(content, path.join('')).value
   }
 
   getDataContent(applicationContext) {
@@ -452,7 +452,7 @@ export class UserDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return _.get(content, path.join('.'))
+    return getValueAtPath(content, path.join('.'))
   }
 
   getDataContent(applicationContext) {
