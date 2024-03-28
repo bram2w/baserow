@@ -94,16 +94,11 @@
 .element-preview__name {
   @include add-elevation($elevation-low);
   @include absolute(-26px, auto, auto, 5px);
-
-  @include button-style(
-    $palette-blue-500,
-    $palette-blue-800,
-    $palette-blue-700,
-    $white,
-    $palette-blue-100
-  );
   @include rounded($rounded);
 
+  background-color: $palette-blue-500;
+  color: $white;
+  cursor: default;
   padding: 3px 6px;
   z-index: 1;
 
