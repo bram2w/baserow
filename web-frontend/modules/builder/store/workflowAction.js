@@ -13,6 +13,7 @@ export function populateWorkflowAction(workflowAction) {
     ...workflowAction,
     _: {
       loading: false,
+      dispatching: false,
     },
   }
 }
@@ -60,6 +61,9 @@ const mutations = {
   },
   SET_LOADING(state, { workflowAction, value }) {
     workflowAction._.loading = value
+  },
+  SET_DISPATCHING(state, { workflowAction, isDispatching }) {
+    workflowAction._.dispatching = isDispatching
   },
 }
 
@@ -215,6 +219,9 @@ const actions = {
       throw error
     }
   },
+  setDispatching({ commit }, { workflowAction, isDispatching }) {
+    commit('SET_DISPATCHING', { workflowAction, isDispatching })
+  },
 }
 
 const getters = {
@@ -228,6 +235,9 @@ const getters = {
   },
   getLoading: (state) => (workflowAction) => {
     return workflowAction._?.loading
+  },
+  getDispatching: (state) => (workflowAction) => {
+    return workflowAction._?.dispatching
   },
 }
 
