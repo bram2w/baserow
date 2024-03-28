@@ -16,12 +16,15 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      workflowActionsInProgress: false,
-    }
-  },
   computed: {
+    workflowActionsInProgress() {
+      const workflowActions = this.$store.getters[
+        'workflowAction/getElementWorkflowActions'
+      ](this.page, this.element.id)
+      return workflowActions.some((workflowAction) =>
+        this.$store.getters['workflowAction/getDispatching'](workflowAction)
+      )
+    },
     elementType() {
       return this.$registry.get('element', this.element.type)
     },
@@ -77,7 +80,9 @@ export default {
     },
     async fireEvent(EventType) {
       if (this.mode !== 'editing') {
-        this.workflowActionsInProgress = true
+        if (this.workflowActionsInProgress) {
+          return false
+        }
 
         const workflowActions = this.$store.getters[
           'workflowAction/getElementWorkflowActions'
@@ -113,8 +118,6 @@ export default {
             message: toastMessage,
           })
         }
-
-        this.workflowActionsInProgress = false
       }
     },
     fireClickEvent() {

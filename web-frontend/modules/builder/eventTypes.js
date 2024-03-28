@@ -32,12 +32,25 @@ export class Event {
         workflowAction.type
       )
 
-      additionalContext[workflowAction.id] = await workflowActionType.execute({
+      this.store.dispatch('workflowAction/setDispatching', {
         workflowAction,
-        additionalContext,
-        applicationContext,
-        resolveFormula,
+        isDispatching: true,
       })
+      try {
+        additionalContext[workflowAction.id] = await workflowActionType.execute(
+          {
+            workflowAction,
+            additionalContext,
+            applicationContext,
+            resolveFormula,
+          }
+        )
+      } finally {
+        this.store.dispatch('workflowAction/setDispatching', {
+          workflowAction,
+          isDispatching: false,
+        })
+      }
     }
   }
 }

@@ -29,7 +29,10 @@
       </template>
     </div>
     <div class="form-container-element__submit-button margin-top-2">
-      <ABButton @click="validateAndSubmitEvent">
+      <ABButton
+        :loading="workflowActionsInProgress"
+        @click="validateAndSubmitEvent"
+      >
         {{ submitButtonLabelResolved || $t('buttonElement.noValue') }}
       </ABButton>
     </div>

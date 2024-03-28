@@ -9,11 +9,6 @@ import {
 export default {
   inject: ['builder', 'page', 'mode'],
   mixins: [form],
-  data() {
-    return {
-      workflowActionsInProgress: false,
-    }
-  },
   computed: {
     colorVariables() {
       return themeToColorVariables(this.builder.theme)

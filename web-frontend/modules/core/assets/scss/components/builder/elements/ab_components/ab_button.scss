@@ -10,11 +10,6 @@
   text-decoration: none;
   @include rounded($rounded);
 
-  &:hover {
-    filter: brightness(1.3);
-    text-decoration: none;
-  }
-
   &--full-width {
     width: 100%;
   }
@@ -52,6 +47,11 @@
 
   .element--alignment-horizontal-right & {
     text-align: right;
+  }
+
+  &:not(.loading-spinner):hover {
+    filter: brightness(1.3);
+    text-decoration: none;
   }
 
   &[disabled],

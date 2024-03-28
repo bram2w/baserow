@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Improved upon loading states for elements which can dispatch a workflow action.",
+    "issue_number": 2449,
+    "bullet_points": [],
+    "created_at": "2024-03-28"
+}
