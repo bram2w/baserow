@@ -305,7 +305,7 @@ def load_test_data():
                 for index, field in enumerate(fields)
             ]
         )
-        table_element.fields.clear()
+        table_element.fields.all().delete()
         table_element.fields.add(*created_fields)
 
         ElementHandler().create_element(

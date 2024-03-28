@@ -163,12 +163,34 @@ def test_update_table_element_with_fields(data_fixture):
 
     table_element.refresh_from_db()
 
-    fields = list(table_element.fields.all())
+    fields = list(CollectionField.objects.all())
 
     assert len(fields) == 2
 
     fields[0].name == "New field 1"
     fields[1].name == "New field 2"
+
+    ElementService().update_element(
+        user,
+        table_element,
+        fields=[
+            {
+                "name": "New field 3",
+                "type": "text",
+                "config": {"value": "get('test3')"},
+            },
+            {
+                "name": "New field 4",
+                "type": "text",
+                "config": {"value": "get('test4')"},
+            },
+        ],
+    )
+
+    fields = list(CollectionField.objects.all())
+
+    # Check that we keep the same field count in db after a second update
+    assert len(fields) == 2
 
 
 @pytest.mark.django_db

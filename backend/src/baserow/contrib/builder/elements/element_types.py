@@ -232,7 +232,7 @@ class CollectionElementType(ElementType, ABC):
     def after_update(self, instance, values):
         if "fields" in values:
             # Remove previous fields
-            instance.fields.clear()
+            instance.fields.all().delete()
 
             created_fields = CollectionField.objects.bulk_create(
                 [
