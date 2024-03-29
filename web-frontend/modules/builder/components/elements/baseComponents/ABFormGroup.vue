@@ -37,11 +37,6 @@ export default {
       required: false,
       default: null,
     },
-    isInError: {
-      type: Boolean,
-      required: false,
-      default: null,
-    },
     label: {
       type: String,
       required: false,
@@ -70,7 +65,7 @@ export default {
   },
   computed: {
     hasError() {
-      return this.isInError !== null ? this.isInError : Boolean(this.error)
+      return Boolean(this.errorMessage)
     },
   },
 }

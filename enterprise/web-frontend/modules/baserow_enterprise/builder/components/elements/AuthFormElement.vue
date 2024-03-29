@@ -131,55 +131,55 @@ export default {
     }),
     async onLogin(event) {
       if (this.isAuthenticated) {
-        this.$store.dispatch('userSourceUser/logoff')
-      } else {
-        this.$v.$touch()
-        if (this.$v.$invalid) {
-          this.focusOnFirstError()
-          return
-        }
-        this.loading = true
-        this.hideError()
-        try {
-          await this.$store.dispatch('userSourceUser/authenticate', {
-            userSource: this.selectedUserSource,
-            credentials: {
-              email: this.values.email,
-              password: this.values.password,
-            },
-            setCookie: this.mode === 'public',
-          })
-          this.values.password = ''
-          this.values.email = ''
-          this.$v.$reset()
-          this.fireAfterLoginEvent()
-        } catch (error) {
-          if (error.handler) {
-            const response = error.handler.response
-            if (response && response.status === 401) {
-              this.values.password = ''
-              this.$v.$reset()
-              this.$v.$touch()
-              this.$refs.passwordRef.focus()
-
-              if (response.data?.error === 'ERROR_INVALID_CREDENTIALS') {
-                this.showError(
-                  this.$t('error.incorrectCredentialTitle'),
-                  this.$t('error.incorrectCredentialMessage')
-                )
-              }
-            } else {
-              const message = error.handler.getMessage('login')
-              this.showError(message)
-            }
-
-            error.handler.handled()
-          } else {
-            throw error
-          }
-        }
-        this.loading = false
+        await this.$store.dispatch('userSourceUser/logoff')
       }
+
+      this.$v.$touch()
+      if (this.$v.$invalid) {
+        this.focusOnFirstError()
+        return
+      }
+      this.loading = true
+      this.hideError()
+      try {
+        await this.$store.dispatch('userSourceUser/authenticate', {
+          userSource: this.selectedUserSource,
+          credentials: {
+            email: this.values.email,
+            password: this.values.password,
+          },
+          setCookie: this.mode === 'public',
+        })
+        this.values.password = ''
+        this.values.email = ''
+        this.$v.$reset()
+        this.fireAfterLoginEvent()
+      } catch (error) {
+        if (error.handler) {
+          const response = error.handler.response
+          if (response && response.status === 401) {
+            this.values.password = ''
+            this.$v.$reset()
+            this.$v.$touch()
+            this.$refs.passwordRef.focus()
+
+            if (response.data?.error === 'ERROR_INVALID_CREDENTIALS') {
+              this.showError(
+                this.$t('error.incorrectCredentialTitle'),
+                this.$t('error.incorrectCredentialMessage')
+              )
+            }
+          } else {
+            const message = error.handler.getMessage('login')
+            this.showError(message)
+          }
+
+          error.handler.handled()
+        } else {
+          throw error
+        }
+      }
+      this.loading = false
     },
   },
   validations: {

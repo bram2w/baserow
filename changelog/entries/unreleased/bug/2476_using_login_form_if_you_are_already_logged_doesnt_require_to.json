@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Using login form if you are already logged doesn't require to click twice on the button anymore",
+    "issue_number": 2476,
+    "bullet_points": [],
+    "created_at": "2024-03-28"
+}
