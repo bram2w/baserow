@@ -25,6 +25,9 @@ export default {
         !this.isEditMode
       )
     },
+    errorMessage() {
+      return this.displayFormDataError ? this.getErrorMessage() : ''
+    },
     formElementTouched() {
       return this.$store.getters['formData/getElementTouched'](
         this.page,
@@ -80,6 +83,10 @@ export default {
         wasTouched: true,
         elementId: this.element.id,
       })
+    },
+    /** Override this method to display the right error message */
+    getErrorMessage() {
+      return ''
     },
   },
   watch: {

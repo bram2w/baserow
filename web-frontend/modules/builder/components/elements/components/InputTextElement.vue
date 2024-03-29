@@ -2,8 +2,7 @@
   <div>
     <ABFormGroup
       :label="resolvedLabel"
-      :is-in-error="displayFormDataError"
-      :error-message="errorForValidationType"
+      :error-message="errorMessage"
       :autocomplete="isEditMode ? 'off' : ''"
       :required="element.required"
     >
@@ -40,16 +39,6 @@ export default {
     },
   },
   computed: {
-    errorForValidationType() {
-      switch (this.element.validation_type) {
-        case 'integer':
-          return this.$t('error.invalidNumber')
-        case 'email':
-          return this.$t('error.invalidEmail')
-        default:
-          return this.$t('error.requiredField')
-      }
-    },
     resolvedDefaultValue() {
       return this.resolveFormula(this.element.default_value)
     },
@@ -66,6 +55,18 @@ export default {
         this.inputValue = value
       },
       immediate: true,
+    },
+  },
+  methods: {
+    getErrorMessage() {
+      switch (this.element.validation_type) {
+        case 'integer':
+          return this.$t('error.invalidNumber')
+        case 'email':
+          return this.$t('error.invalidEmail')
+        default:
+          return this.$t('error.requiredField')
+      }
     },
   },
 }
