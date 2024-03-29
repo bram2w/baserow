@@ -23,7 +23,7 @@
       <div v-if="!loaded && loading" class="loading-absolute-center" />
       <div v-else>
         <div class="row-comments">
-          <div v-if="totalCount === 0" class="row-comments__empty">
+          <div v-if="currentCount === 0" class="row-comments__empty">
             <i class="row-comments__empty-icon iconoir-multi-bubble"></i>
             <div class="row-comments__empty-text">
               <template
