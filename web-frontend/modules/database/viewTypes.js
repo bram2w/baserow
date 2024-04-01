@@ -13,6 +13,7 @@ import {
   isAdhocSorting,
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 export const maxPossibleOrderValue = 32767
 
 export class ViewType extends Registerable {
@@ -469,7 +470,13 @@ export class GridViewType extends ViewType {
   shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
     const searchTerm =
       store.getters[storePrefix + 'view/grid/getActiveSearchTerm']
-    return newFieldMatchesActiveSearchTerm(registry, field, searchTerm)
+    const searchMode = getDefaultSearchModeFromEnv(this.app.$config)
+    return newFieldMatchesActiveSearchTerm(
+      searchMode,
+      registry,
+      field,
+      searchTerm
+    )
   }
 
   async afterFieldCreated(
@@ -709,7 +716,13 @@ class BaseBufferedRowView extends ViewType {
       store.getters[
         storePrefix + 'view/' + this.getType() + '/getActiveSearchTerm'
       ]
-    return newFieldMatchesActiveSearchTerm(registry, field, searchTerm)
+    const searchMode = getDefaultSearchModeFromEnv(this.app.$config)
+    return newFieldMatchesActiveSearchTerm(
+      searchMode,
+      registry,
+      field,
+      searchTerm
+    )
   }
 
   async afterFieldCreated(
