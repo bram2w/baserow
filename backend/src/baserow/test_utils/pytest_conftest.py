@@ -412,7 +412,7 @@ def group_compat_timebomb():
     if now() >= GROUP_DEPRECATION:
         pytest.fail(
             "Group compatibility ended on "
-            f"{GROUP_DEPRECATION.strftime('%Y-%m-%d')}, please migrate to"
+            f"{GROUP_DEPRECATION.strftime('%Y-%m-%d')}, please migrate to "
             "using the Workspace endpoints."
         )
 
