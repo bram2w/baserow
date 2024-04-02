@@ -120,7 +120,8 @@
     "singleSelectDropdown": "Dropdown",
     "singleSelectRadios": "Radios",
     "autonumber": "Autonumber",
-    "password": "Password"
+    "password": "Password",
+    "ai": "AI prompt"
   },
   "fieldErrors": {
     "invalidNumber": "Invalid number",
@@ -311,13 +312,16 @@
     "disabledPasswordProviderMessage": "Please use another authentication provider.",
     "maxLocksPerTransactionExceededTitle": "PostgreSQL issue detected",
     "maxLocksPerTransactionExceededDescription": "Baserow attempted to permanently delete the trashed items, but exceeded the available locks specified in `max_locks_per_transaction`.",
-    "disabledPasswordProviderMessage": "Please use another authentication provider.",
     "lastAdminTitle": "Can't remove last workspace admin",
     "lastAdminMessage": "A workspace has to have at least one admin.",
     "adminAlreadyExistsTitle": "Can't use that username",
     "adminAlreadyExistsDescription": "That username can't be used because it already exists.",
     "cannotCreateFieldTypeTitle": "Can't create field",
-    "cannotCreateFieldTypeDescription": "The requested field type cannot be created at the moment. It might be just a temporary problem with older tables. Please try again later."
+    "cannotCreateFieldTypeDescription": "The requested field type cannot be created at the moment. It might be just a temporary problem with older tables. Please try again later.",
+    "generativeAIDoesNotExistTitle": "Generative AI does not exist",
+    "generativeAIDoesNotExistDescription": "The generative AI model does not exist.",
+    "modelDoesNotBelongToTypeTitle": "The selected model does not belong to the AI Type",
+    "modelDoesNotBelongToTypeDescription": "The selected model does not belong to the selected AI type."
   },
   "importerType": {
     "csv": "Import a CSV file",

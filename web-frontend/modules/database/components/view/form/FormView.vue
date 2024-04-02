@@ -6,6 +6,7 @@
       :view="view"
       :fields="disabledFields"
       :enabled-fields="enabledFields"
+      :all-fields-in-table="fields"
       :read-only="
         readOnly ||
         !$hasPermission(

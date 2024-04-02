@@ -32,6 +32,7 @@ import {
   UUIDFieldType,
   AutonumberFieldType,
   PasswordFieldType,
+  AIFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -257,6 +258,7 @@ import {
   FormSubmittedNotificationType,
 } from '@baserow/modules/database/notificationTypes'
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
+import { FieldsDataProviderType } from '@baserow/modules/database/dataProviderTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -465,6 +467,7 @@ export default (context) => {
   app.$registry.register('field', new UUIDFieldType(context))
   app.$registry.register('field', new AutonumberFieldType(context))
   app.$registry.register('field', new PasswordFieldType(context))
+  app.$registry.register('field', new AIFieldType(context))
 
   app.$registry.register('importer', new CSVImporterType(context))
   app.$registry.register('importer', new PasteImporterType(context))
@@ -708,6 +711,11 @@ export default (context) => {
   )
 
   app.$registry.register('formViewMode', new FormViewFormModeType(context))
+
+  app.$registry.register(
+    'databaseDataProvider',
+    new FieldsDataProviderType(context)
+  )
 
   // notifications
   app.$registry.register(

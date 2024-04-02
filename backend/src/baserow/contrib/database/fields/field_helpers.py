@@ -235,6 +235,14 @@ def construct_all_possible_field_kwargs(
         "uuid": [{"name": "uuid"}],
         "autonumber": [{"name": "autonumber"}],
         "password": [{"name": "password"}],
+        "ai": [
+            {
+                "name": "ai",
+                "ai_generative_ai_type": "test_generative_ai",
+                "ai_generative_ai_model": "test_1",
+                "ai_prompt": "Who are you?",
+            }
+        ],
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs

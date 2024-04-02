@@ -44,6 +44,7 @@
       :database="database"
       :table="table"
       :sortable="false"
+      :all-fields-in-table="allFields"
       :visible-fields="allFields"
       :can-modify-fields="false"
       @created="createRow"

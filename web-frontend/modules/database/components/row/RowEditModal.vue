@@ -53,6 +53,7 @@
         :view="view"
         :table="table"
         :database="database"
+        :all-fields-in-table="allFieldsInTable"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @order-fields="$emit('order-fields', $event)"
@@ -77,6 +78,7 @@
           :view="view"
           :table="table"
           :database="database"
+          :all-fields-in-table="allFieldsInTable"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
@@ -109,6 +111,7 @@
           ref="createFieldContext"
           :table="table"
           :view="view"
+          :all-fields-in-table="allFieldsInTable"
           @field-created="$emit('field-created', $event)"
         ></CreateFieldContext>
       </div>
@@ -118,7 +121,7 @@
         :row="row"
         :table="table"
         :database="database"
-        :fields="fields"
+        :fields="allFieldsInTable"
         :read-only="readOnly"
       ></RowEditModalSidebar>
     </template>
@@ -157,7 +160,7 @@ export default {
       required: false,
       default: null,
     },
-    fields: {
+    allFieldsInTable: {
       type: Array,
       required: true,
     },

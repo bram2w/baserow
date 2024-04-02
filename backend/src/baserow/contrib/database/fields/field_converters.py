@@ -10,15 +10,18 @@ from baserow.contrib.database.db.schema import (
 )
 
 from .models import (
+    AIField,
     AutonumberField,
     FileField,
     FormulaField,
     LinkRowField,
+    LongTextField,
     MultipleCollaboratorsField,
     MultipleSelectField,
     PasswordField,
     SelectOption,
     SingleSelectField,
+    TextField,
 )
 from .registries import FieldConverter, field_type_registry
 
@@ -72,6 +75,16 @@ class PasswordFieldConverter(RecreateFieldConverter):
         from_password = isinstance(from_field, PasswordField)
         to_password = isinstance(to_field, PasswordField)
         return to_password or from_password
+
+
+class AIFieldConverter(RecreateFieldConverter):
+    type = "ai"
+
+    def is_applicable(self, from_model, from_field, to_field):
+        from_ai = isinstance(from_field, AIField)
+        to_ai = isinstance(to_field, AIField)
+        to_text_fields = isinstance(to_field, (TextField, LongTextField))
+        return from_ai and not (to_text_fields or to_ai) or not from_ai and to_ai
 
 
 class LinkRowFieldConverter(RecreateFieldConverter):

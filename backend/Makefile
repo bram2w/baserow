@@ -21,7 +21,7 @@ format:
 fix: sort format
 
 sort:
-	isort --skip generated  src tests ../premium/backend ../enterprise/backend || exit;
+	isort --skip generated --overwrite-in-place src tests ../premium/backend ../enterprise/backend || exit;
 
 test:
 	pytest tests ../premium/backend/tests ../enterprise/backend/tests || exit;

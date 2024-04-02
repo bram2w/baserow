@@ -162,6 +162,7 @@ class DatabaseConfig(AppConfig):
         plugin_registry.register(DatabasePlugin())
 
         from .fields.field_types import (
+            AIFieldType,
             AutonumberFieldType,
             BooleanFieldType,
             CountFieldType,
@@ -216,8 +217,10 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(UUIDFieldType())
         field_type_registry.register(AutonumberFieldType())
         field_type_registry.register(PasswordFieldType())
+        field_type_registry.register(AIFieldType())
 
         from .fields.field_converters import (
+            AIFieldConverter,
             AutonumberFieldConverter,
             FileFieldConverter,
             FormulaFieldConverter,
@@ -244,6 +247,7 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(FormulaFieldConverter())
         field_converter_registry.register(AutonumberFieldConverter())
         field_converter_registry.register(PasswordFieldConverter())
+        field_converter_registry.register(AIFieldConverter())
 
         from .fields.actions import (
             CreateFieldActionType,
@@ -725,6 +729,16 @@ class DatabaseConfig(AppConfig):
         from .tokens.subjects import TokenSubjectType
 
         subject_type_registry.register(TokenSubjectType())
+
+        from baserow.contrib.database.data_providers.registries import (
+            database_data_provider_type_registry,
+        )
+
+        from .rows.data_providers import HumanReadableFieldsDataProviderType
+
+        database_data_provider_type_registry.register(
+            HumanReadableFieldsDataProviderType()
+        )
 
         # notification_types
         from baserow.contrib.database.fields.notification_types import (

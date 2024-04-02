@@ -1,7 +1,7 @@
 <template>
   <div>
     <FieldSelectThroughFieldSubForm
-      :fields="fields"
+      :fields="allFieldsInTable"
       :database="database"
       :default-values="defaultValues"
       @input="selectedThroughField = $event"
@@ -43,6 +43,7 @@
         :formula-type="targetFieldFormulaType"
         :table="table"
         :view="view"
+        :all-fields-in-table="allFieldsInTable"
       >
       </FormulaTypeSubForms>
     </template>
@@ -53,7 +54,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
@@ -99,12 +99,6 @@ export default {
         (f) => f.isRollupCompatible()
       )
     },
-    ...mapGetters({
-      // This part might fail in the future because we can't 100% depend on that the
-      // fields in the store are related to the component that renders this. An example
-      // is if you edit the field type in a row edit modal of a related table.
-      fields: 'field/getAll',
-    }),
   },
   validations: {
     values: {

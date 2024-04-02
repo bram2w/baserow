@@ -26,6 +26,7 @@ from baserow.contrib.database.table.constants import (
     MULTIPLE_SELECT_THROUGH_TABLE_PREFIX,
     get_tsv_vector_field_name,
 )
+from baserow.core.formula.field import FormulaField as ModelFormulaField
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
     JobWithUserIpAddress,
@@ -738,6 +739,12 @@ class AutonumberField(Field):
 
 class PasswordField(Field):
     pass
+
+
+class AIField(Field):
+    ai_generative_ai_type = models.CharField(max_length=32, null=True)
+    ai_generative_ai_model = models.CharField(max_length=32, null=True)
+    ai_prompt = ModelFormulaField(default="")
 
 
 class DuplicateFieldJob(

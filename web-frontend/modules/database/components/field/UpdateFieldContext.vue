@@ -11,6 +11,7 @@
       :view="view"
       :default-values="field"
       :primary="field.primary"
+      :all-fields-in-table="allFieldsInTable"
       @submitted="submit"
     >
       <div
@@ -23,7 +24,7 @@
           type="submit"
           class="button"
           :class="{ 'button--loading': loading }"
-          :disabled="loading"
+          :disabled="loading || fieldTypeDisabled"
         >
           {{ $t('action.save') }}
         </button>
@@ -54,11 +55,20 @@ export default {
       type: Object,
       required: true,
     },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
       loading: false,
     }
+  },
+  computed: {
+    fieldTypeDisabled() {
+      return !this.$registry.get('field', this.field.type).isEnabled()
+    },
   },
   watch: {
     field() {

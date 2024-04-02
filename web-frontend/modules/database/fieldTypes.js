@@ -30,6 +30,7 @@ import FieldLinkRowSubForm from '@baserow/modules/database/components/field/Fiel
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 import FieldCollaboratorSubForm from '@baserow/modules/database/components/field/FieldCollaboratorSubForm'
 import FieldPasswordSubForm from '@baserow/modules/database/components/field/FieldPasswordSubForm'
+import FieldAISubForm from '@baserow/modules/database/components/field/FieldAISubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
@@ -52,6 +53,7 @@ import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
 import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
 import GridViewFieldPassword from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPassword'
+import GridViewFieldAI from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAI'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
@@ -72,6 +74,7 @@ import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/vi
 import FunctionalGridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber'
 import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
 import FunctionalGridVIewFieldPassword from '@baserow/modules/database/components/view/grid/fields/FunctionalGridVIewFieldPassword.vue'
+import FunctionalGridViewFieldAI from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAI'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -94,6 +97,7 @@ import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldAutonumber from '@baserow/modules/database/components/row/RowEditFieldAutonumber'
 import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
 import RowEditFieldPassword from '@baserow/modules/database/components/row/RowEditFieldPassword'
+import RowEditFieldAI from '@baserow/modules/database/components/row/RowEditFieldAI'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -133,6 +137,8 @@ import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
 import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
 import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
+
+import GridViewFieldAIGenerateValuesContextItem from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAIGenerateValuesContextItem'
 
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
@@ -195,6 +201,16 @@ export class FieldType extends Registerable {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
+  }
+
+  /**
+   * This method generates the context menu options for actions that can be performed on
+   * more selected cells within the same field. These options appear in the grid view
+   * when the user right-clicks on multiple cells.
+   * @param field The field object.
+   */
+  getGridViewContextItemsOnCellsSelection(field) {
+    return []
   }
 
   /**
@@ -755,6 +771,13 @@ export class FieldType extends Registerable {
    */
   parseInputValue(field, value) {
     return value
+  }
+
+  /**
+   * Indicates whether it's possible to select the field type when creating or updating the field.
+   */
+  isEnabled() {
+    return true
   }
 }
 
@@ -4135,5 +4158,90 @@ export class PasswordFieldType extends FieldType {
 
   getRowHistoryEntryComponent() {
     return RowHistoryFieldPassword
+  }
+}
+
+export class AIFieldType extends FieldType {
+  static getType() {
+    return 'ai'
+  }
+
+  getIconClass() {
+    return 'iconoir-magic-wand'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.ai')
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldAI
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldAI
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldAI
+  }
+
+  getCardComponent() {
+    return RowCardFieldText
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
+  }
+
+  getFormComponent() {
+    return FieldAISubForm
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getEmptyValue(field) {
+    return null
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return collatedStringCompare(stringA, stringB, order)
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return '@TODO'
+  }
+
+  getDocsRequestExample(field) {
+    return 'string'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
+  getGridViewContextItemsOnCellsSelection(field) {
+    return [GridViewFieldAIGenerateValuesContextItem]
+  }
+
+  isEnabled() {
+    const { store } = this.app
+    return Object.keys(store.getters['settings/get'].generative_ai).length > 0
   }
 }

@@ -20,6 +20,7 @@
       :table="table"
       :view="view"
       :field="field"
+      :all-fields-in-table="allFieldsInTable"
       @update="$emit('field-updated', $event)"
       @delete="$emit('field-deleted')"
     >
@@ -43,6 +44,7 @@
       :field="field"
       :value="row['field_' + field.id]"
       :read-only="readOnly"
+      :row-is-created="!!row.id"
       @update="update"
       @refresh-row="$emit('refresh-row', row)"
     />
@@ -99,6 +101,15 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
+    },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
+    rowIsCreated: {
+      type: Boolean,
+      required: false,
+      default: () => true,
     },
   },
   methods: {

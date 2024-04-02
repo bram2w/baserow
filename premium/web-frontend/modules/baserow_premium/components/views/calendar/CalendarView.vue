@@ -20,6 +20,7 @@
       :visible-fields="visibleCardFields"
       :hidden-fields="hiddenFields"
       :show-hidden-fields="showHiddenFieldsInRowModal"
+      :all-fields-in-table="fields"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
       "
@@ -35,7 +36,7 @@
       :database="database"
       :table="table"
       :view="view"
-      :fields="fields"
+      :all-fields-in-table="fields"
       :primary-is-sortable="false"
       :visible-fields="visibleCardFields"
       :hidden-fields="hiddenFields"

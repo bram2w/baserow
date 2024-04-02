@@ -40,6 +40,7 @@
         :formula-type="formulaType"
         :table="table"
         :view="view"
+        :all-fields-in-table="allFieldsInTable"
       >
       </FormulaTypeSubForms>
     </template>

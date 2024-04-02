@@ -296,6 +296,17 @@ class CoreConfig(AppConfig):
         )
         notification_type_registry.register(BaserowVersionUpgradeNotificationType())
 
+        from baserow.core.generative_ai.generative_ai_models import (
+            OllamaGenerativeAIModelType,
+            OpenAIGenerativeAIModelType,
+        )
+        from baserow.core.generative_ai.registries import (
+            generative_ai_model_type_registry,
+        )
+
+        generative_ai_model_type_registry.register(OpenAIGenerativeAIModelType())
+        generative_ai_model_type_registry.register(OllamaGenerativeAIModelType())
+
         # Must import the Posthog signal, otherwise it won't work.
         import baserow.core.posthog  # noqa: F403, F401
 

@@ -9,6 +9,7 @@
       :view="view"
       :loading="refreshingFormula"
       :formula-type-refresh-needed="formulaTypeRefreshNeeded"
+      :all-fields-in-table="allFieldsInTable"
       @open-advanced-context="
         $refs.advancedFormulaEditContext.openContext($event)
       "
@@ -30,7 +31,6 @@
 
 <script>
 import { required } from 'vuelidate/lib/validators'
-import { mapGetters } from 'vuex'
 
 import form from '@baserow/modules/core/mixins/form'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -69,9 +69,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      rawFields: 'field/getAll',
-    }),
     localOrServerFormulaType() {
       return (
         this.mergedTypeOptions.array_formula_type ||
@@ -79,7 +76,7 @@ export default {
       )
     },
     fieldsUsableInFormula() {
-      return this.rawFields.filter((f) => {
+      return this.allFieldsInTable.filter((f) => {
         const isNotThisField = f.id !== this.defaultValues.id
         const canBeReferencedByFormulaField = this.$registry
           .get('field', f.type)

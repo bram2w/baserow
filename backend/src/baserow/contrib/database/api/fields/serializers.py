@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import Optional
 
+from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.utils.functional import lazy
@@ -319,3 +320,14 @@ class PasswordSerializer(serializers.CharField):
             return None
 
         return make_password(data)
+
+
+class GenerateAIFieldValueViewSerializer(serializers.Serializer):
+    row_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        max_length=settings.BATCH_ROWS_SIZE_LIMIT,
+        help_text="The ids of the rows that the values should be generated for.",
+    )
+
+    def to_internal_value(self, data):
+        return super().to_internal_value(data)

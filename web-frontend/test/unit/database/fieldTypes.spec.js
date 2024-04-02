@@ -333,6 +333,15 @@ const mockedFields = {
     type: 'password',
     testingRowData: [null, true, 'test'],
   },
+  ai: {
+    id: 26,
+    name: 'ai',
+    order: 26,
+    primary: false,
+    table_id: 42,
+    type: 'ai',
+    testingRowData: [null, 'Generated: hello!'],
+  },
 }
 
 const valuesToCall = [null, undefined]

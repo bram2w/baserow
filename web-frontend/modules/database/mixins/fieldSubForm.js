@@ -15,6 +15,9 @@ export default {
     },
     primary: {
       type: Boolean,
+    },
+    allFieldsInTable: {
+      type: Array,
       required: true,
     },
   },

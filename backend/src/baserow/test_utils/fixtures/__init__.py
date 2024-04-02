@@ -9,6 +9,7 @@ from .domain import DomainFixtures
 from .element import ElementFixtures
 from .field import FieldFixtures
 from .file_import import FileImportFixtures
+from .generative_ai import GenerativeAIFixtures
 from .integration import IntegrationFixtures
 from .job import JobFixtures
 from .notifications import NotificationsFixture
@@ -59,6 +60,7 @@ class Fixtures(
     UserSourceFixtures,
     AppAuthProviderFixtures,
     UserSourceUserFixtures,
+    GenerativeAIFixtures,
 ):
     def __init__(self, fake=None):
         self.fake = fake

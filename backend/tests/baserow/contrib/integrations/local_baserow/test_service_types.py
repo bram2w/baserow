@@ -1724,6 +1724,13 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "boolean",
         },
+        field_db_column_by_name["ai"]: {
+            "title": "ai",
+            "default": None,
+            "original_type": "ai",
+            "metadata": {},
+            "type": "string",
+        },
         "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 

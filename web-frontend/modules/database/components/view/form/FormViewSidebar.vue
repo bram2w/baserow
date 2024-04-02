@@ -68,6 +68,7 @@
           ref="createFieldContext"
           :table="table"
           :view="view"
+          :all-fields-in-table="allFieldsInTable"
           @field-created="$event.callback()"
         ></CreateFieldContext>
       </div>
@@ -121,6 +122,10 @@ export default {
     },
     readOnly: {
       type: Boolean,
+      required: true,
+    },
+    allFieldsInTable: {
+      type: Array,
       required: true,
     },
   },

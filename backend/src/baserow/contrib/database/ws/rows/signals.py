@@ -7,11 +7,19 @@ from baserow.contrib.database.api.rows.serializers import (
     RowHistorySerializer,
     RowSerializer,
     get_row_serializer_class,
+    serialize_rows_for_response,
 )
 from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.ws.registries import page_registry
+
+
+@receiver(row_signals.before_rows_update)
+def serialize_rows_values(
+    sender, rows, user, table, model, updated_field_ids, **kwargs
+):
+    return serialize_rows_for_response(rows, model)
 
 
 @receiver(row_signals.rows_created)
@@ -57,10 +65,10 @@ def rows_updated(
     model,
     before_return,
     updated_field_ids,
-    before_rows_values,
     **kwargs,
 ):
     table_page_type = page_registry.get("table")
+    before_rows_values = dict(before_return)[serialize_rows_values]
     transaction.on_commit(
         lambda: table_page_type.broadcast(
             RealtimeRowMessages.rows_updated(
@@ -73,6 +81,26 @@ def rows_updated(
                     user, table, [row.id for row in rows]
                 ),
             ),
+            getattr(user, "web_socket_id", None),
+            table_id=table.id,
+        )
+    )
+
+
+@receiver(row_signals.rows_ai_values_generation_error)
+def rows_ai_values_generation_error(
+    sender, user, rows, field, table, error_message, **kwargs
+):
+    table_page_type = page_registry.get("table")
+    transaction.on_commit(
+        lambda: table_page_type.broadcast(
+            {
+                "type": "rows_ai_values_generation_error",
+                "field_id": field.id,
+                "table_id": table.id,
+                "row_ids": [row.id for row in rows],
+                "error": error_message,
+            },
             getattr(user, "web_socket_id", None),
             table_id=table.id,
         )

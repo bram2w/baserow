@@ -177,7 +177,6 @@ def notify_users_added_to_row_when_rows_updated(
     model,
     before_return,
     updated_field_ids,
-    before_rows_values,
     m2m_change_tracker=None,
     **kwargs
 ):
