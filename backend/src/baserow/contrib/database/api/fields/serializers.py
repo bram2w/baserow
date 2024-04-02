@@ -129,15 +129,12 @@ class LinkRowValueSerializer(serializers.Serializer):
         read_only=True,
         help_text="The unique identifier of the row in the related table.",
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["value"] = serializers.CharField(
-            help_text="The primary field's value as a string of the row in the "
-            "related table.",
-            required=False,
-            source="*",
-        )
+    value = serializers.CharField(
+        help_text="The primary field's value as a string of the row in the "
+        "related table.",
+        required=False,
+        source="*",
+    )
 
 
 class FileFieldRequestSerializer(serializers.Serializer):

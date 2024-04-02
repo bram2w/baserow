@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Allow selecting the value property for linked tables field. It also fixes the data schema icons for File fields\"",
+    "issue_number": 2402,
+    "bullet_points": [],
+    "created_at": "2024-03-28"
+}
