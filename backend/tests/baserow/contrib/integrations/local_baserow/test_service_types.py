@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
@@ -13,6 +15,7 @@ from rest_framework.fields import (
     DecimalField,
     FloatField,
     IntegerField,
+    SerializerMethodField,
     UUIDField,
 )
 from rest_framework.serializers import ListSerializer, Serializer
@@ -1386,7 +1389,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["self_link_row"]: {
@@ -1397,7 +1403,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["link_row_without_related"]: {
@@ -1408,7 +1417,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["decimal_link_row"]: {
@@ -1419,7 +1431,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["file_link_row"]: {
@@ -1430,7 +1445,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["file"]: {
@@ -1442,7 +1460,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "items": {
                 "type": "object",
                 "properties": {
-                    "url": {"title": "url", "type": None},
+                    "url": {"title": "url", "type": "string"},
                     "thumbnails": {"title": "thumbnails", "type": None},
                     "visible_name": {"title": "visible_name", "type": "string"},
                     "name": {"title": "name", "type": "string"},
@@ -1746,8 +1764,31 @@ def test_guess_type_for_response_serialize_field_permutations():
         "type": "array",
         "items": TYPE_OBJECT,
     }
+    TYPE_OBJECT_FROM_METHOD_SERIALIZER = {
+        "type": "object",
+        "properties": {
+            "answer": {"title": "answer", "type": "number"},
+            "url": {"title": "url", "type": "string"},
+        },
+    }
+
     cls = LocalBaserowServiceType
     cls.model_class = Mock()
+
+    class FakeSerializer(Serializer):
+        """Dummy serializer for testing method serializers that use OpenAPI types."""
+
+        answer = SerializerMethodField()
+        url = SerializerMethodField()
+
+        @extend_schema_field(OpenApiTypes.NUMBER)
+        def get_answer(self, instance):
+            return 42
+
+        @extend_schema_field(OpenApiTypes.URI)
+        def get_url(self, instance):
+            return "https://baserow.io"
+
     assert (
         cls().guess_json_type_from_response_serialize_field(UUIDField()) == TYPE_STRING
     )
@@ -1790,6 +1831,9 @@ def test_guess_type_for_response_serialize_field_permutations():
         cls().guess_json_type_from_response_serialize_field("unknown")  # type: ignore
         == TYPE_NULL
     )
+    assert (
+        cls().guess_json_type_from_response_serialize_field((FakeSerializer()))
+    ) == TYPE_OBJECT_FROM_METHOD_SERIALIZER
 
 
 def test_local_baserow_service_type_get_schema_for_return_type():

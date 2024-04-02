@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 
+from drf_spectacular.types import OPENAPI_TYPE_MAPPING
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
@@ -15,6 +16,7 @@ from rest_framework.fields import (
     Field,
     FloatField,
     IntegerField,
+    SerializerMethodField,
     TimeField,
     UUIDField,
 )
@@ -143,9 +145,31 @@ class LocalBaserowServiceType(ServiceType):
                 serializer_field.child
             )
             return {"type": "array", "items": sub_type}
+        elif isinstance(serializer_field, SerializerMethodField):
+            # Try to guess the json type of SerializerMethodField based on the
+            # OpenAPI annotations.
+            #
+            # When a method serializer uses @extend_schema_field decorator it will
+            # include a dictionary called "_spectacular_annotation" that contains
+            # the type of the field to return.
+            #
+            # NOTE: This only works for primitive types (e.g, string, boolean, etc.)
+            # and not for composite ones (e.g, object, lists, etc.).
+            base_type = None
+            method = getattr(serializer_field.parent, serializer_field.method_name)
+            if hasattr(method, "_spectacular_annotation"):
+                field = method._spectacular_annotation.get("field")
+                mapping = OPENAPI_TYPE_MAPPING.get(field)
+                if isinstance(mapping, dict):
+                    base_type = mapping.get("type", None)
         elif issubclass(serializer_field.__class__, Serializer):
             properties = {}
             for name, child_serializer in serializer_field.get_fields().items():
+                # In order to keep the parent serializer context in the next
+                # recursive function calls, we need to bind the child serializer
+                # to its parent. Otherwise, the child serializer will be almost
+                # empty with no relevant metadata.
+                child_serializer.bind(name, serializer_field)
                 properties[name] = {
                     "title": name,
                     **self.guess_json_type_from_response_serialize_field(
