@@ -129,6 +129,7 @@ export default {
   data() {
     return {
       loading: false,
+      redirectImmediately: false,
       loginRequestError: false,
       values: {
         email: '',
