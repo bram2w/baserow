@@ -105,7 +105,8 @@ def test_can_export_every_interesting_different_field_to_json(
     "lookup": [],
     "uuid": "00000000-0000-4000-8000-000000000002",
     "autonumber": 1,
-    "password": ""
+    "password": "",
+    "ai": ""
 },
 {
     "id": 2,
@@ -221,7 +222,8 @@ def test_can_export_every_interesting_different_field_to_json(
     ],
     "uuid": "00000000-0000-4000-8000-000000000003",
     "autonumber": 2,
-    "password": true
+    "password": true,
+    "ai": "I'm an AI."
 }
 ]
 """
@@ -371,6 +373,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <uuid>00000000-0000-4000-8000-000000000002</uuid>
       <autonumber>1</autonumber>
       <password/>
+      <ai/>
    </row>
    <row>
       <id>2</id>
@@ -487,6 +490,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <uuid>00000000-0000-4000-8000-000000000003</uuid>
       <autonumber>2</autonumber>
       <password>true</password>
+      <ai>I'm an AI.</ai>
    </row>
 </rows>
 """

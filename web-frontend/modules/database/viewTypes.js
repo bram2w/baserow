@@ -260,6 +260,12 @@ export class ViewType extends Registerable {
   rowUpdated(context, tableId, fields, row, values, metadata, storePrefix) {}
 
   /**
+   * Event that is called when something went wrong while generating AI values
+   * for a field. This can be used to show an error message to the user.
+   */
+  AIValuesGenerationError(context, tableId, fieldId, rowIds, error) {}
+
+  /**
    * Event that is called when a row is deleted from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
@@ -628,6 +634,27 @@ export class GridViewType extends ViewType {
       store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
         view: store.getters['view/getSelected'],
       })
+    }
+  }
+
+  AIValuesGenerationError(
+    context,
+    tableId,
+    fieldId,
+    rowIds,
+    error,
+    storePrefix = ''
+  ) {
+    if (this.isCurrentView(context.store, tableId)) {
+      context.store.dispatch(
+        storePrefix + 'view/grid/AIValuesGenerationError',
+        {
+          fieldId,
+          rowIds,
+          error,
+        },
+        { root: true }
+      )
     }
   }
 }

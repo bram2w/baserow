@@ -156,6 +156,15 @@
       :max-height-if-outside-viewport="true"
     >
       <ul v-show="isMultiSelectActive" class="context__menu">
+        <component
+          :is="contextItemComponent"
+          v-for="(contextItemComponent, index) in getMultiSelectContextItems()"
+          :key="index"
+          :field="getSelectedField()"
+          :rows="getSelectedRows()"
+          :store-prefix="storePrefix"
+          @click=";[$refs.rowContext.hide()]"
+        ></component>
         <li class="context__menu-item">
           <a
             class="context__menu-item-link"
@@ -297,7 +306,7 @@
       :database="database"
       :table="table"
       :view="view"
-      :fields="fields"
+      :all-fields-in-table="fields"
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
@@ -1177,6 +1186,7 @@ export default {
         rowId: row.id,
         fieldIndex,
       })
+      this.$refs.rowContext.hide()
     },
     /**
      * Called when mouse hovers over a GridViewCell component.
@@ -1425,7 +1435,6 @@ export default {
       }
 
       this.$store.dispatch('toast/setPasting', true)
-
       try {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/updateDataIntoCells',
@@ -1530,6 +1539,38 @@ export default {
         this.storePrefix + 'view/grid/setWindowHeight',
         height
       )
+    },
+    /**
+     * Called when the user right clicks after selecting multiple cells.
+     * Shows the context menu with the appropriate options.
+     */
+    getMultiSelectContextItems() {
+      const selectedFields = this.$store.getters[
+        this.storePrefix + 'view/grid/getSelectedFields'
+      ](this.fields)
+
+      if (selectedFields.length === 1) {
+        return this.$registry
+          .get('field', selectedFields[0].type)
+          .getGridViewContextItemsOnCellsSelection()
+      } else {
+        return []
+      }
+    },
+    /**
+     * Returns the selected field if only one field is selected, otherwise returns null.
+     */
+    getSelectedField() {
+      const selectedFields = this.$store.getters[
+        this.storePrefix + 'view/grid/getSelectedFields'
+      ](this.fields)
+      return selectedFields.length === 1 ? selectedFields[0] : null
+    },
+    /**
+     * Returns the selected rows if any rows are selected, otherwise returns an empty array.
+     */
+    getSelectedRows() {
+      return this.$store.getters[this.storePrefix + 'view/grid/getSelectedRows']
     },
   },
 }

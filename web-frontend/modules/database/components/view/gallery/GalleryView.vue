@@ -86,6 +86,7 @@
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"
       :show-hidden-fields="showHiddenFieldsInRowModal"
+      :all-fields-in-table="fields"
       @toggle-hidden-fields-visibility="
         showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
       "
@@ -101,7 +102,7 @@
       :database="database"
       :table="table"
       :view="view"
-      :fields="fields"
+      :all-fields-in-table="fields"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"

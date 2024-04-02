@@ -60,7 +60,10 @@
             :icon="fieldType.iconClass"
             :name="fieldType.getName()"
             :value="fieldType.type"
-            :disabled="primary && !fieldType.canBePrimaryField"
+            :disabled="
+              (primary && !fieldType.canBePrimaryField) ||
+              !fieldType.isEnabled()
+            "
           ></DropdownItem>
         </Dropdown>
         <div v-if="$v.values.type.$error" class="error">
@@ -76,6 +79,7 @@
         :field-type="values.type"
         :view="view"
         :primary="primary"
+        :all-fields-in-table="allFieldsInTable"
         :name="values.name"
         :default-values="defaultValues"
         @validate="$v.$touch"
@@ -120,6 +124,10 @@ export default {
       type: [String, null],
       required: false,
       default: null,
+    },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
     },
   },
   data() {
@@ -201,7 +209,10 @@ export default {
       return !RESERVED_BASEROW_FIELD_NAMES.includes(param?.trim())
     },
     getFormComponent(type) {
-      return this.$registry.get('field', type).getFormComponent()
+      const fieldType = this.$registry.get('field', type)
+      if (fieldType.isEnabled()) {
+        return fieldType.getFormComponent()
+      }
     },
     showFieldTypesDropdown(target) {
       this.$refs.fieldTypesDropdown.show(target)

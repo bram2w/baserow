@@ -147,6 +147,14 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.lastAdminTitle'),
         app.i18n.t('clientHandler.lastAdminMessage')
       ),
+      ERROR_GENERATIVE_AI_DOES_NOT_EXIST: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.generativeAIDoesNotExistTitle'),
+        app.i18n.t('clientHandler.generativeAIDoesNotExistDescription')
+      ),
+      ERROR_MODEL_DOES_NOT_BELONG_TO_TYPE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.modelDoesNotBelongToTypeTitle'),
+        app.i18n.t('clientHandler.modelDoesNotBelongToTypeDescription')
+      ),
     }
   }
 

@@ -599,11 +599,14 @@
     "deleteRow": "Delete row",
     "deleteRows": "Delete rows",
     "copyCells": "Copy cells",
+    "generateCellsValues": "Generate values with AI",
     "rowCount": "No rows | 1 row | {count} rows",
     "hiddenRowsInsertedTitle": "Rows added",
     "hiddenRowsInsertedMessage": "{number} newly added rows have been added, but are not visible because of the active filters.",
     "tooManyItemsTitle": "Too many items",
-    "tooManyItemsDescription": "It's not possible to update more than {limit} rows at once, so we've only updated the first."
+    "tooManyItemsDescription": "It's not possible to update more than {limit} rows at once, so we've only updated the first.",
+    "AIValuesGenerationErrorTitle": "AI value generation failed",
+    "AIValuesGenerationErrorMessage": "Please check your API_KEY and verify the selected model."
   },
   "gridViewFieldFile": {
     "dropHere": "Drop here",
@@ -829,5 +832,27 @@
     "passwordSet": "The password was set",
     "passwordUpdated": "The password was updated",
     "passwordDeleted": "The password was deleted"
+  },
+  "dataProviderTypes": {
+    "fieldsName": "Fields"
+  },
+  "functionalGridViewFieldAI": {
+    "generate": "Generate"
+  },
+  "gridViewFieldAI": {
+    "generate": "Generate",
+    "regenerate": "Re-Generate"
+  },
+  "fieldAISubForm": {
+    "AIType": "AI Type",
+    "AIModel": "AI Model",
+    "prompt": "Prompt"
+  },
+  "rowEditFieldAI": {
+    "generate": "Generate",
+    "createRowBefore": "The AI value can be generated after the row has been created."
+  },
+  "rowCardFieldAI": {
+    "generate": "Generate"
   }
 }

@@ -30,6 +30,7 @@
         :table="table"
         :view="view"
         :forced-type="singleSelectFieldType"
+        :all-fields-in-table="fields"
         @field-created="$event.callback()"
       ></CreateFieldContext>
     </div>

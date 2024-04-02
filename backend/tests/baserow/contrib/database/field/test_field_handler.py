@@ -26,6 +26,7 @@ from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
 from baserow.contrib.database.fields.field_types import (
+    AIFieldType,
     AutonumberFieldType,
     BooleanFieldType,
     CountFieldType,
@@ -361,6 +362,13 @@ def test_field_conversion_created_by(data_fixture):
 @pytest.mark.django_db
 def test_field_conversion_autonumber(data_fixture):
     _test_can_convert_between_fields(data_fixture, AutonumberFieldType.type)
+
+
+@pytest.mark.field_ai
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_ai(data_fixture):
+    _test_can_convert_between_fields(data_fixture, AIFieldType.type)
 
 
 @pytest.mark.django_db

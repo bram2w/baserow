@@ -11,6 +11,7 @@
       :table="table"
       :view="view"
       :forced-type="forcedType"
+      :all-fields-in-table="allFieldsInTable"
       @submitted="submit"
       @keydown-enter="$refs.submitButton.focus()"
     >
@@ -56,6 +57,10 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
     },
   },
   data() {

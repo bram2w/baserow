@@ -32,6 +32,11 @@ export default {
       required: false,
       default: true,
     },
+    rowIsCreated: {
+      type: Boolean,
+      required: false,
+      default: () => true,
+    },
   },
   methods: {
     /**

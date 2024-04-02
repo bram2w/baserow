@@ -11,7 +11,10 @@ from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.handler import PublicViewRows, ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.ws.rows.signals import RealtimeRowMessages
+from baserow.contrib.database.ws.rows.signals import (
+    RealtimeRowMessages,
+    serialize_rows_values,
+)
 from baserow.core.telemetry.utils import baserow_trace
 from baserow.ws.registries import page_registry
 
@@ -148,18 +151,10 @@ def public_before_rows_update(
 @receiver(row_signals.rows_updated)
 @baserow_trace(tracer)
 def public_rows_updated(
-    sender,
-    rows,
-    user,
-    table,
-    model,
-    before_return,
-    updated_field_ids,
-    before_rows_values,
-    **kwargs
+    sender, rows, user, table, model, before_return, updated_field_ids, **kwargs
 ):
     before_return_dict = dict(before_return)[public_before_rows_update]
-    serialized_old_rows = before_rows_values
+    serialized_old_rows = dict(before_return)[serialize_rows_values]
     serialized_updated_rows = serialize_rows_for_response(rows, model)
 
     old_row_public_views: List[PublicViewRows] = before_return_dict[

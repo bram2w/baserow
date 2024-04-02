@@ -18,6 +18,7 @@
         :table="table"
         :database="database"
         :can-modify-fields="canModifyFields"
+        :all-fields-in-table="allFieldsInTable"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @order-fields="$emit('order-fields', $event)"
@@ -42,6 +43,7 @@
           :view="view"
           :database="database"
           :can-modify-fields="canModifyFields"
+          :all-fields-in-table="allFieldsInTable"
           @field-updated="$emit('field-updated', $event)"
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
@@ -121,6 +123,10 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
     },
   },
   data() {

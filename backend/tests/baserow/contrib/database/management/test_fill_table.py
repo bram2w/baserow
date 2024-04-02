@@ -113,6 +113,7 @@ def test_fill_table_fields_with_add_all_fields(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(user=user, table=table)
+    data_fixture.register_fake_generate_ai_type()
 
     model = table.get_model()
 

@@ -26,6 +26,7 @@
         :database="database"
         :sortable="sortable && fieldIsSortable(field)"
         :can-modify-fields="canModifyFields"
+        :all-fields-in-table="allFieldsInTable"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @update="$emit('update', $event)"
@@ -86,6 +87,10 @@ export default {
     },
     database: {
       type: Object,
+      required: true,
+    },
+    allFieldsInTable: {
+      type: Array,
       required: true,
     },
   },

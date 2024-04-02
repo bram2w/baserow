@@ -45,6 +45,7 @@
         :table="table"
         :view="view"
         :field="field"
+        :all-fields-in-table="allFieldsInTable"
         @update="$emit('refresh', $event)"
         @delete="$emit('refresh')"
       >
@@ -98,6 +99,7 @@
             :table="table"
             :view="view"
             :from-field="field"
+            :all-fields-in-table="allFieldsInTable"
             @field-created="$emit('field-created', $event)"
             @move-field="moveField($event)"
           ></InsertFieldContext>
@@ -124,6 +126,7 @@
             ref="duplicateFieldModal"
             :table="table"
             :from-field="field"
+            :all-fields-in-table="allFieldsInTable"
             @field-created="$emit('field-created', $event)"
             @move-field="moveField($event)"
           ></DuplicateFieldModal>
@@ -286,6 +289,10 @@ export default {
     },
     readOnly: {
       type: Boolean,
+      required: true,
+    },
+    allFieldsInTable: {
+      type: Array,
       required: true,
     },
   },

@@ -4,6 +4,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 
 from .views import (
     AsyncDuplicateFieldView,
+    AsyncGenerateAIFieldValuesView,
     FieldsView,
     FieldView,
     UniqueRowValueFieldView,
@@ -23,5 +24,10 @@ urlpatterns = field_type_registry.api_urls + [
         r"(?P<field_id>[0-9]+)/duplicate/async/$",
         AsyncDuplicateFieldView.as_view(),
         name="async_duplicate",
+    ),
+    re_path(
+        r"(?P<field_id>[0-9]+)/generate-ai-field-values/$",
+        AsyncGenerateAIFieldValuesView.as_view(),
+        name="async_generate_ai_field_values",
     ),
 ]

@@ -5,7 +5,7 @@
     :database="database"
     :table="table"
     :rows="[]"
-    :fields="fields"
+    :all-fields-in-table="fields"
     :visible-fields="fields"
     :fields-sortable="fieldsSortable"
     :can-modify-fields="canModifyFields"
