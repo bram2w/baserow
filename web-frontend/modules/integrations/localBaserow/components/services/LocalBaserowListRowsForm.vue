@@ -48,6 +48,7 @@
           >
             <InjectedFormulaInputGroup
               v-model="values.search_query"
+              small
               :placeholder="
                 $t('localBaserowListRowsForm.searchFieldPlaceHolder')
               "

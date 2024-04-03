@@ -15,7 +15,7 @@
         <div class="col col-6">
           <InjectedFormulaInputGroup
             v-model="values.row_id"
-            small-label
+            small
             :label="$t('localBaserowGetRowForm.rowFieldLabel')"
             :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
             :help-text="$t('localBaserowGetRowForm.rowFieldHelpText')"
@@ -41,9 +41,13 @@
                 {{ $t('localBaserowGetRowForm.noTableChosenForFiltering') }}
               </p>
             </Tab>
-            <Tab :title="$t('localBaserowGetRowForm.searchTabTitle')">
+            <Tab
+              :title="$t('localBaserowGetRowForm.searchTabTitle')"
+              class="data-source-form__condition-search-tab"
+            >
               <InjectedFormulaInputGroup
                 v-model="values.search_query"
+                small
                 :placeholder="
                   $t('localBaserowGetRowForm.searchFieldPlaceHolder')
                 "
