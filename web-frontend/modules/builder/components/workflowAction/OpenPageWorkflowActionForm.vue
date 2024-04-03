@@ -2,6 +2,8 @@
   <form @submit.prevent="submit">
     <ApplicationBuilderFormulaInputGroup
       v-model="values.url"
+      small
+      small-label
       :placeholder="$t('openPageWorkflowActionForm.urlPlaceholder')"
       :data-providers-allowed="dataProvidersAllowed"
       :label="$t('openPageWorkflowActionForm.urlLabel')"

@@ -22,6 +22,7 @@
     <InjectedFormulaInputGroup
       v-if="enableRowId && values.integration_id"
       v-model="values.row_id"
+      small
       small-label
       :placeholder="$t('upsertRowWorkflowActionForm.rowIdPlaceholder')"
       :label="$t('upsertRowWorkflowActionForm.rowIdLabel')"

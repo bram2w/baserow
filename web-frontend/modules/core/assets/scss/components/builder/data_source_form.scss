@@ -56,6 +56,19 @@
 
     .filters__value--formula-input {
       flex: 1;
+      margin-bottom: 0;
+
+      .formula-input-field {
+        min-height: 37px;
+      }
+    }
+
+    .input--small {
+      height: 37px;
+    }
+
+    .control__elements--small {
+      margin-bottom: 0;
     }
 
     .filters__value-dropdown {

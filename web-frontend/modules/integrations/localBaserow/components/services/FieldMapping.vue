@@ -1,9 +1,5 @@
 <template>
-  <InjectedFormulaInputGroup
-    v-model="fieldValue"
-    :placeholder="$t('upsertRowWorkflowActionForm.fieldMappingPlaceholder')"
-    :label="field.name"
-  />
+  <InjectedFormulaInputGroup v-model="fieldValue" v-bind="$attrs" />
 </template>
 
 <script>

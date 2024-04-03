@@ -3,8 +3,12 @@
     <FieldMapping
       v-for="field in fields"
       :key="field.id"
+      small
+      small-label
       :field="field"
+      :label="field.name"
       :value="getFieldMappingValue(field.id)"
+      :placeholder="$t('upsertRowWorkflowActionForm.fieldMappingPlaceholder')"
       @change="updateFieldMapping($event, field.id)"
     ></FieldMapping>
   </div>

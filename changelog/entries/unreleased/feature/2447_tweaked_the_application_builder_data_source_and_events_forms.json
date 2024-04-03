@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Tweaked the application builder data source and events forms so that they occasionally use our smaller form input variant.",
+    "issue_number": 2447,
+    "bullet_points": [],
+    "created_at": "2024-04-02"
+}

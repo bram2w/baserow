@@ -81,6 +81,7 @@
                 v-model="field.name"
                 class="table-element-form__field-label"
                 label="Name"
+                small
                 horizontal
                 :error="
                   !$v.values.fields.$each[index].name.required
@@ -104,6 +105,7 @@
                 </label>
                 <div class="control__elements">
                   <Dropdown
+                    small
                     :value="field.type"
                     :show-search="false"
                     @input="changeFieldType(field, $event)"

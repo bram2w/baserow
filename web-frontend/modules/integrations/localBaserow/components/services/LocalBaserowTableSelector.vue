@@ -4,7 +4,12 @@
       :label="$t('localBaserowTableSelector.databaseFieldLabel')"
       small-label
     >
-      <Dropdown v-model="databaseSelectedId" :show-search="false" fixed-items>
+      <Dropdown
+        v-model="databaseSelectedId"
+        :show-search="false"
+        fixed-items
+        small
+      >
         <DropdownItem
           v-for="database in databases"
           :key="database.id"
@@ -25,6 +30,7 @@
         :show-search="false"
         :disabled="databaseSelectedId === null"
         fixed-items
+        small
         @input="$emit('input', $event)"
       >
         <DropdownItem
@@ -47,6 +53,7 @@
         :show-search="false"
         :disabled="value === null"
         fixed-items
+        small
         @input="$emit('update:view-id', $event)"
       >
         <DropdownItem
