@@ -153,6 +153,12 @@ if [[ "$DATABASE_HOST" == "embed" && -z "${DATABASE_URL:-}" ]]; then
   export DATABASE_HOST=localhost
   export BASEROW_EMBEDDED_PSQL=true
 else
+  if [ ! -z "$DATABASE_URL" ] && [ "$POSTGRES_SETUP_SCRIPT_COMMAND" = "upgrade" ]; then
+      startup_echo "===================================================================================="
+      startup_echo "This image should only be used to update the data folder of the embedded PostgreSQL."
+      startup_echo "===================================================================================="
+      exit 1
+  fi
   startup_echo "Using provided external postgres at ${DATABASE_HOST:-} or the " \
                "DATABASE_URL"
   export BASEROW_EMBEDDED_PSQL=false

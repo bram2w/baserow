@@ -40,7 +40,8 @@ if [[ "$DATABASE_HOST" == "localhost" && -z "${DATABASE_URL:-}" ]]; then
   chown postgres:postgres "$POSTGRES_LOCATION"/postgresql.conf
 
   # Setup an empty baserow database with the provided user and password.
-  ./baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh setup
+  POSTGRES_SETUP_SCRIPT_COMMAND=${POSTGRES_SETUP_SCRIPT_COMMAND:-setup}
+  ./baserow/supervisor/wrapper.sh GREEN POSTGRES_INIT ./baserow/supervisor/docker-postgres-setup.sh ${POSTGRES_SETUP_SCRIPT_COMMAND}
 
   # Enable the embedded postgres by moving it into the directory from which supervisor
   # includes all .conf files it finds.

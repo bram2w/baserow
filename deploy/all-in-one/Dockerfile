@@ -18,9 +18,9 @@ ENV DOCKER_USER=${DOCKER_USER:-baserow_docker_user}
 
 ENV DATA_DIR=/baserow/data
 ENV BASEROW_PLUGIN_DIR=$DATA_DIR/plugins
-ENV POSTGRES_VERSION=11
+ENV POSTGRES_VERSION=15
 ENV NODE_MAJOR=18
-ENV POSTGRES_LOCATION=/etc/postgresql/11/main
+ENV POSTGRES_LOCATION=/etc/postgresql/15/main
 ENV BASEROW_IMAGE_TYPE="all-in-one"
 
 # ========================
