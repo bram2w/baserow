@@ -1,3 +1,6 @@
+import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
+import { resolveFormula } from '@baserow/modules/core/formula'
+
 /**
  * This might look like something that belongs in a registry, but it does not.
  *
@@ -23,7 +26,7 @@ export class Event {
     return null
   }
 
-  async fire({ workflowActions, applicationContext, resolveFormula }) {
+  async fire({ workflowActions, applicationContext }) {
     const additionalContext = {}
     for (let i = 0; i < workflowActions.length; i += 1) {
       const workflowAction = workflowActions[i]
@@ -31,6 +34,33 @@ export class Event {
         'workflowAction',
         workflowAction.type
       )
+      const localResolveFormula = (formula) => {
+        const formulaFunctions = {
+          get: (name) => {
+            return this.registry.get('runtimeFormulaFunction', name)
+          },
+        }
+        const runtimeFormulaContext = new Proxy(
+          new RuntimeFormulaContext(
+            this.registry.getAll('builderDataProvider'),
+            { ...applicationContext, previousActionResults: additionalContext }
+          ),
+          {
+            get(target, prop) {
+              return target.get(prop)
+            },
+          }
+        )
+        try {
+          return resolveFormula(
+            formula,
+            formulaFunctions,
+            runtimeFormulaContext
+          )
+        } catch {
+          return ''
+        }
+      }
 
       this.store.dispatch('workflowAction/setDispatching', {
         workflowAction,
@@ -41,8 +71,11 @@ export class Event {
           {
             workflowAction,
             additionalContext,
-            applicationContext,
-            resolveFormula,
+            applicationContext: {
+              ...applicationContext,
+              previousActionResults: additionalContext,
+            },
+            resolveFormula: localResolveFormula,
           }
         )
       } finally {

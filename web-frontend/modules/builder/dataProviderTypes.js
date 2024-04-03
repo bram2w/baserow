@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import { getValueAtPath } from '@baserow/modules/core/utils/object'
 
@@ -31,7 +32,7 @@ export class DataSourceDataProviderType extends DataProviderType {
       'dataSourceContent/fetchPageDataSourceContent',
       {
         page: applicationContext.page,
-        data: DataProviderType.getAllDispatchContext(
+        data: DataProviderType.getAllDataSourceDispatchContext(
           this.app.$registry.getAll('builderDataProvider'),
           applicationContext
         ),
@@ -165,7 +166,7 @@ export class PageParameterDataProviderType extends DataProviderType {
     return getValueAtPath(content, path.join('.'))
   }
 
-  getDispatchContext(applicationContext) {
+  getDataSourceDispatchContext(applicationContext) {
     return this.getDataContent(applicationContext)
   }
 
@@ -225,10 +226,11 @@ export class CurrentRecordDataProviderType extends DataProviderType {
             'dataSource/getPageDataSourceById'
           ](page, element.data_source_id)
 
-          const dispatchContext = DataProviderType.getAllDispatchContext(
-            this.app.$registry.getAll('builderDataProvider'),
-            { ...applicationContext, element }
-          )
+          const dispatchContext =
+            DataProviderType.getAllDataSourceDispatchContext(
+              this.app.$registry.getAll('builderDataProvider'),
+              { ...applicationContext, element }
+            )
 
           try {
             // fetch the initial content
@@ -370,7 +372,7 @@ export class FormDataProviderType extends DataProviderType {
     })
   }
 
-  getDispatchContext(applicationContext) {
+  getActionDispatchContext(applicationContext) {
     return this.getDataContent(applicationContext)
   }
 
@@ -427,6 +429,92 @@ export class FormDataProviderType extends DataProviderType {
       }
     }
 
+    return super.getPathTitle(applicationContext, pathParts)
+  }
+}
+
+export class PreviousActionDataProviderType extends DataProviderType {
+  static getType() {
+    return 'previous_action'
+  }
+
+  get name() {
+    return this.app.i18n.t('dataProviderType.previousAction')
+  }
+
+  get needBackendContext() {
+    return true
+  }
+
+  getActionDispatchContext(applicationContext) {
+    return this.getDataContent(applicationContext)
+  }
+
+  getDataChunk(applicationContext, path) {
+    const content = this.getDataContent(applicationContext)
+    return _.get(content, path.join('.'))
+  }
+
+  getWorkflowActionSchema(workflowAction) {
+    if (workflowAction?.type) {
+      const actionType = this.app.$registry.get(
+        'workflowAction',
+        workflowAction.type
+      )
+      return actionType.getDataSchema(workflowAction)
+    }
+    return null
+  }
+
+  getDataContent(applicationContext) {
+    return applicationContext.previousActionResults
+  }
+
+  getDataSchema(applicationContext) {
+    const page = applicationContext.page
+
+    const previousActions = this.app.store.getters[
+      'workflowAction/getElementPreviousWorkflowActions'
+    ](page, applicationContext.element.id, applicationContext.workflowAction.id)
+
+    const previousActionSchema = _.chain(previousActions)
+      // Retrieve the associated schema for each action
+      .map((workflowAction) => [
+        workflowAction,
+        this.getWorkflowActionSchema(workflowAction),
+      ])
+      // Remove actions without schema
+      .filter(([_, schema]) => schema)
+      // Add an index number to the schema title for each workflow action of
+      // the same type.
+      // For example if we have 2 update and create row actions we want their
+      // titles to be: [Update row,  Create row, Update row 2, Create row 2]
+      .groupBy('0.type')
+      .flatMap((workflowActions) =>
+        workflowActions.map(([workflowAction, schema], index) => [
+          workflowAction.id,
+          { ...schema, title: `${schema.title} ${index ? index + 1 : ''}` },
+        ])
+      )
+      // Create the schema object
+      .fromPairs()
+      .value()
+    return { type: 'object', properties: previousActionSchema }
+  }
+
+  getPathTitle(applicationContext, pathParts) {
+    if (pathParts.length === 2) {
+      const page = applicationContext?.page
+      const workflowActionId = parseInt(pathParts[1])
+
+      const action = this.app.store.getters[
+        'workflowAction/getWorkflowActionById'
+      ](page, workflowActionId)
+
+      if (!action) {
+        return `action_${workflowActionId}`
+      }
+    }
     return super.getPathTitle(applicationContext, pathParts)
   }
 }

@@ -139,7 +139,7 @@ export default {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
     dispatchContext() {
-      return DataProviderType.getAllDispatchContext(
+      return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )

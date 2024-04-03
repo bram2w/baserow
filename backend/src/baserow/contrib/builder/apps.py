@@ -206,6 +206,7 @@ class BuilderConfig(AppConfig):
             DataSourceDataProviderType,
             FormDataProviderType,
             PageParameterDataProviderType,
+            PreviousActionProviderType,
             UserDataProviderType,
         )
 
@@ -213,6 +214,7 @@ class BuilderConfig(AppConfig):
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
         builder_data_provider_type_registry.register(CurrentRecordDataProviderType())
         builder_data_provider_type_registry.register(FormDataProviderType())
+        builder_data_provider_type_registry.register(PreviousActionProviderType())
         builder_data_provider_type_registry.register(UserDataProviderType())
 
         from baserow.contrib.builder.theme.operations import UpdateThemeOperationType

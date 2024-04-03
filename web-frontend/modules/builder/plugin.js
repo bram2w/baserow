@@ -78,6 +78,7 @@ import {
   DataSourceDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
+  PreviousActionDataProviderType,
   UserDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
@@ -224,6 +225,10 @@ export default (context) => {
   app.$registry.register(
     'builderDataProvider',
     new FormDataProviderType(context)
+  )
+  app.$registry.register(
+    'builderDataProvider',
+    new PreviousActionDataProviderType(context)
   )
   app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
 

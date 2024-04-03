@@ -1,6 +1,7 @@
 from typing import Any, List, Type, Union
 
 from baserow.contrib.builder.data_providers.exceptions import (
+    DataProviderChunkInvalidException,
     FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
@@ -14,10 +15,14 @@ from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.element_types import FormElementType
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import FormElement
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
 from baserow.core.formula.exceptions import FormulaRecursion
 from baserow.core.formula.registries import DataProviderType
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.utils import get_value_at_path
+from baserow.core.workflow_actions.exceptions import WorkflowActionDoesNotExist
 
 
 class PageParameterDataProviderType(DataProviderType):
@@ -204,6 +209,42 @@ class CurrentRecordDataProviderType(DataProviderType):
         _, *rest = service_type.import_path([0, *path], id_mapping)
 
         return rest
+
+
+class PreviousActionProviderType(DataProviderType):
+    """
+    The previous action provider can read data from registered page workflow actions.
+    """
+
+    type = "previous_action"
+
+    def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
+        previous_action_id, *rest = path
+        previous_action = dispatch_context.request.data.get("previous_action", {})
+
+        if previous_action_id not in previous_action:
+            message = "The previous action id is not present in the dispatch context"
+            raise DataProviderChunkInvalidException(message)
+        return get_value_at_path(previous_action, path)
+
+    def import_path(self, path, id_mapping, **kwargs):
+        workflow_action_id, *rest = path
+
+        if "builder_workflow_actions" in id_mapping:
+            try:
+                workflow_action_id = id_mapping["builder_workflow_actions"][
+                    int(workflow_action_id)
+                ]
+                workflow_action = BuilderWorkflowActionHandler().get_workflow_action(
+                    workflow_action_id
+                )
+            except (KeyError, WorkflowActionDoesNotExist):
+                return [str(workflow_action_id), *rest]
+
+            service_type = workflow_action.service.specific.get_type()
+            rest = service_type.import_path(rest, id_mapping)
+
+        return [str(workflow_action_id), *rest]
 
 
 class UserDataProviderType(DataProviderType):

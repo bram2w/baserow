@@ -19,4 +19,11 @@ export class WorkflowActionType extends Registerable {
   async execute(context) {
     return await Promise.resolve()
   }
+
+  /**
+   * Should return a JSON schema of the data returned by this workflow action.
+   */
+  getDataSchema(applicationContext, workflowAction) {
+    throw new Error('Must be set on the type.')
+  }
 }

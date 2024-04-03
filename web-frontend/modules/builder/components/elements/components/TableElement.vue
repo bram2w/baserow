@@ -130,7 +130,7 @@ export default {
       return this.$registry.getAll('collectionField')
     },
     dispatchContext() {
-      return DataProviderType.getAllDispatchContext(
+      return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )

@@ -113,3 +113,30 @@ export function getValueAtPath(obj, path) {
   const keys = typeof path === 'string' ? _.toPath(path) : path
   return _getValueAtPath(obj, keys)
 }
+
+/**
+ * Uses Object.defineProperty to make Vue provide/inject reactive.
+ *
+ * @param staticProperties The original object
+ * @param reactiveProperties An object containing the properties and values to
+ *                           become reactive
+ * @return {object} The original object with the updated properties
+ * @see https://stackoverflow.com/questions/65718651/how-do-i-make-vue-2-provide-inject-api-reactive
+ *
+ * @example
+ * const obj = { a: "A", b: "B" }
+ * fixPropertyReactivityForProvide(obj, { c: () => "C" }
+ * console.log(obj.c) // "c" property is now reactive and will return "C"
+ */
+export function fixPropertyReactivityForProvide(
+  staticProperties,
+  reactiveProperties
+) {
+  Object.entries(reactiveProperties).forEach(([propertyName, getValue]) => {
+    Object.defineProperty(staticProperties, propertyName, {
+      enumerable: true,
+      get: () => getValue(),
+    })
+  })
+  return staticProperties
+}
