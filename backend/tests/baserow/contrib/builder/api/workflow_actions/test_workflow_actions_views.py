@@ -621,7 +621,9 @@ def test_dispatch_workflow_action_with_invalid_form_data(
     service = workflow_action.service.specific
     service.table = table
     service.save()
-    service.field_mappings.create(field=field, value="get('form_data.17')")
+    field_mapping = service.field_mappings.create(
+        field=field, value="get('form_data.17')"
+    )
 
     url = reverse(
         "api:builder:workflow_action:dispatch",
@@ -641,7 +643,7 @@ def test_dispatch_workflow_action_with_invalid_form_data(
 
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "error": "ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID",
-        "detail": "The form data provided to the workflow action "
-        "contained invalid values.",
+        "error": "ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED",
+        "detail": "The workflow_action configuration is incorrect: "
+        f"Path error in formula for field {field.name}({field.id})",
     }

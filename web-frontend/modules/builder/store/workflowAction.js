@@ -1,5 +1,6 @@
 import WorkflowActionService from '@baserow/modules/builder/services/workflowAction'
 import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+import _ from 'lodash'
 
 const updateContext = {
   updateTimeout: null,
@@ -195,8 +196,12 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  dispatchAction({ dispatch }, { workflowActionId, data }) {
-    return WorkflowActionService(this.$client).dispatch(workflowActionId, data)
+  async dispatchAction({ dispatch }, { workflowActionId, data }) {
+    const { data: result } = await WorkflowActionService(this.$client).dispatch(
+      workflowActionId,
+      data
+    )
+    return result
   },
   async order({ commit, getters }, { page, order, element = null }) {
     const workflowActions =
@@ -228,11 +233,23 @@ const getters = {
   getWorkflowActions: (state) => (page) => {
     return page.workflowActions.map((w) => w).sort((a, b) => a.order - b.order)
   },
+  getWorkflowActionById: (state, getters) => (page, workflowActionId) => {
+    return getters
+      .getWorkflowActions(page)
+      .find((workflowAction) => workflowAction.id === workflowActionId)
+  },
   getElementWorkflowActions: (state) => (page, elementId) => {
     return page.workflowActions
       .filter((workflowAction) => workflowAction.element_id === elementId)
       .sort((a, b) => a.order - b.order)
   },
+  getElementPreviousWorkflowActions:
+    (state, getters) => (page, elementId, workflowActionId) => {
+      return _.takeWhile(
+        getters.getElementWorkflowActions(page, elementId),
+        (workflowAction) => workflowAction.id !== workflowActionId
+      )
+    },
   getLoading: (state) => (workflowAction) => {
     return workflowAction._?.loading
   },

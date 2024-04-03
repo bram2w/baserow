@@ -2150,15 +2150,21 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
     service_type = service.get_type()
     dispatch_context = BuilderDispatchContext(Mock(), page)
 
-    service.field_mappings.create(field=boolean_field, value="'Horse'")
+    field_mapping = service.field_mappings.create(field=boolean_field, value="'Horse'")
     with pytest.raises(DRFValidationError) as exc:
-        service_type.dispatch_data(service, {"table": table}, dispatch_context)
+        service_type.dispatch_data(
+            service, {"table": table, field_mapping.id: "Horse"}, dispatch_context
+        )
 
     service.field_mappings.all().delete()
 
-    service.field_mappings.create(field=single_field, value="'99999999999'")
+    field_mapping = service.field_mappings.create(
+        field=single_field, value="'99999999999'"
+    )
     with pytest.raises(ServiceImproperlyConfigured) as exc:
-        service_type.dispatch_data(service, {"table": table}, dispatch_context)
+        service_type.dispatch_data(
+            service, {"table": table, field_mapping.id: "99999999999"}, dispatch_context
+        )
 
     assert exc.value.args[0] == (
         "The result value of the formula is not valid for the "
@@ -2347,6 +2353,17 @@ def test_local_baserow_upsert_row_service_after_update(data_fixture):
     service.refresh_from_db()
     assert service.table_id == table2.id
     assert service.field_mappings.count() == 0
+
+
+@pytest.mark.django_db
+def test_local_baserow_upsert_row_service_type_import_path(data_fixture):
+    imported_upsert_row_service_type = LocalBaserowUpsertRowServiceType()
+
+    assert imported_upsert_row_service_type.import_path(["id"], {}) == ["id"]
+    assert imported_upsert_row_service_type.import_path(["field_1"], {}) == ["field_1"]
+    assert imported_upsert_row_service_type.import_path(
+        ["field_1"], {"database_fields": {1: 2}}
+    ) == ["field_2"]
 
 
 @pytest.mark.django_db

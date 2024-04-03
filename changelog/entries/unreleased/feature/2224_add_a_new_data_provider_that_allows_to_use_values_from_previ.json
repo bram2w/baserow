@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add a new data provider that allows to use values from previous actions in formulas",
+    "issue_number": 2224,
+    "bullet_points": [],
+    "created_at": "2024-03-06"
+}

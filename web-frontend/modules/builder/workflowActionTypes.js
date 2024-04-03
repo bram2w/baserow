@@ -25,6 +25,10 @@ export class NotificationWorkflowActionType extends WorkflowActionType {
       message: ensureString(resolveFormula(description)),
     })
   }
+
+  getDataSchema(applicationContext, workflowAction) {
+    return null
+  }
 }
 
 export class OpenPageWorkflowActionType extends WorkflowActionType {
@@ -60,6 +64,10 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
 
     window.location.replace(urlParsed)
   }
+
+  getDataSchema(applicationContext, workflowAction) {
+    return null
+  }
 }
 
 export class LogoutWorkflowActionType extends WorkflowActionType {
@@ -81,18 +89,25 @@ export class LogoutWorkflowActionType extends WorkflowActionType {
 }
 
 export class WorkflowActionServiceType extends WorkflowActionType {
-  async execute({
-    workflowAction: { id },
-    applicationContext,
-    resolveFormula,
-  }) {
-    return await this.app.store.dispatch('workflowAction/dispatchAction', {
+  execute({ workflowAction: { id }, applicationContext, resolveFormula }) {
+    return this.app.store.dispatch('workflowAction/dispatchAction', {
       workflowActionId: id,
-      data: DataProviderType.getAllDispatchContext(
+      data: DataProviderType.getAllActionDispatchContext(
         this.app.$registry.getAll('builderDataProvider'),
         applicationContext
       ),
     })
+  }
+
+  getDataSchema(workflowAction) {
+    if (!workflowAction?.service?.schema) {
+      return null
+    }
+    return {
+      title: this.label,
+      type: 'object',
+      properties: workflowAction?.service?.schema?.properties,
+    }
   }
 }
 

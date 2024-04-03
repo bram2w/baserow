@@ -3,12 +3,14 @@
     v-bind="$attrs"
     :data-explorer-loading="dataExplorerLoading"
     :data-providers="dataProviders"
-    :application-context="{
-      page,
-      builder,
-      mode,
-      ...applicationContextAdditions,
-    }"
+    :application-context="
+      applicationContext ?? {
+        page,
+        builder,
+        mode,
+        ...applicationContextAdditions,
+      }
+    "
     v-on="$listeners"
   ></FormulaInputGroup>
 </template>
@@ -19,7 +21,21 @@ import { DataSourceDataProviderType } from '@baserow/modules/builder/dataProvide
 export default {
   name: 'ApplicationBuilderFormulaInputGroup',
   components: { FormulaInputGroup },
-  inject: ['page', 'builder', 'mode'],
+  inject: {
+    page: {
+      from: 'page',
+    },
+    builder: {
+      from: 'builder',
+    },
+    mode: {
+      from: 'mode',
+    },
+    applicationContext: {
+      from: 'applicationContext',
+      default: null,
+    },
+  },
   props: {
     dataProvidersAllowed: {
       type: Array,

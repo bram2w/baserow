@@ -10,9 +10,11 @@ from baserow.contrib.builder.data_providers.data_provider_types import (
     DataSourceDataProviderType,
     FormDataProviderType,
     PageParameterDataProviderType,
+    PreviousActionProviderType,
     UserDataProviderType,
 )
 from baserow.contrib.builder.data_providers.exceptions import (
+    DataProviderChunkInvalidException,
     FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
@@ -690,6 +692,37 @@ def test_form_data_provider_type_import_path(data_fixture):
     path_imported = FormDataProviderType().import_path(path, id_mapping)
 
     assert path_imported == [str(element_duplicated.id), "test"]
+
+
+def test_previous_action_data_provider_get_data_chunk():
+    previous_action_data_provider = PreviousActionProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {"previous_action": {"id": 42}}
+    dispatch_context = BuilderDispatchContext(fake_request, None)
+
+    assert previous_action_data_provider.get_data_chunk(dispatch_context, ["id"]) == 42
+    with pytest.raises(DataProviderChunkInvalidException):
+        previous_action_data_provider.get_data_chunk(dispatch_context, ["invalid"])
+
+
+@pytest.mark.django_db
+def test_previous_action_data_provider_import_path():
+    previous_action_data_provider = PreviousActionProviderType()
+    path = ["1", "field"]
+
+    valid_id_mapping = {"builder_workflow_actions": {1: 2}}
+    invalid_id_mapping = {"builder_workflow_actions": {0: 1}}
+
+    assert previous_action_data_provider.import_path(path, {}) == ["1", "field"]
+    assert previous_action_data_provider.import_path(path, invalid_id_mapping) == [
+        "1",
+        "field",
+    ]
+    assert previous_action_data_provider.import_path(path, valid_id_mapping) == [
+        "2",
+        "field",
+    ]
 
 
 @pytest.mark.django_db

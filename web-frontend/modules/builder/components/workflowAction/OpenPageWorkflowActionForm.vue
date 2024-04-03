@@ -12,13 +12,14 @@
 </template>
 
 <script>
-import workflowActionForm from '@baserow/modules/builder/mixins/workflowActionForm'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import form from '@baserow/modules/core/mixins/form'
 
 export default {
   name: 'OpenPageWorkflowActionForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [workflowActionForm],
+  mixins: [form],
+  inject: ['dataProvidersAllowed'],
   data() {
     return {
       values: {

@@ -7,6 +7,7 @@ import {
   PageParameterDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
+  PreviousActionDataProviderType,
   UserDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
@@ -118,6 +119,16 @@ export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
 export const DATA_PROVIDERS_ALLOWED_DATA_SOURCES = [
   UserDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
+]
+
+/**
+ * A list of all the data providers that can be used to configure workflow actions.
+ *
+ * @type {String[]}
+ */
+export const DATA_PROVIDERS_ALLOWED_WORKFLOW_ACTIONS = [
+  PreviousActionDataProviderType.getType(),
+  ...DATA_PROVIDERS_ALLOWED_ELEMENTS,
 ]
 
 export const ELEMENT_EVENTS = {

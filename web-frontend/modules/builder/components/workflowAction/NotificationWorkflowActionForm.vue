@@ -20,13 +20,14 @@
 </template>
 
 <script>
-import workflowActionForm from '@baserow/modules/builder/mixins/workflowActionForm'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
+import form from '@baserow/modules/core/mixins/form'
 
 export default {
   name: 'NotificationWorkflowActionForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [workflowActionForm],
+  mixins: [form],
+  inject: ['dataProvidersAllowed'],
   data() {
     return {
       values: {

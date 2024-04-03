@@ -4,6 +4,7 @@
     "pageParameter": "Parameter",
     "currentRecord": "Data source",
     "formData": "Form data",
+    "previousAction": "Previous action",
     "user": "User"
   },
   "formDataProviderType": {

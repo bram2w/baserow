@@ -12,15 +12,11 @@
 import UpsertRowWorkflowActionForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowUpsertRowServiceForm'
 import form from '@baserow/modules/core/mixins/form'
 import _ from 'lodash'
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'CreateRowWorkflowAction',
   components: { UpsertRowWorkflowActionForm },
   mixins: [form],
-  provide() {
-    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_ELEMENTS }
-  },
   inject: ['builder'],
   props: {
     workflowAction: {

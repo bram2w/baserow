@@ -45,25 +45,40 @@ export class DataProviderType extends Registerable {
     )
   }
 
-  static getAllDispatchContext(dataProviders, applicationContext) {
+  static getAllActionDispatchContext(dataProviders, applicationContext) {
     return Object.fromEntries(
       Object.values(dataProviders).map((dataProvider) => {
         return [
           dataProvider.type,
-          dataProvider.getDispatchContext(applicationContext),
+          dataProvider.getActionDispatchContext(applicationContext),
+        ]
+      })
+    )
+  }
+
+  static getAllDataSourceDispatchContext(dataProviders, applicationContext) {
+    return Object.fromEntries(
+      Object.values(dataProviders).map((dataProvider) => {
+        return [
+          dataProvider.type,
+          dataProvider.getDataSourceDispatchContext(applicationContext),
         ]
       })
     )
   }
 
   /**
-   * Should return the context needed to be send to the backend for each dataProvider
+   * Should return the context needed to be sent to the backend for each dataProvider
    * to be able to solve the formulas on the backend.
    * @param {Object} applicationContext the application context.
    * @returns An object if the dataProvider wants to send something to the backend.
    */
-  getDispatchContext(applicationContext) {
+  getDataSourceDispatchContext(applicationContext) {
     return null
+  }
+
+  getActionDispatchContext(applicationContext) {
+    return this.getDataSourceDispatchContext(applicationContext)
   }
 
   /**
