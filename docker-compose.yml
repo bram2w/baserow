@@ -292,7 +292,11 @@ services:
       local:
 
   db:
-    image: postgres:11
+    image: postgres:15
+    # If you were using a previous version, perform the update by uncommenting the
+    # following line. See: https://baserow.io/docs/installation%2Finstall-with-docker#upgrading-postgresql-database-from-a-previous-version
+    # for more information.
+    # image: pgautoupgrade/pgautoupgrade:15-alpine3.8
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${DATABASE_USER:-baserow}
