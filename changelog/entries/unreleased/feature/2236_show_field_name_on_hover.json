@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "For Grid view, show field name on hover if it doesn't fit in the field width",
+    "issue_number": 2236,
+    "bullet_points": [],
+    "created_at": "2024-04-03"
+}

@@ -20,7 +20,7 @@
     >
       <i :class="`grid-view__description-icon ${field._.type.iconClass}`"></i>
 
-      <div class="grid-view__description-name">
+      <div class="grid-view__description-name" :title="field.name">
         <span ref="quickEditLink" @dblclick="handleQuickEdit()">
           {{ field.name }}
         </span>
