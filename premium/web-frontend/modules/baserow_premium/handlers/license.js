@@ -43,7 +43,17 @@ export class LicenseHandler {
    */
   instanceWideLicenseTypes() {
     const userData = this.getters['auth/getAdditionalUserData']
-    const instanceWideLicenses = userData?.active_licenses?.instance_wide || {}
+    const settings = this.getters['settings/get']
+
+    // The user data active licenses will take precedence because that will give us
+    // the best overview of the active licenses. If doesn't exist if the user isn't
+    // authenticated. In that case, we can check if there are instance wide licenses
+    // in the settings.
+    const instanceWideLicenses = (
+      userData?.active_licenses?.instance_wide
+      || settings?.instance_wide_licenses
+      || {}
+    )
     return Object.entries(instanceWideLicenses)
       .filter(
         ([key, enabled]) => enabled && this.$registry.exists('license', key)

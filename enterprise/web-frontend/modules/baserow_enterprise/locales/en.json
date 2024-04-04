@@ -266,7 +266,9 @@
   },
   "enterpriseFeatures": {
     "sso": "Single Sign On",
-    "rbac": "Role-based access control"
+    "rbac": "Role-based access control",
+    "auditLogs": "Audit logs",
+    "coBranding": "Co-branding logo replacement"
   },
   "chatwootSupportSidebarWorkspace": {
     "directSupport": "Direct support"

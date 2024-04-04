@@ -2,6 +2,7 @@ import base64
 from unittest.mock import patch
 
 from django.db import transaction
+from django.shortcuts import reverse
 from django.test.utils import override_settings
 
 import pytest
@@ -24,6 +25,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from freezegun import freeze_time
+from rest_framework.status import HTTP_200_OK
 
 from baserow.core.exceptions import IsNotAdminError
 
@@ -981,3 +983,22 @@ def test_check_active_premium_license_for_workspace_with_license_pretending_to_b
         assert not LicenseHandler.user_has_feature_instance_wide(
             PREMIUM, user_in_license
         )
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(DEBUG=True)
+def test_add_active_licenses_to_settings(api_client, data_fixture):
+    with freeze_time("2021-07-01 12:00"):
+        License.objects.create(
+            license=VALID_TWO_SEAT_LICENSE.decode(), cached_untrusted_instance_wide=True
+        )
+        License.objects.create(
+            license=VALID_ENTERPRISE_FIVE_SEAT_LICENSE.decode(),
+            cached_untrusted_instance_wide=True,
+        )
+
+        response = api_client.get(reverse("api:settings:get"))
+        assert response.status_code == HTTP_200_OK
+        response_json = response.json()
+        assert len(response_json.keys()) > 1
+        assert response_json["instance_wide_licenses"] == {"enterprise": True}

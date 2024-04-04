@@ -125,3 +125,11 @@ class BaserowPremiumConfig(AppConfig):
 
         notification_type_registry.register(RowCommentMentionNotificationType())
         notification_type_registry.register(RowCommentNotificationType())
+
+        from baserow_premium.api.settings.settings_types import (
+            InstanceWideSettingsDataType,
+        )
+
+        from baserow.api.settings.registries import settings_data_registry
+
+        settings_data_registry.register(InstanceWideSettingsDataType())
