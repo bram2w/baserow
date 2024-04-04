@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from baserow.api.decorators import validate_body
+from baserow.api.settings.registries import settings_data_registry
 from baserow.core.handler import CoreHandler
 
 from .serializers import InstanceIdSerializer, SettingsSerializer
@@ -27,7 +28,9 @@ class SettingsView(APIView):
         """Responds with all the admin configured settings."""
 
         settings = CoreHandler().get_settings()
-        return Response(SettingsSerializer(settings).data)
+        data = SettingsSerializer(settings).data
+        data.update(**settings_data_registry.get_all_settings_data(request))
+        return Response(data)
 
 
 class InstanceIdView(APIView):
