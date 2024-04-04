@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fix bug where cards were overlapping if the field name was too long.",
+  "issue_number": 2478,
+  "bullet_points": [],
+  "created_at": "2024-04-03"
+}
