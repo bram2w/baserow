@@ -4300,6 +4300,11 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-document/-/extension-document-2.2.3.tgz#40e4faac7369d0fea31ea4eb57716ed7393f24b7"
   integrity sha512-60Egd9yKb5SzpQlstQAP2A/2a/Qr+A+TblMRKZugrT+NENUhAj6Tx1HxWlblqGu2MsS1iXvQLZ6BQO1jHkL2IQ==
 
+"@tiptap/extension-dropcursor@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-dropcursor/-/extension-dropcursor-2.2.4.tgz#df39861159a022029f733924e9a3977a76dfed17"
+  integrity sha512-IHwkEKmqpqXyJi16h7871NrcIqeyN7I6XRE2qdqi+MhGigVWI8nWHoYbjRKa7K/1uhs5zeRYyDlq5EuZyL6mgA==
+
 "@tiptap/extension-floating-menu@^2.2.3":
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-floating-menu/-/extension-floating-menu-2.2.3.tgz#3e200f51760fd1d48cb572223dcaf54c70f244a6"
@@ -4313,6 +4318,11 @@
   integrity sha512-U25l7PEzOmlAPugNRl8t8lqyhQZS6W/+3f92+FdwW9qXju3i62iX/3OGCC3Gv+vybmQ4fbZmMjvl+VDfenNi3A==
   dependencies:
     tippy.js "^6.3.7"
+
+"@tiptap/extension-gapcursor@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-gapcursor/-/extension-gapcursor-2.2.4.tgz#607b2682376c5ced086258f8329eb080e8047627"
+  integrity sha512-Y6htT/RDSqkQ1UwG2Ia+rNVRvxrKPOs3RbqKHPaWr3vbFWwhHyKhMCvi/FqfI3d5pViVHOZQ7jhb5hT/a0BmNw==
 
 "@tiptap/extension-hard-break@2.2.3":
   version "2.2.3"
@@ -4329,10 +4339,20 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-highlight/-/extension-highlight-2.2.3.tgz#b9cf810547d2abc8b3b7567b9002397b6add3477"
   integrity sha512-3K9WbrR2WCYq7a/2JSQi5K2zzG/5ebNfTOXyDcT3kn5B5PutyWuDCzqjkPxGXmkf8yEZTQ9Sn2lQPRMG3sNwFw==
 
+"@tiptap/extension-history@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-history/-/extension-history-2.2.4.tgz#2d37ccfce9a8b7997bb4d46ebb19e986c5eb6f39"
+  integrity sha512-FDM32XYF5NU4mzh+fJ8w2CyUqv0l2Nl15sd6fOhQkVxSj8t57z+DUXc9ZR3zkH+1RAagYJo/2Gu3e99KpMr0tg==
+
 "@tiptap/extension-horizontal-rule@^2.2.2":
   version "2.2.3"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-horizontal-rule/-/extension-horizontal-rule-2.2.3.tgz#ff76b7627b6fea3ba5397fbfccd818f0f2e6efbd"
   integrity sha512-pc0J0hBcvj9ymJkFau1W/3L+OhB1PQzMjsx4ZWJvxURL8U7zdDqvYvJjfCA0i5Qw2ZuSVXFACGbEVr6NoCMRAw==
+
+"@tiptap/extension-image@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-image/-/extension-image-2.2.4.tgz#55c267e9ff77e2bf3c514896331ad91d18da08c3"
+  integrity sha512-xOnqZpnP/fAfmK5AKmXplVQdXBtY5AoZ9B+qllH129aLABaDRzl3e14ZRHC8ahQawOmCe6AOCCXYUBXDOlY5Jg==
 
 "@tiptap/extension-italic@^2.2.2":
   version "2.2.3"

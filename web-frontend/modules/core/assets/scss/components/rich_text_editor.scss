@@ -1,23 +1,28 @@
+.rich-text-editor .loading-spinner {
+  position: sticky;
+  top: 50%;
+  left: 50%;
+}
 
 .rich-text-editor--scrollbar-thin {
-    /* scrollbar */
-    &::-webkit-scrollbar {
-      width: 10px;
-    }
-  
-    &::-webkit-scrollbar-track {
-      -webkit-border-radius: 10px;
-      border-radius: 10px;
-      background-color: transparent;
-    }
-  
-    &::-webkit-scrollbar-thumb {
-      -webkit-border-radius: 10px;
-      border-radius: 10px;
-      background: $color-neutral-500;
-      background-clip: content-box;
-      border: 2px solid transparent;
-    }
+  /* scrollbar */
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: $color-neutral-500;
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
 }
 
 .rich-text-editor__content-blockquote {
@@ -73,7 +78,8 @@
     text-decoration: none;
   }
 
-  ul, ol {
+  ul,
+  ol {
     margin-top: 4px;
     margin-bottom: 4px;
     padding-inline-start: 20px;
@@ -85,7 +91,7 @@
 
   blockquote {
     @extend .rich-text-editor__content-blockquote;
-    
+
     margin: 1rem;
   }
 
@@ -94,7 +100,7 @@
     background-color: $color-neutral-100;
     border-radius: $rounded;
   }
-  
+
   ul[data-type='taskList'] {
     padding-inline-start: 5px;
 
@@ -119,6 +125,10 @@
   max-height: 50vh;
   overflow: auto;
   background-color: white;
+}
+
+.rich-text-editor__content--loading {
+  opacity: 0.2;
 }
 
 .rich-text-editor__mention {
@@ -154,7 +164,8 @@
   height: 0;
 }
 
-.rich-text-editor__floating-menu, .rich-text-editor__bubble-menu {
+.rich-text-editor__floating-menu,
+.rich-text-editor__bubble-menu {
   @include add-elevation($elevation-medium);
 
   background-color: white;
@@ -176,7 +187,8 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
-.rich-text-editor__floating-menu-button, .rich-text-editor__bubble-menu-button {
+.rich-text-editor__floating-menu-button,
+.rich-text-editor__bubble-menu-button {
   padding: 0;
   margin: 0;
   line-height: 16px;
@@ -207,7 +219,6 @@
   i {
     font-size: 18px;
   }
-
 }
 
 .rich-text-editor__floating-menu--collapsed {
@@ -217,7 +228,6 @@
     background-color: inherit;
   }
 }
-
 
 .rich-text-editor__bubble-menu-button {
   i.iconoir-underline {
@@ -229,7 +239,7 @@
     font-size: 14px;
     margin-top: -1px;
   }
-} 
+}
 
 .rich-text-editor__bubble-menu-link-edit {
   position: relative;
@@ -271,7 +281,6 @@
   cursor: pointer;
 
   @include add-elevation($elevation-low);
-
 }
 
 .rich-text-editor__bubble-menu-link-edit-set--disabled {
@@ -286,4 +295,3 @@
   padding: 4px;
   gap: 6px;
 }
-

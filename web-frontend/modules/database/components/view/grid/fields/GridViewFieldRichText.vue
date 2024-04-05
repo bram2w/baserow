@@ -57,7 +57,9 @@ export default {
   },
   computed: {
     formattedValue() {
-      return parseMarkdown(this.value, { openLinkOnClick: true })
+      return parseMarkdown(this.value, {
+        openLinkOnClick: true,
+      })
     },
   },
   watch: {

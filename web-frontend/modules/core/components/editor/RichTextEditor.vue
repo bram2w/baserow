@@ -2,6 +2,10 @@
   <div
     class="rich-text-editor"
     :class="{ 'rich-text-editor--scrollbar-thin': thinScrollbar }"
+    @drop.prevent="dropImage($event)"
+    @dragover.prevent
+    @dragenter.prevent="dragEnter($event)"
+    @dragleave="dragLeave($event)"
   >
     <RichTextEditorMentionsList
       v-if="editable && enableMentions"
@@ -24,9 +28,13 @@
     </div>
     <EditorContent
       class="rich-text-editor__content"
-      :class="editorClass"
+      :class="[
+        { 'rich-text-editor__content--loading': loadings.length > 0 },
+        editorClass,
+      ]"
       :editor="editor"
     />
+    <div v-if="loadings.length > 0" class="loading-spinner"></div>
   </div>
 </template>
 
@@ -56,6 +64,9 @@ import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
 import { TaskItem } from '@tiptap/extension-task-item'
 import { TaskList } from '@tiptap/extension-task-list'
 import { Text } from '@tiptap/extension-text'
+import { Dropcursor } from '@tiptap/extension-dropcursor'
+import { Gapcursor } from '@tiptap/extension-gapcursor'
+import { History } from '@tiptap/extension-history'
 import { mergeAttributes, isActive } from '@tiptap/core'
 
 import { Markdown } from 'tiptap-markdown'
@@ -63,44 +74,57 @@ import { Markdown } from 'tiptap-markdown'
 import RichTextEditorMentionsList from '@baserow/modules/core/components/editor/RichTextEditorMentionsList'
 import RichTextEditorBubbleMenu from '@baserow/modules/core/components/editor/RichTextEditorBubbleMenu'
 import RichTextEditorFloatingMenu from '@baserow/modules/core/components/editor/RichTextEditorFloatingMenu'
-import EnterStopEditExtension from '@baserow/modules/core/components/editor/extensions/EnterStopEditExtension'
-import suggestion from '@baserow/modules/core/editor/suggestion'
+import { EnterStopEditExtension } from '@baserow/modules/core/editor/enterStopEditExtension'
+import { ScalableImage } from '@baserow/modules/core/editor/image'
 import { isElement } from '@baserow/modules/core/utils/dom'
 import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
+import { uuid } from '@baserow/modules/core/utils/string'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import suggestion from '@baserow/modules/core/editor/suggestion'
 
-const richTextEditorExtensions = ({ openLinksOnClick = false }) => [
-  // Nodes
-  Heading.configure({ levels: [1, 2, 3] }),
-  ListItem,
-  OrderedList,
-  BulletList,
-  CodeBlock,
-  Blockquote,
-  HorizontalRule,
-  TaskItem,
-  TaskList,
-  // Marks
-  Bold,
-  Italic,
-  Strike,
-  Underline,
-  Subscript,
-  Superscript,
-  Link.configure({
-    protocols: [
-      { scheme: 'ftp' },
-      { scheme: 'mailto', optionalSlashes: true },
-      { scheme: 'tel', optionalSlashes: true },
-    ],
-    autolink: false,
-    openOnClick: openLinksOnClick,
-  }),
-  // Extensions
-  Markdown.configure({
-    html: false,
-    breaks: true,
-  }),
-]
+const richTextEditorExtensions = ({
+  openLinksOnClick = false,
+  enableImages = false,
+}) => {
+  const extensions = [
+    // Nodes
+    Heading.configure({ levels: [1, 2, 3] }),
+    ListItem,
+    OrderedList,
+    BulletList,
+    CodeBlock,
+    Blockquote,
+    HorizontalRule,
+    TaskItem,
+    TaskList,
+    // Marks
+    Bold,
+    Italic,
+    Strike,
+    Underline,
+    Subscript,
+    Superscript,
+    Link.configure({
+      protocols: [
+        { scheme: 'ftp' },
+        { scheme: 'mailto', optionalSlashes: true },
+        { scheme: 'tel', optionalSlashes: true },
+      ],
+      autolink: false,
+      openOnClick: openLinksOnClick,
+    }),
+    // Extensions
+    Markdown.configure({
+      html: false,
+      breaks: true,
+    }),
+    History,
+  ]
+  if (enableImages) {
+    extensions.push(...[ScalableImage, Dropcursor, Gapcursor])
+  }
+  return extensions
+}
 
 export default {
   components: {
@@ -109,6 +133,7 @@ export default {
     RichTextEditorMentionsList,
     RichTextEditorFloatingMenu,
   },
+  inject: ['uploadUserFile'],
   props: {
     value: {
       type: [Object, String],
@@ -157,6 +182,7 @@ export default {
       resizeObserver: null,
       bubbleMenuVisible: false,
       floatingMenuVisible: false,
+      loadings: [],
     }
   },
   computed: {
@@ -169,6 +195,10 @@ export default {
         return this.scrollableAreaElement.getBoundingClientRect()
       }
       return () => this.$el.getBoundingClientRect()
+    },
+    canUploadImages() {
+      const enableImages = false
+      return this.editable && this.enableRichTextFormatting && enableImages
     },
   },
   watch: {
@@ -213,7 +243,9 @@ export default {
 
       if (this.enableRichTextFormatting) {
         extensions.push(
-          ...richTextEditorExtensions({ openLinksOnClick: !this.editable })
+          ...richTextEditorExtensions({
+            openLinksOnClick: !this.editable,
+          })
         )
       }
 
@@ -282,18 +314,23 @@ export default {
           this.$emit('blur')
         },
         onSelectionUpdate: ({ editor }) => {
-          if (this.editable && this.enableRichTextFormatting) {
-            const emptySelection = editor.state.selection.empty === false
-            const codeBlockActive = editor.isActive('codeBlock')
-            const linkMarkActive = editor.isActive('link')
+          if (!this.editable || !this.enableRichTextFormatting) {
+            return
+          }
 
-            if ((emptySelection && !codeBlockActive) || linkMarkActive) {
-              this.bubbleMenuVisible = true
-              this.floatingMenuVisible = false
-            } else {
-              this.bubbleMenuVisible = false
-              this.floatingMenuVisible = true
-            }
+          const emptySelection = editor.state.selection.empty === true
+          const codeBlockActive = editor.isActive('codeBlock')
+          const linkMarkActive = editor.isActive('link')
+
+          if (editor.isActive('image')) {
+            this.bubbleMenuVisible = false
+            this.floatingMenuVisible = false
+          } else if ((!emptySelection && !codeBlockActive) || linkMarkActive) {
+            this.bubbleMenuVisible = true
+            this.floatingMenuVisible = false
+          } else {
+            this.bubbleMenuVisible = false
+            this.floatingMenuVisible = true
           }
         },
       })
@@ -307,6 +344,7 @@ export default {
         this.registerResizeObserver()
         this.registerAutoCollapseFloatingMenuHandler()
         this.registerAutoHideBubbleMenuHandler()
+        this.registerOnPasteHandler()
       } else {
         this.unregisterResizeObserver()
       }
@@ -335,6 +373,12 @@ export default {
       elem.addEventListener('scroll', handler)
       this.$once('hook:unmounted', () => {
         elem.removeEventListener('scroll', handler)
+      })
+    },
+    registerOnPasteHandler() {
+      document.addEventListener('paste', this.onPaste)
+      this.$once('hook:unmounted', () => {
+        document.removeEventListener('paste', this.onPaste)
       })
     },
     customRenderHTMLForMentions() {
@@ -369,6 +413,88 @@ export default {
     },
     isEventTargetInside(event) {
       return isElement(this.$el, event.target) || this.isEventFromMenu(event)
+    },
+    addImages(imageFiles) {
+      for (const image of imageFiles) {
+        this.editor.commands.setImage({
+          src: image.url,
+          alt: image.original_name.split('.')[0],
+        })
+      }
+    },
+    async dropImage(event) {
+      const files = [...event.dataTransfer.items].map((item) =>
+        item.getAsFile()
+      )
+      const images = files.filter((file) => file?.type.startsWith('image/'))
+      if (images.length === 0) {
+        return
+      }
+      await this.uploadFiles(images)
+    },
+    async uploadFiles(fileArray) {
+      this.dragging = false
+
+      if (!this.canUploadImages) {
+        return
+      }
+
+      const files = fileArray.map((file) => ({ id: uuid(), file }))
+
+      // First add the file ids to the loading list so the user sees a visual loading
+      // indication for each file.
+      files.forEach((file) => {
+        this.loadings.push({ id: file.id })
+      })
+
+      // Now upload the files one by one to not overload the backend. When finished,
+      // regardless of is has succeeded, the loading state for that file can be removed
+      // because it has already been added as a file.
+      for (const fileObj of files) {
+        const id = fileObj.id
+        const file = fileObj.file
+
+        try {
+          const { data } = await this.uploadUserFile(file)
+          this.addImages([data])
+        } catch (error) {
+          notifyIf(error, 'userFile')
+        }
+
+        const index = this.loadings.findIndex((l) => l.id === id)
+        this.loadings.splice(index, 1)
+      }
+    },
+    dragEnter(event) {
+      if (!this.canUploadImages) {
+        return
+      }
+      this.dragging = true
+      this.dragTarget = event.target
+    },
+    dragLeave(event) {
+      if (this.dragTarget === event.target && !this.canUploadImages) {
+        event.stopPropagation()
+        event.preventDefault()
+        this.dragging = false
+        this.dragTarget = null
+      }
+    },
+    onPaste(event) {
+      if (
+        !event.clipboardData.types.includes('text/plain') ||
+        event.clipboardData.getData('text/plain').startsWith('file:///')
+      ) {
+        const { items } = event.clipboardData
+        for (const item of items) {
+          if (item.type.includes('image')) {
+            const file = item.getAsFile()
+            this.uploadFiles([file])
+            return true
+          }
+        }
+      }
+      return false
     },
   },
 }

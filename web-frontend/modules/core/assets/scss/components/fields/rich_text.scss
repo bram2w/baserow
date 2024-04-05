@@ -103,6 +103,15 @@
     max-width: 100%;
   }
 
+  img {
+    @include rounded($rounded);
+
+    max-height: 23px;
+    width: auto;
+    border: solid 1px $color-neutral-400;
+    margin-block-start: 5px;
+  }
+
   ul.contains-task-list {
     list-style-type: none;
 

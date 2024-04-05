@@ -75,6 +75,7 @@ export default function CoreModule(options) {
       process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:8000',
     PUBLIC_WEB_FRONTEND_URL:
       process.env.PUBLIC_WEB_FRONTEND_URL ?? 'http://localhost:3000',
+    MEDIA_URL: process.env.MEDIA_URL ?? 'http://localhost:4000/media/',
     INITIAL_TABLE_DATA_LIMIT: process.env.INITIAL_TABLE_DATA_LIMIT ?? null,
     DOWNLOAD_FILE_VIA_XHR: process.env.DOWNLOAD_FILE_VIA_XHR ?? '0',
     HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:

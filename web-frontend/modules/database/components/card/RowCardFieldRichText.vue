@@ -1,5 +1,5 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
-  <!-- eslint-disable-next-line vue/no-v-html -->
   <div
     class="card-rich-text field-rich-text--preview"
     v-html="formattedValue"
@@ -19,7 +19,9 @@ export default {
   height: 32,
   computed: {
     formattedValue() {
-      return parseMarkdown(this.value, { openLinkOnClick: true })
+      return parseMarkdown(this.value, {
+        openLinkOnClick: true,
+      })
     },
   },
 }
