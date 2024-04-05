@@ -1,19 +1,19 @@
 from django.shortcuts import reverse
 
 import pytest
+from baserow_premium.fields.models import AIField
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import AIField
 
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_create_ai_field_type(data_fixture):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    data_fixture.create_text_field(table=table, order=1, name="name")
+def test_create_ai_field_type(premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    premium_data_fixture.create_text_field(table=table, order=1, name="name")
 
     handler = FieldHandler()
     ai_field = handler.create_field(
@@ -34,10 +34,10 @@ def test_create_ai_field_type(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_update_ai_field_type(data_fixture):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    field = data_fixture.create_ai_field(table=table, order=1, name="name")
+def test_update_ai_field_type(premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    field = premium_data_fixture.create_ai_field(table=table, order=1, name="name")
 
     handler = FieldHandler()
     ai_field = handler.update_field(
@@ -56,10 +56,10 @@ def test_update_ai_field_type(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_delete_ai_field_type(data_fixture):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    field = data_fixture.create_ai_field(
+def test_delete_ai_field_type(premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    field = premium_data_fixture.create_ai_field(
         table=table,
         order=1,
         name="name",
@@ -76,11 +76,11 @@ def test_delete_ai_field_type(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_create_ai_field_type_via_api(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    data_fixture.create_text_field(table=table, order=1, name="name")
+def test_create_ai_field_type_via_api(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    premium_data_fixture.create_text_field(table=table, order=1, name="name")
 
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
@@ -103,11 +103,11 @@ def test_create_ai_field_type_via_api(data_fixture, api_client):
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_create_ai_field_type_via_api_invalid_formula(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    data_fixture.create_text_field(table=table, order=1, name="name")
+def test_create_ai_field_type_via_api_invalid_formula(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    premium_data_fixture.create_text_field(table=table, order=1, name="name")
 
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
@@ -129,11 +129,13 @@ def test_create_ai_field_type_via_api_invalid_formula(data_fixture, api_client):
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_create_ai_field_type_via_api_with_invalid_type(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    data_fixture.create_text_field(table=table, order=1, name="name")
+def test_create_ai_field_type_via_api_with_invalid_type(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    premium_data_fixture.create_text_field(table=table, order=1, name="name")
 
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
@@ -154,11 +156,13 @@ def test_create_ai_field_type_via_api_with_invalid_type(data_fixture, api_client
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_create_ai_field_type_via_api_with_invalid_model(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    data_fixture.create_text_field(table=table, order=1, name="name")
+def test_create_ai_field_type_via_api_with_invalid_model(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    premium_data_fixture.create_text_field(table=table, order=1, name="name")
 
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
@@ -179,11 +183,13 @@ def test_create_ai_field_type_via_api_with_invalid_model(data_fixture, api_clien
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_update_ai_field_type_via_api_with_invalid_type(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    field = data_fixture.create_ai_field(table=table, order=1, name="name")
+def test_update_ai_field_type_via_api_with_invalid_type(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    field = premium_data_fixture.create_ai_field(table=table, order=1, name="name")
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field.id}),
@@ -198,11 +204,13 @@ def test_update_ai_field_type_via_api_with_invalid_type(data_fixture, api_client
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_update_ai_field_type_via_api_with_invalid_model(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    field = data_fixture.create_ai_field(table=table, order=1, name="name")
+def test_update_ai_field_type_via_api_with_invalid_model(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    field = premium_data_fixture.create_ai_field(table=table, order=1, name="name")
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field.id}),
@@ -217,11 +225,13 @@ def test_update_ai_field_type_via_api_with_invalid_model(data_fixture, api_clien
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_update_ai_field_type_via_api_with_valid_model(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.register_fake_generate_ai_type()
-    field = data_fixture.create_ai_field(table=table, order=1, name="name")
+def test_update_ai_field_type_via_api_with_valid_model(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    premium_data_fixture.register_fake_generate_ai_type()
+    field = premium_data_fixture.create_ai_field(table=table, order=1, name="name")
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field.id}),

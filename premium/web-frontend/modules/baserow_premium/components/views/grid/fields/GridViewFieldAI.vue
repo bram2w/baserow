@@ -45,7 +45,7 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
-import gridFieldAI from '@baserow/modules/database/mixins/gridFieldAI'
+import gridFieldAI from '@baserow_premium/mixins/gridFieldAI'
 
 export default {
   mixins: [gridField, gridFieldInput, gridFieldAI],

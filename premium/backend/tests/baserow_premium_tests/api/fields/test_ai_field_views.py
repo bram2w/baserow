@@ -15,15 +15,19 @@ from baserow.contrib.database.rows.handler import RowHandler
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_generate_ai_field_value_view_field_does_not_exist(data_fixture, api_client):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token(
+def test_generate_ai_field_value_view_field_does_not_exist(
+    premium_data_fixture, api_client
+):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(table=table, name="ai")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(table=table, name="ai")
 
     rows = RowHandler().create_rows(
         user,
@@ -33,7 +37,7 @@ def test_generate_ai_field_value_view_field_does_not_exist(data_fixture, api_cli
 
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": 0},
         ),
         {"row_ids": [rows[0].id]},
@@ -46,15 +50,19 @@ def test_generate_ai_field_value_view_field_does_not_exist(data_fixture, api_cli
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_generate_ai_field_value_view_row_does_not_exist(data_fixture, api_client):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token(
+def test_generate_ai_field_value_view_row_does_not_exist(
+    premium_data_fixture, api_client
+):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(table=table, name="ai")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(table=table, name="ai")
 
     rows = RowHandler().create_rows(
         user,
@@ -64,7 +72,7 @@ def test_generate_ai_field_value_view_row_does_not_exist(data_fixture, api_clien
 
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": [0]},
@@ -77,18 +85,22 @@ def test_generate_ai_field_value_view_row_does_not_exist(data_fixture, api_clien
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_generate_ai_field_value_view_user_not_in_workspace(data_fixture, api_client):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token(
+def test_generate_ai_field_value_view_user_not_in_workspace(
+    premium_data_fixture, api_client
+):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    user_2, token_2 = data_fixture.create_user_and_token(
+    user_2, token_2 = premium_data_fixture.create_user_and_token(
         email="test2@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(table=table, name="ai")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(table=table, name="ai")
 
     rows = RowHandler().create_rows(
         user,
@@ -98,7 +110,7 @@ def test_generate_ai_field_value_view_user_not_in_workspace(data_fixture, api_cl
 
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": [rows[0].id]},
@@ -112,16 +124,18 @@ def test_generate_ai_field_value_view_user_not_in_workspace(data_fixture, api_cl
 @pytest.mark.django_db
 @pytest.mark.field_ai
 def test_generate_ai_field_value_view_generative_ai_does_not_exist(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token(
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(
         table=table, name="ai", ai_generative_ai_type="does_not_exist"
     )
 
@@ -133,7 +147,7 @@ def test_generate_ai_field_value_view_generative_ai_does_not_exist(
 
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": [rows[0].id]},
@@ -147,16 +161,18 @@ def test_generate_ai_field_value_view_generative_ai_does_not_exist(
 @pytest.mark.django_db
 @pytest.mark.field_ai
 def test_generate_ai_field_value_view_generative_ai_model_does_not_belong_to_type(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token(
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(
         table=table, name="ai", ai_generative_ai_model="does_not_exist"
     )
 
@@ -170,7 +186,7 @@ def test_generate_ai_field_value_view_generative_ai_model_does_not_belong_to_typ
 
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": [rows[0].id]},
@@ -183,18 +199,22 @@ def test_generate_ai_field_value_view_generative_ai_model_does_not_belong_to_typ
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-@patch("baserow.contrib.database.fields.tasks.generate_ai_values_for_rows.apply")
+@patch("baserow_premium.fields.tasks.generate_ai_values_for_rows.apply")
 def test_generate_ai_field_value_view_generative_ai(
-    patched_generate_ai_values_for_rows, data_fixture, api_client
+    patched_generate_ai_values_for_rows, premium_data_fixture, api_client
 ):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token(
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(table=table, name="ai", ai_prompt="'Hello'")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(
+        table=table, name="ai", ai_prompt="'Hello'"
+    )
 
     rows = RowHandler().create_rows(
         user,
@@ -205,7 +225,7 @@ def test_generate_ai_field_value_view_generative_ai(
 
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": [rows[0].id]},
@@ -218,11 +238,13 @@ def test_generate_ai_field_value_view_generative_ai(
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
-def test_batch_generate_ai_field_value_limit(api_client, data_fixture):
-    data_fixture.register_fake_generate_ai_type()
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    field = data_fixture.create_ai_field(table=table, name="ai", ai_prompt="'Hello'")
+def test_batch_generate_ai_field_value_limit(api_client, premium_data_fixture):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    field = premium_data_fixture.create_ai_field(
+        table=table, name="ai", ai_prompt="'Hello'"
+    )
     rows = RowHandler().create_rows(
         user,
         table,
@@ -234,7 +256,7 @@ def test_batch_generate_ai_field_value_limit(api_client, data_fixture):
     # BATCH_ROWS_SIZE_LIMIT rows are allowed
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": row_ids[: settings.BATCH_ROWS_SIZE_LIMIT]},
@@ -247,7 +269,7 @@ def test_batch_generate_ai_field_value_limit(api_client, data_fixture):
     # BATCH_ROWS_SIZE_LIMIT + 1 rows are not allowed
     response = api_client.post(
         reverse(
-            "api:database:fields:async_generate_ai_field_values",
+            "api:premium:fields:async_generate_ai_field_values",
             kwargs={"field_id": field.id},
         ),
         {"row_ids": row_ids},

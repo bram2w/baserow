@@ -350,5 +350,24 @@
         "modeMentionsDesc": "You will only receive notifications when you are mentioned.",
         "modeAllTitle": "All comments",
         "modeAllDesc": "You will receive notifications for all comments in this row."
+    },
+    "premiumFieldType": {
+      "ai": "AI prompt"
+    },
+    "functionalGridViewFieldAI": {
+      "generate": "Generate"
+    },
+    "gridViewFieldAI": {
+      "generate": "Generate",
+      "regenerate": "Re-Generate"
+    },
+    "fieldAISubForm": {
+      "AIType": "AI Type",
+      "AIModel": "AI Model",
+      "prompt": "Prompt"
+    },
+    "rowEditFieldAI": {
+      "generate": "Generate",
+      "createRowBefore": "The AI value can be generated after the row has been created."
     }
 }

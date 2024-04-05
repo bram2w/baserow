@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
 import pytest
+from baserow_premium.fields.tasks import generate_ai_values_for_rows
 
-from baserow.contrib.database.fields.tasks import generate_ai_values_for_rows
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.generative_ai.exceptions import GenerativeAIPromptError
 
@@ -10,15 +10,21 @@ from baserow.core.generative_ai.exceptions import GenerativeAIPromptError
 @pytest.mark.django_db
 @pytest.mark.field_ai
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
-def test_generate_ai_field_value_view_generative_ai(patched_rows_updated, data_fixture):
-    data_fixture.register_fake_generate_ai_type()
-    user = data_fixture.create_user(
+def test_generate_ai_field_value_view_generative_ai(
+    patched_rows_updated, premium_data_fixture
+):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user = premium_data_fixture.create_user(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    field = data_fixture.create_ai_field(table=table, name="ai", ai_prompt="'Hello'")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(
+        table=table, name="ai", ai_prompt="'Hello'"
+    )
 
     rows = RowHandler().create_rows(user, table, rows_values=[{}])
 
@@ -34,19 +40,23 @@ def test_generate_ai_field_value_view_generative_ai(patched_rows_updated, data_f
 @pytest.mark.field_ai
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 def test_generate_ai_field_value_view_generative_ai_parse_formula(
-    patched_rows_updated, data_fixture
+    patched_rows_updated, premium_data_fixture
 ):
-    data_fixture.register_fake_generate_ai_type()
-    user = data_fixture.create_user(
+    premium_data_fixture.register_fake_generate_ai_type()
+    user = premium_data_fixture.create_user(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    firstname = data_fixture.create_text_field(table=table, name="firstname")
-    lastname = data_fixture.create_text_field(table=table, name="lastname")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    firstname = premium_data_fixture.create_text_field(table=table, name="firstname")
+    lastname = premium_data_fixture.create_text_field(table=table, name="lastname")
     formula = f"concat('Hello ', get('fields.field_{firstname.id}'), ' ', get('fields.field_{lastname.id}'))"
-    field = data_fixture.create_ai_field(table=table, name="ai", ai_prompt=formula)
+    field = premium_data_fixture.create_ai_field(
+        table=table, name="ai", ai_prompt=formula
+    )
 
     rows = RowHandler().create_rows(
         user,
@@ -68,18 +78,22 @@ def test_generate_ai_field_value_view_generative_ai_parse_formula(
 @pytest.mark.field_ai
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 def test_generate_ai_field_value_view_generative_ai_invalid_field(
-    patched_rows_updated, data_fixture
+    patched_rows_updated, premium_data_fixture
 ):
-    data_fixture.register_fake_generate_ai_type()
-    user = data_fixture.create_user(
+    premium_data_fixture.register_fake_generate_ai_type()
+    user = premium_data_fixture.create_user(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    firstname = data_fixture.create_text_field(table=table, name="firstname")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    firstname = premium_data_fixture.create_text_field(table=table, name="firstname")
     formula = "concat('Hello ', get('fields.field_0'))"
-    field = data_fixture.create_ai_field(table=table, name="ai", ai_prompt=formula)
+    field = premium_data_fixture.create_ai_field(
+        table=table, name="ai", ai_prompt=formula
+    )
 
     rows = RowHandler().create_rows(
         user,
@@ -98,18 +112,20 @@ def test_generate_ai_field_value_view_generative_ai_invalid_field(
 @patch("baserow.contrib.database.rows.signals.rows_ai_values_generation_error.send")
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 def test_generate_ai_field_value_view_generative_ai_invalid_prompt(
-    patched_rows_updated, patched_rows_ai_values_generation_error, data_fixture
+    patched_rows_updated, patched_rows_ai_values_generation_error, premium_data_fixture
 ):
-    data_fixture.register_fake_generate_ai_type()
-    user = data_fixture.create_user(
+    premium_data_fixture.register_fake_generate_ai_type()
+    user = premium_data_fixture.create_user(
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    database = data_fixture.create_database_application(user=user, name="database")
-    table = data_fixture.create_database_table(name="table", database=database)
-    firstname = data_fixture.create_text_field(table=table, name="firstname")
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    firstname = premium_data_fixture.create_text_field(table=table, name="firstname")
     formula = "concat('Hello ', get('fields.field_0'))"
-    field = data_fixture.create_ai_field(
+    field = premium_data_fixture.create_ai_field(
         table=table,
         name="ai",
         ai_generative_ai_type="test_generative_ai_prompt_error",

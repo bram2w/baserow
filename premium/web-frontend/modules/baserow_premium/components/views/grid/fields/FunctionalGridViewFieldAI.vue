@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import gridFieldAI from '@baserow/modules/database/mixins/gridFieldAI'
+import gridFieldAI from '@baserow_premium/mixins/gridFieldAI'
 
 export default {
   name: 'FunctionalGridViewFieldAI',

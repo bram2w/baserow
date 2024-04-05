@@ -32,7 +32,6 @@ import {
   UUIDFieldType,
   AutonumberFieldType,
   PasswordFieldType,
-  AIFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -467,7 +466,6 @@ export default (context) => {
   app.$registry.register('field', new UUIDFieldType(context))
   app.$registry.register('field', new AutonumberFieldType(context))
   app.$registry.register('field', new PasswordFieldType(context))
-  app.$registry.register('field', new AIFieldType(context))
 
   app.$registry.register('importer', new CSVImporterType(context))
   app.$registry.register('importer', new PasteImporterType(context))
