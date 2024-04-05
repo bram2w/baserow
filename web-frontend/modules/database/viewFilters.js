@@ -1,4 +1,5 @@
 import moment from '@baserow/modules/core/moment'
+import _ from 'lodash'
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
@@ -10,6 +11,7 @@ import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFi
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import ViewFilterTypeNumberWithTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeNumberWithTimeZone'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
+import ViewFilterTypeMultipleSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions'
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
   splitTimezoneAndFilterValue,
@@ -1500,6 +1502,71 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
       rowValue === null ||
       (rowValue !== null && rowValue.id !== parseInt(filterValue))
     )
+  }
+}
+
+export class SingleSelectIsAnyOfViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'single_select_is_any_of'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAnyOf')
+  }
+
+  getExample() {
+    return '1,2'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeMultipleSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['single_select']
+  }
+
+  prepareValue(value, field) {
+    const t = (this._prepareValue(value, field) || []).join(',')
+    return t
+  }
+
+  /**
+   * internal method to get an uniq array of ids for the filter or null, if there is no filter value
+   *
+   * @param value
+   * @param field
+   * @returns {any[]|*[]|null}
+   * @private
+   */
+  _prepareValue(value, field) {
+    if (value === '') {
+      return null
+    }
+    const _parsed = this.app.$papa.stringToArray(value).map((v) => parseInt(v))
+    return _.uniq(_parsed)
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const parsedValue = this._prepareValue(filterValue)
+    return parsedValue === null || _.includes(parsedValue, rowValue?.id)
+  }
+}
+
+export class SingleSelectIsNoneOfViewFilterType extends SingleSelectIsAnyOfViewFilterType {
+  static getType() {
+    return 'single_select_is_none_of'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNoneOf')
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const parsedValue = this._prepareValue(filterValue)
+    return parsedValue === null || !_.includes(parsedValue, rowValue?.id)
   }
 }
 

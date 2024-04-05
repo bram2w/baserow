@@ -48,7 +48,8 @@ exports[`Dropdown component Test slots 1`] = `
           <div
             class="select__item-name"
           >
-            My item
+            <!---->
+             My item
           </div>
            
           <!---->
@@ -117,6 +118,8 @@ exports[`Dropdown component With items 1`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -203,6 +206,8 @@ exports[`Dropdown component With items 2`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -228,6 +233,8 @@ exports[`Dropdown component With items 2`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -261,6 +268,8 @@ exports[`Dropdown component With items 2`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="C"
@@ -286,6 +295,8 @@ exports[`Dropdown component With items 2`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <i
               class="select__item-icon times"
             />
@@ -317,6 +328,8 @@ exports[`Dropdown component With items 2`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -393,6 +406,8 @@ exports[`Dropdown component With items 3`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -418,6 +433,8 @@ exports[`Dropdown component With items 3`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -638,6 +655,8 @@ exports[`Dropdown component change value prop 1`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -663,6 +682,8 @@ exports[`Dropdown component change value prop 1`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -749,6 +770,8 @@ exports[`Dropdown component test focus 1`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -827,6 +850,8 @@ exports[`Dropdown component test focus 2`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -913,6 +938,8 @@ exports[`Dropdown component test interactions 1`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -938,6 +965,8 @@ exports[`Dropdown component test interactions 1`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->
@@ -1024,6 +1053,8 @@ exports[`Dropdown component test interactions 2`] = `
              
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -1049,6 +1080,8 @@ exports[`Dropdown component test interactions 2`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <!---->

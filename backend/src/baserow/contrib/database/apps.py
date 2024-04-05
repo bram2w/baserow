@@ -309,6 +309,8 @@ class DatabaseConfig(AppConfig):
             NotEmptyViewFilterType,
             NotEqualViewFilterType,
             SingleSelectEqualViewFilterType,
+            SingleSelectIsAnyOfViewFilterType,
+            SingleSelectIsNoneOfViewFilterType,
             SingleSelectNotEqualViewFilterType,
             UserIsNotViewFilterType,
             UserIsViewFilterType,
@@ -349,6 +351,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
+        view_filter_type_registry.register(SingleSelectIsAnyOfViewFilterType())
+        view_filter_type_registry.register(SingleSelectIsNoneOfViewFilterType())
         view_filter_type_registry.register(LinkRowHasViewFilterType())
         view_filter_type_registry.register(LinkRowHasNotViewFilterType())
         view_filter_type_registry.register(LinkRowContainsViewFilterType())

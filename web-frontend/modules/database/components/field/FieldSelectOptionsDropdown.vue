@@ -16,7 +16,20 @@
       @click="show()"
     >
       <div
-        v-if="hasValue()"
+        v-if="multiple && hasValue()"
+        class="select-options__multiple-dropdown-options"
+      >
+        <div
+          v-for="(name, index) in selectedName"
+          :key="name"
+          class="select-options__dropdown-option"
+          :class="'background-color--' + selectedColor[index]"
+        >
+          {{ name }}
+        </div>
+      </div>
+      <div
+        v-else-if="hasValue()"
         class="select-options__dropdown-option"
         :class="'background-color--' + selectedColor"
       >
