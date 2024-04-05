@@ -11,14 +11,14 @@
     />
     <div v-if="editable && enableRichTextFormatting">
       <RichTextEditorBubbleMenu
-        v-show="bubbleMenuOpen"
         ref="bubbleMenu"
         :editor="editor"
+        :visible="bubbleMenuVisible"
       />
       <RichTextEditorFloatingMenu
-        v-show="floatingMenuOpen"
         ref="floatingMenu"
         :editor="editor"
+        :visible="floatingMenuVisible"
         :get-scrollable-area-bounding-rect="scrollableAreaBoundingRect"
       />
     </div>
@@ -46,6 +46,7 @@ import { OrderedList } from '@tiptap/extension-ordered-list'
 import { Bold } from '@tiptap/extension-bold'
 import { Italic } from '@tiptap/extension-italic'
 import { Strike } from '@tiptap/extension-strike'
+import { Link } from '@tiptap/extension-link'
 import { Underline } from '@tiptap/extension-underline'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
@@ -55,7 +56,7 @@ import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
 import { TaskItem } from '@tiptap/extension-task-item'
 import { TaskList } from '@tiptap/extension-task-list'
 import { Text } from '@tiptap/extension-text'
-import { mergeAttributes } from '@tiptap/core'
+import { mergeAttributes, isActive } from '@tiptap/core'
 
 import { Markdown } from 'tiptap-markdown'
 
@@ -65,8 +66,9 @@ import RichTextEditorFloatingMenu from '@baserow/modules/core/components/editor/
 import EnterStopEditExtension from '@baserow/modules/core/components/editor/extensions/EnterStopEditExtension'
 import suggestion from '@baserow/modules/core/editor/suggestion'
 import { isElement } from '@baserow/modules/core/utils/dom'
+import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
 
-const richTextEditorExtensions = [
+const richTextEditorExtensions = ({ openLinksOnClick = false }) => [
   // Nodes
   Heading.configure({ levels: [1, 2, 3] }),
   ListItem,
@@ -84,6 +86,15 @@ const richTextEditorExtensions = [
   Underline,
   Subscript,
   Superscript,
+  Link.configure({
+    protocols: [
+      { scheme: 'ftp' },
+      { scheme: 'mailto', optionalSlashes: true },
+      { scheme: 'tel', optionalSlashes: true },
+    ],
+    autolink: false,
+    openOnClick: openLinksOnClick,
+  }),
   // Extensions
   Markdown.configure({
     html: false,
@@ -144,8 +155,8 @@ export default {
     return {
       editor: null,
       resizeObserver: null,
-      bubbleMenuOpen: false,
-      floatingMenuOpen: false,
+      bubbleMenuVisible: false,
+      floatingMenuVisible: false,
     }
   },
   computed: {
@@ -163,10 +174,8 @@ export default {
   watch: {
     editable: {
       handler(editable) {
-        this.editor.setOptions({
-          editable,
-        })
-        this.setupEditor()
+        this.editor.destroy()
+        this.createEditor()
       },
     },
     value(value) {
@@ -176,8 +185,7 @@ export default {
     },
   },
   mounted() {
-    const extensions = this.getConfiguredExtensions()
-    this.createEditor(extensions)
+    this.createEditor()
   },
   unmount() {
     if (this.editor) {
@@ -189,7 +197,7 @@ export default {
     registerResizeObserver() {
       const resizeObserver = new ResizeObserver(() => {
         this.$refs.floatingMenu?.updateReferenceClientRect()
-        this.bubbleMenuOpen = false
+        this.bubbleMenuVisible = false
       })
       resizeObserver.observe(this.$el)
       this.resizeObserver = resizeObserver
@@ -204,7 +212,9 @@ export default {
       const extensions = [Document, Paragraph, Text, HardBreak]
 
       if (this.enableRichTextFormatting) {
-        extensions.push(...richTextEditorExtensions)
+        extensions.push(
+          ...richTextEditorExtensions({ openLinksOnClick: !this.editable })
+        )
       }
 
       if (this.enterStopEdit || this.shiftEnterStopEdit) {
@@ -234,17 +244,31 @@ export default {
       }
       return extensions
     },
-    createEditor(extensions) {
+    createEditor() {
+      const extensions = this.getConfiguredExtensions()
       this.editor = new Editor({
         content: this.value,
         editable: this.editable,
+        editorProps: {
+          handleClickOn: (view, pos, node, nodePos, event, direct) => {
+            // Open links in a new tab when the user clicks on them while holding Cmd/Ctrl..
+            if (
+              isActive(view.state, 'link') &&
+              isOsSpecificModifierPressed(event)
+            ) {
+              window.open(this.editor.getAttributes('link').href, '_blank')
+              event.preventDefault()
+              return true
+            }
+          },
+        },
         extensions,
         onUpdate: () => {
           this.$emit('input', this.editor.getJSON())
         },
         onFocus: ({ editor, event }) => {
-          if (this.editable && !this.bubbleMenuOpen) {
-            this.floatingMenuOpen = true
+          if (this.editable && !this.bubbleMenuVisible) {
+            this.floatingMenuVisible = true
           }
           this.$emit('focus')
         },
@@ -253,21 +277,22 @@ export default {
             return // Do not emit blur event if the event is from one of the editor's menu.
           }
 
-          this.bubbleMenuOpen = false
-          this.floatingMenuOpen = false
+          this.bubbleMenuVisible = false
+          this.floatingMenuVisible = false
           this.$emit('blur')
         },
         onSelectionUpdate: ({ editor }) => {
           if (this.editable && this.enableRichTextFormatting) {
-            const hasValidSelection = editor.state.selection.empty === false
+            const emptySelection = editor.state.selection.empty === false
             const codeBlockActive = editor.isActive('codeBlock')
+            const linkMarkActive = editor.isActive('link')
 
-            if (hasValidSelection && !codeBlockActive) {
-              this.bubbleMenuOpen = true
-              this.floatingMenuOpen = false
+            if ((emptySelection && !codeBlockActive) || linkMarkActive) {
+              this.bubbleMenuVisible = true
+              this.floatingMenuVisible = false
             } else {
-              this.bubbleMenuOpen = false
-              this.floatingMenuOpen = true
+              this.bubbleMenuVisible = false
+              this.floatingMenuVisible = true
             }
           }
         },
@@ -277,7 +302,7 @@ export default {
     setupEditor() {
       if (this.editable) {
         this.focus()
-        this.floatingMenuOpen = true
+        this.floatingMenuVisible = true
 
         this.registerResizeObserver()
         this.registerAutoCollapseFloatingMenuHandler()
@@ -302,7 +327,7 @@ export default {
       const _this = this
 
       const handler = (event) => {
-        _this.bubbleMenuOpen = false
+        _this.bubbleMenuVisible = false
       }
 
       const elem = this.scrollableAreaElement ?? this.$el

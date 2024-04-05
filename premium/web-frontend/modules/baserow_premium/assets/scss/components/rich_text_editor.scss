@@ -21,10 +21,26 @@
 }
 
 .rich-text-editor__content-blockquote {
-    padding-left: 1rem;
-    color: $color-neutral-700;
-    border-left: 4px solid $color-neutral-300;
- }
+  padding-left: 1rem;
+  color: $color-neutral-700;
+  border-left: 4px solid $color-neutral-300;
+}
+
+.rich-text-editor__bubble-menu-link-show-href {
+  padding-right: 20px;
+  border-right: 1px solid $palette-neutral-200;
+
+  a {
+    color: inherit;
+  }
+}
+
+.rich-text-editor__bubble-menu-link-show-button {
+  border: none;
+  background-color: transparent;
+  color: $palette-neutral-700;
+  cursor: pointer;
+}
 
 .rich-text-editor__content {
   width: 100%;
@@ -50,6 +66,11 @@
   p {
     margin: 0;
     color: revert;
+  }
+
+  a {
+    cursor: text;
+    text-decoration: none;
   }
 
   ul, ol {
@@ -140,7 +161,9 @@
   padding: 4px;
   gap: 2px;
   border-radius: 6px;
-  border: 1px solid $palette-neutral-400;
+  border: 1px solid $palette-neutral-500;
+  margin-block-start: 0;
+  margin-block-end: 0;
 }
 
 .rich-text-editor__bubble-menu {
@@ -206,4 +229,61 @@
     font-size: 14px;
     margin-top: -1px;
   }
+} 
+
+.rich-text-editor__bubble-menu-link-edit {
+  position: relative;
+
+  .rich-text-editor__bubble-menu-link-edit-input {
+    padding: 8px 16px 8px 12px;
+    margin: 4px;
+    border-radius: 6px;
+    border: 1px solid $palette-neutral-200;
+    background: white;
+
+    @include add-elevation($elevation-low);
+  }
+
+  .rich-text-editor__bubble-menu-link-edit-delete {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    color: $palette-neutral-700;
+  }
 }
+
+.rich-text-editor__bubble-menu-link-edit-set {
+  display: inline-flex;
+  padding: 8px 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  background-color: $palette-blue-500;
+  color: white;
+  border: none;
+  margin: 4px 4px 4px 0;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include add-elevation($elevation-low);
+
+}
+
+.rich-text-editor__bubble-menu-link-edit-set--disabled {
+  cursor: not-allowed;
+  background-color: $palette-neutral-100;
+  color: $palette-neutral-700;
+}
+
+.rich-text-editor__bubble-menu-link-show {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  gap: 6px;
+}
+

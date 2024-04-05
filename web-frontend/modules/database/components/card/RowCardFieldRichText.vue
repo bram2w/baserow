@@ -19,7 +19,7 @@ export default {
   height: 32,
   computed: {
     formattedValue() {
-      return parseMarkdown(this.value || '')
+      return parseMarkdown(this.value, { openLinkOnClick: true })
     },
   },
 }
