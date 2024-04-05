@@ -49,6 +49,7 @@ export default {
       if (!disabled) {
         this.$parent.select(value)
       }
+      this.$emit('click', value)
     },
     hover(value, disabled) {
       if (!disabled && this.$parent.hover !== value) {

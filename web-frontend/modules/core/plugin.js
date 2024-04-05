@@ -71,6 +71,11 @@ import {
 
 import priorityBus from '@baserow/modules/core/plugins/priorityBus'
 
+import {
+  AdminRoleType,
+  MemberRoleType,
+} from '@baserow/modules/database/roleTypes'
+
 export default (context, inject) => {
   const { store, isDev, app } = context
   inject('bus', new Vue())
@@ -106,6 +111,7 @@ export default (context, inject) => {
   registry.registerNamespace('service')
   registry.registerNamespace('userSource')
   registry.registerNamespace('appAuthProvider')
+  registry.registerNamespace('roles')
 
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
@@ -169,6 +175,9 @@ export default (context, inject) => {
   registry.register('runtimeFormulaFunction', new RuntimeConcat(context))
   registry.register('runtimeFormulaFunction', new RuntimeGet(context))
   registry.register('runtimeFormulaFunction', new RuntimeAdd(context))
+
+  registry.register('roles', new AdminRoleType(context))
+  registry.register('roles', new MemberRoleType(context))
 
   // Notification types
   registry.register(

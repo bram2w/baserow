@@ -12,6 +12,7 @@
       ref="editRoleContext"
       :subject="rowSanitised"
       :roles="roles"
+      :workspace="workspace"
       role-value-column="permissions"
       @update-role="roleUpdate($event)"
     ></EditRoleContext>
@@ -51,7 +52,9 @@ export default {
     rowSanitised() {
       return {
         ...this.row,
-        permissions: this.roles.some(({ uid }) => uid === this.row.permissions)
+        permissions: this.roles.some(
+          (role) => role.uid === this.row.permissions
+        )
           ? this.row.permissions
           : 'BUILDER',
       }

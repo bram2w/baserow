@@ -21,24 +21,44 @@
         </div>
       </div>
       <ul class="context__menu context__menu--can-be-active">
-        <li v-for="role in roles" :key="role.uid" class="context__menu-item">
+        <li
+          v-for="(role, index) in visibleRoles"
+          :key="index"
+          class="context__menu-item"
+        >
           <a
             class="context__menu-item-link context__menu-item-link--with-desc"
-            :class="{ active: subject[roleValueColumn] === role.uid }"
-            @click="roleUpdate(role.uid, subject)"
+            :class="{
+              active: subject[roleValueColumn] === role.uid,
+              disabled: role.isDeactivated,
+            }"
+            @click="
+              !role.isDeactivated
+                ? roleUpdate(role.uid, subject)
+                : clickOnDeactivatedItem(role.uid)
+            "
           >
             <span class="context__menu-item-title">
               {{ role.name }}
-              <Badge v-if="role.isBillable" color="cyan" size="small" bold
+              <Badge
+                v-if="role.showIsBillable && role.isBillable"
+                color="cyan"
+                size="small"
+                bold
                 >{{ $t('common.billable') }}
               </Badge>
               <Badge
-                v-else-if="!role.isBillable && atLeastOneBillableRole"
+                v-else-if="
+                  role.showIsBillable &&
+                  !role.isBillable &&
+                  atLeastOneBillableRole
+                "
                 color="yellow"
                 size="small"
                 bold
                 >{{ $t('common.free') }}
               </Badge>
+              <i v-if="role.isDeactivated" class="iconoir-lock"></i>
             </span>
             <div v-if="role.description" class="context__menu-item-description">
               {{ role.description }}
@@ -48,6 +68,13 @@
               class="context__menu-active-icon iconoir-check"
             ></i>
           </a>
+          <component
+            :is="deactivatedClickModal(role)"
+            :ref="'deactivatedClickModal-' + role.uid"
+            :v-if="deactivatedClickModal(role)"
+            :name="$t('editRoleContext.additionalRoles')"
+            :workspace="workspace"
+          ></component>
         </li>
         <li
           v-if="allowRemovingRole"
@@ -71,6 +98,11 @@ export default {
   name: 'EditRoleContext',
   mixins: [context],
   props: {
+    workspace: {
+      type: Object,
+      required: false,
+      default: null,
+    },
     subject: {
       required: true,
       type: Object,
@@ -90,6 +122,9 @@ export default {
     },
   },
   computed: {
+    visibleRoles() {
+      return this.roles.filter((role) => role.isVisible)
+    },
     atLeastOneBillableRole() {
       return this.roles.some((role) => role.isBillable)
     },
@@ -102,6 +137,15 @@ export default {
 
       this.$emit('update-role', { uid: roleNew, subject })
       this.hide()
+    },
+    deactivatedClickModal(role) {
+      const allRoles = Object.values(this.$registry.getAll('roles'))
+      return allRoles
+        .find((r) => r.getUid() === role.uid)
+        .getDeactivatedClickModal()
+    },
+    clickOnDeactivatedItem(value) {
+      this.$refs[`deactivatedClickModal-${value}`][0].show()
     },
   },
 }

@@ -134,7 +134,8 @@
         "invitationFormTitle": "Invite by email",
         "optionalMessagePlaceholder": "Optional message",
         "errorInvalidEmail": "Please enter a valid e-mail address.",
-        "errorTooLongMessage": "Messages are limited to {amount} characters."
+        "errorTooLongMessage": "Messages are limited to {amount} characters.",
+        "additionalRoles": "Additional roles"
     },
     "workspacesContext": {
         "search": "Search workspaces",
@@ -528,7 +529,8 @@
         "remove": "Remove"
     },
     "editRoleContext": {
-        "billableRolesLink": "Billable roles documentation"
+        "billableRolesLink": "Billable roles documentation",
+        "additionalRoles": "Additional roles"
     },
     "highestPaidRoleField": {
         "billable": "Billable"

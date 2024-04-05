@@ -209,10 +209,12 @@
     "subLabel": "{totalUserAmount} workspace members"
   },
   "memberRolesDatabaseContexItem": {
-    "label": "Manage members"
+    "label": "Manage members",
+    "additionalRoles": "Additional roles"
   },
   "memberRolesTableContexItem": {
-    "label": "Manage members"
+    "label": "Manage members",
+    "additionalRoles": "Additional roles"
   },
   "memberRolesMembersList": {
     "remove": "Remove",
