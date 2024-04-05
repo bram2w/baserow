@@ -1,10 +1,16 @@
 import Markdown from 'markdown-it'
 import taskLists from 'markdown-it-task-lists'
 
-export const parseMarkdown = (markdown, { openLinkOnClick = false } = {}) => {
+export const parseMarkdown = (
+  markdown,
+  { openLinkOnClick = false, enableImages = false } = {}
+) => {
   const md = new Markdown({ html: false })
+
+  // task lists
   md.use(taskLists, { label: true, enabled: true })
 
+  // link
   if (!openLinkOnClick) {
     // Remove the href attribute from the link to avoid the user clicking on it.
     md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
@@ -36,6 +42,19 @@ export const parseMarkdown = (markdown, { openLinkOnClick = false } = {}) => {
       }
       return self.renderToken(tokens, idx, options)
     }
+  }
+
+  if (enableImages) {
+    md.renderer.rules.image = function (tokens, idx, options, env, self) {
+      // Show only the first image in the preview.
+      const style = tokens[idx].attrIndex('style')
+      if (style < 0) {
+        tokens[idx].attrPush(['style', 'display: block;'])
+      }
+      return self.renderToken(tokens, idx, options)
+    }
+  } else {
+    md.disable('image')
   }
 
   return md.render(markdown)

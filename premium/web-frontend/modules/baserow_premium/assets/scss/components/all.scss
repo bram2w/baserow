@@ -10,11 +10,10 @@
 @import 'views/decorators';
 @import 'impersonate_warning';
 @import 'views/conditional_color_value_provider_form';
-@import 'redirectModal';
+@import 'redirect-modal';
 @import 'top_sidebar';
 @import 'instance_wide_license';
 @import 'form_view_survey';
 @import 'views/calendar/all';
-@import 'active_users.scss';
-@import 'rich_text_editor.scss';
-@import 'row_edit_modal_comments_notification_mode.scss';
+@import 'active_users';
+@import 'row_edit_modal_comments_notification_mode';

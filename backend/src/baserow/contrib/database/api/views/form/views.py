@@ -23,7 +23,7 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
-from baserow.contrib.database.fields.models import FileField
+from baserow.contrib.database.fields.models import FileField, LongTextField
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
@@ -220,8 +220,13 @@ class FormUploadFileView(APIView):
         has_public_file_field = FileField.objects.filter(
             formview=view, formviewfieldoptions__enabled=True
         ).exists()
+        has_public_rich_text_field = LongTextField.objects.filter(
+            formview=view,
+            formviewfieldoptions__enabled=True,
+            long_text_enable_rich_text=True,
+        ).exists()
 
-        if not has_public_file_field:
+        if not has_public_file_field and not has_public_rich_text_field:
             raise ViewHasNoPublicFileFieldError()
 
         file = request.FILES.get("file")

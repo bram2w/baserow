@@ -3,7 +3,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 // Please, note that we need to remap Enter to Shift-Enter for every extension
 // relying on it in order to emit an event when the user presses Enter.
-const EnterStopEditExtension = Extension.create({
+export const EnterStopEditExtension = Extension.create({
   name: 'enterStopEditHandler',
 
   addOptions() {

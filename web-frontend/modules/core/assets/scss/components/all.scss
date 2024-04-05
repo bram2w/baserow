@@ -31,8 +31,8 @@
 @import 'fields/link_row';
 @import 'fields/file';
 @import 'fields/multiple_select';
-@import 'fields/multiple_collaborators.scss';
-@import 'fields/last_modified_by.scss';
+@import 'fields/multiple_collaborators';
+@import 'fields/last_modified_by';
 @import 'fields/array';
 @import 'fields/duration';
 @import 'fields/password';
@@ -161,3 +161,4 @@
 @import 'chips';
 @import 'segment_control';
 @import 'url_input';
+@import 'rich_text_editor';

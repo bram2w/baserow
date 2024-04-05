@@ -26,6 +26,7 @@ import { mapState } from 'vuex'
 import Table from '@baserow/modules/database/components/table/Table'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { getDefaultView } from '@baserow/modules/database/utils/view'
+import UserFileService from '@baserow/modules/core/services/userFile'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -33,6 +34,11 @@ import { getDefaultView } from '@baserow/modules/database/utils/view'
  */
 export default {
   components: { Table },
+  provide: {
+    async uploadUserFile(file) {
+      return await UserFileService(this.$client).uploadFile(file)
+    },
+  },
   /**
    * When the user leaves to another page we want to unselect the selected table. This
    * way it will not be highlighted the left sidebar.
