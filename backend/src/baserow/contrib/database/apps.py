@@ -294,6 +294,7 @@ class DatabaseConfig(AppConfig):
             FilenameContainsViewFilterType,
             FilesLowerThanViewFilterType,
             HasFileTypeViewFilterType,
+            HigherThanOrEqualViewFilterType,
             HigherThanViewFilterType,
             IsEvenAndWholeViewFilterType,
             LengthIsLowerThanViewFilterType,
@@ -301,6 +302,7 @@ class DatabaseConfig(AppConfig):
             LinkRowHasNotViewFilterType,
             LinkRowHasViewFilterType,
             LinkRowNotContainsViewFilterType,
+            LowerThanOrEqualViewFilterType,
             LowerThanViewFilterType,
             MultipleCollaboratorsHasNotViewFilterType,
             MultipleCollaboratorsHasViewFilterType,
@@ -327,7 +329,9 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DoesntContainWordViewFilterType())
         view_filter_type_registry.register(LengthIsLowerThanViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
+        view_filter_type_registry.register(HigherThanOrEqualViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
+        view_filter_type_registry.register(LowerThanOrEqualViewFilterType())
         view_filter_type_registry.register(IsEvenAndWholeViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateBeforeViewFilterType())

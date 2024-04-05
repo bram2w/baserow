@@ -1000,9 +1000,69 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                          
                         <span
                           class="select__item-name-text"
+                          title="viewFilter.higherThanOrEqual"
+                        >
+                          viewFilter.higherThanOrEqual
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
                           title="viewFilter.lowerThan"
                         >
                           viewFilter.lowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lowerThanOrEqual"
+                        >
+                          viewFilter.lowerThanOrEqual
                         </span>
                       </div>
                        
@@ -1440,9 +1500,69 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                          
                         <span
                           class="select__item-name-text"
+                          title="viewFilter.higherThanOrEqual"
+                        >
+                          viewFilter.higherThanOrEqual
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
                           title="viewFilter.lowerThan"
                         >
                           viewFilter.lowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lowerThanOrEqual"
+                        >
+                          viewFilter.lowerThanOrEqual
                         </span>
                       </div>
                        
@@ -1880,9 +2000,69 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                          
                         <span
                           class="select__item-name-text"
+                          title="viewFilter.higherThanOrEqual"
+                        >
+                          viewFilter.higherThanOrEqual
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
                           title="viewFilter.lowerThan"
                         >
                           viewFilter.lowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lowerThanOrEqual"
+                        >
+                          viewFilter.lowerThanOrEqual
                         </span>
                       </div>
                        

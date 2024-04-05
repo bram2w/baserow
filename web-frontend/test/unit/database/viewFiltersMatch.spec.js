@@ -29,7 +29,9 @@ import {
   DateEqualsCurrentYearViewFilterType,
   IsEvenAndWholeViewFilterType,
   HigherThanViewFilterType,
+  HigherThanOrEqualViewFilterType,
   LowerThanViewFilterType,
+  LowerThanOrEqualViewFilterType,
   SingleSelectIsAnyOfViewFilterType,
   SingleSelectIsNoneOfViewFilterType,
 } from '@baserow/modules/database/viewFilters'
@@ -1225,6 +1227,44 @@ const numberValueIsHigherThanCases = [
   },
 ]
 
+const numberValueIsHigherThanOrEqualCases = [
+  {
+    rowValue: 2,
+    filterValue: 3,
+    expected: false,
+  },
+  {
+    rowValue: 2,
+    filterValue: 0,
+    expected: true,
+  },
+  {
+    rowValue: null,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: 1,
+    filterValue: '-1',
+    expected: true,
+  },
+  {
+    rowValue: 0,
+    filterValue: '0',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '-1',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '0',
+    expected: false,
+  },
+]
+
 const numberValueIsLowerThanCases = [
   {
     rowValue: 1,
@@ -1240,6 +1280,44 @@ const numberValueIsLowerThanCases = [
     rowValue: 0,
     filterValue: '0',
     expected: false,
+  },
+]
+
+const numberValueIsLowerThanOrEqualCases = [
+  {
+    rowValue: 2,
+    filterValue: 3,
+    expected: true,
+  },
+  {
+    rowValue: 2,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: null,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: 1,
+    filterValue: '-1',
+    expected: false,
+  },
+  {
+    rowValue: 0,
+    filterValue: '0',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '-1',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '0',
+    expected: true,
   },
 ]
 
@@ -1566,6 +1644,20 @@ describe('All Tests', () => {
     }
   )
 
+  test.each(numberValueIsHigherThanOrEqualCases)(
+    'NumberHigherThanOrEqualFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new HigherThanOrEqualViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
   test.each(numberValueIsHigherThanCases)(
     'FormulaNumberHigherThanFilterType',
     (values) => {
@@ -1585,6 +1677,20 @@ describe('All Tests', () => {
     (values) => {
       const app = testApp.getApp()
       const result = new LowerThanViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(numberValueIsLowerThanOrEqualCases)(
+    'NumberLowerThanOrEqualFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new LowerThanOrEqualViewFilterType({ app }).matches(
         values.rowValue,
         values.filterValue,
         { type: 'number' },

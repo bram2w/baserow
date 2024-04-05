@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Introduce 'greater than or equal to' and 'lower than or equal to' filter types for number fields",
+    "issue_number": 1988,
+    "bullet_points": [],
+    "created_at": "2024-03-29"
+}
