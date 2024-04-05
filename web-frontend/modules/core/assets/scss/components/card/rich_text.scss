@@ -6,4 +6,18 @@
   min-width: 1px;
   line-height: 16px;
   height: 32px;
+
+  a,
+  a:visited,
+  a:hover,
+  a:active {
+    pointer-events: auto !important;
+    color: $color-primary-500;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
 }

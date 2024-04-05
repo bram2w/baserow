@@ -45,6 +45,30 @@
     @extend %ellipsis;
   }
 
+  a,
+  a:visited,
+  a:hover,
+  a:active {
+    color: inherit;
+    text-decoration: underline;
+    cursor: text;
+  }
+
+  &.active {
+    a,
+    a:visited,
+    a:hover,
+    a:active {
+      color: $color-primary-500;
+      text-decoration: initial;
+      cursor: pointer;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+
   ul {
     list-style-type: disc;
     margin-left: 0;

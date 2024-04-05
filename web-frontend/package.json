@@ -46,7 +46,7 @@
     "@tiptap/extension-highlight": "^2.2.2",
     "@tiptap/extension-horizontal-rule": "^2.2.2",
     "@tiptap/extension-italic": "^2.2.2",
-    "@tiptap/extension-link": "^2.2.2",
+    "@tiptap/extension-link": "^2.2.4",
     "@tiptap/extension-list-item": "^2.2.2",
     "@tiptap/extension-mention": "2.2.3",
     "@tiptap/extension-ordered-list": "^2.2.2",

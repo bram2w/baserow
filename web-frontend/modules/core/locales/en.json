@@ -590,7 +590,10 @@
         "bold": "Bold",
         "italic": "Italic",
         "underline": "Underline",
-        "strikethrough": "Strike"
+        "strikethrough": "Strike",
+        "link": "Link",
+        "linkEditPlaceholder": "Link URL...",
+        "linkEditDone": "Done"
     },
     "richTextEditorFloatingMenu": {
         "hierarchy": "Hierarchy",
