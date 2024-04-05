@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Display unavailable advanced/enterprise roles even if the user isn't on one of these plans",
+  "issue_number": 1313,
+  "bullet_points": [],
+  "created_at": "2024-03-27"
+}

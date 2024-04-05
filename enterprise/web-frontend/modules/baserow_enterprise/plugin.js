@@ -28,6 +28,16 @@ import { EnterprisePlugin } from '@baserow_enterprise/plugins'
 import { LocalBaserowUserSourceType } from '@baserow_enterprise/integrations/userSourceTypes'
 import { LocalBaserowPasswordAppAuthProviderType } from '@baserow_enterprise/integrations/appAuthProviderTypes'
 import { AuthFormElementType } from '@baserow_enterprise/builder/elementTypes'
+import {
+  EnterpriseAdminRoleType,
+  EnterpriseMemberRoleType,
+  EnterpriseBuilderRoleType,
+  EnterpriseEditorRoleType,
+  EnterpriseCommenterRoleType,
+  EnterpriseViewerRoleType,
+  NoAccessRoleType,
+  NoRoleLowPriorityRoleType,
+} from '@baserow_enterprise/roleTypes'
 
 export default (context) => {
   const { app, isDev, store } = context
@@ -96,6 +106,15 @@ export default (context) => {
     'appAuthProvider',
     new LocalBaserowPasswordAppAuthProviderType(context)
   )
+
+  app.$registry.register('roles', new EnterpriseAdminRoleType(context))
+  app.$registry.register('roles', new EnterpriseMemberRoleType(context))
+  app.$registry.register('roles', new EnterpriseBuilderRoleType(context))
+  app.$registry.register('roles', new EnterpriseEditorRoleType(context))
+  app.$registry.register('roles', new EnterpriseCommenterRoleType(context))
+  app.$registry.register('roles', new EnterpriseViewerRoleType(context))
+  app.$registry.register('roles', new NoAccessRoleType(context))
+  app.$registry.register('roles', new NoRoleLowPriorityRoleType(context))
 
   app.$registry.register('element', new AuthFormElementType(context))
 }

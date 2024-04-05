@@ -42,6 +42,7 @@
           ref="editRoleContext"
           :subject="editRoleMember"
           :roles="roles"
+          :workspace="workspace"
           @update-role="roleUpdate($event)"
         ></EditRoleContext>
       </template>

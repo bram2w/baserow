@@ -29,7 +29,6 @@ export class EnterprisePlugin extends BaserowPlugin {
 
   getAdditionalDatabaseContextComponents(workspace, database) {
     if (
-      this.app.$hasFeature(EnterpriseFeatures.RBAC, workspace.id) &&
       this.app.$hasPermission('application.read_role', database, workspace.id)
     ) {
       return [MemberRolesDatabaseContextItem]
@@ -40,7 +39,6 @@ export class EnterprisePlugin extends BaserowPlugin {
 
   getAdditionalTableContextComponents(workspace, table) {
     if (
-      this.app.$hasFeature(EnterpriseFeatures.RBAC, workspace.id) &&
       this.app.$hasPermission('database.table.read_role', table, workspace.id)
     ) {
       return [MemberRolesTableContextItem]

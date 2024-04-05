@@ -49,7 +49,7 @@ export default {
   },
   methods: {
     roleUpdated({ uid }) {
-      const role = this.roles.find((role) => role.uid === uid)
+      const role = this.roles.find((role) => role.getUid() === uid)
       this.$emit('input', role)
     },
   },

@@ -355,7 +355,8 @@ export const actions = {
     try {
       const { data } = await RolesService(
         this.$client,
-        this.app.$hasFeature
+        this.app.$hasFeature,
+        this.$registry
       ).get(workspace)
       const translatedRoles = appendRoleTranslations(data, this.app.$registry)
       commit('SET_ROLES', { workspaceId: workspace.id, roles: translatedRoles })
