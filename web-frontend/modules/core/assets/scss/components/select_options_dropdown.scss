@@ -4,9 +4,11 @@
 
 .select-options__dropdown-link {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   padding: 0 10px;
   height: 32px;
+  gap: 8px;
 
   &:hover {
     text-decoration: none;
@@ -20,4 +22,17 @@
 
 .select-options__dropdown-option {
   @include select-option-style(inline-block, false);
+}
+
+.select-options__multiple-dropdown-options {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  width: calc(100% - 16px);
+  flex-flow: row;
+
+  .select-options__dropdown-option {
+    flex-shrink: 0;
+  }
 }

@@ -13,6 +13,9 @@
       @click="select(value, disabled)"
       @mousemove="hover(value, disabled)"
     >
+      <div v-if="multiple">
+        <Checkbox :disabled="disabled" :checked="isActive(value)"></Checkbox>
+      </div>
       <div
         class="select-options__dropdown-option"
         :class="'background-color--' + color"

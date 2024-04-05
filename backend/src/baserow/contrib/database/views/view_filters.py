@@ -1068,6 +1068,37 @@ class SingleSelectNotEqualViewFilterType(
     type = "single_select_not_equal"
 
 
+class SingleSelectIsAnyOfViewFilterType(ViewFilterType):
+    """
+    This filter accepts a string with a list of option ids separated with a comma as
+    value input. The filter will show rows that have single select option value in
+    the filter's value list.
+    """
+
+    type = "single_select_is_any_of"
+    compatible_field_types = [SingleSelectFieldType.type]
+
+    def get_filter(self, field_name, value: str, model_field, field):
+        if not value:
+            return Q()
+
+        option_ids = [int(v) for v in value.split(",") if v.isdigit()]
+
+        return Q(**{f"{field_name}_id__in": option_ids})
+
+
+class SingleSelectIsNoneOfViewFilterType(
+    NotViewFilterTypeMixin, SingleSelectIsAnyOfViewFilterType
+):
+    """
+    This filter accepts a string with a list of option ids separated with a comma as
+    value input. The filter will show rows that have single select option value not
+    present in the filter's value list.
+    """
+
+    type = "single_select_is_none_of"
+
+
 class BooleanViewFilterType(ViewFilterType):
     """
     The boolean filter tries to convert the provided filter value to a boolean and

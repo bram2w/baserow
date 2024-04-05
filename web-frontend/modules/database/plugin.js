@@ -50,6 +50,8 @@ import {
   IsEvenAndWholeViewFilterType,
   SingleSelectEqualViewFilterType,
   SingleSelectNotEqualViewFilterType,
+  SingleSelectIsAnyOfViewFilterType,
+  SingleSelectIsNoneOfViewFilterType,
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
@@ -410,6 +412,15 @@ export default (context) => {
     'viewFilter',
     new SingleSelectNotEqualViewFilterType(context)
   )
+  app.$registry.register(
+    'viewFilter',
+    new SingleSelectIsAnyOfViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new SingleSelectIsNoneOfViewFilterType(context)
+  )
+
   app.$registry.register('viewFilter', new BooleanViewFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasNotFilterType(context))

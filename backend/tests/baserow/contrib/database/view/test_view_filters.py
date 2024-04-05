@@ -6307,3 +6307,141 @@ def test_user_is_filter_type_export_import(data_fixture):
     assert view_filter_type.set_import_serialized_value(user.email, {}) == ""
     assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
     assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""
+
+
+@pytest.mark.django_db
+def test_single_select_is_one_of_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_single_select_field(table=table)
+    option_1 = data_fixture.create_select_option(field=field, value="AAA", color="blue")
+    option_2 = data_fixture.create_select_option(field=field, value="AAB", color="red")
+    option_3 = data_fixture.create_select_option(field=field, value="ABB", color="red")
+    option_4 = data_fixture.create_select_option(field=field, value="BBB", color="red")
+    options = [option_1, option_2, option_3, option_4]
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    rows = []
+    for option in options:
+        rows.append(
+            model.objects.create(
+                **{
+                    f"field_{field.id}_id": option.id,
+                }
+            )
+        )
+    rows.append(
+        model.objects.create(
+            **{
+                f"field_{field.id}_id": None,
+            }
+        )
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=field,
+        type="single_select_is_any_of",
+        value=f"{option_1.id},{option_2.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # only two last (ABB, BBB) are selected
+    assert len(ids) == 2
+    # first two rows only
+    assert set([r.id for r in rows[:2]]) == set(ids)
+
+    # no match values
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # all rows are visible because the value is empty.
+    assert len(ids) == 5
+
+    # no match values
+    view_filter.value = "12345678,12345679,12345680"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # all rows are filtered out
+    assert ids == []
+
+    # no match values
+    view_filter.value = "true,false"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # all rows are filtered out
+    assert len(ids) == 0
+
+    view_filter.value = ",".join([str(o.id) for o in options])
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # all the rows with an option are selected
+    assert len(ids) == 4
+    assert set(ids) == set([o.id for o in rows[:4]])
+
+
+@pytest.mark.django_db
+def test_single_select_is_none_of_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_single_select_field(table=table)
+    option_1 = data_fixture.create_select_option(field=field, value="AAA", color="blue")
+    option_2 = data_fixture.create_select_option(field=field, value="AAB", color="red")
+    option_3 = data_fixture.create_select_option(field=field, value="ABB", color="red")
+    option_4 = data_fixture.create_select_option(field=field, value="BBB", color="red")
+    options = [option_1, option_2, option_3, option_4]
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    rows = []
+    for option in options:
+        rows.append(
+            model.objects.create(
+                **{
+                    f"field_{field.id}_id": option.id,
+                }
+            )
+        )
+    rows.append(
+        model.objects.create(
+            **{
+                f"field_{field.id}_id": None,
+            }
+        )
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=field,
+        type="single_select_is_none_of",
+        value=f"{option_1.id},{option_2.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # only two last (ABB, BBB) are selected
+    assert len(ids) == 3
+    assert set([rows[2].id, rows[3].id, rows[4].id]) == set(ids)
+
+    # no match values
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # all rows are visible because the value is empty.
+    assert len(ids) == 5
+
+    # no match values
+    view_filter.value = "12345678,12345679,12345680"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # all options are selected
+    assert len(ids) == 5
+    assert set(ids) == set([o.id for o in rows])
+
+    view_filter.value = ",".join([str(o.id) for o in options])
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    # only the empty row is selected
+    assert ids == [rows[4].id]

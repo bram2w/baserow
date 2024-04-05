@@ -13,17 +13,24 @@
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
         <slot name="value">
-          <i
-            v-if="selectedIcon"
-            class="dropdown__selected-icon"
-            :class="selectedIcon"
-          />
-          <img
-            v-if="selectedImage"
-            class="dropdown__selected-image"
-            :src="selectedImage"
-          />
-          <span class="dropdown__selected-text">{{ selectedName }}</span>
+          <template v-if="multiple">
+            <span class="dropdown__selected-text">{{
+              selectedName.join(', ')
+            }}</span>
+          </template>
+          <template v-else>
+            <i
+              v-if="selectedIcon"
+              class="dropdown__selected-icon"
+              :class="selectedIcon"
+            />
+            <img
+              v-if="selectedImage"
+              class="dropdown__selected-image"
+              :src="selectedImage"
+            />
+            <span class="dropdown__selected-text">{{ selectedName }}</span>
+          </template>
         </slot>
       </template>
       <template v-else>
