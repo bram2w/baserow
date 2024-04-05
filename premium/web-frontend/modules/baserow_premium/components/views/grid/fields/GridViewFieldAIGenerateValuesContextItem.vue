@@ -12,8 +12,8 @@
 </template>
 
 <script>
-import FieldService from '@baserow/modules/database/services/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import FieldService from '@baserow_premium/services/field'
 
 export default {
   props: {

@@ -19,10 +19,6 @@ from baserow.api.decorators import (
     validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.generative_ai.errors import (
-    ERROR_GENERATIVE_AI_DOES_NOT_EXIST,
-    ERROR_MODEL_DOES_NOT_BELONG_TO_TYPE,
-)
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
@@ -50,7 +46,6 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
     ERROR_RESERVED_BASEROW_FIELD_NAME,
 )
-from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
 from baserow.contrib.database.api.tables.errors import (
     ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
     ERROR_TABLE_DOES_NOT_EXIST,
@@ -80,16 +75,13 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.job_types import DuplicateFieldJobType
-from baserow.contrib.database.fields.models import AIField, Field
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import (
     CreateFieldOperationType,
     ListFieldsOperationType,
     ReadFieldOperationType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.tasks import generate_ai_values_for_rows
-from baserow.contrib.database.rows.exceptions import RowDoesNotExist
-from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import (
     FailedToLockTableDueToConflict,
     TableDoesNotExist,
@@ -100,11 +92,6 @@ from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInWorkspace
-from baserow.core.generative_ai.exceptions import (
-    GenerativeAITypeDoesNotExist,
-    ModelDoesNotBelongToType,
-)
-from baserow.core.generative_ai.registries import generative_ai_model_type_registry
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
@@ -116,7 +103,6 @@ from .serializers import (
     DuplicateFieldParamsSerializer,
     FieldSerializer,
     FieldSerializerWithRelatedFields,
-    GenerateAIFieldValueViewSerializer,
     RelatedFieldsSerializer,
     UniqueRowValueParamsSerializer,
     UniqueRowValuesSerializer,
@@ -614,87 +600,3 @@ class AsyncDuplicateFieldView(APIView):
 
         serializer = job_type_registry.get_serializer(job, JobSerializer)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-
-
-class AsyncGenerateAIFieldValuesView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="field_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="The field to generate the value for.",
-            ),
-            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
-        ],
-        tags=["Database table fields"],
-        operation_id="generate_table_ai_field_value",
-        description=(
-            "Endpoint that's used by the AI field to start an sync task that "
-            "will update the cell value of the provided row IDs based on the "
-            "dynamically constructed prompt configured in the field settings."
-        ),
-        request=None,
-        responses={
-            200: str,
-            400: get_error_schema(
-                [
-                    "ERROR_GENERATIVE_AI_DOES_NOT_EXIST",
-                    "ERROR_MODEL_DOES_NOT_BELONG_TO_TYPE",
-                ]
-            ),
-            404: get_error_schema(
-                [
-                    "ERROR_FIELD_DOES_NOT_EXIST",
-                    "ERROR_ROW_DOES_NOT_EXIST",
-                ]
-            ),
-        },
-    )
-    @transaction.atomic
-    @map_exceptions(
-        {
-            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
-            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
-            GenerativeAITypeDoesNotExist: ERROR_GENERATIVE_AI_DOES_NOT_EXIST,
-            ModelDoesNotBelongToType: ERROR_MODEL_DOES_NOT_BELONG_TO_TYPE,
-        }
-    )
-    @validate_body(GenerateAIFieldValueViewSerializer, return_validated=True)
-    def post(self, request: Request, field_id: int, data) -> Response:
-        ai_field = FieldHandler().get_field(
-            field_id,
-            base_queryset=AIField.objects.all().select_related(
-                "table__database__workspace"
-            ),
-        )
-
-        CoreHandler().check_permissions(
-            request.user,
-            ListFieldsOperationType.type,
-            workspace=ai_field.table.database.workspace,
-            context=ai_field.table,
-        )
-
-        model = ai_field.table.get_model()
-        req_row_ids = data["row_ids"]
-        rows = RowHandler().get_rows(model, req_row_ids)
-        if len(rows) != len(req_row_ids):
-            found_rows_ids = [row.id for row in rows]
-            raise RowDoesNotExist(sorted(list(set(req_row_ids) - set(found_rows_ids))))
-
-        generative_ai_model_type = generative_ai_model_type_registry.get(
-            ai_field.ai_generative_ai_type
-        )
-        ai_models = generative_ai_model_type.get_enabled_models()
-
-        if ai_field.ai_generative_ai_model not in ai_models:
-            raise ModelDoesNotBelongToType(model_name=ai_field.ai_generative_ai_model)
-
-        generate_ai_values_for_rows.delay(request.user.id, ai_field.id, req_row_ids)
-
-        return Response(status=status.HTTP_202_ACCEPTED)

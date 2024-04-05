@@ -1,3 +1,4 @@
+from baserow_premium.fields.models import AIField
 from baserow_premium.license.models import License, LicenseUser
 from baserow_premium.row_comments.models import RowComment
 from baserow_premium.views.models import (
@@ -165,3 +166,27 @@ class PremiumFixtures:
                 )
             ],
         ).to_json()
+
+    def create_ai_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        # Register the fake generative AI model for testing purposes.
+        self.register_fake_generate_ai_type()
+
+        if "ai_generative_ai_type" not in kwargs:
+            kwargs["ai_generative_ai_type"] = "test_generative_ai"
+
+        if "ai_generative_ai_model" not in kwargs:
+            kwargs["ai_generative_ai_model"] = "test_1"
+
+        if "ai_prompt" not in kwargs:
+            kwargs[
+                "ai_prompt"
+            ] = "'What is your purpose? Answer with a maximum of 10 words.'"
+
+        field = AIField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field

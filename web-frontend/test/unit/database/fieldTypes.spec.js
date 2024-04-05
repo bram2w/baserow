@@ -333,15 +333,6 @@ const mockedFields = {
     type: 'password',
     testingRowData: [null, true, 'test'],
   },
-  ai: {
-    id: 26,
-    name: 'ai',
-    order: 26,
-    primary: false,
-    table_id: 42,
-    type: 'ai',
-    testingRowData: [null, 'Generated: hello!'],
-  },
 }
 
 const valuesToCall = [null, undefined]
@@ -704,6 +695,8 @@ describe('FieldType tests', () => {
     fieldRegistry = testApp._app.$registry.registry.field
 
     // Make sure that we have a mockedField for every field type in the registry
+    console.log(Object.keys(fieldRegistry).sort())
+    console.log(Object.keys(mockedFields).sort())
     expect(Object.keys(fieldRegistry).sort()).toEqual(
       Object.keys(mockedFields).sort()
     )

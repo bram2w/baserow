@@ -6,6 +6,7 @@ from django.db import connection, models
 from django.test.utils import CaptureQueriesContext
 
 import pytest
+from baserow_premium.fields.field_types import AIFieldType
 from faker import Faker
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
@@ -26,7 +27,6 @@ from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
 from baserow.contrib.database.fields.field_types import (
-    AIFieldType,
     AutonumberFieldType,
     BooleanFieldType,
     CountFieldType,

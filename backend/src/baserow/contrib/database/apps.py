@@ -162,7 +162,6 @@ class DatabaseConfig(AppConfig):
         plugin_registry.register(DatabasePlugin())
 
         from .fields.field_types import (
-            AIFieldType,
             AutonumberFieldType,
             BooleanFieldType,
             CountFieldType,
@@ -217,10 +216,8 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(UUIDFieldType())
         field_type_registry.register(AutonumberFieldType())
         field_type_registry.register(PasswordFieldType())
-        field_type_registry.register(AIFieldType())
 
         from .fields.field_converters import (
-            AIFieldConverter,
             AutonumberFieldConverter,
             FileFieldConverter,
             FormulaFieldConverter,
@@ -247,7 +244,6 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(FormulaFieldConverter())
         field_converter_registry.register(AutonumberFieldConverter())
         field_converter_registry.register(PasswordFieldConverter())
-        field_converter_registry.register(AIFieldConverter())
 
         from .fields.actions import (
             CreateFieldActionType,

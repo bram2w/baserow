@@ -835,24 +835,5 @@
   },
   "dataProviderTypes": {
     "fieldsName": "Fields"
-  },
-  "functionalGridViewFieldAI": {
-    "generate": "Generate"
-  },
-  "gridViewFieldAI": {
-    "generate": "Generate",
-    "regenerate": "Re-Generate"
-  },
-  "fieldAISubForm": {
-    "AIType": "AI Type",
-    "AIModel": "AI Model",
-    "prompt": "Prompt"
-  },
-  "rowEditFieldAI": {
-    "generate": "Generate",
-    "createRowBefore": "The AI value can be generated after the row has been created."
-  },
-  "rowCardFieldAI": {
-    "generate": "Generate"
   }
 }

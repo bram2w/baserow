@@ -5,7 +5,6 @@ from baserow.contrib.database.fields.dependencies.handler import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.field_types import AutonumberFieldType
 from baserow.contrib.database.fields.models import (
-    AIField,
     AutonumberField,
     BooleanField,
     CreatedByField,
@@ -406,30 +405,6 @@ class FieldFixtures:
         self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = PasswordField.objects.create(**kwargs)
-        if create_field:
-            self.create_model_field(kwargs["table"], field)
-
-        return field
-
-    def create_ai_field(self, user=None, create_field=True, **kwargs):
-        self.set_test_field_kwarg_defaults(user, kwargs)
-
-        # Register the fake generative AI model for testing purposes.
-        self.register_fake_generate_ai_type()
-
-        if "ai_generative_ai_type" not in kwargs:
-            kwargs["ai_generative_ai_type"] = "test_generative_ai"
-
-        if "ai_generative_ai_model" not in kwargs:
-            kwargs["ai_generative_ai_model"] = "test_1"
-
-        if "ai_prompt" not in kwargs:
-            kwargs[
-                "ai_prompt"
-            ] = "'What is your purpose? Answer with a maximum of 10 words.'"
-
-        field = AIField.objects.create(**kwargs)
-
         if create_field:
             self.create_model_field(kwargs["table"], field)
 

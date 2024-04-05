@@ -20,7 +20,7 @@
 
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
-import fieldAI from '@baserow/modules/database/mixins/fieldAI'
+import fieldAI from '@baserow_premium/mixins/fieldAI'
 
 export default {
   mixins: [rowEditField, fieldAI],

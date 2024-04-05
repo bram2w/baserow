@@ -17,6 +17,18 @@ class BaserowPremiumConfig(AppConfig):
 
         from baserow.api.user.registries import user_data_registry
         from baserow.contrib.database.export.registries import table_exporter_registry
+        from baserow.contrib.database.fields.registries import (
+            field_converter_registry,
+            field_type_registry,
+        )
+
+        from .fields.field_converters import AIFieldConverter
+        from .fields.field_types import AIFieldType
+
+        field_type_registry.register(AIFieldType())
+
+        field_converter_registry.register(AIFieldConverter())
+
         from baserow.contrib.database.rows.registries import row_metadata_registry
         from baserow.contrib.database.views.registries import (
             decorator_type_registry,
@@ -133,3 +145,5 @@ class BaserowPremiumConfig(AppConfig):
         from baserow.api.settings.registries import settings_data_registry
 
         settings_data_registry.register(InstanceWideSettingsDataType())
+
+        import baserow_premium.fields.tasks  # noqa: F401
