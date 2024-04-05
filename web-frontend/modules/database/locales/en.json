@@ -835,5 +835,9 @@
   },
   "dataProviderTypes": {
     "fieldsName": "Fields"
+  },
+  "userMentionInRichTextFieldNotification": {
+    "title": "{sender} mentioned you in field {fieldName} of row {rowId} in {tableName}",
+    "deletedUser": "A deleted user"
   }
 }

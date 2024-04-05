@@ -7,12 +7,6 @@
     @dragenter.prevent="dragEnter($event)"
     @dragleave="dragLeave($event)"
   >
-    <RichTextEditorMentionsList
-      v-if="editable && enableMentions"
-      ref="mentionsList"
-      :show-search="false"
-      :add-empty-item="false"
-    />
     <div v-if="editable && enableRichTextFormatting">
       <RichTextEditorBubbleMenu
         ref="bubbleMenu"
@@ -43,7 +37,7 @@ import _ from 'lodash'
 import { mapGetters } from 'vuex'
 import { Editor, EditorContent } from '@tiptap/vue-2'
 import { Placeholder } from '@tiptap/extension-placeholder'
-import { Mention } from '@tiptap/extension-mention'
+import { Mention } from '@baserow/modules/core/editor/mention'
 import { Document } from '@tiptap/extension-document'
 import { Paragraph } from '@tiptap/extension-paragraph'
 import { HardBreak } from '@tiptap/extension-hard-break'
@@ -71,7 +65,6 @@ import { mergeAttributes, isActive } from '@tiptap/core'
 
 import { Markdown } from 'tiptap-markdown'
 
-import RichTextEditorMentionsList from '@baserow/modules/core/components/editor/RichTextEditorMentionsList'
 import RichTextEditorBubbleMenu from '@baserow/modules/core/components/editor/RichTextEditorBubbleMenu'
 import RichTextEditorFloatingMenu from '@baserow/modules/core/components/editor/RichTextEditorFloatingMenu'
 import { EnterStopEditExtension } from '@baserow/modules/core/editor/enterStopEditExtension'
@@ -130,7 +123,6 @@ export default {
   components: {
     EditorContent,
     RichTextEditorBubbleMenu,
-    RichTextEditorMentionsList,
     RichTextEditorFloatingMenu,
   },
   inject: ['uploadUserFile'],
@@ -151,9 +143,9 @@ export default {
       type: String,
       default: '',
     },
-    enableMentions: {
-      type: Boolean,
-      default: false,
+    mentionableUsers: {
+      type: [Array, null],
+      default: null,
     },
     enterStopEdit: {
       type: Boolean,
@@ -188,7 +180,6 @@ export default {
   computed: {
     ...mapGetters({
       loggedUserId: 'auth/getUserId',
-      workspace: 'workspace/getSelected',
     }),
     scrollableAreaBoundingRect() {
       if (this.scrollableAreaElement !== null) {
@@ -239,6 +230,7 @@ export default {
       }
     },
     getConfiguredExtensions() {
+      // Base extensions that are always enabled.
       const extensions = [Document, Paragraph, Text, HardBreak]
 
       if (this.enableRichTextFormatting) {
@@ -256,13 +248,16 @@ export default {
         })
         extensions.push(enterKeyExt)
       }
-      if (this.enableMentions) {
-        const renderHTML = this.customRenderHTMLForMentions()
+
+      // If mentionable users are provided, add the mention extension.
+      const users = this.mentionableUsers
+      if (users !== null) {
+        const users = this.mentionableUsers
+        const renderHTML = this.renderHTMLMention()
         const mentionsExt = Mention.configure({
           renderHTML,
-          suggestion: suggestion({
-            component: this.$refs.mentionsList,
-          }),
+          suggestion: suggestion({ users }),
+          users,
         })
         extensions.push(mentionsExt)
       }
@@ -306,7 +301,7 @@ export default {
         },
         onBlur: ({ editor, event }) => {
           if (this.isEventFromMenu(event)) {
-            return // Do not emit blur event if the event is from one of the editor's menu.
+            return // Do not emit a blur event if it is coming from one of the editor's menu.
           }
 
           this.bubbleMenuVisible = false
@@ -381,21 +376,23 @@ export default {
         document.removeEventListener('paste', this.onPaste)
       })
     },
-    customRenderHTMLForMentions() {
+    renderHTMLMention() {
       const loggedUserId = this.loggedUserId
-      const isUserInWorkspace =
-        this.$store.getters['workspace/isUserIdMemberOfSelectedWorkspace']
+      const isUserInWorkspace = (userId) =>
+        this.mentionableUsers.some((user) => user.user_id === userId)
+
       return ({ node, options }) => {
         let className = 'rich-text-editor__mention'
-        if (node.attrs.id === loggedUserId) {
+        const userId = parseInt(node.attrs.id)
+        if (userId === loggedUserId) {
           className += ' rich-text-editor__mention--current-user'
-        } else if (!isUserInWorkspace(node.attrs.id)) {
+        } else if (!isUserInWorkspace(userId)) {
           className += ' rich-text-editor__mention--user-gone'
         }
         return [
           'span',
           mergeAttributes({ class: className }, this.HTMLAttributes),
-          `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`,
+          `@${node.attrs.label ?? node.attrs.id}`,
         ]
       }
     },

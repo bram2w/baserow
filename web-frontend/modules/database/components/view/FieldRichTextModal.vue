@@ -17,6 +17,7 @@
         ref="editor"
         class="rich_text_modal__editor"
         :enable-rich-text-formatting="true"
+        :mentionable-users="mentionableUsers"
         :value="value"
         @input="$emit('input', $event)"
       ></RichTextEditor>
@@ -41,6 +42,10 @@ export default {
       type: [String, Object],
       required: true,
     },
+    mentionableUsers: {
+      type: [Array],
+      default: () => [],
+    },
   },
   watch: {
     value: {
@@ -58,6 +63,10 @@ export default {
     },
     isOpen() {
       return this.$refs.modal.isOpen()
+    },
+    // Used by the parent to serialize the editor content to markdown.
+    serializeToMarkdown() {
+      return this.$refs.editor.serializeToMarkdown()
     },
   },
 }

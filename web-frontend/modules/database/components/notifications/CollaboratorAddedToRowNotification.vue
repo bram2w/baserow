@@ -19,7 +19,7 @@
         </template>
         <template #rowId>
           <strong>{{
-            notification.data.row_name ?? notification.data.row_id
+            notification.data.row_name || notification.data.row_id
           }}</strong>
         </template>
         <template #tableName>

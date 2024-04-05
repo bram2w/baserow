@@ -7,6 +7,10 @@ async function openRowCommentSidebar(
   testApp,
   { tableId = 10, rowId = 20, workspaceId = 30 } = {}
 ) {
+  testApp
+    .getStore()
+    .dispatch('workspace/forceCreate', { id: workspaceId, users: [] })
+
   return await testApp.mount(RowCommentsSidebar, {
     propsData: {
       database: { workspace: { id: workspaceId } },

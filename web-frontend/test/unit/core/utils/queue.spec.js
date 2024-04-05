@@ -1,7 +1,10 @@
 import { GroupTaskQueue } from '@baserow/modules/core/utils/queue'
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms * 4))
+  // FIXME: * 10 is a hack to increase the sleep time without the need to change all the
+  // values. The problem is that timing is not always accurate when running tests in
+  // parallel and this tests might fail because of that.
+  return new Promise((resolve) => setTimeout(resolve, ms * 10))
 }
 
 // Split the test to make sure they run async. This actually helps with the sleep

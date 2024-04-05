@@ -72,6 +72,7 @@
               <component
                 :is="getNotificationContent(notification)"
                 :notification="notification"
+                :workspace="workspace"
                 @close-panel="hide"
               >
               </component>
@@ -137,6 +138,9 @@ export default {
       currentCount: 'notification/getCurrentCount',
       totalCount: 'notification/getTotalCount',
     }),
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
+    },
   },
   watch: {
     loaded(isLoaded) {

@@ -67,7 +67,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
     invalidate_table_in_model_cache(table.id)
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(15):
         TrashHandler.permanently_delete_marked_trash()
 
     row_2 = handler.create_row(user=user, table=table)
@@ -82,7 +82,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
     invalidate_table_in_model_cache(table.id)
-    # We only want seven more queries when deleting 2 rows instead of 1 compared to
+    # We only want 8 more queries when deleting 2 rows instead of 1 compared to
     # above:
     # 1. An extra query to open the second trash entries savepoint
     # 2. An extra query to lookup the second trash entry
@@ -91,9 +91,10 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
     # 5. A query to delete it's trash entry.
     # 6. A query to delete any related row comments.
     # 7. An extra query to close the second trash entries savepoint
+    # 8. An extra query to delete user mentions on the second row.
     # If we weren't caching the table models an extra number of queries would be first
     # performed to lookup the table information which breaks this assertion.
-    with django_assert_num_queries(21):
+    with django_assert_num_queries(23):
         TrashHandler.permanently_delete_marked_trash()
 
 

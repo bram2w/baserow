@@ -15,12 +15,21 @@ export default {
       type: String,
       default: '',
     },
+    workspaceId: {
+      type: Number,
+      required: true,
+    },
   },
   height: 32,
   computed: {
     formattedValue() {
+      const workspace = this.$store.getters['workspace/get'](this.workspaceId)
+      const loggedUserId = this.$store.getters['auth/getUserId']
+
       return parseMarkdown(this.value, {
         openLinkOnClick: true,
+        workspaceUsers: workspace.users,
+        loggedUserId,
       })
     },
   },

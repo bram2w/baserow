@@ -14,7 +14,11 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.signals import rows_created
-from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.table.models import (
+    GeneratedTableModel,
+    RichTextFieldMention,
+    Table,
+)
 from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.contrib.database.views.handler import ViewHandler, ViewIndexingHandler
 from baserow.contrib.database.views.models import View
@@ -324,6 +328,9 @@ class RowTrashableItemType(TrashableItemType):
         )
 
     def permanently_delete_item(self, row, trash_item_lookup_cache=None):
+        RichTextFieldMention.objects.filter(
+            table_id=row.baserow_table_id, row_id=row.id
+        ).delete()
         row.delete()
 
     def lookup_trashed_item(
@@ -473,6 +480,10 @@ class RowsTrashableItemType(TrashableItemType):
         delete_qs = table_model.objects_and_trash.filter(id__in=trashed_item.row_ids)
         delete_qs._raw_delete(delete_qs.db)
         trashed_item.delete()
+        RichTextFieldMention.objects.filter(
+            table_id=trashed_item.table_id,
+            row_id__in=trashed_item.row_ids,
+        ).delete()
 
     def lookup_trashed_item(
         self, trashed_entry: TrashEntry, trash_item_lookup_cache=None

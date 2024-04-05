@@ -131,7 +131,8 @@
   opacity: 0.2;
 }
 
-.rich-text-editor__mention {
+.rich-text-editor__mention,
+span[data-type='mention'] {
   padding: 0 2px;
   background-color: rgba(6, 46, 71, 0.08);
   font-weight: 600;
@@ -294,4 +295,37 @@
   align-items: center;
   padding: 4px;
   gap: 6px;
+}
+
+.rich-text-editor__mention-list {
+  padding: 0.2rem;
+  position: relative;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  font-size: 0.9rem;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 10px 20px rgba(0, 0, 0, 0.1);
+  max-height: 164px;
+  width: 240px;
+  overflow-y: auto;
+}
+
+.rich-text-editor__mention-list-item {
+  @extend %ellipsis;
+
+  display: flex;
+  align-items: center;
+  margin: 0;
+  width: 100%;
+  height: 32px;
+  text-align: left;
+  background: transparent;
+  border-radius: 0.4rem;
+  border: 1px solid transparent;
+  padding: 0.2rem 0.4rem;
+
+  &.is-selected {
+    background-color: $palette-neutral-100;
+  }
 }

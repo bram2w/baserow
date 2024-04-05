@@ -1334,3 +1334,38 @@ class DuplicateTableJob(
         on_delete=models.SET_NULL,
         help_text="The duplicated Baserow table.",
     )
+
+
+class RichTextFieldMention(models.Model):
+    table = models.ForeignKey(
+        Table,
+        on_delete=models.CASCADE,
+        related_name="+",
+        help_text="The table that the user mention is in.",
+    )
+    row_id = models.PositiveIntegerField(
+        help_text="The row id that the user mention is in."
+    )
+    field = models.ForeignKey(
+        "database.Field",
+        on_delete=models.CASCADE,
+        related_name="+",
+        help_text="The field that the user mention is in.",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="+",
+        help_text="The user that is mentioned.",
+    )
+    marked_for_deletion_at = models.DateTimeField(
+        null=True,
+        db_index=True,
+        help_text="The date and time that the mention has been marked as ready for deletion.",
+    )
+
+    class Meta:
+        unique_together = ("table", "row_id", "field", "user")
+        indexes = [
+            models.Index(fields=["row_id", "field"]),
+        ]

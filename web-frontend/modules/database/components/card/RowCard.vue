@@ -43,6 +43,7 @@
                 v-if="!loading"
                 :field="field"
                 :value="row['field_' + field.id]"
+                :workspace-id="workspaceId"
               />
             </div>
           </div>
@@ -73,6 +74,10 @@ export default {
       type: Object,
       required: false,
       default: () => {},
+    },
+    workspaceId: {
+      type: Number,
+      required: true,
     },
     loading: {
       type: Boolean,

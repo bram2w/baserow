@@ -21,6 +21,7 @@
             :is="getEntryComponent(fieldIdentifier)"
             :key="fieldIdentifier + 'content'"
             :entry="entry"
+            :workspace-id="workspaceId"
             :field-identifier="fieldIdentifier"
             :field="getField(fieldIdentifier)"
           ></component>
@@ -38,6 +39,10 @@ export default {
   name: 'RowHistoryEntry',
   mixins: [collaboratorName],
   props: {
+    workspaceId: {
+      type: Number,
+      required: true,
+    },
     entry: {
       type: Object,
       required: true,
