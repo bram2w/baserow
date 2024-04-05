@@ -25,3 +25,11 @@ export function addQueryParamsToRedirectUrl(url, params) {
 
   return parsedUrl.toString()
 }
+
+export function ensureUrlProtocol(value) {
+  const protocolRegex = /^[a-zA-Z]+:\/\//
+  if (!protocolRegex.test(value)) {
+    return `https://${value}`
+  }
+  return value
+}
