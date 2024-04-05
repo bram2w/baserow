@@ -743,6 +743,7 @@ class DatabaseConfig(AppConfig):
         # notification_types
         from baserow.contrib.database.fields.notification_types import (
             CollaboratorAddedToRowNotificationType,
+            UserMentionInRichTextFieldNotificationType,
         )
         from baserow.contrib.database.views.notification_types import (
             FormSubmittedNotificationType,
@@ -750,6 +751,9 @@ class DatabaseConfig(AppConfig):
         from baserow.core.notifications.registries import notification_type_registry
 
         notification_type_registry.register(CollaboratorAddedToRowNotificationType())
+        notification_type_registry.register(
+            UserMentionInRichTextFieldNotificationType()
+        )
         notification_type_registry.register(FormSubmittedNotificationType())
 
         # The signals must always be imported last because they use the registries

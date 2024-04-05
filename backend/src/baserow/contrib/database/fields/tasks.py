@@ -1,10 +1,12 @@
 import traceback
+from datetime import timedelta
 from itertools import groupby
 from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import QuerySet
+from django.utils import timezone
 
 from loguru import logger
 from opentelemetry import trace
@@ -12,6 +14,7 @@ from opentelemetry import trace
 from baserow.config.celery import app
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.search.handler import SearchHandler
+from baserow.contrib.database.table.models import RichTextFieldMention
 from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import add_baserow_trace_attrs, baserow_trace
 
@@ -105,6 +108,16 @@ def _run_periodic_field_type_update_per_workspace(
         SearchHandler().entire_field_values_changed_or_created(fields[0].table, fields)
 
 
+@app.task(bind=True)
+def delete_mentions_marked_for_deletion(self):
+    cutoff_time = timezone.now() - timedelta(
+        minutes=settings.STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES
+    )
+    RichTextFieldMention.objects.filter(
+        marked_for_deletion_at__lte=cutoff_time
+    ).delete()
+
+
 @baserow_trace(tracer)
 def _run_periodic_field_update(field, field_type_instance, all_updated_fields):
     add_baserow_trace_attrs(field_id=field.id)
@@ -118,4 +131,8 @@ def _run_periodic_field_update(field, field_type_instance, all_updated_fields):
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         settings.PERIODIC_FIELD_UPDATE_CRONTAB, run_periodic_fields_updates.s()
+    )
+    sender.add_periodic_task(
+        timedelta(minutes=min(15, settings.STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES)),
+        delete_mentions_marked_for_deletion.s(),
     )

@@ -32,6 +32,7 @@
                 </div>
                 <RowHistoryEntry
                   :entry="entry"
+                  :workspace-id="database.workspace.id"
                   :fields="fields"
                   :class="{
                     'row-history-entry--first':

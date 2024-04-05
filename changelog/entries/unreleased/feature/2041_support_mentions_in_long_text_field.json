@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for user mentions in the rich text field.",
+    "issue_number": 2041,
+    "bullet_points": [],
+    "created_at": "2024-03-25"
+}

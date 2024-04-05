@@ -1,12 +1,18 @@
 from datetime import datetime, timezone
 
+from django.test import override_settings
 from django.utils import timezone as django_timezone
 
 import pytest
 from freezegun import freeze_time
 
 from baserow.contrib.database.fields.field_types import FormulaFieldType
-from baserow.contrib.database.fields.tasks import run_periodic_fields_updates
+from baserow.contrib.database.fields.tasks import (
+    delete_mentions_marked_for_deletion,
+    run_periodic_fields_updates,
+)
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.models import RichTextFieldMention
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -369,3 +375,83 @@ def test_run_periodic_field_type_doesnt_update_trashed_workspace(data_fixture):
         assert getattr(row, f"field_{field.id}") == original_datetime
 
         assert FormulaFieldType().get_fields_needing_periodic_update().count() == 0
+
+
+@override_settings(STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES=60)
+@pytest.mark.django_db
+def test_run_delete_mentions_marked_for_deletion(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    rich_text_field = data_fixture.create_long_text_field(
+        table=table, long_text_enable_rich_text=True
+    )
+    model = table.get_model()
+
+    # Create a user mention
+    with freeze_time("2023-02-27 9:00"):
+        row_1, row_2 = RowHandler().create_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {f"field_{rich_text_field.id}": f"Hello @{user.id}!"},
+                {f"field_{rich_text_field.id}": f"Hi @{user.id}!"},
+            ],
+            model=model,
+        )
+
+    mentions = RichTextFieldMention.objects.all()
+    assert len(mentions) == 2
+    assert mentions[0].marked_for_deletion_at is None
+    assert mentions[1].marked_for_deletion_at is None
+
+    with freeze_time("2023-02-27 10:00"):
+        RowHandler().update_rows(
+            user=user,
+            table=table,
+            rows_values=[{"id": row_1.id, f"field_{rich_text_field.id}": "Bye!"}],
+            model=model,
+        )
+
+    mentions = RichTextFieldMention.objects.order_by("row_id")
+    assert len(mentions) == 2
+    assert mentions[0].marked_for_deletion_at == datetime(
+        2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc
+    )
+    assert mentions[1].marked_for_deletion_at is None
+
+    with freeze_time("2023-02-27 11:00"):
+        RowHandler().update_rows(
+            user,
+            table,
+            [{"id": row_2.id, f"field_{rich_text_field.id}": "Bye!"}],
+        )
+
+    mentions = RichTextFieldMention.objects.order_by("row_id")
+    assert len(mentions) == 2
+    assert mentions[0].marked_for_deletion_at == datetime(
+        2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc
+    )
+    assert mentions[1].marked_for_deletion_at == datetime(
+        2023, 2, 27, 11, 0, 0, tzinfo=timezone.utc
+    )
+
+    # Since STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES=60, only mentions
+    # marked for deletion before 10:30 will be deleted
+    with freeze_time("2023-02-27 11:30"):
+        delete_mentions_marked_for_deletion()
+
+    mentions = RichTextFieldMention.objects.all()
+    assert len(mentions) == 1
+    assert mentions[0].row_id == row_2.id
+    assert mentions[0].marked_for_deletion_at == datetime(
+        2023, 2, 27, 11, 0, 0, tzinfo=timezone.utc
+    )
+
+    # Delete also the other mention
+    with freeze_time("2023-02-27 12:30"):
+        delete_mentions_marked_for_deletion()
+
+    assert RichTextFieldMention.objects.count() == 0

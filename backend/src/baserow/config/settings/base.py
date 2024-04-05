@@ -826,6 +826,11 @@ EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
 
+# The interval in minutes that the mentions cleanup job should run. This job will
+# remove mentions that are no longer used.
+STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES = int(
+    os.getenv("BASEROW_STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES", "") or 360
+)
 
 MIDNIGHT_CRONTAB_STR = "0 0 * * *"
 BASEROW_STORAGE_USAGE_JOB_CRONTAB = get_crontab_from_env(

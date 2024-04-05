@@ -1,9 +1,15 @@
 import Markdown from 'markdown-it'
 import taskLists from 'markdown-it-task-lists'
+import { parseMention } from '@baserow/modules/core/editor/mention'
 
 export const parseMarkdown = (
-  markdown,
-  { openLinkOnClick = false, enableImages = false } = {}
+  value,
+  {
+    openLinkOnClick = false,
+    enableImages = false,
+    workspaceUsers = null,
+    loggedUserId = null,
+  } = {}
 ) => {
   const md = new Markdown({ html: false })
 
@@ -57,5 +63,8 @@ export const parseMarkdown = (
     md.disable('image')
   }
 
-  return md.render(markdown)
+  // mentions
+  md.use(parseMention(workspaceUsers || [], loggedUserId))
+
+  return md.render(value || '')
 }

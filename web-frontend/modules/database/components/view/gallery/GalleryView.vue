@@ -38,6 +38,7 @@
           :key="'card-' + slot.id"
           :fields="cardFields"
           :row="slot.item || {}"
+          :workspace-id="database.workspace.id"
           :loading="slot.item === null"
           :cover-image-field="coverImageField"
           :decorations-by-place="decorationsByPlace"

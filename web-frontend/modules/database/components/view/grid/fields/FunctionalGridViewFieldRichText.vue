@@ -2,7 +2,7 @@
 <template functional>
   <div
     class="field-rich-text--preview grid-view__cell grid-field-rich-text__cell"
-    v-html="$options.methods.renderFormattedValue(props)"
+    v-html="$options.methods.renderFormattedValue(parent, props)"
   ></div>
 </template>
 
@@ -12,19 +12,25 @@ import { parseMarkdown } from '@baserow/modules/core/editor/markdown'
 export default {
   name: 'FunctionalGridViewFieldRichText',
   methods: {
-    renderFormattedValue(props) {
-      const { value } = props
+    renderFormattedValue(parent, props) {
+      const maxLen = 200
+      const { value, workspaceId } = props
 
       // Take only a part of the text as a preview to avoid rendering a huge amount of
       // HTML that could slow down the page and won't be visible anyway
-      let preview = ''
-      if (value) {
-        preview = value.substring(0, 200)
-        if (value.length > 200) {
-          preview += '...'
-        }
+      let preview = value || ''
+      if (preview.length > maxLen) {
+        preview = value.substring(0, maxLen) + '...'
       }
-      return parseMarkdown(preview)
+
+      const workspace = parent.$store.getters['workspace/get'](workspaceId)
+      const loggedUserId = parent.$store.getters['auth/getUserId']
+
+      return parseMarkdown(preview, {
+        openLinkOnClick: false,
+        workspaceUsers: workspace.users,
+        loggedUserId,
+      })
     },
   },
 }

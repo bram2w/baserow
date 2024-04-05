@@ -257,6 +257,7 @@ import { DatabasePlugin } from '@baserow/modules/database/plugins'
 import {
   CollaboratorAddedToRowNotificationType,
   FormSubmittedNotificationType,
+  UserMentionInRichTextFieldNotificationType,
 } from '@baserow/modules/database/notificationTypes'
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 import { FieldsDataProviderType } from '@baserow/modules/database/dataProviderTypes'
@@ -734,6 +735,10 @@ export default (context) => {
   app.$registry.register(
     'notification',
     new FormSubmittedNotificationType(context)
+  )
+  app.$registry.register(
+    'notification',
+    new UserMentionInRichTextFieldNotificationType(context)
   )
 
   app.$registry.register(

@@ -1,42 +1,63 @@
-import Vue from 'vue'
+import { VueRenderer } from '@tiptap/vue-2'
+import tippy from 'tippy.js'
 
-function updateComponentProps(component, props) {
-  for (const key of ['command', 'query']) {
-    Vue.set(component, key, props[key])
-  }
-}
+import RichTextEditorMentionsList from '@baserow/modules/core/components/editor/RichTextEditorMentionsList'
 
-export default ({ component }) => ({
+export default ({ users }) => ({
   render: () => {
+    let popup
+    let component
+
     return {
       onStart: (props) => {
+        component = new VueRenderer(RichTextEditorMentionsList, {
+          parent: this,
+          propsData: { users, ...props },
+        })
+
         if (!props.clientRect) {
           return
         }
 
-        updateComponentProps(component, props)
-        component.show()
+        popup = tippy('body', {
+          getReferenceClientRect: props.clientRect,
+          appendTo: () => document.body,
+          content: component.element,
+          showOnCreate: true,
+          interactive: true,
+          trigger: 'manual',
+          placement: 'top-start',
+          offset: [0, 5],
+        })
       },
 
       onUpdate(props) {
-        updateComponentProps(component, props)
+        component.updateProps(props)
+
+        if (!props.clientRect) {
+          return
+        }
+
+        popup[0].setProps({
+          getReferenceClientRect: props.clientRect,
+        })
       },
 
       onKeyDown(props) {
         if (props.event.key === 'Escape') {
-          if (component.open) {
-            props.event.preventDefault()
-            props.event.stopPropagation()
-            component.hide()
-          }
+          popup[0].hide()
+
           return true
         }
 
-        return component.onKeyDown({ event: props.event })
+        return component.ref?.onKeyDown(props)
       },
 
       onExit() {
-        component.hide()
+        if (component) {
+          popup[0].destroy()
+          component.destroy()
+        }
       },
     }
   },

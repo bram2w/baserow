@@ -1,113 +1,126 @@
 <template>
-  <div
-    class="dropdown rich-text-editor__mention-dropdown"
-    :class="{
-      'dropdown--floating': !showInput,
-      'dropdown--disabled': disabled,
-    }"
-    :tabindex="realTabindex"
-    @contextmenu.stop
-    @focusin="show()"
-    @focusout="focusout($event)"
-  >
-    <div class="dropdown__items" :class="{ hidden: !open }">
-      <ul
-        ref="items"
-        v-prevent-parent-scroll
-        v-auto-overflow-scroll
-        class="select__items"
-        tabindex=""
-        @scroll="scroll"
-      >
-        <FieldCollaboratorDropdownItem
-          v-for="collaborator in results"
-          :key="collaborator.user_id"
-          :name="collaborator.name"
-          :value="collaborator.user_id"
-        ></FieldCollaboratorDropdownItem>
+  <div>
+    <template v-if="filteredUsers.length">
+      <ul class="rich-text-editor__mention-list">
+        <li
+          v-for="(user, index) in filteredUsers"
+          :key="index"
+          ref="user"
+          class="rich-text-editor__mention-list-item"
+          :class="{ 'is-selected': index === selectedIndex }"
+          @click.stop.prevent="selectItem(index)"
+        >
+          <div class="select-collaborators__initials">
+            {{ userInitials(user) }}
+          </div>
+          <div class="select-collaborators__dropdown-option">
+            {{ user.name }}
+          </div>
+        </li>
       </ul>
-      <div v-show="isNotFound" class="select__description">
-        {{ notFoundErrorMessage }}
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script>
-import inMemoryPaginatedDropdown from '@baserow/modules/core/mixins/inMemoryPaginatedDropdown'
-import FieldCollaboratorDropdownItem from '@baserow/modules/database/components/field/FieldCollaboratorDropdownItem'
-
 export default {
-  name: 'RichTextEditorMentionsList',
-  components: { FieldCollaboratorDropdownItem },
-  mixins: [inMemoryPaginatedDropdown],
+  props: {
+    users: {
+      type: Array,
+      required: true,
+    },
+
+    command: {
+      type: Function,
+      required: true,
+    },
+    query: {
+      type: String,
+      required: true,
+    },
+  },
+
   data() {
     return {
-      collaborators: [],
-      query: '',
-      command: () => {},
+      selectedIndex: 0,
+      filteredUsers: [],
     }
   },
-  computed: {
-    isNotFound() {
-      return this.results.length === 0
-    },
-    notFoundErrorMessage() {
-      return this.$i18n.t('richTextEditorMentionsList.notFound')
-    },
-  },
+
   watch: {
-    query(newVal, oldVal) {
-      if (newVal !== oldVal) {
-        this.fetch(1, this.query).then(() => {
-          this.hoverFirstItem()
-        })
-      }
+    workspace() {
+      this.selectedIndex = 0
+    },
+    query: {
+      handler(query, oldQuery) {
+        this.filteredUsers = this.users.filter(
+          (user) =>
+            !query ||
+            user.name.toLowerCase().includes(query.toLowerCase()) ||
+            `${user.user_id}` === query
+        )
+        if (query !== oldQuery) {
+          this.selectedIndex = 0
+        }
+      },
+      immediate: true,
     },
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.hoverFirstItem()
-    })
-  },
+
   methods: {
-    hoverFirstItem() {
-      this.hover = this.collaborators[0]?.user_id
-    },
-    filterItems(query) {
-      const workspace = this.$store.getters['workspace/getSelected']
-      this.collaborators = workspace.users.filter(
-        (user) =>
-          user.name.toLowerCase().includes(query.toLowerCase()) &&
-          user.to_be_deleted === false
-      )
-      return this.collaborators
+    userInitials(user) {
+      return user.name.slice(0, 1).toUpperCase()
     },
     onKeyDown({ event }) {
-      if (this.open) {
-        // return true to insert the selected item
-        if (event.key === 'Enter') {
-          return true
-        }
-        if (event.key === 'Tab') {
-          this.select(this.hover)
-          return true
-        }
+      if (event.key === 'ArrowUp') {
+        this.upHandler()
+        return true
       }
+
+      if (event.key === 'ArrowDown') {
+        this.downHandler()
+        return true
+      }
+
+      if (event.key === 'Enter' || event.key === 'Tab') {
+        this.enterHandler()
+        event.preventDefault()
+        event.stopPropagation()
+        return true
+      }
+
+      return false
     },
-    _select(collaborator) {
-      this.command({
-        id: collaborator.user_id,
-        label: collaborator.name,
+    scrollSelectedIntoView() {
+      this.$nextTick(() => {
+        const listItem = this.$refs.user[this.selectedIndex]
+        listItem.scrollIntoView({ behavior: 'auto', block: 'nearest' })
       })
     },
-    select(collaboratorUserId) {
-      const collaborator = this.collaborators.find(
-        (c) => c.user_id === collaboratorUserId
-      )
+    upHandler() {
+      if (this.selectedIndex === 0) return
 
-      if (collaborator) {
-        this._select(collaborator)
+      this.selectedIndex = this.selectedIndex - 1
+
+      this.scrollSelectedIntoView()
+    },
+
+    downHandler() {
+      if (this.selectedIndex === this.filteredUsers.length - 1) return
+
+      this.selectedIndex = this.selectedIndex + 1
+      this.scrollSelectedIntoView()
+    },
+
+    enterHandler() {
+      this.selectItem(this.selectedIndex)
+    },
+
+    selectItem(index) {
+      const item = this.filteredUsers[index]
+
+      if (item) {
+        this.command({ id: item.user_id, label: item.name })
       }
     },
   },
