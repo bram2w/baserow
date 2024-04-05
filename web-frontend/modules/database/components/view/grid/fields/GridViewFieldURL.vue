@@ -32,6 +32,7 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
+import { ensureUrlProtocol } from '@baserow/modules/core/utils/url'
 
 export default {
   mixins: [gridField, gridFieldInput],
@@ -43,11 +44,7 @@ export default {
       })
     },
     getHref(value) {
-      const protocolRegex = /^[a-zA-Z]+:\/\//
-      if (!protocolRegex.test(value)) {
-        return `https://${value}`
-      }
-      return value
+      return ensureUrlProtocol(value)
     },
   },
 }

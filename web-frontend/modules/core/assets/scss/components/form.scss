@@ -132,6 +132,10 @@
     padding: 8px 12px;
   }
 
+  &.input--invisible {
+    color: $white;
+  }
+
   &[disabled] {
     color: $palette-neutral-700;
     box-shadow: none;
