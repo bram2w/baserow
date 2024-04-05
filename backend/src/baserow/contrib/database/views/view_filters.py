@@ -311,43 +311,6 @@ class LengthIsLowerThanViewFilterType(ViewFilterType):
             return self.default_filter_on_exception()
 
 
-class HigherThanViewFilterType(ViewFilterType):
-    """
-    The higher than filter checks if the field value is higher than the filter value.
-    It only works if a numeric number is provided. It is at compatible with
-    models.IntegerField and models.DecimalField.
-    """
-
-    type = "higher_than"
-    compatible_field_types = [
-        NumberFieldType.type,
-        RatingFieldType.type,
-        AutonumberFieldType.type,
-        DurationFieldType.type,
-        FormulaFieldType.compatible_with_formula_types(
-            BaserowFormulaNumberType.type,
-        ),
-    ]
-
-    def get_filter(self, field_name, value, model_field, field):
-        value = value.strip()
-
-        # If an empty value has been provided we do not want to filter at all.
-        if value == "":
-            return Q()
-
-        if isinstance(model_field, IntegerField) and value.find(".") != -1:
-            decimal = Decimal(value)
-            value = floor(decimal)
-
-        # Check if the model_field accepts the value.
-        try:
-            value = model_field.get_prep_value(value)
-            return Q(**{f"{field_name}__gt": value})
-        except Exception:
-            return self.default_filter_on_exception()
-
-
 class IsEvenAndWholeViewFilterType(ViewFilterType):
     """
     The is even and whole filter checks if the field value is an even number
@@ -372,14 +335,14 @@ class IsEvenAndWholeViewFilterType(ViewFilterType):
         )
 
 
-class LowerThanViewFilterType(ViewFilterType):
+class NumericComparisonViewFilterType(ViewFilterType):
     """
-    The lower than filter checks if the field value is lower than the filter value.
-    It only works if a numeric number is provided. It is at compatible with
-    models.IntegerField and models.DecimalField.
+    Base filter type for basic numeric comparisons. It defines common logic for
+    'lower than', 'lower than or equal', 'higher than' and 'higher than or equal'
+    view filter types.
     """
 
-    type = "lower_than"
+    operator = None
     compatible_field_types = [
         NumberFieldType.type,
         RatingFieldType.type,
@@ -390,6 +353,9 @@ class LowerThanViewFilterType(ViewFilterType):
         ),
     ]
 
+    def should_round_value_to_compare(self, value, model_field):
+        return isinstance(model_field, IntegerField) and value.find(".") != -1
+
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
@@ -397,16 +363,62 @@ class LowerThanViewFilterType(ViewFilterType):
         if value == "":
             return Q()
 
-        if isinstance(model_field, IntegerField) and value.find(".") != -1:
-            decimal = Decimal(value)
-            value = ceil(decimal)
+        if self.should_round_value_to_compare(value, model_field):
+            decimal_value = Decimal(value)
+            value = self.rounding_func(decimal_value)
 
         # Check if the model_field accepts the value.
         try:
             value = model_field.get_prep_value(value)
-            return Q(**{f"{field_name}__lt": value})
+            return Q(**{f"{field_name}__{self.operator}": value})
         except Exception:
             return self.default_filter_on_exception()
+
+
+class LowerThanViewFilterType(NumericComparisonViewFilterType):
+    """
+    The lower than filter checks if the field value is lower than the filter value.
+    It only works if a numeric number is provided.
+    """
+
+    type = "lower_than"
+    operator = "lt"
+    rounding_func = floor
+
+
+class LowerThanOrEqualViewFilterType(NumericComparisonViewFilterType):
+    """
+    The lower than or equal filter checks if the field value is lower or if it
+    equals to the filter value.
+    It only works if a numeric number is provided.
+    """
+
+    type = "lower_than_or_equal"
+    operator = "lte"
+    rounding_func = floor
+
+
+class HigherThanViewFilterType(NumericComparisonViewFilterType):
+    """
+    The higher than filter checks if the field value is higher than the filter value.
+    It only works if a numeric number is provided.
+    """
+
+    type = "higher_than"
+    operator = "gt"
+    rounding_func = ceil
+
+
+class HigherThanOrEqualViewFilterType(NumericComparisonViewFilterType):
+    """
+    The higher than or equal filter checks if the field value is higher than or
+    if it equals to the filter value.
+    It only works if a numeric number is provided.
+    """
+
+    type = "higher_than_or_equal"
+    operator = "gte"
+    rounding_func = ceil
 
 
 class TimezoneAwareDateViewFilterType(ViewFilterType):

@@ -1495,6 +1495,115 @@ def test_higher_than_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_higher_than_or_equal_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    integer_field = data_fixture.create_number_field(table=table, number_negative=True)
+    decimal_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=2,
+        number_negative=True,
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{integer_field.id}": 10,
+            f"field_{decimal_field.id}": 20.20,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{integer_field.id}": None,
+            f"field_{decimal_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": 99,
+            f"field_{decimal_field.id}": 99.99,
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": -10,
+            f"field_{decimal_field.id}": -30.33,
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=integer_field, type="higher_than_or_equal", value="1"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert (
+        len(ids) == 2
+    )  # Only rows with values 10 and 99 are equal to or greater than 1
+    assert row.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "10"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2  # Rows with 10 and 99 are equal to or greater than 10
+    assert row.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "99"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1  # Only row_3 matches because it's equal to or greater than 99
+    assert row_3.id in ids
+
+    view_filter.value = "100"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0  # No rows match
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = "0"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2  # Rows with 10 and 99 are equal to or greater than 0
+
+    view_filter.value = "-10"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert (
+        len(ids) == 3
+    )  # Includes row, row_3, and row_4 because it's equal to or greater than -10
+
+    view_filter.field = decimal_field
+    view_filter.value = "20.20"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert (
+        len(ids) == 2
+    )  # Matches row and row_3 with values equal to or greater than 20.20
+
+    view_filter.value = "99.99"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1  # Only row_3 matches
+
+    view_filter.value = "100"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
 def test_lower_than_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -1644,6 +1753,75 @@ def test_lower_than_filter_type(data_fixture):
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
+
+
+@pytest.mark.django_db
+def test_lower_than_or_equal_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    integer_field = data_fixture.create_number_field(table=table, number_negative=True)
+    decimal_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=2,
+        number_negative=True,
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{integer_field.id}": 10,
+            f"field_{decimal_field.id}": 20.20,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{integer_field.id}": None,
+            f"field_{decimal_field.id}": None,
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": 99,
+            f"field_{decimal_field.id}": 99.99,
+        }
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{integer_field.id}": -10,
+            f"field_{decimal_field.id}": -30.33,
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=integer_field, type="lower_than_or_equal", value="1"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_4.id in ids
+
+    view_filter.value = "100"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3  # Includes row, row_3, row_4;
+
+    view_filter.value = "-10"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1  # Only row_4 matches
+
+    view_filter.value = "9"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1  # Only row_4 matches
+
+    view_filter.field = decimal_field
+    view_filter.value = "20.20"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2  # Includes row and row_4;
 
 
 @pytest.mark.django_db
