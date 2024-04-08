@@ -55,7 +55,7 @@
     </div>
     <component
       :is="deactivatedClickComponent"
-      v-if="isDeactivated"
+      v-if="isDeactivated && workspace"
       ref="clickModal"
       :workspace="workspace"
       :name="fieldName"
@@ -84,7 +84,7 @@ export default {
       this.afterSave()
     },
     canUnselectByClickingOutside(event) {
-      if (this.isDeactivated) {
+      if (this.isDeactivated && this.workspace) {
         return !isElement(this.$refs.clickModal.$el, event.target)
       }
       return true

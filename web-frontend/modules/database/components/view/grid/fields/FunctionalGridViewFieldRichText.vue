@@ -32,7 +32,7 @@ export default {
 
       return parseMarkdown(preview, {
         openLinkOnClick: false,
-        workspaceUsers: workspace.users,
+        workspaceUsers: workspace ? workspace.users : null,
         loggedUserId,
       })
     },

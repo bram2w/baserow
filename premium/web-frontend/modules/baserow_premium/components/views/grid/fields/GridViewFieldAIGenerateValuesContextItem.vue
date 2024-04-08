@@ -2,8 +2,8 @@
   <li class="context__menu-item">
     <a
       class="context__menu-item-link"
-      :class="{ disabled: !modelAvailable }"
-      @click.prevent.stop=";[generateAIFieldValues()]"
+      :class="{ disabled: !modelAvailable || !hasPremium }"
+      @click.prevent.stop="generateAIFieldValues()"
     >
       <i class="context__menu-item-icon iconoir-magic-wand"></i>
       {{ $t('gridView.generateCellsValues') }}
@@ -14,6 +14,7 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldService from '@baserow_premium/services/field'
+import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   props: {
@@ -50,10 +51,13 @@ export default {
         aIModels.includes(this.field.ai_generative_ai_model)
       )
     },
+    hasPremium() {
+      return this.$hasFeature(PremiumFeatures.PREMIUM, this.workspace.id)
+    },
   },
   methods: {
     async generateAIFieldValues($event) {
-      if (!this.modelAvailable) {
+      if (!this.modelAvailable || !this.hasPremium) {
         return
       }
 

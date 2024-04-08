@@ -23,7 +23,7 @@
       :class="{ 'grid-field-rich-text__textarea--resizable': editing }"
       :editable="editing && !isModalOpen()"
       :enable-rich-text-formatting="true"
-      :mentionable-users="workspace.users"
+      :mentionable-users="workspace ? workspace.users : null"
       :thin-scrollbar="true"
     ></RichTextEditor>
     <i
@@ -38,7 +38,7 @@
       ref="expandedModal"
       v-model="richCopy"
       :field="field"
-      :mentionable-users="workspace.users"
+      :mentionable-users="workspace ? workspace.users : null"
       @hidden="onExpandedModalHidden"
     ></FieldRichTextModal>
   </div>
@@ -64,7 +64,7 @@ export default {
     formattedValue() {
       return parseMarkdown(this.value, {
         openLinkOnClick: true,
-        workspaceUsers: this.workspace.users,
+        workspaceUsers: this.workspace ? this.workspace.users : null,
         loggedUserId: this.$store.getters['auth/getUserId'],
       })
     },
