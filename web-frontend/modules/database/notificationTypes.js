@@ -16,6 +16,17 @@ export class CollaboratorAddedToRowNotificationType extends NotificationType {
   getContentComponent() {
     return CollaboratorAddedToRowNotification
   }
+
+  getRoute(notificationData) {
+    return {
+      name: 'database-table-row',
+      params: {
+        databaseId: notificationData.database_id,
+        tableId: notificationData.table_id,
+        rowId: notificationData.row_id,
+      },
+    }
+  }
 }
 
 export class FormSubmittedNotificationType extends NotificationType {
@@ -30,6 +41,17 @@ export class FormSubmittedNotificationType extends NotificationType {
   getContentComponent() {
     return FormSubmittedNotification
   }
+
+  getRoute(notificationData) {
+    return {
+      name: 'database-table-row',
+      params: {
+        databaseId: notificationData.database_id,
+        tableId: notificationData.table_id,
+        rowId: notificationData.row_id,
+      },
+    }
+  }
 }
 
 export class UserMentionInRichTextFieldNotificationType extends NotificationType {
@@ -43,5 +65,16 @@ export class UserMentionInRichTextFieldNotificationType extends NotificationType
 
   getContentComponent() {
     return UserMentionInRichTextFieldNotification
+  }
+
+  getRoute(notificationData) {
+    return {
+      name: 'database-table-row',
+      params: {
+        databaseId: notificationData.database_id,
+        tableId: notificationData.table_id,
+        rowId: notificationData.row_id,
+      },
+    }
   }
 }

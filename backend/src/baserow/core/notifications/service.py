@@ -8,6 +8,7 @@ from baserow.core.notifications.handler import NotificationHandler
 from baserow.core.notifications.models import NotificationRecipient
 from baserow.core.registries import OperationType
 
+from .exceptions import NotificationDoesNotExist
 from .operations import (
     ListNotificationsOperationType,
     MarkNotificationAsReadOperationType,
@@ -35,6 +36,35 @@ class NotificationService:
         )
 
         return NotificationHandler.list_notifications(user, workspace)
+
+    @classmethod
+    def get_notification(
+        cls,
+        user: AbstractUser,
+        workspace_id: int,
+        notification_id: int,
+    ) -> NotificationRecipient:
+        """
+        Get notification
+
+        :param user: The user on whose behalf the request is made.
+        :param workspace_id: The workspace id to get the notification for.
+        :param notification_id: The notification id to get.
+        """
+
+        workspace = cls.get_workspace_if_has_permissions_or_raise(
+            user, workspace_id, ListNotificationsOperationType
+        )
+
+        try:
+            notification = NotificationHandler.all_notifications_for_user(
+                user, workspace
+            ).get(notification_id=notification_id)
+        except NotificationRecipient.DoesNotExist:
+            raise NotificationDoesNotExist(
+                f"Notification {notification_id} is not found."
+            )
+        return notification
 
     @classmethod
     def mark_notification_as_read(

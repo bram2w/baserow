@@ -373,19 +373,19 @@ def test_not_all_notification_types_are_included_in_the_email_notification_summa
             notification_type=ExcludedFromEmailTestNotification.type,
         )
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.DAILY)
         )
         assert res.users_with_notifications == []
         assert res.remaining_users_to_notify_count == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.WEEKLY)
         )
         assert res.users_with_notifications == []
         assert res.remaining_users_to_notify_count == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.INSTANT)
         )
         assert res.users_with_notifications == [user_1]
@@ -407,6 +407,7 @@ def test_not_all_notification_types_are_included_in_the_email_notification_summa
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 }
             ],
             "new_notifications_count": 1,
@@ -434,19 +435,19 @@ def test_no_email_without_renderable_notifications(
             notification_type=ExcludedFromEmailTestNotification.type,
         )
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.DAILY)
         )
         assert res.users_with_notifications == []
         assert res.remaining_users_to_notify_count == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.WEEKLY)
         )
         assert res.users_with_notifications == []
         assert res.remaining_users_to_notify_count == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.INSTANT)
         )
         assert res.users_with_notifications == []
@@ -487,7 +488,7 @@ def test_user_with_daily_email_notification_frequency_settings(
             notification_type=ExcludedFromEmailTestNotification.type,
         )
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=email_notification_frequency)
         )
         assert res.users_with_notifications == [user_1]
@@ -509,6 +510,7 @@ def test_user_with_daily_email_notification_frequency_settings(
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 }
             ],
             "new_notifications_count": 1,
@@ -539,7 +541,7 @@ def test_email_notifications_are_sent_only_after_setting_is_activated(
         user_1 = UserHandler().update_user(
             user_1, email_notification_frequency=options.INSTANT
         )
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
         assert res.users_with_notifications == []
@@ -549,7 +551,7 @@ def test_email_notifications_are_sent_only_after_setting_is_activated(
             recipients=[user_1], notification_type=TestNotification.type
         )
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
 
@@ -572,6 +574,7 @@ def test_email_notifications_are_sent_only_after_setting_is_activated(
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 }
             ],
             "new_notifications_count": 1,
@@ -601,7 +604,7 @@ def test_email_notifications_are_included_up_to_email_limit(
                 recipients=[user_1], notification_type=TestNotification.type
             )
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
         assert res.users_with_notifications == [user_1]
@@ -624,6 +627,7 @@ def test_email_notifications_are_included_up_to_email_limit(
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 }
                 for _ in range(limit)
             ],
@@ -656,7 +660,7 @@ def test_email_notifications_are_sent_just_once(
         )
 
         assert NotificationRecipient.objects.filter(email_scheduled=True).count() == 1
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.INSTANT)
         )
         assert res.users_with_notifications == [user_1]
@@ -664,7 +668,7 @@ def test_email_notifications_are_sent_just_once(
         assert res.remaining_users_to_notify_count == 0
 
         assert NotificationRecipient.objects.filter(email_scheduled=True).count() == 0
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(profile__email_notification_frequency=options.INSTANT)
         )
         assert res.users_with_notifications == []
@@ -683,7 +687,7 @@ def test_broadcast_notifications_are_not_sent_by_email(
 
     user_1 = data_fixture.create_user()
 
-    res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+    res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
         Q(pk=user_1.pk)
     )
     assert res.users_with_notifications == []
@@ -708,7 +712,7 @@ def test_email_notifications_are_not_sent_if_global_setting_is_disabled(
 
         assert NotificationRecipient.objects.filter(email_scheduled=True).count() == 1
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
         assert res.users_with_notifications == [user_1]
@@ -745,7 +749,7 @@ def test_email_notifications_are_not_sent_if_already_read_by_user(
 
         assert NotificationRecipient.objects.filter(email_scheduled=True).count() == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
         assert res.users_with_notifications == []
@@ -765,7 +769,7 @@ def test_email_notifications_are_not_sent_if_already_read_by_user(
 
         assert NotificationRecipient.objects.filter(email_scheduled=True).count() == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
         assert res.users_with_notifications == []
@@ -798,7 +802,7 @@ def test_email_notifications_are_not_sent_if_already_cleared_by_user(
 
         assert NotificationRecipient.objects.filter(email_scheduled=True).count() == 0
 
-        res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
             Q(pk=user_1.pk)
         )
         assert res.users_with_notifications == []

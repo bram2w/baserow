@@ -160,10 +160,12 @@ class NotificationsSummaryEmail(BaseEmailMessage):
                     notification, context
                 )
             )
+            email_url = notification_type.get_web_frontend_url(notification)
             rendered_notifications.append(
                 {
                     "title": email_title,
                     "description": email_description,
+                    "url": email_url,
                 }
             )
         unlisted_notifications_count = self.new_notifications_count - len(

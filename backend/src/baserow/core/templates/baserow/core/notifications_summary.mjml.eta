@@ -11,7 +11,12 @@
     </mj-text>
     <mj-divider border-width="1px" border-style="dashed" border-color="lightgrey" />
     <mj-raw><!-- htmlmin:ignore -->{% for notification in notifications %}<!-- htmlmin:ignore --></mj-raw>
-      <mj-text mj-class="notification-title">{{ notification.title }}</mj-text>
+      {{ notification.url }}
+      <mj-raw><!-- htmlmin:ignore -->{% if notification.url %}<!-- htmlmin:ignore --></mj-raw>
+        <mj-text mj-class="notification-title"><a style="font-family:Inter,sans-serif;font-size:14px;line-height:170%;text-align:left;color:#070810;" href="{{ notification.url }}">{{ notification.title }}</a></mj-text>
+      <mj-raw><!-- htmlmin:ignore -->{% else %}<!-- htmlmin:ignore --></mj-raw>
+        <mj-text mj-class="notification-title">{{ notification.title }}</mj-text>
+      <mj-raw><!-- htmlmin:ignore -->{% endif %}<!-- htmlmin:ignore --></mj-raw>
       <mj-raw><!-- htmlmin:ignore -->{% if notification.description %}<!-- htmlmin:ignore --></mj-raw>
         <mj-text mj-class="notification-description">{{ notification.description|linebreaksbr }}</mj-text>
       <mj-raw><!-- htmlmin:ignore -->{% endif %}<!-- htmlmin:ignore --></mj-raw>

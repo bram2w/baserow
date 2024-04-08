@@ -65,6 +65,13 @@
               font-family="Inter,sans-serif"
       />
       <mj-class
+              name="notification-title"
+              font-size="14px"
+              color="#070810"
+              font-family="Inter,sans-serif"
+              line-height="170%"
+      />
+      <mj-class
               name="notification-description"
               font-size="12px"
               color="#838387"
