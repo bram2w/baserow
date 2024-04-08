@@ -93,6 +93,10 @@ export default {
       }
     },
     submit() {
+      if (this.selectedFieldIsDeactivated) {
+        return
+      }
+
       this.touch()
 
       if (this.isFormValid()) {

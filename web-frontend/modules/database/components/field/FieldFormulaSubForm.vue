@@ -10,6 +10,7 @@
       :loading="refreshingFormula"
       :formula-type-refresh-needed="formulaTypeRefreshNeeded"
       :all-fields-in-table="allFieldsInTable"
+      :database="database"
       @open-advanced-context="
         $refs.advancedFormulaEditContext.openContext($event)
       "
@@ -22,6 +23,7 @@
       :table="table"
       :fields="fieldsUsableInFormula"
       :error="formulaError"
+      :database="database"
       @blur="$v.values.formula.$touch()"
       @hidden="$v.values.formula.$touch()"
     >

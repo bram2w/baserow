@@ -23,6 +23,21 @@
         </a>
       </li>
       <li
+        v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+        class="context__menu-item"
+      >
+        <a
+          class="context__menu-item-link"
+          @click="
+            $refs.workspaceSettingsModal.show()
+            hide()
+          "
+        >
+          <i class="context__menu-item-icon iconoir-settings"></i>
+          {{ $t('workspaceContext.settings') }}
+        </a>
+      </li>
+      <li
         v-if="$hasPermission('invitation.read', workspace, workspace.id)"
         class="context__menu-item"
       >
@@ -84,6 +99,11 @@
       ref="leaveWorkspaceModal"
       :workspace="workspace"
     ></LeaveWorkspaceModal>
+    <WorkspaceSettingsModal
+      v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+      ref="workspaceSettingsModal"
+      :workspace="workspace"
+    ></WorkspaceSettingsModal>
   </Context>
 </template>
 
@@ -92,10 +112,11 @@ import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import LeaveWorkspaceModal from '@baserow/modules/core/components/workspace/LeaveWorkspaceModal'
+import WorkspaceSettingsModal from '@baserow/modules/core/components/workspace/WorkspaceSettingsModal'
 
 export default {
   name: 'WorkspaceContext',
-  components: { LeaveWorkspaceModal, TrashModal },
+  components: { LeaveWorkspaceModal, TrashModal, WorkspaceSettingsModal },
   mixins: [context],
   props: {
     workspace: {

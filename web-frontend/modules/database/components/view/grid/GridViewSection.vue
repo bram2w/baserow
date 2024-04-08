@@ -175,11 +175,6 @@ export default {
     GridViewWidthHandle,
   },
   mixins: [gridViewHelpers],
-  provide() {
-    return {
-      workspace: this.database.workspace,
-    }
-  },
   props: {
     visibleFields: {
       type: Array,

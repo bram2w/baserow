@@ -62,9 +62,30 @@
             :value="fieldType.type"
             :disabled="
               (primary && !fieldType.canBePrimaryField) ||
-              !fieldType.isEnabled()
+              !fieldType.isEnabled(workspace) ||
+              fieldType.isDeactivated(workspace.id)
             "
-          ></DropdownItem>
+            @click="clickOnDeactivatedItem($event, fieldType)"
+          >
+            <i class="select__item-icon" :class="fieldType.iconClass" />
+            <span class="select__item-name-text" :title="fieldType.getName()">{{
+              fieldType.getName()
+            }}</span>
+            <i
+              v-if="fieldType.isDeactivated(workspace.id)"
+              class="iconoir-lock"
+            ></i>
+            <component
+              :is="fieldType.getDeactivatedClickModal(workspace.id)"
+              :ref="'deactivatedClickModal-' + fieldType.type"
+              :v-if="
+                fieldType.isDeactivated(workspace.id) &&
+                fieldType.getDeactivatedClickModal(workspace.id)
+              "
+              :name="$t(fieldType.getName())"
+              :workspace="workspace"
+            ></component>
+          </DropdownItem>
         </Dropdown>
         <div v-if="$v.values.type.$error" class="error">
           {{ $t('error.requiredField') }}
@@ -82,11 +103,12 @@
         :all-fields-in-table="allFieldsInTable"
         :name="values.name"
         :default-values="defaultValues"
+        :database="database"
         @validate="$v.$touch"
         @suggested-field-name="handleSuggestedFieldName($event)"
       />
     </template>
-    <slot></slot>
+    <slot v-if="!selectedFieldIsDeactivated"></slot>
   </form>
 </template>
 
@@ -129,6 +151,10 @@ export default {
       type: Array,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -142,6 +168,10 @@ export default {
     }
   },
   computed: {
+    // Return the reactive object that can be updated in runtime.
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
+    },
     fieldTypes() {
       return this.$registry.getAll('field')
     },
@@ -150,6 +180,15 @@ export default {
     },
     existingFieldId() {
       return this.defaultValues ? this.defaultValues.id : null
+    },
+    selectedFieldIsDeactivated() {
+      try {
+        return this.$registry
+          .get('field', this.values.type)
+          .isDeactivated(this.workspace.id)
+      } catch {
+        return false
+      }
     },
     ...mapGetters({
       fields: 'field/getAll',
@@ -210,7 +249,7 @@ export default {
     },
     getFormComponent(type) {
       const fieldType = this.$registry.get('field', type)
-      if (fieldType.isEnabled()) {
+      if (fieldType.isEnabled(this.workspace)) {
         return fieldType.getFormComponent()
       }
     },
@@ -232,6 +271,11 @@ export default {
       event.preventDefault()
       this.$emit('keydown-enter')
       this.submit()
+    },
+    clickOnDeactivatedItem(event, fieldType) {
+      if (fieldType.isDeactivated(this.workspace.id)) {
+        this.$refs[`deactivatedClickModal-${fieldType.type}`][0].show()
+      }
     },
   },
 }

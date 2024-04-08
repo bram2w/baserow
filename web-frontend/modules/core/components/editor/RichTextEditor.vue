@@ -125,7 +125,6 @@ export default {
     RichTextEditorBubbleMenu,
     RichTextEditorFloatingMenu,
   },
-  inject: ['uploadUserFile'],
   props: {
     value: {
       type: [Object, String],
@@ -451,6 +450,7 @@ export default {
         const id = fileObj.id
         const file = fileObj.file
 
+        // FIXME: provide uploadUserFile as prop
         try {
           const { data } = await this.uploadUserFile(file)
           this.addImages([data])

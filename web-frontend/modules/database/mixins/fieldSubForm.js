@@ -20,5 +20,9 @@ export default {
       type: Array,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
   },
 }

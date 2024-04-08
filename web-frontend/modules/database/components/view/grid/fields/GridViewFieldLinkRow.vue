@@ -75,9 +75,6 @@ export default {
   name: 'GridViewFieldLinkRow',
   components: { ForeignRowEditModal, SelectRowModal },
   mixins: [gridField, linkRowField],
-  inject: {
-    workspace: { default: null },
-  },
   data() {
     return {
       modalOpen: false,
@@ -85,6 +82,10 @@ export default {
     }
   },
   computed: {
+    // Return the reactive object that can be updated in runtime.
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
+    },
     canAccessLinkedTable() {
       const linkedTable = this.allTables.find(
         ({ id }) => id === this.field.link_row_table_id

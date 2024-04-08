@@ -296,7 +296,7 @@ class CoreConfig(AppConfig):
         )
         notification_type_registry.register(BaserowVersionUpgradeNotificationType())
 
-        from baserow.core.generative_ai.generative_ai_models import (
+        from baserow.core.generative_ai.generative_ai_model_types import (
             OllamaGenerativeAIModelType,
             OpenAIGenerativeAIModelType,
         )

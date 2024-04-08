@@ -63,3 +63,11 @@ BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED = "VIEWER"
 # prevent failures caused by the middleware itself
 if "baserow.middleware.ConcurrentUserRequestsMiddleware" in MIDDLEWARE:
     MIDDLEWARE.remove("baserow.middleware.ConcurrentUserRequestsMiddleware")
+
+
+BASEROW_OPENAI_API_KEY = None
+BASEROW_OPENAI_ORGANIZATION = None
+BASEROW_OPENAI_MODELS = []
+BASEROW_OLLAMA_HOST = None
+BASEROW_OLLAMA_MODELS = None
+BASEROW_OLLAMA_MODELS = []

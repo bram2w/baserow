@@ -76,9 +76,6 @@ export default {
       }
       return []
     },
-    database() {
-      return this.$store.getters['application/get'](this.table.database_id)
-    },
     tablesWhereFieldsCanBeCreated() {
       return this.tables.filter((table) =>
         this.$hasPermission(

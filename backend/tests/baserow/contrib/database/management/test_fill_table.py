@@ -85,10 +85,11 @@ def test_fill_table_rows_no_empty_table(data_fixture, test_limit):
 def test_fill_table_fields(data_fixture):
     """Verify that the fill_table_fields command correctly creates columns."""
 
+    data_fixture.register_fake_generate_ai_type()
     # create a new empty table with a field
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(user=user, table=table)
+    text_field = data_fixture.create_text_field(user=user, table=table, primary=True)
 
     model = table.get_model()
 

@@ -323,3 +323,105 @@ def test_trashed_workspace_not_returned_by_views(api_client, data_fixture):
     response_json = response.json()
     assert len(response_json) == 1
     assert response_json[0]["id"] == visible_workspace.id
+
+
+@pytest.mark.django_db
+def test_only_admin_can_list_generative_ai_settings(api_client, data_fixture):
+    data_fixture.register_fake_generate_ai_type()
+    user, token = data_fixture.create_user_and_token(email="test@test.nl")
+    member_user, member_token = data_fixture.create_user_and_token(
+        email="test2@test.nl",
+    )
+
+    workspace = data_fixture.create_workspace(user=user)
+    data_fixture.create_user_workspace(
+        workspace=workspace, user=member_user, permissions="MEMBER"
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:workspaces:generative_ai_settings",
+            kwargs={"workspace_id": workspace.id},
+        ),
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {}
+
+    response = api_client.get(
+        reverse(
+            "api:workspaces:generative_ai_settings",
+            kwargs={"workspace_id": workspace.id},
+        ),
+        **{"HTTP_AUTHORIZATION": f"JWT {member_token}"},
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_workspace_settings_override_global_generative_ai_settings(
+    api_client, data_fixture
+):
+    data_fixture.register_fake_generate_ai_type()
+    user, token = data_fixture.create_user_and_token(email="test@test.nl")
+    member_user, member_token = data_fixture.create_user_and_token(
+        email="test2@test.nl",
+    )
+
+    workspace = data_fixture.create_workspace(user=user)
+    data_fixture.create_user_workspace(
+        workspace=workspace, user=member_user, permissions="MEMBER"
+    )
+
+    # the default value
+    response = api_client.get(
+        reverse("api:workspaces:list"), **{"HTTP_AUTHORIZATION": f"JWT {member_token}"}
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json()[0]["generative_ai_models_enabled"] == {
+        "test_generative_ai": ["test_1"],
+        "test_generative_ai_prompt_error": ["test_1"],
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:workspaces:generative_ai_settings",
+            kwargs={"workspace_id": workspace.id},
+        ),
+        {"test_generative_ai": {"models": ["cannot_change_it"]}},
+        format="json",
+        **{"HTTP_AUTHORIZATION": f"JWT {member_token}"},
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_INVALID_GROUP_PERMISSIONS"
+
+    response = api_client.patch(
+        reverse(
+            "api:workspaces:generative_ai_settings",
+            kwargs={"workspace_id": workspace.id},
+        ),
+        {"test_generative_ai": {"models": ["wp_model_setting"]}},
+        format="json",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "id": workspace.id,
+        "name": workspace.name,
+        "generative_ai_models_enabled": {
+            "test_generative_ai": ["wp_model_setting"],  # it was "test_1"
+            "test_generative_ai_prompt_error": ["test_1"],
+        },
+    }
+
+    response = api_client.get(
+        reverse("api:workspaces:list"), **{"HTTP_AUTHORIZATION": f"JWT {member_token}"}
+    )
+
+    # The global settings is overridden by the workspace settings
+    assert response.status_code == HTTP_200_OK
+    settings = response.json()[0]["generative_ai_models_enabled"]
+    assert settings["test_generative_ai"] == ["wp_model_setting"]  # it was "test_1"

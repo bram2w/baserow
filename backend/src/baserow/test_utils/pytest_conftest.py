@@ -693,3 +693,12 @@ def stubbed_storage(monkeypatch):
     storage_instance = StubbedStorage()
     monkeypatch.setattr("django.core.files.storage.default_storage", storage_instance)
     return storage_instance
+
+
+@pytest.fixture(autouse=True)
+def mutable_generative_ai_model_type_registry():
+    from baserow.core.generative_ai.registries import generative_ai_model_type_registry
+
+    before = generative_ai_model_type_registry.registry.copy()
+    yield generative_ai_model_type_registry
+    generative_ai_model_type_registry.registry = before

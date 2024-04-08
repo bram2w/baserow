@@ -9,15 +9,30 @@ export default {
     }
   },
   computed: {
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
+    },
     modelAvailable() {
       const aIModels =
         this.$store.getters['settings/get'].generative_ai[
           this.field.ai_generative_ai_type
         ] || []
       return (
-        this.$registry.get('field', this.field.type).isEnabled() &&
+        this.$registry
+          .get('field', this.field.type)
+          .isEnabled(this.workspace) &&
         aIModels.includes(this.field.ai_generative_ai_model)
       )
+    },
+    isDeactivated() {
+      return this.$registry
+        .get('field', this.field.type)
+        .isDeactivated(this.workspaceId)
+    },
+    deactivatedClickComponent() {
+      return this.$registry
+        .get('field', this.field.type)
+        .getDeactivatedClickModal(this.workspaceId)
     },
   },
   watch: {

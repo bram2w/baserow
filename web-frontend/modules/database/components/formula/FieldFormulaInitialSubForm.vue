@@ -41,6 +41,7 @@
         :table="table"
         :view="view"
         :all-fields-in-table="allFieldsInTable"
+        :database="database"
       >
       </FormulaTypeSubForms>
     </template>

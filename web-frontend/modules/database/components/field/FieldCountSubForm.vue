@@ -23,11 +23,6 @@ export default {
       values: {},
     }
   },
-  computed: {
-    database() {
-      return this.$store.getters['application/get'](this.table.database_id)
-    },
-  },
   validations: {},
 }
 </script>

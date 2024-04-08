@@ -1,6 +1,8 @@
 .grid-field-rich-text__cell {
   @extend .grid-field-long-text__cell;
+}
 
+.grid-field-rich-text__cell-content {
   padding: 0 10px;
 }
 

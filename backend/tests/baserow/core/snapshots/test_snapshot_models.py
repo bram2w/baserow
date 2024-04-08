@@ -1,8 +1,11 @@
+import pytest
+
 from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED, JOB_PENDING
 from baserow.core.models import Snapshot
 from baserow.core.snapshots.models import CreateSnapshotJob
 
 
+@pytest.mark.disabled_in_ci
 def test_migration_remove_dangling_snapshots(
     data_fixture, migrator, teardown_table_metadata
 ):

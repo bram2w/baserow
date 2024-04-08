@@ -44,6 +44,7 @@
         :table="table"
         :view="view"
         :all-fields-in-table="allFieldsInTable"
+        :database="database"
       >
       </FormulaTypeSubForms>
     </template>
@@ -82,9 +83,6 @@ export default {
     }
   },
   computed: {
-    database() {
-      return this.$store.getters['application/get'](this.table.database_id)
-    },
     targetFieldFormulaType() {
       if (this.selectedTargetField) {
         return (

@@ -100,6 +100,7 @@
             :view="view"
             :from-field="field"
             :all-fields-in-table="allFieldsInTable"
+            :database="database"
             @field-created="$emit('field-created', $event)"
             @move-field="moveField($event)"
           ></InsertFieldContext>

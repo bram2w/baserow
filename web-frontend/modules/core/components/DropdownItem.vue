@@ -7,6 +7,7 @@
       disabled: disabled,
       hover: isHovering(value),
     }"
+    @click="$emit('click', $event)"
   >
     <a
       class="select__item-link"

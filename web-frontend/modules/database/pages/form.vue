@@ -50,21 +50,6 @@ export default {
     Toasts,
     FormViewPoweredBy,
   },
-  provide: {
-    async uploadUserFile(file) {
-      const slug = this.$route.params.slug
-      const publicAuthToken = await this.$store.dispatch(
-        'page/view/public/setAuthTokenFromCookiesIfNotSet',
-        { slug }
-      )
-      return await FormService(this.$client).uploadFile(
-        file,
-        () => {},
-        slug,
-        publicAuthToken
-      )
-    },
-  },
   middleware: ['settings'],
   async asyncData({ params, error, app, route, redirect, store }) {
     const slug = params.slug

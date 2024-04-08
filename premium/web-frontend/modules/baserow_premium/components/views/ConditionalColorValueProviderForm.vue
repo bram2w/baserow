@@ -127,7 +127,7 @@ export default {
   name: 'ConditionalColorValueProvider',
   components: { ViewFieldConditionsForm, ColorSelectContext },
   props: {
-    workspace: {
+    database: {
       type: Object,
       required: true,
     },

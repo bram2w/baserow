@@ -201,8 +201,16 @@ def test_get_integrations_serializer(api_client, data_fixture):
                 "name": database.name,
                 "order": database.order,
                 "type": "database",
-                "group": {"id": workspace.id, "name": workspace.name},
-                "workspace": {"id": workspace.id, "name": workspace.name},
+                "group": {
+                    "id": workspace.id,
+                    "name": workspace.name,
+                    "generative_ai_models_enabled": {},
+                },
+                "workspace": {
+                    "id": workspace.id,
+                    "name": workspace.name,
+                    "generative_ai_models_enabled": {},
+                },
                 "tables": [
                     {
                         "id": table.id,
