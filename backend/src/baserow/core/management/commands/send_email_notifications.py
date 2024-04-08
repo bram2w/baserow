@@ -78,7 +78,7 @@ class Command(BaseCommand):
         timestamp = options["timestamp"]
 
         if user_id is not None and not frequency:
-            result = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+            result = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
                 Q(id=user_id), max_emails=max_emails
             )
             logger.info(

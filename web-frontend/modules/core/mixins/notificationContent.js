@@ -1,7 +1,22 @@
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
+  props: {
+    workspace: {
+      type: Object,
+      required: true,
+    },
+    notification: {
+      type: Object,
+      required: true,
+    },
+  },
   computed: {
+    route() {
+      return this.$registry
+        .get('notification', this.notification.type)
+        .getRoute(this.notification.data)
+    },
     sender() {
       return this.notification.sender?.first_name
     },

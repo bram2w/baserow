@@ -28,11 +28,5 @@ import notificationContent from '@baserow/modules/core/mixins/notificationConten
 export default {
   name: 'WorkspaceInvitationRejectedNotification',
   mixins: [notificationContent],
-  props: {
-    notification: {
-      type: Object,
-      required: true,
-    },
-  },
 }
 </script>

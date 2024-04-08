@@ -55,6 +55,13 @@ class Notification(models.Model):
     )
     data = models.JSONField(default=dict, help_text="The data of the notification.")
 
+    @property
+    def web_frontend_url(self):
+        from .registries import notification_type_registry
+
+        notification_type = notification_type_registry.get(self.type)
+        return notification_type.get_web_frontend_url(self)
+
     class Meta:
         ordering = ["-created_on"]
         indexes = [

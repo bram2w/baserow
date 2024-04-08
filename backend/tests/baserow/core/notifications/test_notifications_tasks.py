@@ -83,6 +83,7 @@ def test_daily_report_is_sent_at_correct_time_according_to_user_timezone(
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 }
             ],
             "new_notifications_count": 1,
@@ -125,10 +126,12 @@ def test_daily_report_is_sent_at_correct_time_according_to_user_timezone(
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 },
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 },
             ],
             "new_notifications_count": 2,
@@ -207,6 +210,7 @@ def test_weekly_report_is_sent_at_correct_date_and_time_according_to_user_timezo
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 }
             ],
             "new_notifications_count": 1,
@@ -249,10 +253,12 @@ def test_weekly_report_is_sent_at_correct_date_and_time_according_to_user_timezo
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 },
                 {
                     "title": "Test notification",
                     "description": None,
+                    "url": None,
                 },
             ],
             "new_notifications_count": 2,

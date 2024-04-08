@@ -30,6 +30,7 @@ class FormSubmittedNotificationData:
 
 class FormSubmittedNotificationType(EmailNotificationTypeMixin, NotificationType):
     type = "form_submitted"
+    has_web_frontend_route = True
 
     @classmethod
     def create_form_submitted_notification(

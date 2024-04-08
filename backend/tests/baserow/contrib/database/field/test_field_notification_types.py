@@ -464,7 +464,7 @@ def test_email_notifications_are_created_correctly_for_collaborators_added(
         assert response.status_code == HTTP_200_OK
 
     # Force to send the notifications
-    res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+    res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
         Q(pk=user_2.pk)
     )
     assert res.users_with_notifications == [user_2]
@@ -479,12 +479,16 @@ def test_email_notifications_are_created_correctly_for_collaborators_added(
     assert user_2_summary_email.to == [user_2.email]
     assert user_2_summary_email.get_subject() == "You have 1 new notification - Baserow"
 
+    notif = NotificationRecipient.objects.get(recipient=user_2)
+    notification_url = f"http://localhost:3000/notification/{notif.workspace_id}/{notif.notification_id}"
+
     expected_context = {
         "notifications": [
             {
                 "title": f"User 1 assigned you to Collaborator 1 in row unnamed row"
                 f" {row.id} in Example.",
                 "description": None,
+                "url": notification_url,
             }
         ],
         "new_notifications_count": 1,
@@ -1024,7 +1028,7 @@ def test_email_notifications_are_created_correctly_for_mentions_in_rich_text_fie
         )
 
     # Force to send the notifications
-    res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+    res = NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
         Q(pk=user_2.pk)
     )
     assert res.users_with_notifications == [user_2]
@@ -1039,6 +1043,9 @@ def test_email_notifications_are_created_correctly_for_mentions_in_rich_text_fie
     assert user_2_summary_email.to == [user_2.email]
     assert user_2_summary_email.get_subject() == "You have 1 new notification - Baserow"
 
+    notif = NotificationRecipient.objects.get(recipient=user_2)
+    notification_url = f"http://localhost:3000/notification/{notif.workspace_id}/{notif.notification_id}"
+
     expected_context = {
         "notifications": [
             {
@@ -1046,6 +1053,7 @@ def test_email_notifications_are_created_correctly_for_mentions_in_rich_text_fie
                     f"Lisa Smith mentioned you in RichTextField in row unnamed row {row.id} in Example."
                 ),
                 "description": None,
+                "url": notification_url,
             }
         ],
         "new_notifications_count": 1,

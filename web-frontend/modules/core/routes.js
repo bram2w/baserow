@@ -83,6 +83,11 @@ export const routes = [
       },
     ],
   },
+  {
+    name: 'notification-redirect',
+    path: '/notification/:workspaceId/:notificationId',
+    component: path.resolve(__dirname, 'pages/notificationRedirect.vue'),
+  },
 ]
 
 if (process.env.NODE_ENV !== 'production') {

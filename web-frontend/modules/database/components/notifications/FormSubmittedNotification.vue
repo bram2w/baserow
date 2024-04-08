@@ -1,7 +1,7 @@
 <template>
   <nuxt-link
     class="notification-panel__notification-link"
-    :to="url"
+    :to="route"
     @click.native="markAsReadAndHandleClick"
   >
     <div class="notification-panel__notification-content-title">
@@ -37,31 +37,12 @@ import notificationContent from '@baserow/modules/core/mixins/notificationConten
 export default {
   name: 'FormSubmittedNotification',
   mixins: [notificationContent],
-  props: {
-    notification: {
-      type: Object,
-      required: true,
-    },
-  },
   data() {
     return {
       limitValues: 3, // only the first 3 elements to keep it short
     }
   },
   computed: {
-    params() {
-      return {
-        databaseId: this.notification.data.database_id,
-        tableId: this.notification.data.table_id,
-        rowId: this.notification.data.row_id,
-      }
-    },
-    url() {
-      return {
-        name: 'database-table-row',
-        params: this.params,
-      }
-    },
     submittedValuesSummary() {
       return this.notification.data.values
         .slice(0, this.limitValues)

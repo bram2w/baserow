@@ -15,6 +15,17 @@ export class RowCommentMentionNotificationType extends NotificationType {
   getContentComponent() {
     return RowCommentMentionNotification
   }
+
+  getRoute(notificationData) {
+    return {
+      name: 'database-table-row',
+      params: {
+        databaseId: notificationData.database_id,
+        tableId: notificationData.table_id,
+        rowId: notificationData.row_id,
+      },
+    }
+  }
 }
 
 export class RowCommentNotificationType extends NotificationType {
@@ -28,5 +39,16 @@ export class RowCommentNotificationType extends NotificationType {
 
   getContentComponent() {
     return RowCommentNotification
+  }
+
+  getRoute(notificationData) {
+    return {
+      name: 'database-table-row',
+      params: {
+        databaseId: notificationData.database_id,
+        tableId: notificationData.table_id,
+        rowId: notificationData.row_id,
+      },
+    }
   }
 }

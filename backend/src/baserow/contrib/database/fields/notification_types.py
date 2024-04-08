@@ -45,6 +45,7 @@ class CollaboratorAddedToRowNotificationType(
     EmailNotificationTypeMixin, NotificationType
 ):
     type = "collaborator_added_to_row"
+    has_web_frontend_route = True
 
     @classmethod
     def get_notification_title_for_email(cls, notification, context):
@@ -172,6 +173,7 @@ class UserMentionInRichTextFieldNotificationType(
     EmailNotificationTypeMixin, NotificationType
 ):
     type = "user_mention_in_rich_text_field"
+    has_web_frontend_route = True
 
     @classmethod
     def get_notification_title_for_email(cls, notification, context):

@@ -59,10 +59,8 @@
     </style>
     <![endif]-->
   <!--[if !mso]><!-->
-  <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Inter:400,600" rel="stylesheet" type="text/css">
   <style type="text/css">
-    @import url(https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700);
     @import url(https://fonts.googleapis.com/css?family=Inter:400,600);
   </style>
   <!--<![endif]-->
@@ -156,11 +154,22 @@
                     </tr>
                     <!-- htmlmin:ignore -->{% for notification in notifications %}
                     <!-- htmlmin:ignore -->
+                    <!-- htmlmin:ignore -->{% if notification.url %}
+                    <!-- htmlmin:ignore -->
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{{ notification.title }}</div>
+                        <div style="font-family:Inter,sans-serif;font-size:14px;line-height:170%;text-align:left;color:#070810;"><a style="font-family:Inter,sans-serif;font-size:14px;line-height:170%;text-align:left;color:#070810;" href="{{ notification.url }}">{{ notification.title }}</a></div>
                       </td>
                     </tr>
+                    <!-- htmlmin:ignore -->{% else %}
+                    <!-- htmlmin:ignore -->
+                    <tr>
+                      <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                        <div style="font-family:Inter,sans-serif;font-size:14px;line-height:170%;text-align:left;color:#070810;">{{ notification.title }}</div>
+                      </td>
+                    </tr>
+                    <!-- htmlmin:ignore -->{% endif %}
+                    <!-- htmlmin:ignore -->
                     <!-- htmlmin:ignore -->{% if notification.description %}
                     <!-- htmlmin:ignore -->
                     <tr>
