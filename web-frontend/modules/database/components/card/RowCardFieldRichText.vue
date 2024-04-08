@@ -28,7 +28,7 @@ export default {
 
       return parseMarkdown(this.value, {
         openLinkOnClick: true,
-        workspaceUsers: workspace.users,
+        workspaceUsers: workspace ? workspace.users : null,
         loggedUserId,
       })
     },
