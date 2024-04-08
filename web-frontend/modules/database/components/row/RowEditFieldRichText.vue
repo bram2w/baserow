@@ -11,7 +11,7 @@
       :disabled="readOnly"
       :editable="!readOnly"
       :enable-rich-text-formatting="true"
-      :mentionable-users="workspace.users"
+      :mentionable-users="workspace ? workspace.users : null"
       @focus="select()"
       @blur="unselect()"
     ></RichTextEditor>
