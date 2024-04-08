@@ -12,6 +12,7 @@
       :default-values="field"
       :primary="field.primary"
       :all-fields-in-table="allFieldsInTable"
+      :database="database"
       @submitted="submit"
     >
       <div
@@ -59,6 +60,10 @@ export default {
       type: Array,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -66,8 +71,14 @@ export default {
     }
   },
   computed: {
+    // Return the reactive object that can be updated in runtime.
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
+    },
     fieldTypeDisabled() {
-      return !this.$registry.get('field', this.field.type).isEnabled()
+      return !this.$registry
+        .get('field', this.field.type)
+        .isEnabled(this.workspace)
     },
   },
   watch: {

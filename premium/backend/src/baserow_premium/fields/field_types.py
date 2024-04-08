@@ -105,9 +105,9 @@ class AIFieldType(CollationSortMixin, FieldType):
     def contains_word_query(self, *args):
         return contains_word_filter(*args)
 
-    def _validate_field_kwargs(self, ai_type, model_type):
+    def _validate_field_kwargs(self, ai_type, model_type, workspace=None):
         ai_type = generative_ai_model_type_registry.get(ai_type)
-        models = ai_type.get_enabled_models()
+        models = ai_type.get_enabled_models(workspace=workspace)
         if model_type not in models:
             raise ModelDoesNotBelongToType(model_name=model_type)
 
@@ -116,7 +116,8 @@ class AIFieldType(CollationSortMixin, FieldType):
     ):
         ai_type = field_kwargs.get("ai_generative_ai_type", None)
         model_type = field_kwargs.get("ai_generative_ai_model", None)
-        self._validate_field_kwargs(ai_type, model_type)
+        workspace = table.database.workspace
+        self._validate_field_kwargs(ai_type, model_type, workspace=workspace)
 
     def before_update(self, from_field, to_field_values, user, field_kwargs):
         update_field = None
@@ -129,5 +130,5 @@ class AIFieldType(CollationSortMixin, FieldType):
         model_type = field_kwargs.get("ai_generative_ai_model", None) or getattr(
             update_field, "ai_generative_ai_model", None
         )
-
-        self._validate_field_kwargs(ai_type, model_type)
+        workspace = from_field.table.database.workspace
+        self._validate_field_kwargs(ai_type, model_type, workspace=workspace)

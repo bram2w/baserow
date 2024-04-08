@@ -12,6 +12,8 @@ import FunctionalGridViewFieldAI from '@baserow_premium/components/views/grid/fi
 import RowEditFieldAI from '@baserow_premium/components/row/RowEditFieldAI'
 import FieldAISubForm from '@baserow_premium/components/field/FieldAISubForm'
 import GridViewFieldAIGenerateValuesContextItem from '@baserow_premium/components/views/grid/fields/GridViewFieldAIGenerateValuesContextItem'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
+import PremiumFeatures from '@baserow_premium/features'
 
 export class AIFieldType extends FieldType {
   static getType() {
@@ -73,7 +75,8 @@ export class AIFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return '@TODO'
+    const { i18n } = this.app
+    return i18n.t('premiumFieldType.aiDescription')
   }
 
   getDocsRequestExample(field) {
@@ -92,8 +95,17 @@ export class AIFieldType extends FieldType {
     return [GridViewFieldAIGenerateValuesContextItem]
   }
 
-  isEnabled() {
-    const { store } = this.app
-    return Object.keys(store.getters['settings/get'].generative_ai).length > 0
+  isEnabled(workspace) {
+    return Object.values(workspace.generative_ai_models_enabled).some(
+      (models) => models.length > 0
+    )
+  }
+
+  isDeactivated(workspaceId) {
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, workspaceId)
+  }
+
+  getDeactivatedClickModal(workspaceId) {
+    return PremiumModal
   }
 }

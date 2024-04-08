@@ -6,6 +6,7 @@
     :force-typed="forcedType"
     :use-action-group-id="true"
     :all-fields-in-table="allFieldsInTable"
+    :database="database"
     @field-created="$emit('field-created', $event)"
     @field-created-callback-done="updateInsertedFieldOrder"
   ></CreateFieldContext>
@@ -38,6 +39,10 @@ export default {
     },
     allFieldsInTable: {
       type: Array,
+      required: true,
+    },
+    database: {
+      type: Object,
       required: true,
     },
   },

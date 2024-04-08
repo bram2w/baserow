@@ -2,11 +2,13 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.shortcuts import reverse
+from django.test.utils import override_settings
 
 import pytest
 from rest_framework.status import (
     HTTP_202_ACCEPTED,
     HTTP_400_BAD_REQUEST,
+    HTTP_402_PAYMENT_REQUIRED,
     HTTP_404_NOT_FOUND,
 )
 
@@ -15,12 +17,52 @@ from baserow.contrib.database.rows.handler import RowHandler
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
+def test_generate_ai_field_value_without_license(premium_data_fixture, api_client):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=False,
+    )
+
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    field = premium_data_fixture.create_ai_field(table=table, name="ai")
+
+    rows = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[{}],
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:premium:fields:async_generate_ai_field_values",
+            kwargs={"field_id": field.id},
+        ),
+        {"row_ids": [rows[0].id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+
+
+@pytest.mark.django_db
+@pytest.mark.field_ai
+@override_settings(DEBUG=True)
 def test_generate_ai_field_value_view_field_does_not_exist(
     premium_data_fixture, api_client
 ):
     premium_data_fixture.register_fake_generate_ai_type()
     user, token = premium_data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
 
     database = premium_data_fixture.create_database_application(
@@ -50,12 +92,16 @@ def test_generate_ai_field_value_view_field_does_not_exist(
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
 def test_generate_ai_field_value_view_row_does_not_exist(
     premium_data_fixture, api_client
 ):
     premium_data_fixture.register_fake_generate_ai_type()
     user, token = premium_data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
 
     database = premium_data_fixture.create_database_application(
@@ -85,15 +131,22 @@ def test_generate_ai_field_value_view_row_does_not_exist(
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
 def test_generate_ai_field_value_view_user_not_in_workspace(
     premium_data_fixture, api_client
 ):
     premium_data_fixture.register_fake_generate_ai_type()
     user, token = premium_data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
     user_2, token_2 = premium_data_fixture.create_user_and_token(
-        email="test2@test.nl", password="password", first_name="Test1"
+        email="test2@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
 
     database = premium_data_fixture.create_database_application(
@@ -123,12 +176,16 @@ def test_generate_ai_field_value_view_user_not_in_workspace(
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
 def test_generate_ai_field_value_view_generative_ai_does_not_exist(
     premium_data_fixture, api_client
 ):
     premium_data_fixture.register_fake_generate_ai_type()
     user, token = premium_data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
 
     database = premium_data_fixture.create_database_application(
@@ -160,12 +217,16 @@ def test_generate_ai_field_value_view_generative_ai_does_not_exist(
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
 def test_generate_ai_field_value_view_generative_ai_model_does_not_belong_to_type(
     premium_data_fixture, api_client
 ):
     premium_data_fixture.register_fake_generate_ai_type()
     user, token = premium_data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
 
     database = premium_data_fixture.create_database_application(
@@ -199,13 +260,17 @@ def test_generate_ai_field_value_view_generative_ai_model_does_not_belong_to_typ
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
 @patch("baserow_premium.fields.tasks.generate_ai_values_for_rows.apply")
 def test_generate_ai_field_value_view_generative_ai(
     patched_generate_ai_values_for_rows, premium_data_fixture, api_client
 ):
     premium_data_fixture.register_fake_generate_ai_type()
     user, token = premium_data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1"
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        has_active_premium_license=True,
     )
 
     database = premium_data_fixture.create_database_application(
@@ -238,9 +303,12 @@ def test_generate_ai_field_value_view_generative_ai(
 
 @pytest.mark.django_db
 @pytest.mark.field_ai
+@override_settings(DEBUG=True)
 def test_batch_generate_ai_field_value_limit(api_client, premium_data_fixture):
     premium_data_fixture.register_fake_generate_ai_type()
-    user, token = premium_data_fixture.create_user_and_token()
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
     table = premium_data_fixture.create_database_table(user=user)
     field = premium_data_fixture.create_ai_field(
         table=table, name="ai", ai_prompt="'Hello'"

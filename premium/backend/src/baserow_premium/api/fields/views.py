@@ -2,6 +2,8 @@ from django.db import transaction
 
 from baserow_premium.fields.models import AIField
 from baserow_premium.fields.tasks import generate_ai_values_for_rows
+from baserow_premium.license.features import PREMIUM
+from baserow_premium.license.handler import LicenseHandler
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -97,10 +99,16 @@ class AsyncGenerateAIFieldValuesView(APIView):
             ),
         )
 
+        workspace = ai_field.table.database.workspace
+
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            PREMIUM, request.user, workspace
+        )
+
         CoreHandler().check_permissions(
             request.user,
             ListFieldsOperationType.type,
-            workspace=ai_field.table.database.workspace,
+            workspace=workspace,
             context=ai_field.table,
         )
 
@@ -114,7 +122,7 @@ class AsyncGenerateAIFieldValuesView(APIView):
         generative_ai_model_type = generative_ai_model_type_registry.get(
             ai_field.ai_generative_ai_type
         )
-        ai_models = generative_ai_model_type.get_enabled_models()
+        ai_models = generative_ai_model_type.get_enabled_models(workspace=workspace)
 
         if ai_field.ai_generative_ai_model not in ai_models:
             raise ModelDoesNotBelongToType(model_name=ai_field.ai_generative_ai_model)

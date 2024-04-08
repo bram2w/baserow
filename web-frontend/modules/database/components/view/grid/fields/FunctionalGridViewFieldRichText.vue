@@ -2,8 +2,12 @@
 <template functional>
   <div
     class="field-rich-text--preview grid-view__cell grid-field-rich-text__cell"
-    v-html="$options.methods.renderFormattedValue(parent, props)"
-  ></div>
+  >
+    <div
+      class="grid-field-rich-text__cell-content"
+      v-html="$options.methods.renderFormattedValue(parent, props)"
+    ></div>
+  </div>
 </template>
 
 <script>

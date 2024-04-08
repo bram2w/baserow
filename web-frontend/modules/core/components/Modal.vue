@@ -9,6 +9,7 @@
       class="modal__box"
       :class="{
         'modal__box--full-height': fullHeight,
+        'modal__box--full-max-height': !fullHeight && contentScrollable,
         'modal__box--with-sidebar': sidebar,
         'modal__box--full-screen': fullScreen,
         'modal__box--wide': wide,

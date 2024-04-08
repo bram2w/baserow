@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="!isDeactivated">
     <div class="control">
       <label class="control__label control__label--small">{{
         $t('fieldAISubForm.AIType')
@@ -74,10 +74,14 @@
       </div>
     </div>
   </div>
+  <div v-else>
+    <p>
+      {{ $t('fieldAISubForm.premiumFeature') }} <i class="iconoir-lock"></i>
+    </p>
+  </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
@@ -103,9 +107,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      settings: 'settings/get',
-    }),
+    // Return the reactive object that can be updated in runtime.
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
+    },
     applicationContext() {
       const context = {}
       Object.defineProperty(context, 'fields', {
@@ -122,12 +127,19 @@ export default {
       return [this.$registry.get('databaseDataProvider', 'fields')]
     },
     aITypes() {
-      return Object.keys(this.settings.generative_ai)
+      return Object.keys(this.workspace.generative_ai_models_enabled || {})
     },
     aIModelsPerType() {
       return (
-        this.settings.generative_ai[this.values.ai_generative_ai_type] || []
+        this.workspace.generative_ai_models_enabled[
+          this.values.ai_generative_ai_type
+        ] || []
       )
+    },
+    isDeactivated() {
+      return this.$registry
+        .get('field', this.fieldType)
+        .isDeactivated(this.workspace.id)
     },
   },
   validations: {

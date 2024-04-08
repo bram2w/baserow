@@ -230,6 +230,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
     seats_taken = models.IntegerField(null=True)
     seats_taken_updated_at = models.DateTimeField(null=True)
     now = models.DateTimeField(null=True)
+    generative_ai_models_settings = models.JSONField(default=dict, null=True)
 
     def get_parent(self):
         return None

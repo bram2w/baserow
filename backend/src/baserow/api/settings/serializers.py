@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from baserow.api.user_files.serializers import UserFileField
-from baserow.core.generative_ai.registries import generative_ai_model_type_registry
 from baserow.core.models import Settings
 
 
@@ -24,7 +23,6 @@ class SettingsSerializer(serializers.ModelSerializer):
         required=False,
         help_text="Co-branding logo that's placed next to the Baserow logo (176x29).",
     )
-    generative_ai = serializers.SerializerMethodField()
 
     class Meta:
         model = Settings
@@ -40,7 +38,6 @@ class SettingsSerializer(serializers.ModelSerializer):
             "track_workspace_usage",
             "show_baserow_help_request",
             "co_branding_logo",
-            "generative_ai",
         )
         extra_kwargs = {
             "allow_new_signups": {"required": False},
@@ -51,9 +48,6 @@ class SettingsSerializer(serializers.ModelSerializer):
             "track_workspace_usage": {"required": False},
             "show_baserow_help_request": {"required": False},
         }
-
-    def get_generative_ai(self, object):
-        return generative_ai_model_type_registry.get_models_per_type()
 
 
 class InstanceIdSerializer(serializers.ModelSerializer):

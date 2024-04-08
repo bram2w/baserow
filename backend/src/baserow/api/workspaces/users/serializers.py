@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.api.user.registries import member_data_registry
+from baserow.core.generative_ai.registries import generative_ai_model_type_registry
 from baserow.core.models import WorkspaceUser
 
 User = get_user_model()
@@ -137,6 +138,14 @@ class WorkspaceUserWorkspaceSerializer(serializers.Serializer):
         read_only=True,
         help_text="The number of unread notifications for the requesting user.",
     )
+    generative_ai_models_enabled = serializers.SerializerMethodField(
+        read_only=True, help_text="Generative AI models available in this workspace."
+    )
+
+    def get_generative_ai_models_enabled(self, object):
+        return generative_ai_model_type_registry.get_enabled_models_per_type(
+            workspace=object.workspace
+        )
 
 
 class UpdateWorkspaceUserSerializer(serializers.ModelSerializer):

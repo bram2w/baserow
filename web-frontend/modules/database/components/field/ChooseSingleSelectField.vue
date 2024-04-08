@@ -31,6 +31,7 @@
         :view="view"
         :forced-type="singleSelectFieldType"
         :all-fields-in-table="fields"
+        :database="database"
         @field-created="$event.callback()"
       ></CreateFieldContext>
     </div>
@@ -49,7 +50,7 @@ export default {
       type: Object,
       required: true,
     },
-    workspace: {
+    database: {
       type: Object,
       required: true,
     },
@@ -85,7 +86,7 @@ export default {
         this.$hasPermission(
           'database.table.create_field',
           this.table,
-          this.workspace.id
+          this.database.workspace.id
         )
       )
     },

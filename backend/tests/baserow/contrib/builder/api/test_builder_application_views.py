@@ -165,8 +165,16 @@ def test_get_builder_application(api_client, data_fixture):
         "name": application.name,
         "order": application.order,
         "type": "builder",
-        "group": {"id": workspace.id, "name": workspace.name},
-        "workspace": {"id": workspace.id, "name": workspace.name},
+        "group": {
+            "id": workspace.id,
+            "name": workspace.name,
+            "generative_ai_models_enabled": {},
+        },
+        "workspace": {
+            "id": workspace.id,
+            "name": workspace.name,
+            "generative_ai_models_enabled": {},
+        },
         "pages": [],
         "theme": {
             "primary_color": "#5190efff",
@@ -204,8 +212,16 @@ def test_list_builder_applications(api_client, data_fixture):
             "name": application.name,
             "order": application.order,
             "type": "builder",
-            "group": {"id": workspace.id, "name": workspace.name},
-            "workspace": {"id": workspace.id, "name": workspace.name},
+            "group": {
+                "id": workspace.id,
+                "name": workspace.name,
+                "generative_ai_models_enabled": {},
+            },
+            "workspace": {
+                "id": workspace.id,
+                "name": workspace.name,
+                "generative_ai_models_enabled": {},
+            },
             "pages": [],
             "theme": {
                 "primary_color": "#5190efff",

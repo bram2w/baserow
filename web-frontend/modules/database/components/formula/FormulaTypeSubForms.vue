@@ -7,6 +7,7 @@
       :view="view"
       :allow-set-number-negative="false"
       :all-fields-in-table="allFieldsInTable"
+      :database="database"
     >
     </FieldNumberSubForm>
     <FieldDateSubForm
@@ -15,6 +16,7 @@
       :table="table"
       :view="view"
       :all-fields-in-table="allFieldsInTable"
+      :database="database"
     >
     </FieldDateSubForm>
     <FieldDurationSubForm
@@ -23,6 +25,7 @@
       :table="table"
       :view="view"
       :all-fields-in-table="allFieldsInTable"
+      :database="database"
     >
     </FieldDurationSubForm>
   </div>

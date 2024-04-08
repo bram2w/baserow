@@ -3,6 +3,7 @@ from django.urls import include, path, re_path
 from .invitations import urls as invitation_urls
 from .users import urls as user_urls
 from .views import (
+    WorkspaceGenerativeAISettingsView,
     WorkspaceLeaveView,
     WorkspaceOrderView,
     WorkspacePermissionsView,
@@ -26,4 +27,9 @@ urlpatterns = [
     ),
     re_path(r"(?P<workspace_id>[0-9]+)/$", WorkspaceView.as_view(), name="item"),
     re_path(r"order/$", WorkspaceOrderView.as_view(), name="order"),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/settings/generative-ai/$",
+        WorkspaceGenerativeAISettingsView.as_view(),
+        name="generative_ai_settings",
+    ),
 ]

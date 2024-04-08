@@ -28,11 +28,12 @@ def generate_ai_values_for_rows(self, user_id: int, field_id: int, row_ids: list
         ),
     )
     table = ai_field.table
+    workspace = table.database.workspace
 
     CoreHandler().check_permissions(
         user,
         ListFieldsOperationType.type,
-        workspace=table.database.workspace,
+        workspace=workspace,
         context=table,
     )
 
@@ -46,7 +47,7 @@ def generate_ai_values_for_rows(self, user_id: int, field_id: int, row_ids: list
     generative_ai_model_type = generative_ai_model_type_registry.get(
         ai_field.ai_generative_ai_type
     )
-    ai_models = generative_ai_model_type.get_enabled_models()
+    ai_models = generative_ai_model_type.get_enabled_models(workspace=workspace)
 
     if ai_field.ai_generative_ai_model not in ai_models:
         raise ModelDoesNotBelongToType(model_name=ai_field.ai_generative_ai_model)
@@ -61,7 +62,7 @@ def generate_ai_values_for_rows(self, user_id: int, field_id: int, row_ids: list
 
         try:
             value = generative_ai_model_type.prompt(
-                ai_field.ai_generative_ai_model, message
+                ai_field.ai_generative_ai_model, message, workspace=workspace
             )
         except Exception as exc:
             # If the prompt fails once, we should not continue with the other rows.

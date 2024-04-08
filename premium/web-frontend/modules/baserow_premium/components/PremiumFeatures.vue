@@ -36,5 +36,9 @@
       <i class="iconoir-check premium-features__feature-icon"></i>
       {{ $t('premiumFeatures.personalViews') }}
     </li>
+    <li class="premium-features__feature">
+      <i class="iconoir-check premium-features__feature-icon"></i>
+      {{ $t('premiumFeatures.aiFeatures') }}
+    </li>
   </ul>
 </template>

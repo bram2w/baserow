@@ -156,8 +156,13 @@ def test_workspace_restored(mock_broadcast_to_users, data_fixture):
         "group": {
             "id": workspace.id,
             "name": workspace.name,
+            "generative_ai_models_enabled": {},
         },  # GroupDeprecation
-        "workspace": {"id": workspace.id, "name": workspace.name},
+        "workspace": {
+            "id": workspace.id,
+            "name": workspace.name,
+            "generative_ai_models_enabled": {},
+        },
         "tables": [],
     }
     assert len(args) == 2

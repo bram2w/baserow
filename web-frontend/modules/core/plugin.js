@@ -13,6 +13,11 @@ import {
   EmailNotificationsSettingsType,
   DeleteAccountSettingsType,
 } from '@baserow/modules/core/settingsTypes'
+import { GenerativeAIWorkspaceSettingsType } from '@baserow/modules/core/workspaceSettingsTypes'
+import {
+  OpenAIModelType,
+  OllamaModelType,
+} from '@baserow/modules/core/generativeAIModelTypes'
 import {
   UploadFileUserFileUploadType,
   UploadViaURLUserFileUploadType,
@@ -102,6 +107,7 @@ export default (context, inject) => {
   registry.registerNamespace('view')
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
+  registry.registerNamespace('workspaceSettings')
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
   registry.registerNamespace('runtimeFormulaFunction')
@@ -112,11 +118,21 @@ export default (context, inject) => {
   registry.registerNamespace('userSource')
   registry.registerNamespace('appAuthProvider')
   registry.registerNamespace('roles')
+  registry.registerNamespace('generativeAIModel')
 
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new EmailNotificationsSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
+
+  registry.register(
+    'workspaceSettings',
+    new GenerativeAIWorkspaceSettingsType(context)
+  )
+
+  registry.register('generativeAIModel', new OpenAIModelType(context))
+  registry.register('generativeAIModel', new OllamaModelType(context))
+
   registry.register('permissionManager', new CorePermissionManagerType(context))
   registry.register(
     'permissionManager',

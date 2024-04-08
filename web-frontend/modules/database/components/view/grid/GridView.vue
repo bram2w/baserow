@@ -163,6 +163,7 @@
           :field="getSelectedField()"
           :rows="getSelectedRows()"
           :store-prefix="storePrefix"
+          :database="database"
           @click=";[$refs.rowContext.hide()]"
         ></component>
         <li class="context__menu-item">
@@ -1552,7 +1553,7 @@ export default {
       if (selectedFields.length === 1) {
         return this.$registry
           .get('field', selectedFields[0].type)
-          .getGridViewContextItemsOnCellsSelection()
+          .getGridViewContextItemsOnCellsSelection(selectedFields[0])
       } else {
         return []
       }

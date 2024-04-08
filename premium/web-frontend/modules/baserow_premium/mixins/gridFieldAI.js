@@ -12,6 +12,19 @@ export default {
     modelAvailable() {
       return this.isModelAvailable(this.$parent, this.$props)
     },
+    isDeactivated() {
+      return this.$registry
+        .get('field', this.field.type)
+        .isDeactivated(this.workspaceId)
+    },
+    deactivatedClickComponent() {
+      return this.$registry
+        .get('field', this.field.type)
+        .getDeactivatedClickModal(this.workspaceId)
+    },
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
+    },
   },
   methods: {
     isGenerating(parent, props) {
@@ -20,16 +33,26 @@ export default {
       )
     },
     isModelAvailable(parent, props) {
+      const workspace = parent.$store.getters['workspace/get'](
+        props.workspaceId
+      )
+      if (!workspace) return false
+
       const aIModels =
-        parent.$store.getters['settings/get'].generative_ai[
+        workspace.generative_ai_models_enabled[
           props.field.ai_generative_ai_type
         ] || []
       return (
-        parent.$registry.get('field', props.field.type).isEnabled() &&
+        parent.$registry.get('field', props.field.type).isEnabled(workspace) &&
         aIModels.includes(props.field.ai_generative_ai_model)
       )
     },
     async generate() {
+      if (this.isDeactivated) {
+        this.$refs.clickModal.show()
+        return
+      }
+
       const rowId = this.$parent.row.id
       this.$store.dispatch(
         this.storePrefix + 'view/grid/setPendingFieldOperations',

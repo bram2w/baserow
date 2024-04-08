@@ -144,11 +144,38 @@
     },
     "workspaceContext": {
         "renameWorkspace": "Rename workspace",
+        "settings": "Settings",
         "members": "Members",
         "auditLog": "Audit log",
         "viewTrash": "View trash",
         "leaveWorkspace": "Leave workspace",
         "deleteWorkspace": "Delete workspace"
+    },
+    "workspaceSettingsModal": {
+        "title": "Workspace Settings"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "Generative AI"
+    },
+    "generativeAIModelType": {
+        "openai": "OpenAI",
+        "openaiApiKeyLabel": "API Key",
+        "openaiApiKeyDescription": "Provide an OpenAI API key if you would like to enable the integration. [Instructions on getting an API key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "openaiOrganization": "Organization (optional)",
+        "openaiModelsLabel": "Enabled Models",
+        "openaiModelsDescription": "Provide a list of comma separated [OpenAI models](https://platform.openai.com/docs/models/continuous-model-upgrades) that can be used in Baserow. (e.g. `gpt-3.5-turbo,gpt-4`)",
+        "ollama": "Ollama",
+        "ollamaHostLabel": "Host",
+        "ollamaHostDescription": "Provide the hostname to your [Ollama](https://ollama.com/) server. This typically runs locally on your own device.",
+        "ollamaModelsLabel": "Enabled Models",
+        "ollamaModelsDescription": "Provide a list of comma separated [Ollama installed models](https://ollama.com/library). Note that the model must be downloaded and installed before it can be used. (e.g. `llama2,mistral`)"
+    },
+    "generativeAIWorkspaceSettings": {
+        "title": "Generative AI settings",
+        "description": "These settings can be used to optionally set generative AI configuration on workspace level. Features like the AI field can be disabled because they lack an API key for one of the supported models. By providing the settings here, you can enable those features. Leaving a value blank defaults back to the global instance settings. Note that everyone in the workspace will share these settings.",
+        "changedTitle": "Settings updated correctly",
+        "changedDescription": "The settings have been updated and they will be now used in this workspace.",
+        "submitButton": "Update settings"
     },
     "createWorkspaceModal": {
         "createNew": "Create new workspace",

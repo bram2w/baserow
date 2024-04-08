@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     ref="cell"
@@ -8,8 +9,11 @@
     }"
     @contextmenu="stopContextIfEditing($event)"
   >
-    <!-- eslint-disable-next-line vue/no-v-html -->
-    <div v-if="!opened || isModalOpen()" v-html="formattedValue"></div>
+    <div
+      v-if="!opened || isModalOpen()"
+      class="grid-field-rich-text__cell-content"
+      v-html="formattedValue"
+    ></div>
     <RichTextEditor
       v-else
       ref="input"

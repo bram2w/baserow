@@ -1,3 +1,4 @@
+from baserow.api.generative_ai.serializers import GenerativeAIModelsSerializer
 from baserow.core.generative_ai.exceptions import GenerativeAIPromptError
 
 
@@ -11,55 +12,54 @@ class GenerativeAIFixtures:
         class TestGenerativeAINoModelType(GenerativeAIModelType):
             type = "test_generative_ai_no_model"
 
-            def is_enabled(self):
-                return True
+            def is_enabled(self, workspace=None):
+                return False
 
-            def get_enabled_models(self):
+            def get_enabled_models(self, workspace=None):
                 return []
 
-            def prompt(self, model, prompt):
+            def prompt(self, model, prompt, workspace=None):
                 return ""
+
+            def get_settings_serializer(self):
+                return GenerativeAIModelsSerializer
 
         class TestGenerativeAIModelType(GenerativeAIModelType):
             type = "test_generative_ai"
 
-            def is_enabled(self):
+            def is_enabled(self, workspace=None):
                 return True
 
-            def get_enabled_models(self):
-                return ["test_1"]
+            def get_enabled_models(self, workspace=None):
+                models = self.get_workspace_setting(workspace, "models")
+                return models if models else ["test_1"]
 
-            def prompt(self, model, prompt):
+            def prompt(self, model, prompt, workspace=None):
                 return f"Generated: {prompt}"
+
+            def get_settings_serializer(self):
+                return GenerativeAIModelsSerializer
 
         class TestGenerativeAIModelTypePromptError(GenerativeAIModelType):
             type = "test_generative_ai_prompt_error"
 
-            def is_enabled(self):
+            def is_enabled(self, workspace=None):
                 return True
 
-            def get_enabled_models(self):
+            def get_enabled_models(self, workspace=None):
                 return ["test_1"]
 
-            def prompt(self, model, prompt):
+            def prompt(self, model, prompt, workspace=None):
                 raise GenerativeAIPromptError("Test error")
 
-        if (
-            TestGenerativeAINoModelType.type
-            not in generative_ai_model_type_registry.registry
-        ):
+            def get_settings_serializer(self):
+                return GenerativeAIModelsSerializer
+
+        try:
             generative_ai_model_type_registry.register(TestGenerativeAINoModelType())
-
-        if (
-            TestGenerativeAIModelType.type
-            not in generative_ai_model_type_registry.registry
-        ):
             generative_ai_model_type_registry.register(TestGenerativeAIModelType())
-
-        if (
-            TestGenerativeAIModelTypePromptError.type
-            not in generative_ai_model_type_registry.registry
-        ):
             generative_ai_model_type_registry.register(
                 TestGenerativeAIModelTypePromptError()
             )
+        except generative_ai_model_type_registry.already_registered_exception_class:
+            pass

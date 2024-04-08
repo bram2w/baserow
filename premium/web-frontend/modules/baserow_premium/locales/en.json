@@ -234,7 +234,8 @@
         "rowColoring": "Row coloring",
         "surveyForm": "Survey form",
         "publicLogoRemoval": "Public logo removal",
-        "personalViews": "Personal views"
+        "personalViews": "Personal views",
+        "aiFeatures": "AI field"
     },
     "licenses": {
         "titleNoLicenses": "No licenses found",
@@ -352,7 +353,8 @@
         "modeAllDesc": "You will receive notifications for all comments in this row."
     },
     "premiumFieldType": {
-      "ai": "AI prompt"
+      "ai": "AI prompt",
+      "aiDescription": "A read-only field that holds AI generated text based on the field prompt."
     },
     "functionalGridViewFieldAI": {
       "generate": "Generate"
@@ -364,7 +366,8 @@
     "fieldAISubForm": {
       "AIType": "AI Type",
       "AIModel": "AI Model",
-      "prompt": "Prompt"
+      "prompt": "Prompt",
+      "premiumFeature": "The AI field is a premium feature"
     },
     "rowEditFieldAI": {
       "generate": "Generate",

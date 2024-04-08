@@ -29,15 +29,24 @@ export default {
       type: String,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
   },
   computed: {
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
+    },
     modelAvailable() {
       const aIModels =
-        this.$store.getters['settings/get'].generative_ai[
+        this.workspace.generative_ai_models_enabled[
           this.field.ai_generative_ai_type
         ] || []
       return (
-        this.$registry.get('field', this.field.type).isEnabled() &&
+        this.$registry
+          .get('field', this.field.type)
+          .isEnabled(this.workspace) &&
         aIModels.includes(this.field.ai_generative_ai_model)
       )
     },

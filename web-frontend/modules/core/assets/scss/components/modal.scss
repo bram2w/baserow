@@ -37,6 +37,10 @@
     height: calc(100% - 80px);
   }
 
+  &.modal__box--full-max-height {
+    max-height: calc(100% - 80px);
+  }
+
   &.modal__box--wide {
     max-width: 720px;
   }
