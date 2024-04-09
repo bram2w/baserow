@@ -1843,6 +1843,36 @@ class DurationFieldType(FieldType):
     def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
         return self.model_class(duration_format=formula_type.duration_format)
 
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Any:
+        duration = self.get_internal_value_from_db(row, field_name)
+        if duration is None:
+            return None
+
+        return duration.total_seconds()
+
+    def set_import_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Optional[List[models.Model]]:
+        field = row._meta.get_field(field_name)
+        if value is not None:
+            value = duration_value_to_timedelta(value, field.duration_format)
+
+        setattr(row, field_name, value)
+
 
 class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):
     """

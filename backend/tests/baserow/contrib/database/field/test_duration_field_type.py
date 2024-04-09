@@ -1,4 +1,6 @@
+import json
 from datetime import timedelta
+from io import BytesIO
 
 import pytest
 from pytest_unordered import unordered
@@ -10,6 +12,8 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
+from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 
@@ -785,3 +789,57 @@ def test_duration_field_can_be_looked_up(data_fixture):
         {"id": row_b_1.id, "value": 3600 + 60},
         {"id": row_b_2.id, "value": 60 + 60},
     ]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_import_export_duration_field(data_fixture):
+    user = data_fixture.create_user()
+    imported_workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    duration_field = data_fixture.create_duration_field(
+        table=table, name="duration", duration_format="h:mm"
+    )
+
+    RowHandler().create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {},
+            {duration_field.db_column: None},
+            {duration_field.db_column: timedelta(seconds=60)},
+            {duration_field.db_column: timedelta(seconds=3660)},
+        ],
+    )
+
+    core_handler = CoreHandler()
+    config = ImportExportConfig(include_permission_data=False)
+    exported_applications = core_handler.export_workspace_applications(
+        database.workspace, BytesIO(), config
+    )
+
+    # Ensure the values are json serializable
+    try:
+        json.dumps(exported_applications)
+    except Exception as e:
+        pytest.fail(f"Exported applications are not json serializable: {e}")
+
+    imported_applications, _ = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), config, None
+    )
+
+    imported_database = imported_applications[0]
+    imported_tables = imported_database.table_set.all()
+    imported_table = imported_tables[0]
+    import_duration_field = imported_table.field_set.all().first().specific
+
+    imported_rows = imported_table.get_model().objects.all()
+    assert imported_rows.count() == 4
+    assert getattr(imported_rows[0], import_duration_field.db_column) is None
+    assert getattr(imported_rows[1], import_duration_field.db_column) is None
+    assert getattr(imported_rows[2], import_duration_field.db_column) == timedelta(
+        seconds=60
+    )
+    assert getattr(imported_rows[3], import_duration_field.db_column) == timedelta(
+        seconds=3660
+    )
