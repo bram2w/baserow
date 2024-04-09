@@ -122,11 +122,11 @@ export class BaserowPlugin extends Registerable {
 
   /**
    * Every registered plugin can display multiple additional context items in the
-   * database context displayed by the sidebar when opening the context menu of a
-   * database.
+   * application context displayed by the sidebar when opening the context menu of a
+   * application.
    * @returns {*[]}
    */
-  getAdditionalDatabaseContextComponents(workspace, database) {
+  getAdditionalApplicationContextComponents(workspace, application) {
     return []
   }
 

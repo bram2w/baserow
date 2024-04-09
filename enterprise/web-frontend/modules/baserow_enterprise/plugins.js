@@ -8,6 +8,7 @@ import SnapshotModalWarning from '@baserow_enterprise/components/SnapshotModalWa
 import EnterpriseSettings from '@baserow_enterprise/components/EnterpriseSettings'
 import EnterpriseSettingsOverrideDashboardHelp from '@baserow_enterprise/components/EnterpriseSettingsOverrideDashboardHelp'
 import EnterpriseLogo from '@baserow_enterprise/components/EnterpriseLogo'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export class EnterprisePlugin extends BaserowPlugin {
   static getType() {
@@ -27,14 +28,20 @@ export class EnterprisePlugin extends BaserowPlugin {
     return sidebarItems
   }
 
-  getAdditionalDatabaseContextComponents(workspace, database) {
+  getAdditionalApplicationContextComponents(workspace, application) {
+    const additionalComponents = []
+    const hasReadRolePermission = this.app.$hasPermission(
+      'application.read_role',
+      application,
+      workspace.id
+    )
     if (
-      this.app.$hasPermission('application.read_role', database, workspace.id)
+      hasReadRolePermission &&
+      application.type === DatabaseApplicationType.getType()
     ) {
-      return [MemberRolesDatabaseContextItem]
-    } else {
-      return []
+      additionalComponents.push(MemberRolesDatabaseContextItem)
     }
+    return additionalComponents
   }
 
   getAdditionalTableContextComponents(workspace, table) {
