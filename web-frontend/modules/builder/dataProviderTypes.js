@@ -528,8 +528,9 @@ export class UserDataProviderType extends DataProviderType {
     return this.app.i18n.t('dataProviderType.user')
   }
 
-  getDispatchContext(applicationContext) {
-    const { isAuthenticated, id } = this.getDataContent(applicationContext)
+  getDataSourceDispatchContext(applicationContext) {
+    const { is_authenticated: isAuthenticated, id } =
+      this.getDataContent(applicationContext)
 
     if (isAuthenticated) {
       return id
