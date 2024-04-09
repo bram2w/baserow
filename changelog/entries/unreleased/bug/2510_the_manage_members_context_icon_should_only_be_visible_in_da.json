@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Restrict 'Manage members' context menu item to database applications only.",
+    "issue_number": 2510,
+    "bullet_points": [],
+    "created_at": "2024-04-09"
+}

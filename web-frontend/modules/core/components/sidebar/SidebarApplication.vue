@@ -195,7 +195,7 @@ export default {
         .reduce(
           (components, plugin) =>
             components.concat(
-              plugin.getAdditionalDatabaseContextComponents(
+              plugin.getAdditionalApplicationContextComponents(
                 this.workspace,
                 this.application
               )
