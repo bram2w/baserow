@@ -7,7 +7,9 @@
         "free": "Gratuit",
         "comingSoon": "A venir...",
         "link": "Lien",
-        "table": "Table"
+        "table": "Table",
+        "all": "Tous",
+        "billable": "Facturable"
     },
     "action": {
         "upload": "Envoyer",
@@ -78,7 +80,8 @@
         "integerField": "Le champ doit être un entier.",
         "minValueField": "Le champ doit être supérieur ou égal à {min}.",
         "maxValueField": "Le champ doit être inférieur ou égal à {max}.",
-        "minMaxValueField": "La valeur du champ doit être comprise entre {min} et {max}."
+        "minMaxValueField": "La valeur du champ doit être comprise entre {min} et {max}.",
+        "invalidNumber": "Le champ doit être un nombre."
     },
     "permission": {
         "admin": "Admin",
@@ -119,7 +122,8 @@
         "lastModifiedBy": "Dernière modification par",
         "multipleSelectCheckboxes": "Cases à cocher",
         "duration": "Durée",
-        "password": "Mot de passe"
+        "password": "Mot de passe",
+        "ai": "Prompt pour l'IA"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -205,7 +209,11 @@
         "isWithinMonths": "dans les X mois",
         "isAfterDaysAgo": "Après X jours",
         "isEvenAndWhole": "Est un entier pair",
-        "filesLowerThan": "Nb fichiers plus petit que"
+        "filesLowerThan": "Nb fichiers plus petit que",
+        "lowerThanOrEqual": "inférieur ou égal",
+        "isAnyOf": "est l'une des valeurs",
+        "higherThanOrEqual": "supérieur ou égal",
+        "isNoneOf": "n'est aucune des valeurs"
     },
     "viewType": {
         "grid": "Tableau",
@@ -318,7 +326,11 @@
         "adminAlreadyExistsDescription": "Ce nom d'utilisateur ne peut pas être utilisé car il existe déjà.",
         "adminAlreadyExistsTitle": "Impossible d'utiliser ce nom d'utilisateur",
         "cannotCreateFieldTypeDescription": "Le type de champ demandé ne peut pas être créé pour le moment. Il peut s'agir d'un problème temporaire avec des tables plus anciennes. Veuillez réessayer plus tard.",
-        "cannotCreateFieldTypeTitle": "Impossible de créer le champ"
+        "cannotCreateFieldTypeTitle": "Impossible de créer le champ",
+        "modelDoesNotBelongToTypeTitle": "Le modèle sélectionné ne correspond pas au type d'IA",
+        "generativeAIDoesNotExistTitle": "L'IA générative n'est pas disponible",
+        "generativeAIDoesNotExistDescription": "Le modèle d'IA générative n'existe pas.",
+        "modelDoesNotBelongToTypeDescription": "Le modèle sélectionné ne correspond pas au type d'IA sélectionné."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",

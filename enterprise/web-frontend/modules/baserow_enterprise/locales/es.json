@@ -207,7 +207,8 @@
         "label": "Compartir con todos en {nombre}"
     },
     "memberRolesDatabaseContexItem": {
-        "label": "Gestionar miembros"
+        "label": "Gestionar miembros",
+        "additionalRoles": "Funciones adicionales"
     },
     "roleAssignmentModal": {
         "membersTab": "Miembros",
@@ -251,7 +252,8 @@
         "subheading": "Los equipos permiten conceder o restringir permisos en bloque a varias personas."
     },
     "memberRolesTableContexItem": {
-        "label": "Gestionar miembros"
+        "label": "Gestionar miembros",
+        "additionalRoles": "Funciones adicionales"
     },
     "memberRolesMembersList": {
         "remove": "Quitar",
@@ -265,7 +267,9 @@
     },
     "enterpriseFeatures": {
         "sso": "Inicio de sesión único",
-        "rbac": "Control de acceso basado en funciones"
+        "rbac": "Control de acceso basado en funciones",
+        "auditLogs": "Registros de auditoría",
+        "coBranding": "Sustitución del logotipo de marca compartida"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Apoyo directo"
@@ -300,5 +304,14 @@
     "localBaserowPasswordAppAuthProviderForm": {
         "passwordFieldLabel": "Seleccionar campo de contraseña",
         "noFields": "No hay campos compatibles"
+    },
+    "enterpriseSettings": {
+        "branding": "Gestión de marca",
+        "deactivated": "Disponible para la empresa",
+        "uploadFileButton": "Subir la imagen",
+        "showBaserowHelpMessage": "Mostrar un mensaje de ayuda",
+        "showBaserowHelpMessageDescription": "Indica si el mensaje de la solicitud de ayuda debe mostrarse en el panel.",
+        "coBrandingLogo": "Logotipo",
+        "coBrandingLogoDescription": "Reemplaza el logotipo de Baserow por una alternativa personalizada de un logotipo de una marca (176x29)."
     }
 }

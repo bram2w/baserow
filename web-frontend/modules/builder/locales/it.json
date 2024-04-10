@@ -144,7 +144,8 @@
         "currentRecord": "Sorgente dati",
         "formData": "Dati del modulo",
         "dataSource": "Dati",
-        "user": "Utente"
+        "user": "Utente",
+        "previousAction": "Azione precedente"
     },
     "elementForms": {
         "invalidFormula": "La formula non è valida",
@@ -288,7 +289,8 @@
     },
     "eventTypes": {
         "clickLabel": "Al click",
-        "submitLabel": "All'invio"
+        "submitLabel": "All'invio",
+        "afterLoginLabel": "Dopo login"
     },
     "tableElementForm": {
         "fields": "Campi",
@@ -346,7 +348,8 @@
         "notificationLabel": "Mostra Notifiche",
         "createRowLabel": "Crea Riga",
         "openPageLabel": "Apri Pagina",
-        "updateRowLabel": "Aggiorna Riga"
+        "updateRowLabel": "Aggiorna Riga",
+        "logoutLabel": "Logout"
     },
     "notificationWorkflowActionForm": {
         "titleLabel": "Titolo",
@@ -386,11 +389,15 @@
     "formContainerElementForm": {
         "submitButtonLabel": "Pulsante di invio",
         "submitButtonPlaceholder": "Inserisci valore...",
-        "buttonColor": "Colore pulsante"
+        "buttonColor": "Colore pulsante",
+        "resetToInitialValuesDescription": "Se selezionato, i valori predefiniti del modulo verranno utilizzati per reimpostare il modulo dopo un invio riuscito. Altrimenti rimarranno i valori dell'utente.",
+        "resetToInitialValuesTitle": "Ripristina i valori predefiniti dopo l'invio"
     },
     "dispatchWorkflowActionError": {
         "defaultTitle": "Errore evento",
-        "defaultMessage": "Questo evento ha generato un errore imprevisto."
+        "defaultMessage": "Questo evento ha generato un errore imprevisto.",
+        "formDataInvalidTitle": "Modulo non valido",
+        "formDataInvalidMessage": "Uno o più campi contengono valori non validi."
     },
     "upsertRowWorkflowActionForm": {
         "integrationDropdownLabel": "Integrazione",
@@ -461,12 +468,19 @@
         "valuePlaceholder": "Inserisci un valore di default (opzionale)",
         "placeholderTitle": "Placeholder",
         "placeholderPlaceholder": "Inserisci un placeholder (opzionale)",
-        "requiredTitle": "Richiesto"
+        "requiredTitle": "Richiesto",
+        "validationTitle": "Validazione"
     },
     "inputTextElementForm": {
         "multilineTitle": "Multi linea",
         "rowsTitle": "Numero di linee",
-        "rowsPlaceholder": "Inserisci il numero di righe per questo campo input"
+        "rowsPlaceholder": "Inserisci il numero di righe per questo campo input",
+        "validationTypeAnyDescription": "Permetti qualsiasi valore per questo input.",
+        "validationTypeEmailLabel": "Email",
+        "validationTypeAnyLabel": "Qualsiasi",
+        "validationTypeIntegerLabel": "Numero",
+        "validationTypeEmailDescription": "Obbliga ad inserire un indirizzo email in questo input.",
+        "validationTypeIntegerDescription": "Obbliga ad inserire un valore numerico per questo input."
     },
     "userSourceSettings": {
         "titleAddUserSource": "Nuova sorgente dati",
@@ -488,7 +502,7 @@
         "errorUniqueName": "Il nome della sorgente deve essere unico."
     },
     "fontSidePanelForm": {
-        "label": "Carattere"
+        "label": "Colore carattere"
     },
     "formDataProviderType": {
         "nodeMissing": "Mancante"
@@ -502,5 +516,13 @@
     },
     "authFormElementForm": {
         "userSource": "Sorgente utenti"
+    },
+    "formContainerElement": {
+        "submitDeactivatedText": "Completa tutti i campi richiesti per inviare"
+    },
+    "visibilityForm": {
+        "loggedInVisitors": "Visitatori loggati",
+        "notLoggedInVisitors": "Visitatori non loggati",
+        "allVisitors": "Tutti i visitatori"
     }
 }

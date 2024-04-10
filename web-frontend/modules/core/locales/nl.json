@@ -107,7 +107,8 @@
         "invitationFormTitle": "Uitnodigen per e-mail",
         "optionalMessagePlaceholder": "Optioneel bericht",
         "errorInvalidEmail": "Voer een geldig e-mail adres in.",
-        "errorTooLongMessage": "Berichten zijn beperkt tot {amount} tekens."
+        "errorTooLongMessage": "Berichten zijn beperkt tot {amount} tekens.",
+        "additionalRoles": "Extra rollen"
     },
     "workspacesContext": {
         "search": "Zoek werkruimtes",
@@ -120,7 +121,8 @@
         "viewTrash": "Bekijk Prullenbak",
         "leaveWorkspace": "Verlaat werkruimte",
         "deleteWorkspace": "werkruimte verwijderen",
-        "auditLog": "Audit log"
+        "auditLog": "Audit log",
+        "settings": "Instellingen"
     },
     "createWorkspaceModal": {
         "createNew": "Nieuwe werkruimte aanmaken",
@@ -518,7 +520,8 @@
         "content": "Dit kan invloed hebben op waar u toegang toe heeft, gelieve de pagina opnieuw te laden."
     },
     "editRoleContext": {
-        "billableRolesLink": "Documentatie voor factureerbare rollen"
+        "billableRolesLink": "Documentatie voor factureerbare rollen",
+        "additionalRoles": "Extra rollen"
     },
     "highestPaidRoleField": {
         "billable": "Factureerbaar"
@@ -666,7 +669,10 @@
         "underline": "Onderstreep",
         "bold": "Vet",
         "italic": "Cursief",
-        "strikethrough": "Doorstreept"
+        "strikethrough": "Doorstreept",
+        "link": "Link",
+        "linkEditPlaceholder": "Link URL...",
+        "linkEditDone": "Klaar"
     },
     "richTextEditorFloatingMenu": {
         "hierarchy": "Hiërarchie",
@@ -679,5 +685,31 @@
         "taskList": "Takenlijst",
         "lists": "Lijsten",
         "paragraph": "Paragraaf"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "Generatieve AI"
+    },
+    "generativeAIModelType": {
+        "openai": "OpenAI",
+        "openaiOrganization": "Organisatie (optioneel)",
+        "openaiModelsLabel": "Ingeschakelde modellen",
+        "openaiModelsDescription": "Geef een lijst met door komma's gescheiden [OpenAI-modellen] (https://platform.openai.com/docs/models/continuous-model-upgrades) die kunnen worden gebruikt in Baserow. (bijv. `gpt-3.5-turbo,gpt-4`)",
+        "ollamaHostLabel": "Host",
+        "ollamaModelsLabel": "Ingeschakelde modellen",
+        "openaiApiKeyLabel": "API-sleutel",
+        "openaiApiKeyDescription": "Geef een OpenAI API-sleutel op als je de integratie wilt inschakelen. [Instructies voor het verkrijgen van een API-sleutel](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "ollamaHostDescription": "Geef de hostnaam van je [Ollama](https://ollama.com/) server. Deze draait meestal lokaal op je eigen apparaat.",
+        "ollama": "Ollama",
+        "ollamaModelsDescription": "Geef een lijst met door komma gescheiden [Ollama geïnstalleerde modellen] (https://ollama.com/library). Het model moet worden gedownload en geïnstalleerd voordat het kan worden gebruikt. (bijvoorbeeld `llama2,mistral`)"
+    },
+    "generativeAIWorkspaceSettings": {
+        "title": "Generatieve AI-instellingen",
+        "submitButton": "Instellingen bijwerken",
+        "description": "Deze instellingen kunnen worden gebruikt om optioneel generatieve AI-configuratie in te stellen op werkruimte-niveau. Functies zoals het AI-veld kunnen worden uitgeschakeld omdat ze geen API-sleutel hebben voor een van de ondersteunde modellen. Door de instellingen hier op te geven, kun je die functies inschakelen. Als je een waarde leeg laat, wordt deze standaard teruggezet naar de globale instance-instellingen. Let op dat iedereen in de werkruimte deze instellingen deelt.",
+        "changedTitle": "Instellingen correct bijgewerkt",
+        "changedDescription": "De instellingen zijn bijgewerkt en worden nu gebruikt in deze werkruimte."
+    },
+    "workspaceSettingsModal": {
+        "title": "Werkruimte-instellingen"
     }
 }

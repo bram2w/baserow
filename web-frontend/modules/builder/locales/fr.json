@@ -292,7 +292,13 @@
         "labelPlaceholder": "Entrez une étiquette (facultatif)",
         "multilineTitle": "Multiligne",
         "rowsTitle": "Nombre de lignes",
-        "rowsPlaceholder": "Saisir le nombre de lignes minimum"
+        "rowsPlaceholder": "Saisir le nombre de lignes minimum",
+        "validationTypeAnyLabel": "Toutes les valeurs",
+        "validationTypeAnyDescription": "Permet d'accepter n'importe quelle valeur dans cette entrée.",
+        "validationTypeIntegerLabel": "Nombre",
+        "validationTypeEmailLabel": "Courriel",
+        "validationTypeEmailDescription": "N'autoriser que les courriels dans ce champ.",
+        "validationTypeIntegerDescription": "N'autoriser que les valeurs numériques dans ce champ."
     },
     "columnElementForm": {
         "columnGapPlaceholder": "Entrez l'espace entre les colonnes...",
@@ -363,7 +369,8 @@
         "pageParameter": "Paramètre",
         "dataSource": "Données",
         "formData": "Données de formulaire",
-        "user": "Utilisateur"
+        "user": "Utilisateur",
+        "previousAction": "Action précédente"
     },
     "openPageWorkflowActionForm": {
         "urlLabel": "URL",
@@ -380,7 +387,7 @@
         "showMore": "Afficher plus"
     },
     "fontSidePanelForm": {
-        "label": "Police"
+        "label": "Couleur de la police"
     },
     "styleBoxForm": {
         "paddingError": "La valeur doit être comprise entre 0 et 200.",
@@ -395,14 +402,16 @@
         "notificationLabel": "Afficher une notification",
         "openPageLabel": "Ouvrir une page",
         "updateRowLabel": "Mise à jour de ligne",
-        "createRowLabel": "Création de ligne"
+        "createRowLabel": "Création de ligne",
+        "logoutLabel": "Déconnexion"
     },
     "getFormulaComponent": {
         "errorTooltip": "Référence invalide"
     },
     "eventTypes": {
         "clickLabel": "Au clic",
-        "submitLabel": "Sur validation"
+        "submitLabel": "Sur validation",
+        "afterLoginLabel": "Après la connexion"
     },
     "linkFieldForm": {
         "fieldLinkNamePlaceholder": "Saisir la valeur...",
@@ -439,7 +448,9 @@
     },
     "dispatchWorkflowActionError": {
         "defaultMessage": "Une erreur s'est produite lors du traitement de cette action.",
-        "defaultTitle": "Erreur"
+        "defaultTitle": "Erreur",
+        "formDataInvalidTitle": "Formulaire invalide",
+        "formDataInvalidMessage": "Un ou plusieurs champs contiennent des valeurs invalides."
     },
     "collectionFieldType": {
         "text": "Texte",
@@ -467,7 +478,9 @@
     "formContainerElementForm": {
         "submitButtonLabel": "Bouton de soumission",
         "submitButtonPlaceholder": "Saisir la valeur...",
-        "buttonColor": "Couleur du bouton"
+        "buttonColor": "Couleur du bouton",
+        "resetToInitialValuesTitle": "Réinitialiser les valeurs par défaut après soumission",
+        "resetToInitialValuesDescription": "Si cette case est cochée, le formulaire sera réinitialisé avec les valeurs par défaut après une soumission réussie. Si la case n'est pas cochée, les valeurs saisies par l'utilisateur seront conservées."
     },
     "linkField": {
         "details": "Détails"
@@ -479,7 +492,8 @@
         "labelTitle": "Label",
         "valueTitle": "Valeur par défaut",
         "placeholderTitle": "Texte provisoire",
-        "placeholderPlaceholder": "Saisir un texte provisoire (facultatif)"
+        "placeholderPlaceholder": "Saisir un texte provisoire (facultatif)",
+        "validationTitle": "Validation"
     },
     "iframeElementForm": {
         "urlPlaceholder": "Lien vers la ressource externe à intégrer",
@@ -535,5 +549,13 @@
     },
     "authFormElementForm": {
         "userSource": "Source d'utilisateur"
+    },
+    "formContainerElement": {
+        "submitDeactivatedText": "Veuillez remplir tous les champs requis pour soumettre le formulaire"
+    },
+    "visibilityForm": {
+        "allVisitors": "Tous les visiteurs",
+        "loggedInVisitors": "Visiteurs connectés",
+        "notLoggedInVisitors": "Visiteurs déconnectés"
     }
 }

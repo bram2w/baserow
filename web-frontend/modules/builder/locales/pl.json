@@ -263,5 +263,13 @@
     },
     "styleBoxForm": {
         "paddingError": "Wartość musi być liczbą całkowitą z zakresu od 0 do 200."
+    },
+    "dataProviderType": {
+        "dataSource": "Dane",
+        "pageParameter": "Parametr",
+        "currentRecord": "Źródło danych",
+        "previousAction": "Poprzednie działanie",
+        "user": "Użytkownik",
+        "formData": "Dane formularza"
     }
 }

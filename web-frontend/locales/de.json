@@ -5,7 +5,8 @@
         "wrong": "Etwas ist schief gegangen",
         "none": "Kein",
         "free": "Kostenlos",
-        "comingSoon": "In Kürze verfügbar..."
+        "comingSoon": "In Kürze verfügbar...",
+        "billable": "Abrechenbar"
     },
     "action": {
         "upload": "Hochladen",
@@ -34,7 +35,9 @@
         "login": "Anmelden",
         "download": "Download",
         "copyToClipboard": "In die Zwischenablage kopieren",
-        "reset": "Zurücksetzen"
+        "reset": "Zurücksetzen",
+        "set": "Festlegen",
+        "logout": "Abmelden"
     },
     "adminType": {
         "settings": "Einstellungen",

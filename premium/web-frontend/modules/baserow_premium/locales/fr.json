@@ -272,8 +272,8 @@
         "addConditionGroup": "Ajouter un groupe de condition"
     },
     "redirectToBaserowModal": {
-        "title": "Redirection vers http://baserow.io",
-        "content": "Vous allez quitter votre instance auto-hébergée et être redirigé vers http://baserow.io."
+        "title": "Redirection vers https://baserow.io",
+        "content": "Vous allez quitter votre instance auto-hébergée et être redirigé vers https://baserow.io."
     },
     "premiumTopSidebar": {
         "impersonateDescription": "L’identité de ce compte est usurpée. Une actualisation de la page l’arrêtera.",
@@ -295,7 +295,8 @@
         "surveyForm": "Formulaire de sondage",
         "publicLogoRemoval": "Suppression du logo public",
         "personalViews": "Vues privées",
-        "calendarView": "Vue Calendrier"
+        "calendarView": "Vue Calendrier",
+        "aiFeatures": "Champ IA"
     },
     "formViewModePreviewSurvey": {
         "deactivated": "Les sondage sont disponibles dans la version premium.",
@@ -358,5 +359,26 @@
         "modeAllTitle": "Tous les commentaires",
         "modeAllDesc": "Vous recevrez des notifications pour tous les commentaires de cette ligne.",
         "modeMentionsTitle": "Seulement les mentions"
+    },
+    "gridViewFieldAI": {
+        "generate": "Générer",
+        "regenerate": "Re-générer"
+    },
+    "premiumFieldType": {
+        "ai": "Prompt pour l'IA",
+        "aiDescription": "Champ en lecture seule contenant un texte généré par une IA en fonction du prompt définit."
+    },
+    "fieldAISubForm": {
+        "AIType": "Type d'IA",
+        "AIModel": "Modèle d'IA",
+        "prompt": "Prompt",
+        "premiumFeature": "Le champ IA est une fonctionnalité premium"
+    },
+    "rowEditFieldAI": {
+        "createRowBefore": "La valeur du champ IA peut être générée après la création de la ligne.",
+        "generate": "Générer"
+    },
+    "functionalGridViewFieldAI": {
+        "generate": "Générer"
     }
 }

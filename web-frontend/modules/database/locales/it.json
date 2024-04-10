@@ -66,7 +66,8 @@
         "createTable": "Crea tabella"
     },
     "sidebarItem": {
-        "exportTable": "Esporta tabella"
+        "exportTable": "Esporta tabella",
+        "webhooks": "Webhooks"
     },
     "apiToken": {
         "create": "crea",
@@ -145,7 +146,8 @@
         "include": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da includere, fornendo il parametro di query include.\n\n#### Con `user_field_names`:\n\n`include` deve essere un elenco separato da virgole di nomi campo da includere nei risultati. Ad esempio se si fornisce il seguente parametro GET: `include=My Field,-My Field 2` allora solo quei campi saranno inclusi (a meno che non siano esplicitamente esclusi).\n\nIl nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi campo contengono virgolette, allora devono essere evasi usando il carattere `\\`. Es: `Name \\\"`.\n\n#### Senza `user_field_names`:\n\n`include` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da includere nei risultati. Ad esempio: se si fornisce il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno i soli inclusi (a meno che non siano esplicitamente esclusi).",
         "exclude": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da escludere, fornendo il parametro di query exclude.\n\n #### Con `user_field_names`:\n\n `exclude` deve essere un elenco separato da virgole di nomi campo da escludere dai risultati. As esempio se si fornisce il seguente parametro GET: `exclude=My Field,-My Field 2` allora quei campi saranno esclusi.\n\n Il nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi dei campi contengono virgolette, allora devono essere evasi usando il carattere ```. Es: `Name \\\"`.\n\n #### Senza `nomi_di_campo_utente`:\n\n `exclude` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da escludere dai risultati. Ad esempio: Se fornisci il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno esclusi.",
         "viewId": "Di default nessuno dei filtri o ordinamenti fuori da quelli definiti nei parametri query del URL verrà applicato. Puoi aggiungere filtri e ordinamenti fornendo i relativi `id` come parametro GET per il parametro `view_id`. Per esempio, scrivendo `view_id=1` allora verranno utilizzati i filtri e l'ordinamento della vista con `id` 1. Puoi trovare l'id della vista nel menu di modifica della singola vista. L'id è il numero tra parentesi dopo il nome.\n\n #### With `filter__{field}__{filter}` \n\n Verranno applicati sia il filtro fornito nei parametri query del URL che quello impostato nella vista. \n\n #### With `order_by` \n\n Se viene fornito uno specifico `order_by`, l'ordinamento impostato nella vista viene ignorato.",
-        "filtersBuilder": "Apri il tool per preparare i tuoi filtri"
+        "filtersBuilder": "Apri il tool per preparare i tuoi filtri",
+        "filters": "Facoltativamente, le righe possono essere filtrate utilizzando gli stessi filtri di visualizzazione disponibili per le visualizzazioni. Questo parametro accetta una stringa serializzata JSON contenente l'albero dei filtri da applicare a questa vista. L'albero dei filtri è una struttura nidificata contenente i filtri che devono essere applicati.\n\n#### Con `user_field_names`:\n\nUn esempio di albero di filtri valido è il seguente: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\" }]}`.\n\n#### Senza `user_field_names`:\n\nAd esempio, se fornisci facoltativamente il seguente parametro GET: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"} ]}`\n\nTieni presente che se viene fornito questo parametro, tutti gli altri `filter__{field}__{filter}` verranno ignorati, così come il parametro filter_type."
     },
     "apiDocsIntro": {
         "intro": "Il database {name} fornisce un modo semplice per integrare i dati con qualsiasi sistema esterno. L'API segue la semantica REST, usa JSON per codificare gli oggetti e si basa su codici HTTP standard, errori leggibili dalla macchina e dall'uomo per segnalare i risultati delle operazioni.",
@@ -455,7 +457,9 @@
         "webhooks": "Webhook",
         "deleteView": "Elimina vista",
         "duplicateView": "Duplica vista",
-        "importFile": "Importa file"
+        "importFile": "Importa file",
+        "toCollaborative": "A collaborativa",
+        "toPersonal": "A personale"
     },
     "deleteViewModal": {
         "title": "Elimina {name}",
@@ -499,7 +503,12 @@
         "hiddenRowsInsertedTitle": "Righe aggiunte",
         "copiedRowURLMessage": "La riga {id} è stata copiata nella tua clipboard.",
         "copiedRowURL": "URL di riga copiato",
-        "copyRowURL": "Copia URL di riga"
+        "copyRowURL": "Copia URL di riga",
+        "generateCellsValues": "Genera valori con IA",
+        "AIValuesGenerationErrorTitle": "Generazione del valore IA fallita",
+        "AIValuesGenerationErrorMessage": "Per favore controlla la tua chiave API e verifica il modello selezionato.",
+        "tooManyItemsDescription": "Non è possible aggiornare più di {limit} righe alla volta, per cui abbiamo aggiornato solo le prime.",
+        "tooManyItemsTitle": "Troppi oggetti"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
@@ -673,7 +682,7 @@
     },
     "snapshotsModal": {
         "title": "snapshot",
-        "description": "Gli snapshot sono copie esatte dei tuoi database prese al momento in cui sono vengono create. Al momento del ripristino, verrà creato un clone dei dati originali. Gli snapshot vengono cancellati automaticamente dopo un anno.",
+        "description": "Gli snapshot sono copie esatte del/della tuo/tua {applicationTypeName} prese al momento in cui sono vengono create. Al momento del ripristino, verrà creato un clone dei dati originali. Gli snapshot vengono cancellati automaticamente dopo un anno.",
         "createLabel": "Crea uno snapshot",
         "snapshotRestoredErrorTitle": "Errore",
         "snapshotRestoredErrorMessage": "Lo snapshot non può essere ripristinato. Riprova più tardi.",
@@ -813,12 +822,41 @@
         "noGroupByText": "Raggruppa righe per campo."
     },
     "collaboratorAddedToRowNotification": {
-        "title": "{sender} ti ha assegnato a {fieldName} nella riga {rowId} della tabella {tableName}"
+        "title": "{sender} ti ha assegnato a {fieldName} nella riga {rowId} della tabella {tableName}",
+        "deletedUser": "Un utente rimosso"
     },
     "fieldCollaboratorSubForm": {
         "notifyUserWhenAdded": "Notifica gli utenti quando vengono aggiunti"
     },
     "viewFieldConditionsForm": {
         "addCondition": "Aggiungi condizione"
+    },
+    "fieldPasswordSubForm": {
+        "description": "Non è ancora possibile fare nulla direttamente con il campo password, questo viene utilizzato solo dall'autenticazione dell'utente nell'application builder."
+    },
+    "rowHistoryFieldPassword": {
+        "passwordSet": "La password è stata impostata",
+        "passwordUpdated": "La password è stata aggiornata",
+        "passwordDeleted": "La password è stata eliminata"
+    },
+    "userMentionInRichTextFieldNotification": {
+        "deletedUser": "Un utente rimosso",
+        "title": "{sender} ti ha menzionato nel campo {fieldName} della riga {rowId} in {tableName}"
+    },
+    "rowEditFieldPassword": {
+        "setPassword": "Imposta password"
+    },
+    "dataProviderTypes": {
+        "fieldsName": "Campi"
+    },
+    "fieldDurationSubForm": {
+        "durationFormatLabel": "Formato della durata"
+    },
+    "formSubmittedNotification": {
+        "moreValues": "0 | e 1 ulteriore campo. | e {count} ulteriori campi.",
+        "title": "{formName} è stato inviato nella tabella {tableName}:"
+    },
+    "fieldLongTextSubForm": {
+        "enableRichTextFormatting": "Abilita la formattazione RTF"
     }
 }

@@ -7,7 +7,9 @@
         "free": "Gratis",
         "comingSoon": "Pronto...",
         "link": "Enlace",
-        "table": "Tabla"
+        "table": "Tabla",
+        "billable": "Facturable",
+        "all": "Todos"
     },
     "action": {
         "upload": "Subir",
@@ -37,7 +39,7 @@
         "download": "Descargar",
         "copyToClipboard": "Copiar al portapapeles",
         "reset": "Restablecer",
-        "logout": "Cerrar sesión",
+        "logout": "Cerrar la sesión",
         "set": "Establecer"
     },
     "adminType": {
@@ -78,7 +80,8 @@
         "integerField": "El campo debe ser un número entero.",
         "minValueField": "El campo debe ser mayor o igual que {mínimo}.",
         "maxValueField": "El campo debe ser menor o igual que {máximo}.",
-        "minMaxValueField": "El valor del campo debe estar comprendido entre {min} y {max}."
+        "minMaxValueField": "El valor del campo debe estar comprendido entre {min} y {max}.",
+        "invalidNumber": "El campo debe ser un número."
     },
     "permission": {
         "admin": "Admin",
@@ -119,7 +122,8 @@
         "lastModifiedBy": "Última modificación por",
         "multipleSelectCheckboxes": "Casillas",
         "duration": "Duración",
-        "password": "Contraseña"
+        "password": "Contraseña",
+        "ai": "Aviso de IA"
     },
     "fieldErrors": {
         "invalidNumber": "Número invalido",
@@ -136,7 +140,7 @@
     "fieldDocs": {
         "readOnly": "Este es un campo de sólo lectura.",
         "text": "Acepta texto de una sola línea.",
-        "longText": "Acepta texto multilínea. Si el formato de texto enriquecido está activado, puedes utilizar markdown para dar formato al texto.",
+        "longText": "Acepta el texto en varias líneas. Si el formato de texto enriquecido está activado, puede utilizar Markdown para dar formato al texto.",
         "linkRow": "Acepta una matriz que contiene los identificadores o los valores de texto del campo principal de las filas relacionadas del id de tabla {table}. Deben proporcionarse todos los identificadores cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones. En caso de que se proporcione un valor de texto en lugar de un identificador, se buscará una fila con el valor coincidente para su campo principal. Si se encuentra más de una coincidencia, se seleccionará la primera en el orden de la tabla. Puedes enviar una cadena con nombres separados por coma, en cuyo caso la cadena se convierte en una matriz de nombres de fila.",
         "number": "Acepta un número.",
         "numberPositive": "Acepta un número positivo.",
@@ -205,7 +209,11 @@
         "isWithinMonths": "es dentro de meses",
         "isEvenAndWhole": "es par y entero",
         "filesLowerThan": "archivos inferiores a",
-        "isAfterDaysAgo": "es después de hace días"
+        "isAfterDaysAgo": "es después de hace días",
+        "higherThanOrEqual": "mayor o igual que",
+        "lowerThanOrEqual": "menos o igual que",
+        "isAnyOf": "es cualquiera de",
+        "isNoneOf": "es ninguno de"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -318,7 +326,11 @@
         "adminAlreadyExistsDescription": "Ese nombre de usuario no se puede utilizar porque ya existe.",
         "adminAlreadyExistsTitle": "No se puede usar ese nombre de usuario",
         "cannotCreateFieldTypeDescription": "El tipo de campo solicitado no puede crearse en este momento. Puede ser un problema temporal con tablas antiguas. Vuelve a intentarlo más tarde.",
-        "cannotCreateFieldTypeTitle": "No se puede crear el campo"
+        "cannotCreateFieldTypeTitle": "No se puede crear el campo",
+        "generativeAIDoesNotExistTitle": "La IA generativa no existe",
+        "generativeAIDoesNotExistDescription": "El modelo de IA generativa no existe.",
+        "modelDoesNotBelongToTypeTitle": "El modelo seleccionado no pertenece al tipo AI",
+        "modelDoesNotBelongToTypeDescription": "El modelo seleccionado no pertenece al tipo de IA seleccionado."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",

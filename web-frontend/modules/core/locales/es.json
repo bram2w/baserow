@@ -19,7 +19,7 @@
     "sidebar": {
         "createWorkspace": "Crea un grupo",
         "inviteOthers": "Invitar a otros",
-        "logoff": "Desconectarse",
+        "logoff": "Cerrar la sesión",
         "errorNoWorkspace": "No tienes ningún grupo.",
         "admin": "Admin",
         "dashboard": "Tablero",
@@ -107,7 +107,8 @@
         "invitationFormTitle": "Invitar por correo electrónico",
         "optionalMessagePlaceholder": "Mensaje opcional",
         "errorInvalidEmail": "Por favor, introduce una dirección de correo electrónico válida.",
-        "errorTooLongMessage": "Los mensajes están limitados a {cantidad} caracteres."
+        "errorTooLongMessage": "Los mensajes están limitados a {cantidad} caracteres.",
+        "additionalRoles": "Funciones adicionales"
     },
     "workspacesContext": {
         "search": "Buscar grupos",
@@ -120,7 +121,8 @@
         "viewTrash": "Ver papelera",
         "leaveWorkspace": "Dejar grupo",
         "deleteWorkspace": "Eliminar grupo",
-        "auditLog": "Registro de auditoría"
+        "auditLog": "Registro de auditoría",
+        "settings": "Configuración"
     },
     "createWorkspaceModal": {
         "createNew": "Crear grupo nuevo",
@@ -518,7 +520,8 @@
         "action": "Recargar"
     },
     "editRoleContext": {
-        "billableRolesLink": "Documentación sobre funciones facturables"
+        "billableRolesLink": "Documentación sobre funciones facturables",
+        "additionalRoles": "Funciones adicionales"
     },
     "highestPaidRoleField": {
         "billable": "Facturable"
@@ -666,7 +669,10 @@
         "bold": "Negrita",
         "italic": "Cursiva",
         "underline": "Subraye",
-        "strikethrough": "Tachado"
+        "strikethrough": "Tachado",
+        "link": "Enlace",
+        "linkEditPlaceholder": "URL del enlace...",
+        "linkEditDone": "Listo"
     },
     "richTextEditorFloatingMenu": {
         "hierarchy": "Jerarquía",
@@ -679,5 +685,31 @@
         "unorderedList": "Lista de puntos",
         "code": "Código",
         "taskList": "Lista de tareas"
+    },
+    "generativeAIModelType": {
+        "openai": "OpenAI",
+        "openaiApiKeyLabel": "Clave de API",
+        "openaiOrganization": "Organización (opcional)",
+        "openaiModelsLabel": "Modelos activados",
+        "openaiModelsDescription": "Proporciona una lista de [modelos OpenAI] separados por comas (https://platform.openai.com/docs/models/continuous-model-upgrades) que se pueden utilizar en Baserow. (por ejemplo, `gpt-3.5-turbo,gpt-4`)",
+        "ollama": "Ollama",
+        "ollamaHostLabel": "Anfitrión",
+        "ollamaHostDescription": "Proporciona el nombre de host de tu servidor [Ollama](https://ollama.com/). Normalmente se ejecuta localmente en tu propio dispositivo.",
+        "ollamaModelsLabel": "Modelos activados",
+        "openaiApiKeyDescription": "Proporciona una clave de API de OpenAI si deseas activar la integración. [Instrucciones para obtener una clave de API](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "ollamaModelsDescription": "Proporciona una lista de [modelos instalados de Ollama] separados por comas (https://ollama.com/library). Ten en cuenta que el modelo debe ser descargado e instalado antes de que pueda ser utilizado. (por ejemplo, `llama2,mistral`)"
+    },
+    "generativeAIWorkspaceSettings": {
+        "title": "Configuración de la IA generativa",
+        "description": "Estos ajustes pueden utilizarse para establecer opcionalmente la configuración de la IA generativa en el nivel del espacio de trabajo. Funciones como el campo de IA pueden estar desactivadas porque carecen de una clave API para uno de los modelos compatibles. Proporcionando los ajustes aquí, puedes habilitar esas características. Si dejas un valor en blanco, se restablecerá la configuración global de la instancia. Ten en cuenta que todos los usuarios del espacio de trabajo compartirán esta configuración.",
+        "changedTitle": "Configuración actualizada correctamente",
+        "changedDescription": "Los ajustes se han actualizado y ahora se utilizarán en este espacio de trabajo.",
+        "submitButton": "Actualizar ajustes"
+    },
+    "workspaceSettingsModal": {
+        "title": "Configuración del espacio de trabajo"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "Inteligencia artificial generativa"
     }
 }

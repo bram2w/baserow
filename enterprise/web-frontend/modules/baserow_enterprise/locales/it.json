@@ -244,7 +244,8 @@
         "memberRolesTableTabTitle": "Tabella corrente"
     },
     "memberRolesTableContexItem": {
-        "label": "Gestisci membri"
+        "label": "Gestisci membri",
+        "additionalRoles": "Ruoli aggiuntivi"
     },
     "roleAssignmentModal": {
         "subjectTypeNameTeams": "team",
@@ -261,14 +262,17 @@
         "noAccessHelpText": "Questo utente necessita di esplicito accesso alle risorse."
     },
     "memberRolesDatabaseContexItem": {
-        "label": "Gestisci membri"
+        "label": "Gestisci membri",
+        "additionalRoles": "Ruoli aggiuntivi"
     },
     "loginButton": {
         "continueWith": "Continua con"
     },
     "enterpriseFeatures": {
         "sso": "Single Sign On",
-        "rbac": "Role-based access control"
+        "rbac": "Role-based access control",
+        "coBranding": "Sostituzione logo co-branding",
+        "auditLogs": "Registro attività"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Supporto diretto"
@@ -300,5 +304,14 @@
     "localBaserowPasswordAppAuthProviderForm": {
         "passwordFieldLabel": "Scegli il campo password",
         "noFields": "Nessun campo compatibile"
+    },
+    "enterpriseSettings": {
+        "deactivated": "Disponibile in enterprise",
+        "coBrandingLogo": "Logo",
+        "coBrandingLogoDescription": "Sostituisce il logo Baserow con un'alternativa personalizzata di co-branding (176x29).",
+        "showBaserowHelpMessage": "Mostra messaggio di aiuto",
+        "branding": "Branding",
+        "uploadFileButton": "Carica immagine",
+        "showBaserowHelpMessageDescription": "Indica se il messaggio di richiesta di aiuto deve essere mostrato sulla dashboard."
     }
 }

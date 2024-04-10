@@ -273,8 +273,8 @@
         "chooseAColor": "¿Por cual campo de selección individual debe colorearse la fila?"
     },
     "redirectToBaserowModal": {
-        "title": "Redirigiendo a http://baserow.io",
-        "content": "Estás abandonando tu instancia auto-alojada y estás siendo redirigido a http://baserow.io."
+        "title": "Redirigido a https://baserow.io",
+        "content": "Saldrás de tu instancia alojada automáticamente y serás redirigido a https://baserow.io."
     },
     "premiumTopSidebar": {
         "impersonateDescription": "Esta cuenta está suplantada. Una actualización de la página la detendrá.",
@@ -296,7 +296,8 @@
         "surveyForm": "Formulario de encuesta",
         "publicLogoRemoval": "Eliminación del logo público",
         "personalViews": "Vistas personales",
-        "calendarView": "Vista del calendario"
+        "calendarView": "Vista del calendario",
+        "aiFeatures": "Campo de IA"
     },
     "formViewModeType": {
         "surveyDescription": "Un campo es visible al mismo tiempo.",
@@ -359,5 +360,26 @@
         "modeAllTitle": "Todos los comentarios",
         "modeAllDesc": "Recibirás notificaciones de todos los comentarios de esta fila.",
         "modeMentionsTitle": "Sólo menciones"
+    },
+    "gridViewFieldAI": {
+        "regenerate": "Re-generar",
+        "generate": "Generar"
+    },
+    "fieldAISubForm": {
+        "AIType": "Tipo de IA",
+        "AIModel": "Modelo de IA",
+        "prompt": "Pregunta",
+        "premiumFeature": "El campo de IA es una función premium"
+    },
+    "rowEditFieldAI": {
+        "generate": "Generar",
+        "createRowBefore": "El valor de IA puede generarse después de crear la fila."
+    },
+    "premiumFieldType": {
+        "ai": "Aviso de IA",
+        "aiDescription": "Un campo de sólo lectura que contiene el texto generado por AI basado en la pregunta del campo."
+    },
+    "functionalGridViewFieldAI": {
+        "generate": "Generar"
     }
 }
