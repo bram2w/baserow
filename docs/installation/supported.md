@@ -10,7 +10,7 @@ Software versions are divided into the following groups:
 
 ## Web browsers
 
-### Baserow 1.23.2
+### Baserow 1.24.0
 
 Browser         | Supported versions | Recommended versions
 ----------------|--------------------|--------------------
