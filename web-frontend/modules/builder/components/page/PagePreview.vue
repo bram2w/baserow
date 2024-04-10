@@ -304,6 +304,8 @@ export default {
             this.selectNextElement(this.elementSelected, PLACEMENTS.RIGHT)
           }
           break
+        case 'Backspace':
+        case 'Clear':
         case 'Delete':
           this.deleteElement()
           break
