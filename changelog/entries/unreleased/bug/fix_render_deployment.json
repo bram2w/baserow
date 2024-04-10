@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fixes the Render deployment by enforcing http.",
+  "issue_number": null,
+  "bullet_points": [],
+  "created_at": "2024-04-10"
+}
