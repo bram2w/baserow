@@ -1,7 +1,7 @@
 version: "3.4"
 services:
-  baserow_pg11:
-    image: baserow_pg11
+  baserow-pg11:
+    image: baserow-pg11
     build:
       dockerfile: $PWD/deploy/all-in-one/pg11.Dockerfile
       context: $PWD

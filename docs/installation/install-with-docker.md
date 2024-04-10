@@ -148,10 +148,10 @@ To upgrade your data directory to be compatible with PostgreSQL 15, follow these
 
 ```
 docker run \
-  --name baserow_pgautoupgrade \
+  --name baserow-pgautoupgrade \
   # ALL THE ARGUMENTS YOU NORMALLY ADD TO YOUR BASEROW INSTANCE
   --restart no \
-  baserow_pgautoupgrade:1.24.0
+  baserow/baserow-pgautoupgrade:1.24.0
 ```
 
 3. If the upgrade was successful, the contaner should exit with a success message, you can now start Baserow as you did before.
@@ -165,10 +165,10 @@ To run Baserow image which uses legacy PostgreSQL 11 version, run:
 
 ```
 docker run \
-  --name baserow_pg11 \
+  --name baserow-pg11 \
   # ALL THE ARGUMENTS YOU NORMALLY ADD TO YOUR BASEROW INSTANCE
   --restart unless-stopped \
-  baserow_pg11:1.24.0
+  baserow/baserow-pg11:1.24.0
 ```
 
 ## Example Commands
