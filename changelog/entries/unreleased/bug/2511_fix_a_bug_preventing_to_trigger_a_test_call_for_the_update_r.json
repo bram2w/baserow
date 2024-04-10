@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug preventing to trigger a test call for the `update_row` webhook event type.",
+    "issue_number": 2511,
+    "bullet_points": [],
+    "created_at": "2024-04-09"
+}

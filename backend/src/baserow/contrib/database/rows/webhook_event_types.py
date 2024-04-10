@@ -78,8 +78,9 @@ class RowsUpdatedEventType(RowsEventType):
 
     def get_test_call_payload(self, table, model, event_id, webhook):
         rows = [model(id=0, order=0)]
-        before_rows_values = serialize_rows_for_response(rows, model)
-        before_return = {}
+        before_return = {
+            serialize_rows_values: serialize_rows_for_response(rows, model)
+        }
         payload = self.get_payload(
             event_id=event_id,
             webhook=webhook,
@@ -87,7 +88,6 @@ class RowsUpdatedEventType(RowsEventType):
             table=table,
             rows=rows,
             before_return=before_return,
-            before_rows_values=before_rows_values,
         )
         return payload
 
