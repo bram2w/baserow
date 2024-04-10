@@ -5,6 +5,7 @@
       :default-values="defaultValues"
       :table="table"
       :view="view"
+      :primary="primary"
       :allow-set-number-negative="false"
       :all-fields-in-table="allFieldsInTable"
       :database="database"
@@ -17,6 +18,7 @@
       :view="view"
       :all-fields-in-table="allFieldsInTable"
       :database="database"
+      :primary="primary"
     >
     </FieldDateSubForm>
     <FieldDurationSubForm
@@ -26,6 +28,7 @@
       :view="view"
       :all-fields-in-table="allFieldsInTable"
       :database="database"
+      :primary="primary"
     >
     </FieldDurationSubForm>
   </div>

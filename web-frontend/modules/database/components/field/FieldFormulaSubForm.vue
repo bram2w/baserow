@@ -7,6 +7,7 @@
       :formula-type="localOrServerFormulaType"
       :table="table"
       :view="view"
+      :primary="primary"
       :loading="refreshingFormula"
       :formula-type-refresh-needed="formulaTypeRefreshNeeded"
       :all-fields-in-table="allFieldsInTable"
