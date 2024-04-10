@@ -29,6 +29,7 @@ from baserow.contrib.builder.api.workflow_actions.errors import (
     ERROR_DATA_DOES_NOT_EXIST,
     ERROR_WORKFLOW_ACTION_CANNOT_BE_DISPATCHED,
     ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST,
+    ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID,
     ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED,
     ERROR_WORKFLOW_ACTION_NOT_IN_ELEMENT,
 )
@@ -37,6 +38,9 @@ from baserow.contrib.builder.api.workflow_actions.serializers import (
     CreateBuilderWorkflowActionSerializer,
     OrderWorkflowActionsSerializer,
     UpdateBuilderWorkflowActionsSerializer,
+)
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
@@ -375,6 +379,7 @@ class DispatchBuilderWorkflowActionView(APIView):
             BuilderWorkflowActionCannotBeDispatched: ERROR_WORKFLOW_ACTION_CANNOT_BE_DISPATCHED,
             BuilderWorkflowActionImproperlyConfigured: ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED,
             DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            FormDataProviderChunkInvalidException: ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID,
         }
     )
     def post(self, request, workflow_action_id: int):

@@ -214,6 +214,24 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent(
+    'rows_ai_values_generation_error',
+    async (context, data) => {
+      const { app } = context
+
+      for (const viewType of Object.values(app.$registry.getAll('view'))) {
+        await viewType.AIValuesGenerationError(
+          context,
+          data.table_id,
+          data.field_id,
+          data.row_ids,
+          data.error,
+          'page/'
+        )
+      }
+    }
+  )
+
   realtime.registerEvent('rows_deleted', (context, data) => {
     const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {

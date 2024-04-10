@@ -4,6 +4,7 @@
     "pageParameter": "Parameter",
     "currentRecord": "Data source",
     "formData": "Form data",
+    "previousAction": "Previous action",
     "user": "User"
   },
   "formDataProviderType": {
@@ -161,12 +162,23 @@
     "valuePlaceholder": "Enter a default value (optional)",
     "placeholderTitle": "Placeholder",
     "placeholderPlaceholder": "Enter a placeholder (optional)",
-    "requiredTitle": "Required"
+    "requiredTitle": "Required",
+    "validationTitle": "Validation"
   },
   "inputTextElementForm": {
     "multilineTitle": "Multiline",
     "rowsTitle": "Number of lines",
-    "rowsPlaceholder": "Enter the number of rows of this input"
+    "rowsPlaceholder": "Enter the number of rows of this input",
+    "validationTypeAnyLabel": "Any",
+    "validationTypeAnyDescription": "Allow any value to be set in this input.",
+    "validationTypeIntegerLabel": "Number",
+    "validationTypeIntegerDescription": "Enforce a number value in this input.",
+    "validationTypeEmailLabel": "Email",
+    "validationTypeEmailDescription": "Enforce an email address value in this input.",
+    "inputType": "Input type",
+    "inputTypeTextLabel": "Text",
+    "inputTypePasswordLabel": "Password",
+    "passwordTypeWarning": "Passwords are sensitive data. Please be careful how you handle and store passwords in your application."
   },
   "imageElementForm": {
     "fileLabel": "Image file",
@@ -369,13 +381,14 @@
   },
   "eventTypes": {
     "clickLabel": "On click",
-    "submitLabel": "On submit"
+    "submitLabel": "On submit",
+    "afterLoginLabel": "After login"
   },
   "getFormulaComponent": {
     "errorTooltip": "Invalid reference"
   },
   "fontSidePanelForm": {
-    "label": "Font"
+    "label": "Font color"
   },
   "tableElementForm": {
     "dataSource": "Data source",
@@ -402,7 +415,8 @@
     "notificationLabel": "Show Notification",
     "openPageLabel": "Open Page",
     "createRowLabel": "Create Row",
-    "updateRowLabel": "Update Row"
+    "updateRowLabel": "Update Row",
+    "logoutLabel": "Logout"
   },
   "notificationWorkflowActionForm": {
     "titleLabel": "Title",
@@ -446,10 +460,15 @@
     "authTitle": "Authentication",
     "integrationFieldLabel": "Integration"
   },
+  "formContainerElement": {
+    "submitDeactivatedText": "Complete all required fields to submit"
+  },
   "formContainerElementForm": {
     "submitButtonLabel": "Submit button",
     "submitButtonPlaceholder": "Enter value...",
-    "buttonColor": "Button color"
+    "buttonColor": "Button color",
+    "resetToInitialValuesTitle": "Reset to default values after submission",
+    "resetToInitialValuesDescription": "If checked, the form's default values will be used to reset the form after successful submission. If unchecked, the user's values will remain."
   },
   "dropdownOptionSelector": {
     "label": "Options",
@@ -459,7 +478,9 @@
   },
   "dispatchWorkflowActionError": {
     "defaultTitle": "Event error",
-    "defaultMessage": "An error occurred triggering this event."
+    "defaultMessage": "An error occurred triggering this event.",
+    "formDataInvalidTitle": "Invalid form",
+    "formDataInvalidMessage": "One or more fields contain invalid values."
   },
   "dispatchDataSourceError": {
     "defaultTitle": "Data loading error",
@@ -496,5 +517,10 @@
   "userSelector": {
     "viewAs": "View as: {user}",
     "anonymous": "Anonymous"
+  },
+  "visibilityForm": {
+    "allVisitors": "All visitors",
+    "loggedInVisitors": "Logged-in visitors",
+    "notLoggedInVisitors": "Logged-out visitors"
   }
 }

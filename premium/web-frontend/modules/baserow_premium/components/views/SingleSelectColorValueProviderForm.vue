@@ -4,7 +4,7 @@
       :view="view"
       :table="table"
       :fields="selectFields"
-      :workspace="workspace"
+      :database="database"
       :value="value"
       @input="$emit('update', { field_id: $event })"
     >
@@ -27,7 +27,7 @@ export default {
       type: Object,
       required: true,
     },
-    workspace: {
+    database: {
       type: Object,
       required: true,
     },

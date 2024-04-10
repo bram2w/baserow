@@ -140,10 +140,13 @@ export default {
       }
     },
     dispatchContext() {
-      return DataProviderType.getAllDispatchContext(
+      return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )
+    },
+    isAuthenticated() {
+      return this.$store.getters['userSourceUser/isAuthenticated']
     },
   },
   watch: {
@@ -163,6 +166,12 @@ export default {
           )
         }
       },
+    },
+    isAuthenticated() {
+      // When the user login or logout, we need to refetch the elements and actions
+      // as they might have changed
+      this.$store.dispatch('element/fetchPublished', { page: this.page })
+      this.$store.dispatch('workflowAction/fetchPublished', { page: this.page })
     },
   },
 }

@@ -362,7 +362,7 @@
       </div>
       <div class="sidebar__foot sidebar__foot--with-undo-redo">
         <div class="sidebar__logo">
-          <BaserowLogo />
+          <ExternalLinkBaserowLogo />
         </div>
         <div class="sidebar__foot-links">
           <a
@@ -415,7 +415,7 @@ import CreateWorkspaceModal from '@baserow/modules/core/components/workspace/Cre
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import editWorkspace from '@baserow/modules/core/mixins/editWorkspace'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
-import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
+import ExternalLinkBaserowLogo from '@baserow/modules/core/components/ExternalLinkBaserowLogo'
 import WorkspaceMemberInviteModal from '@baserow/modules/core/components/workspace/WorkspaceMemberInviteModal'
 import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 import NotificationPanel from '@baserow/modules/core/components/NotificationPanel'
@@ -424,7 +424,7 @@ import BadgeCounter from '@baserow/modules/core/components/BadgeCounter'
 export default {
   name: 'Sidebar',
   components: {
-    BaserowLogo,
+    ExternalLinkBaserowLogo,
     SettingsModal,
     CreateApplicationContext,
     SidebarAdminItem,

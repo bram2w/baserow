@@ -2427,6 +2427,34 @@ def test_upload_file_view_with_no_public_file_field(api_client, data_fixture, tm
 
 
 @pytest.mark.django_db
+def test_upload_file_view_with_a_rich_text_field_is_possible(
+    api_client, data_fixture, tmpdir
+):
+    view = data_fixture.create_form_view(public=True)
+    rich_text_field = data_fixture.create_long_text_field(
+        long_text_enable_rich_text=True
+    )
+    data_fixture.create_form_view_field_option(
+        view, field=rich_text_field, enabled=True
+    )
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        with freeze_time("2020-01-01 12:00"):
+            file = SimpleUploadedFile("test.txt", b"Hello World")
+            response = api_client.post(
+                reverse(
+                    "api:database:views:form:upload_file",
+                    kwargs={"slug": view.slug},
+                ),
+                data={"file": file},
+                format="multipart",
+            )
+
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_upload_file_form_view_does_not_exist(api_client, data_fixture, tmpdir):
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
     with patch("baserow.core.user_files.handler.default_storage", new=storage):

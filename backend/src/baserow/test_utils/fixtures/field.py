@@ -405,7 +405,6 @@ class FieldFixtures:
         self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = PasswordField.objects.create(**kwargs)
-
         if create_field:
             self.create_model_field(kwargs["table"], field)
 

@@ -4,62 +4,49 @@
     class="auth-form-element"
     @submit.prevent="onLogin"
   >
-    <template v-if="!isAuthenticated">
-      <Error :error="error"></Error>
-      <FormGroup
-        :label="$t('authFormElement.email')"
-        :error="
-          $v.values.email.$dirty
-            ? !$v.values.email.required
-              ? $t('error.requiredField')
-              : !$v.values.email.email
-              ? $t('error.invalidEmail')
-              : ''
+    <Error :error="error"></Error>
+    <ABFormGroup
+      :label="$t('authFormElement.email')"
+      :error-message="
+        $v.values.email.$dirty
+          ? !$v.values.email.required
+            ? $t('error.requiredField')
+            : !$v.values.email.email
+            ? $t('error.invalidEmail')
             : ''
-        "
-        :autocomplete="isEditMode ? 'off' : ''"
-      >
-        <input
-          v-model="values.email"
-          type="text"
-          class="input-element"
-          :class="{ 'input-element--error': $v.values.email.$error }"
-          required
-          :placeholder="$t('authFormElement.emailPlaceholder')"
-          @blur="$v.values.email.$touch()"
-        />
-      </FormGroup>
-      <FormGroup
-        :label="$t('authFormElement.password')"
-        :error="
-          $v.values.password.$dirty
-            ? !$v.values.password.required
-              ? $t('error.requiredField')
-              : ''
-            : ''
-        "
-      >
-        <input
-          ref="password"
-          v-model="values.password"
-          type="password"
-          class="input-element"
-          :class="{ 'input-element--error': $v.values.password.$error }"
-          required
-          :placeholder="$t('authFormElement.passwordPlaceholder')"
-          @blur="$v.values.password.$touch()"
-        />
-      </FormGroup>
-    </template>
-    <button
-      class="ab-button ab-button--full-width ab-button--center ab-button--large"
-      :class="{
-        'loading-spinner': loading,
-      }"
-      :disabled="$v.$error"
+          : ''
+      "
+      :autocomplete="isEditMode ? 'off' : ''"
+      required
     >
-      {{ !isAuthenticated ? $t('action.login') : $t('action.logout') }}
-    </button>
+      <ABInput
+        v-model="values.email"
+        :placeholder="$t('authFormElement.emailPlaceholder')"
+        @blur="$v.values.email.$touch()"
+      />
+    </ABFormGroup>
+    <ABFormGroup
+      :label="$t('authFormElement.password')"
+      :error-message="
+        $v.values.password.$dirty
+          ? !$v.values.password.required
+            ? $t('error.requiredField')
+            : ''
+          : ''
+      "
+      required
+    >
+      <ABInput
+        ref="passwordRef"
+        v-model="values.password"
+        type="password"
+        :placeholder="$t('authFormElement.passwordPlaceholder')"
+        @blur="$v.values.password.$touch()"
+      />
+    </ABFormGroup>
+    <ABButton :disabled="$v.$error" full-width :loading="loading" size="large">
+      {{ $t('action.login') }}
+    </ABButton>
   </form>
   <p v-else>{{ $t('authFormElement.selectOrConfigureUserSourceFirst') }}</p>
 </template>
@@ -86,7 +73,10 @@ export default {
     },
   },
   data() {
-    return { loading: false, values: { email: '', password: '' } }
+    return {
+      loading: false,
+      values: { email: '', password: '' },
+    }
   },
   computed: {
     selectedUserSource() {
@@ -141,53 +131,55 @@ export default {
     }),
     async onLogin(event) {
       if (this.isAuthenticated) {
-        this.$store.dispatch('userSourceUser/logoff')
-      } else {
-        this.$v.$touch()
-        if (this.$v.$invalid) {
-          this.focusOnFirstError()
-          return
-        }
-        this.loading = true
-        this.hideError()
-        try {
-          await this.$store.dispatch('userSourceUser/authenticate', {
-            userSource: this.selectedUserSource,
-            credentials: {
-              email: this.values.email,
-              password: this.values.password,
-            },
-            setCookie: this.mode === 'public',
-          })
-          this.values.password = ''
-          this.values.email = ''
-          this.$v.$reset()
-        } catch (error) {
-          if (error.handler) {
-            const response = error.handler.response
-            if (response && response.status === 401) {
-              this.values.password = ''
-              this.$v.$reset()
-              this.$refs.password.focus()
-
-              if (response.data?.error === 'ERROR_INVALID_CREDENTIALS') {
-                this.showError(
-                  this.$t('error.incorrectCredentialTitle'),
-                  this.$t('error.incorrectCredentialMessage')
-                )
-              }
-            } else {
-              const message = error.handler.getMessage('login')
-              this.showError(message)
-            }
-
-            error.handler.handled()
-          } else {
-            throw error
-          }
-        }
-        this.loading = false
+        await this.$store.dispatch('userSourceUser/logoff')
       }
+
+      this.$v.$touch()
+      if (this.$v.$invalid) {
+        this.focusOnFirstError()
+        return
+      }
+      this.loading = true
+      this.hideError()
+      try {
+        await this.$store.dispatch('userSourceUser/authenticate', {
+          userSource: this.selectedUserSource,
+          credentials: {
+            email: this.values.email,
+            password: this.values.password,
+          },
+          setCookie: this.mode === 'public',
+        })
+        this.values.password = ''
+        this.values.email = ''
+        this.$v.$reset()
+        this.fireAfterLoginEvent()
+      } catch (error) {
+        if (error.handler) {
+          const response = error.handler.response
+          if (response && response.status === 401) {
+            this.values.password = ''
+            this.$v.$reset()
+            this.$v.$touch()
+            this.$refs.passwordRef.focus()
+
+            if (response.data?.error === 'ERROR_INVALID_CREDENTIALS') {
+              this.showError(
+                this.$t('error.incorrectCredentialTitle'),
+                this.$t('error.incorrectCredentialMessage')
+              )
+            }
+          } else {
+            const message = error.handler.getMessage('login')
+            this.showError(message)
+          }
+
+          error.handler.handled()
+        } else {
+          throw error
+        }
+      }
+      this.loading = false
     },
   },
   validations: {

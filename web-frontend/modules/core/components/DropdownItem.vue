@@ -7,6 +7,7 @@
       disabled: disabled,
       hover: isHovering(value),
     }"
+    @click="$emit('click', $event)"
   >
     <a
       class="select__item-link"
@@ -14,6 +15,9 @@
       @mousemove="hover(value, disabled)"
     >
       <div class="select__item-name">
+        <div v-if="multiple">
+          <Checkbox :disabled="disabled" :checked="isActive(value)"></Checkbox>
+        </div>
         <slot>
           <i
             v-if="icon"
@@ -29,7 +33,7 @@
         {{ description }}
       </div>
     </a>
-    <i class="select__item-active-icon iconoir-check"></i>
+    <i v-if="!multiple" class="select__item-active-icon iconoir-check"></i>
   </li>
 </template>
 

@@ -6,7 +6,12 @@
   >
     <PreviewNavigationBar :page="page" :style="{ maxWidth }" />
     <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
-      <div ref="previewScaled" class="page-preview__scaled">
+      <div
+        ref="previewScaled"
+        class="page-preview__scaled"
+        tabindex="0"
+        @keydown="handleKeyDown"
+      >
         <CallToAction
           v-if="!elements.length"
           class="page-preview__empty"
@@ -26,10 +31,8 @@
           :element="element"
           :is-first-element="index === 0"
           :is-last-element="index === elements.length - 1"
-          :placements="[PLACEMENTS.BEFORE, PLACEMENTS.AFTER]"
-          :placements-disabled="getPlacementsDisabled(index)"
           :is-copying="copyingElementIndex === index"
-          @move="moveElement(element, index, $event)"
+          @move="moveElement(element, $event)"
         />
       </div>
     </div>
@@ -37,7 +40,8 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
+
 import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import PreviewNavigationBar from '@baserow/modules/builder/components/page/PreviewNavigationBar'
@@ -68,9 +72,14 @@ export default {
     ...mapGetters({
       deviceTypeSelected: 'page/getDeviceTypeSelected',
       elementSelected: 'element/getSelected',
+      getChildren: 'element/getChildren',
+      getClosestSiblingElement: 'element/getClosestSiblingElement',
     }),
     elements() {
       return this.$store.getters['element/getRootElements'](this.page)
+    },
+    elementSelectedId() {
+      return this.elementSelected?.id
     },
     deviceType() {
       return this.deviceTypeSelected
@@ -82,12 +91,26 @@ export default {
         ? `${this.deviceType.maxWidth}px`
         : 'unset'
     },
+    parentOfElementSelected() {
+      if (!this.elementSelected?.parent_element_id) {
+        return null
+      }
+      return this.$store.getters['element/getElementById'](
+        this.page,
+        this.elementSelected.parent_element_id
+      )
+    },
   },
   watch: {
     deviceType(value) {
       this.$nextTick(() => {
         this.updatePreviewScale(value)
       })
+    },
+    elementSelectedId(newValue) {
+      if (newValue) {
+        this.$refs.previewScaled.focus()
+      }
     },
   },
   mounted() {
@@ -96,15 +119,33 @@ export default {
     })
     this.resizeObserver.observe(this.$el)
     this.onWindowResized()
+
+    document.addEventListener('keydown', this.preventScrollIfFocused)
   },
   destroyed() {
     this.resizeObserver.unobserve(this.$el)
+    document.removeEventListener('keydown', this.preventScrollIfFocused)
   },
   methods: {
     ...mapActions({
-      actionMoveElement: 'element/move',
+      actionDuplicateElement: 'element/duplicate',
+      actionDeleteElement: 'element/delete',
+      actionMoveElement: 'element/moveElement',
       actionSelectElement: 'element/select',
+      actionSelectNextElement: 'element/selectNextElement',
     }),
+    preventScrollIfFocused(e) {
+      if (this.$refs.previewScaled === document.activeElement) {
+        switch (e.key) {
+          case 'ArrowLeft':
+          case 'ArrowRight':
+          case 'ArrowUp':
+          case 'ArrowDown':
+            e.preventDefault()
+            break
+        }
+      }
+    },
     onWindowResized() {
       this.$nextTick(() => {
         this.updatePreviewScale(this.deviceType)
@@ -132,41 +173,158 @@ export default {
       previewScaled.style.width = `${currentWidth / scale}px`
       previewScaled.style.height = `${currentHeight / scale}px`
     },
-    async moveElement(element, index, placement) {
-      const elementToMoveId = element.id
 
-      // BeforeElementId remains null if we are moving the element at the end of the
-      // list
-      let beforeElementId = null
+    async moveElement(element, placement) {
+      if (!element?.id) {
+        return
+      }
 
-      if (placement === PLACEMENTS.BEFORE) {
-        beforeElementId = this.elements[index - 1].id
-      } else if (index + 2 < this.elements.length) {
-        beforeElementId = this.elements[index + 2].id
+      const elementType = this.$registry.get('element', element.type)
+      const placementsDisabled = elementType.getPlacementsDisabled(
+        this.page,
+        element
+      )
+
+      if (placementsDisabled.includes(placement)) {
+        return
       }
 
       try {
         await this.actionMoveElement({
           page: this.page,
-          elementId: elementToMoveId,
-          beforeElementId,
+          element,
+          placement,
+        })
+        await this.actionSelectElement({ element })
+      } catch (error) {
+        notifyIf(error)
+      }
+    },
+    async selectNextElement(element, placement) {
+      if (!element?.id) {
+        return
+      }
+
+      const elementType = this.$registry.get('element', element.type)
+      const placementsDisabled = elementType.getPlacementsDisabled(
+        this.page,
+        element
+      )
+
+      if (placementsDisabled.includes(placement)) {
+        return
+      }
+
+      try {
+        await this.actionSelectNextElement({
+          page: this.page,
+          element,
+          placement,
         })
       } catch (error) {
         notifyIf(error)
       }
     },
-    getPlacementsDisabled(index) {
-      const placementsDisabled = []
-
-      if (index === 0) {
-        placementsDisabled.push(PLACEMENTS.BEFORE)
+    async duplicateElement() {
+      if (!this.elementSelected?.id) {
+        return
       }
 
-      if (index === this.elements.length - 1) {
-        placementsDisabled.push(PLACEMENTS.AFTER)
+      this.isDuplicating = true
+      try {
+        await this.actionDuplicateElement({
+          page: this.page,
+          elementId: this.elementSelected.id,
+        })
+      } catch (error) {
+        notifyIf(error)
       }
-
-      return placementsDisabled
+      this.isDuplicating = false
+    },
+    async deleteElement() {
+      if (!this.elementSelected?.id) {
+        return
+      }
+      try {
+        const siblingElementToSelect = this.getClosestSiblingElement(
+          this.page,
+          this.elementSelected
+        )
+        await this.actionDeleteElement({
+          page: this.page,
+          elementId: this.elementSelected.id,
+        })
+        if (siblingElementToSelect?.id) {
+          await this.actionSelectElement({ element: siblingElementToSelect })
+        }
+      } catch (error) {
+        notifyIf(error)
+      }
+    },
+    selectParentElement() {
+      if (this.parentOfElementSelected) {
+        this.actionSelectElement({ element: this.parentOfElementSelected })
+      }
+    },
+    selectChildElement() {
+      const children = this.getChildren(this.page, this.elementSelected)
+      if (children.length) {
+        this.actionSelectElement({ element: children[0] })
+      }
+    },
+    handleKeyDown(e) {
+      let shouldPrevent = true
+      const alternateAction = e.altKey || e.ctrlKey || e.metaKey
+      switch (e.key) {
+        case 'ArrowUp':
+          if (alternateAction) {
+            this.moveElement(this.elementSelected, PLACEMENTS.BEFORE)
+          } else {
+            this.selectNextElement(this.elementSelected, PLACEMENTS.BEFORE)
+          }
+          break
+        case 'ArrowDown':
+          if (alternateAction) {
+            this.moveElement(this.elementSelected, PLACEMENTS.AFTER)
+          } else {
+            this.selectNextElement(this.elementSelected, PLACEMENTS.AFTER)
+          }
+          break
+        case 'ArrowLeft':
+          if (alternateAction) {
+            this.moveElement(this.elementSelected, PLACEMENTS.LEFT)
+          } else {
+            this.selectNextElement(this.elementSelected, PLACEMENTS.LEFT)
+          }
+          break
+        case 'ArrowRight':
+          if (alternateAction) {
+            this.moveElement(this.elementSelected, PLACEMENTS.RIGHT)
+          } else {
+            this.selectNextElement(this.elementSelected, PLACEMENTS.RIGHT)
+          }
+          break
+        case 'Backspace':
+        case 'Clear':
+        case 'Delete':
+          this.deleteElement()
+          break
+        case 'c':
+          this.selectChildElement()
+          break
+        case 'd':
+          this.duplicateElement()
+          break
+        case 'p':
+          this.selectParentElement()
+          break
+        default:
+          shouldPrevent = false
+      }
+      if (shouldPrevent) {
+        e.stopPropagation()
+        e.preventDefault()
+      }
     },
   },
 }

@@ -11,7 +11,7 @@ export const getCardHeight = (fields, coverImageField, registry) => {
         accumulator +
         fieldType.getCardValueHeight(field) +
         6 + // margin-bottom of card.scss.card__field-name
-        14 + // line-height of card.scss.card__field-name
+        18 + // line-height of card.scss.card__field-name
         10 // margin-bottom of card.scss.card__field
       )
     }, 0) +

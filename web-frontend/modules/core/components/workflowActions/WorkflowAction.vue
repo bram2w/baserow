@@ -9,18 +9,21 @@
       <WorkflowActionSelector
         :available-workflow-action-types="availableWorkflowActionTypes"
         :workflow-action="workflowAction"
+        :disabled="loading"
         @change="updateWorkflowAction({ type: $event })"
         @delete="$emit('delete')"
       />
     </div>
     <component
       :is="workflowActionType.form"
+      v-if="workflowActionType.form"
       ref="actionForm"
       :workflow-action="workflowAction"
       :default-values="workflowAction"
       class="margin-top-2"
       @values-changed="updateWorkflowAction($event)"
     ></component>
+    <div v-else class="workflow-action__placeholder" />
   </div>
 </template>
 
@@ -29,11 +32,19 @@ import WorkflowActionSelector from '@baserow/modules/core/components/workflowAct
 import _ from 'lodash'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { mapActions } from 'vuex'
+import { DATA_PROVIDERS_ALLOWED_WORKFLOW_ACTIONS } from '@baserow/modules/builder/enums'
+import { fixPropertyReactivityForProvide } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'WorkflowAction',
   components: { WorkflowActionSelector },
-  inject: ['page'],
+  inject: ['page', 'builder', 'mode'],
+  provide() {
+    return {
+      dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_WORKFLOW_ACTIONS,
+      applicationContext: this.applicationContext,
+    }
+  },
   props: {
     availableWorkflowActionTypes: {
       type: Array,
@@ -44,6 +55,13 @@ export default {
       required: false,
       default: null,
     },
+    element: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return { loading: false }
   },
   computed: {
     workflowActionType() {
@@ -52,19 +70,33 @@ export default {
           workflowActionType.getType() === this.workflowAction.type
       )
     },
+    applicationContext() {
+      const context = {
+        page: this.page,
+        builder: this.builder,
+        mode: this.mode,
+        element: this.element,
+      }
+      return fixPropertyReactivityForProvide(context, {
+        workflowAction: () => this.workflowAction,
+      })
+    },
   },
   methods: {
     ...mapActions({
       actionUpdateWorkflowAction: 'workflowAction/updateDebounced',
     }),
     async updateWorkflowAction(values) {
-      if (!this.$refs.actionForm.isFormValid()) {
+      if (this.$refs.actionForm && !this.$refs.actionForm.isFormValid()) {
         return
       }
 
       // In this case there weren't any actual changes
       if (_.isMatch(this.workflowAction, values)) {
         return
+      }
+      if (values.type) {
+        this.loading = true
       }
 
       try {
@@ -74,9 +106,11 @@ export default {
           values,
         })
       } catch (error) {
-        this.$refs.actionForm.reset()
+        this.$refs.actionForm?.reset()
         notifyIf(error)
       }
+
+      this.loading = false
     },
   },
 }

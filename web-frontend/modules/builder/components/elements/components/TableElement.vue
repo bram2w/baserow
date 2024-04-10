@@ -19,14 +19,9 @@
       </template>
     </BaserowTable>
     <div class="table-element__footer">
-      <button
-        v-if="hasMorePage"
-        class="ab-button"
-        :disabled="loading"
-        @click="loadMore()"
-      >
+      <ABButton v-if="hasMorePage" :disabled="loading" @click="loadMore()">
         {{ $t('tableElement.showMore') }}
-      </button>
+      </ABButton>
     </div>
   </div>
 </template>
@@ -40,6 +35,7 @@ import { mapActions, mapGetters } from 'vuex'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 import _ from 'lodash'
 
 export default {
@@ -134,7 +130,7 @@ export default {
       return this.$registry.getAll('collectionField')
     },
     dispatchContext() {
-      return DataProviderType.getAllDispatchContext(
+      return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )
@@ -209,7 +205,9 @@ export default {
         }
       )
       try {
-        return resolveFormula(formula, this.formulaFunctions, formulaContext)
+        return ensureString(
+          resolveFormula(formula, this.formulaFunctions, formulaContext)
+        )
       } catch {
         return ''
       }

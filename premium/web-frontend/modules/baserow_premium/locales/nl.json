@@ -290,7 +290,8 @@
         "surveyForm": "Enquêteformulier",
         "publicLogoRemoval": "Publiek logo verwijderen",
         "personalViews": "Persoonlijke weergave",
-        "calendarView": "Kalenderweergave"
+        "calendarView": "Kalenderweergave",
+        "aiFeatures": "AI veld"
     },
     "premiumModal": {
         "title": "Upgrade om de {name} te gebruiken",
@@ -358,5 +359,26 @@
         "modeAllTitle": "Alle opmerkingen",
         "modeAllDesc": "Je ontvangt meldingen voor alle opmerkingen in deze rij.",
         "modeMentionsTitle": "Alleen vermeldingen"
+    },
+    "functionalGridViewFieldAI": {
+        "generate": "Genereren"
+    },
+    "gridViewFieldAI": {
+        "regenerate": "Opnieuw genereren",
+        "generate": "Genereren"
+    },
+    "fieldAISubForm": {
+        "AIType": "AI Type",
+        "AIModel": "AI-model",
+        "prompt": "Prompt",
+        "premiumFeature": "Het AI-veld is een premium functie"
+    },
+    "rowEditFieldAI": {
+        "generate": "Genereren",
+        "createRowBefore": "De AI-waarde kan worden gegenereerd nadat de rij is aangemaakt."
+    },
+    "premiumFieldType": {
+        "ai": "AI prompt",
+        "aiDescription": "Een alleen-lezen veld dat AI-gegenereerde tekst bevat op basis van de veldprompt."
     }
 }

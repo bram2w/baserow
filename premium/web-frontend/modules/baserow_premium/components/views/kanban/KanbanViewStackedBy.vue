@@ -7,7 +7,7 @@
       :view="view"
       :table="table"
       :fields="fields"
-      :workspace="workspace"
+      :database="database"
       :value="view.single_select_field"
       :read-only="readOnly"
       :loading="loading"
@@ -33,7 +33,7 @@ export default {
       type: Object,
       required: true,
     },
-    workspace: {
+    database: {
       type: Object,
       required: true,
     },

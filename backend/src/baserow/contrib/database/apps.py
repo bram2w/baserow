@@ -294,6 +294,7 @@ class DatabaseConfig(AppConfig):
             FilenameContainsViewFilterType,
             FilesLowerThanViewFilterType,
             HasFileTypeViewFilterType,
+            HigherThanOrEqualViewFilterType,
             HigherThanViewFilterType,
             IsEvenAndWholeViewFilterType,
             LengthIsLowerThanViewFilterType,
@@ -301,6 +302,7 @@ class DatabaseConfig(AppConfig):
             LinkRowHasNotViewFilterType,
             LinkRowHasViewFilterType,
             LinkRowNotContainsViewFilterType,
+            LowerThanOrEqualViewFilterType,
             LowerThanViewFilterType,
             MultipleCollaboratorsHasNotViewFilterType,
             MultipleCollaboratorsHasViewFilterType,
@@ -309,6 +311,8 @@ class DatabaseConfig(AppConfig):
             NotEmptyViewFilterType,
             NotEqualViewFilterType,
             SingleSelectEqualViewFilterType,
+            SingleSelectIsAnyOfViewFilterType,
+            SingleSelectIsNoneOfViewFilterType,
             SingleSelectNotEqualViewFilterType,
             UserIsNotViewFilterType,
             UserIsViewFilterType,
@@ -325,7 +329,9 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DoesntContainWordViewFilterType())
         view_filter_type_registry.register(LengthIsLowerThanViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
+        view_filter_type_registry.register(HigherThanOrEqualViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
+        view_filter_type_registry.register(LowerThanOrEqualViewFilterType())
         view_filter_type_registry.register(IsEvenAndWholeViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateBeforeViewFilterType())
@@ -349,6 +355,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
+        view_filter_type_registry.register(SingleSelectIsAnyOfViewFilterType())
+        view_filter_type_registry.register(SingleSelectIsNoneOfViewFilterType())
         view_filter_type_registry.register(LinkRowHasViewFilterType())
         view_filter_type_registry.register(LinkRowHasNotViewFilterType())
         view_filter_type_registry.register(LinkRowContainsViewFilterType())
@@ -726,9 +734,20 @@ class DatabaseConfig(AppConfig):
 
         subject_type_registry.register(TokenSubjectType())
 
+        from baserow.contrib.database.data_providers.registries import (
+            database_data_provider_type_registry,
+        )
+
+        from .rows.data_providers import HumanReadableFieldsDataProviderType
+
+        database_data_provider_type_registry.register(
+            HumanReadableFieldsDataProviderType()
+        )
+
         # notification_types
         from baserow.contrib.database.fields.notification_types import (
             CollaboratorAddedToRowNotificationType,
+            UserMentionInRichTextFieldNotificationType,
         )
         from baserow.contrib.database.views.notification_types import (
             FormSubmittedNotificationType,
@@ -736,6 +755,9 @@ class DatabaseConfig(AppConfig):
         from baserow.core.notifications.registries import notification_type_registry
 
         notification_type_registry.register(CollaboratorAddedToRowNotificationType())
+        notification_type_registry.register(
+            UserMentionInRichTextFieldNotificationType()
+        )
         notification_type_registry.register(FormSubmittedNotificationType())
 
         # The signals must always be imported last because they use the registries

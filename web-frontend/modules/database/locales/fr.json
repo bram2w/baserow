@@ -505,7 +505,10 @@
         "copiedRowURL": "URL de la ligne copiée",
         "copyRowURL": "Copier l'URL de la ligne",
         "tooManyItemsTitle": "Trop d'éléments",
-        "tooManyItemsDescription": "Il n'est pas possible de mettre à jour plus de {limit} lignes à la fois, c'est pourquoi seule la première a été mise à jour."
+        "tooManyItemsDescription": "Il n'est pas possible de mettre à jour plus de {limit} lignes à la fois, c'est pourquoi seule la première a été mise à jour.",
+        "generateCellsValues": "Générer des valeurs avec l'IA",
+        "AIValuesGenerationErrorTitle": "La génération de valeur par l'IA a échoué",
+        "AIValuesGenerationErrorMessage": "Veuillez vérifier votre API_KEY et le modèle sélectionné."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -848,5 +851,12 @@
     },
     "fieldPasswordSubForm": {
         "description": "Il n'est pas encore possible d'utiliser directement le champ du mot de passe, celui-ci est uniquement utilisé pour l'authentification dans d'une application."
+    },
+    "dataProviderTypes": {
+        "fieldsName": "Champs"
+    },
+    "userMentionInRichTextFieldNotification": {
+        "deletedUser": "Un utilisateur a été supprimé",
+        "title": "{sender} vous a mentionné dans le champ {fieldName} de la ligne {rowId} de la table {tableName}"
     }
 }

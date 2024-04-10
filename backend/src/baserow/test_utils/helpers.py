@@ -96,6 +96,8 @@ def setup_interesting_test_table(
     if database is None:
         database = data_fixture.create_database_application(user=user)
 
+    data_fixture.register_fake_generate_ai_type()
+
     file_suffix = file_suffix or ""
 
     try:
@@ -241,6 +243,7 @@ def setup_interesting_test_table(
         ],
         "phone_number": "+4412345678",
         "password": "test",
+        "ai": "I'm an AI.",
     }
 
     with freeze_time("2020-02-01 01:23"):

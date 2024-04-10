@@ -20,11 +20,7 @@
     </div>
     <div class="sidebar__foot">
       <div class="sidebar__logo">
-        <img
-          height="14"
-          src="@baserow/modules/core/static/img/logo.svg"
-          alt="Baserow logo"
-        />
+        <Logo height="14" alt="Baserow logo" />
       </div>
       <a class="sidebar__collapse-link" @click="$emit('collapse-toggled')">
         <i

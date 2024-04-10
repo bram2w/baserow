@@ -6,6 +6,7 @@ from django.db import connection, models
 from django.test.utils import CaptureQueriesContext
 
 import pytest
+from baserow_premium.fields.field_types import AIFieldType
 from faker import Faker
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
@@ -361,6 +362,13 @@ def test_field_conversion_created_by(data_fixture):
 @pytest.mark.django_db
 def test_field_conversion_autonumber(data_fixture):
     _test_can_convert_between_fields(data_fixture, AutonumberFieldType.type)
+
+
+@pytest.mark.field_ai
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_ai(data_fixture):
+    _test_can_convert_between_fields(data_fixture, AIFieldType.type)
 
 
 @pytest.mark.django_db

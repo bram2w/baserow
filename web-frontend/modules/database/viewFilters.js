@@ -1,4 +1,5 @@
 import moment from '@baserow/modules/core/moment'
+import _ from 'lodash'
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
@@ -10,6 +11,7 @@ import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFi
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import ViewFilterTypeNumberWithTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeNumberWithTimeZone'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
+import ViewFilterTypeMultipleSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions'
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
   splitTimezoneAndFilterValue,
@@ -1324,16 +1326,10 @@ export class DateEqualsDayOfMonthViewFilterType extends LocalizedDateViewFilterT
   }
 }
 
-export class HigherThanViewFilterType extends ViewFilterType {
-  static getType() {
-    return 'higher_than'
-  }
-
-  getName() {
-    const { i18n } = this.app
-    return i18n.t('viewFilter.higherThan')
-  }
-
+// Base filter type for basic numeric comparisons. It defines common logic for
+// 'lower than', 'lower than or equal', 'higher than' and 'higher than or equal'
+// view filter types.
+export class NumericComparisonViewFilterType extends ViewFilterType {
   getExample() {
     return '100'
   }
@@ -1354,6 +1350,22 @@ export class HigherThanViewFilterType extends ViewFilterType {
       'duration',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
+  }
+
+  // This method should be implemented by subclasses to define their comparison logic.
+  matches(rowValue, filterValue, field, fieldType) {
+    throw new Error('matches method must be implemented by subclasses')
+  }
+}
+
+export class HigherThanViewFilterType extends NumericComparisonViewFilterType {
+  static getType() {
+    return 'higher_than'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.higherThan')
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -1367,7 +1379,30 @@ export class HigherThanViewFilterType extends ViewFilterType {
   }
 }
 
-export class LowerThanViewFilterType extends ViewFilterType {
+export class HigherThanOrEqualViewFilterType extends NumericComparisonViewFilterType {
+  static getType() {
+    return 'higher_than_or_equal'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.higherThanOrEqual')
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (filterValue === '') {
+      return true
+    }
+
+    const rowVal = fieldType.parseInputValue(field, rowValue)
+    const fltVal = fieldType.parseInputValue(field, filterValue)
+    return (
+      Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal >= fltVal
+    )
+  }
+}
+
+export class LowerThanViewFilterType extends NumericComparisonViewFilterType {
   static getType() {
     return 'lower_than'
   }
@@ -1375,28 +1410,6 @@ export class LowerThanViewFilterType extends ViewFilterType {
   getName() {
     const { i18n } = this.app
     return i18n.t('viewFilter.lowerThan')
-  }
-
-  getExample() {
-    return '100'
-  }
-
-  getInputComponent(field) {
-    const inputComponent = {
-      [RatingFieldType.getType()]: ViewFilterTypeRating,
-      [DurationFieldType.getType()]: ViewFilterTypeDuration,
-    }
-    return inputComponent[field?.type] || ViewFilterTypeNumber
-  }
-
-  getCompatibleFieldTypes() {
-    return [
-      'number',
-      'rating',
-      'autonumber',
-      'duration',
-      FormulaFieldType.compatibleWithFormulaTypes('number'),
-    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -1407,6 +1420,29 @@ export class LowerThanViewFilterType extends ViewFilterType {
     const rowVal = fieldType.parseInputValue(field, rowValue)
     const fltVal = fieldType.parseInputValue(field, filterValue)
     return Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal < fltVal
+  }
+}
+
+export class LowerThanOrEqualViewFilterType extends NumericComparisonViewFilterType {
+  static getType() {
+    return 'lower_than_or_equal'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.lowerThanOrEqual')
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (filterValue === '') {
+      return true
+    }
+
+    const rowVal = fieldType.parseInputValue(field, rowValue)
+    const fltVal = fieldType.parseInputValue(field, filterValue)
+    return (
+      Number.isFinite(rowVal) && Number.isFinite(fltVal) && rowVal <= fltVal
+    )
   }
 }
 
@@ -1500,6 +1536,71 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
       rowValue === null ||
       (rowValue !== null && rowValue.id !== parseInt(filterValue))
     )
+  }
+}
+
+export class SingleSelectIsAnyOfViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'single_select_is_any_of'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAnyOf')
+  }
+
+  getExample() {
+    return '1,2'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeMultipleSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['single_select']
+  }
+
+  prepareValue(value, field) {
+    const t = (this._prepareValue(value, field) || []).join(',')
+    return t
+  }
+
+  /**
+   * internal method to get an uniq array of ids for the filter or null, if there is no filter value
+   *
+   * @param value
+   * @param field
+   * @returns {any[]|*[]|null}
+   * @private
+   */
+  _prepareValue(value, field) {
+    if (value === '') {
+      return null
+    }
+    const _parsed = this.app.$papa.stringToArray(value).map((v) => parseInt(v))
+    return _.uniq(_parsed)
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const parsedValue = this._prepareValue(filterValue)
+    return parsedValue === null || _.includes(parsedValue, rowValue?.id)
+  }
+}
+
+export class SingleSelectIsNoneOfViewFilterType extends SingleSelectIsAnyOfViewFilterType {
+  static getType() {
+    return 'single_select_is_none_of'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNoneOf')
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const parsedValue = this._prepareValue(filterValue)
+    return parsedValue === null || !_.includes(parsedValue, rowValue?.id)
   }
 }
 

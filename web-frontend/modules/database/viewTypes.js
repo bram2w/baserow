@@ -13,6 +13,7 @@ import {
   isAdhocSorting,
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 export const maxPossibleOrderValue = 32767
 
 export class ViewType extends Registerable {
@@ -259,6 +260,12 @@ export class ViewType extends Registerable {
   rowUpdated(context, tableId, fields, row, values, metadata, storePrefix) {}
 
   /**
+   * Event that is called when something went wrong while generating AI values
+   * for a field. This can be used to show an error message to the user.
+   */
+  AIValuesGenerationError(context, tableId, fieldId, rowIds, error) {}
+
+  /**
    * Event that is called when a row is deleted from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
@@ -469,7 +476,13 @@ export class GridViewType extends ViewType {
   shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
     const searchTerm =
       store.getters[storePrefix + 'view/grid/getActiveSearchTerm']
-    return newFieldMatchesActiveSearchTerm(registry, field, searchTerm)
+    const searchMode = getDefaultSearchModeFromEnv(this.app.$config)
+    return newFieldMatchesActiveSearchTerm(
+      searchMode,
+      registry,
+      field,
+      searchTerm
+    )
   }
 
   async afterFieldCreated(
@@ -623,6 +636,27 @@ export class GridViewType extends ViewType {
       })
     }
   }
+
+  AIValuesGenerationError(
+    context,
+    tableId,
+    fieldId,
+    rowIds,
+    error,
+    storePrefix = ''
+  ) {
+    if (this.isCurrentView(context.store, tableId)) {
+      context.store.dispatch(
+        storePrefix + 'view/grid/AIValuesGenerationError',
+        {
+          fieldId,
+          rowIds,
+          error,
+        },
+        { root: true }
+      )
+    }
+  }
 }
 
 /**
@@ -709,7 +743,13 @@ class BaseBufferedRowView extends ViewType {
       store.getters[
         storePrefix + 'view/' + this.getType() + '/getActiveSearchTerm'
       ]
-    return newFieldMatchesActiveSearchTerm(registry, field, searchTerm)
+    const searchMode = getDefaultSearchModeFromEnv(this.app.$config)
+    return newFieldMatchesActiveSearchTerm(
+      searchMode,
+      registry,
+      field,
+      searchTerm
+    )
   }
 
   async afterFieldCreated(

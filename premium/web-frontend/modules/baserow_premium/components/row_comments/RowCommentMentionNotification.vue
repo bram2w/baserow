@@ -1,7 +1,7 @@
 <template>
   <nuxt-link
     class="notification-panel__notification-link"
-    :to="url"
+    :to="route"
     @click.native="markAsReadAndHandleClick"
   >
     <div class="notification-panel__notification-content-title">
@@ -16,7 +16,7 @@
         </template>
         <template #row>
           <strong>{{
-            notification.data.row_name ?? notification.data.row_id
+            notification.data.row_name || notification.data.row_id
           }}</strong>
         </template>
         <template #table>
@@ -26,7 +26,7 @@
     </div>
     <RichTextEditor
       :editable="false"
-      :enable-mentions="true"
+      :mentionable-users="workspace.users"
       :value="notification.data.message"
     />
   </nuxt-link>
@@ -42,29 +42,6 @@ export default {
     RichTextEditor,
   },
   mixins: [notificationContent],
-  props: {
-    notification: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    params() {
-      const data = this.notification.data
-
-      return {
-        databaseId: data.database_id,
-        tableId: data.table_id,
-        rowId: data.row_id,
-      }
-    },
-    url() {
-      return {
-        name: 'database-table-row',
-        params: this.params,
-      }
-    },
-  },
   methods: {
     handleClick(evt) {
       this.$emit('close-panel')

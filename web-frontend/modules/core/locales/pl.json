@@ -1,6 +1,6 @@
 {
     "paginator": {
-        "page": "strona",
+        "page": "Strona",
         "of": "z {pages}"
     },
     "copied": {
@@ -127,7 +127,8 @@
         "invitationFormTitle": "Zaproś przez e-mail",
         "optionalMessagePlaceholder": "Opcjonalna wiadomość",
         "errorInvalidEmail": "Podaj poprawny adres e-mail.",
-        "errorTooLongMessage": "Wiadomości są ograniczone do {amount} znaków."
+        "errorTooLongMessage": "Wiadomości są ograniczone do {amount} znaków.",
+        "additionalRoles": "Dodatkowe role"
     },
     "workspacesContext": {
         "search": "Wyszukaj grupy",
@@ -140,7 +141,8 @@
         "viewTrash": "Wyświetl kosz",
         "leaveWorkspace": "Opuść grupę",
         "deleteWorkspace": "Usuń grupę",
-        "auditLog": "Dziennik inspekcji"
+        "auditLog": "Dziennik inspekcji",
+        "settings": "Ustawienia"
     },
     "createWorkspaceModal": {
         "createNew": "Utwórz nową grupę",
@@ -421,7 +423,8 @@
                 "title": "Jak ukryć pole"
             }
         },
-        "prefillOrHideInfoLink": "Dynamiczne wypełnianie lub ukrywanie"
+        "prefillOrHideInfoLink": "Dynamiczne wypełnianie lub ukrywanie",
+        "notifyUserOnSubmit": "Otrzymywanie powiadomień po przesłaniu"
     },
     "job": {
         "statePending": "Czekam na start...",
@@ -517,7 +520,8 @@
         "action": "Przeładuj"
     },
     "editRoleContext": {
-        "billableRolesLink": "Dokumentacja ról podlegających rozliczeniu"
+        "billableRolesLink": "Dokumentacja ról podlegających rozliczeniu",
+        "additionalRoles": "Dodatkowe role"
     },
     "highestPaidRoleField": {
         "billable": "Płatny"
@@ -597,13 +601,16 @@
         "content": "Przygotowuję Twoje dane"
     },
     "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} zaakceptował Twoje zaproszenie do {workspaceName}"
+        "title": "{sender} zaakceptował Twoje zaproszenie do {workspaceName}",
+        "deletedUser": "Usunięty użytkownik"
     },
     "workspaceInvitationRejectedNotification": {
-        "title": "{sender} odrzucił Twoje zaproszenie do {workspaceName}"
+        "title": "{sender} odrzucił Twoje zaproszenie do {workspaceName}",
+        "deletedUser": "Usunięty użytkownik"
     },
     "workspaceInvitationCreatedNotification": {
-        "title": "{sender} zaprasza Cię do {workspaceName}"
+        "title": "{sender} zaprasza Cię do {workspaceName}",
+        "deletedUser": "Usunięty użytkownik"
     },
     "versionUpgradeNotification": {
         "title": "{version} już jest! Sprawdź, co nowego."
@@ -642,5 +649,66 @@
     },
     "formulaInputField": {
         "errorInvalidFormula": "Formuła jest nieprawidłowa."
+    },
+    "dataExplorer": {
+        "noMatchingNodesText": "Nie znaleziono pasujących dostawców danych.",
+        "noProvidersText": "Nie znaleziono dostawców danych. Aby rozpocząć, możesz na przykład dodać źródło danych lub parametr strony."
+    },
+    "workspaceSettingsModal": {
+        "title": "Ustawienia obszaru roboczego"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "Generatywna sztuczna inteligencja"
+    },
+    "generativeAIModelType": {
+        "openai": "OpenAI",
+        "openaiApiKeyLabel": "Klucz API",
+        "ollama": "Ollama",
+        "ollamaHostLabel": "Host",
+        "openaiApiKeyDescription": "Podaj klucz API OpenAI, jeśli chcesz włączyć integrację. [Instrukcje dotyczące uzyskania klucza API](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "openaiOrganization": "Organizacja (opcjonalnie)",
+        "openaiModelsLabel": "Włączone modele",
+        "openaiModelsDescription": "Podaj listę rozdzielonych przecinkami [modeli OpenAI](https://platform.openai.com/docs/models/continuous-model-upgrades), które mogą być używane w Baserow. (np. `gpt-3.5-turbo,gpt-4`)",
+        "ollamaHostDescription": "Podaj nazwę hosta serwera [Ollama](https://ollama.com/). Zazwyczaj działa on lokalnie na urządzeniu użytkownika.",
+        "ollamaModelsLabel": "Włączone modele",
+        "ollamaModelsDescription": "Podaj listę oddzielonych przecinkami [zainstalowanych modeli Ollama](https://ollama.com/library). Należy pamiętać, że model musi zostać pobrany i zainstalowany, zanim będzie można go użyć. (np. `llama2,mistral`)"
+    },
+    "generativeAIWorkspaceSettings": {
+        "changedTitle": "Ustawienia zostały poprawnie zaktualizowane",
+        "submitButton": "Ustawienia aktualizacji",
+        "title": "Ustawienia generatywnej sztucznej inteligencji",
+        "description": "Ustawienia te mogą być używane do opcjonalnego ustawiania konfiguracji generatywnej sztucznej inteligencji na poziomie obszaru roboczego. Funkcje takie jak pole AI mogą być wyłączone, ponieważ nie mają klucza API dla jednego z obsługiwanych modeli. Podając ustawienia tutaj, można włączyć te funkcje. Pozostawienie wartości pustej powoduje powrót do globalnych ustawień instancji. Należy pamiętać, że wszyscy w obszarze roboczym będą współdzielić te ustawienia.",
+        "changedDescription": "Ustawienia zostały zaktualizowane i będą teraz używane w tym obszarze roboczym."
+    },
+    "userPasswordChangedToast": {
+        "title": "Hasło zostało zmienione",
+        "content": "Twoje hasło zostało zmienione. Zaloguj się ponownie."
+    },
+    "integrationDropdown": {
+        "addIntegration": "Dodaj nową integrację",
+        "noIntegrations": "Nie znaleziono żadnych integracji.",
+        "selectTypeFirst": "Najpierw wybierz typ",
+        "integrationPlaceholder": "Wybierz integrację"
+    },
+    "richTextEditorFloatingMenu": {
+        "paragraph": "Ustęp",
+        "heading1": "Nagłówek 1",
+        "heading2": "Nagłówek 2",
+        "heading3": "Nagłówek 3",
+        "orderedList": "Lista numerowana",
+        "unorderedList": "Lista wypunktowana",
+        "code": "Kod",
+        "hierarchy": "Hierarchia",
+        "lists": "Listy",
+        "taskList": "Lista zadań"
+    },
+    "richTextEditorBubbleMenu": {
+        "strikethrough": "Przekreślenie",
+        "link": "Link",
+        "linkEditPlaceholder": "Link URL...",
+        "linkEditDone": "Gotowe",
+        "bold": "Pogrubienie",
+        "italic": "Kursywa",
+        "underline": "Podkreślenie"
     }
 }

@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-18 13:32+0000\n"
-"PO-Revision-Date: 2024-03-13 14:32+0000\n"
-"Last-Translator: Hiram <hiramfromthechi@users.noreply.hosted.weblate.org>\n"
+"PO-Revision-Date: 2024-03-27 13:01+0000\n"
+"Last-Translator: gallegonovato <fran-carro@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/baserow/"
 "backend-database/es/>\n"
 "Language: es\n"
@@ -54,9 +54,9 @@ msgid ""
 "\" (%(installed_application_id)s) from Airtable share ID "
 "\"%(airtable_share_id)s\""
 msgstr ""
-"Importada base de datos \"%( nombre_aplicacion_instalada)s\" "
-"(%(identificador_aplicacion_instalada)s) desde Airtable share ID \""
-"%(identificador_airtable_share)s\""
+"Base de datos importada \"%(installed_application_name)s\" "
+"(%(installed_application_id)s) desde Airtable share ID \"%(airtable_share_id)"
+"s\""
 
 #: src/baserow/contrib/database/application_types.py:231
 msgid "Table"
@@ -69,14 +69,12 @@ msgstr "Exportar tabla"
 #: src/baserow/contrib/database/export/actions.py:21
 #, python-format
 msgid "View \"%(view_name)s\" (%(view_id)s) exported to %(export_type)s"
-msgstr ""
-"Vista \"%(nombre_vista)s\" (%(id_vista)s) exportada a %(tipo_exportación)s"
+msgstr "Exportar la vista \"%(view_name)s\" (%(view_id)s) a %(export_type)s"
 
 #: src/baserow/contrib/database/export/actions.py:82
 #, python-format
 msgid "Table \"%(table_name)s\" (%(table_id)s) exported to %(export_type)s"
-msgstr ""
-"Tabla \"%(nombre_tabla)s\" (%(id_tabla)s) exportada a %(tipo_exportación)s"
+msgstr "Exportar la tabla '%(table_name)s' (%(table_id)s) a %(export_type)s"
 
 #: src/baserow/contrib/database/fields/actions.py:35
 msgid "Update field"
@@ -128,8 +126,8 @@ msgid ""
 "%(sender)s assigned you to %(field_name)s in row %(row_id)s in "
 "%(table_name)s."
 msgstr ""
-"%(remitente)s te asignó a %(nombre_campo)s en la fila %(fila_id)s en "
-"%(nombre_tabla)s."
+"%(sender)s le ha asignado a %(field_name)s en la fila %(row_id)s de la tabla "
+"%(table_name)s."
 
 #: src/baserow/contrib/database/plugins.py:63
 #, python-format
@@ -328,8 +326,8 @@ msgstr "Crear token de base de datos"
 msgid ""
 "A Database Token with name \"%(token_name)s\" (%(token_id)s) has been created"
 msgstr ""
-"Se ha creado un token de base de datos con el nombre \"%(nombre_token)s\" "
-"(%(id_token)s)."
+"Se ha creado un token de base de datos con el nombre \"%(token_name)s\" "
+"(%(token_id)s)"
 
 #: src/baserow/contrib/database/tokens/actions.py:54
 msgid "Update DB token name"
@@ -341,8 +339,8 @@ msgid ""
 "The Database Token (%(token_name)s) name changed from "
 "\"%(original_token_name)s\" to \"%(token_name)s\""
 msgstr ""
-"El nombre del token de base de datos (%(nombre_token)s) ha cambiado de \""
-"%(nombre_token_original)s\" a \"%(nombre_token)s\"."
+"El nombre del token de la base de datos (%(token_name)s) ha cambiado de \""
+"%(original_token_name)s\" a \"%(token_name)s\""
 
 #: src/baserow/contrib/database/tokens/actions.py:94
 msgid "Update DB token permissions"
@@ -354,8 +352,8 @@ msgid ""
 "The Database Token \"%(token_name)s\" (%(token_id)s) permissions has been "
 "updated"
 msgstr ""
-"Se han actualizado los permisos del token de base de datos \"%(nombre_token)"
-"s\" (%(id_token)s)."
+"Se han actualizado los permisos del token de la base de datos \"%(token_name)"
+"s\" (%(token_id)s)"
 
 #: src/baserow/contrib/database/tokens/actions.py:149
 msgid "Rotate DB token key"
@@ -365,8 +363,7 @@ msgstr "Rotar la clave de la base de datos"
 #, python-format
 msgid "The Database Token \"%(token_name)s\" (%(token_id)s) has been rotated"
 msgstr ""
-"El token de base de datos \"%(nombre_token)s\" (%(identificador_token)s) ha "
-"sido rotado."
+"Rotación del token de la base de datos \"%(token_name)s\" (%(token_id)s)"
 
 #: src/baserow/contrib/database/tokens/actions.py:182
 msgid "Delete DB token"
@@ -376,8 +373,8 @@ msgstr "Borrar token de base de datos"
 #, python-format
 msgid "The Database Token \"%(token_name)s\" (%(token_id)s) has been deleted"
 msgstr ""
-"El token de base de datos \"%(nombre_token)s\" (%( identificador_token)s) ha "
-"sido eliminado."
+"El token de la base de datos \"%(token_name)s\" (%(token_id)s) ha sido "
+"eliminado"
 
 #: src/baserow/contrib/database/views/actions.py:42
 msgid "Create a view filter"
@@ -422,7 +419,7 @@ msgstr "Actualizar un grupo de filtros de vista"
 #: src/baserow/contrib/database/views/actions.py:444
 #, python-format
 msgid "View filter group updated to \"%(filter_type)s\""
-msgstr "Ver grupo de filtros actualizado a \"%(tipo_filtro)s\""
+msgstr "Ver el grupo de filtros actualizados a \"%(filter_type)s\""
 
 #: src/baserow/contrib/database/views/actions.py:536
 msgid "Delete a view filter group"
@@ -559,7 +556,7 @@ msgstr "Crear un grupo de vistas"
 #: src/baserow/contrib/database/views/actions.py:1718
 #, python-format
 msgid "View grouped on field \"%(field_name)s\" (%(field_id)s)"
-msgstr "Vista agrupada en el campo \"%(nombre_campo)s\" (%(id_campo)s)"
+msgstr "Vista agrupada en el campo \" %(field_name)s\" (%(field_id)s)"
 
 #: src/baserow/contrib/database/views/actions.py:1809
 msgid "Update a view group"
@@ -569,7 +566,8 @@ msgstr "Actualizar un grupo de vistas"
 #, python-format
 msgid "View group by updated on field \"%(field_name)s\" (%(field_id)s)"
 msgstr ""
-"Ver grupo por actualizado en el campo \"%(nombre_campo)s\" (%(id_campo)s)"
+"Agrupación de vista actualizada para el campo \"%(field_name)s\" "
+"(%(field_id)s)"
 
 #: src/baserow/contrib/database/views/actions.py:1925
 msgid "Delete a view group"
@@ -578,19 +576,19 @@ msgstr "Eliminar un grupo de vistas"
 #: src/baserow/contrib/database/views/actions.py:1926
 #, python-format
 msgid "View group by deleted from field \"%(field_name)s\" (%(field_id)s)"
-msgstr "Ver grupo por eliminado del campo \"%(nombre_campo)s\" (%(id_campo)s)"
+msgstr "Agrupación eliminada del campo \"%(field_name)s \" (%(field_id)s)"
 
 #: src/baserow/contrib/database/views/notification_types.py:83
 #, python-format
 msgid "%(form_name)s has been submitted in %(table_name)s"
-msgstr "%(nombre_formulario)s se ha enviado en %(nombre_tabla)s"
+msgstr "%(form_name)s se ha enviado en %(table_name)s"
 
 #: src/baserow/contrib/database/views/notification_types.py:100
 #, python-format
 msgid "and 1 more field"
 msgid_plural "and %(count)s more fields"
-msgstr[0] "y 1 campo más"
-msgstr[1] "y %(cuenta)s más campos"
+msgstr[0] "y un campo más"
+msgstr[1] "y %(count)s campos más"
 
 #: src/baserow/contrib/database/webhooks/actions.py:20
 msgid "Create Webhook"
@@ -602,8 +600,8 @@ msgid ""
 "Webhook \"%(webhook_name)s\" (%(webhook_id)s) as %(webhook_request_method)s "
 "to %(webhook_url)s\" created"
 msgstr ""
-"Webhook \"%(nombre_webhook)s\" (%(id_webhook)s) as %(método_petición_webhook)"
-"s to %(dirección_webhook)s\" creado"
+"Ha sido creado el Webhook\"%(webhook_name)s \" (%(webhook_id)s) con el "
+"método %(webhook_request_method)s para la dirección %(webhook_url)s\""
 
 #: src/baserow/contrib/database/webhooks/actions.py:82
 msgid "Delete Webhook"
@@ -615,8 +613,8 @@ msgid ""
 "Webhook \"%(webhook_name)s\" (%(webhook_id)s) as %(webhook_request_method)s "
 "to %(webhook_url)s\" deleted"
 msgstr ""
-"Webhook \"%(nombre_webhook)s\" (%(id_webhook)s) as %(método_petición_webhook)"
-"s to %(dirección_webhook)s\" borrado"
+"El webhook \"%(webhook_name)s\" (%(webhook_id)s) con el método "
+"%(webhook_request_method)s para %(webhook_url)s\" ha sido eliminado"
 
 #: src/baserow/contrib/database/webhooks/actions.py:140
 msgid "Update Webhook"
@@ -628,5 +626,5 @@ msgid ""
 "Webhook \"%(webhook_name)s\" (%(webhook_id)s) as %(webhook_request_method)s "
 "to %(webhook_url)s\" updated"
 msgstr ""
-"Webhook \"%(nombre_webhook)s\" (%(id_webhook)s) as %(método_petición_webhook)"
-"s to %(dirección_webhook)s\" actualizado"
+"Se ha modificado el webhook \"%(webhook_name)s\" (%(webhook_id)s) con el "
+"método %(webhook_request_method)s para %(webhook_url)s\""

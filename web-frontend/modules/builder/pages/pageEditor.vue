@@ -21,6 +21,7 @@ import PageHeader from '@baserow/modules/builder/components/page/header/PageHead
 import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import _ from 'lodash'
 
@@ -83,6 +84,12 @@ export default {
     try {
       const builder = await store.dispatch('application/selectById', builderId)
 
+      const builderApplicationType = $registry.get(
+        'application',
+        BuilderApplicationType.getType()
+      )
+      await builderApplicationType.loadExtraData(builder)
+
       const page = store.getters['page/getById'](builder, pageId)
 
       await store.dispatch('workspace/selectById', builder.workspace.id)
@@ -132,7 +139,7 @@ export default {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
     dispatchContext() {
-      return DataProviderType.getAllDispatchContext(
+      return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )

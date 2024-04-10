@@ -1,5 +1,6 @@
 import { compile } from 'path-to-regexp'
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 /**
  * Responsible for generating the data necessary to resolve an application builder
@@ -22,7 +23,7 @@ export default function resolveElementUrl(
   let resolvedUrl = ''
   const resolvedContext = {
     url: '',
-    isExternalUrl: false,
+    isExternalLink: false,
   }
   if (element.navigation_type === 'page') {
     if (!isNaN(element.navigate_to_page_id)) {
@@ -51,7 +52,7 @@ export default function resolveElementUrl(
       resolvedUrl = toPath(pageParams)
     }
   } else {
-    resolvedUrl = resolveFormula(element.navigate_to_url)
+    resolvedUrl = ensureString(resolveFormula(element.navigate_to_url))
   }
   resolvedContext.url = prefixInternalResolvedUrl(
     resolvedUrl,
@@ -59,7 +60,7 @@ export default function resolveElementUrl(
     element.navigation_type,
     editorMode
   )
-  resolvedContext.isExternalUrl = isExternalLink(
+  resolvedContext.isExternalLink = isExternalLink(
     resolvedContext.url,
     element.navigation_type
   )

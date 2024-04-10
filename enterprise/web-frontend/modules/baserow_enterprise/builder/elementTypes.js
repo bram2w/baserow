@@ -1,6 +1,7 @@
 import { ElementType } from '@baserow/modules/builder/elementTypes'
 import AuthFormElement from '@baserow_enterprise/builder/components/elements/AuthFormElement'
 import AuthFormElementForm from '@baserow_enterprise/builder/components/elements/AuthFormElementForm'
+import { AfterLoginEvent } from '@baserow/modules/builder/eventTypes'
 
 export class AuthFormElementType extends ElementType {
   getType() {
@@ -25,6 +26,10 @@ export class AuthFormElementType extends ElementType {
 
   get generalFormComponent() {
     return AuthFormElementForm
+  }
+
+  get events() {
+    return [AfterLoginEvent]
   }
 
   isInError({ builder, element }) {

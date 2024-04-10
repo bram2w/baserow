@@ -58,11 +58,16 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
               target="_blank"
               title="Baserow - open source no-code database tool and Airtable alternative"
             >
-              <img
-                alt="Baserow - open source no-code database tool and Airtable alternative"
-                height="14"
-                src="@baserow/modules/core/static/img/logo.svg"
-              />
+              <div
+                class="logo"
+              >
+                <img
+                  alt="Baserow - open source no-code database tool and Airtable alternative"
+                  class=""
+                  height="14"
+                  src="@baserow/modules/core/static/img/logo.svg"
+                />
+              </div>
             </a>
           </li>
            
@@ -378,6 +383,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <div
                       class="grid-view__description-name"
+                      title="Last name"
                     >
                       <span>
                         
@@ -411,6 +417,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <div
                       class="grid-view__description-name"
+                      title="Notes"
                     >
                       <span>
                         
@@ -444,6 +451,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <div
                       class="grid-view__description-name"
+                      title="Active"
                     >
                       <span>
                         
@@ -477,6 +485,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <div
                       class="grid-view__description-name"
+                      title="Name"
                     >
                       <span>
                         

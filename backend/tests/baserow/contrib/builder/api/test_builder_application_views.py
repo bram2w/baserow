@@ -142,3 +142,97 @@ def test_list_builder_applications_theme(
         "heading_3_font_size": 16,
         "heading_3_color": "#070810ff",
     }
+
+
+@pytest.mark.django_db
+def test_get_builder_application(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace, order=1)
+
+    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+
+    response = api_client.get(
+        url,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "id": application.id,
+        "name": application.name,
+        "order": application.order,
+        "type": "builder",
+        "group": {
+            "id": workspace.id,
+            "name": workspace.name,
+            "generative_ai_models_enabled": {},
+        },
+        "workspace": {
+            "id": workspace.id,
+            "name": workspace.name,
+            "generative_ai_models_enabled": {},
+        },
+        "pages": [],
+        "theme": {
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
+            "heading_1_font_size": 24,
+            "heading_1_color": "#070810ff",
+            "heading_2_font_size": 20,
+            "heading_2_color": "#070810ff",
+            "heading_3_font_size": 16,
+            "heading_3_color": "#070810ff",
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_builder_applications(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace, order=1)
+
+    url = reverse("api:applications:list", kwargs={"workspace_id": workspace.id})
+
+    response = api_client.get(
+        url,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == [
+        {
+            "id": application.id,
+            "name": application.name,
+            "order": application.order,
+            "type": "builder",
+            "group": {
+                "id": workspace.id,
+                "name": workspace.name,
+                "generative_ai_models_enabled": {},
+            },
+            "workspace": {
+                "id": workspace.id,
+                "name": workspace.name,
+                "generative_ai_models_enabled": {},
+            },
+            "pages": [],
+            "theme": {
+                "primary_color": "#5190efff",
+                "secondary_color": "#0eaa42ff",
+                "border_color": "#d7d8d9ff",
+                "heading_1_font_size": 24,
+                "heading_1_color": "#070810ff",
+                "heading_2_font_size": 20,
+                "heading_2_color": "#070810ff",
+                "heading_3_font_size": 16,
+                "heading_3_color": "#070810ff",
+            },
+        }
+    ]

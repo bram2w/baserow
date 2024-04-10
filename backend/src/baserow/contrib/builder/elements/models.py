@@ -49,6 +49,11 @@ class WidthTypes(models.TextChoices):
     SMALL = "small"
 
 
+class INPUT_TEXT_TYPES(models.TextChoices):
+    TEXT = "text"
+    PASSWORD = "password"  # nosec bandit B105
+
+
 def get_default_element_content_type():
     return ContentType.objects.get_for_model(Element)
 
@@ -66,6 +71,11 @@ class Element(
     This model represents a page element. An element is a piece of the page that
     display an information or something the user can interact with.
     """
+
+    class VISIBILITY_TYPES(models.TextChoices):
+        ALL = "all"
+        LOGGED_IN = "logged-in"
+        NOT_LOGGED = "not-logged"
 
     page = models.ForeignKey("builder.Page", on_delete=models.CASCADE)
     order = models.DecimalField(
@@ -99,6 +109,14 @@ class Element(
         default=None,
         max_length=255,
         help_text="The place in the container.",
+    )
+
+    visibility = models.CharField(
+        choices=VISIBILITY_TYPES.choices,
+        max_length=20,
+        default=VISIBILITY_TYPES.ALL,
+        null=True,  # TODO remove me in next release
+        db_index=True,
     )
 
     style_border_top_color = models.CharField(
@@ -512,20 +530,49 @@ class ImageElement(Element):
     )
 
 
-class InputElement(Element):
+class FormContainerElement(ContainerElement):
     """
-    The base input element, which can be extended to
+    A form element
+    """
+
+    submit_button_label = FormulaField(default="")
+    reset_initial_values_post_submission = models.BooleanField(
+        default=False,
+        help_text="Whether to reset the form to using its initial "
+        "values after a successful form submission.",
+    )
+
+    button_color = models.CharField(
+        max_length=20,
+        default="primary",
+        blank=True,
+        help_text="The color of the button",
+    )
+
+
+class FormElement(Element):
+    """
+    The base form element, which can be extended to
     support an element for each supported type.
     """
+
+    required = models.BooleanField(
+        default=False, help_text="Whether this form element is a required field."
+    )
 
     class Meta:
         abstract = True
 
 
-class InputTextElement(InputElement):
+class InputTextElement(FormElement):
     """
     An input element of text type.
     """
+
+    class INPUT_TEXT_VALIDATION_TYPES(models.TextChoices):
+        ANY = "any"
+        EMAIL = "email"
+        INTEGER = "integer"
 
     label = FormulaField(
         default="",
@@ -534,8 +581,11 @@ class InputTextElement(InputElement):
     default_value = FormulaField(
         default="", help_text="This text input's default value."
     )
-    required = models.BooleanField(
-        default=False, help_text="Whether this text input is a required field."
+    validation_type = models.CharField(
+        max_length=15,
+        choices=INPUT_TEXT_VALIDATION_TYPES.choices,
+        default=INPUT_TEXT_VALIDATION_TYPES.ANY,
+        help_text="Optionally set the validation type to use when applying form data.",
     )
     placeholder = FormulaField(
         default="",
@@ -549,6 +599,49 @@ class InputTextElement(InputElement):
         default=3,
         help_text="Number of rows displayed by the rendered input element",
     )
+    input_type = models.CharField(
+        max_length=10,
+        choices=INPUT_TEXT_TYPES.choices,
+        default=INPUT_TEXT_TYPES.TEXT,
+        help_text="The type of the input, not applicable for multiline inputs.",
+        null=True,  # TODO remove me in next release
+    )
+
+
+class DropdownElement(FormElement):
+    label = FormulaField(
+        default="",
+        help_text="The text label for this dropdown",
+    )
+    default_value = FormulaField(
+        default="", help_text="This dropdowns input's default value."
+    )
+    placeholder = FormulaField(
+        default="",
+        help_text="The placeholder text which should be applied to the element.",
+    )
+
+
+class DropdownElementOption(models.Model):
+    value = models.TextField(
+        blank=True, default="", help_text="The value of the option"
+    )
+    name = models.TextField(
+        blank=True, default="", help_text="The display name of the option"
+    )
+    dropdown = models.ForeignKey(DropdownElement, on_delete=models.CASCADE)
+
+
+class CheckboxElement(FormElement):
+    """
+    A checkbox element.
+    """
+
+    label = FormulaField(
+        default="",
+        help_text="The text label for this input",
+    )
+    default_value = FormulaField(default="", help_text="The input's default value.")
 
 
 class ButtonElement(Element):
@@ -641,63 +734,6 @@ class TableElement(CollectionElement):
         default="primary",
         blank=True,
         help_text="The color of the button",
-    )
-
-
-class FormContainerElement(ContainerElement):
-    """
-    A form element
-    """
-
-    submit_button_label = FormulaField(default="")
-
-    button_color = models.CharField(
-        max_length=20,
-        default="primary",
-        blank=True,
-        help_text="The color of the button",
-    )
-
-
-class DropdownElement(Element):
-    label = FormulaField(
-        default="",
-        help_text="The text label for this dropdown",
-    )
-    default_value = FormulaField(
-        default="", help_text="This dropdowns input's default value."
-    )
-    required = models.BooleanField(
-        default=False, help_text="Whether this drodpown is a required field."
-    )
-    placeholder = FormulaField(
-        default="",
-        help_text="The placeholder text which should be applied to the element.",
-    )
-
-
-class DropdownElementOption(models.Model):
-    value = models.TextField(
-        blank=True, default="", help_text="The value of the option"
-    )
-    name = models.TextField(
-        blank=True, default="", help_text="The display name of the option"
-    )
-    dropdown = models.ForeignKey(DropdownElement, on_delete=models.CASCADE)
-
-
-class CheckboxElement(InputElement):
-    """
-    A checkbox element.
-    """
-
-    label = FormulaField(
-        default="",
-        help_text="The text label for this input",
-    )
-    default_value = FormulaField(default="", help_text="The input's default value.")
-    required = models.BooleanField(
-        default=False, help_text="Whether this input is a required field."
     )
 
 

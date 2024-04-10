@@ -505,7 +505,10 @@
         "copiedRowURL": "Rij URL gekopieerd.",
         "copyRowURL": "URL van rij kopiëren",
         "tooManyItemsTitle": "Te veel items",
-        "tooManyItemsDescription": "Het is niet mogelijk om meer dan {limit} rijen tegelijk bij te werken, dus we hebben alleen de eerste bijgewerkt."
+        "tooManyItemsDescription": "Het is niet mogelijk om meer dan {limit} rijen tegelijk bij te werken, dus we hebben alleen de eerste bijgewerkt.",
+        "generateCellsValues": "Genereer waardes met AI",
+        "AIValuesGenerationErrorTitle": "AI-waardegeneratie mislukt",
+        "AIValuesGenerationErrorMessage": "Controleer alsjeblieft je API_KEY en controleer het geselecteerde model."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
@@ -848,5 +851,12 @@
     },
     "fieldLongTextSubForm": {
         "enableRichTextFormatting": "Opmaak met rijke tekst inschakelen"
+    },
+    "dataProviderTypes": {
+        "fieldsName": "Velden"
+    },
+    "userMentionInRichTextFieldNotification": {
+        "title": "{sender} heeft u vermeld in veld {fieldName} van rij {rowId} in {tableName}",
+        "deletedUser": "Een verwijderde gebruiker"
     }
 }

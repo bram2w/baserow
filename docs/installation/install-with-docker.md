@@ -27,7 +27,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
@@ -50,7 +50,7 @@ docker run \
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.23.2` image by default runs all of Baserow's various services in
+The `baserow/baserow:1.24.0` image by default runs all of Baserow's various services in
 a single container for maximum ease of use.
 
 > This image is designed for simple single server deployments or simple container
@@ -129,6 +129,48 @@ docker logs -f baserow_version_REPLACE_WITH_NEW_VERSION
 docker rm baserow
 ```
 
+## Upgrading PostgreSQL database from a previous version
+
+On November 2023 [PostgreSQL released](https://www.postgresql.org/about/news/postgresql-161-155-1410-1313-1217-and-1122-released-2749/) a final update for version 11 of the database together with an end-of-life notice for this version. This means, that PostgreSQL 11 will no longer receive security and bug fixes.
+
+If you are using an embedded PostgreSQL database (an embedded one is when you do _not_ provide `POSTGRESQL_*` environment variables when launching Baserow, as opposed to an external one, where you provide connection details to your external PostgreSQL instance), and if you restart or try to run a new Baserow instance, if your data was initialized with PostgreSQL version 11, you'll notice that it doesn't start up anymore and raises an error because you need to upgrade your data directory to be compatible with PostgreSQL version 15. Baserow provides an image to automatically upgrade your data directory to PostgreSQL version 15, which is now the version officially supported by Baserow.
+
+If you don't want to upgrade at this point in time, jump to [Legacy PostgreSQL version](#legacy-postgresql-version) section below. Although, be aware, that we will only support PostgreSQL 11 for a limited amount of time and that this version won't receive official updates from PostgreSQL anymore.
+
+### Upgrade process
+
+To upgrade your data directory to be compatible with PostgreSQL 15, follow these steps:
+
+**CAUTION:** before doing this, make sure to [Back up your Baserow instance](#backing-up-and-restoring-baserow) to avoid potential data loss.
+
+1. Make sure there are no Baserow instances running with `docker ps`. If Baserow is running, stop the container with `docker stop baserow`.
+2. Run this command to run a Docker image which will automatically update your data directory to be compatible with PostgreSQL version 15:
+
+```
+docker run \
+  --name baserow_pgautoupgrade \
+  # ALL THE ARGUMENTS YOU NORMALLY ADD TO YOUR BASEROW INSTANCE
+  --restart no \
+  baserow_pgautoupgrade:1.24.0
+```
+
+3. If the upgrade was successful, the contaner should exit with a success message, you can now start Baserow as you did before.
+4. If the upgrade wasn't successful, the upgrade image should output verbose logs of where exactly it failed. In that case, copy all of the log output and refer to [Baserow community](https://community.baserow.io/) or contact us for further assistance.
+
+### Legacy PostgreSQL version
+
+Baserow provides an image which runs a legacy PostgreSQL 11 version which can be run if you don't want to upgrade to PostgreSQL 15 at this point. Note, that we will only support PostgreSQL 11 for a limited amount of time to help transitioning between database versions. Also, be aware, that PostgreSQL 11 is not receiving official security updates and bug fixes anymore.
+
+To run Baserow image which uses legacy PostgreSQL 11 version, run:
+
+```
+docker run \
+  --name baserow_pg11 \
+  # ALL THE ARGUMENTS YOU NORMALLY ADD TO YOUR BASEROW INSTANCE
+  --restart unless-stopped \
+  baserow_pg11:1.24.0
+```
+
 ## Example Commands
 
 See [Configuring Baserow](configuration.md) for more detailed information on all the
@@ -156,7 +198,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### Behind a reverse proxy already handling ssl
@@ -169,7 +211,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### On a nonstandard HTTP port
@@ -182,7 +224,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 3001:80 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### With an external PostgresSQL server
@@ -201,7 +243,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### With an external Redis server
@@ -220,7 +262,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### With an external email server
@@ -240,7 +282,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### With a Postgresql server running on the same host as the Baserow docker container
@@ -278,7 +320,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### Supply secrets using files
@@ -305,7 +347,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   -p 443:443 \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 ### Start just the embedded database
@@ -318,7 +360,7 @@ docker run -it \
   --name baserow \
   -p 5432:5432 \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.23.2 \
+  baserow/baserow:1.24.0 \
   start-only-db
 # Now get the password from
 docker exec -it baserow cat /baserow/data/.pgpass
@@ -350,7 +392,7 @@ docker run -it \
   --rm \
   --name baserow \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.23.2 \
+  baserow/baserow:1.24.0 \
   backend-cmd-with-db manage dbshell
 ```
 
@@ -473,19 +515,19 @@ the command below.
 
 ```bash
 # First read the help message for this command
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.23.2 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.24.0 \
    backend-cmd-with-db backup --help
 
 # Stop Baserow instance
 docker stop baserow
 
 # The command below backs up Baserow to the backups folder in the baserow_data volume:
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.23.2 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.24.0 \
    backend-cmd-with-db backup -f /baserow/data/backups/backup.tar.gz
 
 # Or backup to a file on your host instead run something like:
 docker run -it --rm -v baserow_data:/baserow/data -v $PWD:/baserow/host \
-   baserow/baserow:1.23.2 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
+   baserow/baserow:1.24.0 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
 ```
 
 ### Restore only Baserow's Postgres Database
@@ -501,13 +543,13 @@ docker stop baserow
 docker run -it --rm \
   -v old_baserow_data_volume_containing_the_backup_tar_gz:/baserow/old_data \
   -v new_baserow_data_volume_to_restore_into:/baserow/data \
-  baserow/baserow:1.23.2 backend-cmd-with-db restore -f /baserow/old_data/backup.tar.gz
+  baserow/baserow:1.24.0 backend-cmd-with-db restore -f /baserow/old_data/backup.tar.gz
 
 # Or to restore from a file on your host instead run something like:
 docker run -it --rm \
   -v baserow_data:/baserow/data -v \
   $(pwd):/baserow/host \
-  baserow/baserow:1.23.2 backend-cmd-with-db restore -f /baserow/host/backup.tar.gz
+  baserow/baserow:1.24.0 backend-cmd-with-db restore -f /baserow/host/backup.tar.gz
 ```
 
 ## Running healthchecks on Baserow
@@ -558,7 +600,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.23.2
+  baserow/baserow:1.24.0
 ```
 
 Or you can just store it directly in the volume at `baserow_data/env` meaning it will be
@@ -567,7 +609,7 @@ loaded whenever you mount in this data volume.
 ### Building your own image from Baserow
 
 ```dockerfile
-FROM baserow/baserow:1.23.2
+FROM baserow/baserow:1.24.0
 
 # Any .sh files found in /baserow/supervisor/env/ will be sourced and loaded at startup
 # useful for storing your own environment variable overrides.

@@ -119,7 +119,7 @@ class SnapshotHandler:
                 mark_for_deletion=False,
             )
             .select_related("created_by")
-            .order_by("-created_at")
+            .order_by("-created_at", "-id")
         )
 
     def create(self, application_id: int, performed_by: User, name: str):

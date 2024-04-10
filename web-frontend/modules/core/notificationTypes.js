@@ -19,6 +19,17 @@ export class NotificationType extends Registerable {
   getIconComponentProps() {
     return {}
   }
+
+  /**
+   * Should return the nuxt route of the page where to redirect to if the user clicks
+   * on the notification. Note that the backend also uses this to create a link in
+   * external communication like the email, and if anything changes in this method,
+   * the `safe_route_data_parameters` then might need to be updated as well. If
+   * `null` is returned, it means that the notification is not clickable.
+   */
+  getRoute(notificationData) {
+    return null
+  }
 }
 
 export class WorkspaceInvitationCreatedNotificationType extends NotificationType {

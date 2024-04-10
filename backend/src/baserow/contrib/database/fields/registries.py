@@ -1018,7 +1018,7 @@ class FieldType(
         storage: Optional[Storage] = None,
     ) -> Any:
         """
-        Exports the value to a the value of a row to serialized value that is also JSON
+        Exports the value of a row to serialized value that is also JSON
         serializable.
 
         :param row: The row instance that the value must be exported from.

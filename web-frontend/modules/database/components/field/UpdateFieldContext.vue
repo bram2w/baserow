@@ -11,6 +11,8 @@
       :view="view"
       :default-values="field"
       :primary="field.primary"
+      :all-fields-in-table="allFieldsInTable"
+      :database="database"
       @submitted="submit"
     >
       <div
@@ -23,7 +25,7 @@
           type="submit"
           class="button"
           :class="{ 'button--loading': loading }"
-          :disabled="loading"
+          :disabled="loading || fieldTypeDisabled"
         >
           {{ $t('action.save') }}
         </button>
@@ -54,11 +56,30 @@ export default {
       type: Object,
       required: true,
     },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
+    database: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
       loading: false,
     }
+  },
+  computed: {
+    // Return the reactive object that can be updated in runtime.
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
+    },
+    fieldTypeDisabled() {
+      return !this.$registry
+        .get('field', this.field.type)
+        .isEnabled(this.workspace)
+    },
   },
   watch: {
     field() {

@@ -5,6 +5,7 @@ from baserow.contrib.database.api.rows.serializers import (
     serialize_rows_for_response,
 )
 from baserow.contrib.database.webhooks.registries import WebhookEventType
+from baserow.contrib.database.ws.rows.signals import serialize_rows_values
 
 from .signals import rows_created, rows_deleted, rows_updated
 
@@ -62,19 +63,11 @@ class RowsUpdatedEventType(RowsEventType):
     signal = rows_updated
 
     def get_payload(
-        self,
-        event_id,
-        webhook,
-        model,
-        table,
-        rows,
-        before_return,
-        before_rows_values,
-        **kwargs
+        self, event_id, webhook, model, table, rows, before_return, **kwargs
     ):
         payload = super().get_payload(event_id, webhook, model, table, rows, **kwargs)
 
-        old_items = before_rows_values
+        old_items = dict(before_return)[serialize_rows_values]
 
         if webhook.use_user_field_names:
             old_items = remap_serialized_rows_to_user_field_names(old_items, model)
@@ -85,8 +78,9 @@ class RowsUpdatedEventType(RowsEventType):
 
     def get_test_call_payload(self, table, model, event_id, webhook):
         rows = [model(id=0, order=0)]
-        before_rows_values = serialize_rows_for_response(rows, model)
-        before_return = {}
+        before_return = {
+            serialize_rows_values: serialize_rows_for_response(rows, model)
+        }
         payload = self.get_payload(
             event_id=event_id,
             webhook=webhook,
@@ -94,7 +88,6 @@ class RowsUpdatedEventType(RowsEventType):
             table=table,
             rows=rows,
             before_return=before_return,
-            before_rows_values=before_rows_values,
         )
         return payload
 

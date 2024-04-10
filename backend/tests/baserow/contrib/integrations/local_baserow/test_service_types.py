@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
@@ -13,6 +15,7 @@ from rest_framework.fields import (
     DecimalField,
     FloatField,
     IntegerField,
+    SerializerMethodField,
     UUIDField,
 )
 from rest_framework.serializers import ListSerializer, Serializer
@@ -1386,7 +1389,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["self_link_row"]: {
@@ -1397,7 +1403,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["link_row_without_related"]: {
@@ -1408,7 +1417,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["decimal_link_row"]: {
@@ -1419,7 +1431,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["file_link_row"]: {
@@ -1430,7 +1445,10 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"id": {"title": "id", "type": "number"}},
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["file"]: {
@@ -1442,7 +1460,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "items": {
                 "type": "object",
                 "properties": {
-                    "url": {"title": "url", "type": None},
+                    "url": {"title": "url", "type": "string"},
                     "thumbnails": {"title": "thumbnails", "type": None},
                     "visible_name": {"title": "visible_name", "type": "string"},
                     "name": {"title": "name", "type": "string"},
@@ -1706,6 +1724,13 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "boolean",
         },
+        field_db_column_by_name["ai"]: {
+            "title": "ai",
+            "default": None,
+            "original_type": "ai",
+            "metadata": {},
+            "type": "string",
+        },
         "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 
@@ -1746,8 +1771,31 @@ def test_guess_type_for_response_serialize_field_permutations():
         "type": "array",
         "items": TYPE_OBJECT,
     }
+    TYPE_OBJECT_FROM_METHOD_SERIALIZER = {
+        "type": "object",
+        "properties": {
+            "answer": {"title": "answer", "type": "number"},
+            "url": {"title": "url", "type": "string"},
+        },
+    }
+
     cls = LocalBaserowServiceType
     cls.model_class = Mock()
+
+    class FakeSerializer(Serializer):
+        """Dummy serializer for testing method serializers that use OpenAPI types."""
+
+        answer = SerializerMethodField()
+        url = SerializerMethodField()
+
+        @extend_schema_field(OpenApiTypes.NUMBER)
+        def get_answer(self, instance):
+            return 42
+
+        @extend_schema_field(OpenApiTypes.URI)
+        def get_url(self, instance):
+            return "https://baserow.io"
+
     assert (
         cls().guess_json_type_from_response_serialize_field(UUIDField()) == TYPE_STRING
     )
@@ -1790,6 +1838,9 @@ def test_guess_type_for_response_serialize_field_permutations():
         cls().guess_json_type_from_response_serialize_field("unknown")  # type: ignore
         == TYPE_NULL
     )
+    assert (
+        cls().guess_json_type_from_response_serialize_field((FakeSerializer()))
+    ) == TYPE_OBJECT_FROM_METHOD_SERIALIZER
 
 
 def test_local_baserow_service_type_get_schema_for_return_type():
@@ -1970,6 +2021,53 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_unknown_row_id(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_with_read_only_table_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("UUID", "uuid", {}),
+            ("Ingredient", "text", {}),
+        ],
+    )
+    uuid = table.field_set.get(name="UUID")
+    ingredient = table.field_set.get(name="Ingredient")
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=integration,
+        table=table,
+    )
+    service_type = service.get_type()
+    service.field_mappings.create(
+        field=uuid, value="'b52d8848-f2c2-4495-b8ef-94e1b4f3c49f'"
+    )
+    service.field_mappings.create(field=ingredient, value="'Potato'")
+
+    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    assert (
+        getattr(dispatch_data["data"], uuid.db_column)
+        != "b52d8848-f2c2-4495-b8ef-94e1b4f3c49f"
+    )
+    assert getattr(dispatch_data["data"], ingredient.db_column) == "Potato"
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_transform(
     data_fixture,
 ):
@@ -2052,15 +2150,21 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
     service_type = service.get_type()
     dispatch_context = BuilderDispatchContext(Mock(), page)
 
-    service.field_mappings.create(field=boolean_field, value="'Horse'")
+    field_mapping = service.field_mappings.create(field=boolean_field, value="'Horse'")
     with pytest.raises(DRFValidationError) as exc:
-        service_type.dispatch_data(service, {"table": table}, dispatch_context)
+        service_type.dispatch_data(
+            service, {"table": table, field_mapping.id: "Horse"}, dispatch_context
+        )
 
     service.field_mappings.all().delete()
 
-    service.field_mappings.create(field=single_field, value="'99999999999'")
+    field_mapping = service.field_mappings.create(
+        field=single_field, value="'99999999999'"
+    )
     with pytest.raises(ServiceImproperlyConfigured) as exc:
-        service_type.dispatch_data(service, {"table": table}, dispatch_context)
+        service_type.dispatch_data(
+            service, {"table": table, field_mapping.id: "99999999999"}, dispatch_context
+        )
 
     assert exc.value.args[0] == (
         "The result value of the formula is not valid for the "
@@ -2252,6 +2356,17 @@ def test_local_baserow_upsert_row_service_after_update(data_fixture):
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_type_import_path(data_fixture):
+    imported_upsert_row_service_type = LocalBaserowUpsertRowServiceType()
+
+    assert imported_upsert_row_service_type.import_path(["id"], {}) == ["id"]
+    assert imported_upsert_row_service_type.import_path(["field_1"], {}) == ["field_1"]
+    assert imported_upsert_row_service_type.import_path(
+        ["field_1"], {"database_fields": {1: 2}}
+    ) == ["field_2"]
+
+
+@pytest.mark.django_db
 def test_import_datasource_provider_formula_using_list_rows_service_containing_no_row_or_field_fails_silently(
     data_fixture,
 ):
@@ -2265,6 +2380,42 @@ def test_import_datasource_provider_formula_using_list_rows_service_containing_n
     table = data_fixture.create_database_table(database=database)
     page = data_fixture.create_builder_page(builder=builder)
     service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        table=table,
+    )
+    data_source = DataSourceService().create_data_source(
+        user, service_type=service.get_type(), page=page
+    )
+    ElementService().create_element(
+        user,
+        element_type_registry.get("input_text"),
+        page=page,
+        data_source_id=data_source.id,
+        placeholder=f"get('data_source.{data_source.id}')",
+    )
+    duplicated_page = PageService().duplicate_page(user, page)
+    duplicated_element = duplicated_page.element_set.first()
+    duplicated_data_source = duplicated_page.datasource_set.first()
+    assert (
+        duplicated_element.specific.placeholder
+        == f"get('data_source.{duplicated_data_source.id}')"
+    )
+
+
+@pytest.mark.django_db
+def test_import_datasource_provider_formula_using_get_row_service_containing_no_field_fails_silently(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, authorized_user=user
+    )
+    table = data_fixture.create_database_table(database=database)
+    page = data_fixture.create_builder_page(builder=builder)
+    service = data_fixture.create_local_baserow_get_row_service(
         integration=integration,
         table=table,
     )

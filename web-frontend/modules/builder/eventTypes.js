@@ -1,3 +1,6 @@
+import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
+import { resolveFormula } from '@baserow/modules/core/formula'
+
 /**
  * This might look like something that belongs in a registry, but it does not.
  *
@@ -23,7 +26,7 @@ export class Event {
     return null
   }
 
-  async fire({ workflowActions, applicationContext, resolveFormula }) {
+  async fire({ workflowActions, applicationContext }) {
     const additionalContext = {}
     for (let i = 0; i < workflowActions.length; i += 1) {
       const workflowAction = workflowActions[i]
@@ -31,20 +34,54 @@ export class Event {
         'workflowAction',
         workflowAction.type
       )
+      const localResolveFormula = (formula) => {
+        const formulaFunctions = {
+          get: (name) => {
+            return this.registry.get('runtimeFormulaFunction', name)
+          },
+        }
+        const runtimeFormulaContext = new Proxy(
+          new RuntimeFormulaContext(
+            this.registry.getAll('builderDataProvider'),
+            { ...applicationContext, previousActionResults: additionalContext }
+          ),
+          {
+            get(target, prop) {
+              return target.get(prop)
+            },
+          }
+        )
+        try {
+          return resolveFormula(
+            formula,
+            formulaFunctions,
+            runtimeFormulaContext
+          )
+        } catch {
+          return ''
+        }
+      }
 
+      this.store.dispatch('workflowAction/setDispatching', {
+        workflowAction,
+        isDispatching: true,
+      })
       try {
         additionalContext[workflowAction.id] = await workflowActionType.execute(
           {
             workflowAction,
             additionalContext,
-            applicationContext,
-            resolveFormula,
+            applicationContext: {
+              ...applicationContext,
+              previousActionResults: additionalContext,
+            },
+            resolveFormula: localResolveFormula,
           }
         )
-      } catch (error) {
-        return this.store.dispatch('toast/error', {
-          title: this.i18n.t('dispatchWorkflowActionError.defaultTitle'),
-          message: this.i18n.t('dispatchWorkflowActionError.defaultMessage'),
+      } finally {
+        this.store.dispatch('workflowAction/setDispatching', {
+          workflowAction,
+          isDispatching: false,
         })
       }
     }
@@ -68,5 +105,15 @@ export class SubmitEvent extends Event {
 
   get label() {
     return this.i18n.t('eventTypes.submitLabel')
+  }
+}
+
+export class AfterLoginEvent extends Event {
+  static getType() {
+    return 'after_login'
+  }
+
+  get label() {
+    return this.i18n.t('eventTypes.afterLoginLabel')
   }
 }

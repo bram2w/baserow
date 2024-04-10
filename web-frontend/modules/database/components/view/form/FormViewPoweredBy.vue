@@ -6,9 +6,8 @@
       target="_blank"
       title="Baserow - open source no-code database tool and Airtable alternative"
     >
-      <img
+      <Logo
         class="form-view__powered-by-logo"
-        src="@baserow/modules/core/static/img/logo.svg"
         alt="Baserow - open source no-code database tool and Airtable alternative"
       />
     </a>

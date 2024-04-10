@@ -275,7 +275,8 @@
         "pageParameter": "Parameter",
         "dataSource": "Data",
         "formData": "Formuliergegevens",
-        "user": "Gebruiker"
+        "user": "Gebruiker",
+        "previousAction": "Vorige actie"
     },
     "tableElementForm": {
         "addField": "veld toevoegen",
@@ -342,7 +343,13 @@
         "labelPlaceholder": "Voer een label in (optioneel)",
         "multilineTitle": "Meerdere regels",
         "rowsTitle": "Aantal regels",
-        "rowsPlaceholder": "Voer het aantal rijen van deze invoer in"
+        "rowsPlaceholder": "Voer het aantal rijen van deze invoer in",
+        "validationTypeAnyLabel": "Elke",
+        "validationTypeIntegerLabel": "Nummer",
+        "validationTypeEmailLabel": "E-mail",
+        "validationTypeEmailDescription": "Dwing een e-mailadres waarde af in deze invoer.",
+        "validationTypeAnyDescription": "Sta toe dat deze invoer een willekeurige waarde bevat.",
+        "validationTypeIntegerDescription": "Dwing een getalwaarde af in deze invoer."
     },
     "widthSelector": {
         "widthFull": "Volledige breedte",
@@ -358,7 +365,8 @@
         "updateRowLabel": "Rij bijwerken",
         "createRowLabel": "Rij maken",
         "notificationLabel": "Melding tonen",
-        "openPageLabel": "Pagina openen"
+        "openPageLabel": "Pagina openen",
+        "logoutLabel": "Uitloggen"
     },
     "widthTypes": {
         "full": "Volledige breedte",
@@ -405,7 +413,9 @@
     },
     "dispatchWorkflowActionError": {
         "defaultMessage": "Er is een fout opgetreden die deze gebeurtenis heeft veroorzaakt.",
-        "defaultTitle": "Gebeurtenis fout"
+        "defaultTitle": "Gebeurtenis fout",
+        "formDataInvalidTitle": "Ongeldig formulier",
+        "formDataInvalidMessage": "Een of meer velden bevatten ongeldige waarden."
     },
     "openPageWorkflowActionForm": {
         "urlLabel": "URL",
@@ -454,12 +464,15 @@
     },
     "eventTypes": {
         "submitLabel": "Op versturen",
-        "clickLabel": "Op klik"
+        "clickLabel": "Op klik",
+        "afterLoginLabel": "Na inloggen"
     },
     "formContainerElementForm": {
         "submitButtonLabel": "Verstuur knop",
         "submitButtonPlaceholder": "Waarde invoeren...",
-        "buttonColor": "Kleur knop"
+        "buttonColor": "Kleur knop",
+        "resetToInitialValuesTitle": "Terugzetten naar standaardwaarden na verzenden",
+        "resetToInitialValuesDescription": "Als aangevinkt, worden de standaardwaarden van het formulier gebruikt om het formulier te resetten na een succesvolle verzending. Als niet aangevinkt, blijven de waarden van de gebruiker behouden."
     },
     "subDomainForm": {
         "domainNameLabel": "Domeinnaam"
@@ -477,7 +490,8 @@
         "valuePlaceholder": "Voer een standaardwaarde in (optioneel)",
         "placeholderTitle": "Placeholder",
         "placeholderPlaceholder": "Voer een placeholder in (optioneel)",
-        "requiredTitle": "Verplicht"
+        "requiredTitle": "Verplicht",
+        "validationTitle": "Validatie"
     },
     "linkNavigationSelection": {
         "urlPlaceholder": "Voer een URL in...",
@@ -533,5 +547,13 @@
     "userSelector": {
         "viewAs": "Weergeven als: {user}",
         "anonymous": "Anoniem"
+    },
+    "formContainerElement": {
+        "submitDeactivatedText": "Vul alle verplichte velden in om te verzenden"
+    },
+    "visibilityForm": {
+        "allVisitors": "Alle bezoekers",
+        "loggedInVisitors": "Aangemelde bezoekers",
+        "notLoggedInVisitors": "Uitgelogde bezoekers"
     }
 }

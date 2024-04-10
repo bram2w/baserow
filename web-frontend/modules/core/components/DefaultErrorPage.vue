@@ -2,11 +2,7 @@
   <div v-if="!redirecting" class="placeholder">
     <div class="placeholder__logo">
       <nuxt-link :to="{ name: 'index' }">
-        <img
-          class="placeholder__logo-image"
-          src="@baserow/modules/core/static/img/logo.svg"
-          alt=""
-        />
+        <Logo class="placeholder__logo-image" />
       </nuxt-link>
     </div>
     <h1 class="placeholder__title">{{ message }}</h1>

@@ -51,6 +51,10 @@
   .control {
     margin-bottom: 12px;
   }
+
+  .control__elements--small {
+    margin-bottom: 0;
+  }
 }
 
 .table-element-form__field-label .form-input__input-wrapper {

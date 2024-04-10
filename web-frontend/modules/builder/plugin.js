@@ -56,6 +56,7 @@ import {
   EventsPageSidePanelType,
   GeneralPageSidePanelType,
   StylePageSidePanelType,
+  VisibilityPageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
 import {
   CustomDomainType,
@@ -77,6 +78,7 @@ import {
   DataSourceDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
+  PreviousActionDataProviderType,
   UserDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
@@ -86,6 +88,7 @@ import {
   NotificationWorkflowActionType,
   OpenPageWorkflowActionType,
   UpdateRowWorkflowActionType,
+  LogoutWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
@@ -157,16 +160,16 @@ export default (context) => {
 
   app.$registry.register('element', new HeadingElementType(context))
   app.$registry.register('element', new TextElementType(context))
-  app.$registry.register('element', new LinkElementType(context))
   app.$registry.register('element', new ImageElementType(context))
-  app.$registry.register('element', new InputTextElementType(context))
-  app.$registry.register('element', new ColumnElementType(context))
+  app.$registry.register('element', new IFrameElementType(context))
+  app.$registry.register('element', new LinkElementType(context))
   app.$registry.register('element', new ButtonElementType(context))
   app.$registry.register('element', new TableElementType(context))
+  app.$registry.register('element', new ColumnElementType(context))
   app.$registry.register('element', new FormContainerElementType(context))
+  app.$registry.register('element', new InputTextElementType(context))
   app.$registry.register('element', new DropdownElementType(context))
   app.$registry.register('element', new CheckboxElementType(context))
-  app.$registry.register('element', new IFrameElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
@@ -186,6 +189,10 @@ export default (context) => {
   )
   app.$registry.register('pageSidePanel', new GeneralPageSidePanelType(context))
   app.$registry.register('pageSidePanel', new StylePageSidePanelType(context))
+  app.$registry.register(
+    'pageSidePanel',
+    new VisibilityPageSidePanelType(context)
+  )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
 
   app.$registry.register('domain', new CustomDomainType(context))
@@ -219,6 +226,10 @@ export default (context) => {
     'builderDataProvider',
     new FormDataProviderType(context)
   )
+  app.$registry.register(
+    'builderDataProvider',
+    new PreviousActionDataProviderType(context)
+  )
   app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
 
   app.$registry.register(
@@ -228,6 +239,10 @@ export default (context) => {
   app.$registry.register(
     'workflowAction',
     new OpenPageWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new LogoutWorkflowActionType(context)
   )
   app.$registry.register(
     'workflowAction',

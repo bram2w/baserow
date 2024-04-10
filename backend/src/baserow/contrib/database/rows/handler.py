@@ -28,7 +28,6 @@ from django.utils.encoding import force_str
 
 from opentelemetry import metrics, trace
 
-from baserow.contrib.database.api.rows.serializers import serialize_rows_for_response
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
@@ -276,7 +275,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             prepared_values_by_field[
                 field_name
             ] = field_type.prepare_value_for_db_in_bulk(
-                field["field"], batch_values, continue_on_error=generate_error_report
+                field["field"],
+                batch_values,
+                continue_on_error=generate_error_report,
             )
 
         # replace original values to keep ordering
@@ -964,8 +965,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             updated_field_ids=updated_field_ids,
         )
 
-        before_rows_values = serialize_rows_for_response(rows, model)
-
         if not values_already_prepared:
             prepared_values = self.prepare_values(model._field_objects, values)
         else:
@@ -1043,7 +1042,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             model=model,
             before_return=before_return,
             updated_field_ids=updated_field_ids,
-            before_rows_values=before_rows_values,
             m2m_change_tracker=m2m_change_tracker,
         )
 
@@ -1636,8 +1634,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             values["id"] = row.id
             original_row_values_by_id[row.id] = values
 
-        before_rows_values = serialize_rows_for_response(rows_to_update, model)
-
         before_return = before_rows_update.send(
             self,
             rows=list(rows_to_update),
@@ -1815,7 +1811,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             model=model,
             before_return=before_return,
             updated_field_ids=updated_field_ids,
-            before_rows_values=before_rows_values,
             m2m_change_tracker=m2m_change_tracker,
         )
 
@@ -1829,6 +1824,19 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             fields_metadata_by_row_id,
         )
 
+    def get_rows(
+        self, model: GeneratedTableModel, row_ids: List[int]
+    ) -> List[GeneratedTableModel]:
+        """
+        Returns a list of rows based on the provided row ids.
+
+        :param model: The model that should be used to get the rows.
+        :param row_ids: The list of row ids that should be fetched.
+        :return: The list of rows.
+        """
+
+        return model.objects.filter(id__in=row_ids).enhance_by_fields()
+
     def get_rows_for_update(
         self, model: GeneratedTableModel, row_ids: List[int]
     ) -> RowsForUpdate:
@@ -1839,10 +1847,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         return cast(
-            RowsForUpdate,
-            model.objects.select_for_update(of=("self",))
-            .enhance_by_fields()
-            .filter(id__in=row_ids),
+            RowsForUpdate, self.get_rows(model, row_ids).select_for_update(of=("self",))
         )
 
     def move_row_by_id(
@@ -1906,7 +1911,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         before_return = before_rows_update.send(
             self, rows=[row], user=user, table=table, model=model, updated_field_ids=[]
         )
-        before_rows_values = serialize_rows_for_response([row], model)
 
         row.order = self.get_unique_orders_before_row(before_row, model)[0]
         row.save()
@@ -1954,7 +1958,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             model=model,
             before_return=before_return,
             updated_field_ids=[],
-            before_rows_values=before_rows_values,
             prepared_rows_values=None,
         )
 

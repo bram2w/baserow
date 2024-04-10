@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import pytest
@@ -8,6 +10,9 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
@@ -593,3 +598,52 @@ def test_dispatch_local_baserow_update_row_workflow_action(api_client, data_fixt
     assert response_json["id"] == first_row.id
     assert response_json[color_field.db_column] == "Blue"
     assert response_json[animal_field.db_column] == "Horse"
+
+
+@pytest.mark.django_db
+@patch(
+    "baserow.contrib.builder.data_providers.data_provider_types.FormDataProviderType.validate_data_chunk",
+    side_effect=FormDataProviderChunkInvalidException,
+)
+def test_dispatch_workflow_action_with_invalid_form_data(
+    mock_validate, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    database = data_fixture.create_database_application(workspace=builder.workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_text_field(table=table)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_update_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK, user=user
+    )
+    service = workflow_action.service.specific
+    service.table = table
+    service.save()
+    field_mapping = service.field_mappings.create(
+        field=field, value="get('form_data.17')"
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:dispatch",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+
+    response = api_client.post(
+        url,
+        {
+            "form_data": {
+                "17": {"value": "", "type": "string", "isValid": False},
+            },
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED",
+        "detail": "The workflow_action configuration is incorrect: "
+        f"Path error in formula for field {field.name}({field.id})",
+    }

@@ -13,7 +13,7 @@ from decimal import Decimal
 from fractions import Fraction
 from itertools import islice
 from numbers import Number
-from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from django.db import transaction
 from django.db.models import ForeignKey, ManyToManyField, Model
@@ -43,6 +43,18 @@ RE_PROP_NAME = re.compile(
     # Or match "" as the space between consecutive dots or empty brackets.
     + r"(?=(?:\.|\[\])(?:\.|\[\]|$))"
 )
+
+
+def flatten(nested_list: List[Any]):
+    """
+    Efficiently deeply flatten a list.
+    """
+
+    return [
+        element
+        for sublist in nested_list
+        for element in (flatten(sublist) if isinstance(sublist, list) else [sublist])
+    ]
 
 
 def split_attrs_and_m2m_fields(
@@ -292,59 +304,55 @@ def to_path(path):
     return result
 
 
-def get_nested_value_from_dict(
-    nested_dict: Dict, value_path_in_dot_notation: Union[str, List[str]]
-):
-    """
-    This util allows you to get a value from a nested dictionary using dot notation like
-    such:
+def get_value_at_path(obj: Any, path: Union[str | List[str]]) -> Any:
+    """Get the value at `path` of `obj`, similar to Lodash `get` function.
 
-    data = {
-        "a": {
-            "b": {
-                "c": 123
-            }
+    Example:
+        data = {
+            "a": {
+                "b": {
+                    "c": 123
+                }
+            },
+            "e": [
+                {"f": 1},
+                {"f": 2}
+            ]
         }
-    }
+        get_value_at_path(data, "a.b.c")      # 123
+        get_value_at_path(data, "a.e.0.f")    # 1
+        get_value_at_path(data, "a.e.*.f")    # [1, 2]
 
-    result = get_nested_value_from_dict(data, "a.b.c")
-    print(result)  # Output: 123
+    See also: https://lodash.com/docs/4.17.15#get
 
-    It also supports array indexes like such:
-
-    data = {
-        "a": [
-          { b: "1" }, { "b": "123" }
-        ]
-    }
-
-    result = get_nested_value_from_dict(data, "a.1.b")
-    print(result)  # Output: 123
-
-    :param nested_dict: The dict that holds the value
-    :param value_path_in_dot_notation: The path to the value or an array with the path
-        parts
+    :param obj: The object that holds the value
+    :param path: The path to the value or a list with the path parts
     :return: The value held by the path
     """
 
-    if isinstance(value_path_in_dot_notation, str):
-        keys = to_path(value_path_in_dot_notation)
-    else:
-        keys = value_path_in_dot_notation
+    def _get_value_at_path(obj: Any, keys: List[str]) -> Any:
+        if not keys:
+            return obj
+        first, *rest = keys
+        if isinstance(obj, dict) and keys[0] in obj:
+            return _get_value_at_path(obj[first], keys[1:])
+        if isinstance(obj, list) and first.isdigit() and (key := int(first)) < len(obj):
+            return _get_value_at_path(obj[key], keys[1:])
+        if isinstance(obj, list) and keys[0] == "*":
+            # Call recursively this function transforming the `*` in the path in a list
+            # of indexes present in the object, e.g:
+            # get(obj, "a.*.b") <=> [get(obj, "a.0.b"), get(obj, "a.1.b"), ...]
+            results = [
+                _get_value_at_path(obj, [str(index), *rest])
+                for index, _ in enumerate(obj)
+            ]
+            # Remove empty results and return None in case there are no results
+            # Note: Don't exclude false values such as booleans, empty strings, etc.
+            return [result for result in results if result is not None] or None
+        return None
 
-    current_value = nested_dict
-    for key in keys:
-        if isinstance(current_value, dict) and key in current_value:
-            current_value = current_value[key]
-        elif isinstance(current_value, list):
-            try:
-                key = int(key)
-                current_value = current_value[key]
-            except (ValueError, IndexError):
-                return None
-        else:
-            return None
-    return current_value
+    keys = to_path(path) if isinstance(path, str) else path
+    return _get_value_at_path(obj, keys)
 
 
 def random_string(length):

@@ -1,7 +1,7 @@
 <template>
   <nuxt-link
     class="notification-panel__notification-link"
-    :to="url"
+    :to="route"
     @click.native="markAsReadAndHandleClick"
   >
     <div class="notification-panel__notification-content-title">
@@ -19,7 +19,7 @@
         </template>
         <template #rowId>
           <strong>{{
-            notification.data.row_name ?? notification.data.row_id
+            notification.data.row_name || notification.data.row_id
           }}</strong>
         </template>
         <template #tableName>
@@ -36,27 +36,6 @@ import notificationContent from '@baserow/modules/core/mixins/notificationConten
 export default {
   name: 'CollaboratorAddedToRowNotification',
   mixins: [notificationContent],
-  props: {
-    notification: {
-      type: Object,
-      required: true,
-    },
-  },
-  computed: {
-    params() {
-      return {
-        databaseId: this.notification.data.database_id,
-        tableId: this.notification.data.table_id,
-        rowId: this.notification.data.row_id,
-      }
-    },
-    url() {
-      return {
-        name: 'database-table-row',
-        params: this.params,
-      }
-    },
-  },
   methods: {
     handleClick() {
       this.$emit('close-panel')

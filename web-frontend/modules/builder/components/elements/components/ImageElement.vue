@@ -70,18 +70,10 @@ export default {
         : this.resolvedURL
     },
     resolvedAltText() {
-      try {
-        return ensureString(this.resolveFormula(this.element.alt_text))
-      } catch {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.alt_text))
     },
     resolvedURL() {
-      try {
-        return ensureString(this.resolveFormula(this.element.image_url))
-      } catch {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.image_url))
     },
     classes() {
       return {

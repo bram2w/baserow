@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an issue where a list data source's row index would raise an error when used in the current_record data provider.",
+    "issue_number": 2431,
+    "bullet_points": [],
+    "created_at": "2024-03-19"
+}

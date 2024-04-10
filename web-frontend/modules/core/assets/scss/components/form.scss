@@ -73,6 +73,10 @@
     margin-top: 0;
     margin-left: 16px;
   }
+
+  &.control__elements--small {
+    margin-bottom: 16px;
+  }
 }
 
 .control__elements--flex {
@@ -126,6 +130,10 @@
   &.input--small {
     height: 36px;
     padding: 8px 12px;
+  }
+
+  &.input--invisible {
+    color: $white;
   }
 
   &[disabled] {

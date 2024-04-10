@@ -153,8 +153,10 @@ class BuilderConfig(AppConfig):
         from baserow.core.registries import permission_manager_type_registry
 
         from .domains.permission_manager import AllowPublicBuilderManagerType
+        from .elements.permission_manager import ElementVisibilityPermissionManager
 
         permission_manager_type_registry.register(AllowPublicBuilderManagerType())
+        permission_manager_type_registry.register(ElementVisibilityPermissionManager())
 
         from .elements.element_types import (
             ButtonElementType,
@@ -204,6 +206,7 @@ class BuilderConfig(AppConfig):
             DataSourceDataProviderType,
             FormDataProviderType,
             PageParameterDataProviderType,
+            PreviousActionProviderType,
             UserDataProviderType,
         )
 
@@ -211,6 +214,7 @@ class BuilderConfig(AppConfig):
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
         builder_data_provider_type_registry.register(CurrentRecordDataProviderType())
         builder_data_provider_type_registry.register(FormDataProviderType())
+        builder_data_provider_type_registry.register(PreviousActionProviderType())
         builder_data_provider_type_registry.register(UserDataProviderType())
 
         from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
@@ -225,6 +229,7 @@ class BuilderConfig(AppConfig):
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
             CreateRowWorkflowActionType,
+            LogoutWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
             UpdateRowWorkflowActionType,
@@ -234,6 +239,7 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
         builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
 
         from .elements.collection_field_types import (
             LinkCollectionFieldType,

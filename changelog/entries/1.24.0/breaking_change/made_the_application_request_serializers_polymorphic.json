@@ -1,0 +1,9 @@
+{
+    "type": "breaking_change",
+    "message": "Made the application request serializers polymorphic.",
+    "issue_number": null,
+    "bullet_points": [
+      "Breaking change: when an application is created or updated via the API with an invalid `type` we will now return an `ERROR_APPLICATION_TYPE_DOES_NOT_EXIST` error code, rather than `ERROR_REQUEST_BODY_VALIDATION`."
+    ],
+    "created_at": "2024-03-15"
+}

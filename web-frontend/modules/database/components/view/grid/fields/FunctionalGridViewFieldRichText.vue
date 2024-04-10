@@ -1,34 +1,41 @@
+<!-- eslint-disable vue/no-v-html -->
+<template functional>
+  <div
+    class="field-rich-text--preview grid-view__cell grid-field-rich-text__cell"
+  >
+    <div
+      class="grid-field-rich-text__cell-content"
+      v-html="$options.methods.renderFormattedValue(parent, props)"
+    ></div>
+  </div>
+</template>
+
 <script>
-import Markdown from 'markdown-it'
-import taskLists from 'markdown-it-task-lists'
+import { parseMarkdown } from '@baserow/modules/core/editor/markdown'
 
 export default {
-  functional: true,
-  render(createElement, context) {
-    const { props } = context
-    const md = new Markdown({ html: true })
+  name: 'FunctionalGridViewFieldRichText',
+  methods: {
+    renderFormattedValue(parent, props) {
+      const maxLen = 200
+      const { value, workspaceId } = props
 
-    function parseMarkdown(value) {
-      return md.use(taskLists, { label: true, enabled: true }).render(value)
-    }
-
-    // Take only a part of the text as a preview to avoid rendering a huge amount of
-    // HTML that could slow down the page and won't be visible anyway
-    let preview = ''
-    if (props.value) {
-      preview = props.value.substring(0, 200)
-      if (props.value.length > 200) {
-        preview += '...'
+      // Take only a part of the text as a preview to avoid rendering a huge amount of
+      // HTML that could slow down the page and won't be visible anyway
+      let preview = value || ''
+      if (preview.length > maxLen) {
+        preview = value.substring(0, maxLen) + '...'
       }
-    }
 
-    return createElement('div', {
-      class:
-        'grid-view__cell grid-field-rich-text__cell grid-field-rich-text__cell--preview',
-      domProps: {
-        innerHTML: parseMarkdown(preview),
-      },
-    })
+      const workspace = parent.$store.getters['workspace/get'](workspaceId)
+      const loggedUserId = parent.$store.getters['auth/getUserId']
+
+      return parseMarkdown(preview, {
+        openLinkOnClick: false,
+        workspaceUsers: workspace ? workspace.users : null,
+        loggedUserId,
+      })
+    },
   },
 }
 </script>

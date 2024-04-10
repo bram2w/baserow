@@ -186,8 +186,10 @@ def test_create_application(api_client, data_fixture, group_compat_timebomb):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"]["type"][0]["code"] == "invalid_choice"
+    assert response_json["error"] == "ERROR_APPLICATION_TYPE_DOES_NOT_EXIST"
+    assert (
+        response_json["detail"] == "The application type NOT_EXISTING does not exist."
+    )
 
     response = api_client.post(
         reverse("api:applications_compat:list", kwargs={"group_id": 99999}),

@@ -2,6 +2,7 @@ import {
   clone,
   isPromise,
   mappingToStringifiedJSONLines,
+  getValueAtPath,
 } from '@baserow/modules/core/utils/object'
 
 describe('test utils object', () => {
@@ -69,5 +70,39 @@ describe('test utils object', () => {
     // but it does. Unfortunately this is as close to a good promise detection
     // as we can get
     expect(isPromise({ then: () => null, catch: () => null })).toBeTruthy()
+  })
+
+  test.each([
+    ['a.b.c', 123],
+    ['list.1.d', 789],
+    ['list[1]d', 789],
+    ['a.b.x', null],
+    ['list.5.d', null],
+    [
+      '',
+      {
+        a: { b: { c: 123 } },
+        list: [{ d: 456 }, { d: 789, e: 111 }],
+        nested: [{ nested: [{ a: 1 }, { a: 2 }] }, { nested: [{ a: 3 }] }],
+      },
+    ],
+    ['a.b', { c: 123 }],
+    ['a[b]', { c: 123 }],
+    ['list', [{ d: 456 }, { d: 789, e: 111 }]],
+    ['list.*', [{ d: 456 }, { d: 789, e: 111 }]],
+    ['list.*.c', null],
+    ['list.*.d', [456, 789]],
+    ['list.*.e', [111]],
+    ['nested.*.nested.*.a', [[1, 2], [3]]],
+    ['nested[*].nested[*].a', [[1, 2], [3]]],
+    ['nested.*.nested.0.a', [1, 3]],
+    ['nested.*.nested.1.a', [2]],
+  ])('test getValueAtPath', (path, result) => {
+    const obj = {
+      a: { b: { c: 123 } },
+      list: [{ d: 456 }, { d: 789, e: 111 }],
+      nested: [{ nested: [{ a: 1 }, { a: 2 }] }, { nested: [{ a: 3 }] }],
+    }
+    expect(getValueAtPath(obj, path)).toStrictEqual(result)
   })
 })

@@ -1,18 +1,29 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <div
     ref="cell"
     class="grid-view__cell grid-field-rich-text__cell active"
-    :class="{ editing: opened && !isModalOpen() }"
+    :class="{
+      editing: opened && !isModalOpen(),
+      'field-rich-text--preview': !opened || isModalOpen(),
+    }"
     @contextmenu="stopContextIfEditing($event)"
   >
+    <div
+      v-if="!opened || isModalOpen()"
+      class="grid-field-rich-text__cell-content"
+      v-html="formattedValue"
+    ></div>
     <RichTextEditor
+      v-else
       ref="input"
       v-model="richCopy"
       v-prevent-parent-scroll="editing"
-      :class="classNames"
+      class="grid-field-rich-text__textarea"
+      :class="{ 'grid-field-rich-text__textarea--resizable': editing }"
       :editable="editing && !isModalOpen()"
-      :content-scaled="!opened || isModalOpen()"
       :enable-rich-text-formatting="true"
+      :mentionable-users="workspace ? workspace.users : null"
       :thin-scrollbar="true"
     ></RichTextEditor>
     <i
@@ -27,6 +38,7 @@
       ref="expandedModal"
       v-model="richCopy"
       :field="field"
+      :mentionable-users="workspace ? workspace.users : null"
       @hidden="onExpandedModalHidden"
     ></FieldRichTextModal>
   </div>
@@ -37,6 +49,7 @@ import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEdit
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
 import FieldRichTextModal from '@baserow/modules/database/components/view/FieldRichTextModal'
+import { parseMarkdown } from '@baserow/modules/core/editor/markdown'
 
 export default {
   components: { RichTextEditor, FieldRichTextModal },
@@ -48,14 +61,15 @@ export default {
     }
   },
   computed: {
-    classNames() {
-      if (!this.opened || this.isModalOpen()) {
-        return 'grid-field-rich-text'
-      } else if (this.editing) {
-        return 'grid-field-rich-text__textarea grid-field-rich-text__textarea--resizable'
-      } else {
-        return 'grid-field-rich-text__textarea'
-      }
+    formattedValue() {
+      return parseMarkdown(this.value, {
+        openLinkOnClick: true,
+        workspaceUsers: this.workspace ? this.workspace.users : null,
+        loggedUserId: this.$store.getters['auth/getUserId'],
+      })
+    },
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
     },
   },
   watch: {
@@ -85,7 +99,8 @@ export default {
       return this.save()
     },
     beforeSave() {
-      return this.$refs.input.serializeToMarkdown()
+      const ref = this.isModalOpen() ? 'expandedModal' : 'input'
+      return this.$refs[ref].serializeToMarkdown()
     },
     afterEdit() {
       this.$nextTick(() => {

@@ -45,10 +45,14 @@ import {
   ContainsNotViewFilterType,
   LengthIsLowerThanViewFilterType,
   HigherThanViewFilterType,
+  HigherThanOrEqualViewFilterType,
   LowerThanViewFilterType,
+  LowerThanOrEqualViewFilterType,
   IsEvenAndWholeViewFilterType,
   SingleSelectEqualViewFilterType,
   SingleSelectNotEqualViewFilterType,
+  SingleSelectIsAnyOfViewFilterType,
+  SingleSelectIsNoneOfViewFilterType,
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
@@ -255,8 +259,10 @@ import { DatabasePlugin } from '@baserow/modules/database/plugins'
 import {
   CollaboratorAddedToRowNotificationType,
   FormSubmittedNotificationType,
+  UserMentionInRichTextFieldNotificationType,
 } from '@baserow/modules/database/notificationTypes'
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
+import { FieldsDataProviderType } from '@baserow/modules/database/dataProviderTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -395,7 +401,15 @@ export default (context) => {
     new LengthIsLowerThanViewFilterType(context)
   )
   app.$registry.register('viewFilter', new HigherThanViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new HigherThanOrEqualViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new LowerThanViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new LowerThanOrEqualViewFilterType(context)
+  )
   app.$registry.register(
     'viewFilter',
     new IsEvenAndWholeViewFilterType(context)
@@ -408,6 +422,15 @@ export default (context) => {
     'viewFilter',
     new SingleSelectNotEqualViewFilterType(context)
   )
+  app.$registry.register(
+    'viewFilter',
+    new SingleSelectIsAnyOfViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new SingleSelectIsNoneOfViewFilterType(context)
+  )
+
   app.$registry.register('viewFilter', new BooleanViewFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasNotFilterType(context))
@@ -709,6 +732,11 @@ export default (context) => {
 
   app.$registry.register('formViewMode', new FormViewFormModeType(context))
 
+  app.$registry.register(
+    'databaseDataProvider',
+    new FieldsDataProviderType(context)
+  )
+
   // notifications
   app.$registry.register(
     'notification',
@@ -717,6 +745,10 @@ export default (context) => {
   app.$registry.register(
     'notification',
     new FormSubmittedNotificationType(context)
+  )
+  app.$registry.register(
+    'notification',
+    new UserMentionInRichTextFieldNotificationType(context)
   )
 
   app.$registry.register(

@@ -11,3 +11,122 @@
     background-color: $palette-neutral-700;
   }
 }
+
+.field-rich-text--preview {
+  overflow: hidden;
+
+  h1,
+  h2,
+  h3,
+  p,
+  a,
+  ul,
+  ol,
+  li,
+  blockquote,
+  pre,
+  code {
+    @include fixed-height(32px, 13px);
+
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    color: revert;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  a,
+  blockquote,
+  pre,
+  code {
+    @extend %ellipsis;
+  }
+
+  a,
+  a:visited,
+  a:hover,
+  a:active {
+    color: inherit;
+    text-decoration: underline;
+    cursor: text;
+  }
+
+  &.active {
+    a,
+    a:visited,
+    a:hover,
+    a:active {
+      color: $color-primary-500;
+      text-decoration: initial;
+      cursor: pointer;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  }
+
+  ul {
+    list-style-type: disc;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  li {
+    margin-left: 20px;
+  }
+
+  blockquote {
+    @extend .rich-text-editor__content-blockquote;
+
+    margin: 5px 0 0 0;
+    display: flex;
+    align-items: center;
+    height: 22px;
+    padding-left: 6px;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  pre {
+    background-color: $color-neutral-100;
+    border-radius: $rounded;
+    display: flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 2px;
+    width: fit-content;
+    margin-top: 5px;
+    max-width: 100%;
+  }
+
+  img {
+    @include rounded($rounded);
+
+    max-height: 23px;
+    width: auto;
+    border: solid 1px $color-neutral-400;
+    margin-block-start: 5px;
+  }
+
+  ul.contains-task-list {
+    list-style-type: none;
+
+    li {
+      margin-left: 0;
+
+      label {
+        @extend %ellipsis;
+        @include fixed-height(32px, 13px);
+
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+      }
+    }
+  }
+}

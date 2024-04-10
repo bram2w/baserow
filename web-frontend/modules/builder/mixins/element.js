@@ -1,6 +1,10 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
-import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
+import {
+  ClickEvent,
+  SubmitEvent,
+  AfterLoginEvent,
+} from '@baserow/modules/builder/eventTypes'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
@@ -12,12 +16,15 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      workflowActionsInProgress: false,
-    }
-  },
   computed: {
+    workflowActionsInProgress() {
+      const workflowActions = this.$store.getters[
+        'workflowAction/getElementWorkflowActions'
+      ](this.page, this.element.id)
+      return workflowActions.some((workflowAction) =>
+        this.$store.getters['workflowAction/getDispatching'](workflowAction)
+      )
+    },
     elementType() {
       return this.$registry.get('element', this.element.type)
     },
@@ -73,23 +80,44 @@ export default {
     },
     async fireEvent(EventType) {
       if (this.mode !== 'editing') {
-        this.workflowActionsInProgress = true
+        if (this.workflowActionsInProgress) {
+          return false
+        }
 
         const workflowActions = this.$store.getters[
           'workflowAction/getElementWorkflowActions'
         ](this.page, this.element.id)
 
-        await new EventType({
-          i18n: this.$i18n,
-          store: this.$store,
-          registry: this.$registry,
-        }).fire({
-          workflowActions,
-          resolveFormula: this.resolveFormula,
-          applicationContext: this.applicationContext,
-        })
-
-        this.workflowActionsInProgress = false
+        try {
+          await new EventType({
+            i18n: this.$i18n,
+            store: this.$store,
+            registry: this.$registry,
+          }).fire({
+            workflowActions,
+            resolveFormula: this.resolveFormula,
+            applicationContext: this.applicationContext,
+          })
+        } catch (e) {
+          let toastTitle = this.$i18n.t(
+            'dispatchWorkflowActionError.defaultTitle'
+          )
+          let toastMessage = this.$i18n.t(
+            'dispatchWorkflowActionError.defaultMessage'
+          )
+          if (e.error !== 'ERROR_WORKFLOW_ACTION_FORM_DATA_INVALID') {
+            toastTitle = this.$i18n.t(
+              'dispatchWorkflowActionError.formDataInvalidTitle'
+            )
+            toastMessage = this.$i18n.t(
+              'dispatchWorkflowActionError.formDataInvalidMessage'
+            )
+          }
+          return this.$store.dispatch('toast/error', {
+            title: toastTitle,
+            message: toastMessage,
+          })
+        }
       }
     },
     fireClickEvent() {
@@ -97,6 +125,9 @@ export default {
     },
     fireSubmitEvent() {
       this.fireEvent(SubmitEvent)
+    },
+    fireAfterLoginEvent() {
+      this.fireEvent(AfterLoginEvent)
     },
 
     resolveColor,

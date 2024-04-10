@@ -38,6 +38,7 @@
       :table="table"
       :view="view"
       :field="field"
+      :all-fields-in-table="allFieldsInTable"
       :filters="view.filters"
       :include-field-width-handles="includeFieldWidthHandles"
       :read-only="readOnly"
@@ -71,6 +72,8 @@
         ref="createFieldContext"
         :table="table"
         :view="view"
+        :all-fields-in-table="allFieldsInTable"
+        :database="database"
         @field-created="$emit('field-created', $event)"
         @shown="onShownCreateFieldContext"
       ></CreateFieldContext>

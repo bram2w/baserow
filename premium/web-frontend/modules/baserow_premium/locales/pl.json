@@ -206,7 +206,8 @@
         "surveyForm": "Formularz ankiety",
         "publicLogoRemoval": "Usunięcie logo publicznego",
         "personalViews": "Osobiste widoki",
-        "calendarView": "Widok kalendarza"
+        "calendarView": "Widok kalendarza",
+        "aiFeatures": "Pole AI"
     },
     "licenses": {
         "titleNoLicenses": "Nie znaleziono licencji",
@@ -274,13 +275,17 @@
         "chooseAColor": "Według którego pojedynczego pola wyboru powinien być pokolorowany wiersz?"
     },
     "conditionalColorValueProviderForm": {
-        "addCondition": "dodaj warunek",
-        "colorAlwaysApply": "Ten kolor obowiązuje domyślnie. Możesz dodać warunki, klikając przycisk „Dodaj warunek”.",
-        "addColor": "dodaj kolor"
+        "addCondition": "Dodaj warunek",
+        "colorAlwaysApply": "Warunki można dodawać, klikając przycisk \"Dodaj warunek\".",
+        "addColor": "Dodaj kolor",
+        "deleteColor": "Usuń kolor",
+        "colorAlwaysApplyTitle": "Ten kolor jest stosowany domyślnie.",
+        "addConditionGroup": "Dodaj grupę warunków",
+        "title": "Kolory"
     },
     "redirectToBaserowModal": {
-        "title": "Przekierowanie do http://baserow.io",
-        "content": "Opuszczasz swoją samodzielnie hostowaną instancję i zostajesz przekierowany na stronę http://baserow.io."
+        "title": "Przekierowanie na stronę https://baserow.io",
+        "content": "Opuszczasz samodzielnie hostowaną instancję i zostajesz przekierowany na stronę https://baserow.io."
     },
     "premiumTopSidebar": {
         "impersonateDescription": "To konto jest obsługiwane przez podszytego użytkownika. Odświeżenie strony zatrzyma to.",
@@ -308,7 +313,8 @@
         "personal": "Osobisty"
     },
     "rowCommentMentionNotification": {
-        "title": "{sender} wspomniał o Tobie w wierszu {row} w {table}"
+        "title": "{sender} wspomniał o Tobie w wierszu {row} w {table}",
+        "deletedUser": "Usunięty użytkownik"
     },
     "rowCommentContext": {
         "edit": "Edytuj komentarz",
@@ -338,5 +344,36 @@
     "selectDateFieldModal": {
         "chooseDateField": "Wybierz pole daty",
         "save": "Zapisz"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsDesc": "Będziesz otrzymywać powiadomienia tylko wtedy, gdy zostaniesz wspomniany.",
+        "modeAllTitle": "Wszystkie komentarze",
+        "modeMentionsTitle": "Tylko wzmianki",
+        "modeAllDesc": "Będziesz otrzymywać powiadomienia o wszystkich komentarzach w tym wierszu."
+    },
+    "premiumFieldType": {
+        "ai": "Prompt AI",
+        "aiDescription": "Pole tylko do odczytu, które przechowuje tekst wygenerowany przez sztuczną inteligencję na podstawie monitu pola."
+    },
+    "functionalGridViewFieldAI": {
+        "generate": "Generuj"
+    },
+    "fieldAISubForm": {
+        "AIModel": "Model AI",
+        "premiumFeature": "Pole AI jest funkcją premium",
+        "AIType": "Typ AI",
+        "prompt": "Prompt"
+    },
+    "rowEditFieldAI": {
+        "generate": "Generuj",
+        "createRowBefore": "Wartość AI może zostać wygenerowana po utworzeniu wiersza."
+    },
+    "gridViewFieldAI": {
+        "generate": "Generuj",
+        "regenerate": "Ponowne generowanie"
+    },
+    "rowCommentNotification": {
+        "title": "{sender} opublikował komentarz w wierszu {row} w {table}",
+        "deletedUser": "Usunięty użytkownik"
     }
 }

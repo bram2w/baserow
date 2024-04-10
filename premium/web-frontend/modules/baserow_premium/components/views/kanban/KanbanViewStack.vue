@@ -81,6 +81,7 @@
               :fields="cardFields"
               :decorations-by-place="decorationsByPlace"
               :row="slot.row"
+              :workspace-id="database.workspace.id"
               :cover-image-field="coverImageField"
               :style="{
                 transform: `translateY(${

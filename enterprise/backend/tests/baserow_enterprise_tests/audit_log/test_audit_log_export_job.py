@@ -232,10 +232,14 @@ def test_audit_log_export_workspace_csv_correctly(
     workspace = enterprise_data_fixture.create_workspace(user=user)
 
     with freeze_time("2023-01-01 12:00:00"):
-        app_1 = CreateApplicationActionType.do(user, workspace, "database", "App 1")
+        app_1 = CreateApplicationActionType.do(
+            user, workspace, "database", name="App 1"
+        )
 
     with freeze_time("2023-01-01 12:00:10"):
-        app_2 = CreateApplicationActionType.do(user, workspace, "database", "App 2")
+        app_2 = CreateApplicationActionType.do(
+            user, workspace, "database", name="App 2"
+        )
 
     csv_settings = {
         "csv_column_separator": ",",

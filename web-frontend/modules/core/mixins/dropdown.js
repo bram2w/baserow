@@ -3,15 +3,23 @@ import {
   isElement,
   onClickOutside,
 } from '@baserow/modules/core/utils/dom'
+import { clone } from '@baserow/modules/core/utils/object'
 
 import dropdownHelpers from './dropdownHelpers'
 import _ from 'lodash'
 
 export default {
   mixins: [dropdownHelpers],
+  provide() {
+    return {
+      // This is needed to tell all the child components that the dropdown is going
+      // to be in multiple state.
+      multiple: this.multiple,
+    }
+  },
   props: {
     value: {
-      type: [String, Number, Boolean, Object],
+      type: [String, Number, Boolean, Object, Array],
       required: false,
       default: null,
     },
@@ -70,6 +78,11 @@ export default {
      * Apply max width to the dropdown items container.
      */
     maxWidth: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    multiple: {
       type: Boolean,
       required: false,
       default: false,
@@ -272,10 +285,30 @@ export default {
         const updatePosition = () => {
           const element = this.$refs.itemsContainer
           const targetRect = this.$el.getBoundingClientRect()
-          element.style.top = targetRect.top + 'px'
+
           element.style.left = targetRect.left + 'px'
           element.style['min-width'] = targetRect.width + 'px'
-          element.style['max-height'] = `calc(100vh - ${targetRect.top + 20}px)`
+
+          // 140 is ~ the size of 1 item + optional footer
+          const minHeight = 140
+          let offset = 0
+
+          if (
+            // If the target is two low on the page
+            targetRect.top > window.innerHeight - minHeight &&
+            // and we have more space above
+            targetRect.bottom > window.innerHeight - targetRect.top
+          ) {
+            // if not enough space below the target, let's display the dropdown above
+            offset = window.innerHeight - targetRect.bottom
+            element.style.top = 'auto'
+            element.style.bottom = `${window.innerHeight - targetRect.bottom}px`
+          } else {
+            offset = Math.min(targetRect.top, window.innerHeight - minHeight)
+            element.style.top = `${offset}px`
+            element.style.bottom = 'auto'
+          }
+          element.style['max-height'] = `calc(100vh - ${offset + 20}px)`
         }
 
         // Delay the position update to the next tick to let the Context content
@@ -317,9 +350,21 @@ export default {
      * Selects a new value which will also be
      */
     select(value) {
-      this.$emit('input', value)
-      this.$emit('change', value)
-      this.hide()
+      if (this.multiple) {
+        const newValue = clone(this.value)
+        const index = newValue.indexOf(value)
+        if (index === -1) {
+          newValue.push(value)
+        } else {
+          newValue.splice(index, 1)
+        }
+        this.$emit('input', newValue)
+        this.$emit('change', newValue)
+      } else {
+        this.$emit('input', value)
+        this.$emit('change', value)
+        this.hide()
+      }
     },
     /**
      * If not empty it will only show children that contain the given query.
@@ -337,13 +382,21 @@ export default {
      * so the requested property of the child is returned
      */
     getSelectedProperty(value, property) {
-      for (const i in this.getDropdownItemComponents()) {
-        const item = this.getDropdownItemComponents()[i]
-        if (_.isEqual(item.value, value)) {
-          return item[property]
+      const get = (value, property) => {
+        for (const i in this.getDropdownItemComponents()) {
+          const item = this.getDropdownItemComponents()[i]
+          if (_.isEqual(item.value, value)) {
+            return item[property]
+          }
         }
+        return ''
       }
-      return ''
+
+      if (this.multiple) {
+        return value.map((valueItem) => get(valueItem, property))
+      } else {
+        return get(value, property)
+      }
     },
     /**
      * Returns true if there is a value.
@@ -352,7 +405,13 @@ export default {
     hasValue() {
       for (const i in this.getDropdownItemComponents()) {
         const item = this.getDropdownItemComponents()[i]
-        if (_.isEqual(item.value, this.value)) {
+        if (this.multiple) {
+          for (const i2 in this.value) {
+            if (_.isEqual(item.value, this.value[i2])) {
+              return true
+            }
+          }
+        } else if (_.isEqual(item.value, this.value)) {
           return true
         }
       }

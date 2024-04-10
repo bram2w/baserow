@@ -1690,6 +1690,7 @@ class BaserowDateDiff(ThreeArgumentBaserowFunction):
 
 class BaserowAnd(TwoArgumentBaserowFunction):
     type = "and"
+    operator = "&&"
     arg1_type = [BaserowFormulaBooleanType]
     arg2_type = [BaserowFormulaBooleanType]
 

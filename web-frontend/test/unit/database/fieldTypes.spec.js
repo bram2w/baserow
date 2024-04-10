@@ -695,6 +695,8 @@ describe('FieldType tests', () => {
     fieldRegistry = testApp._app.$registry.registry.field
 
     // Make sure that we have a mockedField for every field type in the registry
+    console.log(Object.keys(fieldRegistry).sort())
+    console.log(Object.keys(mockedFields).sort())
     expect(Object.keys(fieldRegistry).sort()).toEqual(
       Object.keys(mockedFields).sort()
     )

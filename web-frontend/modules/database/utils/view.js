@@ -409,6 +409,7 @@ export function calculateSingleRowSearchMatches(
  * Returns true is the empty value of the provided field matches the active search term.
  */
 export function newFieldMatchesActiveSearchTerm(
+  searchMode,
   registry,
   newField,
   activeSearchTerm
@@ -418,6 +419,7 @@ export function newFieldMatchesActiveSearchTerm(
     const emptyValue = fieldType.getEmptyValue(newField)
 
     return valueMatchesActiveSearchTerm(
+      searchMode,
       registry,
       newField,
       emptyValue,

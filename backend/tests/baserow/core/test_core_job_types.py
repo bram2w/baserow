@@ -52,7 +52,7 @@ def test_can_submit_duplicate_application_job(data_fixture):
     application_name = "My Application"
 
     application = CoreHandler().create_application(
-        user, workspace, application_type, application_name
+        user, workspace, application_type, name=application_name
     )
 
     assert Application.objects.count() == 1
@@ -110,7 +110,7 @@ def test_can_undo_duplicate_application_job(data_fixture):
     application_name = "My Application"
 
     application = CoreHandler().create_application(
-        user, workspace, application_type, application_name
+        user, workspace, application_type, name=application_name
     )
 
     JobHandler().create_and_start_job(

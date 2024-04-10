@@ -48,6 +48,7 @@ class RowCommentNotificationData:
 
 class RowCommentMentionNotificationType(EmailNotificationTypeMixin, NotificationType):
     type = "row_comment_mention"
+    has_web_frontend_route = True
 
     @classmethod
     def notify_mentioned_users(cls, row_comment, row, mentions):
@@ -93,6 +94,7 @@ class RowCommentNotificationType(EmailNotificationTypeMixin, NotificationType):
     """
 
     type = "row_comment"
+    has_web_frontend_route = True
 
     @classmethod
     def notify_subscribed_users(

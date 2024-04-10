@@ -36,9 +36,6 @@ export default {
     role() {
       return this.roles.find((r) => r.uid === this.roleUID)
     },
-    roleIsBillable() {
-      return this?.role.isBillable
-    },
     workspace() {
       return this.$store.getters['workspace/get'](
         this.column.additionalProps.workspaceId

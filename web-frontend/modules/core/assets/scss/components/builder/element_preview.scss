@@ -84,6 +84,27 @@
       pointer-events: none;
     }
   }
+
+  :not(.element-preview--not-visible) &--not-visible .element__wrapper {
+    opacity: 0.5;
+    filter: blur(1px);
+  }
+}
+
+.element-preview__name {
+  @include add-elevation($elevation-low);
+  @include absolute(-26px, auto, auto, 5px);
+  @include rounded($rounded);
+
+  background-color: $palette-blue-500;
+  color: $white;
+  cursor: default;
+  padding: 3px 6px;
+  z-index: 1;
+
+  .element-preview--first-element & {
+    @include absolute(auto, auto, -26px, 5px);
+  }
 }
 
 .element-preview__menu-item-description {

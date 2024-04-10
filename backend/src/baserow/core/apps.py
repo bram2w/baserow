@@ -47,10 +47,15 @@ class CoreConfig(AppConfig):
             WorkspaceMemberOnlyPermissionManagerType,
         )
         from baserow.core.registries import (
+            email_context_registry,
             object_scope_type_registry,
             operation_type_registry,
             permission_manager_type_registry,
         )
+
+        from .emails_context_types import CoreEmailContextType
+
+        email_context_registry.register(CoreEmailContextType())
 
         permission_manager_type_registry.register(CorePermissionManagerType())
         permission_manager_type_registry.register(StaffOnlyPermissionManagerType())
@@ -295,6 +300,17 @@ class CoreConfig(AppConfig):
             WorkspaceInvitationRejectedNotificationType()
         )
         notification_type_registry.register(BaserowVersionUpgradeNotificationType())
+
+        from baserow.core.generative_ai.generative_ai_model_types import (
+            OllamaGenerativeAIModelType,
+            OpenAIGenerativeAIModelType,
+        )
+        from baserow.core.generative_ai.registries import (
+            generative_ai_model_type_registry,
+        )
+
+        generative_ai_model_type_registry.register(OpenAIGenerativeAIModelType())
+        generative_ai_model_type_registry.register(OllamaGenerativeAIModelType())
 
         # Must import the Posthog signal, otherwise it won't work.
         import baserow.core.posthog  # noqa: F403, F401

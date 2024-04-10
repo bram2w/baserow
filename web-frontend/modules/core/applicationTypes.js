@@ -173,7 +173,9 @@ export class ApplicationType extends Registerable {
    * Before the application values are updated, they can be modified here. This
    * might be needed because providing certain values could break the update.
    */
-  prepareForStoreUpdate(application, data) {}
+  prepareForStoreUpdate(application, data) {
+    return data
+  }
 
   /**
    * Indicates whether the application is visible in the create new application contact.

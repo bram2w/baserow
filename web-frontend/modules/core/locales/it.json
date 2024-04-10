@@ -107,7 +107,8 @@
         "invitationFormTitle": "Invita via e-mail",
         "optionalMessagePlaceholder": "Messaggio facoltativo",
         "errorInvalidEmail": "Inserisci un indirizzo e-mail valido.",
-        "errorTooLongMessage": "I messaggi sono limitati a {amount} caratteri."
+        "errorTooLongMessage": "I messaggi sono limitati a {amount} caratteri.",
+        "additionalRoles": "Ruoli addizionali"
     },
     "workspacesContext": {
         "search": "Cerca progetto",
@@ -120,7 +121,8 @@
         "viewTrash": "Visualizza cestino",
         "leaveWorkspace": "Lascia progetto",
         "deleteWorkspace": "Elimina progetto",
-        "auditLog": "Audit log"
+        "auditLog": "Audit log",
+        "settings": "Impostazioni"
     },
     "createWorkspaceModal": {
         "createNew": "Crea nuovo progetto",
@@ -521,7 +523,8 @@
         "billable": "Paganti"
     },
     "editRoleContext": {
-        "billableRolesLink": "Documentazione per i ruoli a pagamento"
+        "billableRolesLink": "Documentazione per i ruoli a pagamento",
+        "additionalRoles": "Ruoli aggiuntivi"
     },
     "connectingToast": {
         "title": "Riconnettendo",
@@ -666,7 +669,10 @@
         "underline": "Sottolineato",
         "bold": "Grassetto",
         "italic": "Corsivo",
-        "strikethrough": "Barrato"
+        "strikethrough": "Barrato",
+        "linkEditPlaceholder": "URL del link...",
+        "link": "Link",
+        "linkEditDone": "Fatto"
     },
     "richTextEditorFloatingMenu": {
         "lists": "Liste",
@@ -679,5 +685,31 @@
         "taskList": "Elenco attività",
         "hierarchy": "Gerarchia",
         "paragraph": "Paragrafo"
+    },
+    "workspaceSettingsModal": {
+        "title": "Impostazioni progetto"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "IA generativa"
+    },
+    "generativeAIModelType": {
+        "openaiOrganization": "Organizzazione (opzionale)",
+        "openaiModelsLabel": "Modelli abilitati",
+        "openaiModelsDescription": "Fornire un elenco di [modelli OpenAI](https://platform.openai.com/docs/models/continuous-model-upgrades) separati da virgole che possono essere utilizzati in Baserow. (ad esempio `gpt-3.5-turbo,gpt-4`)",
+        "ollama": "Ollama",
+        "ollamaHostLabel": "Host",
+        "ollamaModelsLabel": "Modelli abilitati",
+        "openai": "OpenAI",
+        "openaiApiKeyLabel": "Chiave API",
+        "openaiApiKeyDescription": "Fornisci una chiave API OpenAI se desideri abilitare l'integrazione. [Istruzioni su come ottenere una chiave API](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "ollamaHostDescription": "Fornisci il nome host al tuo server [Ollama](https://ollama.com/). Questo in genere viene eseguito localmente sul tuo dispositivo.",
+        "ollamaModelsDescription": "Fornire un elenco di [modelli installati da Ollama] separati da virgole (https://ollama.com/library). Tieni presente che il modello deve essere scaricato e installato prima di poter essere utilizzato. (ad esempio `llama2, mistral`)"
+    },
+    "generativeAIWorkspaceSettings": {
+        "changedTitle": "Impostazioni aggiornate correttamente",
+        "changedDescription": "Le impostazioni sono state aggiornate e saranno ora utilizzate nel progetto.",
+        "submitButton": "Aggiorna impostazioni",
+        "title": "Impostazioni IA generativa",
+        "description": "Queste impostazioni possono essere utilizzate per impostare facoltativamente la configurazione dell'intelligenza artificiale generativa a livello di progetto. Funzionalità come il campo IA possono essere disabilitate perché mancano di una chiave API per uno dei modelli supportati. Fornendo le impostazioni qui, puoi abilitare tali funzionalità. Lasciando un valore vuoto vengono ripristinate le impostazioni predefinite dell'istanza globale. Tieni presente che tutti nel progetto condivideranno queste impostazioni."
     }
 }

@@ -4,6 +4,7 @@ import OpenPageWorkflowActionForm from '@baserow/modules/builder/components/work
 import CreateRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/CreateRowWorkflowAction.vue'
 import UpdateRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/UpdateRowWorkflowAction.vue'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export class NotificationWorkflowActionType extends WorkflowActionType {
   static getType() {
@@ -20,9 +21,13 @@ export class NotificationWorkflowActionType extends WorkflowActionType {
 
   execute({ workflowAction: { title, description }, resolveFormula }) {
     return this.app.store.dispatch('toast/info', {
-      title: resolveFormula(title),
-      message: resolveFormula(description),
+      title: ensureString(resolveFormula(title)),
+      message: ensureString(resolveFormula(description)),
     })
+  }
+
+  getDataSchema(applicationContext, workflowAction) {
+    return null
   }
 }
 
@@ -44,7 +49,7 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
     applicationContext: { builder, mode },
     resolveFormula,
   }) {
-    let urlParsed = resolveFormula(url)
+    let urlParsed = ensureString(resolveFormula(url))
 
     if (urlParsed.startsWith('/')) {
       if (mode === 'preview') {
@@ -59,21 +64,50 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
 
     window.location.replace(urlParsed)
   }
+
+  getDataSchema(applicationContext, workflowAction) {
+    return null
+  }
+}
+
+export class LogoutWorkflowActionType extends WorkflowActionType {
+  static getType() {
+    return 'logout'
+  }
+
+  get form() {
+    return null
+  }
+
+  get label() {
+    return this.app.i18n.t('workflowActionTypes.logoutLabel')
+  }
+
+  execute() {
+    return this.app.store.dispatch('userSourceUser/logoff')
+  }
 }
 
 export class WorkflowActionServiceType extends WorkflowActionType {
-  async execute({
-    workflowAction: { id },
-    applicationContext,
-    resolveFormula,
-  }) {
-    return await this.app.store.dispatch('workflowAction/dispatchAction', {
+  execute({ workflowAction: { id }, applicationContext, resolveFormula }) {
+    return this.app.store.dispatch('workflowAction/dispatchAction', {
       workflowActionId: id,
-      data: DataProviderType.getAllDispatchContext(
+      data: DataProviderType.getAllActionDispatchContext(
         this.app.$registry.getAll('builderDataProvider'),
         applicationContext
       ),
     })
+  }
+
+  getDataSchema(workflowAction) {
+    if (!workflowAction?.service?.schema) {
+      return null
+    }
+    return {
+      title: this.label,
+      type: 'object',
+      properties: workflowAction?.service?.schema?.properties,
+    }
   }
 }
 

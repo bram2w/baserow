@@ -116,6 +116,21 @@ class Settings(models.Model):
         help_text="Runs a job once per day which calculates per workspace row counts "
         "and file storage usage, displayed on the admin workspace page.",
     )
+    show_baserow_help_request = models.BooleanField(
+        default=True,
+        help_text=(
+            "Indicates whether the `We need your help!` message will be shown on the "
+            "dashboard"
+        ),
+    )
+    co_branding_logo = models.ForeignKey(
+        UserFile,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Co-branding logo that's placed next to the Baserow logo (176x29).",
+    )
 
 
 class UserProfile(models.Model):
@@ -215,6 +230,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
     seats_taken = models.IntegerField(null=True)
     seats_taken_updated_at = models.DateTimeField(null=True)
     now = models.DateTimeField(null=True)
+    generative_ai_models_settings = models.JSONField(default=dict, null=True)
 
     def get_parent(self):
         return None

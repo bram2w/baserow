@@ -40,16 +40,18 @@ export default {
     NodeViewWrapper,
   },
   mixins: [formulaComponent],
-  inject: ['applicationContext'],
+  inject: ['applicationContext', 'dataProviders'],
+  data() {
+    return { nodes: [], pathParts: [] }
+  },
   computed: {
     availableData() {
-      if (!this.dataProviderType) {
-        return []
-      }
-      return [this.dataProviderType.getNodes(this.applicationContext)]
+      return Object.values(this.dataProviders).map((dataProvider) =>
+        dataProvider.getNodes(this.applicationContext)
+      )
     },
     isInvalid() {
-      return this.findNode(this.availableData, _.toPath(this.path)) === null
+      return this.findNode(this.nodes, _.toPath(this.path)) === null
     },
     path() {
       return this.node.attrs.path
@@ -61,9 +63,15 @@ export default {
       return _.toPath(this.path)
     },
     dataProviderType() {
-      return this.$registry.get('builderDataProvider', this.rawPathParts[0])
+      const pathParts = this.rawPathParts
+      return this.dataProviders.find(
+        (dataProvider) => dataProvider.type === pathParts[0]
+      )
     },
-    pathParts() {
+  },
+  mounted() {
+    if (this.dataProviderType) {
+      this.nodes = [this.dataProviderType.getNodes(this.applicationContext)]
       const translatedPathPart = this.rawPathParts.map((_, index) =>
         this.dataProviderType.getPathTitle(
           this.applicationContext,
@@ -72,8 +80,8 @@ export default {
       )
 
       translatedPathPart[0] = this.dataProviderType.name
-      return translatedPathPart
-    },
+      this.pathParts = translatedPathPart
+    }
   },
   methods: {
     findNode(nodes, path) {

@@ -1,1 +1,5 @@
-{}
+{
+    "dataProviderType": {
+        "pageParameter": "Parametr"
+    }
+}

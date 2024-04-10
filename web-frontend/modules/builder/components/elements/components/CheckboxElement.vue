@@ -1,35 +1,38 @@
 <template>
-  <div class="checkbox-element">
-    <input
-      class="checkbox-element__input"
-      type="checkbox"
-      :checked="value"
+  <div class="checkbox-element-wrapper">
+    <ABCheckbox
+      v-model="inputValue"
       :required="element.required"
       :disabled="isEditMode"
-      @change="toggleValue"
-    />
-    <label
-      v-if="resolvedLabel"
-      class="checkbox-element__label"
-      @click="toggleValue"
+      :error="displayFormDataError"
+      class="checkbox-element"
     >
       {{ resolvedLabel }}
-    </label>
+      <span
+        v-if="element.label && element.required"
+        :title="$t('error.requiredField')"
+        >*</span
+      >
+    </ABCheckbox>
+    <div v-if="displayFormDataError" class="error">
+      <i class="iconoir-warning-triangle"></i>
+      {{ $t('error.requiredField') }}
+    </div>
   </div>
 </template>
 
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
-import { ensureBoolean } from '@baserow/modules/core/utils/validator'
+import {
+  ensureBoolean,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
+import ABCheckbox from '@baserow/modules/builder/components/elements/baseComponents/ABCheckbox'
 
 export default {
   name: 'CheckboxElement',
+  components: { ABCheckbox },
   mixins: [formElement],
-  data() {
-    return {
-      value: false,
-    }
-  },
   computed: {
     defaultValueResolved() {
       try {
@@ -39,25 +42,15 @@ export default {
       }
     },
     resolvedLabel() {
-      return this.resolveFormula(this.element.label)
+      return ensureString(this.resolveFormula(this.element.label))
     },
   },
   watch: {
     defaultValueResolved: {
-      handler(value) {
-        this.value = value
+      handler(newValue) {
+        this.inputValue = newValue
       },
       immediate: true,
-    },
-    value(value) {
-      this.setFormData(value)
-    },
-  },
-  methods: {
-    toggleValue() {
-      if (!this.isEditMode) {
-        this.value = !this.value
-      }
     },
   },
 }

@@ -7,13 +7,15 @@
       'element-preview--parent-of-selected': isParentOfSelectedElement,
       'element-preview--in-error': inError,
       'element-preview--first-element': isFirstElement,
+      'element-preview--not-visible':
+        !isVisible && !isSelected && !isParentOfSelectedElement,
     }"
-    tabindex="0"
     @click="onSelect"
-    @keyup.d.stop="duplicateElement"
-    @keyup.delete.stop="deleteElement"
-    @keyup.p.stop="selectParentElement"
   >
+    <div v-if="isSelected" class="element-preview__name">
+      {{ elementType.name }}
+      <i v-if="!isVisible" class="iconoir-eye-off" />
+    </div>
     <InsertElementButton
       v-show="isSelected"
       class="element-preview__insert element-preview__insert--top"
@@ -85,16 +87,6 @@ export default {
       required: false,
       default: false,
     },
-    placements: {
-      type: Array,
-      required: false,
-      default: () => [PLACEMENTS.BEFORE, PLACEMENTS.AFTER],
-    },
-    placementsDisabled: {
-      type: Array,
-      required: false,
-      default: () => [],
-    },
     isRootElement: {
       type: Boolean,
       required: false,
@@ -111,7 +103,38 @@ export default {
       elementSelected: 'element/getSelected',
       elementAncestors: 'element/getAncestors',
     }),
+    isVisible() {
+      switch (this.element.visibility) {
+        case 'logged-in':
+          return this.$store.getters['userSourceUser/isAuthenticated']
+        case 'not-logged':
+          return !this.$store.getters['userSourceUser/isAuthenticated']
+        default:
+          return true
+      }
+    },
     PLACEMENTS: () => PLACEMENTS,
+    placements() {
+      return [
+        PLACEMENTS.BEFORE,
+        PLACEMENTS.AFTER,
+        PLACEMENTS.LEFT,
+        PLACEMENTS.RIGHT,
+      ]
+    },
+    parentOfElementSelected() {
+      if (!this.elementSelected?.parent_element_id) {
+        return null
+      }
+      return this.$store.getters['element/getElementById'](
+        this.page,
+        this.elementSelected.parent_element_id
+      )
+    },
+    placementsDisabled() {
+      const elementType = this.$registry.get('element', this.element.type)
+      return elementType.getPlacementsDisabled(this.page, this.element)
+    },
     elementTypesAllowed() {
       return this.parentElementType?.childElementTypes || null
     },
@@ -161,12 +184,29 @@ export default {
   },
   watch: {
     /**
-     * Focuses the element if the element has been selected.
+     * If the element is currently selected, i.e. in the Elements Context menu,
+     * ensure the element is scrolled into the viewport.
      */
     isSelected(newValue, old) {
       if (newValue && !old) {
-        this.$el.focus()
+        this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
+    },
+    /**
+     * If the currently selected element in the Page Preview has moved, ensure
+     * the element is scrolled into the viewport.
+     */
+    element: {
+      handler(newValue, old) {
+        if (
+          (newValue.place_in_container !== old.place_in_container ||
+            newValue.order !== old.order) &&
+          this.isSelected
+        ) {
+          this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      },
+      deep: true,
     },
   },
   methods: {
@@ -219,11 +259,6 @@ export default {
         })
       } catch (error) {
         notifyIf(error)
-      }
-    },
-    selectParentElement() {
-      if (this.parentElement) {
-        this.actionSelectElement({ element: this.parentElement })
       }
     },
   },

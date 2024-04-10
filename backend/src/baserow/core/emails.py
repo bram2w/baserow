@@ -12,6 +12,7 @@ from loguru import logger
 
 from baserow.core.notifications.models import Notification
 from baserow.core.notifications.registries import notification_type_registry
+from baserow.core.registries import email_context_registry
 
 
 class BaseEmailMessage(EmailMultiAlternatives):
@@ -65,14 +66,7 @@ class BaseEmailMessage(EmailMultiAlternatives):
         return body_with_collapsed_newlines
 
     def get_context(self):
-        return {
-            "public_backend_hostname": settings.PUBLIC_BACKEND_HOSTNAME,
-            "public_backend_url": settings.PUBLIC_BACKEND_URL,
-            "public_web_frontend_hostname": settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
-            "public_web_frontend_url": settings.PUBLIC_WEB_FRONTEND_URL,
-            "baserow_embedded_share_url": settings.BASEROW_EMBEDDED_SHARE_URL,
-            "baserow_embedded_share_hostname": settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
-        }
+        return email_context_registry.get_context()
 
     def get_from_email(self):
         return settings.FROM_EMAIL
@@ -160,10 +154,12 @@ class NotificationsSummaryEmail(BaseEmailMessage):
                     notification, context
                 )
             )
+            email_url = notification_type.get_web_frontend_url(notification)
             rendered_notifications.append(
                 {
                     "title": email_title,
                     "description": email_description,
+                    "url": email_url,
                 }
             )
         unlisted_notifications_count = self.new_notifications_count - len(

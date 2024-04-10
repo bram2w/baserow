@@ -932,13 +932,17 @@ export class BaserowAnd extends BaserowFunctionDefinition {
   getExamples() {
     return [
       'and(true, false) = false',
-      'and(true, true) = true',
+      'true && true = true',
       "and(field('first test'), field('second test'))",
     ]
   }
 
   getFormulaType() {
     return 'boolean'
+  }
+
+  getOperator() {
+    return '&&'
   }
 }
 

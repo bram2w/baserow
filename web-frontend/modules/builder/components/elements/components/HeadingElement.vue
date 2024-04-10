@@ -5,10 +5,8 @@
       [`element--alignment-horizontal-${element.alignment}`]: true,
     }"
   >
-    <component
-      :is="`h${element.level}`"
-      class="heading-element__heading"
-      :class="`ab-heading--h${element.level}`"
+    <ABHeading
+      :level="element.level"
       :style="{
         [`--heading-h${element.level}--color`]: resolveColor(
           element.font_color,
@@ -17,13 +15,14 @@
       }"
     >
       {{ resolvedValue || $t('headingElement.noValue') }}
-    </component>
+    </ABHeading>
   </div>
 </template>
 
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import headingElement from '@baserow/modules/builder/mixins/headingElement'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'HeadingElement',
@@ -42,11 +41,7 @@ export default {
   },
   computed: {
     resolvedValue() {
-      try {
-        return this.resolveFormula(this.element.value)
-      } catch (e) {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.value))
     },
   },
 }

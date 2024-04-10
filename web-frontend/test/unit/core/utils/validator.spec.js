@@ -19,6 +19,7 @@ describe('ensureInteger', () => {
     expect(() => ensureInteger('12.34')).toThrow(Error)
     expect(() => ensureInteger(true)).toThrow(Error)
     expect(() => ensureInteger(null)).toThrow(Error)
+    expect(() => ensureInteger([])).toThrow(Error)
   })
 })
 
@@ -27,6 +28,8 @@ describe('ensureString', () => {
     expect(ensureString(null)).toBe('')
     expect(ensureString(undefined)).toBe('')
     expect(ensureString('')).toBe('')
+    expect(ensureString([])).toBe('')
+    expect(ensureString([[[]]])).toBe('')
   })
 
   it('should convert the value to a string if it is truthy', () => {
@@ -35,6 +38,7 @@ describe('ensureString', () => {
     expect(ensureString(0)).toBe('0')
     expect(ensureString(false)).toBe('false')
     expect(ensureString([1, 2, 3])).toBe('1,2,3')
+    expect(ensureString([[], [[], [5, 7], 6]])).toBe('5,7,6')
     expect(ensureString({ key: 'value' })).toBe('[object Object]')
   })
 })

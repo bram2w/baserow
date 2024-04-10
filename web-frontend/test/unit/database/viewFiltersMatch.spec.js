@@ -29,12 +29,17 @@ import {
   DateEqualsCurrentYearViewFilterType,
   IsEvenAndWholeViewFilterType,
   HigherThanViewFilterType,
+  HigherThanOrEqualViewFilterType,
   LowerThanViewFilterType,
+  LowerThanOrEqualViewFilterType,
+  SingleSelectIsAnyOfViewFilterType,
+  SingleSelectIsNoneOfViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   DurationFieldType,
   NumberFieldType,
   FormulaFieldType,
+  SingleSelectFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
 const dateBeforeCases = [
@@ -848,6 +853,80 @@ const lengthIsLowerThanCases = [
   },
 ]
 
+/**
+ * SingleSelectIsAnyOfViewFilterType and SingleSelectIsNoneOfViewFilterType test values.
+ *
+ * In case of SingleSelectIsNoneOfViewFilterType we expect negation of .expected
+ */
+const singleSelectValuesInFilterCases = [
+  {
+    rowValue: { id: 1 },
+    filterValue: '1,2',
+    is_any_of: true,
+    is_none_of: false,
+  },
+  {
+    rowValue: { id: 2 },
+    filterValue: '1,2',
+    is_any_of: true,
+    is_none_of: false,
+  },
+  {
+    rowValue: { id: 3 },
+    filterValue: '1,2',
+    is_any_of: false,
+    is_none_of: true,
+  },
+  {
+    rowValue: { id: 4 },
+    filterValue: '1,2',
+    is_any_of: false,
+    is_none_of: true,
+  },
+  {
+    rowValue: { id: 5 },
+    filterValue: '1',
+    is_any_of: false,
+    is_none_of: true,
+  },
+  {
+    rowValue: { id: 5 },
+    filterValue: '1, 5',
+    is_any_of: true,
+    is_none_of: false,
+  },
+  {
+    rowValue: { id: 5 },
+    filterValue: '',
+    is_any_of: true,
+    is_none_of: true,
+  },
+  {
+    rowValue: null,
+    filterValue: '',
+    is_any_of: true,
+    is_none_of: true,
+  },
+  {
+    rowValue: { id: 1 },
+    filterValue: '',
+    is_any_of: true,
+    is_none_of: true,
+  },
+  {
+    rowValue: { id: 1 },
+    filterValue: 'test,test2',
+    is_any_of: false,
+    is_none_of: true,
+  },
+  {
+    rowValue: { id: 1 },
+    filterValue: '1,test2',
+    is_any_of: true,
+    is_none_of: false,
+  },
+]
+
 describe('Date in this week, month and year tests', () => {
   let testApp = null
   let dateNowSpy
@@ -1148,6 +1227,44 @@ const numberValueIsHigherThanCases = [
   },
 ]
 
+const numberValueIsHigherThanOrEqualCases = [
+  {
+    rowValue: 2,
+    filterValue: 3,
+    expected: false,
+  },
+  {
+    rowValue: 2,
+    filterValue: 0,
+    expected: true,
+  },
+  {
+    rowValue: null,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: 1,
+    filterValue: '-1',
+    expected: true,
+  },
+  {
+    rowValue: 0,
+    filterValue: '0',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '-1',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '0',
+    expected: false,
+  },
+]
+
 const numberValueIsLowerThanCases = [
   {
     rowValue: 1,
@@ -1163,6 +1280,44 @@ const numberValueIsLowerThanCases = [
     rowValue: 0,
     filterValue: '0',
     expected: false,
+  },
+]
+
+const numberValueIsLowerThanOrEqualCases = [
+  {
+    rowValue: 2,
+    filterValue: 3,
+    expected: true,
+  },
+  {
+    rowValue: 2,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: null,
+    filterValue: 0,
+    expected: false,
+  },
+  {
+    rowValue: 1,
+    filterValue: '-1',
+    expected: false,
+  },
+  {
+    rowValue: 0,
+    filterValue: '0',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '-1',
+    expected: true,
+  },
+  {
+    rowValue: -1,
+    filterValue: '0',
+    expected: true,
   },
 ]
 
@@ -1489,6 +1644,20 @@ describe('All Tests', () => {
     }
   )
 
+  test.each(numberValueIsHigherThanOrEqualCases)(
+    'NumberHigherThanOrEqualFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new HigherThanOrEqualViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
   test.each(numberValueIsHigherThanCases)(
     'FormulaNumberHigherThanFilterType',
     (values) => {
@@ -1517,6 +1686,20 @@ describe('All Tests', () => {
     }
   )
 
+  test.each(numberValueIsLowerThanOrEqualCases)(
+    'NumberLowerThanOrEqualFilterType',
+    (values) => {
+      const app = testApp.getApp()
+      const result = new LowerThanOrEqualViewFilterType({ app }).matches(
+        values.rowValue,
+        values.filterValue,
+        { type: 'number' },
+        new NumberFieldType({ app })
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
   test.each(numberValueIsLowerThanCases)(
     'FormulaNumberLowerThanFilterType',
     (values) => {
@@ -1528,6 +1711,31 @@ describe('All Tests', () => {
         new FormulaFieldType({ app })
       )
       expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(singleSelectValuesInFilterCases)(
+    'SingleSelectIsAnyOfViewFilterType',
+    (values) => {
+      const fieldType = new SingleSelectFieldType()
+      const field = {}
+      const result = new SingleSelectIsAnyOfViewFilterType({
+        app: testApp._app,
+      }).matches(values.rowValue, values.filterValue, field, fieldType)
+      console.log(values.rowValue, values.filterValue, result, values.is_any_of)
+      expect(result).toBe(values.is_any_of)
+    }
+  )
+
+  test.each(singleSelectValuesInFilterCases)(
+    'SingleSelectIsNoneOfViewFilterType',
+    (values) => {
+      const fieldType = new SingleSelectFieldType()
+      const field = {}
+      const result = new SingleSelectIsNoneOfViewFilterType({
+        app: testApp._app,
+      }).matches(values.rowValue, values.filterValue, field, fieldType)
+      expect(result).toBe(values.is_none_of)
     }
   )
 })

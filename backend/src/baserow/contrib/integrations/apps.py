@@ -22,3 +22,5 @@ class IntegrationsConfig(AppConfig):
         service_type_registry.register(LocalBaserowGetRowUserServiceType())
         service_type_registry.register(LocalBaserowListRowsUserServiceType())
         service_type_registry.register(LocalBaserowUpsertRowServiceType())
+
+        import baserow.contrib.integrations.signals  # noqa: F403, F401

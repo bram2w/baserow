@@ -122,11 +122,11 @@ export class BaserowPlugin extends Registerable {
 
   /**
    * Every registered plugin can display multiple additional context items in the
-   * database context displayed by the sidebar when opening the context menu of a
-   * database.
+   * application context displayed by the sidebar when opening the context menu of a
+   * application.
    * @returns {*[]}
    */
-  getAdditionalDatabaseContextComponents(workspace, database) {
+  getAdditionalApplicationContextComponents(workspace, application) {
     return []
   }
 
@@ -156,5 +156,38 @@ export class BaserowPlugin extends Registerable {
    */
   hasFeature(feature, forSpecificWorkspace) {
     return false
+  }
+
+  /**
+   * Can return components that will be added to the admin instance settings page.
+   */
+  getSettingsPageComponents() {
+    return []
+  }
+
+  /**
+   * Can overwrite the help component shown on the dashboard page. Note that it can
+   * only show one component, so if any plugin sets one, the original one will be
+   * hidden, and those will be shown.
+   */
+  getDashboardHelpComponents() {
+    return []
+  }
+
+  /**
+   * Overwrite the logo component everywhere. If there are multiple plugins
+   * providing a logo, then the one with the highest `getLogoComponentOrder` will be
+   * used because we can only show one.
+   */
+  getLogoComponent() {
+    return null
+  }
+
+  /**
+   * If multiple logo components are returned, then the one with the highest order
+   * will be placed.
+   */
+  getLogoComponentOrder() {
+    return 50
   }
 }

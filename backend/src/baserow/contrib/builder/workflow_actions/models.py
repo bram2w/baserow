@@ -13,6 +13,7 @@ from baserow.core.workflow_actions.models import WorkflowAction
 class EventTypes(models.TextChoices):
     CLICK = "click"
     SUBMIT = "submit"
+    AFTER_LOGIN = "after_login"
 
 
 class BuilderWorkflowAction(
@@ -65,6 +66,10 @@ class NotificationWorkflowAction(BuilderWorkflowAction):
 
 class OpenPageWorkflowAction(BuilderWorkflowAction):
     url = FormulaField(default="")
+
+
+class LogoutWorkflowAction(BuilderWorkflowAction):
+    pass
 
 
 class BuilderWorkflowServiceAction(BuilderWorkflowAction):

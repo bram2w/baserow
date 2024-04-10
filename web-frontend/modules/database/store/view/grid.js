@@ -49,6 +49,10 @@ export function populateRow(row, metadata = {}) {
     // between cells.
     selected: false,
     selectedFieldId: -1,
+    // Contains the specific field ids that are in a loading state. This is for
+    // example used for fields that use a background worker to compute the value
+    // like the AI field.
+    pendingFieldOps: [],
   }
   return row
 }
@@ -412,6 +416,17 @@ export const mutations = {
       if (metadata) {
         existingRowState._.metadata = metadata
       }
+
+      // Remove every pending AI field if a value is provided for it.
+      if (existingRowState._?.pendingFieldOps?.length > 0) {
+        const newFieldKeys = new Set(
+          Object.keys(values).filter((key) => values[key])
+        )
+        existingRowState._.pendingFieldOps =
+          existingRowState._.pendingFieldOps.filter(
+            (key) => !newFieldKeys.has(key)
+          )
+      }
     }
   },
   UPDATE_ROW_VALUES(state, { row, values }) {
@@ -583,6 +598,20 @@ export const mutations = {
           newEntry[key] = fieldType.getGroupValueFromRowValue(field, row[key])
         })
         existingMetadata[`field_${groupBy.field}`].push(newEntry)
+      }
+    })
+  },
+  SET_PENDING_FIELD_OPERATIONS(state, { fieldId, rowIds, value }) {
+    const key = `field_${fieldId}`
+    state.rows.forEach((row) => {
+      if (rowIds.includes(row.id)) {
+        if (value) {
+          row._.pendingFieldOps.push(key)
+        } else {
+          row._.pendingFieldOps = row._.pendingFieldOps.filter(
+            (fieldName) => fieldName !== key
+          )
+        }
       }
     })
   },
@@ -2260,6 +2289,7 @@ export const actions = {
       jsonData,
       rowIndex,
       fieldIndex,
+      selectUpdatedCells = true,
     }
   ) {
     const copiedRowsCount = textData.length
@@ -2324,7 +2354,7 @@ export const actions = {
       rowTailIndex = rowTailIndex + newRowsCount
     }
 
-    if (!isSingleCellCopied) {
+    if (!isSingleCellCopied && selectUpdatedCells) {
       // Expand the selection of the multiple select to the cells that we're going to
       // paste in, so the user can see which values have been updated. This is because
       // it could be that there are more or less values in the clipboard compared to
@@ -2929,6 +2959,26 @@ export const actions = {
       fieldIndex: minFieldIndex,
     })
   },
+  /**
+   * Add the fieldId to the list of pending field operations for the given rowIds.
+   * This is used to show a loading spinner when a field is being updated. For example,
+   * the AI field type uses this to show a spinner when the AI values are being
+   * generated in a background task.
+   */
+  setPendingFieldOperations({ commit }, { fieldId, rowIds, value = true }) {
+    commit('SET_PENDING_FIELD_OPERATIONS', { fieldId, rowIds, value })
+  },
+  AIValuesGenerationError({ commit, dispatch }, { fieldId, rowIds }) {
+    commit('SET_PENDING_FIELD_OPERATIONS', { fieldId, rowIds, value: false })
+    dispatch(
+      'toast/error',
+      {
+        title: this.$i18n.t('gridView.AIValuesGenerationErrorTitle'),
+        message: this.$i18n.t('gridView.AIValuesGenerationErrorMessage'),
+      },
+      { root: true }
+    )
+  },
 }
 
 export const getters = {
@@ -3143,6 +3193,23 @@ export const getters = {
         maxRow - state.bufferStartIndex + 1
       )
     }
+  },
+  getSelectedFields: (state, getters) => (fields) => {
+    const [minField, maxField] = getters.getMultiSelectFieldIndexSorted
+    const selectedFields = []
+
+    const fieldMap = fields.reduce((acc, field) => {
+      acc[field.id] = field
+      return acc
+    }, {})
+
+    for (let i = minField; i <= maxField; i++) {
+      const fieldId = getters.getFieldIdByIndex(i, fields)
+      if (fieldId !== -1) {
+        selectedFields.push(fieldMap[fieldId])
+      }
+    }
+    return selectedFields
   },
   getAllFieldAggregationData(state) {
     return state.fieldAggregationData

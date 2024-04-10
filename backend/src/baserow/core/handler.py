@@ -110,6 +110,7 @@ from .types import (
 from .utils import (
     ChildProgressBuilder,
     atomic_if_not_already,
+    extract_allowed,
     find_unused_name,
     set_allowed_attrs,
 )
@@ -122,6 +123,9 @@ tracer = trace.get_tracer(__name__)
 
 
 class CoreHandler(metaclass=baserow_trace_methods(tracer)):
+    default_create_allowed_fields = ["name", "init_with_data"]
+    default_update_allowed_fields = ["name"]
+
     def get_settings(self):
         """
         Returns a settings model instance containing all the admin configured settings.
@@ -131,7 +135,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         try:
-            return Settings.objects.all()[:1].get()
+            return Settings.objects.all().select_related("co_branding_logo")[:1].get()
         except Settings.DoesNotExist:
             return Settings.objects.create()
 
@@ -166,6 +170,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "allow_global_workspace_creation",
                 "account_deletion_grace_delay",
                 "track_workspace_usage",
+                "show_baserow_help_request",
+                "co_branding_logo",
             ],
             settings_instance,
         )
@@ -547,7 +553,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         return workspace_user
 
     def update_workspace(
-        self, user: AbstractUser, workspace: WorkspaceForUpdate, name: str
+        self,
+        user: AbstractUser,
+        workspace: WorkspaceForUpdate,
+        name: Optional[str] = None,
+        generative_ai_models_settings: Optional[Dict[str, Any]] = None,
     ) -> Workspace:
         """
         Updates the values of a workspace if the user has admin
@@ -562,6 +572,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         if not isinstance(workspace, Workspace):
             raise ValueError("The workspace is not an instance of Workspace.")
+        elif name is None and generative_ai_models_settings is None:
+            raise ValueError("Nothing to update.")
 
         CoreHandler().check_permissions(
             user,
@@ -570,9 +582,15 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             context=workspace,
         )
 
-        workspace.name = name
-        workspace.save()
+        updated_fields = []
+        if name is not None:
+            workspace.name = name
+            updated_fields.append("name")
+        if generative_ai_models_settings is not None:
+            workspace.generative_ai_models_settings = generative_ai_models_settings
+            updated_fields.append("generative_ai_models_settings")
 
+        workspace.save(update_fields=updated_fields)
         workspace_updated.send(self, workspace=workspace, user=user)
 
         return workspace
@@ -1306,8 +1324,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         user: AbstractUser,
         workspace: Workspace,
         type_name: str,
-        name: str,
         init_with_data: bool = False,
+        **kwargs,
     ) -> Application:
         """
         Creates a new application based on the provided type.
@@ -1316,9 +1334,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param workspace: The workspace that the application instance belongs to.
         :param type_name: The type name of the application. ApplicationType can be
             registered via the ApplicationTypeRegistry.
-        :param name: The name of the application.
         :param init_with_data: Whether the application should be initialized with
             some default data. Defaults to False.
+        :param kwargs: Additional parameters to pass to the application creation.
         :return: The created application instance.
         """
 
@@ -1330,8 +1348,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         application_type = application_type_registry.get(type_name)
+        allowed_values = extract_allowed(
+            kwargs, self.default_create_allowed_fields + application_type.allowed_fields
+        )
         application = application_type.create_application(
-            user, workspace, name, init_with_data
+            user, workspace, init_with_data=init_with_data, **allowed_values
         )
 
         application_created.send(self, application=application, user=user)
@@ -1356,14 +1377,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
     def update_application(
-        self, user: AbstractUser, application: Application, name: str
+        self, user: AbstractUser, application: Application, **kwargs
     ) -> Application:
         """
         Updates an existing application instance.
 
         :param user: The user on whose behalf the application is updated.
         :param application: The application instance that needs to be updated.
-        :param name: The new name of the application.
+        :param kwargs: Additional parameters to pass to the application update.
         :return: The updated application instance.
         """
 
@@ -1374,7 +1395,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             context=application,
         )
 
-        application.name = name
+        application_type = application_type_registry.get_by_model(application)
+        allowed_updates = extract_allowed(
+            kwargs, self.default_update_allowed_fields + application_type.allowed_fields
+        )
+
+        for key, value in allowed_updates.items():
+            setattr(application, key, value)
+
         application.save()
 
         application_updated.send(self, application=application, user=user)

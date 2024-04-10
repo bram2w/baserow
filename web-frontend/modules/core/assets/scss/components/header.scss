@@ -144,6 +144,11 @@
     width: 16px;
     overflow: hidden;
   }
+
+  .logo {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .header--overflow .header__filter-name {

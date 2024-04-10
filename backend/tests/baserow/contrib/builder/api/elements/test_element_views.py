@@ -533,3 +533,22 @@ def test_dropdown_options_deleted(api_client, data_fixture):
 
     assert response.status_code == HTTP_204_NO_CONTENT
     assert DropdownElementOption.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_create_collection_element_type_with_invalid_data_source_id(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_table_element(page=page)
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": element.id})
+    response = api_client.patch(
+        url,
+        {"data_source_id": 999999},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_DOES_NOT_EXIST"

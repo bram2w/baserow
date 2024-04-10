@@ -128,11 +128,9 @@ def send_instant_notifications_email_to_users():
     )
     max_emails = settings.EMAIL_NOTIFICATIONS_LIMIT_PER_TASK[notifications_frequency]
 
-    return (
-        NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
-            Q(profile__email_notification_frequency=notifications_frequency),
-            max_emails,
-        )
+    return NotificationHandler.send_unread_notifications_by_email_to_users_matching_filters(
+        Q(profile__email_notification_frequency=notifications_frequency),
+        max_emails,
     )
 
 
@@ -177,7 +175,7 @@ def send_daily_notifications_email_to_users(now: Optional[datetime] = None):
     notifications_frequency = UserProfile.EmailNotificationFrequencyOptions.DAILY.value
     max_emails = settings.EMAIL_NOTIFICATIONS_LIMIT_PER_TASK[notifications_frequency]
 
-    return handler.send_new_notifications_to_users_matching_filters_by_email(
+    return handler.send_unread_notifications_by_email_to_users_matching_filters(
         Q(
             profile__email_notification_frequency=notifications_frequency,
             profile__timezone__in=timezones_to_send_notifications,
@@ -209,7 +207,7 @@ def send_weekly_notifications_email_to_users(now: Optional[datetime] = None):
     notifications_frequency = UserProfile.EmailNotificationFrequencyOptions.WEEKLY.value
     max_emails = settings.EMAIL_NOTIFICATIONS_LIMIT_PER_TASK[notifications_frequency]
 
-    return handler.send_new_notifications_to_users_matching_filters_by_email(
+    return handler.send_unread_notifications_by_email_to_users_matching_filters(
         Q(
             profile__email_notification_frequency=notifications_frequency,
             profile__timezone__in=timezones_to_send_notifications,

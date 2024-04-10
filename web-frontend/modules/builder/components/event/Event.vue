@@ -20,9 +20,18 @@
     </template>
     <template #default>
       <div>
+        <!--
+          By setting the WorkflowAction 'key' property to '$id_$order_$workflow.length'
+          we ensure that the component is re-rendered once that value changes.
+          This value will change after an action is ordered, thus triggering the
+          rendering engine, which can be useful when we want instant visual
+          feedback.
+          One example would be to highlight formulas that become invalid after
+          action ordering.
+        -->
         <WorkflowAction
           v-for="(workflowAction, index) in workflowActions"
-          :key="workflowAction.id"
+          :key="`${workflowAction.id}_${workflowAction.order}_${workflowActions.length}`"
           v-sortable="{
             id: workflowAction.id,
             handle: '[data-sortable-handle]',
@@ -30,8 +39,10 @@
           }"
           class="event__workflow-action"
           :class="{ 'event__workflow-action--first': index === 0 }"
+          :element="element"
           :available-workflow-action-types="availableWorkflowActionTypes"
           :workflow-action="workflowAction"
+          :workflow-action-index="index"
           @delete="deleteWorkflowAction(workflowAction)"
         />
       </div>
@@ -60,7 +71,7 @@ const DEFAULT_WORKFLOW_ACTION_TYPE = NotificationWorkflowActionType.getType()
 export default {
   name: 'Event',
   components: { WorkflowAction },
-  inject: ['page'],
+  inject: ['builder', 'page'],
   props: {
     event: {
       type: Event,
@@ -85,8 +96,20 @@ export default {
       addingAction: false,
     }
   },
+  async mounted() {
+    try {
+      await Promise.all([
+        this.actionFetchIntegrations({
+          application: this.builder,
+        }),
+      ])
+    } catch (error) {
+      notifyIf(error)
+    }
+  },
   methods: {
     ...mapActions({
+      actionFetchIntegrations: 'integration/fetch',
       actionCreateWorkflowAction: 'workflowAction/create',
       actionDeleteWorkflowAction: 'workflowAction/delete',
       actionOrderWorkflowActions: 'workflowAction/order',

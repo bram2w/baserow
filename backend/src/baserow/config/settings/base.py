@@ -484,7 +484,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.23.2",
+    "VERSION": "1.24.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -826,6 +826,11 @@ EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
 
+# The interval in minutes that the mentions cleanup job should run. This job will
+# remove mentions that are no longer used.
+STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES = int(
+    os.getenv("BASEROW_STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES", "") or 360
+)
 
 MIDNIGHT_CRONTAB_STR = "0 0 * * *"
 BASEROW_STORAGE_USAGE_JOB_CRONTAB = get_crontab_from_env(
@@ -1061,6 +1066,7 @@ PERMISSION_MANAGERS = [
     "setting_operation",
     "staff",
     "allow_public_builder",
+    "element_visibility",
     "member",
     "token",
     "role",
@@ -1205,3 +1211,15 @@ if SENTRY_DSN:
         send_default_pii=False,
         environment=os.getenv("SENTRY_ENVIRONMENT", ""),
     )
+
+BASEROW_OPENAI_API_KEY = os.getenv("BASEROW_OPENAI_API_KEY", None)
+BASEROW_OPENAI_ORGANIZATION = os.getenv("BASEROW_OPENAI_ORGANIZATION", "") or None
+BASEROW_OPENAI_MODELS = os.getenv("BASEROW_OPENAI_MODELS", "")
+BASEROW_OPENAI_MODELS = (
+    BASEROW_OPENAI_MODELS.split(",") if BASEROW_OPENAI_MODELS else []
+)
+BASEROW_OLLAMA_HOST = os.getenv("BASEROW_OLLAMA_HOST", None)
+BASEROW_OLLAMA_MODELS = os.getenv("BASEROW_OLLAMA_MODELS", "")
+BASEROW_OLLAMA_MODELS = (
+    BASEROW_OLLAMA_MODELS.split(",") if BASEROW_OLLAMA_MODELS else []
+)

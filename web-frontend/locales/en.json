@@ -6,9 +6,8 @@
     "none": "None",
     "free": "Free",
     "comingSoon": "Coming soon...",
-    "table": "Table",
-    "link": "Link",
-    "billable": "Billable"
+    "billable": "Billable",
+    "all": "All"
   },
   "action": {
     "upload": "Upload",
@@ -71,6 +70,7 @@
   },
   "error": {
     "invalidEmail": "Please enter a valid e-mail address.",
+    "invalidNumber": "The field must be a number.",
     "notMatchingPassword": "This field must match your password field.",
     "minLength": "A minimum of {min} characters is required here.",
     "maxLength": "A maximum of {max} characters is allowed here.",
@@ -120,7 +120,8 @@
     "singleSelectDropdown": "Dropdown",
     "singleSelectRadios": "Radios",
     "autonumber": "Autonumber",
-    "password": "Password"
+    "password": "Password",
+    "ai": "AI prompt"
   },
   "fieldErrors": {
     "invalidNumber": "Invalid number",
@@ -178,6 +179,7 @@
     "has": "has",
     "hasNot": "doesn't have",
     "higherThan": "higher than",
+    "higherThanOrEqual": "higher than or equal",
     "is": "is",
     "isNot": "is not",
     "isEmpty": "is empty",
@@ -203,10 +205,13 @@
     "isWithinWeeks": "is within weeks",
     "isWithinMonths": "is within months",
     "lowerThan": "lower than",
+    "lowerThanOrEqual": "lower than or equal",
     "isEvenAndWhole": "is even and whole",
     "lengthIsLowerThan": "length is lower than",
     "hasFileType": "has file type",
-    "filesLowerThan": "files lower than"
+    "filesLowerThan": "files lower than",
+    "isAnyOf": "is any of",
+    "isNoneOf": "is none of"
   },
   "viewType": {
     "grid": "Grid",
@@ -311,13 +316,16 @@
     "disabledPasswordProviderMessage": "Please use another authentication provider.",
     "maxLocksPerTransactionExceededTitle": "PostgreSQL issue detected",
     "maxLocksPerTransactionExceededDescription": "Baserow attempted to permanently delete the trashed items, but exceeded the available locks specified in `max_locks_per_transaction`.",
-    "disabledPasswordProviderMessage": "Please use another authentication provider.",
     "lastAdminTitle": "Can't remove last workspace admin",
     "lastAdminMessage": "A workspace has to have at least one admin.",
     "adminAlreadyExistsTitle": "Can't use that username",
     "adminAlreadyExistsDescription": "That username can't be used because it already exists.",
     "cannotCreateFieldTypeTitle": "Can't create field",
-    "cannotCreateFieldTypeDescription": "The requested field type cannot be created at the moment. It might be just a temporary problem with older tables. Please try again later."
+    "cannotCreateFieldTypeDescription": "The requested field type cannot be created at the moment. It might be just a temporary problem with older tables. Please try again later.",
+    "generativeAIDoesNotExistTitle": "Generative AI does not exist",
+    "generativeAIDoesNotExistDescription": "The generative AI model does not exist.",
+    "modelDoesNotBelongToTypeTitle": "The selected model does not belong to the AI Type",
+    "modelDoesNotBelongToTypeDescription": "The selected model does not belong to the selected AI type."
   },
   "importerType": {
     "csv": "Import a CSV file",

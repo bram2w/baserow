@@ -14,6 +14,9 @@
     >
       {{ label }}
     </label>
+    <div v-if="description" class="control__description">
+      {{ description }}
+    </div>
     <div class="control__elements">
       <slot />
       <div v-if="hasError" class="error">
@@ -36,6 +39,11 @@ export default {
       type: String,
       required: false,
       default: null,
+    },
+    description: {
+      type: String,
+      required: false,
+      default: '',
     },
     smallLabel: {
       type: Boolean,

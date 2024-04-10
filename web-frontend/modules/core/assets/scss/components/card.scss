@@ -91,8 +91,10 @@
 }
 
 .card__field-name {
+  @extend %ellipsis;
+
   font-size: 12px;
-  line-height: 14px;
+  line-height: 18px;
   font-weight: 600;
   margin-bottom: 6px;
 

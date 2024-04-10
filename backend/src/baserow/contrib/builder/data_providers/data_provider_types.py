@@ -1,5 +1,9 @@
-from typing import List, Union
+from typing import Any, List, Type, Union
 
+from baserow.contrib.builder.data_providers.exceptions import (
+    DataProviderChunkInvalidException,
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
@@ -8,10 +12,17 @@ from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceImproperlyConfigured,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.elements.element_types import FormElementType
+from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.models import FormElement
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
 from baserow.core.formula.exceptions import FormulaRecursion
 from baserow.core.formula.registries import DataProviderType
 from baserow.core.services.dispatch_context import DispatchContext
-from baserow.core.utils import get_nested_value_from_dict
+from baserow.core.utils import get_value_at_path
+from baserow.core.workflow_actions.exceptions import WorkflowActionDoesNotExist
 
 
 class PageParameterDataProviderType(DataProviderType):
@@ -43,17 +54,32 @@ class PageParameterDataProviderType(DataProviderType):
 class FormDataProviderType(DataProviderType):
     type = "form_data"
 
+    def validate_data_chunk(self, element_id: str, data_chunk: Any):
+        """
+        :param element_id: The ID of the element we're validating.
+        :param data_chunk: The form data value which we're validating.
+        :raises FormDataProviderChunkInvalidException: if the validation fails.
+        """
+
+        element: Type[FormElement] = ElementHandler().get_element(element_id)  # type: ignore
+        element_type: FormElementType = element.get_type()  # type: ignore
+        if not element_type.is_valid(element, data_chunk):
+            raise FormDataProviderChunkInvalidException(
+                f"Form data {data_chunk} is invalid for its element."
+            )
+
     def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
         if len(path) != 1:
             return None
 
         first_part = path[0]
-
-        return (
+        data_chunk = (
             dispatch_context.request.data.get("form_data", {})
             .get(first_part, {})
             .get("value", None)
         )
+        self.validate_data_chunk(first_part, data_chunk)
+        return data_chunk
 
     def import_path(self, path, id_mapping, **kwargs):
         """
@@ -122,7 +148,7 @@ class DataSourceDataProviderType(DataProviderType):
         if data_source.service.get_type().returns_list:
             dispatch_result = dispatch_result["results"]
 
-        return get_nested_value_from_dict(dispatch_result, rest)
+        return get_value_at_path(dispatch_result, rest)
 
     def import_path(self, path, id_mapping, **kwargs):
         """
@@ -173,8 +199,8 @@ class CurrentRecordDataProviderType(DataProviderType):
         :return: The updated path.
         """
 
-        # We don't need to import the id
-        if len(path) == 1 and path[0] == "id":
+        # We don't need to import the row index (__idx__)
+        if len(path) == 1 and path[0] == "__idx__":
             return path
 
         data_source = DataSourceHandler().get_data_source(data_source_id)
@@ -183,6 +209,42 @@ class CurrentRecordDataProviderType(DataProviderType):
         _, *rest = service_type.import_path([0, *path], id_mapping)
 
         return rest
+
+
+class PreviousActionProviderType(DataProviderType):
+    """
+    The previous action provider can read data from registered page workflow actions.
+    """
+
+    type = "previous_action"
+
+    def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
+        previous_action_id, *rest = path
+        previous_action = dispatch_context.request.data.get("previous_action", {})
+
+        if previous_action_id not in previous_action:
+            message = "The previous action id is not present in the dispatch context"
+            raise DataProviderChunkInvalidException(message)
+        return get_value_at_path(previous_action, path)
+
+    def import_path(self, path, id_mapping, **kwargs):
+        workflow_action_id, *rest = path
+
+        if "builder_workflow_actions" in id_mapping:
+            try:
+                workflow_action_id = id_mapping["builder_workflow_actions"][
+                    int(workflow_action_id)
+                ]
+                workflow_action = BuilderWorkflowActionHandler().get_workflow_action(
+                    workflow_action_id
+                )
+            except (KeyError, WorkflowActionDoesNotExist):
+                return [str(workflow_action_id), *rest]
+
+            service_type = workflow_action.service.specific.get_type()
+            rest = service_type.import_path(rest, id_mapping)
+
+        return [str(workflow_action_id), *rest]
 
 
 class UserDataProviderType(DataProviderType):
@@ -213,6 +275,4 @@ class UserDataProviderType(DataProviderType):
         else:
             user = {"id": 0, "username": "", "email": ""}
 
-        return get_nested_value_from_dict(
-            {"is_authenticated": is_authenticated, **user}, path
-        )
+        return get_value_at_path({"is_authenticated": is_authenticated, **user}, path)

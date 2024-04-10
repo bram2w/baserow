@@ -11,6 +11,7 @@
       :disabled="readOnly"
       :editable="!readOnly"
       :enable-rich-text-formatting="true"
+      :mentionable-users="workspace ? workspace.users : null"
       @focus="select()"
       @blur="unselect()"
     ></RichTextEditor>
@@ -34,6 +35,11 @@ export default {
       // local copy of the value storing the JSON representation of the rich text editor
       richCopy: '',
     }
+  },
+  computed: {
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
+    },
   },
   watch: {
     value: {

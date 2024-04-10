@@ -1,36 +1,26 @@
 <template>
   <div>
-    <label v-if="element.label" class="control__label">
-      {{ resolvedLabel }}
-    </label>
-    <textarea
-      v-if="element.is_multiline === true"
-      ref="textarea"
-      class="input-element"
-      style="resize: none"
-      :value="resolvedDefaultValue"
+    <ABFormGroup
+      :label="resolvedLabel"
+      :error-message="errorMessage"
+      :autocomplete="isEditMode ? 'off' : ''"
       :required="element.required"
-      :placeholder="resolvedPlaceholder"
-      :rows="element.rows"
-      @input="
-        setFormData($event.target.value)
-        updateTextareaHeight()
-      "
-    ></textarea>
-    <input
-      v-else
-      type="text"
-      class="input-element"
-      :value="resolvedDefaultValue"
-      :required="element.required"
-      :placeholder="resolvedPlaceholder"
-      @input="setFormData($event.target.value)"
-    />
+    >
+      <ABInput
+        v-model="inputValue"
+        :placeholder="resolvedPlaceholder"
+        :multiline="element.is_multiline"
+        :rows="element.rows"
+        :type="element.input_type"
+        @blur="onFormElementTouch"
+      />
+    </ABFormGroup>
   </div>
 </template>
 
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'InputTextElement',
@@ -50,36 +40,33 @@ export default {
     },
   },
   computed: {
-    resolvedLabel() {
-      return this.resolveFormula(this.element.label)
-    },
     resolvedDefaultValue() {
       return this.resolveFormula(this.element.default_value)
     },
+    resolvedLabel() {
+      return ensureString(this.resolveFormula(this.element.label))
+    },
     resolvedPlaceholder() {
-      return this.resolveFormula(this.element.placeholder)
+      return ensureString(this.resolveFormula(this.element.placeholder))
     },
   },
   watch: {
-    async 'element.default_value'(value) {
-      this.setFormData(this.resolveFormula(value))
-      await this.$nextTick()
-      this.updateTextareaHeight()
+    resolvedDefaultValue: {
+      handler(value) {
+        this.inputValue = value
+      },
+      immediate: true,
     },
-    async 'element.rows'(value) {
-      await this.$nextTick()
-      this.updateTextareaHeight()
-    },
-  },
-  mounted() {
-    this.updateTextareaHeight()
   },
   methods: {
-    updateTextareaHeight() {
-      if (this.element.is_multiline && this.$refs.textarea) {
-        const textarea = this.$refs.textarea
-        textarea.style.height = 'auto'
-        textarea.style.height = `${textarea.scrollHeight + 2}px`
+    getErrorMessage() {
+      switch (this.element.validation_type) {
+        case 'integer':
+          return this.$t('error.invalidNumber')
+        case 'email':
+          return this.$t('error.invalidEmail')
+        default:
+          return this.$t('error.requiredField')
       }
     },
   },

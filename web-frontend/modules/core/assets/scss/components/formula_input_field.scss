@@ -1,13 +1,15 @@
 .formula-input-field {
   font-size: 13px;
-  line-height: 22px;
+  line-height: 25px;
   padding: 10px 12px;
-  min-height: 34px;
+  min-height: 48px;
   height: auto;
-}
 
-.formula-input-field--small {
-  line-height: 13px;
+  &.formula-input-field--small {
+    min-height: 38px;
+    padding: 5px 12px;
+    line-height: 25px;
+  }
 }
 
 .formula-input-field--focused {

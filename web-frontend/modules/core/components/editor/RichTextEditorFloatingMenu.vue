@@ -1,7 +1,7 @@
 <template>
   <FloatingMenu
     v-if="editor"
-    v-show="open && visible"
+    v-show="open && visible && insideContainer"
     ref="menu"
     :editor="editor"
     :tippy-options="{
@@ -144,11 +144,15 @@ export default {
       type: Function,
       default: () => null,
     },
+    visible: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
       open: true,
-      visible: true,
+      insideContainer: true,
       expanded: false,
     }
   },
@@ -197,7 +201,10 @@ export default {
     isEventTargetInside(event) {
       return (
         isElement(this.$el, event.target) ||
-        isElement(this.$el, event.relatedTarget)
+        isElement(this.$el, event.relatedTarget) ||
+        /// Safari set the relatedTarget to the tippyjs popover that contains this.$el,
+        // but since we cannot access it by reference, try inverting the check.
+        isElement(event.relatedTarget, this.$el)
       )
     },
     onShow() {
@@ -205,13 +212,6 @@ export default {
     },
     onHidden() {
       this.$emit('hidden')
-    },
-    show() {
-      this.open = true
-    },
-    hide() {
-      this.open = false
-      this.expanded = false
     },
     expand() {
       this.open = true
@@ -224,12 +224,12 @@ export default {
     appendTo() {
       return document.body
     },
-    checkIfVisibleInContainer(boundingRect) {
+    updateInsideContainerFlag(boundingRect) {
       const containerBoundingRect = this.getScrollableAreaBoundingRect()
       if (!containerBoundingRect) {
         return
       }
-      this.visible =
+      this.insideContainer =
         containerBoundingRect.top < boundingRect.bottom &&
         containerBoundingRect.bottom > boundingRect.top
     },
@@ -239,13 +239,13 @@ export default {
       const { from } = state.selection
       const boundingRect = posToDOMRect(view, from, from)
 
-      // Open the menu to the left of the editor.
+      // Open the menu to the left of the editor with a small offset.
       const editorBoundingRect = view.dom.getBoundingClientRect()
       const offset = 4
       boundingRect.left = editorBoundingRect.left - offset
       boundingRect.right = editorBoundingRect.left - offset
 
-      this.checkIfVisibleInContainer(boundingRect)
+      this.updateInsideContainerFlag(boundingRect)
 
       return boundingRect
     },

@@ -37,6 +37,13 @@ export class BuilderApplicationType extends ApplicationType {
   populate(application) {
     const values = super.populate(application)
     values.pages = values.pages.map(populatePage)
+    if (!values.integrations) {
+      values.integrations = []
+    }
+    if (!values.userSources) {
+      values.userSources = []
+    }
+    values._loadedOnce = false
     return values
   }
 
@@ -44,6 +51,23 @@ export class BuilderApplicationType extends ApplicationType {
     const pageSelected = application.pages.some((page) => page._.selected)
     if (pageSelected) {
       $router.push({ name: 'dashboard' })
+    }
+  }
+
+  async loadExtraData(builder) {
+    if (!builder._loadedOnce) {
+      await Promise.all([
+        this.app.store.dispatch('userSource/fetch', {
+          application: builder,
+        }),
+        this.app.store.dispatch('integration/fetch', {
+          application: builder,
+        }),
+      ])
+      await this.app.store.dispatch('application/forceUpdate', {
+        application: builder,
+        data: { _loadedOnce: true },
+      })
     }
   }
 

@@ -13,6 +13,11 @@ import {
   EmailNotificationsSettingsType,
   DeleteAccountSettingsType,
 } from '@baserow/modules/core/settingsTypes'
+import { GenerativeAIWorkspaceSettingsType } from '@baserow/modules/core/workspaceSettingsTypes'
+import {
+  OpenAIModelType,
+  OllamaModelType,
+} from '@baserow/modules/core/generativeAIModelTypes'
 import {
   UploadFileUserFileUploadType,
   UploadViaURLUserFileUploadType,
@@ -71,6 +76,11 @@ import {
 
 import priorityBus from '@baserow/modules/core/plugins/priorityBus'
 
+import {
+  AdminRoleType,
+  MemberRoleType,
+} from '@baserow/modules/database/roleTypes'
+
 export default (context, inject) => {
   const { store, isDev, app } = context
   inject('bus', new Vue())
@@ -97,6 +107,7 @@ export default (context, inject) => {
   registry.registerNamespace('view')
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
+  registry.registerNamespace('workspaceSettings')
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
   registry.registerNamespace('runtimeFormulaFunction')
@@ -106,11 +117,22 @@ export default (context, inject) => {
   registry.registerNamespace('service')
   registry.registerNamespace('userSource')
   registry.registerNamespace('appAuthProvider')
+  registry.registerNamespace('roles')
+  registry.registerNamespace('generativeAIModel')
 
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new EmailNotificationsSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
+
+  registry.register(
+    'workspaceSettings',
+    new GenerativeAIWorkspaceSettingsType(context)
+  )
+
+  registry.register('generativeAIModel', new OpenAIModelType(context))
+  registry.register('generativeAIModel', new OllamaModelType(context))
+
   registry.register('permissionManager', new CorePermissionManagerType(context))
   registry.register(
     'permissionManager',
@@ -169,6 +191,9 @@ export default (context, inject) => {
   registry.register('runtimeFormulaFunction', new RuntimeConcat(context))
   registry.register('runtimeFormulaFunction', new RuntimeGet(context))
   registry.register('runtimeFormulaFunction', new RuntimeAdd(context))
+
+  registry.register('roles', new AdminRoleType(context))
+  registry.register('roles', new MemberRoleType(context))
 
   // Notification types
   registry.register(

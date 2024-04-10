@@ -752,7 +752,7 @@ class NotificationHandler:
 
     @classmethod
     @baserow_trace(tracer)
-    def send_new_notifications_to_users_matching_filters_by_email(
+    def send_unread_notifications_by_email_to_users_matching_filters(
         cls, user_filters_q: Q, max_emails: Optional[int] = None
     ) -> UserWithScheduledEmailNotifications:
         """

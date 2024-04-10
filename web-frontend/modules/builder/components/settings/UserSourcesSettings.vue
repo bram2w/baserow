@@ -12,42 +12,33 @@
       </Button>
     </div>
     <div
-      v-if="$fetchState.pending && !error.visible"
-      class="user-source-settings__loader"
-    />
-    <template v-else>
-      <div
-        v-for="userSource in userSources"
-        :key="userSource.id"
-        class="user-source-settings__user-source"
-        @delete="deleteUserSource(userSource)"
-      >
-        <Presentation
-          :image="getUserSourceType(userSource).image"
-          :title="userSource.name"
-          :subtitle="getUserSourceType(userSource).getSummary(userSource)"
-          :rounded-icon="false"
-          avatar-color="transparent"
-          style="flex: 1"
-        />
-        <div class="user-source-settings__user-source-actions">
-          <Button
-            icon="iconoir-edit"
-            type="light"
-            @click="showForm(userSource)"
-          />
-          <Button
-            icon="iconoir-trash"
-            type="light"
-            @click="deleteUserSource(userSource)"
-          />
-        </div>
-      </div>
-    </template>
-    <p
-      v-if="!error.visible && !$fetchState.pending && userSources.length === 0"
-      class="margin-top-3"
+      v-for="userSource in userSources"
+      :key="userSource.id"
+      class="user-source-settings__user-source"
+      @delete="deleteUserSource(userSource)"
     >
+      <Presentation
+        :image="getUserSourceType(userSource).image"
+        :title="userSource.name"
+        :subtitle="getUserSourceType(userSource).getSummary(userSource)"
+        :rounded-icon="false"
+        avatar-color="transparent"
+        style="flex: 1"
+      />
+      <div class="user-source-settings__user-source-actions">
+        <Button
+          icon="iconoir-edit"
+          type="light"
+          @click="showForm(userSource)"
+        />
+        <Button
+          icon="iconoir-trash"
+          type="light"
+          @click="deleteUserSource(userSource)"
+        />
+      </div>
+    </div>
+    <p v-if="!error.visible && userSources.length === 0" class="margin-top-3">
       {{ $t('userSourceSettings.noUserSourceMessage') }}
     </p>
   </div>
@@ -128,7 +119,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions } from 'vuex'
 import error from '@baserow/modules/core/mixins/error'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -153,24 +144,27 @@ export default {
       invalidForm: false,
     }
   },
-  async fetch() {
-    try {
-      await this.actionFetchIntegrations({ applicationId: this.builder.id })
-      this.hideError()
-    } catch (error) {
-      this.handleError(error)
-    }
-  },
   computed: {
-    ...mapGetters({
-      integrations: 'integration/getIntegrations',
-    }),
+    integrations() {
+      return this.$store.getters['integration/getIntegrations'](this.builder)
+    },
     userSources() {
       return this.$store.getters['userSource/getUserSources'](this.builder)
     },
     userSourceTypes() {
       return this.$registry.getAll('userSource')
     },
+  },
+  async mounted() {
+    try {
+      await Promise.all([
+        this.actionFetchIntegrations({
+          application: this.builder,
+        }),
+      ])
+    } catch (error) {
+      notifyIf(error)
+    }
   },
   methods: {
     ...mapActions({

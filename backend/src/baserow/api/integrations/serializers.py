@@ -4,6 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.polymorphic import PolymorphicSerializer
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
 
@@ -29,6 +30,16 @@ class IntegrationSerializer(serializers.ModelSerializer):
             "name": {"read_only": True},
             "order": {"read_only": True, "help_text": "Lowest first."},
         }
+
+
+class PolymorphicIntegrationSerializer(PolymorphicSerializer):
+    """
+    Polymorphic serializer for the integrations.
+    """
+
+    base_class = IntegrationSerializer
+    registry = integration_type_registry
+    request = False
 
 
 class CreateIntegrationSerializer(serializers.ModelSerializer):

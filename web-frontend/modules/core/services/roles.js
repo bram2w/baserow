@@ -1,30 +1,29 @@
-export default (client, $hasFeature) => {
+export default (client, $hasFeature, $registry) => {
   return {
     // TODO implement once endpoint exists
     get(workspace) {
-      if ($hasFeature('RBAC', workspace.id)) {
-        return {
-          data: [
-            { uid: 'ADMIN', isBillable: true },
-            { uid: 'BUILDER', isBillable: true },
-            { uid: 'EDITOR', isBillable: true },
-            { uid: 'COMMENTER', isBillable: false },
-            { uid: 'VIEWER', isBillable: false },
-            { uid: 'NO_ACCESS', isBillable: false },
-            {
-              uid: 'NO_ROLE_LOW_PRIORITY',
-              allowed_scope_types: ['workspace'],
-              allowed_subject_types: ['auth.User'],
-              isBillable: false,
-            },
-          ],
-        }
-      }
       return {
-        data: [
-          { uid: 'ADMIN', isBillable: false },
-          { uid: 'MEMBER', isBillable: false },
-        ],
+        data: Object.values($registry.getAll('roles')).map((role) =>
+          role.getUid() === 'NO_ROLE_LOW_PRIORITY'
+            ? {
+                uid: role.getUid(),
+                description: role.getDescription(),
+                showIsBillable: role.showIsBillable(workspace.id),
+                isBillable: role.getIsBillable(workspace.id),
+                isVisible: role.isVisible(workspace.id),
+                isDeactivated: role.isDeactivated(workspace.id),
+                allowed_scope_types: ['workspace'],
+                allowed_subject_types: ['auth.User'],
+              }
+            : {
+                uid: role.getUid(),
+                description: role.getDescription(),
+                showIsBillable: role.showIsBillable(workspace.id),
+                isBillable: role.getIsBillable(workspace.id),
+                isVisible: role.isVisible(workspace.id),
+                isDeactivated: role.isDeactivated(workspace.id),
+              }
+        ),
       }
     },
   }

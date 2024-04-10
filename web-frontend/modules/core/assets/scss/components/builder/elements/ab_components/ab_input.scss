@@ -1,0 +1,14 @@
+.ab-input {
+  appearance: none;
+  width: 100%;
+  display: block;
+  border: 1px solid $black;
+  padding: 8px 12px;
+  outline: none;
+  line-height: 100%;
+
+  &:active,
+  &:focus {
+    border-color: $black;
+  }
+}

@@ -22,6 +22,7 @@
       :nodes="nodes"
       :node-selected="nodeSelected"
       :loading="dataExplorerLoading"
+      :application-context="applicationContext"
       @node-selected="dataExplorerItemSelected"
       @node-toggled="editor.commands.focus()"
       @focusin="dataExplorerFocused = true"
@@ -52,7 +53,10 @@ export default {
   },
   provide() {
     // Provide the application context to all formula components
-    return { applicationContext: this.applicationContext }
+    return {
+      applicationContext: this.applicationContext,
+      dataProviders: this.dataProviders,
+    }
   },
   props: {
     value: {
@@ -91,6 +95,7 @@ export default {
       dataNodeSelected: null,
       dataExplorerFocused: false,
       formulaInputFocused: false,
+      valueUpdateTimeout: null,
     }
   },
   computed: {

@@ -7,6 +7,7 @@
         <RichTextEditor
           :editable="false"
           :enable-rich-text-formatting="true"
+          :mentionable-users="workspace.users"
           :value="entry.before[fieldIdentifier]"
         ></RichTextEditor>
       </div>
@@ -18,6 +19,7 @@
         <RichTextEditor
           :editable="false"
           :enable-rich-text-formatting="true"
+          :mentionable-users="workspace.users"
           :value="entry.after[fieldIdentifier]"
         ></RichTextEditor>
       </div>
@@ -32,6 +34,10 @@ export default {
   name: 'RowHistoryFieldText',
   components: { RichTextEditor },
   props: {
+    workspaceId: {
+      type: Number,
+      required: true,
+    },
     entry: {
       type: Object,
       required: true,
@@ -44,6 +50,11 @@ export default {
       type: Object,
       required: false,
       default: null,
+    },
+  },
+  computed: {
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
     },
   },
 }

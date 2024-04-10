@@ -1,6 +1,7 @@
 import { escapeRegExp } from '@baserow/modules/core/utils/string'
 
 export default {
+  inject: ['multiple'],
   props: {
     value: {
       validator: () => true,
@@ -49,6 +50,7 @@ export default {
       if (!disabled) {
         this.$parent.select(value)
       }
+      this.$emit('click', value)
     },
     hover(value, disabled) {
       if (!disabled && this.$parent.hover !== value) {
@@ -67,7 +69,11 @@ export default {
       return this.name.match(regex)
     },
     isActive(value) {
-      return this.$parent.value === value
+      if (this.multiple) {
+        return this.$parent.value.includes(value)
+      } else {
+        return this.$parent.value === value
+      }
     },
     isHovering(value) {
       return this.$parent.hover === value

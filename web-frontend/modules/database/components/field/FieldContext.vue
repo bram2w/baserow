@@ -36,6 +36,8 @@
           :table="table"
           :view="view"
           :field="field"
+          :all-fields-in-table="allFieldsInTable"
+          :database="database"
           @update="$emit('update', $event)"
           @updated="$refs.context.hide()"
         ></UpdateFieldContext>
@@ -92,6 +94,10 @@ export default {
     },
     field: {
       type: Object,
+      required: true,
+    },
+    allFieldsInTable: {
+      type: Array,
       required: true,
     },
   },

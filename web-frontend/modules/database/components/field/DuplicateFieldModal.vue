@@ -32,7 +32,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { createNewUndoRedoActionGroupId } from '@baserow/modules/database/utils/action'
 import FieldService from '@baserow/modules/database/services/field'
@@ -52,6 +51,10 @@ export default {
       type: Object,
       required: true,
     },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
@@ -62,14 +65,11 @@ export default {
   },
   computed: {
     existingFieldName() {
-      return this.fields.map((field) => field.name)
+      return this.allFieldsInTable.map((field) => field.name)
     },
     formFieldTypeIsReadOnly() {
       return this.$registry.get('field', this.fromField.type).isReadOnly
     },
-    ...mapGetters({
-      fields: 'field/getAll',
-    }),
   },
   methods: {
     onDuplicationEnd() {

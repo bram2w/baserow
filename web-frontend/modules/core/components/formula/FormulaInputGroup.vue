@@ -1,5 +1,8 @@
 <template>
-  <FormElement :class="{ control: !small, 'control--horizontal': horizontal }">
+  <FormElement
+    class="control"
+    :class="{ control: !small, 'control--horizontal': horizontal }"
+  >
     <label
       v-if="label"
       class="control__label"
@@ -7,7 +10,10 @@
     >
       {{ label }}
     </label>
-    <div class="control__elements">
+    <div
+      class="control__elements"
+      :class="{ 'control__elements--small': small }"
+    >
       <FormulaInputField
         :value="value"
         :small="small"

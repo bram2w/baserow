@@ -1843,6 +1843,36 @@ class DurationFieldType(FieldType):
     def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
         return self.model_class(duration_format=formula_type.duration_format)
 
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Any:
+        duration = self.get_internal_value_from_db(row, field_name)
+        if duration is None:
+            return None
+
+        return duration.total_seconds()
+
+    def set_import_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Optional[List[models.Model]]:
+        field = row._meta.get_field(field_name)
+        if value is not None:
+            value = duration_value_to_timedelta(value, field.duration_format)
+
+        setattr(row, field_name, value)
+
 
 class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):
     """
@@ -2059,24 +2089,27 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
 
             search_values = []
             for name, row_ids in name_map.items():
-                try:
-                    search_values.append(
-                        primary_field_type.prepare_value_for_db(
-                            primary_field["field"], name
+                if primary_field["type"].read_only:
+                    search_values.append(name)
+                else:
+                    try:
+                        search_values.append(
+                            primary_field_type.prepare_value_for_db(
+                                primary_field["field"], name
+                            )
                         )
-                    )
-                except ValidationError as e:
-                    error = ValidationError(
-                        f"The value '{name}' is an invalid value for the primary field "
-                        "of the linked table.",
-                        code="invalid_value",
-                    )
-                    if continue_on_error:
-                        # Replace values by error for failing rows
-                        for row_index in row_ids:
-                            values_by_row[row_index] = error
-                    else:
-                        raise e
+                    except ValidationError as e:
+                        error = ValidationError(
+                            f"The value '{name}' is an invalid value for the primary field "
+                            "of the linked table.",
+                            code="invalid_value",
+                        )
+                        if continue_on_error:
+                            # Replace values by error for failing rows
+                            for row_index in row_ids:
+                                values_by_row[row_index] = error
+                        else:
+                            raise e
 
             # Get all matching rows
             rows = related_model.objects.filter(

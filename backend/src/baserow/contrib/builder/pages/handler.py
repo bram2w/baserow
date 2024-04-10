@@ -655,6 +655,9 @@ class PageHandler:
         :return: the newly created instance list.
         """
 
+        # Sort action because we might have formula that use previous actions
+        serialized_workflow_actions.sort(key=lambda action: action["order"])
+
         for serialized_workflow_action in serialized_workflow_actions:
             BuilderWorkflowActionHandler().import_workflow_action(
                 page, serialized_workflow_action, id_mapping

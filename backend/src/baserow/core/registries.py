@@ -32,6 +32,8 @@ from .export_serialized import CoreExportSerializedStructure
 from .registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
+    CustomFieldsInstanceMixin,
+    CustomFieldsRegistryMixin,
     Instance,
     ModelInstanceMixin,
     ModelRegistryMixin,
@@ -59,7 +61,6 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass
 class ImportExportConfig:
-
     """
     When true the export/import will also transfer any permission data.
 
@@ -211,6 +212,7 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
 class ApplicationType(
     APIUrlsInstanceMixin,
     ModelInstanceMixin["Application"],
+    CustomFieldsInstanceMixin,
     Instance,
 ):
     """
@@ -280,25 +282,24 @@ class ApplicationType(
         )
 
     def create_application(
-        self, user, workspace: "Workspace", name: str, init_with_data: bool = False
+        self, user, workspace: "Workspace", init_with_data: bool = False, **kwargs
     ) -> "Application":
         """
         Creates a new application instance of this type and returns it.
 
         :param user: The user that is creating the application.
         :param workspace: The workspace that the application will be created in.
-        :param name: The name of the application.
         :param init_with_data: Whether the application should be created with some
             initial data. Defaults to False.
+        :param kwargs: Additional parameters to pass to the application creation,
+            these values have already been validated by the view and are allowed.
         :return: The newly created application instance.
         """
 
         model = self.model_class
         last_order = model.get_last_order(workspace)
 
-        instance = model.objects.create(
-            workspace=workspace, order=last_order, name=name
-        )
+        instance = model.objects.create(workspace=workspace, order=last_order, **kwargs)
         if init_with_data:
             self.init_application(user, instance)
         return instance
@@ -486,6 +487,7 @@ class ApplicationTypeRegistry(
     APIUrlsRegistryMixin,
     ModelRegistryMixin[ApplicationSubClassInstance, ApplicationType],
     Registry[ApplicationType],
+    CustomFieldsRegistryMixin,
 ):
     """
     With the application registry it is possible to register new applications. An
@@ -1176,6 +1178,33 @@ class SerializationProcessorRegistry(Registry[SerializationProcessorType]):
     name = "serialization_processors"
 
 
+class EmailContextType(abc.ABC, Instance):
+    """
+    An `EmailContextType` represents a context in which an email can be sent.
+    """
+
+    def get_context(self):
+        raise NotImplementedError(
+            "Must be implemented by the specific email context type"
+        )
+
+
+class EmailContextRegistry(Registry[EmailContextType]):
+    name = "email_context"
+
+    def get_context(self):
+        """
+        Return the context used to render the email template.
+        Be aware that the order used to register the email context is important,
+        because contexts are merged in the order they are registered.
+        """
+
+        context = {}
+        for email_context in self.registry.values():
+            context.update(**email_context.get_context())
+        return context
+
+
 # A default plugin and application registry is created here, this is the one that is
 # used throughout the whole Baserow application. To add a new plugin or application use
 # these registries.
@@ -1192,3 +1221,4 @@ operation_type_registry: OperationTypeRegistry = OperationTypeRegistry()
 serialization_processor_registry: SerializationProcessorRegistry = (
     SerializationProcessorRegistry()
 )
+email_context_registry: EmailContextRegistry = EmailContextRegistry()

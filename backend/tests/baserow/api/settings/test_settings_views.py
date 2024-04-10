@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.shortcuts import reverse
 
 import pytest
@@ -8,6 +10,7 @@ from rest_framework.status import (
     HTTP_403_FORBIDDEN,
 )
 
+from baserow.api.settings.registries import SettingsDataRegistry, SettingsDataType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Settings
 
@@ -157,3 +160,78 @@ def test_update_settings(api_client, data_fixture):
     assert response_json["allow_new_signups"] is False
     assert "instance_id" not in response_json
     assert CoreHandler().get_settings().allow_new_signups is False
+
+
+@pytest.mark.django_db
+def test_update_co_branding_logo(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(is_staff=True)
+
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"co_branding_logo": {"name": file1.name}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["co_branding_logo"]["name"] == file1.name
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"allow_new_signups": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["co_branding_logo"]["name"] == file1.name
+
+
+@pytest.mark.django_db
+def test_update_show_baserow_help_request(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(is_staff=True)
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"show_baserow_help_request": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["show_baserow_help_request"] is False
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"allow_new_signups": False},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["show_baserow_help_request"] is False
+
+
+@pytest.mark.django_db
+def test_register_settings_data_type(api_client, data_fixture):
+    registry = SettingsDataRegistry()
+
+    class TmpSettingsDataType(SettingsDataType):
+        type = "test_tmp"
+
+        def get_settings_data(self, request) -> dict:
+            return "hello"
+
+    registry.register(TmpSettingsDataType())
+
+    with patch("baserow.api.settings.views.settings_data_registry", new=registry):
+        response = api_client.get(reverse("api:settings:get"))
+        assert response.status_code == HTTP_200_OK
+        response_json = response.json()
+        assert len(response_json.keys()) > 1
+        assert response_json["test_tmp"] == "hello"

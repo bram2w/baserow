@@ -1,15 +1,21 @@
 from collections import defaultdict
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import AnonymousUser
 
 import pytest
 
 from baserow.contrib.builder.data_providers.data_provider_types import (
+    CurrentRecordDataProviderType,
     DataSourceDataProviderType,
     FormDataProviderType,
     PageParameterDataProviderType,
+    PreviousActionProviderType,
     UserDataProviderType,
+)
+from baserow.contrib.builder.data_providers.exceptions import (
+    DataProviderChunkInvalidException,
+    FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
@@ -58,7 +64,10 @@ def test_page_parameter_data_provider_get_data_chunk():
     assert page_parameter_provider.get_data_chunk(dispatch_context, ["test"]) is None
 
 
-def test_form_data_provider_get_data_chunk():
+@patch(
+    "baserow.contrib.builder.data_providers.data_provider_types.FormDataProviderType.validate_data_chunk"
+)
+def test_form_data_provider_get_data_chunk(mock_validate):
     form_data_provider = FormDataProviderType()
 
     fake_request = MagicMock()
@@ -70,6 +79,26 @@ def test_form_data_provider_get_data_chunk():
     assert form_data_provider.get_data_chunk(dispatch_context, []) is None
     assert form_data_provider.get_data_chunk(dispatch_context, ["1", "test"]) is None
     assert form_data_provider.get_data_chunk(dispatch_context, ["test"]) is None
+
+
+@patch("baserow.contrib.builder.data_providers.data_provider_types.ElementHandler")
+def test_form_data_provider_validate_data_chunk(mock_handler):
+    mock_element = Mock()
+    mock_element_type = Mock()
+
+    mock_element.get_type.return_value = mock_element_type
+    mock_handler().get_element.return_value = mock_element
+
+    form_data_provider = FormDataProviderType()
+
+    mock_element_type.is_valid.return_value = True
+    assert form_data_provider.validate_data_chunk("1", "horse") is None
+
+    mock_element_type.is_valid.return_value = False
+    with pytest.raises(FormDataProviderChunkInvalidException) as exc:
+        assert form_data_provider.validate_data_chunk("1", 42)
+
+    assert exc.value.args[0] == "Form data 42 is invalid for its element."
 
 
 @pytest.mark.django_db
@@ -665,6 +694,37 @@ def test_form_data_provider_type_import_path(data_fixture):
     assert path_imported == [str(element_duplicated.id), "test"]
 
 
+def test_previous_action_data_provider_get_data_chunk():
+    previous_action_data_provider = PreviousActionProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {"previous_action": {"id": 42}}
+    dispatch_context = BuilderDispatchContext(fake_request, None)
+
+    assert previous_action_data_provider.get_data_chunk(dispatch_context, ["id"]) == 42
+    with pytest.raises(DataProviderChunkInvalidException):
+        previous_action_data_provider.get_data_chunk(dispatch_context, ["invalid"])
+
+
+@pytest.mark.django_db
+def test_previous_action_data_provider_import_path():
+    previous_action_data_provider = PreviousActionProviderType()
+    path = ["1", "field"]
+
+    valid_id_mapping = {"builder_workflow_actions": {1: 2}}
+    invalid_id_mapping = {"builder_workflow_actions": {0: 1}}
+
+    assert previous_action_data_provider.import_path(path, {}) == ["1", "field"]
+    assert previous_action_data_provider.import_path(path, invalid_id_mapping) == [
+        "1",
+        "field",
+    ]
+    assert previous_action_data_provider.import_path(path, valid_id_mapping) == [
+        "2",
+        "field",
+    ]
+
+
 @pytest.mark.django_db
 def test_user_data_provider_get_data_chunk(data_fixture):
     user = data_fixture.create_user()
@@ -697,3 +757,24 @@ def test_user_data_provider_get_data_chunk(data_fixture):
         user_data_provider_type.get_data_chunk(dispatch_context, ["email"]) == "e@ma.il"
     )
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 42
+
+
+@pytest.mark.django_db
+def test_current_record_provider_type_import_path(data_fixture):
+    # When a `current_record` provider is imported, and the path only contains the
+    # current record index (`__idx__`), then there is no need to update the path.
+    id_mapping = {"builder_page_elements": {}}
+    assert CurrentRecordDataProviderType().import_path(["__idx__"], id_mapping) == [
+        "__idx__"
+    ]
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source()
+    field_1 = data_fixture.create_text_field(order=1)
+    field_2 = data_fixture.create_text_field(order=2)
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["database_fields"] = {field_1.id: field_2.id}
+
+    assert CurrentRecordDataProviderType().import_path(
+        [field_1.db_column], id_mapping, data_source_id=data_source.id
+    ) == [field_2.db_column]

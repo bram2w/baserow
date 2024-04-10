@@ -6,19 +6,15 @@
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
   >
-    <a
-      :class="{
-        'link-element__link': element.variant !== 'button',
-        'ab-button': element.variant === 'button',
-        'ab-button--full-width':
-          element.variant === 'button' && element.width === WIDTHS.FULL.value,
-      }"
+    <ABLink
       v-bind="extraAttr"
+      :full-width="element.width === WIDTHS.FULL.value"
       :target="`_${element.target}`"
+      :variant="element.variant"
       @click.prevent="onClick"
     >
       {{ resolvedValue || $t('linkElement.noValue') }}
-    </a>
+    </ABLink>
   </div>
 </template>
 
@@ -26,6 +22,7 @@
 import element from '@baserow/modules/builder/mixins/element'
 import { WIDTHS } from '@baserow/modules/builder/enums'
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 /**
  * @typedef LinkElement
@@ -55,11 +52,7 @@ export default {
   computed: {
     WIDTHS: () => WIDTHS,
     resolvedValue() {
-      try {
-        return this.resolveFormula(this.element.value)
-      } catch {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.value))
     },
     classes() {
       return {
@@ -88,7 +81,7 @@ export default {
       } catch (e) {
         return {
           url: '',
-          isExternalUrl: false,
+          isExternalLink: false,
         }
       }
     },

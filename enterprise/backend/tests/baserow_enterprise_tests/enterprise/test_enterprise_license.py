@@ -3,6 +3,8 @@ from unittest.mock import call, patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.storage import FileSystemStorage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test.utils import CaptureQueriesContext, override_settings
 
@@ -14,15 +16,17 @@ from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.license.registries import SeatUsageSummary
 from freezegun import freeze_time
+from PIL import Image
 from responses import json_params_matcher
 
 from baserow.api.user.registries import user_data_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.core.models import Application, Settings, Workspace
-from baserow.core.registries import subject_type_registry
+from baserow.core.registries import email_context_registry, subject_type_registry
 from baserow.core.trash.handler import TrashHandler
-from baserow_enterprise.features import RBAC, SSO
+from baserow.core.user_files.handler import UserFileHandler
+from baserow_enterprise.features import ENTERPRISE_SETTINGS, RBAC, SSO
 from baserow_enterprise.license_types import EnterpriseLicenseType
 from baserow_enterprise.role.default_roles import default_roles
 from baserow_enterprise.role.handler import RoleAssignmentHandler
@@ -2067,3 +2071,47 @@ def test_can_restore_a_workspace_with_rbac_enabled(
     TrashHandler.trash(user, workspace, None, workspace)
 
     TrashHandler.restore_item(user, "workspace", workspace.id)
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_enterprise_settings_feature_allow_co_branding_in_emails(data_fixture, tmpdir):
+    settings, _ = Settings.objects.update_or_create(defaults={"instance_id": "1"})
+    user = data_fixture.create_user(is_staff=True)
+    LicenseHandler.register_license(user, VALID_ONE_SEAT_ENTERPRISE_LICENSE)
+
+    # Before the license is active
+    with freeze_time("2020-02-01 01:23"):
+        assert not LicenseHandler.instance_has_feature(ENTERPRISE_SETTINGS)
+        email_context = email_context_registry.get_context()
+        assert email_context["logo_url"] == "http://localhost:3000/img/logo.svg"
+        assert email_context["logo_additional_text"] == ""
+
+    # Even after the license is active, but without a custom logo, the additional_text
+    # should be empty and the log should be the default one
+    with freeze_time("2023-02-01 01:23"):
+        assert LicenseHandler.instance_has_feature(ENTERPRISE_SETTINGS)
+        email_context = email_context_registry.get_context()
+        assert email_context["logo_url"] == "http://localhost:3000/img/logo.svg"
+        assert email_context["logo_additional_text"] == ""
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://locaslhost")
+    image = Image.new("RGB", (100, 140), color="red")
+    file = SimpleUploadedFile("test.png", b"")
+    image.save(file, format="PNG")
+
+    user_file = UserFileHandler().upload_user_file(user, "test", file, storage=storage)
+
+    settings.co_branding_logo = user_file
+    settings.save(update_fields=["co_branding_logo"])
+
+    # If we set a custom logo, the additional_text should be populated and the logo_url
+    # should be the custom logo
+    with freeze_time("2023-02-01 01:23"):
+        assert LicenseHandler.instance_has_feature(ENTERPRISE_SETTINGS)
+        email_context = email_context_registry.get_context()
+        assert (
+            email_context["logo_url"]
+            == f"http://localhost:8000/media/user_files/{user_file.name}"
+        )
+        assert email_context["logo_additional_text"] == "by Baserow"

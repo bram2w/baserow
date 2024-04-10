@@ -1,0 +1,331 @@
+.rich-text-editor .loading-spinner {
+  position: sticky;
+  top: 50%;
+  left: 50%;
+}
+
+.rich-text-editor--scrollbar-thin {
+  /* scrollbar */
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: $color-neutral-500;
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+}
+
+.rich-text-editor__content-blockquote {
+  padding-left: 1rem;
+  color: $color-neutral-700;
+  border-left: 4px solid $color-neutral-300;
+}
+
+.rich-text-editor__bubble-menu-link-show-href {
+  padding-right: 20px;
+  border-right: 1px solid $palette-neutral-200;
+
+  a {
+    color: inherit;
+  }
+}
+
+.rich-text-editor__bubble-menu-link-show-button {
+  border: none;
+  background-color: transparent;
+  color: $palette-neutral-700;
+  cursor: pointer;
+}
+
+.rich-text-editor__content {
+  width: 100%;
+  height: calc(100% - 15px);
+  text-align: left;
+
+  .tiptap.ProseMirror {
+    height: 100%;
+  }
+
+  h1 {
+    margin: 8px 0;
+  }
+
+  h2 {
+    margin: 6px 0;
+  }
+
+  h3: {
+    margin: 4px 0;
+  }
+
+  p {
+    margin: 0;
+    color: revert;
+  }
+
+  a {
+    cursor: text;
+    text-decoration: none;
+  }
+
+  ul,
+  ol {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-inline-start: 20px;
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  blockquote {
+    @extend .rich-text-editor__content-blockquote;
+
+    margin: 1rem;
+  }
+
+  pre {
+    padding: 1rem;
+    background-color: $color-neutral-100;
+    border-radius: $rounded;
+  }
+
+  ul[data-type='taskList'] {
+    padding-inline-start: 5px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      > div {
+        flex: 1 1 auto;
+      }
+
+      > label {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+}
+
+.rich-text-editor__content--comment {
+  max-height: 50vh;
+  overflow: auto;
+  background-color: white;
+}
+
+.rich-text-editor__content--loading {
+  opacity: 0.2;
+}
+
+.rich-text-editor__mention,
+span[data-type='mention'] {
+  padding: 0 2px;
+  background-color: rgba(6, 46, 71, 0.08);
+  font-weight: 600;
+
+  @include rounded($rounded);
+}
+
+.rich-text-editor__mention--current-user {
+  color: $color-primary-700;
+  background-color: $color-primary-100;
+}
+
+.rich-text-editor__mention--user-gone {
+  text-decoration: line-through;
+  background-color: $color-error-100;
+}
+
+.rich-text-editor__mention-dropdown {
+  .dropdown__items {
+    bottom: 1px;
+    top: auto;
+  }
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: $color-neutral-500;
+  pointer-events: none;
+  height: 0;
+}
+
+.rich-text-editor__floating-menu,
+.rich-text-editor__bubble-menu {
+  @include add-elevation($elevation-medium);
+
+  background-color: white;
+  padding: 4px;
+  gap: 2px;
+  border-radius: 6px;
+  border: 1px solid $palette-neutral-500;
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.rich-text-editor__bubble-menu {
+  display: flex;
+  list-style: none;
+}
+
+.rich-text-editor__floating-menu--expanded {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.rich-text-editor__floating-menu-button,
+.rich-text-editor__bubble-menu-button {
+  padding: 0;
+  margin: 0;
+  line-height: 16px;
+  background-color: white;
+  border-radius: inherit;
+
+  & button {
+    padding: 0;
+    margin: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    color: $palette-neutral-900;
+    background-color: inherit;
+    border-radius: inherit;
+    cursor: pointer;
+  }
+
+  & button:hover {
+    background-color: $palette-neutral-50;
+  }
+
+  & button.is-active {
+    color: $palette-neutral-1300;
+    background-color: $palette-neutral-200;
+  }
+
+  i {
+    font-size: 18px;
+  }
+}
+
+.rich-text-editor__floating-menu--collapsed {
+  padding: 0;
+
+  & button.is-active:not(:hover) {
+    background-color: inherit;
+  }
+}
+
+.rich-text-editor__bubble-menu-button {
+  i.iconoir-underline {
+    font-size: 20px;
+    margin-top: 2px;
+  }
+
+  i.iconoir-strikethrough {
+    font-size: 14px;
+    margin-top: -1px;
+  }
+}
+
+.rich-text-editor__bubble-menu-link-edit {
+  position: relative;
+
+  .rich-text-editor__bubble-menu-link-edit-input {
+    padding: 8px 16px 8px 12px;
+    margin: 4px;
+    border-radius: 6px;
+    border: 1px solid $palette-neutral-200;
+    background: white;
+
+    @include add-elevation($elevation-low);
+  }
+
+  .rich-text-editor__bubble-menu-link-edit-delete {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    color: $palette-neutral-700;
+  }
+}
+
+.rich-text-editor__bubble-menu-link-edit-set {
+  display: inline-flex;
+  padding: 8px 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  background-color: $palette-blue-500;
+  color: white;
+  border: none;
+  margin: 4px 4px 4px 0;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include add-elevation($elevation-low);
+}
+
+.rich-text-editor__bubble-menu-link-edit-set--disabled {
+  cursor: not-allowed;
+  background-color: $palette-neutral-100;
+  color: $palette-neutral-700;
+}
+
+.rich-text-editor__bubble-menu-link-show {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  gap: 6px;
+}
+
+.rich-text-editor__mention-list {
+  padding: 0.2rem;
+  position: relative;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  font-size: 0.9rem;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 10px 20px rgba(0, 0, 0, 0.1);
+  max-height: 164px;
+  width: 240px;
+  overflow-y: auto;
+}
+
+.rich-text-editor__mention-list-item {
+  @extend %ellipsis;
+
+  display: flex;
+  align-items: center;
+  margin: 0;
+  width: 100%;
+  height: 32px;
+  text-align: left;
+  background: transparent;
+  border-radius: 0.4rem;
+  border: 1px solid transparent;
+  padding: 0.2rem 0.4rem;
+
+  &.is-selected {
+    background-color: $palette-neutral-100;
+  }
+}

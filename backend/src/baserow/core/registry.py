@@ -2,6 +2,7 @@ import contextlib
 import typing
 from abc import ABC, abstractmethod
 from functools import lru_cache
+from types import FunctionType
 from typing import (
     Any,
     Dict,
@@ -171,11 +172,22 @@ class CustomFieldsInstanceMixin:
                 request_serializer, extra_params, **kwargs
             )
 
+        # Build a list of serializers, using two methods:
+        # 1) Serializers can provide a function (note: we can't test with callable()
+        #    as serializers are callable) which lazy loads a serializer mixin, or
+        # 2) Serializers can provide a serializer mixin directly.
+        dynamic_serializer_mixins = []
+        for serializer_mixin in self.serializer_mixins:
+            if isinstance(serializer_mixin, FunctionType):
+                dynamic_serializer_mixins.append(serializer_mixin())
+            else:
+                dynamic_serializer_mixins.append(serializer_mixin)
+
         return get_serializer_class(
             self.model_class,
             field_names,
             field_overrides=field_overrides,
-            base_mixins=self.serializer_mixins,
+            base_mixins=dynamic_serializer_mixins,
             meta_extra_kwargs=self.serializer_extra_kwargs,
             meta_ref_name=meta_ref_name,
             base_class=base_class,

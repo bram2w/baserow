@@ -13,6 +13,7 @@ class ElementDict(TypedDict):
     type: str
     parent_element_id: int
     place_in_container: str
+    visibility: str
     style_border_top_color: str
     style_border_top_size: int
     style_padding_top: int

@@ -39,6 +39,7 @@ expr
     | OPEN_PAREN expr CLOSE_PAREN # Brackets
     | expr op=(SLASH | STAR) expr # BinaryOp
     | expr op=(PLUS | MINUS) expr # BinaryOp
+    | expr op=(AMP_AMP | PIPE_PIPE) expr # BinaryOp
     | expr op=(GT | LT | GTE | LTE) expr # BinaryOp
     | expr op=(EQUAL | BANG_EQUAL) expr # BinaryOp
     | FIELD OPEN_PAREN field_reference CLOSE_PAREN # FieldReference

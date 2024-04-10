@@ -15,7 +15,7 @@ describe('resolveElementUrl tests', () => {
       resolveFormula,
       'preview'
     )
-    expect(result).toEqual({ url: '', isExternalUrl: false })
+    expect(result).toEqual({ url: '', isExternalLink: false })
   })
   test('Should return resolvedContext with page navigation type where page is found and has no params.', () => {
     const element = {
@@ -36,7 +36,7 @@ describe('resolveElementUrl tests', () => {
     )
     expect(result).toEqual({
       url: '/builder/123/preview/contact-us/',
-      isExternalUrl: false,
+      isExternalLink: false,
     })
   })
   test('Should return resolvedContext with page navigation type where page is found and has params.', () => {
@@ -64,7 +64,7 @@ describe('resolveElementUrl tests', () => {
     )
     expect(result).toEqual({
       url: '/builder/123/preview/product/10/',
-      isExternalUrl: false,
+      isExternalLink: false,
     })
   })
   test('Should return resolvedContext for external custom navigation type.', () => {
@@ -82,7 +82,7 @@ describe('resolveElementUrl tests', () => {
     )
     expect(result).toEqual({
       url: 'https://baserow.io',
-      isExternalUrl: true,
+      isExternalLink: true,
     })
   })
   test('Should return resolvedContext for internal custom navigation type.', () => {
@@ -100,7 +100,7 @@ describe('resolveElementUrl tests', () => {
     )
     expect(result).toEqual({
       url: '/builder/123/preview/contact/',
-      isExternalUrl: false,
+      isExternalLink: false,
     })
   })
 })

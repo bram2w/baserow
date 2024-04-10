@@ -1,5 +1,6 @@
 import WorkflowActionService from '@baserow/modules/builder/services/workflowAction'
 import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+import _ from 'lodash'
 
 const updateContext = {
   updateTimeout: null,
@@ -13,6 +14,7 @@ export function populateWorkflowAction(workflowAction) {
     ...workflowAction,
     _: {
       loading: false,
+      dispatching: false,
     },
   }
 }
@@ -60,6 +62,9 @@ const mutations = {
   },
   SET_LOADING(state, { workflowAction, value }) {
     workflowAction._.loading = value
+  },
+  SET_DISPATCHING(state, { workflowAction, isDispatching }) {
+    workflowAction._.dispatching = isDispatching
   },
 }
 
@@ -191,8 +196,12 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  dispatchAction({ dispatch }, { workflowActionId, data }) {
-    return WorkflowActionService(this.$client).dispatch(workflowActionId, data)
+  async dispatchAction({ dispatch }, { workflowActionId, data }) {
+    const { data: result } = await WorkflowActionService(this.$client).dispatch(
+      workflowActionId,
+      data
+    )
+    return result
   },
   async order({ commit, getters }, { page, order, element = null }) {
     const workflowActions =
@@ -215,19 +224,37 @@ const actions = {
       throw error
     }
   },
+  setDispatching({ commit }, { workflowAction, isDispatching }) {
+    commit('SET_DISPATCHING', { workflowAction, isDispatching })
+  },
 }
 
 const getters = {
   getWorkflowActions: (state) => (page) => {
     return page.workflowActions.map((w) => w).sort((a, b) => a.order - b.order)
   },
+  getWorkflowActionById: (state, getters) => (page, workflowActionId) => {
+    return getters
+      .getWorkflowActions(page)
+      .find((workflowAction) => workflowAction.id === workflowActionId)
+  },
   getElementWorkflowActions: (state) => (page, elementId) => {
     return page.workflowActions
       .filter((workflowAction) => workflowAction.element_id === elementId)
       .sort((a, b) => a.order - b.order)
   },
+  getElementPreviousWorkflowActions:
+    (state, getters) => (page, elementId, workflowActionId) => {
+      return _.takeWhile(
+        getters.getElementWorkflowActions(page, elementId),
+        (workflowAction) => workflowAction.id !== workflowActionId
+      )
+    },
   getLoading: (state) => (workflowAction) => {
     return workflowAction._?.loading
+  },
+  getDispatching: (state) => (workflowAction) => {
+    return workflowAction._?.dispatching
   },
 }
 

@@ -3,6 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 
+from drf_spectacular.types import OPENAPI_TYPE_MAPPING
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
@@ -15,11 +16,15 @@ from rest_framework.fields import (
     Field,
     FloatField,
     IntegerField,
+    SerializerMethodField,
     TimeField,
     UUIDField,
 )
 from rest_framework.serializers import ListSerializer, Serializer
 
+from baserow.contrib.builder.data_providers.exceptions import (
+    DataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.database.api.fields.serializers import (
     DurationFieldSerializer,
@@ -143,9 +148,31 @@ class LocalBaserowServiceType(ServiceType):
                 serializer_field.child
             )
             return {"type": "array", "items": sub_type}
+        elif isinstance(serializer_field, SerializerMethodField):
+            # Try to guess the json type of SerializerMethodField based on the
+            # OpenAPI annotations.
+            #
+            # When a method serializer uses @extend_schema_field decorator it will
+            # include a dictionary called "_spectacular_annotation" that contains
+            # the type of the field to return.
+            #
+            # NOTE: This only works for primitive types (e.g, string, boolean, etc.)
+            # and not for composite ones (e.g, object, lists, etc.).
+            base_type = None
+            method = getattr(serializer_field.parent, serializer_field.method_name)
+            if hasattr(method, "_spectacular_annotation"):
+                field = method._spectacular_annotation.get("field")
+                mapping = OPENAPI_TYPE_MAPPING.get(field)
+                if isinstance(mapping, dict):
+                    base_type = mapping.get("type", None)
         elif issubclass(serializer_field.__class__, Serializer):
             properties = {}
             for name, child_serializer in serializer_field.get_fields().items():
+                # In order to keep the parent serializer context in the next
+                # recursive function calls, we need to bind the child serializer
+                # to its parent. Otherwise, the child serializer will be almost
+                # empty with no relevant metadata.
+                child_serializer.bind(name, serializer_field)
                 properties[name] = {
                     "title": name,
                     **self.guess_json_type_from_response_serialize_field(
@@ -810,7 +837,14 @@ class LocalBaserowGetRowUserServiceType(
         Updates the field ids in the path.
         """
 
-        field_dbname, *rest = path
+        # If the path length is greater or equal to one, then we have
+        # the GetRow data source formula format of `data_source.PK.field`.
+        if len(path) >= 1:
+            field_dbname, *rest = path
+        else:
+            # In any other scenario, we have a formula that is not a format we
+            # can currently import properly, so we return the path as is.
+            return path
 
         if field_dbname == "id":
             return path
@@ -1176,6 +1210,26 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         """
 
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
+        field_mappings = service.field_mappings.select_related("field").all()
+        for field_mapping in field_mappings:
+            try:
+                resolved_values[field_mapping.id] = resolve_formula(
+                    field_mapping.value,
+                    formula_runtime_function_registry,
+                    dispatch_context,
+                )
+            except DataProviderChunkInvalidException as e:
+                message = (
+                    "Path error in formula for "
+                    f"field {field_mapping.field.name}({field_mapping.field.id})"
+                )
+                raise ServiceImproperlyConfigured(message) from e
+            except Exception as e:
+                message = (
+                    "Unknown error in formula for "
+                    f"field {field_mapping.field.name}({field_mapping.field.id})"
+                )
+                raise ServiceImproperlyConfigured(message) from e
 
         if not service.row_id:
             # We've received no `row_id` as we're creating a new row.
@@ -1195,11 +1249,13 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 "The result of the `row_id` formula must be an integer or convertible "
                 "to an integer."
             )
+        except DataProviderChunkInvalidException as e:
+            message = f"Formula for row {service.row_id} could not be resolved."
+            raise ServiceImproperlyConfigured(message) from e
         except Exception as e:
             raise ServiceImproperlyConfigured(
                 f"The `row_id` formula can't be resolved: {e}"
             )
-
         return resolved_values
 
     def dispatch_data(
@@ -1225,14 +1281,24 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         field_values = {}
         field_mappings = service.field_mappings.select_related("field").all()
         for field_mapping in field_mappings:
+            if field_mapping.id not in resolved_values:
+                continue
+
+            field = field_mapping.field
+            field_type = field_type_registry.get_by_model(field.specific_class)
+
+            # Determine if the field type is read only, if so, skip it. This
+            # is here for defensive programming purposes, when a field is converted
+            # to a read only type, the field mapping is destroyed. This check is just
+            # in case a loophole is found.
+            if field_type.read_only:
+                continue
+
             resolved_value = resolve_formula(
                 field_mapping.value,
                 formula_runtime_function_registry,
                 dispatch_context,
             )
-
-            field = field_mapping.field
-            field_type = field_type_registry.get_by_model(field.specific_class)
 
             # Transform and validate the resolved value with the field type's DRF field.
             serializer_field = field_type.get_serializer_field(field.specific)
@@ -1271,3 +1337,27 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             )
 
         return {"data": row, "baserow_table_model": table.get_model()}
+
+    def import_path(self, path, id_mapping):
+        """
+        Updates the field ids in the path.
+        """
+
+        # If the path length is greater or equal to one, then we have
+        # the current data source formula format of row, and field.
+        if len(path) >= 1:
+            field_dbname, *rest = path
+        else:
+            # In any other scenario, we have a formula that is not a format we
+            # can currently import properly, so we return the path as is.
+            return path
+
+        if field_dbname == "id":
+            return path
+
+        original_field_id = int(field_dbname[6:])
+        field_id = id_mapping.get("database_fields", {}).get(
+            original_field_id, original_field_id
+        )
+
+        return [f"field_{field_id}", *rest]

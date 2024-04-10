@@ -1,5 +1,63 @@
 # Changelog
 
+## Released 1.24.0
+
+### New features
+* Make links in the URL field type clickable in the row edit modal. [#1072](https://gitlab.com/baserow/baserow/-/issues/1072)
+* Display unavailable advanced/enterprise roles even if the user isn't on one of these plans [#1313](https://gitlab.com/baserow/baserow/-/issues/1313)
+* Made email notifications clickable and link to related row. [#1881](https://gitlab.com/baserow/baserow/-/issues/1881)
+* Introduce 'greater than or equal to' and 'lower than or equal to' filter types for number fields [#1988](https://gitlab.com/baserow/baserow/-/issues/1988)
+* Add support for user mentions in the rich text field. [#2041](https://gitlab.com/baserow/baserow/-/issues/2041)
+* Introduced is any of and is none of filters. [#2102](https://gitlab.com/baserow/baserow/-/issues/2102)
+* Add keyboard shortcuts to interact with Application Builder elements: c (select child), p (select parent), arrow keys (select elements), arrow keys + alt/option (move elements). [#2198](https://gitlab.com/baserow/baserow/-/issues/2198)
+* Add a new data provider that allows to use values from previous actions in formulas [#2224](https://gitlab.com/baserow/baserow/-/issues/2224)
+* For Grid view, show field name on hover if it doesn't fit in the field width [#2236](https://gitlab.com/baserow/baserow/-/issues/2236)
+* Allow optional co-branding in enterprise. [#2294](https://gitlab.com/baserow/baserow/-/issues/2294)
+* Allow selecting entire array result in data explorer [#2347](https://gitlab.com/baserow/baserow/-/issues/2347)
+* Allow to define visibility for elements in application builder [#2374](https://gitlab.com/baserow/baserow/-/issues/2374)
+* Add logout action to application builder [#2390](https://gitlab.com/baserow/baserow/-/issues/2390)
+* Add after login even for the authentication form [#2391](https://gitlab.com/baserow/baserow/-/issues/2391)
+* Add links to the rich text field. [#2412](https://gitlab.com/baserow/baserow/-/issues/2412)
+* Tweaked the application builder data source and events forms so that they occasionally use our smaller form input variant. [#2447](https://gitlab.com/baserow/baserow/-/issues/2447)
+* Improved upon loading states for elements which can dispatch a workflow action. [#2449](https://gitlab.com/baserow/baserow/-/issues/2449)
+* Allow overwriting generative ai settings on workspace level. [#2490](https://gitlab.com/baserow/baserow/-/issues/2490)
+* Add && and || operators to the formula language [#2135](https://gitlab.com/baserow/baserow/-/issues/2135)
+* Introduced a new AI field type
+
+### Bug fixes
+* Fixed copy and paste of unnamed rows for link row field [#1744](https://gitlab.com/baserow/baserow/-/issues/1744)
+* Application builder integrations are now loaded with the application [#2156](https://gitlab.com/baserow/baserow/-/issues/2156)
+* Fixed a bug that caused displacement of the filter type dropdown in survey mode forms. [#2400](https://gitlab.com/baserow/baserow/-/issues/2400)
+* Allow selecting the value property for linked tables field. It also fixes the data schema icons for File fields" [#2402](https://gitlab.com/baserow/baserow/-/issues/2402)
+* Resolved an issue where creating/updating a row in a workflow action would break if the field was read only. [#2408](https://gitlab.com/baserow/baserow/-/issues/2408)
+* Improved formula input field reactivity [#2420](https://gitlab.com/baserow/baserow/-/issues/2420)
+* Resolved an issue causing the rich text menus to malfunction in Safari. [#2428](https://gitlab.com/baserow/baserow/-/issues/2428)
+* Resolved an issue where a list data source's row index would raise an error when used in the current_record data provider. [#2431](https://gitlab.com/baserow/baserow/-/issues/2431)
+* Disable HTML support in the rich text field [#2450](https://gitlab.com/baserow/baserow/-/issues/2450)
+* Fix  [#2464](https://gitlab.com/baserow/baserow/-/issues/2464)
+* Resolved an error which was raised when an application was published with a misconfigured user source. [#2467](https://gitlab.com/baserow/baserow/-/issues/2467)
+* Resolved an issue where updating a table element with an invalid data source would cause the backend to throw an unhandled error. [#2468](https://gitlab.com/baserow/baserow/-/issues/2468)
+* ensure that the get row service type path importer receives no field it doesn t fail hard [#2473](https://gitlab.com/baserow/baserow/-/issues/2473)
+* Using login form if you are already logged doesn't require to click twice on the button anymore [#2476](https://gitlab.com/baserow/baserow/-/issues/2476)
+* Fix bug where cards were overlapping if the field name was too long. [#2478](https://gitlab.com/baserow/baserow/-/issues/2478)
+* Resolved an issue preventing the import/export of workspaces containing a duration field. [#2507](https://gitlab.com/baserow/baserow/-/issues/2507)
+* Restrict 'Manage members' context menu item to database applications only. [#2510](https://gitlab.com/baserow/baserow/-/issues/2510)
+* Fix a bug preventing to trigger a test call for the `update_row` webhook event type. [#2511](https://gitlab.com/baserow/baserow/-/issues/2511)
+* Collection fields are now deleted on table element update
+* Dropdown opened low on the page opens upward now
+* Fixed a memory leak in the all_models property key of the apps registry.
+* Fix thread safety bug of the table get_model method. [#2421](https://gitlab.com/baserow/baserow/-/issues/2421)
+* Restore dashboard performances when getting all applications
+
+### Refactors
+* Create base components for the AB [#2355](https://gitlab.com/baserow/baserow/-/issues/2355)
+* Change application builder elements order
+
+### Breaking API changes
+* Made the application request serializers polymorphic.
+  * Breaking change: when an application is created or updated via the API with an invalid `type` we will now return an `ERROR_APPLICATION_TYPE_DOES_NOT_EXIST` error code, rather than `ERROR_REQUEST_BODY_VALIDATION`.
+
+
 ## Released 1.23.2
 
 ### Bug fixes

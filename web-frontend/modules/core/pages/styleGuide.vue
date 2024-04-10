@@ -348,6 +348,48 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Dropdown multiple</label>
+            <div class="control__elements">
+              value: {{ dropdownMultiple }}
+              <br />
+              <br />
+              <div style="width: 200px">
+                <Dropdown v-model="dropdownMultiple" :multiple="true">
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Dropdown small</label>
             <div class="control__elements">
               value: {{ dropdown }}
@@ -2166,6 +2208,7 @@ export default {
       switchValue: false,
       switchUnknown: 2,
       dropdown: '',
+      dropdownMultiple: [],
       longDropdown: '0',
       date: '',
       formula: 'concat(field("Text"), field("Text"))',

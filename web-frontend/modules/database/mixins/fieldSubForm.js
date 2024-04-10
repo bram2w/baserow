@@ -15,6 +15,13 @@ export default {
     },
     primary: {
       type: Boolean,
+    },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
+    database: {
+      type: Object,
       required: true,
     },
   },

@@ -1,7 +1,7 @@
 <template>
   <div>
     <FieldSelectThroughFieldSubForm
-      :fields="fields"
+      :fields="allFieldsInTable"
       :database="database"
       :default-values="defaultValues"
     ></FieldSelectThroughFieldSubForm>
@@ -22,17 +22,6 @@ export default {
       allowedValues: [],
       values: {},
     }
-  },
-  computed: {
-    database() {
-      return this.$store.getters['application/get'](this.table.database_id)
-    },
-    fields() {
-      // This part might fail in the future because we can't 100% depend on that the
-      // fields in the store are related to the component that renders this. An example
-      // is if you edit the field type in a row edit modal of a related table.
-      return this.$store.getters['field/getAll']
-    },
   },
   validations: {},
 }

@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import (
     InstallTemplateJobApplicationsSerializer,
-    SpecificApplicationSerializer,
+    PolymorphicApplicationResponseSerializer,
 )
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
@@ -65,8 +65,12 @@ class DuplicateApplicationJobType(JobType):
 
     serializer_field_names = ["original_application", "duplicated_application"]
     serializer_field_overrides = {
-        "original_application": SpecificApplicationSerializer(read_only=True),
-        "duplicated_application": SpecificApplicationSerializer(read_only=True),
+        "original_application": PolymorphicApplicationResponseSerializer(
+            read_only=True
+        ),
+        "duplicated_application": PolymorphicApplicationResponseSerializer(
+            read_only=True
+        ),
     }
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):

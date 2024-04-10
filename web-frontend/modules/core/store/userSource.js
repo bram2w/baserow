@@ -214,7 +214,7 @@ const actions = {
       this.$client
     ).fetchAll(application.id)
 
-    commit('CLEAR_ITEMS')
+    commit('CLEAR_ITEMS', { application })
     await Promise.all(
       userSources.map((userSource) =>
         dispatch('forceCreate', { application, userSource })

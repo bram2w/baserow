@@ -60,7 +60,7 @@
         ref="editor"
         v-model="message"
         :editable="editing"
-        :enable-mentions="true"
+        :mentionable-users="workspace.users"
         :enter-stop-edit="true"
         @stop-edit="stopEdit(true)"
       />
@@ -97,6 +97,10 @@ export default {
   },
   props: {
     comment: {
+      type: Object,
+      required: true,
+    },
+    workspace: {
       type: Object,
       required: true,
     },

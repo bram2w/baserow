@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug that caused displacement of the filter type dropdown in survey mode forms.",
+    "issue_number": 2400,
+    "bullet_points": [],
+    "created_at": "2024-03-06"
+}

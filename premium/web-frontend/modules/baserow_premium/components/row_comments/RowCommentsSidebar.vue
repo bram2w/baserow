@@ -15,7 +15,7 @@
         <PremiumModal
           ref="premiumModal"
           :name="$t('rowCommentSidebar.name')"
-          :workspace="database.workspace"
+          :workspace="workspace"
         ></PremiumModal>
       </div>
     </template>
@@ -23,7 +23,7 @@
       <div v-if="!loaded && loading" class="loading-absolute-center" />
       <div v-else>
         <div class="row-comments">
-          <div v-if="totalCount === 0" class="row-comments__empty">
+          <div v-if="currentCount === 0" class="row-comments__empty">
             <i class="row-comments__empty-icon iconoir-multi-bubble"></i>
             <div class="row-comments__empty-text">
               <template
@@ -31,7 +31,7 @@
                   !$hasPermission(
                     'database.table.create_comment',
                     table,
-                    database.workspace.id
+                    workspace.id
                   )
                 "
                 >{{ $t('rowCommentSidebar.readOnlyNoComment') }}</template
@@ -66,6 +66,7 @@
                   </div>
                   <RowComment
                     :comment="c"
+                    :workspace="workspace"
                     :can-edit="canEditComments"
                     :can-delete="canDeleteComments"
                   />
@@ -78,7 +79,7 @@
               $hasPermission(
                 'database.table.create_comment',
                 table,
-                database.workspace.id
+                workspace.id
               )
             "
             class="row-comments__foot"
@@ -86,7 +87,7 @@
             <RichTextEditor
               v-model="comment"
               editor-class="rich-text-editor__content--comment"
-              :enable-mentions="true"
+              :mentionable-users="workspace.users"
               :placeholder="$t('rowCommentSidebar.comment')"
               :enter-stop-edit="true"
               @stop-edit="postComment()"
@@ -167,6 +168,9 @@ export default {
         this.table,
         this.database.workspace.id
       )
+    },
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
     },
   },
   watch: {

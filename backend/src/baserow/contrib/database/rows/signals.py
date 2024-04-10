@@ -8,6 +8,7 @@ before_rows_delete = Signal()
 rows_created = Signal()
 rows_updated = Signal()
 rows_deleted = Signal()
+rows_ai_values_generation_error = Signal()
 
 row_orders_recalculated = Signal()
 

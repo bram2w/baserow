@@ -17,7 +17,8 @@
         "relatedFieldNotFound": "Das Bezugsfeld wurde nicht gefunden.",
         "filterTypeNotFound": "Die Filterart ist nicht kompatibel.",
         "addFilter": "Zusätzliche Filter hinzufügen",
-        "noFilterTitle": "Sie haben bisher keinen Datenquellen-Filter erstellt"
+        "noFilterTitle": "Sie haben bisher keinen Datenquellen-Filter erstellt",
+        "formulaFilterInputPlaceholder": "Text eingeben..."
     },
     "localBaserowTableServiceSortForm": {
         "noTableChosenForSorting": "Wählen Sie eine Tabelle, um die Datenquellen-Sortierung zu verwenden.",

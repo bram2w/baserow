@@ -198,6 +198,16 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * This method generates the context menu options for actions that can be performed on
+   * more selected cells within the same field. These options appear in the grid view
+   * when the user right-clicks on multiple cells.
+   * @param field The field object.
+   */
+  getGridViewContextItemsOnCellsSelection(field) {
+    return []
+  }
+
+  /**
    * This functional component should represent an unselect field cell related to the
    * value of this type. It will only be used in the grid view and is only for fast
    * displaying purposes, not for editing the value. This is because functional
@@ -756,6 +766,27 @@ export class FieldType extends Registerable {
   parseInputValue(field, value) {
     return value
   }
+
+  /**
+   * Indicates whether it's possible to select the field type when creating or updating the field.
+   */
+  isEnabled(workspace) {
+    return true
+  }
+
+  /**
+   * Indicates whether the field is visible, but in a deactivated state.
+   */
+  isDeactivated(workspaceId) {
+    return false
+  }
+
+  /**
+   * The modal that must be shown when a deactivated field is clicked.
+   */
+  getDeactivatedClickModal(workspaceId) {
+    return null
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -1039,7 +1070,13 @@ export class LinkRowFieldType extends FieldType {
       return ''
     }
 
-    const nameList = value.map(({ value }) => value)
+    const nameList = value.map((link) => {
+      if (link.value) {
+        return link.value
+      }
+      return this.app.i18n.t('gridViewFieldLinkRow.unnamed', { value: link.id })
+    })
+
     // Use papa to generate a CSV string
     return this.app.$papa.arrayToString(nameList)
   }

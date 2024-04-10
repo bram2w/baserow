@@ -5,6 +5,8 @@
     :view="view"
     :force-typed="forcedType"
     :use-action-group-id="true"
+    :all-fields-in-table="allFieldsInTable"
+    :database="database"
     @field-created="$emit('field-created', $event)"
     @field-created-callback-done="updateInsertedFieldOrder"
   ></CreateFieldContext>
@@ -32,6 +34,14 @@ export default {
       default: null,
     },
     fromField: {
+      type: Object,
+      required: true,
+    },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
+    database: {
       type: Object,
       required: true,
     },

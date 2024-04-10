@@ -505,7 +505,10 @@
         "copiedRowURL": "URL de la fila copiada",
         "copyRowURL": "Copiar URL de fila",
         "tooManyItemsTitle": "Demasiados artículos",
-        "tooManyItemsDescription": "No es posible actualizar más de {límite} filas a la vez, así que sólo actualizamos la primera."
+        "tooManyItemsDescription": "No es posible actualizar más de {límite} filas a la vez, así que sólo actualizamos la primera.",
+        "generateCellsValues": "Generar valores con IA",
+        "AIValuesGenerationErrorTitle": "Falló la generación de valor de la IA",
+        "AIValuesGenerationErrorMessage": "Por favor, comprueba tu API_KEY y verifica el modelo seleccionado."
     },
     "gridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
@@ -686,7 +689,7 @@
     },
     "snapshotsModal": {
         "createLabel": "Crear una nueva imagen instantánea",
-        "create": "Crear imagen",
+        "create": "Crear instantánea",
         "snapshotRestoredErrorTitle": "Se ha producido un error",
         "snapshotRestoredErrorMessage": "La instantánea no ha podido ser restaurada. Favor de intentarlo más tarde.",
         "snapshotDeletedErrorTitle": "Se ha producido un error",
@@ -848,5 +851,12 @@
     },
     "fieldLongTextSubForm": {
         "enableRichTextFormatting": "Activar el formato de texto enriquecido"
+    },
+    "dataProviderTypes": {
+        "fieldsName": "Campos"
+    },
+    "userMentionInRichTextFieldNotification": {
+        "deletedUser": "Un usuario eliminado",
+        "title": "{sender} le ha mencionado en el campo {fieldName} de la fila {rowId} en {tableName}."
     }
 }
