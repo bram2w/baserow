@@ -49,6 +49,11 @@ class WidthTypes(models.TextChoices):
     SMALL = "small"
 
 
+class INPUT_TEXT_TYPES(models.TextChoices):
+    TEXT = "text"
+    PASSWORD = "password"  # nosec bandit B105
+
+
 def get_default_element_content_type():
     return ContentType.objects.get_for_model(Element)
 
@@ -593,6 +598,13 @@ class InputTextElement(FormElement):
     rows = models.PositiveIntegerField(
         default=3,
         help_text="Number of rows displayed by the rendered input element",
+    )
+    input_type = models.CharField(
+        max_length=10,
+        choices=INPUT_TEXT_TYPES.choices,
+        default=INPUT_TEXT_TYPES.TEXT,
+        help_text="The type of the input, not applicable for multiline inputs.",
+        null=True,  # TODO remove me in next release
     )
 
 

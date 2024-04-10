@@ -60,6 +60,27 @@
         "
       ></FormInput>
     </FormElement>
+
+    <FormGroup
+      v-else
+      :label="$t('inputTextElementForm.inputType')"
+      :description="
+        values.input_type === 'password'
+          ? $t('inputTextElementForm.passwordTypeWarning')
+          : null
+      "
+    >
+      <Dropdown v-model="values.input_type" :show-search="false">
+        <DropdownItem
+          v-for="inputType in inputTypes"
+          :key="inputType.name"
+          :name="inputType.label"
+          :value="inputType.name"
+          :description="inputType.description"
+        >
+        </DropdownItem>
+      </Dropdown>
+    </FormGroup>
   </form>
 </template>
 
@@ -83,6 +104,7 @@ export default {
         placeholder: '',
         is_multiline: false,
         rows: 3,
+        type: 'text',
       },
     }
   },
@@ -109,6 +131,18 @@ export default {
           description: this.$t(
             'inputTextElementForm.validationTypeEmailDescription'
           ),
+        },
+      ]
+    },
+    inputTypes() {
+      return [
+        {
+          name: 'text',
+          label: this.$t('inputTextElementForm.inputTypeTextLabel'),
+        },
+        {
+          name: 'password',
+          label: this.$t('inputTextElementForm.inputTypePasswordLabel'),
         },
       ]
     },
