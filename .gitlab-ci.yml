@@ -53,8 +53,8 @@ variables:
   BACKEND_DEV_IMAGE_NAME: backend_dev
   WEBFRONTEND_IMAGE_NAME: web-frontend
   ALLINONE_IMAGE_NAME: baserow
-  ALLINONE_PG_11_IMAGE_NAME: baserow_pg11
-  ALLINONE_PGAUTOUPGRADE_IMAGE_NAME: baserow_pgautoupgrade
+  ALLINONE_PG_11_IMAGE_NAME: baserow-pg11
+  ALLINONE_PGAUTOUPGRADE_IMAGE_NAME: baserow-pgautoupgrade
   CLOUDRON_IMAGE_NAME: cloudron
   HEROKU_IMAGE_NAME: heroku
   WEBFRONTEND_DEV_IMAGE_NAME: web-frontend_dev
@@ -685,7 +685,7 @@ publish-webfrontend-latest-release-image:
 # ================================ PUSHING ALL-IN-ONE ===============================
 
 # Push baserow/baserow:develop-latest
-publish-allinone-develop-latest-image:
+publish-all-in-one-develop-latest-image:
   extends: .publish-baserow-image
   only:
     variables:
@@ -700,7 +700,7 @@ publish-allinone-develop-latest-image:
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
 # Push baserow/baserow:$VERSION_GIT_TAG
-publish-allinone-release-tagged-image:
+publish-all-in-one-release-tagged-image:
   extends: .publish-baserow-image
   only:
     refs:
@@ -715,7 +715,7 @@ publish-allinone-release-tagged-image:
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
 # Push baserow/baserow:latest
-publish-allinone-latest-release-image:
+publish-all-in-one-latest-release-image:
   extends: .publish-baserow-image
   only:
     refs:
@@ -732,7 +732,22 @@ publish-allinone-latest-release-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
-# Push baserow/baserow_pg11:$VERSION_GIT_TAG
+# Push baserow/baserow-pg11:develop-latest
+publish-all-in-one-embedded-pg-11-develop-latest-image:
+  extends: .publish-baserow-image
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_ALLINONE_PG_11_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$ALLINONE_PG_11_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $RELEASE_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
+
+# Push baserow/baserow-pg11:$VERSION_GIT_TAG
 publish-all-in-one-embedded-pg-11-release-tagged-image:
   extends: .publish-baserow-image
   only:
@@ -747,7 +762,7 @@ publish-all-in-one-embedded-pg-11-release-tagged-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
-# Push baserow/baserow_pg11:latest
+# Push baserow/baserow-pg11:latest
 publish-all-in-one-embedded-pg-11-latest-release-image:
   extends: .publish-baserow-image
   only:
@@ -765,7 +780,22 @@ publish-all-in-one-embedded-pg-11-latest-release-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
-# Push baserow/baserow_pgautoupgrade:$VERSION_GIT_TAG
+# Push baserow/baserow-pgautoupgrade:develop-latest
+publish-all-in-one-embedded-pg-15-upgrade-develop-latest-image:
+  extends: .publish-baserow-image
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_ALLINONE_PGAUTOUPGRADE_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$ALLINONE_PGAUTOUPGRADE_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $RELEASE_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
+
+# Push baserow/baserow-pgautoupgrade:$VERSION_GIT_TAG
 publish-all-in-one-embedded-pg-15-auto-upgrade-release-tagged-image:
   extends: .publish-baserow-image
   only:
@@ -780,7 +810,7 @@ publish-all-in-one-embedded-pg-15-auto-upgrade-release-tagged-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
-# Push baserow/baserow_pgautoupgrade:latest
+# Push baserow/baserow-pgautoupgrade:latest
 publish-all-in-one-embedded-pg-15-auto-upgrade-latest-release-image:
   extends: .publish-baserow-image
   only:
