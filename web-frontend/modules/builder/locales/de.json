@@ -36,7 +36,7 @@
         "userSourcesName": "Benutzer"
     },
     "elementType": {
-        "textDescription": "Einzeiliger Text",
+        "textDescription": "Mehrzeiliger Text",
         "heading": "Überschrift",
         "headingDescription": "Titel der Seitenüberschrift",
         "text": "Paragraph",
@@ -59,7 +59,9 @@
         "iframe": "iFrame",
         "iframeDescription": "Inline-Frame",
         "checkbox": "Kontrollkästchen",
-        "dropdown": "Dropdown"
+        "dropdown": "Dropdown",
+        "authForm": "Anmeldeformular",
+        "authFormDescription": "Ein Benutzer-Anmeldeformular"
     },
     "addElementButton": {
         "label": "Element"
@@ -115,13 +117,17 @@
     "textElementForm": {
         "textTitle": "Text",
         "textPlaceholder": "Text eingeben...",
-        "textError": "Der Wert ist ungültig."
+        "textError": "Der Wert ist ungültig.",
+        "textFormatTypeLabel": "Format",
+        "textFormatTypePlain": "Klartext",
+        "textFormatTypeMarkdown": "Markdown"
     },
     "dataProviderType": {
         "currentRecord": "Datenquelle",
         "pageParameter": "Parameter",
         "dataSource": "Daten",
-        "formData": "Formulardaten"
+        "formData": "Formulardaten",
+        "user": "Benutzer"
     },
     "pageErrors": {
         "errorStartingSlash": "Ein Pfad muss mit '/' beginnen",
@@ -245,7 +251,9 @@
         "altTextTitle": "Alternativer Text",
         "uploadFileButton": "Datei hochladen",
         "altTextDescription": "Wird von Screen-Readern verwendet und angezeigt, wenn das Bild nicht geladen werden kann",
-        "urlWarning": "Hinweis: Bitte vergewissern Sie sich, dass Sie die Kontrolle über die eingegebene URL haben oder dieser vertrauen."
+        "urlWarning": "Hinweis: Bitte vergewissern Sie sich, dass Sie die Kontrolle über die eingegebene URL haben oder dieser vertrauen.",
+        "maxWidthLabel": "Maximale Breite",
+        "maxHeightLabel": "Maximale Höhe"
     },
     "columnElementForm": {
         "columnAmountTitle": "Layout",

@@ -7,7 +7,9 @@
         "free": "Gratis",
         "comingSoon": "Binnenkort...",
         "table": "Tabel",
-        "link": "Link"
+        "link": "Link",
+        "billable": "Factureerbaar",
+        "all": "Alle"
     },
     "action": {
         "upload": "Uploaden",
@@ -78,7 +80,8 @@
         "integerField": "Het veld moet een geheel getal zijn.",
         "minValueField": "Het veld moet groter dan of gelijk aan {min} zijn.",
         "maxValueField": "Het veld moet kleiner zijn dan of gelijk aan {max}.",
-        "minMaxValueField": "De veldwaarde moet tussen {min} en {max} liggen."
+        "minMaxValueField": "De veldwaarde moet tussen {min} en {max} liggen.",
+        "invalidNumber": "Het veld moet een getal zijn."
     },
     "permission": {
         "admin": "Beheerder",
@@ -119,7 +122,8 @@
         "lastModifiedBy": "Laatst gewijzigd door",
         "multipleSelectCheckboxes": "Selectievakjes",
         "duration": "Duur",
-        "password": "Wachtwoord"
+        "password": "Wachtwoord",
+        "ai": "AI prompt"
     },
     "fieldErrors": {
         "invalidNumber": "Ongeldig nummer",
@@ -205,7 +209,11 @@
         "isWithinMonths": "is binnen maanden",
         "isEvenAndWhole": "is even en heel",
         "filesLowerThan": "bestanden lager dan",
-        "isAfterDaysAgo": "is na dagen geleden"
+        "isAfterDaysAgo": "is na dagen geleden",
+        "higherThanOrEqual": "hoger dan of gelijk aan",
+        "lowerThanOrEqual": "lager dan of gelijk aan",
+        "isAnyOf": "is een van",
+        "isNoneOf": "is geen van"
     },
     "viewType": {
         "grid": "Raster",
@@ -318,7 +326,11 @@
         "adminAlreadyExistsDescription": "De gebruikersnaam kan niet worden gebruikt omdat hij al bestaat.",
         "adminAlreadyExistsTitle": "Kan die gebruikersnaam niet gebruiken",
         "cannotCreateFieldTypeDescription": "Het gevraagde veldtype kan momenteel niet worden aangemaakt. Het kan een tijdelijk probleem zijn met oudere tabellen. Probeer het later nog eens.",
-        "cannotCreateFieldTypeTitle": "Kan veld niet maken"
+        "cannotCreateFieldTypeTitle": "Kan veld niet maken",
+        "generativeAIDoesNotExistTitle": "Generatieve AI bestaat niet",
+        "modelDoesNotBelongToTypeTitle": "Het geselecteerde model behoort niet tot het AI-type",
+        "modelDoesNotBelongToTypeDescription": "Het geselecteerde model behoort niet tot het geselecteerde AI-type.",
+        "generativeAIDoesNotExistDescription": "Het generatieve AI-model bestaat niet."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",

@@ -273,8 +273,8 @@
         "chooseAColor": "Quale singola selezione usare per colorare le righe?"
     },
     "redirectToBaserowModal": {
-        "title": "Verrai reindirizzato su http://baserow.io",
-        "content": "Stai lasciando la tua installazione self-hosted e verrai indirizzato su http://baserow.io."
+        "title": "Verrai reindirizzato su https://baserow.io",
+        "content": "Stai lasciando la tua installazione self-hosted e verrai indirizzato su https://baserow.io."
     },
     "premiumTopSidebar": {
         "premiumDescription": "Il tuo account ha pieno accesso alle funzionalità premium",
@@ -291,7 +291,8 @@
         "surveyForm": "Sondaggio",
         "publicLogoRemoval": "Rimozione logo",
         "calendarView": "Vista calendario",
-        "personalViews": "Vista personale"
+        "personalViews": "Vista personale",
+        "aiFeatures": "Campo IA"
     },
     "premiumModal": {
         "title": "Fai l'upgrade per usare {name}",
@@ -359,5 +360,26 @@
         "modeMentionsDesc": "Riceverai le notifiche solo se vieni menzionato in un commento.",
         "modeAllTitle": "Tutti i commenti",
         "modeAllDesc": "Riceverai una notifica per ogni commento pubblicato su questa riga."
+    },
+    "functionalGridViewFieldAI": {
+        "generate": "Genera"
+    },
+    "gridViewFieldAI": {
+        "regenerate": "Ri-genera",
+        "generate": "Genera"
+    },
+    "fieldAISubForm": {
+        "AIModel": "Modello IA",
+        "prompt": "Prompt",
+        "premiumFeature": "Il campo IA è una caratteristica premium",
+        "AIType": "Tipo IA"
+    },
+    "rowEditFieldAI": {
+        "createRowBefore": "Il valore IA può essere generato dopo che la riga è stata creata.",
+        "generate": "Genera"
+    },
+    "premiumFieldType": {
+        "ai": "Prompt IA",
+        "aiDescription": "Un campo di sola lettura che contiene il testo generato dall'intelligenza artificiale in base al prompt inserito."
     }
 }

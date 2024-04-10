@@ -4,7 +4,10 @@
         "no": "nie",
         "wrong": "Coś poszło nie tak",
         "none": "Brak",
-        "free": "Bezpłatnie"
+        "free": "Bezpłatnie",
+        "all": "Wszystkie",
+        "billable": "Płatny",
+        "comingSoon": "Już wkrótce..."
     },
     "action": {
         "upload": "Prześlij",
@@ -33,7 +36,9 @@
         "login": "Zaloguj sie",
         "download": "Pobierz",
         "copyToClipboard": "Skopiuj do schowka",
-        "reset": "Resetowanie"
+        "reset": "Resetowanie",
+        "set": "Zestaw",
+        "logout": "Wylogowanie"
     },
     "adminType": {
         "settings": "Ustawienia",
@@ -72,7 +77,9 @@
         "requiredField": "To pole jest wymagane.",
         "integerField": "Pole musi być liczbą całkowitą.",
         "minValueField": "Pole musi być większe lub równe {min}.",
-        "maxValueField": "Pole musi być mniejsze lub równe {max}."
+        "maxValueField": "Pole musi być mniejsze lub równe {max}.",
+        "invalidNumber": "Pole musi być liczbą.",
+        "minMaxValueField": "Wartość pola musi zawierać się w przedziale od {min} do {max}."
     },
     "permission": {
         "admin": "Administrator",
@@ -100,7 +107,21 @@
         "lookup": "Wyszukiwania",
         "multipleCollaborators": "Współpracownicy",
         "count": "Liczba",
-        "rollup": "Podsumowanie"
+        "rollup": "Podsumowanie",
+        "duration": "Czas trwania",
+        "defaultFormViewComponent": "Domyślny",
+        "linkRowSingle": "Pojedynczy",
+        "linkRowMultiple": "Wiele",
+        "uuid": "UUID",
+        "multipleSelectDropdown": "Lista rozwijana",
+        "multipleSelectCheckboxes": "Pola wyboru",
+        "autonumber": "Autonumer",
+        "password": "Hasło",
+        "ai": "Prompt AI",
+        "singleSelectRadios": "Pole typu radio",
+        "singleSelectDropdown": "Lista rozwijana",
+        "createdBy": "Stworzony przez",
+        "lastModifiedBy": "Ostatnio zmodyfikowany przez"
     },
     "fieldErrors": {
         "invalidNumber": "Nieprawidłowy numer",
@@ -108,13 +129,17 @@
         "invalidUrl": "Nieprawidłowy adres URL",
         "max254Chars": "Maksymalnie 254 znaki",
         "invalidEmail": "Nieprawidłowy e-mail",
-        "invalidPhoneNumber": "Nieważny numer telefonu"
+        "invalidPhoneNumber": "Nieważny numer telefonu",
+        "maxChars": "Maksymalnie {max} znaków.",
+        "minChars": "Min {min} znaków.",
+        "overflowDuration": "Wartość jest zbyt duża.",
+        "invalidDuration": "Nieprawidłowy format ({durationFormat})."
     },
     "fieldDocs": {
         "readOnly": "To jest pole tylko do odczytu.",
         "text": "Akceptuje tekst jednowierszowy.",
-        "longText": "Akceptuje tekst wielowierszowy.",
-        "linkRow": "Przyjmuje tablicę zawierającą identyfikatory lub wartości tekstowe pola głównego powiązanych wierszy z tabeli id {table}. Wszystkie identyfikatory muszą być podane za każdym razem, gdy relacje są aktualizowane. Jeśli podana zostanie pusta tablica, wszystkie relacje zostaną usunięte. W przypadku podania wartości tekstowej zamiast identyfikatora, zostanie wyszukany wiersz z pasującą wartością dla jego pola głównego. Jeśli zostanie znalezione więcej niż jedno dopasowanie, zostanie wybrane pierwsze w kolejności w tabeli.",
+        "longText": "Akceptuje tekst wielowierszowy. Jeśli formatowanie tekstu sformatowanego jest włączone, można użyć markdown do sformatowania tekstu.",
+        "linkRow": "Akceptuje tablicę zawierającą identyfikatory lub wartości tekstowe pól głównych powiązanych wierszy z tabeli id {table}. Wszystkie identyfikatory muszą być podane za każdym razem, gdy relacje są aktualizowane. Jeśli podana zostanie pusta tablica, wszystkie relacje zostaną usunięte. W przypadku podania wartości tekstowej zamiast identyfikatora, wyszukany zostanie wiersz z pasującą wartością pola głównego. Jeśli zostanie znalezione więcej niż jedno dopasowanie, zostanie wybrane pierwsze w kolejności tabeli. Można wysłać ciąg znaków z nazwami oddzielonymi przecinkami, w którym to przypadku ciąg znaków jest konwertowany na tablicę nazw wierszy.",
         "number": "Akceptuje liczbę.",
         "numberPositive": "Akceptuje liczbę dodatnią.",
         "decimal": "Przyjmuje liczbę dziesiętną z {places} miejscami dziesiętnymi po kropce.",
@@ -131,13 +156,19 @@
         "email": "Przyjmuje ciąg znaków, który musi być adresem e-mail.",
         "file": "Akceptuje tablicę obiektów zawierających co najmniej nazwę pliku użytkownika. Możesz użyć punktów końcowych \"Przesyłanie plików\", aby przesłać plik. Odpowiedź tych wywołań może być przekazana bezpośrednio jako obiekt tutaj. Punkty końcowe można znaleźć na lewym pasku bocznym.",
         "singleSelect": "Przyjmuje liczbę całkowitą lub wartość tekstową reprezentującą wybrany identyfikator opcji wyboru lub wartość opcji. Wartość null oznacza, że żadna nie zostanie wybrana. W przypadku wartości tekstowej, wybrana zostanie pierwsza pasująca opcja.",
-        "multipleSelect": "Przyjmuje tablicę mieszanych liczb całkowitych lub wartości tekstowych, z których każda reprezentuje wybrany id lub wartość opcji select. W przypadku wartości tekstowej, wybierana jest pierwsza pasująca opcja.",
+        "multipleSelect": "Akceptuje tablicę mieszanych liczb całkowitych lub wartości tekstowych, z których każda reprezentuje identyfikator lub wartość wybranej opcji wyboru. W przypadku wartości tekstowej wybierana jest pierwsza pasująca opcja. Jako wartość można wysłać ciąg znaków z nazwami oddzielonymi przecinkami, w którym to przypadku ciąg znaków jest konwertowany na tablicę nazw opcji.",
         "phoneNumber": "Akceptuje numer telefonu o maksymalnej długości 100 znaków składający się wyłącznie z cyfr, spacji i następujących znaków: Nx,._+*()#=;/- .",
         "formula": "Pole tylko do odczytu zdefiniowane przez formułę napisaną w języku formuł Baserow.",
         "lookup": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca tablicę wartości i identyfikatorów wierszy z wybranego pola odnośnika w połączonej tabeli.",
         "multipleCollaborators": "Przyjmuje tablicę obiektów, gdzie każdy obiekt zawiera id użytkownika.",
         "rollup": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca wartości z wybranego pola odnośnika w połączonej tabeli.",
-        "count": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca liczbę relacji."
+        "count": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca liczbę relacji.",
+        "createdBy": "Pole created by jest polem tylko do odczytu, wskazującym użytkownika, który utworzył wiersz.",
+        "duration": "Akceptuje czas trwania jako ciąg znaków w formacie {format} lub jako liczbę reprezentującą całkowitą liczbę sekund.",
+        "uuid": "Unikalny i trwały uuid tylko do odczytu.",
+        "autonumber": "Pole tylko do odczytu, które automatycznie zwiększa liczbę dla każdego nowego wiersza.",
+        "password": "Pole tylko do zapisu, które przechowuje zaszyfrowane hasło. Wartością będzie `null` jeśli nie zostało ustawione lub `true` jeśli zostało ustawione. Akceptuje ciąg znaków do ustawienia.",
+        "lastModifiedBy": "Pole ostatnio zmodyfikowane przez jest polem tylko do odczytu."
     },
     "viewFilter": {
         "contains": "zawiera",
@@ -175,7 +206,12 @@
         "isWithinWeeks": "w ciągu tygodni",
         "isWithinMonths": "jest w ciągu miesięcy",
         "isBeforeOrEqualDate": "jest przed lub w tym samym dniu",
-        "isEvenAndWhole": "jest równy i cały"
+        "isEvenAndWhole": "jest równy i cały",
+        "higherThanOrEqual": "wyższy lub równy",
+        "lowerThanOrEqual": "niższy lub równy",
+        "filesLowerThan": "pliki niższe niż",
+        "isAnyOf": "jest dowolnym z",
+        "isNoneOf": "nie jest żadnym z"
     },
     "viewType": {
         "grid": "Siatka",
@@ -281,7 +317,15 @@
         "maxLocksPerTransactionExceededTitle": "Wykryto problem z PostgreSQL",
         "maxLocksPerTransactionExceededDescription": "Baserow próbował trwale usunąć wyrzucone elementy, ale przekroczył dostępne blokady określone w `max_locks_per_transaction`.",
         "notificationDoesNotExistTitle": "Powiadomienie nie istnieje.",
-        "notificationDoesNotExistDescription": "Akcja nie mogła zostać ukończona, ponieważ powiązany element już nie istnieje."
+        "notificationDoesNotExistDescription": "Akcja nie mogła zostać ukończona, ponieważ powiązany element już nie istnieje.",
+        "cannotCreateFieldTypeDescription": "W tej chwili nie można utworzyć żądanego typu pola. Może to być tylko tymczasowy problem ze starszymi tabelami. Spróbuj ponownie później.",
+        "cannotCreateFieldTypeTitle": "Nie może tworzyć pola",
+        "generativeAIDoesNotExistTitle": "Generatywna sztuczna inteligencja nie istnieje",
+        "generativeAIDoesNotExistDescription": "Generatywny model sztucznej inteligencji nie istnieje.",
+        "modelDoesNotBelongToTypeTitle": "Wybrany model nie należy do typu AI",
+        "modelDoesNotBelongToTypeDescription": "Wybrany model nie należy do wybranego typu AI.",
+        "adminAlreadyExistsTitle": "Nie mogę użyć tej nazwy użytkownika",
+        "adminAlreadyExistsDescription": "Ta nazwa użytkownika nie może zostać użyta, ponieważ już istnieje."
     },
     "importerType": {
         "csv": "Importuj plik CSV",
@@ -419,7 +463,17 @@
         "toDateTzDescription": "Zwraca pierwszy argument przekonwertowany na datę podaną jako łańcuch formatu daty jako drugi argument i strefę czasową podaną jako trzeci argument.",
         "datetimeFormatTzDescription": "Konwertuje datę na tekst, podając sposób formatowania daty w określonej strefie czasowej.",
         "encodeUriComponentDescription": "Zwraca zakodowany komponent ciągu URI na podstawie podanego argumentu.",
-        "encodeUriDescription": "Zwraca zakodowany ciąg URI z podanego argumentu."
+        "encodeUriDescription": "Zwraca zakodowany ciąg URI z podanego argumentu.",
+        "getFileSizeDescription": "Zwraca rozmiar pliku z pojedynczego pliku zwróconego przez funkcję indeksu.",
+        "splitPartDescription": "Wyodrębnia segment z ograniczonego ciągu znaków na podstawie ogranicznika i indeksu (wskaźnik numeryczny wskazujący, który element ciągu znaków powinien zostać zwrócony)",
+        "getFileMimeTypeDescription": "Zwraca typ mime pliku z pojedynczego pliku zwróconego przez funkcję index.",
+        "hasOptionDescription": "Zwraca wartość true, jeśli pierwszym argumentem jest pole wielokrotnego wyboru lub odnośnik do pojedynczego pola wyboru, a drugim argumentem jest jedna z opcji.",
+        "getFileCountDescription": "Zwraca liczbę plików w polu pliku, do którego się odwołuje",
+        "getFileVisibleNameDescription": "Zwraca widoczną nazwę pliku z pojedynczego pliku zwróconego przez funkcję index.",
+        "getImageWidthDescription": "Zwraca szerokość obrazu z pojedynczego pliku zwróconego przez funkcję index.",
+        "getImageHeightDescription": "Zwraca wysokość obrazu z pojedynczego pliku zwróconego przez funkcję index.",
+        "getIsImageDescription": "Zwraca, czy pojedynczy plik zwrócony przez funkcję index jest obrazem, czy nie.",
+        "indexDescription": "Zwraca plik z pola pliku w pozycji podanej w drugim argumencie."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "nienazwany wiersz {value}"

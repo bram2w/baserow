@@ -237,7 +237,9 @@
     },
     "enterpriseFeatures": {
         "sso": "Single Sign On",
-        "rbac": "Rol gebaseerde toegangscontrole"
+        "rbac": "Rol gebaseerde toegangscontrole",
+        "auditLogs": "Audit logs",
+        "coBranding": "Co-branding logo vervanging"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Directe ondersteuning"
@@ -265,10 +267,12 @@
         "label": "Deel met iedereen op {name}"
     },
     "memberRolesDatabaseContexItem": {
-        "label": "Leden beheren"
+        "label": "Leden beheren",
+        "additionalRoles": "Extra rollen"
     },
     "memberRolesTableContexItem": {
-        "label": "Leden beheren"
+        "label": "Leden beheren",
+        "additionalRoles": "Extra rollen"
     },
     "membersPagePlugin": {
         "roleHelpText": "Kan worden overschreven met rollen in databases en tabellen."
@@ -300,5 +304,14 @@
     "localBaserowPasswordAppAuthProviderForm": {
         "passwordFieldLabel": "Selecteer wachtwoordveld",
         "noFields": "Geen compatibele velden"
+    },
+    "enterpriseSettings": {
+        "branding": "Branding",
+        "deactivated": "Beschikbaar in enterprise",
+        "uploadFileButton": "Afbeelding uploaden",
+        "showBaserowHelpMessageDescription": "Geeft aan of het bericht met de hulpvraag moet worden weergegeven op het dashboard.",
+        "showBaserowHelpMessage": "Helpbericht tonen",
+        "coBrandingLogo": "Logo",
+        "coBrandingLogoDescription": "Vervangt het Baserow-logo voor een aangepast co-branded alternatief (176x29)."
     }
 }

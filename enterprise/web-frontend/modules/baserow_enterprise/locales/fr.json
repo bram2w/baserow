@@ -210,7 +210,8 @@
         "subLabel": "{totalUserAmount} membres du projet"
     },
     "memberRolesDatabaseContexItem": {
-        "label": "Gérer les membres"
+        "label": "Gérer les membres",
+        "additionalRoles": "Autres rôles"
     },
     "memberRolesMembersList": {
         "remove": "Supprimer",
@@ -265,7 +266,9 @@
     },
     "enterpriseFeatures": {
         "sso": "Authentification unique (SSO)",
-        "rbac": "Contrôle d’accès basé sur les rôles"
+        "rbac": "Contrôle d’accès basé sur les rôles",
+        "coBranding": "Remplacement du logo de co-branding",
+        "auditLogs": "Journaux d'audit"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Assistance"
@@ -274,7 +277,8 @@
         "no_records": "Aucune équipe"
     },
     "memberRolesTableContexItem": {
-        "label": "Gérer les membres"
+        "label": "Gérer les membres",
+        "additionalRoles": "Autres rôles"
     },
     "snapshotModalWarning": {
         "message": "Veuillez noter qu’une sauvegarde inclura toutes les autorisations définies sur l’application et ses tables."
@@ -300,5 +304,14 @@
     "localBaserowPasswordAppAuthProviderForm": {
         "passwordFieldLabel": "Sélectionner le champ du mot de passe",
         "noFields": "Pas de champs compatibles"
+    },
+    "enterpriseSettings": {
+        "deactivated": "Disponible pour le plan Entreprise",
+        "uploadFileButton": "Envoyer l'image",
+        "showBaserowHelpMessageDescription": "Indique si le message de demande d'aide doit être affiché sur le tableau de bord.",
+        "branding": "Image de marque",
+        "showBaserowHelpMessage": "Afficher le message d'aide",
+        "coBrandingLogo": "Logo",
+        "coBrandingLogoDescription": "Remplace le logo Baserow par une alternative co-brandée personnalisée (176x29)."
     }
 }

@@ -214,7 +214,13 @@
         "labelPlaceholder": "Introducir una etiqueta (opcional)",
         "rowsTitle": "Número de líneas",
         "multilineTitle": "Multilínea",
-        "rowsPlaceholder": "Introduce el número de filas de esta entrada"
+        "rowsPlaceholder": "Introduce el número de filas de esta entrada",
+        "validationTypeAnyLabel": "Cualquier",
+        "validationTypeIntegerLabel": "Número",
+        "validationTypeIntegerDescription": "Aplicar un valor numérico en esta entrada.",
+        "validationTypeEmailLabel": "Correo electrónico",
+        "validationTypeEmailDescription": "Implemente un valor de dirección de correo electrónico en esta entrada.",
+        "validationTypeAnyDescription": "Permite establecer cualquier valor en esta entrada."
     },
     "widthSelector": {
         "widthFull": "Anchura completa",
@@ -234,7 +240,8 @@
         "updateRowLabel": "Actualizar fila",
         "createRowLabel": "Crear fila",
         "notificationLabel": "Mostrar notificación",
-        "openPageLabel": "Abrir página"
+        "openPageLabel": "Abrir página",
+        "logoutLabel": "Cerrar sesión"
     },
     "widthTypes": {
         "full": "Anchura completa",
@@ -337,14 +344,17 @@
     },
     "dispatchWorkflowActionError": {
         "defaultMessage": "Se ha producido un error que ha provocado este evento.",
-        "defaultTitle": "Error de evento"
+        "defaultTitle": "Error de evento",
+        "formDataInvalidTitle": "Formulario inválido",
+        "formDataInvalidMessage": "Uno o más campos contienen valores no válidos."
     },
     "dataProviderType": {
         "currentRecord": "Fuente de datos",
         "formData": "Datos del formulario",
         "pageParameter": "Parámetro",
         "dataSource": "Datos",
-        "user": "Usuario"
+        "user": "Usuario",
+        "previousAction": "Acción previa"
     },
     "openPageWorkflowActionForm": {
         "urlLabel": "URL",
@@ -403,7 +413,7 @@
         "showMore": "Ver más"
     },
     "fontSidePanelForm": {
-        "label": "Fuente"
+        "label": "Color de fuente"
     },
     "emptySidePanelState": {
         "message": "Haz clic en uno de los elementos para ver más detalles"
@@ -425,7 +435,8 @@
     },
     "eventTypes": {
         "submitLabel": "Al enviar",
-        "clickLabel": "Al hacer clic"
+        "clickLabel": "Al hacer clic",
+        "afterLoginLabel": "Después de iniciar sesión"
     },
     "pageActionTypes": {
         "publish": "Publicar",
@@ -437,7 +448,9 @@
     "formContainerElementForm": {
         "submitButtonLabel": "Botón de envío",
         "submitButtonPlaceholder": "Introducir valor...",
-        "buttonColor": "Color de los botones"
+        "buttonColor": "Color de los botones",
+        "resetToInitialValuesTitle": "Restablecer los valores por defecto tras el envío",
+        "resetToInitialValuesDescription": "Si está marcada, los valores por defecto del formulario se utilizarán para restablecer el formulario después de un envío exitoso. Si no está marcada, se mantendrán los valores del usuario."
     },
     "subDomainForm": {
         "domainNameLabel": "Nombre de dominio"
@@ -470,7 +483,8 @@
         "labelPlaceholder": "Introduce una etiqueta (opcional)",
         "valueTitle": "Valor por defecto",
         "valuePlaceholder": "Introduce un valor por defecto (opcional)",
-        "placeholderTitle": "Marcador de posición"
+        "placeholderTitle": "Marcador de posición",
+        "validationTitle": "Validación"
     },
     "iframeElementForm": {
         "empty": "Iframe vacío...",
@@ -515,5 +529,13 @@
     "userSelector": {
         "viewAs": "Ver como: {usuario}",
         "anonymous": "Anónimo"
+    },
+    "formContainerElement": {
+        "submitDeactivatedText": "Rellena todos los campos obligatorios para enviar"
+    },
+    "visibilityForm": {
+        "allVisitors": "Todos los visitantes",
+        "loggedInVisitors": "Visitantes registrados",
+        "notLoggedInVisitors": "Visitantes no registrados"
     }
 }

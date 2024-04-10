@@ -7,7 +7,9 @@
         "free": "Gratuito",
         "comingSoon": "In arrivo...",
         "table": "Tabella",
-        "link": "Collegamento"
+        "link": "Collegamento",
+        "all": "Tutti",
+        "billable": "Fatturabile"
     },
     "action": {
         "upload": "Carica",
@@ -78,7 +80,8 @@
         "integerField": "Il campo deve essere un intero.",
         "minValueField": "Il campo deve essere maggior o uguale a {min}.",
         "maxValueField": "Il campo deve essere minore o uguale a {max}.",
-        "minMaxValueField": "Il valore del campo deve essere fra {min} e {max}."
+        "minMaxValueField": "Il valore del campo deve essere fra {min} e {max}.",
+        "invalidNumber": "Il campo deve essere numerico."
     },
     "permission": {
         "admin": "Admin",
@@ -119,7 +122,8 @@
         "singleSelectDropdown": "Lista",
         "password": "Password",
         "autonumber": "Numerazione automatica",
-        "lastModifiedBy": "Ultima modifica di"
+        "lastModifiedBy": "Ultima modifica di",
+        "ai": "Prompt IA"
     },
     "fieldErrors": {
         "invalidNumber": "Numero non valido",
@@ -205,7 +209,11 @@
         "isWithinMonths": "È entro un numero di mesi",
         "isEvenAndWhole": "è pari ed intero",
         "filesLowerThan": "file minore di",
-        "isAfterDaysAgo": "è dopo giorni fa"
+        "isAfterDaysAgo": "è dopo giorni fa",
+        "isAnyOf": "è uno di",
+        "isNoneOf": "è nessuno di",
+        "higherThanOrEqual": "maggiore o uguale",
+        "lowerThanOrEqual": "minore o uguale"
     },
     "viewType": {
         "grid": "Griglia",
@@ -318,7 +326,11 @@
         "adminAlreadyExistsDescription": "Il nome utente non può essere usato perché esiste già.",
         "adminAlreadyExistsTitle": "Non puoi usare questo nome utente",
         "cannotCreateFieldTypeDescription": "Il tipo di campo richiesto non può essere creato al momento. Potrebbe essere un problema temporaneo con tabelle create in precedenza. Si prega di riprovare più tardi.",
-        "cannotCreateFieldTypeTitle": "Impossibile creare il campo"
+        "cannotCreateFieldTypeTitle": "Impossibile creare il campo",
+        "modelDoesNotBelongToTypeDescription": "Il modello selezionato non appartiene al tipo di IA selezionato.",
+        "generativeAIDoesNotExistTitle": "Impossibile trovare l'IA generativa",
+        "generativeAIDoesNotExistDescription": "Il modello di IA generativa non esiste.",
+        "modelDoesNotBelongToTypeTitle": "Il modello selezionato non appartiene al tipo di IA"
     },
     "importerType": {
         "csv": "Importa un file CSV",

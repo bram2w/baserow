@@ -206,10 +206,12 @@
         "subLabel": "{totalUserAmount} członków obszaru roboczego"
     },
     "memberRolesDatabaseContexItem": {
-        "label": "Zarządzaj członkami"
+        "label": "Zarządzaj członkami",
+        "additionalRoles": "Dodatkowe role"
     },
     "memberRolesTableContexItem": {
-        "label": "Zarządzaj członkami"
+        "label": "Zarządzaj członkami",
+        "additionalRoles": "Dodatkowe role"
     },
     "memberRolesMembersList": {
         "teamMembersCount": "{count} członków zespołu",
@@ -268,7 +270,9 @@
     },
     "enterpriseFeatures": {
         "sso": "Logowanie jednokrotne SSO",
-        "rbac": "Kontrola dostępu oparta na rolach"
+        "rbac": "Kontrola dostępu oparta na rolach",
+        "auditLogs": "Dzienniki inspekcji",
+        "coBranding": "Wymiana logo w ramach co-brandingu"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Bezpośrednie wsparcie"
@@ -282,5 +286,32 @@
     "auditLogSidebarWorkspace": {
         "title": "Dziennik inspekcji",
         "deactivated": "Dostępne w wersji zaawansowanej/korporacyjnej"
+    },
+    "localBaserowUserSourceForm": {
+        "noFields": "Brak pól",
+        "nameFieldLabel": "Wybierz pole nazwy",
+        "nameFieldPlaceholder": "Wybierz pole...",
+        "emailFieldLabelPlaceholder": "Wybierz pole...",
+        "description": "Każdy wiersz w tabeli to konto użytkownika. Wybierz pasujące pola w tabeli. Pole e-mail będzie używane do identyfikacji.",
+        "emailFieldLabel": "Wybierz pole e-mail"
+    },
+    "appAuthProviderType": {
+        "localBaserowPassword": "E-mail/hasło"
+    },
+    "localBaserowPasswordAppAuthProviderForm": {
+        "passwordFieldLabel": "Wybierz pole hasła",
+        "noFields": "Brak kompatybilnych pól"
+    },
+    "enterpriseSettings": {
+        "showBaserowHelpMessage": "Pokaż komunikat pomocy",
+        "showBaserowHelpMessageDescription": "Wskazuje, czy komunikat z prośbą o pomoc powinien być wyświetlany na pulpicie nawigacyjnym.",
+        "coBrandingLogo": "Logo",
+        "branding": "Branding",
+        "deactivated": "Dostępne w wersji dla przedsiębiorstw",
+        "coBrandingLogoDescription": "Zastępuje logo Baserow niestandardową alternatywą pod wspólną marką (176x29).",
+        "uploadFileButton": "Prześlij obraz"
+    },
+    "localBaserowUserSourceType": {
+        "notConfigured": "Nie skonfigurowano"
     }
 }
