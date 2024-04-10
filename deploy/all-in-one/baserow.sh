@@ -131,7 +131,7 @@ fi
 # ========================
 # = CHECK IF DATABASE IS INCORRECTLY LOCALHOST
 # ========================
-if [[ "$DATABASE_HOST" == *"localhost"* && -z "$DISABLE_LOCALHOST_CHECK" ]]; then
+if [[ "$DATABASE_HOST" == *"localhost"* && -z "${DISABLE_LOCALHOST_CHECK:-}" ]]; then
   echo -e "\e[31mERROR: You have set DATABASE_HOST to localhost but this will mean "\
           "localhost in the Baserow container and not on your host machine. "\
           "To connect Baserow to a db running on your host instead then you need to"\
@@ -153,7 +153,7 @@ if [[ "$DATABASE_HOST" == "embed" && -z "${DATABASE_URL:-}" ]]; then
   export DATABASE_HOST=localhost
   export BASEROW_EMBEDDED_PSQL=true
 else
-  if [ ! -z "$DATABASE_URL" ] && [ "$POSTGRES_SETUP_SCRIPT_COMMAND" = "upgrade" ]; then
+  if [ ! -z "${DATABASE_URL:-}" ] && [ "${POSTGRES_SETUP_SCRIPT_COMMAND:-}" = "upgrade" ]; then
       startup_echo "===================================================================================="
       startup_echo "This image should only be used to update the data folder of the embedded PostgreSQL."
       startup_echo "===================================================================================="
@@ -167,7 +167,7 @@ fi
 # ========================
 # = CHECK IF REDIS IS INCORRECTLY LOCALHOST
 # ========================
-if [[ "$REDIS_HOST" == *"localhost"* && -z "$DISABLE_LOCALHOST_CHECK" ]]; then
+if [[ "$REDIS_HOST" == *"localhost"* && -z "${DISABLE_LOCALHOST_CHECK:-}" ]]; then
   echo -e "\e[31mERROR: You have set REDIS_HOST to localhost but this will mean "\
           "localhost in the Baserow container and not on your host machine. "\
           "To connect Baserow to a redis running on your host instead then you need to"\
