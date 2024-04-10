@@ -16,6 +16,7 @@ from baserow.contrib.builder.api.elements.serializers import DropdownOptionSeria
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
+    INPUT_TEXT_TYPES,
     WIDTHS,
     ButtonElement,
     CheckboxElement,
@@ -864,6 +865,7 @@ class InputTextElementType(InputElementType):
         "placeholder",
         "is_multiline",
         "rows",
+        "input_type",
     ]
     serializer_field_names = [
         "label",
@@ -873,6 +875,7 @@ class InputTextElementType(InputElementType):
         "placeholder",
         "is_multiline",
         "rows",
+        "input_type",
     ]
 
     class SerializedDict(ElementDict):
@@ -883,6 +886,7 @@ class InputTextElementType(InputElementType):
         default_value: BaserowFormula
         is_multiline: bool
         rows: int
+        input_type: str
 
     @property
     def serializer_field_overrides(self):
@@ -924,6 +928,12 @@ class InputTextElementType(InputElementType):
                 min_value=1,
                 max_value=100,
             ),
+            "input_type": serializers.ChoiceField(
+                choices=INPUT_TEXT_TYPES.choices,
+                help_text=InputTextElement._meta.get_field("input_type").help_text,
+                required=False,
+                default=INPUT_TEXT_TYPES.TEXT,
+            ),
         }
 
         return overrides
@@ -953,6 +963,7 @@ class InputTextElementType(InputElementType):
             "default_value": "'Corporis perspiciatis'",
             "is_multiline": False,
             "rows": 1,
+            "input_type": "text",
         }
 
     def is_valid(self, element: InputTextElement, value: Any) -> bool:

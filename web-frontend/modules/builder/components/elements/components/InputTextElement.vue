@@ -11,6 +11,7 @@
         :placeholder="resolvedPlaceholder"
         :multiline="element.is_multiline"
         :rows="element.rows"
+        :type="element.input_type"
         @blur="onFormElementTouch"
       />
     </ABFormGroup>

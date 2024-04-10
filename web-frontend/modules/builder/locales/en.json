@@ -174,7 +174,11 @@
     "validationTypeIntegerLabel": "Number",
     "validationTypeIntegerDescription": "Enforce a number value in this input.",
     "validationTypeEmailLabel": "Email",
-    "validationTypeEmailDescription": "Enforce an email address value in this input."
+    "validationTypeEmailDescription": "Enforce an email address value in this input.",
+    "inputType": "Input type",
+    "inputTypeTextLabel": "Text",
+    "inputTypePasswordLabel": "Password",
+    "passwordTypeWarning": "Passwords are sensitive data. Please be careful how you handle and store passwords in your application."
   },
   "imageElementForm": {
     "fileLabel": "Image file",
