@@ -497,6 +497,7 @@ build-all-in-one-embedded-pg-11-image:
   variables:
     IMAGE_NAME: $ALLINONE_PG_11_IMAGE_NAME
     DOCKERFILE_PATH: $ALLINONE_PG_11_DOCKERFILE_PATH
+    BUILD_FROM_IMAGE: $TESTED_ALLINONE_CI_IMAGE
 
 build-all-in-one-embedded-pg-15-auto-upgrade-image:
   extends: .build-final-baserow-image
@@ -513,6 +514,7 @@ build-all-in-one-embedded-pg-15-auto-upgrade-image:
   variables:
     IMAGE_NAME: $ALLINONE_PGAUTOUPGRADE_IMAGE_NAME
     DOCKERFILE_PATH: $ALLINONE_PGAUTOUPGRADE_DOCKERFILE_PATH
+    BUILD_FROM_IMAGE: $TESTED_ALLINONE_CI_IMAGE
 
 # If pipeline not triggered by tag:
 # - Build and store cloudron image in CI repo under the `ci-tested` tag so we know
