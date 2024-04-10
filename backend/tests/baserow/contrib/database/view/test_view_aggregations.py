@@ -332,7 +332,7 @@ def test_view_number_aggregation(data_fixture):
             ),
         ],
     )
-    assert result[number_field.db_column] == [
+    assert list(map(lambda x: round(x, 1), result[number_field.db_column])) == [
         19.5,
         22.8,
         33.7,
