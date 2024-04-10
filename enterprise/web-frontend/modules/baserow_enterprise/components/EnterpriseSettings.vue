@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-if="$featureFlagIsEnabled('co-branding')"
-    class="admin-settings__group"
-  >
+  <div class="admin-settings__group">
     <h2 class="admin-settings__group-title">
       {{ $t('enterpriseSettings.branding') }}
     </h2>

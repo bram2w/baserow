@@ -22,6 +22,7 @@ class BaserowEnterpriseConfig(AppConfig):
             action_type_registry,
         )
         from baserow.core.registries import (
+            email_context_registry,
             object_scope_type_registry,
             operation_type_registry,
             plugin_registry,
@@ -57,6 +58,7 @@ class BaserowEnterpriseConfig(AppConfig):
         )
         from baserow_enterprise.trash_types import TeamTrashableItemType
 
+        from .emails_context_types import EnterpriseEmailContextType
         from .plugins import EnterprisePlugin
         from .role.member_data_types import EnterpriseRolesDataType
         from .role.operations import (
@@ -70,6 +72,8 @@ class BaserowEnterpriseConfig(AppConfig):
         from .teams.subjects import TeamSubjectType
 
         plugin_registry.register(EnterprisePlugin())
+
+        email_context_registry.register(EnterpriseEmailContextType())
 
         action_type_registry.register(CreateTeamActionType())
         action_type_registry.register(UpdateTeamActionType())
