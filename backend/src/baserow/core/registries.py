@@ -61,7 +61,6 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass
 class ImportExportConfig:
-
     """
     When true the export/import will also transfer any permission data.
 
@@ -1179,6 +1178,33 @@ class SerializationProcessorRegistry(Registry[SerializationProcessorType]):
     name = "serialization_processors"
 
 
+class EmailContextType(abc.ABC, Instance):
+    """
+    An `EmailContextType` represents a context in which an email can be sent.
+    """
+
+    def get_context(self):
+        raise NotImplementedError(
+            "Must be implemented by the specific email context type"
+        )
+
+
+class EmailContextRegistry(Registry[EmailContextType]):
+    name = "email_context"
+
+    def get_context(self):
+        """
+        Return the context used to render the email template.
+        Be aware that the order used to register the email context is important,
+        because contexts are merged in the order they are registered.
+        """
+
+        context = {}
+        for email_context in self.registry.values():
+            context.update(**email_context.get_context())
+        return context
+
+
 # A default plugin and application registry is created here, this is the one that is
 # used throughout the whole Baserow application. To add a new plugin or application use
 # these registries.
@@ -1195,3 +1221,4 @@ operation_type_registry: OperationTypeRegistry = OperationTypeRegistry()
 serialization_processor_registry: SerializationProcessorRegistry = (
     SerializationProcessorRegistry()
 )
+email_context_registry: EmailContextRegistry = EmailContextRegistry()

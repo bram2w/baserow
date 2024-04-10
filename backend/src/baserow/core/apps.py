@@ -47,10 +47,15 @@ class CoreConfig(AppConfig):
             WorkspaceMemberOnlyPermissionManagerType,
         )
         from baserow.core.registries import (
+            email_context_registry,
             object_scope_type_registry,
             operation_type_registry,
             permission_manager_type_registry,
         )
+
+        from .emails_context_types import CoreEmailContextType
+
+        email_context_registry.register(CoreEmailContextType())
 
         permission_manager_type_registry.register(CorePermissionManagerType())
         permission_manager_type_registry.register(StaffOnlyPermissionManagerType())

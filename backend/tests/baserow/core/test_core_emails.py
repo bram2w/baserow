@@ -23,6 +23,7 @@ class SimpleResetPasswordEmail(BaseEmailMessage):
     template_name = "baserow/core/user/reset_password.html"
 
 
+@pytest.mark.django_db
 def test_base_email_message():
     with pytest.raises(NotImplementedError):
         WithoutSubjectEmail("test@baserow.io")

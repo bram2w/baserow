@@ -88,15 +88,20 @@
     </mj-attributes>
   </mj-head>
   <mj-body>
-    <mj-section>
-      <mj-column>
+    <mj-section text-align="left">
+      <mj-column width="190px">
         <mj-image
             align="left"
-            width="140px"
-            src="{{ public_web_frontend_url }}/img/logo.svg"
+            width="150px"
+            src="{{ logo_url }}"
             href="{{ baserow_embedded_share_url }}"
             padding-bottom="0"
         ></mj-image>
+      </mj-column>
+      <mj-column>
+        <mj-text mj-class="text" align="left" padding-left="0">
+          {{ logo_additional_text }}
+        </mj-text>
       </mj-column>
     </mj-section>
     <%~ it.body %>

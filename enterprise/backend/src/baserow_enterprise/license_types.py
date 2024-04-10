@@ -5,7 +5,14 @@ from baserow_premium.license.models import License
 from baserow_premium.license.registries import LicenseType, SeatUsageSummary
 
 from baserow.core.models import Workspace
-from baserow_enterprise.features import AUDIT_LOG, RBAC, SSO, SUPPORT, TEAMS
+from baserow_enterprise.features import (
+    AUDIT_LOG,
+    ENTERPRISE_SETTINGS,
+    RBAC,
+    SSO,
+    SUPPORT,
+    TEAMS,
+)
 from baserow_enterprise.role.seat_usage_calculator import (
     RoleBasedSeatUsageSummaryCalculator,
 )
@@ -14,7 +21,7 @@ from baserow_enterprise.role.seat_usage_calculator import (
 class EnterpriseWithoutSupportLicenseType(LicenseType):
     type = "enterprise_without_support"
     order = 100
-    features = [PREMIUM, RBAC, SSO, TEAMS, AUDIT_LOG]
+    features = [PREMIUM, RBAC, SSO, TEAMS, AUDIT_LOG, ENTERPRISE_SETTINGS]
     instance_wide = True
     seats_manually_assigned = False
 
