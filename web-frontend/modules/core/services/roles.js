@@ -11,7 +11,7 @@ export default (client, $hasFeature, $registry) => {
                 showIsBillable: role.showIsBillable(workspace.id),
                 isBillable: role.getIsBillable(workspace.id),
                 isVisible: role.isVisible(workspace.id),
-                isDeactivated: role.isDeactivated(),
+                isDeactivated: role.isDeactivated(workspace.id),
                 allowed_scope_types: ['workspace'],
                 allowed_subject_types: ['auth.User'],
               }
@@ -21,7 +21,7 @@ export default (client, $hasFeature, $registry) => {
                 showIsBillable: role.showIsBillable(workspace.id),
                 isBillable: role.getIsBillable(workspace.id),
                 isVisible: role.isVisible(workspace.id),
-                isDeactivated: role.isDeactivated(),
+                isDeactivated: role.isDeactivated(workspace.id),
               }
         ),
       }
