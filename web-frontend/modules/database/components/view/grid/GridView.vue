@@ -1546,14 +1546,10 @@ export default {
      * Shows the context menu with the appropriate options.
      */
     getMultiSelectContextItems() {
-      const selectedFields = this.$store.getters[
-        this.storePrefix + 'view/grid/getSelectedFields'
-      ](this.fields)
-
-      if (selectedFields.length === 1) {
-        return this.$registry
-          .get('field', selectedFields[0].type)
-          .getGridViewContextItemsOnCellsSelection(selectedFields[0])
+      const selectedField = this.getSelectedField()
+      if (selectedField) {
+        const fieldType = this.$registry.get('field', selectedField.type)
+        return fieldType.getGridViewContextItemsOnCellsSelection(selectedField)
       } else {
         return []
       }
