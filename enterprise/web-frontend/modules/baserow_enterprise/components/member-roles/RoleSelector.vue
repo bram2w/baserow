@@ -16,6 +16,7 @@
       :subject="value"
       :roles="roles"
       :allow-removing-role="allowRemovingRole"
+      :workspace="workspace"
       role-value-column="uid"
       @update-role="roleUpdated"
       @delete="$emit('delete')"
@@ -46,10 +47,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    workspace: {
+      type: Object,
+      required: true,
+    },
   },
   methods: {
     roleUpdated({ uid }) {
-      const role = this.roles.find((role) => role.getUid() === uid)
+      const role = this.roles.find((role) => role.uid === uid)
       this.$emit('input', role)
     },
   },

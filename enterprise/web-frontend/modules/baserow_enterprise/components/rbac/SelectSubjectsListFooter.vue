@@ -4,7 +4,11 @@
     :class="{ 'select-list-footer--single': !showRoleSelector }"
   >
     <div v-if="showRoleSelector" class="select-list-footer__left-side">
-      <RoleSelector v-model="roleSelected" :roles="roles" />
+      <RoleSelector
+        v-model="roleSelected"
+        :roles="roles"
+        :workspace="workspace"
+      />
     </div>
     <div>
       <HelpIcon

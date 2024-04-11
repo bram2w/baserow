@@ -42,7 +42,12 @@
         </div>
         <FormElement class="control">
           <div class="control__elements">
-            <Dropdown v-model="values.default_role" :show-search="false" small>
+            <Dropdown
+              v-model="values.default_role"
+              :show-search="false"
+              :fixed-items="true"
+              small
+            >
               <DropdownItem
                 v-for="role in roles"
                 :key="role.uid"
@@ -52,7 +57,18 @@
               >
                 {{ role.name }}
                 <Badge
-                  v-if="!role.isBillable && atLeastOneBillableRole"
+                  v-if="role.showIsBillable && role.isBillable"
+                  color="cyan"
+                  size="small"
+                  bold
+                  >{{ $t('common.billable') }}
+                </Badge>
+                <Badge
+                  v-else-if="
+                    role.showIsBillable &&
+                    !role.isBillable &&
+                    atLeastOneBillableRole
+                  "
                   color="yellow"
                   size="small"
                   bold

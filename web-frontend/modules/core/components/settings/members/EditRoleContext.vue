@@ -100,8 +100,7 @@ export default {
   props: {
     workspace: {
       type: Object,
-      required: false,
-      default: null,
+      required: true,
     },
     subject: {
       required: true,

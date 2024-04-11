@@ -24,6 +24,7 @@
       ref="editRoleContext"
       :subject="row"
       :roles="roles"
+      :workspace="workspace"
       role-value-column="role_uid"
       @update-role="roleUpdate($event)"
     ></EditRoleContext>
