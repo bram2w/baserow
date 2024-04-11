@@ -1,5 +1,16 @@
 # Changelog
 
+## Released 1.24.1
+
+### New features
+* Add the 'Clear' shortcut key for full-sized Mac keyboards. [#2198](https://gitlab.com/baserow/baserow/-/issues/2198)
+* add input_type to InputTextElement to handle password type [#2446](https://gitlab.com/baserow/baserow/-/issues/2446)
+
+### Bug fixes
+* Fixes the Render deployment by enforcing http.
+* Fix selecting role on database and table level.
+
+
 ## Released 1.24.0
 
 ### New features
