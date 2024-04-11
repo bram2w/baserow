@@ -505,6 +505,10 @@ export const getters = {
   getAllSorted(state) {
     return state.items.map((g) => g).sort((a, b) => a.order - b.order)
   },
+  /**
+   * Never use this value in any component to get the current workspace. This is
+   * just used for visual purposes in the left sidebar.
+   */
   getSelected(state) {
     return state.selected
   },

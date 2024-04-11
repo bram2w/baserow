@@ -60,6 +60,7 @@
           :roles="getAvailableRoles(roles)"
           :value="getRole(roleAssignment)"
           :allow-removing-role="true"
+          :workspace="workspace"
           @delete="$emit('role-updated', roleAssignment, null)"
           @input="({ uid }) => $emit('role-updated', roleAssignment, uid)"
         />
