@@ -1,5 +1,11 @@
 # Changelog
 
+## Released 1.24.2
+
+### Bug fixes
+* Fix ownership when initializing PG15 database.
+
+
 ## Released 1.24.1
 
 ### New features
