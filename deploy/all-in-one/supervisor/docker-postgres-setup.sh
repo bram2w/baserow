@@ -57,6 +57,7 @@ docker_setup_db() {
 			CREATE DATABASE :"db";
 			create user :"user" with encrypted password :'pass';
 			grant all privileges on database :"db" to :"user";
+			alter database :"db" OWNER TO :"user";
 		EOSQL
 	fi
 }
