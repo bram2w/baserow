@@ -1,9 +1,14 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import BooleanField from '@baserow/modules/builder/components/elements/components/collectionField/BooleanField'
 import TextField from '@baserow/modules/builder/components/elements/components/collectionField/TextField'
 import LinkField from '@baserow/modules/builder/components/elements/components/collectionField/LinkField'
+import BooleanFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/BooleanFieldForm'
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
 import LinkFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/LinkFieldForm'
-import { ensureString } from '@baserow/modules/core/utils/validator'
+import {
+  ensureBoolean,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 
@@ -35,6 +40,36 @@ export class CollectionFieldType extends Registerable {
    */
   isInError({ field, builder }) {
     return false
+  }
+}
+
+export class BooleanCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'boolean'
+  }
+
+  get name() {
+    return this.app.i18n.t('collectionFieldType.boolean')
+  }
+
+  get component() {
+    return BooleanField
+  }
+
+  get formComponent() {
+    return BooleanFieldForm
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    try {
+      return { value: ensureBoolean(resolveFormula(field.value)) }
+    } catch (error) {
+      return { value: false }
+    }
+  }
+
+  getOrder() {
+    return 5
   }
 }
 
