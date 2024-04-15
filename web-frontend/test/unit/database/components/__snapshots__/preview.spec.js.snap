@@ -80,14 +80,21 @@ exports[`Preview component Office preview 1`] = `
       class="preview__select-buttons"
     >
       <button
-        class="button button--ghost"
+        class="button button--regular button--secondary"
       >
         <i
           class="button__icon iconoir-lock-open"
         />
-        
+         
+        <span
+          class="button__label"
+        >
+          
         previewType.googleDocs
       
+        </span>
+         
+        <!---->
       </button>
     </div>
   </div>
@@ -137,22 +144,36 @@ exports[`Preview component PDF preview component 1`] = `
       class="preview__select-buttons"
     >
       <button
-        class="button button--ghost"
+        class="button button--regular button--secondary"
       >
         <!---->
-        
+         
+        <span
+          class="button__label"
+        >
+          
         previewType.pdfBrowser
       
+        </span>
+         
+        <!---->
       </button>
       <button
-        class="button button--ghost"
+        class="button button--regular button--secondary"
       >
         <i
           class="button__icon iconoir-lock-open"
         />
-        
+         
+        <span
+          class="button__label"
+        >
+          
         previewType.googleDocs
       
+        </span>
+         
+        <!---->
       </button>
     </div>
   </div>
@@ -198,22 +219,36 @@ exports[`Preview component PDF preview component 3`] = `
       class="preview__select-buttons"
     >
       <button
-        class="button button--ghost"
+        class="button button--regular button--secondary"
       >
         <!---->
-        
+         
+        <span
+          class="button__label"
+        >
+          
         previewType.pdfBrowser
       
+        </span>
+         
+        <!---->
       </button>
       <button
-        class="button button--ghost"
+        class="button button--regular button--secondary"
       >
         <i
           class="button__icon iconoir-lock-open"
         />
-        
+         
+        <span
+          class="button__label"
+        >
+          
         previewType.googleDocs
       
+        </span>
+         
+        <!---->
       </button>
     </div>
   </div>

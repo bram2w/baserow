@@ -25,17 +25,20 @@
         <template #settingsLink>{{ $t('apiDocsComponent.settings') }},</template
         >,
       </i18n>
-      <nuxt-link
+
+      <Button
+        tag="nuxt-link"
         :to="{
           name: 'login',
           query: {
             original: $route.path,
           },
         }"
-        class="button button--ghost button--large"
+        type="secondary"
+        size="large"
       >
-        {{ $t('apiDocsComponent.signIn') }}
-      </nuxt-link>
+        {{ $t('apiDocsComponent.signIn') }}</Button
+      >
     </template>
   </div>
 </template>

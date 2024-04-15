@@ -172,13 +172,14 @@
                   !lastHeader(index) && $v.headers.$each[index].value.$touch()
                 "
               />
-              <a
+              <ButtonIcon
                 v-if="!lastHeader(index)"
-                class="button button--error webhook__header-delete"
+                type="danger"
+                icon="iconoir-bin"
+                class="webhook__header-delete"
                 @click="removeHeader(index)"
               >
-                <i class="iconoir-bin button__icon"></i>
-              </a>
+              </ButtonIcon>
             </div>
           </div>
           <div v-if="$v.headers.$anyError" class="error">
@@ -214,9 +215,9 @@
           </div>
         </div>
       </div>
-      <a class="button button--ghost" @click="openTestModal()">{{
+      <Button type="secondary" tag="a" @click="openTestModal()">{{
         $t('webhookForm.triggerButton')
-      }}</a>
+      }}</Button>
       <slot></slot>
       <TestWebhookModal ref="testModal" />
     </div>

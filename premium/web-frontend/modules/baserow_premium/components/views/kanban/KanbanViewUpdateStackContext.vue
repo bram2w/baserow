@@ -6,13 +6,9 @@
       @submitted="submit"
     >
       <div class="context__form-actions">
-        <button
-          class="button"
-          :class="{ 'button--loading': loading }"
-          :disabled="loading"
+        <Button type="primary" :loading="loading" :disabled="loading">
+          {{ $t('action.save') }}</Button
         >
-          {{ $t('action.save') }}
-        </button>
       </div>
     </KanbanViewOptionForm>
   </Context>

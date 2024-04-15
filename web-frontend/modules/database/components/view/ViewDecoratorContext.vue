@@ -25,6 +25,7 @@
                 v-if="dec.valueProviderType"
                 :icon="dec.valueProviderType.getIconClass()"
                 :name="dec.valueProviderType.getName()"
+                small
                 @select="selectValueProvider(dec.decoration, $event)"
               >
                 <template #default="{ hidePicker }">
@@ -45,12 +46,10 @@
               </Picker>
             </div>
             <div class="decorator-context__decorator-header-trash">
-              <a
-                class="decorator-context__decorator-header-trash-link"
+              <ButtonIcon
+                icon="iconoir-bin"
                 @click="removeDecoration(dec.decoration)"
-              >
-                <i class="iconoir-bin" />
-              </a>
+              ></ButtonIcon>
             </div>
           </div>
           <component
@@ -83,21 +82,23 @@
         "
         class="decorator-context__footer"
       >
-        <a
-          ref="addDecoratorLink"
-          class="decorator-context__add"
-          @click="
-            $refs.selectDecoratorContext.toggle(
-              $refs.addDecoratorLink,
-              'bottom',
-              'left',
-              4
-            )
-          "
+        <span ref="addDecoratorLink">
+          <ButtonText
+            icon="iconoir-plus"
+            class="choose-select-field__link margin-right-auto"
+            @click="
+              $refs.selectDecoratorContext.toggle(
+                $refs.addDecoratorLink,
+                'bottom',
+                'left',
+                4
+              )
+            "
+          >
+            {{ $t('viewDecoratorContext.addDecorator') }}
+          </ButtonText></span
         >
-          <i class="decorator-context__add-icon iconoir-plus" />
-          {{ $t('viewDecoratorContext.addDecorator') }}
-        </a>
+
         <SelectViewDecoratorContext
           ref="selectDecoratorContext"
           :database="database"

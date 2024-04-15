@@ -200,24 +200,40 @@
               value: {{ radioButton }}
               <br />
               <br />
-              <RadioButton v-model="radioButton" value="">None</RadioButton>
-              <RadioButton v-model="radioButton" value="a"
-                >Option A</RadioButton
-              >
-              <RadioButton v-model="radioButton" value="b"
-                >Option B</RadioButton
-              >
-              <RadioButton v-model="radioButton" value="c"
-                >Option C</RadioButton
-              >
 
-              <RadioButton v-model="radioButton" value="g" :disabled="true">
-                Option D
-              </RadioButton>
-              <RadioButton v-model="radioButton" value="h" :loading="true">
-                Option E
-              </RadioButton>
+              <div class="">
+                <RadioButton v-model="radioButton" type="chips" value=""
+                  >None</RadioButton
+                >
+                <RadioButton v-model="radioButton" type="chips" value="a"
+                  >Option A</RadioButton
+                >
+                <RadioButton v-model="radioButton" type="chips" value="b"
+                  >Option B</RadioButton
+                >
+                <RadioButton v-model="radioButton" type="chips" value="c"
+                  >Option C</RadioButton
+                >
+
+                <RadioButton
+                  v-model="radioButton"
+                  type="chips"
+                  value="g"
+                  :disabled="true"
+                >
+                  Option D
+                </RadioButton>
+                <RadioButton
+                  v-model="radioButton"
+                  type="chips"
+                  value="h"
+                  :loading="true"
+                >
+                  Option E
+                </RadioButton>
+              </div>
             </div>
+
             <div
               class="control__elements"
               :style="{ backgroundColor: 'white', padding: '5px' }"
@@ -246,19 +262,19 @@
                 v-model="radioButton"
                 value="d"
                 icon="iconoir-align-left"
-                size="large"
+                size="small"
               ></RadioButton>
               <RadioButton
                 v-model="radioButton"
                 value="e"
                 icon="iconoir-align-center"
-                size="large"
+                size="small"
               ></RadioButton>
               <RadioButton
                 v-model="radioButton"
                 value="f"
                 icon="iconoir-align-right"
-                size="large"
+                size="small"
               ></RadioButton>
             </div>
           </div>
@@ -805,163 +821,169 @@
           class="margin-bottom-3 style-guide__buttons"
           :style="{ backgroundColor: 'white', padding: '5px' }"
         >
-          <h3>Tiny size</h3>
-          <Button size="tiny">button</Button>
-          <Button size="tiny" disabled>button[disabled]</Button>
-          <Button size="tiny" type="primary">button.button-success</Button>
-          <Button size="tiny" type="success">button.button-success</Button>
-          <Button size="tiny" type="warning">button.button-warning</Button>
-          <Button size="tiny" type="error">button.button-error</Button>
-          <Button size="tiny" append-icon="baserow-icon-lock-open"
-            >button</Button
-          >
-          <Button size="tiny" type="ghost">button.button-ghost</Button>
-          <Button size="tiny" icon="iconoir-verified-user"></Button>
-          <Button
-            size="tiny"
-            icon="iconoir-verified-user"
-            type="ghost"
-          ></Button>
-        </div>
-        <div
-          class="margin-bottom-3 style-guide__buttons"
-          :style="{ backgroundColor: 'white', padding: '5px' }"
-        >
-          <h3>Small size</h3>
-          <Button size="small">button</Button>
-          <Button size="small" disabled>button[disabled]</Button>
-          <Button size="small" type="primary">button.button-success</Button>
-          <Button size="small" type="success">button.button-success</Button>
-          <Button size="small" type="warning">button.button-warning</Button>
-          <Button size="small" type="error">button.button-error</Button>
-          <Button size="small" append-icon="baserow-icon-lock-open"
-            >button</Button
-          >
-          <Button size="small" type="ghost">button.button-ghost</Button>
-          <Button size="small" icon="iconoir-verified-user"></Button>
-          <Button
-            size="small"
-            icon="iconoir-verified-user"
-            type="ghost"
-          ></Button>
-        </div>
-        <div
-          class="margin-bottom-3 style-guide__buttons"
-          :style="{ backgroundColor: 'white', padding: '5px' }"
-        >
-          <h3>Normal link</h3>
-          <Button tag="a" href="#">a.button</Button>
-          <Button tag="a" disabled href="#">a.button[disabled]</Button>
-          <Button tag="a" type="success" href="#">
-            a.button.button-success
-          </Button>
-          <Button tag="a" type="warning">a.button.button-warning</Button>
-          <Button tag="a" type="error">a.button.button-error</Button>
-          <Button tag="a" append-icon="baserow-icon-lock-open">a.button</Button>
-          <Button tag="a" type="ghost">a.button.button-ghost</Button>
-          <Button tag="a" icon="iconoir-verified-user"></Button>
-          <Button tag="a" icon="iconoir-verified-user" type="ghost"></Button>
-        </div>
-        <div
-          class="margin-bottom-3 style-guide__buttons"
-          :style="{ backgroundColor: 'white', padding: '5px' }"
-        >
-          <h3>Normal button</h3>
-          <Button append-icon="iconoir-plus">button.button</Button>
-          <Button disabled>button[disabled]</Button>
-          <Button type="success">button.button-success</Button>
-          <Button type="warning">button.button-warning</Button>
-          <Button type="error">button.button-error</Button>
-          <Button append-icon="baserow-icon-lock-open">button</Button>
-          <Button type="ghost">button.button-ghost</Button>
-          <Button icon="iconoir-verified-user"></Button>
-          <Button icon="iconoir-verified-user" type="ghost"></Button>
-          <Button type="light">button.light</Button>
-          <Button type="light" active>button.light.active</Button>
-          <Button type="light" icon="iconoir-bin"></Button>
-        </div>
-        <div
-          class="margin-bottom-3 style-guide__buttons"
-          :style="{ backgroundColor: 'white', padding: '5px' }"
-        >
-          <h3>Large size</h3>
-          <Button size="large">button</Button>
-          <Button size="large" disabled>button[disabled]</Button>
-          <Button type="plain" size="large">button-plain</Button>
-          <Button size="large" type="success">button.button-success</Button>
-          <Button size="large" type="warning">button.button-warning</Button>
-          <Button size="large" type="error">button.button-error</Button>
-          <Button size="large" append-icon="baserow-icon-lock-open"
-            >button</Button
-          >
-          <Button size="large" prepend-icon="arrow-left">button</Button>
-          <Button size="large" type="ghost">button.button-ghost</Button>
-          <Button size="large" icon="iconoir-verified-user"></Button>
-          <Button
-            size="large"
-            icon="iconoir-verified-user"
-            type="ghost"
-          ></Button>
-        </div>
-        <div
-          class="margin-bottom-3 style-guide__buttons"
-          :style="{ backgroundColor: 'white', padding: '5px' }"
-        >
-          <h3>Overflow button</h3>
-          <Button overflow>Overflow</Button>
+          <h3>Button</h3>
 
-          <button class="button button--large button--error button--overflow">
-            Remove
-          </button>
+          <Button type="primary">Button primary</Button>
+          <Button type="secondary">Button secondary</Button>
+          <Button type="danger">Button danger</Button>
+          <Button type="upload">Button upload</Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button large</h3>
+
+          <Button type="primary" size="large">Button primary</Button>
+          <Button type="secondary" size="large">Button secondary</Button>
+          <Button type="danger" size="large">Button danger</Button>
+          <Button type="upload" size="large">Button upload</Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button small</h3>
+
+          <Button type="primary" size="small">Button primary</Button>
+          <Button type="secondary" size="small">Button secondary</Button>
+          <Button type="danger" size="small">Button danger</Button>
+          <Button type="upload" size="small">Button upload</Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button loading</h3>
+
+          <Button type="primary" size="small" loading>Button primary</Button>
+          <Button type="secondary" size="small" loading
+            >Button secondary</Button
+          >
+          <Button type="danger" size="small" loading>Button danger</Button>
+          <Button type="upload" size="small" loading>Button upload</Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button disabled</h3>
+
+          <Button type="primary" size="small" disabled>Button primary</Button>
+          <Button type="secondary" size="small" disabled
+            >Button secondary disabled</Button
+          >
+          <Button type="danger" size="small" disabled
+            >Button danger disabled</Button
+          >
+        </div>
+
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button with icon</h3>
+
+          <Button type="primary" size="small" icon="iconoir-plus"
+            >Button primary</Button
+          >
+          <Button type="secondary" size="small" icon="iconoir-plus"
+            >Button secondary</Button
+          >
+          <Button type="danger" size="small" icon="iconoir-plus"
+            >Button danger</Button
+          >
         </div>
 
         <div
           class="margin-bottom-3"
           :style="{ backgroundColor: 'white', padding: '5px' }"
         >
-          <h3>Loading</h3>
-          <Button size="tiny" loading>Loading</Button>
-          <Button loading>Loading</Button>
-          <Button disabled loading>Disabled & loading</Button>
-          <Button type="success" loading>Success loading</Button>
-          <Button append-icon="search" loading>Loading</Button>
+          <h3>Button full width</h3>
 
-          <Button size="large" loading>Loading</Button>
-          <Button size="large" type="ghost" loading>Loading</Button>
-          <Button size="large" icon="iconoir-verified-user" loading></Button>
-          <Button type="light" loading>button.light.loading</Button>
-
-          <Button type="light" active loading>
-            button.light.active.loading
-          </Button>
+          <Button
+            class="margin-bottom-2"
+            type="primary"
+            icon="iconoir-plus"
+            full-width
+            >Button primary</Button
+          >
+          <Button
+            class="margin-bottom-2"
+            type="secondary"
+            icon="iconoir-plus"
+            full-width
+            >Button secondary</Button
+          >
+          <Button
+            class="margin-bottom-2"
+            type="danger"
+            icon="iconoir-plus"
+            full-width
+            >Button danger</Button
+          >
         </div>
 
         <div
           class="margin-bottom-3"
           :style="{ backgroundColor: 'white', padding: '5px' }"
         >
-          <h3>Link button</h3>
-          <Button type="link" prepend-icon="iconoir-nav-arrow-left"
-            >button.link.loading</Button
-          >
-          <Button type="link">button.link</Button>
-          <Button type="link" loading>button.link.loading</Button>
-          <Button type="link" prepend-icon="iconoir-bin" disabled
-            >button.link.disabled</Button
-          >
-          <Button tag="a" icon="iconoir-verified-user" type="link"
-            >button.link.atag</Button
-          >
-          <Button type="link" size="tiny" prepend-icon="iconoir-nav-arrow-left"
-            >button.link.tiny</Button
-          >
-          <Button
-            type="link"
-            size="tiny"
+          <h3>Button icon</h3>
+          <div class="margin-bottom-2">
+            Primary
+            <ButtonIcon type="primary" icon="iconoir-basketball"></ButtonIcon>
+          </div>
+
+          <div>
+            Secondary
+            <ButtonIcon type="secondary" icon="iconoir-basketball"></ButtonIcon>
+          </div>
+
+          <ButtonIcon
+            type="primary"
+            icon="iconoir-basketball"
             loading
-            prepend-icon="iconoir-nav-arrow-left"
-            >button.link.tiny.loading.icon</Button
+          ></ButtonIcon>
+
+          <ButtonIcon
+            type="primary"
+            icon="iconoir-basketball"
+            disabled
+          ></ButtonIcon>
+        </div>
+
+        <div
+          class="margin-bottom-3"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button text</h3>
+
+          <ButtonText type="primary" icon="iconoir-plus"
+            >Button text primary</ButtonText
           >
+
+          <ButtonText type="secondary" icon="iconoir-plus"
+            >Button text primary</ButtonText
+          >
+
+          <ButtonText type="primary" icon="iconoir-plus" loading
+            >Button text loading</ButtonText
+          >
+
+          <ButtonText type="primary" icon="iconoir-plus" disabled
+            >Button text disabled</ButtonText
+          >
+        </div>
+
+        <div
+          class="margin-bottom-3"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Button add</h3>
+
+          <ButtonAdd></ButtonAdd>
+
+          <ButtonAdd disabled></ButtonAdd>
         </div>
 
         <div

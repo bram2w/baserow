@@ -10,13 +10,15 @@
           <a @click.prevent="hide">{{ $t('action.cancel') }}</a>
         </li>
       </ul>
-      <a
-        class="button button button--error"
-        :class="{ 'button--loading': loading }"
+
+      <Button
+        type="danger"
+        :loading="loading"
+        :disabled="loading"
         @click.prevent="confirm"
       >
-        {{ $t('deleteSnapshotModal.confirm') }}
-      </a>
+        {{ $t('deleteSnapshotModal.confirm') }}</Button
+      >
     </div>
   </Modal>
 </template>

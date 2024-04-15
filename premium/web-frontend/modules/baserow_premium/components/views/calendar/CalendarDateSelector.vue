@@ -6,9 +6,10 @@
     <a class="calendar-date-selector__next" @click="selectNext">
       <i class="iconoir-nav-arrow-right"></i>
     </a>
-    <button class="button button--large button--ghost" @click="selectCurrent">
-      {{ $t('calendarDateSelector.today') }}
-    </button>
+
+    <Button type="secondary" size="large" @click="selectCurrent">
+      {{ $t('calendarDateSelector.today') }}</Button
+    >
   </div>
 </template>
 

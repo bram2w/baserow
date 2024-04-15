@@ -1,0 +1,53 @@
+$button-primary: $palette-blue-500;
+$button-secondary: $white;
+$button-danger: $palette-red-600;
+
+$button-tiny-height: 26px;
+$button-tiny-top-bottom-padding: 0;
+$button-tiny-right-left-padding: 12px;
+
+$button-small-height: 32px;
+$button-small-top-bottom-padding: 10px;
+$button-small-right-left-padding: 12px;
+
+$button-regular-height: 36px;
+$button-regular-top-bottom-padding: 8px;
+$button-regular-right-left-padding: 12px;
+
+$button-large-height: 44px;
+$button-large-top-bottom-padding: 12px;
+$button-large-right-left-padding: 20px;
+
+@mixin button-size(
+  $height: $button-regular-height,
+  $padding-top-bottom: $button-regular-top-bottom-padding,
+  $padding-right-left: $button-regular-right-left-padding
+) {
+  height: $height;
+  padding: $padding-top-bottom $padding-right-left;
+}
+
+@mixin button-style(
+  $background: $button-primary,
+  $background-hover: $palette-blue-600,
+  $background-active: $palette-blue-700,
+  $color: $white,
+  $color-active: $palette-blue-50
+) {
+  background: $background;
+  color: $color;
+
+  &:hover {
+    background: $background-hover;
+  }
+
+  &.active,
+  &:active {
+    background: $background-active;
+    color: $color-active;
+  }
+
+  &.button--loading {
+    background: $background-hover;
+  }
+}

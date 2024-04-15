@@ -30,13 +30,14 @@
     </FormElement>
     <div class="actions">
       <div class="align-right">
-        <button
-          class="button button--large button--primary"
-          :class="{ 'button--loading': loading }"
+        <Button
+          type="primary"
+          size="large"
           :disabled="loading"
+          :loading="loading"
         >
-          {{ $t('changePasswordForm.changePassword') }}
-        </button>
+          {{ $t('changePasswordForm.changePassword') }}</Button
+        >
       </div>
     </div>
   </form>

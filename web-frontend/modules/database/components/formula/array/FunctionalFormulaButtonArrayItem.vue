@@ -1,18 +1,20 @@
 <template functional>
   <div class="array-field__item array-field__item--button">
-    <a
+    <Button
       v-if="$options.methods.isValid(props.value)"
-      class="button button--tiny button--ghost forced-pointer-events-auto"
+      size="tiny"
+      type="secondary"
+      class="forced-pointer-events-auto"
       :href="props.value && props.value.url"
       target="_blank"
       rel="nofollow noopener noreferrer"
       @mousedown.stop
     >
       {{ $options.methods.getLabelOrURL(props.value) }}
-    </a>
-    <a v-else class="button button--tiny button--ghost disabled">
+    </Button>
+    <Button v-else size="tiny" type="secondary" disabled>
       {{ $options.methods.getLabelOrURL(props.value) }}
-    </a>
+    </Button>
   </div>
 </template>
 

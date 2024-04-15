@@ -60,13 +60,14 @@
             </div>
           </div>
           <div class="auth__action">
-            <button
-              :class="{ 'button--loading': loading }"
-              class="button button--full-width"
-              :disabled="loading"
+            <Button
+              type="primary"
+              full-width
+              :loading="loading"
+              :disabled="loading || success"
             >
               {{ $t('resetPassword.submit') }}
-            </button>
+            </Button>
           </div>
           <div>
             <ul class="auth__action-links">
@@ -86,10 +87,15 @@
         <i class="iconoir-check"></i>
       </div>
       <h1 class="box__message-title">{{ $t('resetPassword.changed') }}</h1>
-      <nuxt-link :to="{ name: 'login' }" class="button button--large">
-        <i class="iconoir-arrow-left"></i>
+      <Button
+        tag="nuxt-link"
+        :to="{ name: 'login' }"
+        size="large"
+        type="primary"
+        icon="iconoir-arrow-left"
+      >
         {{ $t('action.backToLogin') }}
-      </nuxt-link>
+      </Button>
     </div>
   </div>
 </template>

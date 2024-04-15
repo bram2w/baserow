@@ -1,5 +1,5 @@
 <template>
-  <div class="dropdown">
+  <div class="dropdown" :class="{ 'dropdown--small': small }">
     <a
       ref="pickerLink"
       class="dropdown__selected"
@@ -32,6 +32,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   methods: {

@@ -170,16 +170,12 @@
     ):hover {
     cursor: pointer;
 
-    @include add-elevation($elevation-medium);
+    @include elevation($elevation-medium);
   }
 }
 
 .kanban-view__stack-foot {
   padding: 10px 20px 20px 20px;
-}
-
-.kanban-view__stack-new-button {
-  width: 100%;
 }
 
 .kanban-view__add-stack {

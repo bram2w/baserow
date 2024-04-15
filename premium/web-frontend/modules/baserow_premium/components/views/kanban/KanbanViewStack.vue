@@ -105,7 +105,7 @@
         </template>
       </InfiniteScroll>
       <div class="kanban-view__stack-foot">
-        <a
+        <Button
           v-if="
             !readOnly &&
             $hasPermission(
@@ -114,13 +114,14 @@
               database.workspace.id
             )
           "
-          class="button button--ghost kanban-view__stack-new-button"
+          type="secondary"
+          icon="iconoir-plus"
+          full-width
           :disabled="draggingRow !== null"
           @click="!readOnly && $emit('create-row', { option })"
         >
-          <i class="iconoir-plus"></i>
           {{ $t('kanbanViewStack.new') }}
-        </a>
+        </Button>
       </div>
     </div>
     <!--

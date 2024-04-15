@@ -33,17 +33,17 @@
           />
         </template>
         <template #default>
-          <button
+          <Button
             v-if="!createFinished"
-            :class="{ 'button--loading': createLoading }"
-            class="button"
+            size="large"
+            :loading="createLoading"
             :disabled="createLoading"
           >
             {{ $t('snapshotsModal.create') }}
-          </button>
-          <a v-else class="button button--ghost" @click="reset()">
-            {{ $t('snapshotsModal.reset') }}
-          </a>
+          </Button>
+          <Button v-else type="secondary" tag="a" size="large" @click="reset()">
+            {{ $t('snapshotsModal.reset') }}</Button
+          >
         </template>
       </CreateSnapshotForm>
       <div v-else>

@@ -17,14 +17,14 @@
       @keydown-enter="$refs.submitButton.focus()"
     >
       <div class="context__form-actions">
-        <button
+        <Button
           ref="submitButton"
-          class="button"
-          :class="{ 'button--loading': loading }"
+          type="primary"
+          :loading="loading"
           :disabled="loading"
         >
           {{ $t('action.create') }}
-        </button>
+        </Button>
       </div>
     </FieldForm>
   </Context>

@@ -5,7 +5,7 @@
   position: relative;
   height: 44px;
   box-sizing: border-box;
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 
   @include rounded($rounded-md);
 
@@ -130,4 +130,5 @@
 
 .form-input__input-wrapper {
   display: flex;
+  align-items: center;
 }

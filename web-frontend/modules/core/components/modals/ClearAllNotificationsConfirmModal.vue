@@ -19,15 +19,16 @@
             >
           </li>
         </ul>
-        <button
-          class="button button--error"
+
+        <Button
+          type="danger"
           @click.prevent="
             $emit('confirm', $event)
             hide()
           "
         >
           {{ $t('action.delete') }}
-        </button>
+        </Button>
       </div>
     </div>
   </Modal>

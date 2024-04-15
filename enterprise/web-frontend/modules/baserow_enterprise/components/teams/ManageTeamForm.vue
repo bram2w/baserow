@@ -10,7 +10,7 @@
               v-model="values.name"
               :class="{ 'input--error': fieldHasErrors('name') }"
               type="text"
-              class="input"
+              class="input input--small"
               @blur="$v.values.name.$touch()"
             />
             <div
@@ -109,33 +109,31 @@
             </span>
           </template>
           <template #right-side="{ item }">
-            <div class="margin-right-1">
-              {{ item.email }}
-              <a class="color-error" @click="$emit('remove-subject', item)"
-                ><i class="iconoir-bin"></i
-              ></a>
-            </div>
+            <span class="margin-right-1">{{ item.email }}</span>
+            <ButtonIcon
+              size="small"
+              icon="iconoir-bin"
+              @click="$emit('remove-subject', item)"
+            ></ButtonIcon>
           </template>
         </List>
       </div>
     </div>
     <div class="row margin-top-2">
       <div class="col col-6">
-        <a
-          class="button button--ghost"
+        <Button
+          type="secondary"
+          :loading="loading"
           :disabled="loading"
+          tag="a"
           @click="$emit('invite')"
           >{{ $t('manageTeamForm.inviteMembers') }}
-        </a>
+        </Button>
       </div>
       <div class="col col-6 align-right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button"
-          :disabled="loading"
+        <Button type="primary" :disabled="loading" :loading="loading">
+          {{ $t('manageTeamForm.submit') }}</Button
         >
-          {{ $t('manageTeamForm.submit') }}
-        </button>
       </div>
     </div>
   </form>

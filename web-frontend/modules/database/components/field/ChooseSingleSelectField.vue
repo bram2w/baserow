@@ -17,14 +17,16 @@
       >{{ field.name }}</Radio
     >
     <div v-if="canCreateSingleSelectField" class="margin-top-2">
-      <a
-        ref="createFieldContextLink"
-        class="choose-select-field__link margin-right-auto"
-        @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
+      <span ref="createFieldContextLink">
+        <ButtonText
+          icon="iconoir-plus"
+          class="choose-select-field__link margin-right-auto"
+          @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
+        >
+          {{ $t('chooseSingleSelectField.addSelectField') }}
+        </ButtonText></span
       >
-        <i class="choose-select-field__link-icon iconoir-plus"></i>
-        {{ $t('chooseSingleSelectField.addSelectField') }}
-      </a>
+
       <CreateFieldContext
         ref="createFieldContext"
         :table="table"

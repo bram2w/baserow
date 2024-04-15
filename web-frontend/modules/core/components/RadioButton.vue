@@ -1,7 +1,22 @@
 <template>
-  <Button type="light" v-bind="restProps" @click.prevent="select(value)">
-    <slot></slot>
-  </Button>
+  <div class="radio-button">
+    <ButtonIcon
+      v-if="type === 'icon'"
+      type="primary"
+      v-bind="restProps"
+      @click.prevent="select(value)"
+    >
+    </ButtonIcon>
+
+    <Chips
+      v-if="type === 'chips'"
+      type="primary"
+      v-bind="restProps"
+      @click.prevent="select(value)"
+    >
+      <slot></slot>
+    </Chips>
+  </div>
 </template>
 
 <script>
@@ -12,6 +27,14 @@ export default {
     event: 'input',
   },
   props: {
+    type: {
+      type: String,
+      required: false,
+      validator: function (value) {
+        return ['icon', 'chips'].includes(value)
+      },
+      default: 'icon',
+    },
     value: {
       type: [String, Number, Boolean, Object],
       required: false,

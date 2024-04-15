@@ -1,0 +1,80 @@
+.button-text {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: $palette-neutral-1100;
+  background: none;
+  margin: 0;
+  font-size: 13px;
+  border: none;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 2px;
+  max-width: 100%;
+  text-decoration: none;
+
+  .button-text[disabled] & {
+    color: $palette-neutral-500;
+  }
+
+  &:hover:not(.button-text--loading):not([disabled]) {
+    color: $palette-neutral-1300;
+  }
+
+  &[disabled]:not(.button-text--loading) {
+    cursor: not-allowed;
+    color: $palette-neutral-700;
+  }
+}
+
+.button-text--loading {
+  cursor: wait;
+}
+
+.button-text__label {
+  @extend %ellipsis;
+}
+
+.button-text__spinner {
+  position: relative;
+  user-select: none;
+  width: 18px;
+
+  &::after {
+    content: ' ';
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 0.18em solid;
+    border-color: $palette-blue-500 transparent $palette-blue-500 transparent;
+    animation: spin infinite 1800ms;
+    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
+  }
+}
+
+.button-text--secondary {
+  color: $palette-neutral-900;
+}
+
+.button-text--small {
+  font-size: 12px;
+}
+
+.button-text__icon {
+  font-size: 18px;
+  color: $palette-neutral-600;
+
+  .button-text[disabled]:not(.button-text--loading) & {
+    color: $palette-neutral-500;
+  }
+
+  .button-text:hover:not(.button-text--loading):not([disabled]) & {
+    color: $palette-neutral-1300;
+  }
+
+  .button-text:active:not(.button-text--loading):not([disabled]) & {
+    color: $palette-neutral-700;
+  }
+}

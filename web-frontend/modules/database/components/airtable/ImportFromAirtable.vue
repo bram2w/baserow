@@ -31,22 +31,28 @@
         :value="job.progress_percentage"
         :status="jobHumanReadableState"
       />
-      <button
+
+      <Button
         v-if="!jobHasSucceeded"
-        class="button button--large modal-progress__export-button"
-        :class="{ 'button--loading': loading }"
+        type="primary"
+        size="large"
+        class="modal-progress__export-button"
+        :loading="loading"
         :disabled="loading"
         @click="importFromAirtable"
       >
-        {{ $t('importFromAirtable.importButtonLabel') }}
-      </button>
-      <button
+        {{ $t('importFromAirtable.openButtonLabel') }}
+      </Button>
+
+      <Button
         v-else
-        class="button button--large button--success modal-progress__export-button"
+        type="secondary"
+        size="large"
+        class="modal-progress__export-button"
         @click="openDatabase"
       >
-        {{ $t('importFromAirtable.openButtonLabel') }}
-      </button>
+        {{ $t('importFromAirtable.openButtonLabel') }}</Button
+      >
     </div>
   </div>
 </template>

@@ -8,7 +8,7 @@
         {{ $t('localBaserowTableServiceSortForm.noSortText') }}
       </div>
     </div>
-    <div class="sortings__items">
+    <div v-if="value.length > 0" v-auto-overflow-scroll class="sortings__items">
       <div
         v-for="(sort, index) in value"
         :key="sort.id"
@@ -103,17 +103,20 @@
       </div>
     </div>
     <template v-if="value.length < availableFieldsLength && !disableSort">
-      <a
-        v-if="!tableLoading"
-        ref="addContextToggle"
-        class="sortings__add"
-        @click="
-          $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 4)
-        "
-      >
-        <i class="sortings__add-icon iconoir-plus"></i>
-        {{ $t('localBaserowTableServiceSortForm.addSort') }}
-      </a>
+      <div ref="addContextToggle">
+        <ButtonText
+          v-if="!tableLoading"
+          type="secondary"
+          size="small"
+          icon="iconoir-plus"
+          class="sortings__add"
+          @click="
+            $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 2)
+          "
+        >
+          {{ $t('localBaserowTableServiceSortForm.addSort') }}
+        </ButtonText>
+      </div>
       <Context
         ref="addContext"
         class="sortings__add-context"

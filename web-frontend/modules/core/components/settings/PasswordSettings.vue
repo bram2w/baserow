@@ -53,14 +53,15 @@
         </div>
       </div>
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
           :disabled="loading"
+          icon="iconoir-edit-pencil"
         >
           {{ $t('passwordSettings.submitButton') }}
-          <i class="iconoir-edit-pencil"></i>
-        </button>
+        </Button>
       </div>
     </form>
   </div>

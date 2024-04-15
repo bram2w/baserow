@@ -16,15 +16,16 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large button--error button--overflow"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="danger"
+            size="large"
+            full-width
             :disabled="loading"
-            :title="user.username"
+            :loading="loading"
             @click.prevent="deleteUser()"
           >
-            {{ $t('deleteUserModal.delete', user) }}
-          </button>
+            {{ $t('deleteUserModal.delete', user) }}</Button
+          >
         </div>
       </div>
     </div>

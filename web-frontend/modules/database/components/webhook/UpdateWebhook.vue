@@ -11,26 +11,23 @@
       @formchange="handleFormChange"
     >
       <div class="actions">
-        <a
-          class="button button--primary button--error"
-          @click="$refs.deleteWebhookModal.show()"
-        >
+        <Button type="danger" @click="$refs.deleteWebhookModal.show()">
           {{ $t('action.delete') }}
-        </a>
+        </Button>
         <div class="align-right">
           <p v-if="saved">
             <strong class="color-success">{{
               $t('webhook.successfullyUpdated')
             }}</strong>
           </p>
-          <button
+          <Button
             v-if="!saved"
-            class="button button--primary"
-            :class="{ 'button--loading': loading }"
+            type="primary"
+            :loading="loading"
             :disabled="loading"
           >
             {{ $t('action.save') }}
-          </button>
+          </Button>
         </div>
       </div>
       <DeleteWebhookModal

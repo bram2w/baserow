@@ -30,12 +30,12 @@
   flex-direction: column;
   gap: 10px;
 
-  &--with-padding {
-    padding: 16px 8px 10px 10px;
-  }
-
   &--scrollable {
     overflow-y: scroll;
+  }
+
+  &--with-padding {
+    padding: 16px 8px 10px 10px;
   }
 }
 
@@ -93,7 +93,7 @@
   height: 36px;
   justify-content: center;
 
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
   @include flex-align-items();
 
   &:hover {
@@ -164,7 +164,7 @@
   border: solid 1px $palette-neutral-400;
   padding: 6px 12px;
   @include rounded($rounded);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }
 
 .filters__value-link-row {
@@ -180,7 +180,7 @@
   background-color: $white;
   width: 100%;
   @include rounded($rounded);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 
   &:hover {
     text-decoration: none;
@@ -214,7 +214,7 @@
 }
 
 .filters__footer {
-  border: 1px solid rgba(217, 219, 222, 0.5);
+  border-top: 1px solid rgba(217, 219, 222, 0.5);
   padding: 8px 12px;
   display: flex;
   flex-direction: row;

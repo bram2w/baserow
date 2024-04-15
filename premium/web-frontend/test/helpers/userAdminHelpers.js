@@ -161,7 +161,7 @@ export default class UserAdminUserHelpers {
     userEditInputs.at(inputIndex).element.value = newValue
     await userEditInputs.at(inputIndex).trigger('input')
 
-    await editUserModal.find('.button--primary').trigger('click')
+    await editUserModal.find('button').trigger('click')
 
     if (exit) {
       await editUserModal.find('.modal__close').trigger('click')
@@ -231,7 +231,7 @@ export default class UserAdminUserHelpers {
   async clickConfirmDeleteUserInModal() {
     await this.c
       .findComponent(DeleteUserModal)
-      .find('.button--large')
+      .find('.button--danger')
       .trigger('click')
   }
 }

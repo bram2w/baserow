@@ -13,14 +13,15 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large button--primary"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="loading"
             :disabled="loading"
             @click="rotateSlug()"
           >
             {{ $t('viewRotateSlugModal.generateNewURL') }}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

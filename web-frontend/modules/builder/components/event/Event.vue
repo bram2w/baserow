@@ -46,15 +46,14 @@
           @delete="deleteWorkflowAction(workflowAction)"
         />
       </div>
-      <Button
-        size="tiny"
-        type="link"
-        prepend-icon="baserow-icon-plus"
+      <ButtonText
+        type="secondary"
+        icon="iconoir-plus"
         :loading="addingAction"
         @click="addWorkflowAction"
       >
         {{ $t('event.addAction') }}
-      </Button>
+      </ButtonText>
     </template>
   </Expandable>
 </template>

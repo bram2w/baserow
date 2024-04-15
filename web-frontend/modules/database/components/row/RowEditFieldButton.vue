@@ -1,17 +1,19 @@
 <template>
   <div class="control__elements">
-    <a
+    <Button
       v-if="isValidLinkURL"
-      class="button button--tiny button--ghost"
+      tag="a"
+      size="tiny"
+      type="secondary"
       :href="copy && copy.url"
       target="_blank"
       rel="nofollow noopener noreferrer"
     >
       {{ labelOrURL }}
-    </a>
-    <a v-else class="button button--tiny button--ghost disabled">
+    </Button>
+    <Button v-else tag="a" size="tiny" type="secondary" disabled>
       {{ labelOrURL }}
-    </a>
+    </Button>
   </div>
 </template>
 

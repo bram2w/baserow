@@ -1,6 +1,6 @@
 <template>
   <div class="gallery-view">
-    <a
+    <ButtonFloating
       v-if="
         !readOnly &&
         $hasPermission(
@@ -9,11 +9,11 @@
           database.workspace.id
         )
       "
-      class="gallery-view__add"
+      icon="iconoir-plus"
+      position="fixed"
       @click="$refs.rowCreateModal.show()"
     >
-      <i class="iconoir-plus"></i>
-    </a>
+    </ButtonFloating>
     <div
       ref="scroll"
       v-auto-scroll="{

@@ -1,0 +1,67 @@
+.button-icon {
+  cursor: pointer;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  gap: 8px;
+  flex-shrink: 0;
+  border: 1px solid $palette-neutral-400;
+  background: $white;
+  color: $palette-neutral-1200;
+
+  @include rounded($rounded-md);
+  @include elevation($elevation-low);
+
+  &:hover:not(.button-icon--loading):not([disabled]) {
+    background: $palette-neutral-25;
+    color: $palette-blue-600;
+    text-decoration: none;
+  }
+
+  &.active,
+  &:active:not(.button-icon--loading):not([disabled]) {
+    background: $palette-neutral-50;
+    color: $palette-blue-700;
+    box-shadow: none !important;
+  }
+
+  &[disabled]:not(.button-icon--loading) {
+    cursor: not-allowed;
+    background: $palette-neutral-100 !important;
+    color: $palette-neutral-700;
+  }
+}
+
+.button-icon--loading {
+  position: relative;
+  cursor: wait;
+  user-select: none;
+
+  @include loading-spinner($palette-neutral-700);
+}
+
+.button-icon--small {
+  width: 24px;
+  height: 24px;
+}
+
+.button-icon__icon {
+  font-size: 16px;
+
+  .button-icon--small & {
+    font-size: 14px;
+  }
+}
+
+.button-icon--secondary {
+  &.active,
+  &:active,
+  &:hover {
+    .button-icon__icon {
+      color: $palette-neutral-1200;
+    }
+  }
+}

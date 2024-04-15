@@ -14,11 +14,11 @@
       <label class="control__label">
         {{ $t('linkElementForm.variant') }}
       </label>
-      <div class="control__elements">
-        <RadioButton v-model="values.variant" value="link">
+      <div class="control__elements control__elements--flex">
+        <RadioButton v-model="values.variant" type="chips" value="link">
           {{ $t('linkElementForm.variantLink') }}
         </RadioButton>
-        <RadioButton v-model="values.variant" value="button">
+        <RadioButton v-model="values.variant" type="chips" value="button">
           {{ $t('linkElementForm.variantButton') }}
         </RadioButton>
       </div>

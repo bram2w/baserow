@@ -40,13 +40,15 @@
         </div>
       </FormElement>
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading, disabled: submitDisabled }"
-          class="button button--large"
-          :disabled="submitDisabled"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
+          :disabled="submitDisabled || loading"
+          icon="iconoir-bin"
         >
           {{ $t('emailNotifications.submitButton') }}
-        </button>
+        </Button>
       </div>
     </form>
   </div>

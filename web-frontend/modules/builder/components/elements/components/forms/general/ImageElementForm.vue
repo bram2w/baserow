@@ -4,15 +4,17 @@
       <label class="control__label">
         {{ $t('imageElementForm.fileLabel') }}
       </label>
-      <div class="control__elements">
+      <div class="control__elements control__elements--flex">
         <RadioButton
           v-model="values.image_source_type"
+          type="chips"
           :value="IMAGE_SOURCE_TYPES.UPLOAD"
         >
           {{ $t('imageElementForm.fileSourceTypeUpload') }}
         </RadioButton>
         <RadioButton
           v-model="values.image_source_type"
+          type="chips"
           :value="IMAGE_SOURCE_TYPES.URL"
         >
           {{ $t('imageElementForm.fileSourceTypeURL') }}
@@ -23,13 +25,14 @@
       v-if="values.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD"
       class="control"
     >
-      <button
+      <Button
         v-if="values.image_file === null"
-        class="button"
+        type="upload"
         @click="openFileUploadModal"
       >
         {{ $t('imageElementForm.uploadFileButton') }}
-      </button>
+      </Button>
+
       <Thumbnail
         v-else
         removable

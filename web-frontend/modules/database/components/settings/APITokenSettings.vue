@@ -46,13 +46,14 @@
               </a>
             </li>
           </ul>
-          <button
-            class="button button--large"
-            :class="{ 'button--loading': createLoading }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="createLoading"
             :disabled="createLoading"
           >
             {{ $t('apiTokenSettings.createToken') }}
-          </button>
+          </Button>
         </div>
       </APITokenForm>
     </template>

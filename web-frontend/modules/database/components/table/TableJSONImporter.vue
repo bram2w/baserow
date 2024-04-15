@@ -35,14 +35,16 @@
             accept=".json"
             @change="select($event)"
           />
-          <a
-            class="button button--large button--ghost file-upload__button"
-            :class="{ 'button--loading': state !== null }"
+          <Button
+            type="upload"
+            size="large"
+            icon="iconoir-cloud-upload"
+            class="file-upload__button"
+            :loading="state !== null"
             @click.prevent="$refs.file.click($event)"
           >
-            <i class="iconoir-cloud-upload"></i>
             {{ $t('tableJSONImporter.chooseButton') }}
-          </a>
+          </Button>
           <div v-if="state === null" class="file-upload__file">
             {{ filename }}
           </div>

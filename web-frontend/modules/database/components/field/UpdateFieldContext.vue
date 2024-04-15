@@ -21,14 +21,14 @@
         <a @click="cancel">
           {{ $t('action.cancel') }}
         </a>
-        <button
-          type="submit"
-          class="button"
-          :class="{ 'button--loading': loading }"
+
+        <Button
+          size="large"
+          :loading="loading"
           :disabled="loading || fieldTypeDisabled"
         >
           {{ $t('action.save') }}
-        </button>
+        </Button>
       </div>
     </FieldForm>
   </Context>

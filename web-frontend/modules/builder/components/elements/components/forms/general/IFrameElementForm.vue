@@ -1,18 +1,22 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <FormGroup :label="$t('iframeElementForm.sourceTypeLabel')">
-      <RadioButton
-        v-model="values.source_type"
-        :value="IFRAME_SOURCE_TYPES.URL"
-      >
-        {{ $t('iframeElementForm.urlLabel') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.source_type"
-        :value="IFRAME_SOURCE_TYPES.EMBED"
-      >
-        {{ $t('iframeElementForm.embedLabel') }}
-      </RadioButton>
+      <div class="control__elements--flex">
+        <RadioButton
+          v-model="values.source_type"
+          :value="IFRAME_SOURCE_TYPES.URL"
+          type="chips"
+        >
+          {{ $t('iframeElementForm.urlLabel') }}
+        </RadioButton>
+        <RadioButton
+          v-model="values.source_type"
+          :value="IFRAME_SOURCE_TYPES.EMBED"
+          type="chips"
+        >
+          {{ $t('iframeElementForm.embedLabel') }}
+        </RadioButton>
+      </div>
     </FormGroup>
     <ApplicationBuilderFormulaInputGroup
       v-if="values.source_type === IFRAME_SOURCE_TYPES.URL"

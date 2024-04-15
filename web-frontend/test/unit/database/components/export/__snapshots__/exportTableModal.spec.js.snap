@@ -1648,11 +1648,19 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
         <!---->
          
         <button
-          class="button button--large button--primary modal-progress__export-button"
+          class="button modal-progress__export-button button--large button--full-width"
         >
-          
+          <!---->
+           
+          <span
+            class="button__label"
+          >
+            
     exportTableLoadingBar.export
   
+          </span>
+           
+          <!---->
         </button>
       </div>
     </form>
@@ -3323,11 +3331,19 @@ exports[`Preview exportTableModal Modal with view 1`] = `
         <!---->
          
         <button
-          class="button button--large button--primary modal-progress__export-button"
+          class="button modal-progress__export-button button--large button--full-width"
         >
-          
+          <!---->
+           
+          <span
+            class="button__label"
+          >
+            
     exportTableLoadingBar.export
   
+          </span>
+           
+          <!---->
         </button>
       </div>
     </form>

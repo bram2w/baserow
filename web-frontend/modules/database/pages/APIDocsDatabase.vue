@@ -13,8 +13,9 @@
         {{ $t('apiDocsDatabase.pageTitle', database) }}
       </a>
       <div class="api-docs__open">
-        <nuxt-link
+        <Button
           v-if="database.tables.length > 0"
+          tag="nuxt-link"
           :to="{
             name: 'database-table',
             params: {
@@ -22,8 +23,8 @@
               tableId: database.tables[0].id,
             },
           }"
-          class="button button--ghost"
-          >{{ $t('apiDocsDatabase.openDatabase') }}</nuxt-link
+          type="secondary"
+          >{{ $t('apiDocsDatabase.openDatabase') }}</Button
         >
       </div>
     </div>

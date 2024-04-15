@@ -5,7 +5,7 @@
   margin-bottom: 2px;
 
   @include rounded($rounded);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 
   > div {
     @include rounded($rounded);

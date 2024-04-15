@@ -81,14 +81,15 @@
         </p>
         <div class="actions">
           <div class="align-right">
-            <a
-              class="button button--large button--error"
-              :class="{ 'button--loading': loading }"
+            <Button
+              type="danger"
+              size="large"
               :disabled="loading"
+              :loading="loading"
               @click="deleteStack()"
             >
               {{ $t('kanbanViewStackContext.delete', { name: option.value }) }}
-            </a>
+            </Button>
           </div>
         </div>
       </div>

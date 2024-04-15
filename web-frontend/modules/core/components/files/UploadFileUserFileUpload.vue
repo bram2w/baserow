@@ -51,17 +51,18 @@
       </li>
     </ul>
     <div v-show="files.length > 0" class="align-right">
-      <a
-        class="button button--large"
-        :class="{ 'button--loading': uploading }"
-        :disabled="uploading"
+      <Button
+        type="primary"
+        size="large"
+        :loading="uploading"
+        :disable="uploading"
         @click="upload()"
       >
         <template v-if="!uploading && hasFailed">{{
           $t('uploadFileUserFileUpload.retry')
         }}</template>
         <template v-else>{{ $t('action.upload') }}</template>
-      </a>
+      </Button>
     </div>
   </div>
 </template>

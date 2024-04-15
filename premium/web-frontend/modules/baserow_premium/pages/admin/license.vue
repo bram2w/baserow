@@ -37,7 +37,9 @@
               <Badge :color="licenseType.getLicenseBadgeColor()" bold>
                 {{ licenseType.getName() }}</Badge
               >
-              <Badge v-if="!license.is_active" color="red">{{ $t('licenses.expired') }}</Badge>
+              <Badge v-if="!license.is_active" color="red">{{
+                $t('licenses.expired')
+              }}</Badge>
             </div>
           </div>
           <div class="license-detail__item">
@@ -166,10 +168,9 @@
                 >
               </template>
             </i18n>
-            <a
-              class="button button--error"
-              @click="$refs.disconnectModal.show()"
-              >{{ $t('license.disconnectLicense') }}</a
+
+            <Button type="danger" @click="$refs.disconnectModal.show()">
+              {{ $t('license.disconnectLicense') }}</Button
             >
             <DisconnectLicenseModal
               ref="disconnectModal"

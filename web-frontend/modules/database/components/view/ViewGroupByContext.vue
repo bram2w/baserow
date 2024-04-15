@@ -2,11 +2,10 @@
   <Context
     ref="context"
     class="group-bys"
-    :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
   >
-    <div>
-      <div v-if="view.group_bys.length === 0" class="group_bys__none">
+    <div class="group-bys__content">
+      <div v-if="view.group_bys.length === 0" class="group-bys__none">
         <div class="group-bys__none-title">
           {{ $t('viewGroupByContext.noGroupByTitle') }}
         </div>
@@ -14,114 +13,131 @@
           {{ $t('viewGroupByContext.noGroupByText') }}
         </div>
       </div>
+
       <div
-        v-for="(groupBy, index) in view.group_bys"
-        :key="groupBy.id"
-        class="group-bys__item"
-        :class="{
-          'group-bys__item--loading': groupBy._.loading,
-        }"
-        :set="(field = getField(groupBy.field))"
+        v-if="view.group_bys.length > 0"
+        v-auto-overflow-scroll
+        class="group-bys__items group-bys__items--scrollable"
       >
-        <a
-          v-if="!disableGroupBy"
-          class="group-bys__remove"
-          @click.stop="deleteGroupBy(groupBy)"
-        >
-          <i class="iconoir-cancel"></i>
-        </a>
-        <div class="group-bys__description">
-          <template v-if="index === 0">{{
-            $t('viewGroupByContext.groupBy')
-          }}</template>
-          <template v-if="index > 0">{{
-            $t('viewGroupByContext.thenBy')
-          }}</template>
-        </div>
-        <div class="group-bys__field">
-          <Dropdown
-            :value="groupBy.field"
-            :disabled="disableGroupBy"
-            :fixed-items="true"
-            class="dropdown--floating"
-            small
-            @input="updateGroupBy(groupBy, { field: $event })"
-          >
-            <DropdownItem
-              v-for="field in fields"
-              :key="'groupBy-field-' + groupBy.id + '-' + field.id"
-              :name="field.name"
-              :value="field.id"
-              :disabled="groupBy.field !== field.id && !isFieldAvailable(field)"
-            ></DropdownItem>
-          </Dropdown>
-        </div>
         <div
-          class="group-bys__order"
-          :class="{ 'group-bys__order--disabled': disableGroupBy }"
+          v-for="(groupBy, index) in view.group_bys"
+          :key="groupBy.id"
+          class="group-bys__item"
+          :class="{
+            'group-bys__item--loading': groupBy._.loading,
+          }"
+          :set="(field = getField(groupBy.field))"
         >
           <a
-            class="group-bys__order-item"
-            :class="{ active: groupBy.order === 'ASC' }"
-            @click="updateGroupBy(groupBy, { order: 'ASC' })"
+            v-if="!disableGroupBy"
+            class="group-bys__remove"
+            @click.stop="deleteGroupBy(groupBy)"
           >
-            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-              getGroupByIndicator(field, 1)
-            }}</template>
-            <i
-              v-if="getGroupByIndicator(field, 0) === 'icon'"
-              :class="getGroupByIndicator(field, 1)"
-            ></i>
-
-            <i class="iconoir-arrow-right"></i>
-
-            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-              getGroupByIndicator(field, 2)
-            }}</template>
-            <i
-              v-if="getGroupByIndicator(field, 0) === 'icon'"
-              class="fa"
-              :class="getGroupByIndicator(field, 2)"
-            ></i>
+            <i class="iconoir-cancel"></i>
           </a>
-          <a
-            class="group-bys__order-item"
-            :class="{ active: groupBy.order === 'DESC' }"
-            @click="updateGroupBy(groupBy, { order: 'DESC' })"
+          <div class="group-bys__description">
+            <template v-if="index === 0">{{
+              $t('viewGroupByContext.groupBy')
+            }}</template>
+            <template v-if="index > 0">{{
+              $t('viewGroupByContext.thenBy')
+            }}</template>
+          </div>
+          <div class="group-bys__field">
+            <Dropdown
+              :value="groupBy.field"
+              :disabled="disableGroupBy"
+              :fixed-items="true"
+              class="dropdown--floating"
+              small
+              @input="updateGroupBy(groupBy, { field: $event })"
+            >
+              <DropdownItem
+                v-for="field in fields"
+                :key="'groupBy-field-' + groupBy.id + '-' + field.id"
+                :name="field.name"
+                :value="field.id"
+                :disabled="
+                  groupBy.field !== field.id && !isFieldAvailable(field)
+                "
+              >
+              </DropdownItem>
+            </Dropdown>
+          </div>
+          <div
+            class="group-bys__order"
+            :class="{ 'group-bys__order--disabled': disableGroupBy }"
           >
-            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-              getGroupByIndicator(field, 2)
-            }}</template>
-            <i
-              v-if="getGroupByIndicator(field, 0) === 'icon'"
-              :class="getGroupByIndicator(field, 2)"
-            ></i>
+            <a
+              class="group-bys__order-item"
+              :class="{ active: groupBy.order === 'ASC' }"
+              @click="updateGroupBy(groupBy, { order: 'ASC' })"
+            >
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 1)
+              }}</template>
+              <i
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
+                :class="getGroupByIndicator(field, 1)"
+              ></i>
 
-            <i class="iconoir-arrow-right"></i>
+              <i class="iconoir-arrow-right"></i>
 
-            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-              getGroupByIndicator(field, 1)
-            }}</template>
-            <i
-              v-if="getGroupByIndicator(field, 0) === 'icon'"
-              :class="getGroupByIndicator(field, 1)"
-            ></i>
-          </a>
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 2)
+              }}</template>
+              <i
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
+                class="fa"
+                :class="getGroupByIndicator(field, 2)"
+              ></i>
+            </a>
+            <a
+              class="group-bys__order-item"
+              :class="{ active: groupBy.order === 'DESC' }"
+              @click="updateGroupBy(groupBy, { order: 'DESC' })"
+            >
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 2)
+              }}</template>
+              <i
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
+                :class="getGroupByIndicator(field, 2)"
+              ></i>
+
+              <i class="iconoir-arrow-right"></i>
+
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 1)
+              }}</template>
+              <i
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
+                :class="getGroupByIndicator(field, 1)"
+              ></i>
+            </a>
+          </div>
         </div>
       </div>
-      <template
+      <div
         v-if="view.group_bys.length < availableFieldsLength && !disableGroupBy"
+        class="group-bys__footer"
       >
-        <a
-          ref="addContextToggle"
-          class="group-bys__add"
-          @click="
-            $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 4)
-          "
-        >
-          <i class="group-bys__add-icon iconoir-plus"></i>
-          {{ $t('viewGroupByContext.addGroupBy') }}
-        </a>
+        <div ref="addContextToggle">
+          <ButtonText
+            icon="iconoir-plus"
+            @click="
+              $refs.addContext.toggle(
+                $refs.addContextToggle,
+                'bottom',
+                'left',
+                4
+              )
+            "
+          >
+            {{ $t('viewGroupByContext.addGroupBy') }}</ButtonText
+          >
+        </div>
+
         <Context
           ref="addContext"
           class="group-bys__add-context"
@@ -145,7 +161,7 @@
             </li>
           </ul>
         </Context>
-      </template>
+      </div>
     </div>
   </Context>
 </template>

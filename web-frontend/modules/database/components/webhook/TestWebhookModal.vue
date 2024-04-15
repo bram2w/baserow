@@ -41,12 +41,12 @@
     <div v-if="!isLoading" class="actions margin-bottom-0">
       <a @click="hide()">{{ $t('action.cancel') }}</a>
       <div class="align-right">
-        <a
-          class="button button--ghost"
+        <Button
+          type="secondary"
           @click="makeCall(lastTableId, lastEventType, lastWebhookValues)"
         >
           {{ $t('action.retry') }}
-        </a>
+        </Button>
       </div>
     </div>
   </Modal>

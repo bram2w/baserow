@@ -13,5 +13,5 @@
   border: 1px solid $palette-neutral-200;
 
   @include absolute(-11px, -10px, auto, auto);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }

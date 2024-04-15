@@ -17,7 +17,7 @@
         }}
       </template>
       <template #header-right-side>
-        <div
+        <Button
           v-if="
             $hasPermission(
               'workspace.create_invitation',
@@ -25,11 +25,13 @@
               workspace.id
             )
           "
-          class="button margin-left-2 button--large"
+          type="primary"
+          size="large"
+          class="margin-left-2"
           @click="$refs.inviteModal.show()"
         >
           {{ $t('membersSettings.membersTable.inviteMember') }}
-        </div>
+        </Button>
       </template>
       <template #menus="slotProps">
         <EditMemberContext

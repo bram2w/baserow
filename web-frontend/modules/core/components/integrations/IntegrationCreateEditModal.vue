@@ -28,6 +28,7 @@
         <Button
           size="large"
           :loading="loading"
+          :disabled="loading"
           @click.prevent="$refs.form.submit()"
         >
           {{ create ? $t('action.create') : $t('action.save') }}

@@ -49,5 +49,5 @@
   border-radius: 3px;
   margin-right: 6px;
 
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }

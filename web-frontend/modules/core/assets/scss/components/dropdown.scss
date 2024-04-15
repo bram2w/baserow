@@ -1,7 +1,7 @@
 .dropdown {
   position: relative;
   background-color: $white;
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
   @include rounded($rounded);
 }
 
@@ -75,7 +75,7 @@
 
   @include absolute(0, 0, auto, 0);
   @include rounded($rounded);
-  @include add-elevation($elevation-medium);
+  @include elevation($elevation-medium);
 
   &.dropdown__items--fixed {
     flex-direction: column;

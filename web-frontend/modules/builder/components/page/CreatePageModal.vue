@@ -10,13 +10,9 @@
       @submitted="addPage"
     >
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
-          type="submit"
-        >
+        <Button size="large" :loading="loading">
           {{ $t('createPageModal.submit') }}
-        </button>
+        </Button>
       </div>
     </PageSettingsForm>
   </Modal>

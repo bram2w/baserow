@@ -7,7 +7,7 @@
     <h2 class="box__title">{{ $t('userSourceSettings.titleOverview') }}</h2>
     <Error :error="error"></Error>
     <div v-if="!error.visible" class="actions actions--right">
-      <Button prepend-icon="baserow-icon-plus" @click="showForm()">
+      <Button icon="iconoir-plus" @click="showForm()">
         {{ $t('userSourceSettings.addUserSource') }}
       </Button>
     </div>
@@ -26,14 +26,9 @@
         style="flex: 1"
       />
       <div class="user-source-settings__user-source-actions">
-        <Button
-          icon="iconoir-edit"
-          type="light"
-          @click="showForm(userSource)"
-        />
-        <Button
+        <ButtonIcon icon="iconoir-edit" @click="showForm(userSource)" />
+        <ButtonIcon
           icon="iconoir-trash"
-          type="light"
           @click="deleteUserSource(userSource)"
         />
       </div>
@@ -68,13 +63,13 @@
       @values-changed="onValueChange"
     />
     <div class="actions">
-      <Button
-        type="link"
-        prepend-icon="iconoir-nav-arrow-left"
+      <ButtonText
+        type="secondary"
+        icon="iconoir-nav-arrow-left"
         @click="editedUserSource = null"
       >
         {{ $t('action.back') }}
-      </Button>
+      </ButtonText>
       <Button
         :disabled="actionInProgress || invalidForm"
         :loading="actionInProgress"
@@ -99,13 +94,13 @@
       @values-changed="onValueChange"
     />
     <div class="actions">
-      <Button
-        type="link"
-        prepend-icon="iconoir-nav-arrow-left"
+      <ButtonText
+        type="secondary"
+        icon="iconoir-nav-arrow-left"
         @click="hideForm"
       >
         {{ $t('action.back') }}
-      </Button>
+      </ButtonText>
       <Button
         :disabled="actionInProgress || invalidForm"
         :loading="actionInProgress"

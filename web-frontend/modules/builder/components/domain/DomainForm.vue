@@ -25,17 +25,18 @@
       @error="formHasError = $event"
     />
     <div class="actions">
-      <Button
-        type="link"
-        prepend-icon="iconoir-nav-arrow-left"
+      <ButtonText
+        type="secondary"
+        icon="iconoir-nav-arrow-left"
         @click="hideForm"
       >
         {{ $t('action.back') }}
-      </Button>
+      </ButtonText>
+
       <Button
-        :disabled="createLoading || formHasError"
         size="large"
         :loading="createLoading"
+        :disabled="createLoading || formHasError"
         @click="onSubmit"
       >
         {{ $t('action.create') }}

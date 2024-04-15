@@ -99,14 +99,17 @@
         "
         class="actions"
       >
-        <a
-          ref="createFieldContextLink"
-          class="row-modal__add-field"
-          @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
+        <span ref="createFieldContextLink">
+          <ButtonText
+            icon="iconoir-plus"
+            @click="
+              $refs.createFieldContext.toggle($refs.createFieldContextLink)
+            "
+          >
+            {{ $t('rowEditModal.addField') }}
+          </ButtonText></span
         >
-          <i class="row-modal__add-field-icon iconoir-plus"></i>
-          {{ $t('rowEditModal.addField') }}
-        </a>
+
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"

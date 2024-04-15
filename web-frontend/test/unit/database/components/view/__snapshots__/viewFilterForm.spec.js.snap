@@ -34,25 +34,39 @@ exports[`ViewFilterForm component Default view filter component 1`] = `
     <div
       class="filters__actions"
     >
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilter
-      </a>
+        </span>
+      </button>
        
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilterGroup
-      </a>
+        </span>
+      </button>
     </div>
      
     <!---->
@@ -1133,25 +1147,39 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
     <div
       class="filters__actions"
     >
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilter
-      </a>
+        </span>
+      </button>
        
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilterGroup
-      </a>
+        </span>
+      </button>
     </div>
      
     <div>
@@ -1633,25 +1661,39 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
     <div
       class="filters__actions"
     >
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilter
-      </a>
+        </span>
+      </button>
        
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilterGroup
-      </a>
+        </span>
+      </button>
     </div>
      
     <div>
@@ -2133,25 +2175,39 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
     <div
       class="filters__actions"
     >
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilter
-      </a>
+        </span>
+      </button>
        
-      <a
-        class="filters__add"
+      <button
+        class="button-text"
       >
         <i
-          class="filters__add-icon iconoir-plus"
+          class="button-text__icon iconoir-plus"
         />
-        
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
+        >
+          
         viewFilterContext.addFilterGroup
-      </a>
+        </span>
+      </button>
     </div>
      
     <div>
