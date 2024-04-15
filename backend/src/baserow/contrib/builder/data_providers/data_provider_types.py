@@ -12,8 +12,8 @@ from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceImproperlyConfigured,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
-from baserow.contrib.builder.elements.element_types import FormElementType
 from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.mixins import FormElementTypeMixin
 from baserow.contrib.builder.elements.models import FormElement
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
@@ -62,7 +62,7 @@ class FormDataProviderType(DataProviderType):
         """
 
         element: Type[FormElement] = ElementHandler().get_element(element_id)  # type: ignore
-        element_type: FormElementType = element.get_type()  # type: ignore
+        element_type: FormElementTypeMixin = element.get_type()  # type: ignore
         if not element_type.is_valid(element, data_chunk):
             raise FormDataProviderChunkInvalidException(
                 f"Form data {data_chunk} is invalid for its element."
