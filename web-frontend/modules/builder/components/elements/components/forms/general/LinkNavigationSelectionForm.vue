@@ -84,10 +84,10 @@
         {{ $t('linkNavigationSelection.target') }}
       </label>
       <div class="control__elements">
-        <RadioButton v-model="values.target" value="self">
+        <RadioButton v-model="values.target" type="chips" value="self">
           {{ $t('linkNavigationSelection.targetSelf') }}
         </RadioButton>
-        <RadioButton v-model="values.target" value="blank">
+        <RadioButton v-model="values.target" type="chips" value="blank">
           {{ $t('linkNavigationSelection.targetNewTab') }}
         </RadioButton>
       </div>
