@@ -5,13 +5,15 @@ from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.elements.element_types import (
     CheckboxElementType,
-    ContainerElementType,
     DropdownElementType,
-    FormElementType,
     IFrameElementType,
     InputTextElementType,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.mixins import (
+    ContainerElementTypeMixin,
+    FormElementTypeMixin,
+)
 from baserow.contrib.builder.elements.models import (
     CheckboxElement,
     DropdownElementOption,
@@ -232,18 +234,18 @@ def test_element_type_import_element_priority():
     container_element_types = [
         element_type
         for element_type in element_types
-        if isinstance(element_type, ContainerElementType)
+        if isinstance(element_type, ContainerElementTypeMixin)
     ]
     form_element_types = [
         element_type
         for element_type in element_types
-        if isinstance(element_type, FormElementType)
+        if isinstance(element_type, FormElementTypeMixin)
     ]
     other_element_types = [
         element_type
         for element_type in element_types
-        if not isinstance(element_type, ContainerElementType)
-        and not isinstance(element_type, FormElementType)
+        if not isinstance(element_type, ContainerElementTypeMixin)
+        and not isinstance(element_type, FormElementTypeMixin)
     ]
     manual_ordering = container_element_types + form_element_types + other_element_types
     expected_ordering = sorted(

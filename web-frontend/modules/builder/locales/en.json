@@ -93,7 +93,9 @@
     "iframe": "IFrame",
     "iframeDescription": "Inline frame",
     "authForm": "Login form",
-    "authFormDescription": "A user login form"
+    "authFormDescription": "A user login form",
+    "repeat": "Repeat",
+    "repeatDescription": "A repeatable set of elements"
   },
   "addElementButton": {
     "label": "Element"
