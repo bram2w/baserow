@@ -242,11 +242,13 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
 
         from .elements.collection_field_types import (
+            BooleanCollectionFieldType,
             LinkCollectionFieldType,
             TextCollectionFieldType,
         )
         from .elements.registries import collection_field_type_registry
 
+        collection_field_type_registry.register(BooleanCollectionFieldType())
         collection_field_type_registry.register(TextCollectionFieldType())
         collection_field_type_registry.register(LinkCollectionFieldType())
 

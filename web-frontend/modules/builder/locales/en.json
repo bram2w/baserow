@@ -430,6 +430,7 @@
     "addAction": "add action"
   },
   "collectionFieldType": {
+    "boolean": "Boolean",
     "text": "Text",
     "link": "Link"
   },

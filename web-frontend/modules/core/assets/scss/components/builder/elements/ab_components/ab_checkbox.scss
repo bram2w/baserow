@@ -13,6 +13,11 @@
   border-color: $color-error-300;
 }
 
+.ab-checkbox--readonly {
+  accent-color: $palette-blue-500;
+  pointer-events: none;
+}
+
 .ab-checkbox__label {
   cursor: pointer;
   color: $black;

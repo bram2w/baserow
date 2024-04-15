@@ -6,6 +6,40 @@ from baserow.contrib.builder.formula_importer import import_formula
 from baserow.core.formula.serializers import FormulaSerializerField
 
 
+class BooleanCollectionFieldType(CollectionFieldType):
+    type = "boolean"
+    allowed_fields = ["value"]
+    serializer_field_names = ["value"]
+
+    class SerializedDict(TypedDict):
+        value: bool
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            "value": FormulaSerializerField(
+                help_text="The boolean value.",
+                required=False,
+                allow_blank=True,
+                default=False,
+            ),
+        }
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        data_source_id: Optional[int] = None,
+    ) -> Any:
+        if prop_name == "value" and data_source_id:
+            return import_formula(value, id_mapping, data_source_id=data_source_id)
+
+        return super().deserialize_property(
+            prop_name, value, id_mapping, data_source_id
+        )
+
+
 class TextCollectionFieldType(CollectionFieldType):
     type = "text"
     allowed_fields = ["value"]

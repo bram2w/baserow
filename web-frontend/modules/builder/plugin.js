@@ -93,6 +93,7 @@ import {
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
+  BooleanCollectionFieldType,
   TextCollectionFieldType,
   LinkCollectionFieldType,
 } from '@baserow/modules/builder/collectionFieldTypes'
@@ -258,6 +259,10 @@ export default (context) => {
     new UpdateRowWorkflowActionType(context)
   )
 
+  app.$registry.register(
+    'collectionField',
+    new BooleanCollectionFieldType(context)
+  )
   app.$registry.register(
     'collectionField',
     new TextCollectionFieldType(context)
