@@ -84,18 +84,15 @@ export class LinkCollectionFieldType extends CollectionFieldType {
   getProps(field, { resolveFormula, applicationContext: { mode, builder } }) {
     const defaultProps = {
       url: '',
-      isExternalLink: false,
       navigationType: field.navigation_type || '',
       linkName: ensureString(resolveFormula(field.link_name)),
+      target: field.target || 'self',
     }
     try {
-      const resolvedUrlContext = resolveElementUrl(
-        field,
-        builder,
-        resolveFormula,
-        mode
-      )
-      return { ...defaultProps, ...resolvedUrlContext }
+      return {
+        ...defaultProps,
+        url: resolveElementUrl(field, builder, resolveFormula, mode),
+      }
     } catch (error) {
       return defaultProps
     }

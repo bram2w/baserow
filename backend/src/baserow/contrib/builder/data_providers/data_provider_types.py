@@ -203,6 +203,9 @@ class CurrentRecordDataProviderType(DataProviderType):
         if len(path) == 1 and path[0] == "__idx__":
             return path
 
+        if data_source_id is None:
+            return path
+
         data_source = DataSourceHandler().get_data_source(data_source_id)
         service_type = data_source.service.specific.get_type()
         # Here we add a fake row part to make it match the usual shape for this path

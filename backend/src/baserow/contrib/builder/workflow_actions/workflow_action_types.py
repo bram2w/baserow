@@ -8,6 +8,7 @@ from baserow.contrib.builder.api.workflow_actions.serializers import (
     PolymorphicServiceRequestSerializer,
     PolymorphicServiceSerializer,
 )
+from baserow.contrib.builder.elements.element_types import NavigationElementManager
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import (
     LocalBaserowCreateRowWorkflowAction,
@@ -75,38 +76,60 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
 class OpenPageWorkflowActionType(BuilderWorkflowActionType):
     type = "open_page"
     model_class = OpenPageWorkflowAction
-    serializer_field_names = ["url"]
-    serializer_field_overrides = {
-        "url": FormulaSerializerField(
-            help_text="The url to open. Must be an formula.",
-            required=False,
-            allow_blank=True,
-            default="",
-        ),
-    }
 
-    class SerializedDict(BuilderWorkflowActionDict):
-        url: BaserowFormula
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + NavigationElementManager.serializer_field_names
+            + ["url"]  # TODO remove in the next release
+        )
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["url"]
+        return (
+            super().allowed_fields + NavigationElementManager.allowed_fields + ["url"]
+        )  # TODO remove in the next release
 
-    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
-        return {"url": "'hello'"}
+    @property
+    def serializer_field_overrides(self):
+        return (
+            super().serializer_field_overrides
+            | NavigationElementManager().get_serializer_field_overrides()
+            | {
+                "url": serializers.CharField(
+                    help_text="The url of the page to open.",
+                    required=False,
+                    allow_blank=True,
+                    default="",
+                )
+            }  # TODO remove in the next release
+        )
+
+    class SerializedDict(
+        BuilderWorkflowActionDict,
+        NavigationElementManager.SerializedDict,
+    ):
+        url: str  # TODO remove in the next release, replace with "..."
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return NavigationElementManager().get_pytest_params(pytest_data_fixture)
 
     def deserialize_property(self, prop_name, value, id_mapping: Dict) -> Any:
         """
         Migrate the formulas.
         """
 
-        if prop_name == "url":
+        if prop_name == "url":  # TODO remove in the next release
             return import_formula(value, id_mapping)
 
-        if prop_name == "description":
-            return import_formula(value, id_mapping)
-
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            NavigationElementManager().deserialize_property(
+                prop_name, value, id_mapping
+            ),
+            id_mapping,
+        )
 
 
 class LogoutWorkflowActionType(BuilderWorkflowActionType):
