@@ -131,11 +131,15 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         view=view,
         table=view.table,
         search_query="get('page_parameter.id')",
+        filter_type="Or",
     )
 
     field = fields[0]
     service_filter = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="get('page_parameter.filter')", order=0
+        service=service,
+        field=field,
+        value="get('page_parameter.filter')",
+        order=0,
     )
     service_sort = data_fixture.create_local_baserow_table_service_sort(
         service=service, field=field, order_by=SORT_ORDER_ASC, order=0
@@ -150,6 +154,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         "table_id": service.table_id,
         "integration_id": service.integration_id,
         "search_query": service.search_query,
+        "filter_type": "Or",
         "filters": [
             {
                 "field_id": service_filter.field_id,
@@ -175,6 +180,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
     assert service.id != exported["id"]
     assert service.view_id == exported["view_id"]
     assert service.table_id == exported["table_id"]
+    assert service.filter_type == exported["filter_type"]
     assert service.search_query == exported["search_query"]
     assert service.integration_id == exported["integration_id"]
     assert isinstance(service, service_type.model_class)
@@ -405,6 +411,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
         view=view,
         table=view.table,
         search_query="get('page_parameter.id')",
+        filter_type="Or",
     )
     service_filter = data_fixture.create_local_baserow_table_service_filter(
         service=service, field=field, value="get('page_parameter.filter')", order=0
@@ -420,6 +427,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
         "table_id": service.table_id,
         "integration_id": service.integration_id,
         "search_query": service.search_query,
+        "filter_type": "Or",
         "filters": [
             {
                 "field_id": service_filter.field_id,
@@ -440,6 +448,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
     assert service.row_id == exported["row_id"]
     assert service.view_id == exported["view_id"]
     assert service.table_id == exported["table_id"]
+    assert service.filter_type == exported["filter_type"]
     assert service.search_query == exported["search_query"]
     assert service.integration_id == exported["integration_id"]
     assert isinstance(service, service_type.model_class)
