@@ -393,29 +393,25 @@ class TextElement(Element):
     )
 
 
-class LinkElement(Element):
+class NavigationElementMixin(models.Model):
     """
-    A simple link.
+    Abstract base class for navigation elements.
     """
 
     class NAVIGATION_TYPES(models.TextChoices):
         PAGE = "page"
         CUSTOM = "custom"
 
-    class VARIANTS(models.TextChoices):
-        LINK = "link"
-        BUTTON = "button"
-
     class TARGETS(models.TextChoices):
         SELF = "self"
         BLANK = "blank"
 
-    value = FormulaField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
         help_text="The navigation type.",
         max_length=10,
         default=NAVIGATION_TYPES.PAGE,
+        null=True,
     )
     navigate_to_page = models.ForeignKey(
         "builder.Page",
@@ -429,23 +425,40 @@ class LinkElement(Element):
     navigate_to_url = FormulaField(
         default="",
         help_text="If no page is selected, this indicate the destination of the link.",
+        null=True,
     )
     page_parameters = models.JSONField(
         default=list,
         help_text="The parameters for each parameters of the selected page if any.",
-    )
-
-    variant = models.CharField(
-        choices=VARIANTS.choices,
-        help_text="The variant of the link.",
-        max_length=10,
-        default=VARIANTS.LINK,
+        null=True,
     )
     target = models.CharField(
         choices=TARGETS.choices,
         help_text="The target of the link when we click on it.",
         max_length=10,
         default=TARGETS.SELF,
+        null=True,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class LinkElement(Element, NavigationElementMixin):
+    """
+    A simple link.
+    """
+
+    class VARIANTS(models.TextChoices):
+        LINK = "link"
+        BUTTON = "button"
+
+    value = FormulaField(default="")
+    variant = models.CharField(
+        choices=VARIANTS.choices,
+        help_text="The variant of the link.",
+        max_length=10,
+        default=VARIANTS.LINK,
     )
     width = models.CharField(
         choices=WIDTHS.choices,

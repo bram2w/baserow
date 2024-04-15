@@ -67,6 +67,7 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
                     "type": "link",
                     "navigate_to_url": "get('test2')",
                     "link_name": "get('test3')",
+                    "target": "self",
                 },
                 {"name": "Question", "type": "text", "value": "get('test3')"},
             ],
@@ -87,6 +88,7 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
             "navigate_to_page_id": None,
             "navigate_to_url": "get('test2')",
             "link_name": "get('test3')",
+            "target": "self",
         },
         {"name": "Question", "type": "text", "value": "get('test3')"},
     ]

@@ -1,6 +1,6 @@
 import abc
 from abc import ABC
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, TypedDict
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, validate_integer
@@ -34,6 +34,7 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
+    NavigationElementMixin,
     TableElement,
     TextElement,
     VerticalAlignments,
@@ -313,10 +314,7 @@ class CollectionElementType(ElementType, ABC):
         """
 
         actual_data_source_id = None
-        if (
-            serialized_values.get("data_source_id", None)
-            and "builder_data_sources" in id_mapping
-        ):
+        if serialized_values.get("data_source_id", None):
             actual_data_source_id = id_mapping["builder_data_sources"][
                 serialized_values["data_source_id"]
             ]
@@ -533,70 +531,56 @@ class TextElementType(ElementType):
         return super().import_serialized(page, serialized_copy, id_mapping)
 
 
-class LinkElementType(ElementType):
+class NavigationElementManager:
     """
-    A simple paragraph element that can be used to display a paragraph of text.
+    A base class that adds navigation properties to an element. (not an actual element)
     """
 
-    type = "link"
-    model_class = LinkElement
-    PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP = {"text": str, "numeric": int}
     serializer_field_names = [
-        "value",
         "navigation_type",
         "navigate_to_page_id",
         "navigate_to_url",
         "page_parameters",
-        "variant",
         "target",
-        "width",
-        "alignment",
-        "button_color",
     ]
     allowed_fields = [
-        "value",
         "navigation_type",
         "navigate_to_page_id",
-        "navigate_to_page",
         "navigate_to_url",
         "page_parameters",
-        "variant",
         "target",
-        "width",
-        "alignment",
-        "button_color",
     ]
 
-    class SerializedDict(ElementDict):
-        value: BaserowFormula
+    class SerializedDict(TypedDict):
         navigation_type: str
         navigate_to_page_id: int
         page_parameters: List
         navigate_to_url: BaserowFormula
-        variant: str
         target: str
-        width: str
-        alignment: str
-        button_color: str
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         if prop_name == "navigate_to_page_id" and value:
             return id_mapping["builder_pages"][value]
 
-        if prop_name == "value":
-            return import_formula(value, id_mapping)
-
         if prop_name == "navigate_to_url":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "page_parameters":
             return [
-                {**p, "value": import_formula(p["value"], id_mapping)} for p in value
+                {
+                    **p,
+                    "value": import_formula(p["value"], id_mapping, **kwargs),
+                }
+                for p in value
             ]
 
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return value
 
     @property
     def serializer_field_overrides(self):
@@ -606,14 +590,8 @@ class LinkElementType(ElementType):
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
-            "value": FormulaSerializerField(
-                help_text="The value of the element. Must be an formula.",
-                required=False,
-                allow_blank=True,
-                default="",
-            ),
             "navigation_type": serializers.ChoiceField(
-                choices=LinkElement.NAVIGATION_TYPES.choices,
+                choices=NavigationElementMixin.NAVIGATION_TYPES.choices,
                 help_text=LinkElement._meta.get_field("navigation_type").help_text,
                 required=False,
             ),
@@ -634,46 +612,25 @@ class LinkElementType(ElementType):
                 help_text=LinkElement._meta.get_field("page_parameters").help_text,
                 required=False,
             ),
-            "variant": serializers.ChoiceField(
-                choices=LinkElement.VARIANTS.choices,
-                help_text=LinkElement._meta.get_field("variant").help_text,
-                required=False,
-            ),
             "target": serializers.ChoiceField(
-                choices=LinkElement.TARGETS.choices,
+                choices=NavigationElementMixin.TARGETS.choices,
                 help_text=LinkElement._meta.get_field("target").help_text,
                 required=False,
-            ),
-            "width": serializers.ChoiceField(
-                choices=WIDTHS.choices,
-                help_text=LinkElement._meta.get_field("width").help_text,
-                required=False,
-            ),
-            "alignment": serializers.ChoiceField(
-                choices=HorizontalAlignments.choices,
-                help_text=LinkElement._meta.get_field("alignment").help_text,
-                required=False,
-            ),
-            "button_color": serializers.CharField(
-                max_length=20,
-                required=False,
-                default="primary",
-                help_text="Button color.",
             ),
         }
         return overrides
 
+    @classmethod
+    def get_serializer_field_overrides(cls):
+        return cls().serializer_field_overrides
+
     def get_pytest_params(self, pytest_data_fixture):
         return {
-            "value": "'test'",
             "navigation_type": "custom",
             "navigate_to_page_id": None,
             "navigate_to_url": '"http://example.com"',
             "page_parameters": [],
-            "variant": "link",
             "target": "blank",
-            "width": "auto",
-            "alignment": "center",
         }
 
     def prepare_value_for_db(
@@ -693,7 +650,7 @@ class LinkElementType(ElementType):
 
             self._raise_if_path_params_are_invalid(page_params, page)
 
-        return super().prepare_value_for_db(values, instance)
+        return ElementType.prepare_value_for_db(self, values, instance)
 
     def _raise_if_path_params_are_invalid(self, path_params: Dict, page: Page) -> None:
         """
@@ -716,6 +673,117 @@ class LinkElementType(ElementType):
                 raise DRFValidationError(
                     f"Page path parameter {page_parameter} does not exist."
                 )
+
+
+class LinkElementType(ElementType):
+    """
+    A simple paragraph element that can be used to display a paragraph of text.
+    """
+
+    type = "link"
+    model_class = LinkElement
+    PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP = {"text": str, "numeric": int}
+
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + NavigationElementManager.serializer_field_names
+            + [
+                "value",
+                "variant",
+                "width",
+                "alignment",
+                "button_color",
+            ]
+        )
+
+    @property
+    def allowed_fields(self):
+        return (
+            super().allowed_fields
+            + NavigationElementManager.allowed_fields
+            + [
+                "value",
+                "variant",
+                "width",
+                "alignment",
+                "button_color",
+            ]
+        )
+
+    class SerializedDict(ElementDict, NavigationElementManager.SerializedDict):
+        value: BaserowFormula
+        variant: str
+        width: str
+        alignment: str
+        button_color: str
+
+    def deserialize_property(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+    ) -> Any:
+        if prop_name == "value":
+            return import_formula(value, id_mapping)
+
+        return super().deserialize_property(
+            prop_name,
+            NavigationElementManager().deserialize_property(
+                prop_name, value, id_mapping
+            ),
+            id_mapping,
+        )
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = (
+            super().serializer_field_overrides
+            | NavigationElementManager().get_serializer_field_overrides()
+            | {
+                "value": FormulaSerializerField(
+                    help_text="The value of the element. Must be an formula.",
+                    required=False,
+                    allow_blank=True,
+                    default="",
+                ),
+                "variant": serializers.ChoiceField(
+                    choices=LinkElement.VARIANTS.choices,
+                    help_text=LinkElement._meta.get_field("variant").help_text,
+                    required=False,
+                ),
+                "width": serializers.ChoiceField(
+                    choices=WIDTHS.choices,
+                    help_text=LinkElement._meta.get_field("width").help_text,
+                    required=False,
+                ),
+                "alignment": serializers.ChoiceField(
+                    choices=HorizontalAlignments.choices,
+                    help_text=LinkElement._meta.get_field("alignment").help_text,
+                    required=False,
+                ),
+                "button_color": serializers.CharField(
+                    max_length=20,
+                    required=False,
+                    default="primary",
+                    help_text="Button color.",
+                ),
+            }
+        )
+        return overrides
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return NavigationElementManager().get_pytest_params(pytest_data_fixture) | {
+            "value": "'test'",
+            "variant": "link",
+            "width": "auto",
+            "alignment": "center",
+        }
+
+    def prepare_value_for_db(
+        self, values: Dict, instance: Optional[LinkElement] = None
+    ):
+        return NavigationElementManager().prepare_value_for_db(values, instance)
 
 
 class ImageElementType(ElementType):

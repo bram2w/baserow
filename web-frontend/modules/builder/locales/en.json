@@ -268,7 +268,10 @@
     "urlPlaceholder": "Enter an URL...",
     "url": "Destination URL",
     "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
-    "paramsInErrorButton": "Update parameters"
+    "paramsInErrorButton": "Update parameters",
+    "target": "Open in...",
+    "targetSelf": "Same tab",
+    "targetNewTab": "New tab"
   },
   "linkElementForm": {
     "text": "Text",
@@ -276,9 +279,6 @@
     "variant": "Variant",
     "variantLink": "Link",
     "variantButton": "Button",
-    "target": "Open in...",
-    "targetSelf": "Same tab",
-    "targetNewTab": "New tab",
     "buttonColor": "Button color"
   },
   "widthSelector": {
@@ -423,10 +423,6 @@
     "titlePlaceholder": "Enter text...",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Enter text..."
-  },
-  "openPageWorkflowActionForm": {
-    "urlLabel": "URL",
-    "urlPlaceholder": "Enter text..."
   },
   "event": {
     "addAction": "add action"

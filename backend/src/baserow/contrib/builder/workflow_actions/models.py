@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.contrib.builder.elements.models import Element
+from baserow.contrib.builder.elements.models import Element, NavigationElementMixin
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import OrderableMixin
@@ -64,8 +64,8 @@ class NotificationWorkflowAction(BuilderWorkflowAction):
     description = FormulaField(default="")
 
 
-class OpenPageWorkflowAction(BuilderWorkflowAction):
-    url = FormulaField(default="")
+class OpenPageWorkflowAction(BuilderWorkflowAction, NavigationElementMixin):
+    url = FormulaField(default="")  # TODO remove in the next release
 
 
 class LogoutWorkflowAction(BuilderWorkflowAction):

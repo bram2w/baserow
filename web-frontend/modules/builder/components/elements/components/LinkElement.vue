@@ -7,11 +7,10 @@
     }"
   >
     <ABLink
-      v-bind="extraAttr"
       :full-width="element.width === WIDTHS.FULL.value"
-      :target="`_${element.target}`"
+      :target="element.target"
+      :url="url"
       :variant="element.variant"
-      @click.prevent="onClick"
     >
       {{ resolvedValue || $t('linkElement.noValue') }}
     </ABLink>
@@ -60,17 +59,7 @@ export default {
         'element--no-value': !this.resolvedValue,
       }
     },
-    extraAttr() {
-      const attr = {}
-      if (this.urlContext.url) {
-        attr.href = this.urlContext.url
-      }
-      if (this.urlContext.isExternalLink) {
-        attr.rel = 'noopener noreferrer'
-      }
-      return attr
-    },
-    urlContext() {
+    url() {
       try {
         return resolveElementUrl(
           this.element,
@@ -79,27 +68,7 @@ export default {
           this.mode
         )
       } catch (e) {
-        return {
-          url: '',
-          isExternalLink: false,
-        }
-      }
-    },
-  },
-  methods: {
-    onClick(event) {
-      const url = this.urlContext.url
-      if (this.mode === 'editing' || !url) {
-        return
-      }
-      if (this.element.target !== 'blank') {
-        if (this.element.navigation_type === 'custom') {
-          window.location.href = url
-        } else if (this.element.navigation_type === 'page') {
-          this.$router.push(url)
-        }
-      } else {
-        window.open(url, '_blank')
+        return ''
       }
     },
   },

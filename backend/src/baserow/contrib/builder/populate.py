@@ -296,6 +296,7 @@ def load_test_data():
                         },
                     ],
                     "link_name": f"get('current_record.{field_name.db_column}')",
+                    "target": "self",
                 },
             },
         ]
