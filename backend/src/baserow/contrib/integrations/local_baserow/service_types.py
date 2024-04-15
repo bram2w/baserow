@@ -596,6 +596,7 @@ class LocalBaserowListRowsUserServiceType(
         table_id: int
         view_id: int
         search_query: str
+        filter_type: str
         filters: List[Dict]
         sortings: List[Dict]
 
@@ -823,6 +824,7 @@ class LocalBaserowGetRowUserServiceType(
     class SerializedDict(ServiceDict):
         table_id: int
         view_id: int
+        filter_type: str
         filters: List[Dict]
         row_id: BaserowFormula
         search_query: BaserowFormula
