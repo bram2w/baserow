@@ -10,10 +10,18 @@
       <HorizontalAlignmentsSelector v-model="values.alignment" />
     </FormElement>
     <FormGroup :label="$t('textElementForm.textFormatTypeLabel')">
-      <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.PLAIN">
+      <RadioButton
+        v-model="values.format"
+        type="chips"
+        :value="TEXT_FORMAT_TYPES.PLAIN"
+      >
         {{ $t('textElementForm.textFormatTypePlain') }}
       </RadioButton>
-      <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.MARKDOWN">
+      <RadioButton
+        v-model="values.format"
+        type="chips"
+        :value="TEXT_FORMAT_TYPES.MARKDOWN"
+      >
         {{ $t('textElementForm.textFormatTypeMarkdown') }}
       </RadioButton>
     </FormGroup>
