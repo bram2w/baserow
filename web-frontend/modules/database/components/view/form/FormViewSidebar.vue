@@ -56,14 +56,16 @@
         {{ $t('formSidebar.fieldsDescription') }}
       </p>
       <div v-if="!readOnly && !isDeactivated">
-        <a
-          ref="createFieldContextLink"
-          class="form-view__add-field"
-          @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
-        >
-          <i class="form-view__add-field-icon iconoir-plus"></i>
-          {{ $t('formSidebar.actions.addField') }}
-        </a>
+        <span ref="createFieldContextLink">
+          <ButtonText
+            icon="iconoir-plus"
+            @click="
+              $refs.createFieldContext.toggle($refs.createFieldContextLink)
+            "
+          >
+            {{ $t('formSidebar.actions.addField') }}
+          </ButtonText>
+        </span>
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"

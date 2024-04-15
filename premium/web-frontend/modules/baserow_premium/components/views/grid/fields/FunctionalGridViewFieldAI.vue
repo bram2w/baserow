@@ -7,19 +7,20 @@
     class="grid-view__cell"
   >
     <div class="grid-field-button">
-      <a
-        class="button button--tiny button--ghost"
+      <Button
+        tag="a"
+        size="tiny"
+        type="secondary"
+        :loading="$options.methods.isGenerating(parent, props)"
         :disabled="!$options.methods.isModelAvailable(parent, props)"
-        :class="{
-          'button--loading': $options.methods.isGenerating(parent, props),
-        }"
+        :icon="
+          $options.methods.isDeactivatedFunctional(parent, props)
+            ? 'iconoir-lock'
+            : ''
+        "
       >
         <i18n path="functionalGridViewFieldAI.generate" tag="span" />
-        <i
-          v-if="$options.methods.isDeactivatedFunctional(parent, props)"
-          class="iconoir-lock"
-        ></i>
-      </a>
+      </Button>
     </div>
   </div>
   <div v-else class="grid-view__cell grid-field-long-text__cell">

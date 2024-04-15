@@ -35,14 +35,16 @@
             accept=".xml"
             @change="select($event)"
           />
-          <a
-            class="button button--large button--ghost file-upload__button"
-            :class="{ 'button--loading': state !== null }"
+          <Button
+            type="upload"
+            size="large"
+            class="file-upload__button"
+            :loading="state !== null"
+            icon="iconoir-cloud-upload"
             @click.prevent="$refs.file.click($event)"
           >
-            <i class="iconoir-cloud-upload"></i>
             {{ $t('tableXMLImporter.chooseButton') }}
-          </a>
+          </Button>
           <div v-if="state === null" class="file-upload__file">
             {{ filename }}
           </div>

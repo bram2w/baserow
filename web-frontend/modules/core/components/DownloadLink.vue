@@ -15,7 +15,7 @@
     :class="{ [loadingClass]: loading }"
     @click="onClick($event)"
   >
-    <slot></slot>
+    <slot :loading="loading"></slot>
   </a>
 </template>
 

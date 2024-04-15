@@ -13,13 +13,9 @@
       @submitted="updatePage"
     >
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
-          type="submit"
-        >
+        <Button size="large" :loading="loading" :disabled="loading">
           {{ $t('action.save') }}
-        </button>
+        </Button>
       </div>
     </PageSettingsForm>
   </div>

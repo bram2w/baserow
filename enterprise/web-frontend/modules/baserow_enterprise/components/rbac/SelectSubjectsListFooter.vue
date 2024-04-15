@@ -15,9 +15,9 @@
         :tooltip="$t('selectSubjectsListFooter.helpTooltip')"
         class="margin-right-1"
       ></HelpIcon>
-      <a
-        class="button"
-        :class="{ disabled: !inviteEnabled }"
+      <Button
+        type="primary"
+        :disabled="!inviteEnabled"
         @click="inviteEnabled ? $emit('invite', roleSelected) : null"
         >{{
           $t('selectSubjectsListFooter.invite', {
@@ -25,7 +25,7 @@
             type: subjectTypeLabel,
           })
         }}
-      </a>
+      </Button>
     </div>
   </div>
 </template>

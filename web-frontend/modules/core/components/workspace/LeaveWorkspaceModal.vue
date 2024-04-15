@@ -10,14 +10,15 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large button--error"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="danger"
+            size="large"
+            :loading="loading"
             :disabled="loading"
             @click="leaveWorkspace()"
           >
             {{ $t('leaveWorkspaceModal.leave') }}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

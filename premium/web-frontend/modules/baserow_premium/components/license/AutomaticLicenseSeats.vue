@@ -25,13 +25,14 @@
       <p class="delete-section__description">
         {{ licenseType.getLicenseSeatOverflowWarning(license) }}
       </p>
-      <a
-        class="button button--ghost"
+      <Button
+        type="secondary"
+        tag="a"
         href="https://baserow.io/contact-sales"
         target="_blank"
       >
         {{ $t('license.contactSalesMoreSeats') }}
-      </a>
+      </Button>
     </div>
   </div>
 </template>

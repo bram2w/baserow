@@ -11,26 +11,36 @@
     </p>
     <p v-else class="placeholder__content">{{ content }}</p>
     <div v-if="showBackButton" class="placeholder__action">
-      <button
+      <Button
         v-if="isAuthenticated && currentRouteName === 'dashboard'"
-        class="button button--large"
+        type="primary"
+        icon="iconoir-redo"
         @click="refresh"
       >
-        <i class="iconoir-redo"></i>
-        {{ $t('errorLayout.refresh') }}
-      </button>
-      <nuxt-link
-        v-else-if="isAuthenticated && currentRouteName !== 'dashboard'"
-        :to="{ name: 'dashboard' }"
-        class="button button--large"
+        {{ $t('errorLayout.refresh') }}</Button
       >
-        <i class="iconoir-nav-arrow-left"></i>
-        {{ $t('errorLayout.backDashboard') }}
-      </nuxt-link>
-      <nuxt-link v-else :to="{ name: 'login' }" class="button button--large">
-        <i class="iconoir-nav-arrow-left"></i>
-        {{ $t('errorLayout.backLogin') }}
-      </nuxt-link>
+
+      <Button
+        v-else-if="isAuthenticated && currentRouteName !== 'dashboard'"
+        tag="nuxt-link"
+        :to="{ name: 'dashboard' }"
+        type="primary"
+        size="large"
+        icon="iconoir-nav-arrow-left"
+      >
+        {{ $t('errorLayout.backDashboard') }}</Button
+      >
+
+      <Button
+        v-else
+        tag="nuxt-link"
+        :to="{ name: 'login' }"
+        type="primary"
+        size="large"
+        icon="iconoir-nav-arrow-left"
+      >
+        {{ $t('errorLayout.backLogin') }}</Button
+      >
     </div>
   </div>
 </template>

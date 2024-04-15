@@ -18,15 +18,17 @@
             accept=".csv"
             @change="select($event)"
           />
-          <a
-            class="button button--large button--ghost file-upload__button"
-            :class="{ 'button--loading': state !== null }"
+          <Button
+            type="upload"
+            size="large"
+            :loading="state !== null"
             :disabled="disabled"
+            icon="iconoir-cloud-upload"
+            class="file-upload__button"
             @click.prevent="!disabled && $refs.file.click($event)"
           >
-            <i class="iconoir-cloud-upload"></i>
             {{ $t('tableCSVImporter.chooseFile') }}
-          </a>
+          </Button>
           <div v-if="state === null" class="file-upload__file">
             {{ filename }}
           </div>

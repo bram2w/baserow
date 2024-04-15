@@ -105,13 +105,14 @@
         @updated-account="updatedAccount"
       ></component>
       <div class="auth__action">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--full-width"
+        <Button
+          type="primary"
+          :loading="loading"
+          full-width
           :disabled="loading"
         >
           {{ $t('action.signUp') }}
-        </button>
+        </Button>
       </div>
       <div>
         <slot></slot>

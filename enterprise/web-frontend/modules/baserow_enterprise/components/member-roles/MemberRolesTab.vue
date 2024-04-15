@@ -11,11 +11,12 @@
           :tooltip="$t(`memberRolesTab.${translationPrefix}.headerTooltip`)"
           class="margin-right-1"
         ></HelpIcon>
-        <a
+        <Button
+          type="secondary"
           :disabled="loading"
-          class="button button--ghost"
+          :loading="loading"
           @click="loading ? null : $refs.roleAssignmentModal.show()"
-          >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</a
+          >{{ $t(`memberRolesTab.${translationPrefix}.selectMembers`) }}</Button
         >
       </div>
     </div>

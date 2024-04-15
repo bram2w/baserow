@@ -63,10 +63,16 @@
       </template>
     </ViewFieldConditionsForm>
     <div class="filters_footer">
-      <a v-if="!tableLoading" class="filters__add" @click.prevent="addFilter()">
-        <i class="filters__add-icon iconoir-plus"></i>
-        {{ $t('localBaserowTableServiceConditionalForm.addFilter') }}</a
+      <ButtonText
+        v-if="!tableLoading"
+        type="secondary"
+        size="small"
+        icon="iconoir-plus"
+        class="filters__add"
+        @click.prevent="addFilter()"
       >
+        {{ $t('localBaserowTableServiceConditionalForm.addFilter') }}
+      </ButtonText>
     </div>
   </div>
 </template>

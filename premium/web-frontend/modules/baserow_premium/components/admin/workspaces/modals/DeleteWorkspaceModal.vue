@@ -15,15 +15,16 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large button--error button--overflow"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="danger"
+            size="large"
+            full-width
             :disabled="loading"
-            :title="workspace.name"
+            :loading="loading"
             @click.prevent="deleteGroup()"
           >
-            {{ $t('deleteWorkspaceModal.delete', workspace) }}
-          </button>
+            {{ $t('deleteWorkspaceModal.delete', workspace) }}</Button
+          >
         </div>
       </div>
     </div>

@@ -7,21 +7,22 @@
       class="input field-long-text margin-bottom-2"
       :disabled="true"
     />
+
     <template v-if="!readOnly">
-      <a
+      <Button
         v-if="isDeactivated && rowIsCreated"
-        class="button button--ghost"
+        type="secondary"
+        icon="iconoir-lock"
         @click="$refs.clickModal.show()"
       >
-        <i class="iconoir-lock"></i>
         {{ $t('rowEditFieldAI.generate') }}
-      </a>
-      <a
-        v-else-if="rowIsCreated"
-        class="button button--ghost"
-        :class="{ 'button--loading': generating }"
+      </Button>
+      <Button
+        v-if="rowIsCreated"
+        type="secondary"
+        :loading="generating"
         @click="generate()"
-        >{{ $t('rowEditFieldAI.generate') }}</a
+        >{{ $t('rowEditFieldAI.generate') }}</Button
       >
       <div v-else>{{ $t('rowEditFieldAI.createRowBefore') }}</div>
       <component

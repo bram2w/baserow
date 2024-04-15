@@ -42,9 +42,13 @@
         <DownloadLink
           :url="finishedJob.url"
           :filename="getExportedFilename(finishedJob)"
-          loading-class="loading"
         >
-          {{ $t('action.download').toLowerCase() }}
+          <template #default="{ loading: downloadLoading }">
+            <div v-if="downloadLoading" class="loading"></div>
+            <template v-else>{{
+              $t('action.download').toLowerCase()
+            }}</template>
+          </template>
         </DownloadLink>
       </div>
     </div>

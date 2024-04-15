@@ -129,7 +129,7 @@
   white-space: pre-line;
 
   @include rounded($rounded-md);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 
   .auto-expandable-textarea {
     font-size: 13px;
@@ -242,7 +242,7 @@
     border-radius: 80px;
     font-weight: 500;
 
-    @include add-elevation($elevation-low);
+    @include elevation($elevation-low);
   }
 }
 

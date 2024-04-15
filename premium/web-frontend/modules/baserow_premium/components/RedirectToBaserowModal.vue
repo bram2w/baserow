@@ -1,5 +1,11 @@
 <template>
-  <a @click="redirect">
+  <Button
+    class="margin-left-2"
+    type="secondary"
+    :size="size"
+    :target="target"
+    @click="redirect"
+  >
     <slot></slot>
     <Modal ref="modal" @hidden="cancel">
       <div class="redirect-modal">
@@ -17,7 +23,7 @@
         </div>
       </div>
     </Modal>
-  </a>
+  </Button>
 </template>
 
 <script>
@@ -27,6 +33,10 @@ export default {
     href: {
       type: String,
       required: true,
+    },
+    size: {
+      type: String,
+      default: 'large',
     },
   },
   methods: {

@@ -2,13 +2,14 @@
   <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <KanbanViewOptionForm ref="form" @submitted="submit">
       <div class="context__form-actions">
-        <button
-          class="button"
-          :class="{ 'button--loading': loading }"
+        <Button
+          type="primary"
+          :loading="loading"
+          size="small"
           :disabled="loading"
         >
-          {{ $t('action.create') }}
-        </button>
+          {{ $t('action.create') }}</Button
+        >
       </div>
     </KanbanViewOptionForm>
   </Context>

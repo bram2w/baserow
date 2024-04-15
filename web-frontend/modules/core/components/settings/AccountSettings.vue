@@ -8,13 +8,14 @@
     </Alert>
     <AccountForm :default-values="user" @submitted="submitted">
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
           :disabled="loading"
         >
           {{ $t('accountSettings.submitButton') }}
-        </button>
+        </Button>
       </div>
     </AccountForm>
   </div>

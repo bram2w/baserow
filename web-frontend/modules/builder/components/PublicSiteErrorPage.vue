@@ -16,10 +16,14 @@
     </p>
     <p v-else class="placeholder__content">{{ content }}</p>
     <div class="placeholder__action">
-      <button class="button button--large" @click="$router.go(-1)">
-        <i class="iconoir-arrow-left"></i>
+      <Button
+        type="primary"
+        icon="iconoir-arrow-left"
+        size="large"
+        @click="$router.go(-1)"
+      >
         {{ $t('action.back') }}
-      </button>
+      </Button>
     </div>
   </div>
 </template>

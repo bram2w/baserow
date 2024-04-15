@@ -10,13 +10,9 @@
     >
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--primary"
-            :class="{ 'button--loading': loading }"
-            :disabled="loading"
-          >
+          <Button type="primary" :loading="loading" :disabled="loading">
             {{ $t('action.save') }}
-          </button>
+          </Button>
         </div>
       </div>
     </WebhookForm>

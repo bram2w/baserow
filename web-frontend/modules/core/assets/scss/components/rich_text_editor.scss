@@ -167,7 +167,7 @@ span[data-type='mention'] {
 
 .rich-text-editor__floating-menu,
 .rich-text-editor__bubble-menu {
-  @include add-elevation($elevation-medium);
+  @include elevation($elevation-medium);
 
   background-color: white;
   padding: 4px;
@@ -252,7 +252,7 @@ span[data-type='mention'] {
     border: 1px solid $palette-neutral-200;
     background: white;
 
-    @include add-elevation($elevation-low);
+    @include elevation($elevation-low);
   }
 
   .rich-text-editor__bubble-menu-link-edit-delete {
@@ -281,7 +281,7 @@ span[data-type='mention'] {
   font-weight: 600;
   cursor: pointer;
 
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }
 
 .rich-text-editor__bubble-menu-link-edit-set--disabled {

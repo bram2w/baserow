@@ -3,7 +3,7 @@
     <label class="control__label">
       {{ $t('horizontalAlignmentSelector.alignment') }}
     </label>
-    <div class="control__elements">
+    <div class="control__elements control__elements--flex">
       <RadioButton
         v-for="alignment in alignmentValues"
         :key="alignment.value"

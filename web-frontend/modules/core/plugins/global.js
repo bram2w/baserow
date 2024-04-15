@@ -22,7 +22,12 @@ import Tab from '@baserow/modules/core/components/Tab'
 import List from '@baserow/modules/core/components/List'
 import HelpIcon from '@baserow/modules/core/components/HelpIcon'
 import Button from '@baserow/modules/core/components/Button'
+import ButtonText from '@baserow/modules/core/components/ButtonText'
+import ButtonAdd from '@baserow/modules/core/components/ButtonAdd'
+import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
+import ButtonFloating from '@baserow/modules/core/components/ButtonFloating'
 import Avatar from '@baserow/modules/core/components/Avatar'
+import Chips from '@baserow/modules/core/components/Chips'
 import Presentation from '@baserow/modules/core/components/Presentation'
 import FormInput from '@baserow/modules/core/components/FormInput'
 import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
@@ -75,6 +80,11 @@ function setupVue(Vue) {
   Vue.component('Badge', Badge)
   Vue.component('Expandable', Expandable)
   Vue.component('Button', Button)
+  Vue.component('ButtonText', ButtonText)
+  Vue.component('ButtonFloating', ButtonFloating)
+  Vue.component('ButtonAdd', ButtonAdd)
+  Vue.component('ButtonIcon', ButtonIcon)
+  Vue.component('Chips', Chips)
   Vue.component('RadioButton', RadioButton)
   Vue.component('Thumbnail', Thumbnail)
   Vue.component('Avatar', Avatar)

@@ -53,13 +53,14 @@
             </div>
           </div>
           <div class="auth__action">
-            <button
-              :class="{ 'button--loading': loading }"
-              class="button button--full-width"
+            <Button
+              type="primary"
+              full-width
+              :loading="loading"
               :disabled="loading || success"
             >
               {{ $t('forgotPassword.submit') }}
-            </button>
+            </Button>
           </div>
           <div>
             <ul class="auth__action-links">
@@ -81,10 +82,16 @@
       <p class="box__message-text">
         {{ $t('forgotPassword.confirmation') }}
       </p>
-      <nuxt-link :to="{ name: 'login' }" class="button button--large">
-        <i class="iconoir-arrow-left"></i>
-        {{ $t('action.backToLogin') }}
-      </nuxt-link>
+
+      <Button
+        tag="nuxt-link"
+        :to="{ name: 'login' }"
+        type="primary"
+        size="large"
+        icon="iconoir-arrow-left"
+      >
+        {{ $t('action.backToLogin') }}</Button
+      >
     </div>
   </div>
 </template>

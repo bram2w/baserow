@@ -69,13 +69,15 @@
         </div>
       </FormElement>
       <div class="auth__action">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--full-width"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
+          full-width
           :disabled="loading"
         >
           {{ $t('action.signIn') }}
-        </button>
+        </Button>
       </div>
     </form>
   </div>

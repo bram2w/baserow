@@ -22,13 +22,13 @@
             }}</a>
           </li>
         </ul>
-        <button
-          class="button button--primary"
-          :class="{ 'button--loading': loading }"
+        <Button
+          type="primary"
+          :loading="loading"
           :disabled="loading || $v.$invalid"
         >
           {{ $t(saveText) }}
-        </button>
+        </Button>
       </div>
     </form>
   </Modal>

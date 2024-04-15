@@ -1,22 +1,22 @@
 <template>
   <div class="row">
     <div class="col col-6">
-      <a
+      <Button
         v-if="toggleEnabled"
-        class="button button--ghost"
+        type="secondary"
         @click="$emit('toggle-select-all')"
-        >{{ getToggleLabel }}</a
+        >{{ getToggleLabel }}</Button
       >
     </div>
     <div class="col col-6 align-right">
-      <a
-        class="button"
-        :class="{ disabled: !inviteEnabled }"
+      <Button
+        type="primary"
+        :disabled="!inviteEnabled"
         @click="inviteEnabled ? $emit('invite') : null"
         >{{
           $t('memberAssignmentModalFooter.invite', { selectedMembersCount })
         }}
-      </a>
+      </Button>
     </div>
   </div>
 </template>

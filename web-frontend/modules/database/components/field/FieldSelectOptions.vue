@@ -37,10 +37,9 @@
         </a>
       </div>
     </div>
-    <a class="add" @click="add()">
-      <i class="iconoir-plus add__icon"></i>
+    <ButtonText icon="iconoir-plus" @click="add()">
       {{ $t('fieldSelectOptions.add') }}
-    </a>
+    </ButtonText>
     <ColorSelectContext
       ref="colorContext"
       @selected="updateColor(colorContextSelected, $event)"

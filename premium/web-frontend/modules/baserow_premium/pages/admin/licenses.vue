@@ -23,13 +23,16 @@
         </div>
       </div>
       <div class="placeholder__action">
-        <a class="button button--large" @click="$refs.registerModal.show()">
-          <i class="iconoir-plus"></i>
+        <Button
+          type="primary"
+          size="large"
+          icon="iconoir-plus"
+          @click="$refs.registerModal.show()"
+        >
           {{ $t('licenses.registerLicense') }}
-        </a>
+        </Button>
         <RedirectToBaserowModal
           :href="'https://baserow.io/get-license/' + instanceId + '/'"
-          class="button button--large button--ghost margin-left-2"
           target="_blank"
           >{{ $t('licenses.getLicense') }}</RedirectToBaserowModal
         >
@@ -55,17 +58,17 @@
           {{ $t('licenses.titleLicenses') }}
         </h1>
         <div>
-          <a
-            class="button button--primary margin-right-1"
+          <Button
+            type="primary"
+            icon="iconoir-plus"
             @click="$refs.registerModal.show()"
           >
-            <i class="iconoir-plus"></i>
             {{ $t('licenses.registerLicense') }}
-          </a>
+          </Button>
           <RedirectToBaserowModal
             :href="'https://baserow.io/get-license/' + instanceId + '/'"
-            class="button button--ghost"
             target="_blank"
+            size="regular"
             >{{ $t('licenses.getLicense') }}</RedirectToBaserowModal
           >
         </div>
@@ -100,10 +103,16 @@
                 license.license_id
               }}</span>
             </div>
-            <Badge :color="getLicenseType(license).getLicenseBadgeColor()" bold class="margin-right-1">
+            <Badge
+              :color="getLicenseType(license).getLicenseBadgeColor()"
+              bold
+              class="margin-right-1"
+            >
               {{ getLicenseType(license).getName() }}</Badge
             >
-            <Badge v-if="!license.is_active" color="red">{{ $t('licenses.expired') }}</Badge>
+            <Badge v-if="!license.is_active" color="red">{{
+              $t('licenses.expired')
+            }}</Badge>
           </div>
           <div class="licenses__item-validity">
             {{

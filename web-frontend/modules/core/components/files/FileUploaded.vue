@@ -22,30 +22,30 @@
       </div>
     </div>
     <div class="field-file__actions">
-      <a
+      <ButtonIcon
         v-if="!readOnly"
         v-tooltip="$t('action.rename')"
-        class="field-file__action"
+        size="small"
+        icon="iconoir-edit-pencil"
         @click="$refs.nameEditable.edit()"
-      >
-        <i class="iconoir-edit-pencil"></i>
-      </a>
+      ></ButtonIcon>
       <DownloadLink
-        class="field-file__action"
-        loading-class="button--loading"
         :filename="file.visible_name"
         :url="file.url"
+        class="button-icon button-icon--small"
+        loading-class="button-icon--loading"
       >
-        <i class="iconoir-download"></i>
+        <template #default="{ loading }">
+          <i v-if="!loading" class="button-icon__icon iconoir-download" />
+        </template>
       </DownloadLink>
-      <a
+      <ButtonIcon
         v-if="!readOnly"
         v-tooltip="$t('action.delete')"
-        class="field-file__action"
+        size="small"
+        icon="iconoir-bin"
         @click="$emit('delete')"
-      >
-        <i class="iconoir-bin"></i>
-      </a>
+      ></ButtonIcon>
     </div>
   </div>
 </template>

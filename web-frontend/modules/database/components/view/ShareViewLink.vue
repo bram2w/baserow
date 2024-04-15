@@ -60,9 +60,8 @@
           </a>
         </div>
         <div class="view-sharing__shared-link-options">
-          <div class="view-sharing__option">
+          <div class="view-sharing__option margin-bottom-1">
             <SwitchInput
-              class="margin-bottom-1"
               small
               :value="view.public_view_has_password"
               @input="toggleShareViewPassword"

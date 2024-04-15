@@ -66,16 +66,12 @@
       />
     </div>
     <div v-if="editing" class="row_comments__comment-text-actions">
-      <button
-        class="button button--ghost"
-        :disabled="updating"
-        @click="stopEdit()"
+      <Button type="secondary" :disabled="updating" @click="stopEdit()">
+        {{ $t('action.cancel') }}</Button
       >
-        {{ $t('action.cancel') }}
-      </button>
-      <button class="button button--primary" @click="stopEdit(true)">
-        {{ $t('action.save') }}
-      </button>
+      <Button type="primary" :disabled="updating" @click="stopEdit(true)">
+        {{ $t('action.save') }}</Button
+      >
     </div>
   </div>
 </template>

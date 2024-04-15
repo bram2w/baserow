@@ -37,13 +37,14 @@
       >
         <FormViewPoweredBy v-if="showLogo"></FormViewPoweredBy>
         <div class="form-view__submit">
-          <button
-            class="button button--primary button--large"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="loading"
             :disabled="loading"
           >
             {{ submitText }}
-          </button>
+          </Button>
         </div>
       </div>
     </form>

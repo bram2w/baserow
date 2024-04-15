@@ -21,12 +21,13 @@
         }}
       </template>
       <template #header-right-side>
-        <button
-          class="button button--large"
+        <Button
+          type="primary"
+          size="large"
           @click.prevent="$refs.exportModal.show()"
         >
-          {{ $t('auditLog.exportToCsv') }}
-        </button>
+          {{ $t('auditLog.exportToCsv') }}</Button
+        >
       </template>
       <template #header-filters>
         <div
@@ -82,12 +83,13 @@
               @input="filterToTimestamp"
             ></DateFilter>
           </FilterWrapper>
-          <button
-            class="audit-log__clear_filters_button button button--ghost"
+          <Button
+            class="audit-log__clear_filters_button"
+            type="secondary"
             @click="clearFilters"
           >
-            {{ $t('auditLog.clearFilters') }}
-          </button>
+            {{ $t('auditLog.clearFilters') }}</Button
+          >
         </div>
       </template>
     </CrudTable>

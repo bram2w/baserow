@@ -58,14 +58,15 @@
       @submit.prevent="deleteAccount"
     >
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large button--error"
+        <Button
+          type="danger"
+          size="large"
+          :loading="loading"
           :disabled="loading"
+          icon="iconoir-bin"
         >
           {{ $t('deleteAccountSettings.submitButton') }}
-          <i class="iconoir-bin"></i>
-        </button>
+        </Button>
       </div>
     </form>
   </div>

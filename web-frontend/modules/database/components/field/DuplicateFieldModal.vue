@@ -19,13 +19,14 @@
         </div>
       </div>
       <div class="actions actions--right">
-        <button
-          class="button button--large button--overflow"
-          :class="{ 'button--loading': loading }"
+        <Button
+          ref="submitButton"
+          type="primary"
+          :loading="loading"
           :disabled="loading"
         >
           {{ $t('action.duplicate') }}
-        </button>
+        </Button>
       </div>
     </form>
   </Modal>

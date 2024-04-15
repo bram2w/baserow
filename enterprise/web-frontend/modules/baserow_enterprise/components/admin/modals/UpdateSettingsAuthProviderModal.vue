@@ -20,13 +20,10 @@
               <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
             </li>
           </ul>
-          <button
-            class="button button--primary"
-            :class="{ 'button--loading': loading }"
-            :disabled="loading"
+
+          <Button type="primary" :disabled="loading" :loading="loading">
+            {{ $t('action.save') }}</Button
           >
-            {{ $t('action.save') }}
-          </button>
         </div>
       </component>
     </div>

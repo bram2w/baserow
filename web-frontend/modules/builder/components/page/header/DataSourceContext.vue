@@ -35,15 +35,14 @@
         </div>
       </template>
 
-      <Button
-        type="link"
-        prepend-icon="baserow-icon-plus"
-        size="tiny"
+      <ButtonText
+        icon="iconoir-plus"
+        type="secondary"
         :loading="creationInProgress"
         @click="createDataSource()"
       >
         {{ $t('dataSourceContext.addDataSource') }}
-      </Button>
+      </ButtonText>
     </template>
   </Context>
 </template>

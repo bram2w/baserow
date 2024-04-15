@@ -14,14 +14,14 @@
   cursor: pointer;
 
   @include rounded($rounded-md);
-  @include flex-align-items(8px);
 
   &:hover:not(.chips--disabled) {
     border: 1px solid $palette-blue-300;
     background: rgba($palette-blue-1000, 0.06);
 
     &.chips--active {
-      border-width: 1.5px;
+      border-color: transparent;
+      box-shadow: 0 0 0 1.5px $palette-blue-300;
     }
   }
 
@@ -32,7 +32,8 @@
 }
 
 .chips--active:not(.chips--disabled) {
-  border: 1.5px solid $palette-blue-600;
+  border-color: transparent;
+  box-shadow: 0 0 0 1.5px $palette-blue-300;
   background: rgba($palette-blue-1000, 0.08);
 }
 

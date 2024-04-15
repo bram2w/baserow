@@ -16,13 +16,14 @@
       <RegisterLicenseForm @submitted="submit">
         <div class="actions">
           <div class="align-right">
-            <button
-              class="button button--large"
-              :class="{ 'button--loading': loading }"
+            <Button
+              type="primary"
+              size="large"
               :disabled="loading"
+              :loading="loading"
             >
-              {{ $t('registerLicenseModal.registerLicense') }}
-            </button>
+              {{ $t('registerLicenseModal.registerLicense') }}</Button
+            >
           </div>
         </div>
       </RegisterLicenseForm>

@@ -4,9 +4,9 @@
       {{ $t('formulaInputField.errorInvalidFormula') }}
     </p>
     <template #actions>
-      <button class="alert__actions-button-text" @click.prevent="reset">
+      <Button type="danger" size="small" @click.prevent="reset">
         {{ $t('action.reset') }}
-      </button>
+      </Button>
     </template>
   </Alert>
   <div v-else>

@@ -3,12 +3,16 @@
     <div v-if="impersonating" class="impersonate-warning">
       {{ $t('premiumTopSidebar.impersonateDescription') }}
       <div>
-        <a
+        <Button
+          class="margin-top-1"
+          type="danger"
+          tag="a"
+          size="small"
           :href="resolveAdminUsersHref()"
-          class="button button--error button--tiny margin-top-1"
-          :class="{ 'button--loading': loading }"
+          :loading="loading"
+          :disabled="loading"
           @click="loading = true"
-          >{{ $t('premiumTopSidebar.impersonateStop') }}</a
+          >{{ $t('premiumTopSidebar.impersonateStop') }}</Button
         >
       </div>
     </div>

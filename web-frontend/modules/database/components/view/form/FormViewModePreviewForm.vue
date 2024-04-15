@@ -117,6 +117,7 @@
             @change="updateForm({ submit_text: $event.value })"
             @editing="editingSubmitText = $event"
           ></Editable>
+
           <a
             v-if="!readOnly"
             class="form-view__edit"

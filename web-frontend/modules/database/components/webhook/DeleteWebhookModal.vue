@@ -10,14 +10,15 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <a
-            class="button button--large button--error"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="danger"
+            size="large"
+            :loading="loading"
             :disabled="loading"
             @click="deleteWebhook()"
           >
             {{ $t('deleteWebhookModal.deleteButton') }}
-          </a>
+          </Button>
         </div>
       </div>
     </div>

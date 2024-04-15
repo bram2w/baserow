@@ -92,11 +92,7 @@
                 "
               >
                 <template v-if="values.fields.length > 1" #after-input>
-                  <Button
-                    icon="iconoir-bin"
-                    type="light"
-                    @click="removeField(field)"
-                  />
+                  <ButtonIcon icon="iconoir-bin" @click="removeField(field)" />
                 </template>
               </FormInput>
               <FormElement class="control control--horizontal">
@@ -128,14 +124,14 @@
             </template>
           </Expandable>
         </div>
-        <Button
-          prepend-icon="baserow-icon-plus"
-          type="link"
-          size="tiny"
+        <ButtonText
+          type="primary"
+          icon="iconoir-plus"
+          size="small"
           @click="addField"
         >
           {{ $t('tableElementForm.addField') }}
-        </Button>
+        </ButtonText>
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
     </FormElement>

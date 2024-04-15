@@ -21,16 +21,14 @@
             style="flex: 1"
           />
           <div class="integration_settings__integration-actions">
-            <Button
+            <ButtonIcon
               icon="iconoir-edit"
-              type="light"
               @click="
                 $refs[`IntegrationCreateEditModal_${integration.id}`][0].show()
               "
             />
-            <Button
+            <ButtonIcon
               icon="iconoir-trash"
-              type="light"
               @click="deleteIntegration(integration)"
             />
           </div>

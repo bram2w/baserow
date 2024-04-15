@@ -6,15 +6,16 @@
       class="grid-view__cell active"
     >
       <div class="grid-field-button">
-        <button
-          class="button button--tiny button--ghost"
+        <Button
+          type="secondary"
+          size="tiny"
           :disabled="!modelAvailable || generating"
-          :class="{ 'button--loading': generating }"
+          :loading="generating"
           @click="generate()"
         >
           {{ $t('gridViewFieldAI.generate') }}
           <i v-if="isDeactivated" class="iconoir-lock"></i>
-        </button>
+        </Button>
       </div>
     </div>
     <div
@@ -31,24 +32,22 @@
         </div>
         <div style="background-color: #fff; padding: 8px">
           <template v-if="!readOnly">
-            <button
+            <ButtonText
               v-if="!isDeactivated"
-              class="button button--link"
+              icon="iconoir-magic-wand"
               :disabled="!modelAvailable || generating"
-              :class="{ 'button--loading': generating }"
+              :loading="generating"
               @click.prevent.stop="generate()"
             >
-              <i class="button__icon iconoir-magic-wand"></i>
               {{ $t('gridViewFieldAI.regenerate') }}
-            </button>
-            <button
+            </ButtonText>
+            <ButtonText
               v-else
-              class="button button--link"
+              icon="iconoir-lock"
               @click.prevent.stop="$refs.clickModal.show()"
             >
-              <i class="button__icon iconoir-lock"></i>
               {{ $t('gridViewFieldAI.regenerate') }}
-            </button>
+            </ButtonText>
           </template>
         </div>
       </template>

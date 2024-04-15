@@ -61,11 +61,12 @@
             class="api-docs__content"
             :content="$t('apiDocsTableListRows.filters')"
           />
-          <a
-            class="button button--ghost button--tiny"
+          <Button
+            type="secondary"
+            size="small"
             @click.prevent="$refs.filtersModal.show()"
           >
-            {{ $t('apiDocsTableListRows.filtersBuilder') }}</a
+            {{ $t('apiDocsTableListRows.filtersBuilder') }}</Button
           >
           <APIDocsFiltersBuilderModal
             ref="filtersModal"

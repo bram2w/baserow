@@ -307,13 +307,13 @@
     "style": "Style"
   },
   "rowCreateModal": {
-    "addField": "add field"
+    "addField": "Add field"
   },
   "selectRowContent": {
     "search": "Search rows"
   },
   "rowEditModal": {
-    "addField": "add field",
+    "addField": "Add field",
     "showHiddenFields": "Show hidden fields",
     "hideHiddenFields": "Hide hidden fields"
   },

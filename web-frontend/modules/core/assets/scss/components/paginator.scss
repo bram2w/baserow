@@ -17,7 +17,7 @@
   font-size: 14px;
 
   @include flex-align-items();
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
   @include rounded($rounded-md);
 
   &:hover:not(.paginator__button--disabled) {
@@ -64,5 +64,5 @@
   margin: 0 6px;
 
   @include rounded($rounded-md);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }

@@ -19,7 +19,7 @@
     color: $accent-color;
   }
 
-  .alert__content *:not(.button) {
+  .alert__content .alert__message * {
     color: $color;
   }
 

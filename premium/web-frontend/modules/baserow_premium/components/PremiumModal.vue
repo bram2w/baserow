@@ -17,11 +17,13 @@
         </p>
         <PremiumFeatures class="margin-bottom-3"></PremiumFeatures>
         <div>
-          <a
+          <Button
+            type="primary"
+            size="large"
             href="https://baserow.io/pricing"
             target="_blank"
-            class="button button--primary button--large"
-            >{{ $t('premiumModal.viewPricing') }}</a
+            tag="a"
+            >{{ $t('premiumModal.viewPricing') }}</Button
           >
         </div>
       </div>

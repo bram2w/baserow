@@ -8,7 +8,7 @@
   box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
   z-index: $z-index-toasts;
   @include rounded($rounded-md);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }
 
 .alert__icon {
@@ -31,6 +31,10 @@
 
 .alert__message {
   margin-top: 4px;
+
+  a {
+    text-decoration: underline;
+  }
 }
 
 .alert__close {

@@ -25,7 +25,7 @@
             </a>
             <input
               v-model="values.value"
-              class="input select-options__value"
+              class="form-input form-input--small select-options__value"
               :class="{ 'input--error': fieldHasErrors('value') }"
               @blur="$v.values.value.$touch()"
             />

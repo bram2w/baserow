@@ -42,13 +42,13 @@
           </div>
         </div>
       </FormElement>
-      <button
-        class="button button--primary"
-        :class="{ 'button--loading': loading }"
+      <Button
+        type="primary"
+        :loading="loading"
         :disabled="loading || $v.$invalid"
       >
         {{ $t('emailTester.submit') }}
-      </button>
+      </Button>
     </form>
   </div>
 </template>

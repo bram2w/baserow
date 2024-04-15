@@ -11,14 +11,15 @@
       {{ $t('dashboard.noWorkspaceTextWithoutCreatePermission') }}
     </p>
     <div class="placeholder__action">
-      <a
+      <Button
         v-if="$hasPermission('create_workspace')"
-        class="button button--large"
+        type="primary"
+        size="large"
+        icon="iconoir-plus"
         @click="$emit('create-clicked')"
       >
-        <i class="iconoir-plus"></i>
         {{ $t('dashboard.createWorkspace') }}
-      </a>
+      </Button>
     </div>
   </div>
 </template>

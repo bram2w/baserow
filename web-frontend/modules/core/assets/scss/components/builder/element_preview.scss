@@ -92,7 +92,7 @@
 }
 
 .element-preview__name {
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
   @include absolute(-26px, auto, auto, 5px);
   @include rounded($rounded);
 
