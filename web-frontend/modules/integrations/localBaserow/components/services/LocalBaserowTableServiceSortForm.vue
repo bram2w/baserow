@@ -219,14 +219,14 @@ export default {
       this.$emit('input', newSortings)
     },
     deleteSort(sort) {
-      const newSortings = this.value.filter(({ id }) => {
-        return id !== sort.id
+      const newSortings = this.value.filter(({ field }) => {
+        return field !== sort.field
       })
       this.$emit('input', newSortings)
     },
     updateSort(sort, values) {
       const newSortings = this.value.map((sortConf) => {
-        if (sortConf.id === sort.id) {
+        if (sortConf.field === sort.field) {
           return { ...sortConf, ...values }
         }
         return sortConf
