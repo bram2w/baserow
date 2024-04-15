@@ -8,7 +8,7 @@ from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import LinkElement
 from baserow.contrib.builder.elements.registries import element_type_registry
-from baserow.contrib.builder.pages.service import PageService
+from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
@@ -19,8 +19,8 @@ from baserow.contrib.builder.workflow_actions.registries import (
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.registries import integration_type_registry
-from baserow.core.integrations.service import IntegrationService
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 
@@ -85,15 +85,13 @@ class BuilderApplicationTypeInitApplication:
         return table
 
     def create_page(self, name: str, path: str) -> "Page":
-        return PageService().create_page(
-            self.user, self.application.specific, name, path
-        )
+        return PageHandler().create_page(self.application.specific, name, path)
 
     def create_integration(self) -> "Integration":
-        return IntegrationService().create_integration(
-            self.user,
+        return IntegrationHandler().create_integration(
             integration_type_registry.get("local_baserow"),
             self.application,
+            authorized_user=self.user,
             name=self.first_integration_name,
         )
 
