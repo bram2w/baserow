@@ -103,9 +103,6 @@ _main() {
       # If the upgrade script was run, and it was successful, remove the upgrade directory.
       if [ "$1" == "upgrade" ]; then
         if [ $EXIT_STATUS = 0 ]; then
-          echo
-          echo 'Upgrade was successful! Removing temporary upgrade directory...'
-          echo
           rm -rf "${PGAUTOUPGRADE_DIR}"
           echo
           echo 'You can now run the official `baserow/baserow:1.24.2` image to start Baserow.'
