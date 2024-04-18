@@ -27,10 +27,7 @@
       />
       <div class="user-source-settings__user-source-actions">
         <ButtonIcon icon="iconoir-edit" @click="showForm(userSource)" />
-        <ButtonIcon
-          icon="iconoir-trash"
-          @click="deleteUserSource(userSource)"
-        />
+        <ButtonIcon icon="iconoir-bin" @click="deleteUserSource(userSource)" />
       </div>
     </div>
     <p v-if="!error.visible && userSources.length === 0" class="margin-top-3">

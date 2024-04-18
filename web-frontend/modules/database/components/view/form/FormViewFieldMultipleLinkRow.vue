@@ -25,7 +25,7 @@
         <Button
           type="secondary"
           tag="a"
-          icon="iconoir-trash"
+          icon="iconoir-bin"
           @click="remove(index)"
         ></Button>
       </div>

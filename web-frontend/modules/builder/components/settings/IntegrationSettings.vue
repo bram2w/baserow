@@ -28,7 +28,7 @@
               "
             />
             <ButtonIcon
-              icon="iconoir-trash"
+              icon="iconoir-bin"
               @click="deleteIntegration(integration)"
             />
           </div>
