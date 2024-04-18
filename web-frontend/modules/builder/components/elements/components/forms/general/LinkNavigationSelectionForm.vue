@@ -79,11 +79,8 @@
         </div>
       </div>
     </FormElement>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkNavigationSelection.target') }}
-      </label>
-      <div class="control__elements">
+    <FormGroup :label="$t('linkNavigationSelection.target')">
+      <div class="control__elements--flex">
         <RadioButton v-model="values.target" type="chips" value="self">
           {{ $t('linkNavigationSelection.targetSelf') }}
         </RadioButton>
@@ -91,7 +88,7 @@
           {{ $t('linkNavigationSelection.targetNewTab') }}
         </RadioButton>
       </div>
-    </FormElement>
+    </FormGroup>
   </form>
 </template>
 
