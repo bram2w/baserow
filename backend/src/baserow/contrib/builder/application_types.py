@@ -21,6 +21,7 @@ from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.models import Application, Workspace
 from baserow.core.registries import ApplicationType, ImportExportConfig
+from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.handler import UserSourceHandler
 from baserow.core.utils import ChildProgressBuilder
 
@@ -44,9 +45,26 @@ class BuilderApplicationType(ApplicationType):
         "name",
         "pages",
         "theme",
+        "favicon_file",
     ]
-    request_serializer_field_names = []
+    allowed_fields = ["favicon_file"]
+    request_serializer_field_names = ["favicon_file"]
     serializer_mixins = [lazy_get_instance_serializer_class]
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.api.user_files.serializers import UserFileField
+        from baserow.contrib.builder.api.validators import image_file_validation
+
+        return {
+            "favicon_file": UserFileField(
+                allow_null=True,
+                required=False,
+                default=None,
+                help_text="The favicon image file",
+                validators=[image_file_validation],
+            ),
+        }
 
     def get_api_urls(self):
         from .api import urls as api_urls
@@ -133,6 +151,12 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_theme = ThemeHandler().export_theme(builder)
 
+        serialized_favicon_file = UserFileHandler().export_user_file(
+            builder.favicon_file,
+            files_zip,
+            storage,
+        )
+
         serialized_builder = super().export_serialized(
             builder, import_export_config, files_zip, storage
         )
@@ -142,7 +166,8 @@ class BuilderApplicationType(ApplicationType):
             integrations=serialized_integrations,
             theme=serialized_theme,
             user_sources=serialized_user_sources,
-            **serialized_builder
+            favicon_file=serialized_favicon_file,
+            **serialized_builder,
         )
 
     def import_integrations_serialized(
@@ -251,12 +276,12 @@ class BuilderApplicationType(ApplicationType):
         serialized_user_sources = serialized_values.pop("user_sources")
         serialized_theme = serialized_values.pop("theme")
 
-        builder_progress, integration_progress, user_source_progress, page_progress = (
-            5,
-            10,
-            15,
-            80,
-        )
+        (
+            builder_progress,
+            integration_progress,
+            user_source_progress,
+            page_progress,
+        ) = (5, 10, 15, 80)
         progress = ChildProgressBuilder.build(
             progress_builder, child_total=builder_progress + page_progress
         )
@@ -318,6 +343,15 @@ class BuilderApplicationType(ApplicationType):
                 storage,
                 progress.create_child_builder(represents_progress=page_progress),
             )
+
+        if serialized_favicon_file := serialized_values.pop("favicon_file", None):
+            if favicon_file := UserFileHandler().import_user_file(
+                serialized_favicon_file,
+                files_zip,
+                storage,
+            ):
+                builder.favicon_file = favicon_file
+                builder.save()
 
         ThemeHandler().import_theme(builder, serialized_theme, id_mapping)
 

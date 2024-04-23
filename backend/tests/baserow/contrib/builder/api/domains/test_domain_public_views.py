@@ -11,11 +11,17 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.api.user_files.serializers import UserFileSerializer
+
 
 @pytest.mark.django_db
 def test_get_public_builder_by_domain_name(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    builder_to = data_fixture.create_builder_application(workspace=None)
+    favicon_file = data_fixture.create_user_file(original_extension=".png")
+    builder_to = data_fixture.create_builder_application(
+        workspace=None,
+        favicon_file=favicon_file,
+    )
     page = data_fixture.create_builder_page(user=user, builder=builder_to)
     page2 = data_fixture.create_builder_page(user=user, builder=builder_to)
 
@@ -38,6 +44,7 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response_json == {
+        "favicon_file": UserFileSerializer(builder_to.favicon_file).data,
         "id": builder_to.id,
         "name": builder_to.name,
         "pages": [
@@ -116,7 +123,10 @@ def test_get_non_public_builder(api_client, data_fixture):
 @pytest.mark.django_db
 def test_get_public_builder_by_id(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
+    favicon_file = data_fixture.create_user_file(original_extension=".png")
     page = data_fixture.create_builder_page(user=user)
+    page.builder.favicon_file = favicon_file
+    page.builder.save()
     page2 = data_fixture.create_builder_page(builder=page.builder, user=user)
 
     url = reverse(
@@ -134,6 +144,7 @@ def test_get_public_builder_by_id(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response_json == {
+        "favicon_file": UserFileSerializer(page.builder.favicon_file).data,
         "id": page.builder.id,
         "name": page.builder.name,
         "pages": [

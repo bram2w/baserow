@@ -5,6 +5,7 @@ from django.test.utils import CaptureQueriesContext
 import pytest
 from rest_framework.status import HTTP_200_OK
 
+from baserow.api.user_files.serializers import UserFileSerializer
 from baserow.contrib.builder.models import Builder
 
 
@@ -150,7 +151,12 @@ def test_get_builder_application(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1"
     )
     workspace = data_fixture.create_workspace(user=user)
-    application = data_fixture.create_builder_application(workspace=workspace, order=1)
+    favicon_file = data_fixture.create_user_file(original_extension=".png")
+    application = data_fixture.create_builder_application(
+        workspace=workspace,
+        order=1,
+        favicon_file=favicon_file,
+    )
 
     url = reverse("api:applications:item", kwargs={"application_id": application.id})
 
@@ -161,6 +167,7 @@ def test_get_builder_application(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json == {
+        "favicon_file": UserFileSerializer(application.favicon_file).data,
         "id": application.id,
         "name": application.name,
         "order": application.order,
@@ -196,7 +203,12 @@ def test_list_builder_applications(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1"
     )
     workspace = data_fixture.create_workspace(user=user)
-    application = data_fixture.create_builder_application(workspace=workspace, order=1)
+    favicon_file = data_fixture.create_user_file(original_extension=".png")
+    application = data_fixture.create_builder_application(
+        workspace=workspace,
+        order=1,
+        favicon_file=favicon_file,
+    )
 
     url = reverse("api:applications:list", kwargs={"workspace_id": workspace.id})
 
@@ -208,6 +220,7 @@ def test_list_builder_applications(api_client, data_fixture):
     response_json = response.json()
     assert response_json == [
         {
+            "favicon_file": UserFileSerializer(application.favicon_file).data,
             "id": application.id,
             "name": application.name,
             "order": application.order,

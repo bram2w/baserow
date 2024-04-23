@@ -34,7 +34,8 @@ module.exports = {
       },
     ],
     '^.+\\.vue$': '../../web-frontend/node_modules/@vue/vue2-jest',
-    '^.+\\.svg$': '../../web-frontend/test/helpers/stubSvgTransformer.js',
+    '^.+\\.(gif|ico|jpg|jpeg|png|svg)$':
+      '../../web-frontend/test/helpers/stubFileTransformer.js',
   },
   setupFilesAfterEnv: [
     path.join(__dirname, '/../../premium/web-frontend/jest.setup.js'),

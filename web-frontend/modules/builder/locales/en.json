@@ -21,6 +21,7 @@
     "title": "Application"
   },
   "builderSettingTypes": {
+    "generalName": "General",
     "integrationsName": "Integrations",
     "themeName": "Theme",
     "domainsName": "Domains",
@@ -157,6 +158,10 @@
   "imageElement": {
     "emptyState": "No alt text defined..."
   },
+  "imageInput": {
+    "labelDescription": "Default description",
+    "labelButton": "Upload"
+  },
   "generalForm": {
     "labelTitle": "Label",
     "labelPlaceholder": "Enter a label (optional)",
@@ -231,6 +236,16 @@
     "noUserSourceMessage": "You have not yet add a user source to this application. You must add a user source if you want users being able to authenticate your application.",
     "titleOverview": "User sources",
     "addUserSource": "Add user source"
+  },
+  "generalSettings": {
+    "titleOverview": "General",
+    "labelForm": "Favicon",
+    "labelDescription": "Pick a 128x128px ICO, PNG, GIF, or JPEG.",
+    "labelButton": "Upload favicon",
+    "cantUploadFaviconTitle": "Couldn't Upload Favicon File",
+    "cantUploadFaviconDescription": "Sorry, could not upload favicon image. Please ensure the image file is unique and is a supported image format.",
+    "cantUpdateApplicationTitle": "Couldn't Update Application",
+    "cantUpdateApplicationDescription": "Sorry, could not update the Application."
   },
   "dnsStatus": {
     "description": "Visit your domains' DNS settings and make the following changes",

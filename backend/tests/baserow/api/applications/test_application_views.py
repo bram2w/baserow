@@ -318,16 +318,36 @@ def test_update_application(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
 
+    # Test that an empty payload doesn't cause any side effects.
+    original_name = application.name
     url = reverse("api:applications:item", kwargs={"application_id": application.id})
     response = api_client.patch(
         url,
-        {"UNKNOWN_FIELD": "Test 1"},
+        {},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == application.id
+    assert response_json["name"] == original_name
+    application.refresh_from_db()
+    assert application.name == original_name
+
+    # Test that an unknown key in the payload is ignored.
+    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+    response = api_client.patch(
+        url,
+        {"name": "Test 1", "UNKNOWN_FIELD": "Test 1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == application.id
+    assert response_json["name"] == "Test 1"
+    application.refresh_from_db()
+    assert application.name == "Test 1"
 
     url = reverse("api:applications:item", kwargs={"application_id": application.id})
     response = api_client.patch(

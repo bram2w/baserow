@@ -93,4 +93,8 @@ export class BuilderApplicationType extends ApplicationType {
       return false
     }
   }
+
+  prepareForStoreUpdate(application, data) {
+    return data
+  }
 }

@@ -538,7 +538,7 @@ class UpdateApplicationActionType(UndoableActionType):
         workspace_name: str
         application_type: str
         application_id: int
-        application_name: str
+        application_name: Optional[str]
         original_application_name: str
 
     @classmethod
@@ -572,7 +572,7 @@ class UpdateApplicationActionType(UndoableActionType):
                 workspace.name,
                 application_type.type,
                 application.id,
-                kwargs["name"],
+                kwargs.get("name", original_name),
                 original_name,
             )
             cls.register_action(
