@@ -137,6 +137,11 @@
   @include absolute(0);
 
   overflow: auto;
+
+  @media print {
+    overflow: visible;
+    position: relative;
+  }
 }
 
 .form-view__page {
