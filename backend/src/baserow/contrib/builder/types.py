@@ -58,3 +58,4 @@ class BuilderDict(TypedDict):
     integrations: List[IntegrationDictSubClass]
     user_sources: List[UserSourceDictSubClass]
     theme: object
+    favicon_file: Optional[dict]

@@ -30,6 +30,7 @@ import Avatar from '@baserow/modules/core/components/Avatar'
 import Chips from '@baserow/modules/core/components/Chips'
 import Presentation from '@baserow/modules/core/components/Presentation'
 import FormInput from '@baserow/modules/core/components/FormInput'
+import ImageInput from '@baserow/modules/core/components/ImageInput'
 import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
 import FormRow from '@baserow/modules/core/components/FormRow'
@@ -95,6 +96,7 @@ function setupVue(Vue) {
   Vue.component('FormRow', FormRow)
   Vue.component('ColorInput', ColorInput)
   Vue.component('ColorInputGroup', ColorInputGroup)
+  Vue.component('ImageInput', ImageInput)
   Vue.component('SelectSearch', SelectSearch)
   Vue.component('Logo', Logo)
 

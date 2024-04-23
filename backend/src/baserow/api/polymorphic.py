@@ -170,6 +170,7 @@ class PolymorphicSerializer(serializers.Serializer):
                 request=self.request,
                 context=self.context,
                 data=self.data,
+                partial=self.partial,
             )
         except serializers.ValidationError:
             child_valid = False
@@ -193,6 +194,7 @@ class PolymorphicSerializer(serializers.Serializer):
             base_class=self.base_class,
             request=self.request,
             context=self.context,
+            partial=self.partial,
         )
 
         validated_data = serializer.run_validation(data)

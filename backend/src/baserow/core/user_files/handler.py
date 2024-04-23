@@ -2,11 +2,12 @@ import mimetypes
 import pathlib
 from io import BytesIO
 from os.path import join
-from typing import Optional
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
+from zipfile import ZipFile
 
 from django.conf import settings
-from django.core.files.storage import default_storage
+from django.core.files.storage import Storage, default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
 
@@ -15,6 +16,7 @@ from advocate.exceptions import UnacceptableAddressException
 from PIL import Image, ImageOps
 from requests.exceptions import RequestException
 
+from baserow.core.models import UserFile
 from baserow.core.storage import OverwritingStorageHandler
 from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
@@ -25,7 +27,6 @@ from .exceptions import (
     InvalidFileURLError,
     MaximumUniqueTriesError,
 )
-from .models import UserFile
 
 
 class UserFileHandler:
@@ -323,3 +324,71 @@ class UserFileHandler:
 
         file = SimpleUploadedFile(file_name, content)
         return UserFileHandler().upload_user_file(user, file_name, file, storage)
+
+    def export_user_file(
+        self,
+        user_file: Optional[UserFile],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Dict[str, Any] = None,
+    ) -> Dict[str, str]:
+        """
+        Given a UserFile object, write it to files_zip so it can be exported
+        and subsequently imported later.
+        """
+
+        if cache is None:
+            cache = {}
+
+        if not user_file or not storage:
+            return None
+
+        name = user_file.name
+
+        # Check if the user file object is already in the cache and if not,
+        # it must be fetched and added to to it.
+        cache_entry = f"user_file_{name}"
+        if cache_entry not in cache:
+            if files_zip is not None and name not in files_zip.namelist():
+                # Load the user file from the content and write it to the zip file
+                # because it might not exist in the environment that it is going
+                # to be imported in.
+                file_path = self.user_file_path(name)
+                with storage.open(file_path, mode="rb") as storage_file:
+                    files_zip.writestr(name, storage_file.read())
+
+            # Avoid writing the same file twice
+            cache[cache_entry] = True
+
+        return {"name": name, "original_name": user_file.original_name}
+
+    def import_user_file(
+        self,
+        serialized_user_file: Dict[str, str],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Optional[UserFile]:
+        """
+        Given a valid file name and files_zip, re-create the file and return
+        the resulting UserFile object.
+
+        Otherwise, return the existing file from the db.
+        """
+
+        if not serialized_user_file:
+            return None
+
+        if files_zip is None:
+            user_file = self.get_user_file_by_name(serialized_user_file["name"])
+        else:
+            name = serialized_user_file.get("name")
+            original_name = serialized_user_file.get("original_name")
+            if not name or not original_name:
+                return None
+
+            with files_zip.open(name) as stream:
+                user_file = self.upload_user_file(
+                    None, original_name, stream, storage=storage
+                )
+
+        return user_file

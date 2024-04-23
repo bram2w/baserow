@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "When sending a PATCH request to the api:applications:item endpoint, invalid payload keys will be ignored and will no longer cause an HTTP 400 error.",
+    "issue_number": 2301,
+    "bullet_points": [],
+    "created_at": "2024-03-29"
+}

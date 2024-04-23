@@ -6,6 +6,7 @@ import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
 import {
+  GeneralBuilderSettingsType,
   DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
@@ -140,6 +141,10 @@ export default (context) => {
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
 
+  app.$registry.register(
+    'builderSettings',
+    new GeneralBuilderSettingsType(context)
+  )
   app.$registry.register(
     'builderSettings',
     new IntegrationsBuilderSettingsType(context)

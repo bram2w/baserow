@@ -125,6 +125,7 @@ export default {
       bodyAttrs: {
         class: 'public-page',
       },
+      link: this.faviconLink,
     }
   },
   computed: {
@@ -147,6 +148,21 @@ export default {
     },
     isAuthenticated() {
       return this.$store.getters['userSourceUser/isAuthenticated']
+    },
+    faviconLink() {
+      if (this.builder.favicon_file?.url) {
+        return [
+          {
+            rel: 'icon',
+            type: this.builder.favicon_file.mime_type,
+            href: this.builder.favicon_file.url,
+            sizes: '128x128',
+            hid: true,
+          },
+        ]
+      } else {
+        return []
+      }
     },
   },
   watch: {

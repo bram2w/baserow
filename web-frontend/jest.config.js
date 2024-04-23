@@ -15,7 +15,8 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
     '^.+\\.vue$': '@vue/vue2-jest',
-    '^.+\\.svg$': '<rootDir>/test/helpers/stubSvgTransformer.js',
+    '^.+\\.(gif|ico|jpg|jpeg|png|svg)$':
+      '<rootDir>/test/helpers/stubFileTransformer.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
