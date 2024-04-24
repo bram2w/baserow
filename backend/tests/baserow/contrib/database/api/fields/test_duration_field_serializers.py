@@ -32,6 +32,8 @@ from baserow.contrib.database.fields.utils.duration import (
         ("d h:mm", 86400, timedelta(days=1)),
         ("d h:mm:ss", 0, timedelta(seconds=0)),
         ("d h:mm:ss", 3661, timedelta(seconds=3661)),
+        ("d h mm", 3661, timedelta(seconds=3660)),
+        ("d h mm ss", 3661, timedelta(seconds=3661)),
         # Rounding:
         ("h:mm", 3661.123, timedelta(seconds=3660)),
         ("h:mm", 3661.999, timedelta(seconds=3660)),
@@ -76,6 +78,11 @@ from baserow.contrib.database.fields.utils.duration import (
         ("d h:mm:ss", "1 1:1:1", timedelta(days=1, seconds=3661)),
         ("d h:mm:ss", "1d1:1:1", timedelta(days=1, seconds=3661)),
         ("d h:mm:ss", "1d 1:1:1", timedelta(days=1, seconds=3661)),
+        ("d h mm", "1d 123", timedelta(days=1, minutes=123)),
+        ("d h mm", "123", timedelta(seconds=120)),
+        ("d h mm ss", "1d 123", timedelta(days=1, seconds=123)),
+        ("d h mm ss", "123", timedelta(seconds=123)),
+        ("d h mm ss", "2h 3s", timedelta(hours=2, seconds=3)),
         # String input with rounding:
         ("h:mm", "1:01:01.123", timedelta(seconds=3660)),
         ("h:mm", "1:01:01.999", timedelta(seconds=3660)),
@@ -111,6 +118,8 @@ from baserow.contrib.database.fields.utils.duration import (
         ("d h", None, None),
         ("d h:mm", None, None),
         ("d h:mm:ss", None, None),
+        ("d h mm", None, None),
+        ("d h mm ss", None, None),
     ],
 )
 @pytest.mark.field_duration
@@ -145,6 +154,8 @@ def test_duration_serializer_to_internal_value(
         ("d h", "1hh"),
         ("d h", "1d1d"),
         ("d h", "1h1h"),
+        ("d h mm", "1h1h"),
+        ("d h mm", "1h1h"),
     ],
 )
 @pytest.mark.field_duration

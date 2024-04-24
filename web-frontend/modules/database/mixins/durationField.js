@@ -52,7 +52,7 @@ export default {
       }
     },
     isValidChar(char) {
-      const allowedChars = ['.', ':', ' ', 'd', 'h']
+      const allowedChars = ['.', ':', ' ', 'd', 'h', 'm', 's']
       return /\d/.test(char) || allowedChars.includes(char)
     },
     onKeyPress(field, event) {

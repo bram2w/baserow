@@ -202,7 +202,16 @@ def test_remove_duration_field(data_fixture):
         (timedelta(seconds=3665.555), "h:mm:ss.sss", "1:01:05.555"),
         (timedelta(days=1, hours=2), "d h", "1d 2h"),
         (timedelta(days=1, hours=1, minutes=2), "d h:mm", "1d 1:02"),
+        # note: this uses interval::text cast on database level, so the output format
+        # will be different from the one that should be
         (timedelta(days=1, hours=1, minutes=2, seconds=3), "d h:mm:ss", "1d 1:02:03"),
+        (timedelta(days=1, hours=3, minutes=10), "d h mm ss", "1d 3:10:00"),
+        (
+            timedelta(days=1, hours=3, minutes=10, seconds=12.345),
+            "d h mm ss",
+            "1d 3:10:12",
+        ),
+        (timedelta(days=1, minutes=10, seconds=0.345), "d h mm ss", "1d 0:10:00"),
         (None, "h:mm", None),
         (None, "d h", None),
         (None, "d h:mm", None),
@@ -243,7 +252,12 @@ def test_convert_duration_field_to_text_field(
 
     row_1 = model.objects.first()
     updated_value = getattr(row_1, f"field_{field.id}")
-    assert updated_value == new_text_field_value
+    assert updated_value == new_text_field_value, (
+        user_input,
+        duration_format,
+        updated_value,
+        new_text_field_value,
+    )
 
 
 @pytest.mark.parametrize(
@@ -288,6 +302,24 @@ def test_convert_duration_field_to_text_field(
             "d h:mm:ss",
             "1d 1:02:03",
             timedelta(days=1, hours=1, minutes=2, seconds=3),
+        ),
+        (
+            "d h mm",
+            "1d 1:12",
+            timedelta(days=1, hours=1, minutes=12),
+        ),
+        # note: text to duration field conversion uses db-level cast text::interval,
+        # thus the output value is different than it would be when entering value
+        # manually and go through DURATION_REGEX items.
+        (
+            "d h mm ss",
+            "1d 1:11",
+            timedelta(days=1, hours=1, minutes=11),
+        ),
+        (
+            "d h mm ss",
+            "1d 1:11.12",
+            timedelta(days=1, minutes=1, seconds=11.120),
         ),
     ],
 )
@@ -335,7 +367,12 @@ def test_convert_text_field_to_duration_field(
     row_1 = table_models.first()
     updated_value = getattr(row_1, f"field_{field.id}")
 
-    assert updated_value == new_duration_field_value
+    assert updated_value == new_duration_field_value, (
+        duration_format,
+        text_field_value,
+        updated_value,
+        new_duration_field_value,
+    )
 
 
 @pytest.mark.django_db
@@ -374,6 +411,14 @@ def test_convert_text_field_to_duration_field(
         (
             [1, 10, 51, 100, 122, 86461, 90002],
             {"duration_format": "d h:mm:ss"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "d h mm ss"},
+        ),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "d h mm"},
         ),
     ],
 )
@@ -439,6 +484,14 @@ def test_alter_duration_format(expected, field_kwargs, data_fixture):
         (
             [1, 10, 51, 100, 122, 86461, 90002],
             {"duration_format": "d h:mm:ss"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "d h mm ss"},
+        ),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "d h mm"},
         ),
     ],
 )

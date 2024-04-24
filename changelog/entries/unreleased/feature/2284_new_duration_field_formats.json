@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add support for `d h m` and `d h m s` duration formats.",
+    "issue_number": 2284,
+    "bullet_points": [],
+    "created_at": "2024-04-18"
+}
