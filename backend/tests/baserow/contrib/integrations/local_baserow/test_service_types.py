@@ -2007,6 +2007,64 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user, authorized_user=user
+    )
+    database = data_fixture.create_database_application(workspace=builder.workspace)
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Cost", "number", {}),
+            ("Name", "text", {}),
+        ],
+    )
+    cost = table.field_set.get(name="Cost")
+    name = table.field_set.get(name="Name")
+    row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={cost.db_column: 5, name.db_column: "test"},
+    )
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page, table=table, integration=integration
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        row_id=f'get("data_source.{data_source.id}.id")',
+        integration=integration,
+    )
+    service_type = service.get_type()
+    service.field_mappings.create(
+        field=cost, value=f'get("data_source.{data_source.id}.{cost.db_column}")'
+    )
+    service.field_mappings.create(
+        field=name, value=f'get("data_source.{data_source.id}.{name.db_column}")'
+    )
+
+    fake_request = Mock()
+    fake_request.data = {"page_parameter": {"id": 10}}
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    row.refresh_from_db()
+    assert getattr(row, cost.db_column) == 5
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_data_with_unknown_row_id(
     data_fixture,
 ):

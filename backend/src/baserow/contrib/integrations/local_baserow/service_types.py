@@ -1214,6 +1214,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
         field_mappings = service.field_mappings.select_related("field").all()
         for field_mapping in field_mappings:
+            dispatch_context.reset_call_stack()
             try:
                 resolved_values[field_mapping.id] = resolve_formula(
                     field_mapping.value,
@@ -1229,7 +1230,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             except Exception as e:
                 message = (
                     "Unknown error in formula for "
-                    f"field {field_mapping.field.name}({field_mapping.field.id})"
+                    f"field {field_mapping.field.name}({field_mapping.field.id}): {str(e)}"
                 )
                 raise ServiceImproperlyConfigured(message) from e
 
@@ -1239,6 +1240,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             return resolved_values
 
         try:
+            dispatch_context.reset_call_stack()
             resolved_values["row_id"] = ensure_integer(
                 resolve_formula(
                     service.row_id,
@@ -1258,6 +1260,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             raise ServiceImproperlyConfigured(
                 f"The `row_id` formula can't be resolved: {e}"
             )
+
         return resolved_values
 
     def dispatch_data(
@@ -1282,6 +1285,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
         field_values = {}
         field_mappings = service.field_mappings.select_related("field").all()
+
         for field_mapping in field_mappings:
             if field_mapping.id not in resolved_values:
                 continue
@@ -1296,11 +1300,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             if field_type.read_only:
                 continue
 
-            resolved_value = resolve_formula(
-                field_mapping.value,
-                formula_runtime_function_registry,
-                dispatch_context,
-            )
+            resolved_value = resolved_values[field_mapping.id]
 
             # Transform and validate the resolved value with the field type's DRF field.
             serializer_field = field_type.get_serializer_field(field.specific)
@@ -1326,10 +1326,10 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                     values=field_values,
                     values_already_prepared=True,
                 )
-            except RowDoesNotExist:
+            except RowDoesNotExist as exc:
                 raise ServiceImproperlyConfigured(
                     f"The row with id {resolved_values['row_id']} does not exist."
-                )
+                ) from exc
         else:
             row = RowHandler().create_row(
                 user=integration.authorized_user,
