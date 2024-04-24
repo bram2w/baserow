@@ -2411,7 +2411,7 @@ export class DurationFieldType extends FieldType {
 
     if (totalSecs === null) {
       return this.app.i18n.t('fieldErrors.invalidDuration', {
-        durationFormat: field.duration_format,
+        durationFormat: this.getDocsRequestExample(field),
       })
     } else if (totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS) {
       return this.app.i18n.t('fieldErrors.overflowDuration')

@@ -20,6 +20,9 @@ const VALID_DURATION_VALUES = {
     ['10', 10 * SECS_IN_HOUR],
     ['3600.0', 1 * SECS_IN_HOUR],
     ['60:0.0', 1 * SECS_IN_HOUR],
+    ['1d 2h 3m', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 2h 58m', 26 * SECS_IN_HOUR + 58 * SECS_IN_MIN],
+    ['1d 3m', 24 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
     ['0', 0],
   ],
   'd h:mm': [
@@ -32,6 +35,10 @@ const VALID_DURATION_VALUES = {
     ['1d1:30', 25 * SECS_IN_HOUR + 30 * 60],
     ['5:30', 5 * SECS_IN_HOUR + 30 * 60],
     ['10:30', 10 * SECS_IN_HOUR + 30 * 60],
+    ['1d 2h 3m', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 2h 3m 4s', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 4],
+    ['1d 3m', 24 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 32s', 24 * SECS_IN_HOUR + 32], // rounded up to 1m
     ['0:30', 30 * 60],
     ['0:0', 0],
   ],
@@ -44,6 +51,9 @@ const VALID_DURATION_VALUES = {
     ['1d2:30:61', 26 * SECS_IN_HOUR + 31 * 60 + 1],
     ['5:30:45', 5 * SECS_IN_HOUR + 30 * 60 + 45],
     ['10:30:45', 10 * SECS_IN_HOUR + 30 * 60 + 45],
+    ['1d 2h 3m 4s', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 4],
+    ['1d 2h 3m', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 3m', 24 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
     ['0:30:45', 30 * 60 + 45],
     ['0:0:45', 45],
     ['0:0:0', 0],
@@ -55,6 +65,7 @@ const VALID_DURATION_VALUES = {
     ['8:30', 8 * SECS_IN_HOUR + 30 * 60],
     ['0:30', 30 * 60],
     ['0:61', 61 * 60],
+    ['1d 4h 50m 37s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37], // rounded up to +1 min
     ['0:0', 0],
     ['0', 0],
   ],
@@ -64,6 +75,7 @@ const VALID_DURATION_VALUES = {
     ['2:30:45', 2 * SECS_IN_HOUR + 30 * 60 + 45],
     ['8:30:45', 8 * SECS_IN_HOUR + 30 * 60 + 45],
     ['0:30:45', 30 * 60 + 45],
+    ['1d 4h 50m 37.7s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.7], // rouded up to +1min
     ['0:0:45', 45],
     ['0:0:61', 61],
     ['0:0:0', 0],
@@ -73,6 +85,7 @@ const VALID_DURATION_VALUES = {
     ['1:30:45.2', 1 * SECS_IN_HOUR + 30 * 60 + 45.2],
     ['2:30:45.3', 2 * SECS_IN_HOUR + 30 * 60 + 45.3],
     ['8:30:45.9', 8 * SECS_IN_HOUR + 30 * 60 + 45.9],
+    ['1d 4h 50m 37.28s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.28],
     ['0:30:45.5', 30 * 60 + 45.5],
     ['0:0:45.0', 45],
     ['0:0:59.9', 59.9],
@@ -83,6 +96,7 @@ const VALID_DURATION_VALUES = {
     ['1:30:45.22', 1 * SECS_IN_HOUR + 30 * 60 + 45.22],
     ['2:30:45.33', 2 * SECS_IN_HOUR + 30 * 60 + 45.33],
     ['8:30:45.46', 8 * SECS_IN_HOUR + 30 * 60 + 45.46],
+    ['1d 4h 50m 37.28s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.28],
     ['0:30:45.50', 30 * 60 + 45.5],
     ['0:0:45.00', 45],
     ['0:0:59.99', 59.99],
@@ -93,7 +107,16 @@ const VALID_DURATION_VALUES = {
     ['1:30:45.222', 1 * SECS_IN_HOUR + 30 * 60 + 45.222],
     ['2:30:45.333', 2 * SECS_IN_HOUR + 30 * 60 + 45.333],
     ['8:30:45.456', 8 * SECS_IN_HOUR + 30 * 60 + 45.456],
+    ['1d 4h 50m 37.283s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.283],
     ['0:30:45.500', 30 * 60 + 45.5],
+    ['0:0:45.000', 45],
+    ['0:0:59.999', 59.999],
+    ['0', 0],
+  ],
+  'd h mm ss': [
+    ['2d 4h 3m 4s', (2 * 24 + 4) * SECS_IN_HOUR + 30 * SECS_IN_MIN + 4],
+    ['4m 12.3s', 4 * SECS_IN_MIN + 12.3],
+    ['8:30:45.589', 8 * SECS_IN_HOUR + 30 * 60 + 46],
     ['0:0:45.000', 45],
     ['0:0:59.999', 59.999],
     ['0', 0],
@@ -103,8 +126,6 @@ const VALID_DURATION_VALUES = {
 const INVALID_DURATION_VALUES = [
   'd',
   'h',
-  '1d 2h 3m',
-  '1d 2h 3s',
   '1day',
   '2 days',
   '1 hour',
@@ -113,7 +134,6 @@ const INVALID_DURATION_VALUES = [
   'aaaaa',
   '1dd',
   '2hh',
-  '1h2m',
 ]
 
 const DURATION_FORMATTED_VALUES = {

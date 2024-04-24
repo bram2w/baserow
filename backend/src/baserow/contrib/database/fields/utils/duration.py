@@ -19,68 +19,128 @@ H_M_S_S = "h:mm:ss.s"
 H_M_S_SS = "h:mm:ss.ss"
 H_M_S_SSS = "h:mm:ss.sss"
 D_H = "d h"
-D_H_M = "d h:mm"
+D_H_M = "d h:mm"  # 1d 11:11
 D_H_M_S = "d h:mm:ss"
+D_H_M_NO_COLONS = "d h mm"  # 1d 2h 3m, 1d 3m
+D_H_M_S_NO_COLONS = "d h mm ss"  # 1d2h3m4s, 1h 2m
 
 MOST_ACCURATE_DURATION_FORMAT = H_M_S_SSS
 
 
-def total_secs(days=0, hours=0, mins=0, secs=0):
-    return int(days) * 86400 + int(hours) * 3600 + int(mins) * 60 + float(secs)
+def total_secs(
+    days: Optional[int] = None,
+    hours: Optional[int] = None,
+    mins: Optional[int] = None,
+    secs: Optional[int] = None,
+) -> float:
+    """
+    Calculate number of seconds from higher-order units
+
+    :param days:
+    :param hours:
+    :param mins:
+    :param secs:
+    :return:
+    """
+
+    return (
+        int(days or 0) * 86400
+        + int(hours or 0) * 3600
+        + int(mins or 0) * 60
+        + float(secs or 0.0)
+    )
 
 
 # These regexps are supposed to tokenize the provided duration value and to return a
 # proper number of seconds based on format and the tokens. NOTE: Keep these in sync with
 # web-frontend/modules/database/utils/duration.js:DURATION_REGEXPS
 DURATION_REGEXPS = {
+    # 1d 10h 20m 30s
+    # 1d 30m 40.50s
+    # 1d 30s
+    re.compile(  # optionally capture `1d`
+        r"^((?P<days>\d+)(?:d\s*))?"
+        # optionally capture 1h
+        r"((?P<hours>\d+)(?:h\s*))?"
+        # optionally capture 1m
+        r"((?P<mins>\d+)(?:m\s*|\s+))?"
+        # optionally capture 1.2s
+        r"((?P<secs>\d+|\d+.\d+)?(?:s\s*))?$"
+    ): {
+        "default": lambda days, hours, mins, secs: total_secs(
+            days=days, hours=hours, mins=mins, secs=secs
+        ),
+    },
+    # 1d 11:12:13.14
+    # 1 11:12:13.14
     re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+):(\d+|\d+.\d+)$"): {
         "default": lambda d, h, m, s: total_secs(days=d, hours=h, mins=m, secs=s),
     },
+    # 11:12:13.14
     re.compile(r"^(\d+):(\d+):(\d+|\d+.\d+)$"): {
         "default": lambda h, m, s: total_secs(hours=h, mins=m, secs=s),
     },
+    # 1d 12h
+    # 1 12h
     re.compile(r"^(\d+)(?:d\s*|\s+)(\d+)h$"): {
         "default": lambda d, h: total_secs(days=d, hours=h),
     },
+    # 1234h
     re.compile(r"^(\d+)h$"): {
         "default": lambda h: total_secs(hours=h),
     },
+    # 123d
     re.compile(r"^(\d+)d$"): {
         "default": lambda d: total_secs(days=d),
     },
+    # 1d 11:12
+    # 1 11:12
     re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+)$"): {
         H_M: lambda d, h, m: total_secs(days=d, hours=h, mins=m),
         D_H: lambda d, h, m: total_secs(days=d, hours=h, mins=m),
         D_H_M: lambda d, h, m: total_secs(days=d, hours=h, mins=m),
+        D_H_M_NO_COLONS: lambda d, h, m: total_secs(days=d, hours=h, mins=m),
         "default": lambda d, m, s: total_secs(days=d, mins=m, secs=s),
     },
+    # 1d 11:12.23
+    # 1 11:12.23
     re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+.\d+)$"): {
         "default": lambda d, m, s: total_secs(days=d, mins=m, secs=s),
     },
+    # 11:12
     re.compile(r"^(\d+):(\d+)$"): {
         H_M: lambda h, m: total_secs(hours=h, mins=m),
         D_H: lambda h, m: total_secs(hours=h, mins=m),
         D_H_M: lambda h, m: total_secs(hours=h, mins=m),
         "default": lambda m, s: total_secs(mins=m, secs=s),
     },
+    # 11:12.134
     re.compile(r"^(\d+):(\d+.\d+)$"): {
         "default": lambda m, s: total_secs(mins=m, secs=s),
     },
+    # 1d 123
+    # 1 123
     re.compile(r"^(\d+)(?:d\s*|\s+)(\d+)$"): {
         H_M: lambda d, m: total_secs(days=d, mins=m),
         D_H: lambda d, h: total_secs(days=d, hours=h),
         D_H_M: lambda d, m: total_secs(days=d, mins=m),
+        D_H_M_NO_COLONS: lambda d, m: total_secs(days=d, mins=m),
         "default": lambda d, s: total_secs(days=d, secs=s),
     },
+    # 1d 12.134
+    # 1 12.134
     re.compile(r"^(\d+)(?:d\s*|\s+)(\d+.\d+)$"): {
         "default": lambda d, s: total_secs(days=d, secs=s),
     },
+    # 123
     re.compile(r"^(\d+)$"): {
         H_M: lambda m: total_secs(mins=float(m)),
         D_H: lambda h: total_secs(hours=float(h)),
         D_H_M: lambda m: total_secs(mins=float(m)),
+        D_H_M_NO_COLONS: lambda m: total_secs(mins=m),
         "default": lambda s: total_secs(secs=s),
     },
+    # 11.123
     re.compile(r"^(\d+.\d+)$"): {
         "default": lambda s: total_secs(secs=s),
     },
@@ -150,6 +210,18 @@ DURATION_FORMATS = {
         "sql_round_func": "EXTRACT(EPOCH FROM p_in::INTERVAL)::int",
         "format_func": lambda d, h, m, s: "%dd %d:%02d:%02d" % (d, h, m, s),
     },
+    D_H_M_NO_COLONS: {
+        "name": "days:hours:minutes:with_spaces",
+        "round_func": lambda value: rround(value / 60) * 60,
+        "sql_round_func": "(EXTRACT(EPOCH FROM p_in::INTERVAL) / 60)::int * 60",
+        "format_func": lambda d, h, m, s: "%dd %dh %02dm" % (d, h, m),
+    },
+    D_H_M_S_NO_COLONS: {
+        "name": "days:hours:minutes:seconds:with_spaces",
+        "round_func": lambda value: rround(value, 0),
+        "sql_round_func": "EXTRACT(EPOCH FROM p_in::INTERVAL)::int",
+        "format_func": lambda d, h, m, s: "%dd %dh %02dm %02ds" % (d, h, m, s),
+    },
 }
 
 HOURS_WITH_DAYS_SQL_TO_TEXT = (
@@ -195,6 +267,8 @@ DURATION_FORMAT_TOKENS = {
             D_H: f"CASE WHEN p_in IS null THEN null ELSE CONCAT({HOURS_WITH_DAYS_SQL_TO_TEXT}, 'h') END",
             D_H_M: HOURS_WITH_DAYS_SQL_TO_TEXT,
             D_H_M_S: HOURS_WITH_DAYS_SQL_TO_TEXT,
+            D_H_M_NO_COLONS: HOURS_WITH_DAYS_SQL_TO_TEXT,
+            D_H_M_S_NO_COLONS: HOURS_WITH_DAYS_SQL_TO_TEXT,
             "default": "TRUNC(EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::INTEGER / 3600)",
         },
         "search_expr": {
@@ -203,6 +277,8 @@ DURATION_FORMAT_TOKENS = {
             ),
             D_H_M: hours_with_days_search_expr,
             D_H_M_S: hours_with_days_search_expr,
+            D_H_M_NO_COLONS: hours_with_days_search_expr,
+            D_H_M_S_NO_COLONS: hours_with_days_search_expr,
             "default": lambda field_name: Cast(
                 Func(
                     Extract(field_name, "epoch", output_field=IntegerField())
@@ -313,7 +389,17 @@ def parse_duration_value(formatted_value: str, format: str) -> float:
         match = regex.match(formatted_value)
         if match:
             format_func = format_funcs.get(format, format_funcs["default"])
-            return format_func(*match.groups())
+            # handle named groups in regexps
+            captured = match.groupdict()
+            if any(v for v in captured.values()):
+                out = format_func(**captured)
+                return out
+            # if no named groups, use standard args
+            try:
+                return format_func(*match.groups())
+            # invalid number of args
+            except TypeError:
+                pass
 
     # None of the regexps matches the formatted value
     raise ValueError(f"{formatted_value} is not a valid duration string.")
@@ -497,5 +583,4 @@ def duration_value_sql_to_text(field) -> str:
             format_func += " || ' ' || "
         else:
             format_func += " || ':' || "
-    (format_func)
     return format_func
