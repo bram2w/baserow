@@ -19,6 +19,7 @@
 
   position: relative;
   margin: 4px 0;
+
   @include rounded($rounded);
 
   &.active {
@@ -33,20 +34,22 @@
   }
 }
 
-%tree__size {
+%tree-size {
   line-height: 32px;
 }
 
 .tree__action {
-  @extend %tree__size;
+  @extend %tree-size;
 
   padding: 0 6px;
+
   @include rounded($rounded);
 
   .layout--collapsed & {
     height: 32px;
     justify-content: center;
-    @include flex-align-items();
+
+    @include flex-align-items;
   }
 
   &.tree__action--disabled {
@@ -54,7 +57,7 @@
     cursor: not-allowed;
   }
 
-  &:has(.tree__progress_percentage) {
+  &:has(.tree__progress-percentage) {
     padding-right: 72px;
   }
 
@@ -78,7 +81,7 @@
 }
 
 .tree__link {
-  @extend %tree__size;
+  @extend %tree-size;
 
   color: $color-neutral-900;
   font-size: 14px;
@@ -108,7 +111,7 @@
   min-width: 0;
 }
 
-.tree__progress_percentage {
+.tree__progress-percentage {
   display: inline-block;
   position: absolute;
   right: 35px;
@@ -116,7 +119,7 @@
 }
 
 .tree__icon {
-  @extend %tree__size;
+  @extend %tree-size;
 
   text-align: center;
   color: $color-neutral-900;
@@ -126,7 +129,7 @@
   }
 }
 
-%tree_sub-size {
+%tree-sub-size {
   line-height: 28px;
   height: 28px;
 }
@@ -134,12 +137,12 @@
 .tree__subs {
   position: relative;
   list-style: none;
-  padding: 0 0 2px 0;
+  padding: 0 0 2px;
   margin: 0;
 }
 
 .tree__sub {
-  @extend %tree_sub-size;
+  @extend %tree-sub-size;
 
   position: relative;
   padding: 0 34px;
@@ -177,7 +180,7 @@
 }
 
 .tree__sub-link {
-  @extend %tree_sub-size;
+  @extend %tree-sub-size;
   @extend %ellipsis;
 
   color: $color-neutral-900;
@@ -224,7 +227,8 @@
   }
 }
 
-.tree__right-icon {
+.tree__right-icon,
+%tree-right-icon {
   position: absolute;
   z-index: 1;
   right: 0;
@@ -248,7 +252,7 @@
 }
 
 .tree__options {
-  @extend .tree__right-icon;
+  @extend %tree-right-icon;
 
   color: $color-neutral-500;
   cursor: pointer;

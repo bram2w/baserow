@@ -14,13 +14,13 @@
   @include rounded($rounded-3xl);
   @include elevation($elevation-low);
 
-  &:hover:not(.button-floating--loading):not([disabled]) {
+  &:hover:not(.button-floating--loading, [disabled]) {
     background: $palette-neutral-25;
     color: $palette-blue-600;
     text-decoration: none;
   }
 
-  &:active:not(.button-floating--loading):not([disabled]) {
+  &:active:not(.button-floating--loading, [disabled]) {
     background: $palette-neutral-50;
     color: $palette-blue-700;
     box-shadow: none;
@@ -62,5 +62,6 @@
 
 .button-floating--secondary {
   border: 1px solid $palette-neutral-200;
+
   @include elevation($elevation-medium);
 }

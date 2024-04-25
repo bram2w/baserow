@@ -68,7 +68,7 @@
   padding: 0 30px 0 12px;
 
   @include rounded($rounded);
-  @include flex-align-items();
+  @include flex-align-items;
 
   &:hover {
     text-decoration: none;
@@ -121,14 +121,14 @@
 }
 
 .form-view__sidebar-prefill-or-hide-link {
-  padding: 0 30px 30px 30px;
+  padding: 0 30px 30px;
 }
 
 .form-view__preview {
   @include absolute(0, 0, 0, 300px);
 
   overflow: auto;
-  padding: 30px 30px 0 30px;
+  padding: 30px 30px 0;
 }
 
 // This container is needed to mimic the way the tool works. This is needed so that the
@@ -166,6 +166,7 @@
   font-weight: 600;
   color: $color-neutral-600;
   overflow: hidden;
+
   @include rounded($rounded-xl);
 
   &:hover {
@@ -232,7 +233,7 @@
   }
 }
 
-.form_view__file-delete {
+.form-view__file-delete {
   @include absolute(0, 0, 0, 0);
 
   display: none;
@@ -301,17 +302,17 @@
 }
 
 .form-view__heading {
-  padding: 20px 20px 10px 20px;
+  padding: 20px 20px 10px;
 
   // If we're in the form heading, the span.contenteditable
   // is false, and there's no text value, show the placeholder.
-  @include contenteditable-placeholder();
+  @include contenteditable-placeholder;
 }
 
 .form-view__title {
   font-size: 22px;
   font-weight: 600;
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
 
   @include flex-align-items(5px);
 }
@@ -331,6 +332,7 @@
   font-size: 16px;
   color: $color-neutral-600;
   line-height: 160%;
+
   @include rounded($rounded-md);
 }
 
@@ -344,6 +346,7 @@
 
 .form-view__field {
   position: relative;
+
   @include rounded($rounded-xl);
 
   &.form-view__field--editable {
@@ -355,7 +358,7 @@
 
       // If we've selected a form field, the span.contenteditable
       // is false, and there's no text value, show the placeholder.
-      @include contenteditable-placeholder();
+      @include contenteditable-placeholder;
     }
 
     &:not(.form-view__field--selected) {

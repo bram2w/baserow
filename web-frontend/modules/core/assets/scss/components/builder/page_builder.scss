@@ -46,10 +46,10 @@
 
 .page-builder__preview-menu {
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
+  flex-flow: column nowrap;
   width: 26px;
   border: solid 1px $color-neutral-400;
+
   @include rounded($rounded);
 }
 
@@ -63,6 +63,7 @@
   line-height: 20px;
   padding: 0 4px;
   white-space: nowrap;
+
   @include rounded($rounded);
 }
 

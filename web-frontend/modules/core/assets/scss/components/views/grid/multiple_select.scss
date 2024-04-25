@@ -1,6 +1,6 @@
 .grid-field-multiple-select__item {
   white-space: nowrap;
-  margin: 6px 4px 4px 4px;
+  margin: 6px 4px 4px;
   overflow: unset;
 
   @include select-option-style(flex, true);

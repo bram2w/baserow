@@ -193,7 +193,7 @@
 }
 
 .header__info {
-  @extend .clearfix;
+  @extend %clearfix;
 
   list-style: none;
   padding: 0;

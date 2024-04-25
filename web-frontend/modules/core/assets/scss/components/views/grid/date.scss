@@ -7,13 +7,13 @@
   padding-right: 10px;
 }
 
-%grid-field-date__date {
+%grid-field-date-date {
   width: 100%;
   max-width: 78px;
   padding: 0;
 }
 
-%grid-field-date__time {
+%grid-field-date-time {
   width: 100%;
   max-width: 65px;
   padding: 0;
@@ -22,17 +22,17 @@
 }
 
 .grid-field-date__date {
-  @extend .grid-field-text;
-  @extend %grid-field-date__date;
+  @extend %grid-field-text;
+  @extend %grid-field-date-date;
 }
 
 .grid-field-date__time {
-  @extend .grid-field-text;
-  @extend %grid-field-date__time;
+  @extend %grid-field-text;
+  @extend %grid-field-date-time;
 }
 
 .grid-field-date__tzinfo {
-  @extend .grid-field-text;
+  @extend %grid-field-text;
 
   flex-shrink: 5;
   padding: 0;
@@ -43,11 +43,11 @@
 }
 
 .grid-field-date__date-input {
-  @extend .grid-field-text__input;
-  @extend %grid-field-date__date;
+  @extend %grid-field-text-input;
+  @extend %grid-field-date-date;
 }
 
 .grid-field-date__time-input {
-  @extend .grid-field-text__input;
-  @extend %grid-field-date__time;
+  @extend %grid-field-text-input;
+  @extend %grid-field-date-time;
 }

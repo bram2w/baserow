@@ -1,6 +1,7 @@
 .dropdown {
   position: relative;
   background-color: $white;
+
   @include elevation($elevation-low);
   @include rounded($rounded);
 }
@@ -41,6 +42,7 @@
 
   .dropdown.dropdown--small & {
     padding: 8px 12px;
+
     @include fixed-height(36px, 13px);
   }
 }

@@ -10,7 +10,7 @@
         <div
           v-for="integration in integrations"
           :key="integration.id"
-          class="integration_settings__integration"
+          class="integration-settings__integration"
         >
           <Presentation
             :image="getIntegrationType(integration).image"
@@ -20,7 +20,7 @@
             avatar-color="transparent"
             style="flex: 1"
           />
-          <div class="integration_settings__integration-actions">
+          <div class="integration-settings__integration-actions">
             <ButtonIcon
               icon="iconoir-edit"
               @click="

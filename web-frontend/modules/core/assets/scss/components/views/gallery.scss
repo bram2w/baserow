@@ -37,13 +37,12 @@
 
   .gallery-view__cards--dragging & {
     // Must be kept in sync with the timeout of bufferedRowsDragAndDrop.js::rowMoved
-    transition-duration: 0.1s;
-    transition-timing-function: ease-out;
-    transition-property: transform;
-    transition-delay: 0s;
+    transition: transform 0.1s ease-out 0s;
   }
 
-  &:not(.card--loading):not(.gallery-view__card--disabled):not(
+  &:not(
+      .card--loading,
+      .gallery-view__card--disabled,
       .gallery-view__card--dragging
     ):hover {
     cursor: pointer;

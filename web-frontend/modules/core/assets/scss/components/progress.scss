@@ -4,6 +4,7 @@
   width: 100%;
   background-color: $palette-neutral-100;
   margin-right: 30px;
+
   @include rounded($rounded-md);
 }
 
@@ -11,6 +12,7 @@
   background-color: $palette-green-500;
   height: 100%;
   transition-timing-function: linear;
+
   @include rounded($rounded-md);
 
   &--overflow {

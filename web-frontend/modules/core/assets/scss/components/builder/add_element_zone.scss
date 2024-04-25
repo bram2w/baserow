@@ -12,6 +12,7 @@
   height: 70px;
   border: dashed 2px $color-neutral-400;
   cursor: pointer;
+
   @include rounded($rounded-md);
 
   &:hover {

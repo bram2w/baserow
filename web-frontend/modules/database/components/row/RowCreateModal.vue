@@ -2,7 +2,7 @@
   <Modal ref="modal">
     <form @submit.prevent="create">
       <div class="box__title">
-        <h2 class="row_modal__title">
+        <h2 class="row-modal__title">
           {{ heading }}
         </h2>
       </div>

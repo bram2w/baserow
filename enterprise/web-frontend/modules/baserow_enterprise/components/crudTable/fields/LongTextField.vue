@@ -1,6 +1,6 @@
 <template functional>
   <div
-    :class="[data.staticClass, data.class, 'long_text_field']"
+    :class="[data.staticClass, data.class, 'long-text-field']"
     :title="props.row[props.column.key]"
     v-on="listeners"
   >

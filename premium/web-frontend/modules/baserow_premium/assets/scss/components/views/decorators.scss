@@ -5,6 +5,6 @@
   flex-grow: 0;
   margin: 4px;
 
-  @include add-shadow-on-same-background();
+  @include add-shadow-on-same-background;
   @include rounded($rounded-md);
 }

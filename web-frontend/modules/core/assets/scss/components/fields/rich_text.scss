@@ -1,5 +1,5 @@
 .field-rich-text {
-  @extend .field-long-text;
+  @extend %field-long-text;
 
   overflow-y: auto;
 
@@ -80,9 +80,9 @@
   }
 
   blockquote {
-    @extend .rich-text-editor__content-blockquote;
+    @extend %rich-text-editor-content-blockquote;
 
-    margin: 5px 0 0 0;
+    margin: 5px 0 0;
     display: flex;
     align-items: center;
     height: 22px;

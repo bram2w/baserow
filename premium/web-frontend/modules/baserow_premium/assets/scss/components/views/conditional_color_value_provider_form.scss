@@ -51,7 +51,7 @@
   justify-content: center;
 
   @include rounded($rounded);
-  @include flex-align-items();
+  @include flex-align-items;
 }
 
 .conditional-color-value-provider-form__color-filter--empty {
@@ -106,7 +106,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 24px 4px 0 4px;
+  margin: 24px 4px 0;
 }
 
 .conditional-color-value-provider-form__colors-header-title {

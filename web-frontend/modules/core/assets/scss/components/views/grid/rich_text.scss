@@ -1,5 +1,5 @@
 .grid-field-rich-text__cell {
-  @extend .grid-field-long-text__cell;
+  @extend %grid-field-long-text-cell;
 }
 
 .grid-field-rich-text__cell-content {
@@ -7,11 +7,11 @@
 }
 
 .grid-field-rich-text {
-  @extend .grid-field-long-text;
+  @extend %grid-field-long-text;
 }
 
 .grid-field-rich-text__textarea {
-  @extend .grid-field-long-text__textarea;
+  @extend %grid-field-long-text-textarea;
 }
 
 .grid-field-rich-text__textarea--resizable {

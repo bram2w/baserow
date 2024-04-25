@@ -21,14 +21,14 @@
   vertical-align: middle;
 
   @include rounded($rounded-md);
-  @include button-size(); // regular size
-  @include button-style(); // primary style
+  @include button-size; // regular size
+  @include button-style; // primary style
 
   &:hover {
     text-decoration: none;
   }
 
-  &:active:not(.button--loading):not([disabled]) {
+  &:active:not(.button--loading, [disabled]) {
     box-shadow: none !important;
   }
 
@@ -62,6 +62,7 @@
 
 .button--secondary {
   border: 1px solid $palette-neutral-400;
+
   @include button-style(
     $white,
     $palette-neutral-25,
@@ -73,6 +74,7 @@
 
 .button--ghost {
   border: 1px solid rgba($white, 0.24);
+
   @include button-style(transparent, rgba($white, 0.1), rgba($white, 0.15));
 }
 
@@ -96,6 +98,7 @@
 
 .button--tiny {
   font-size: 11px;
+
   @include button-size(
     $button-tiny-height,
     $button-tiny-top-bottom-padding,
@@ -105,6 +108,7 @@
 
 .button--small {
   font-size: 11px;
+
   @include button-size(
     $button-small-height,
     $button-small-top-bottom-padding,
@@ -136,6 +140,7 @@
 .button--upload {
   border: 1px dashed $palette-neutral-400;
   box-shadow: none;
+
   @include button-style(
     $palette-neutral-25,
     $white,

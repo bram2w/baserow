@@ -2,7 +2,7 @@
   <li class="tree__sub">
     <a class="tree__sub-link tree__sub-link--disabled">
       {{ jobSidebarText }}
-      <div class="tree__progress_percentage">
+      <div class="tree__progress-percentage">
         {{ job.progress_percentage }} %
       </div>
     </a>

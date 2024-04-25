@@ -34,7 +34,7 @@
 
 .dashboard__sidebar-group {
   list-style: none;
-  margin: 0 0 30px 0;
+  margin: 0 0 30px;
   padding: 0;
 
   li:not(:last-child) {
@@ -173,13 +173,14 @@
       content: '';
       background-color: $color-neutral-100;
       z-index: -1;
+
       @include rounded($rounded);
     }
   }
 }
 
 .dashboard__group-item-icon {
-  @include flex-align-items();
+  @include flex-align-items;
   @include rounded($rounded);
 
   background-color: $color-primary-500;

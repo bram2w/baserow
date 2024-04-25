@@ -1,7 +1,7 @@
 <template>
   <div class="row-history-entry">
     <div class="row-history-entry__header">
-      <span class="row_history-entry__initials">{{ initials }}</span>
+      <span class="row-history-entry__initials">{{ initials }}</span>
       <span class="row-history-entry__name">{{ name }}</span>
       <span class="row-history-entry__timestamp" :title="timestampTooltip">{{
         formattedTimestamp

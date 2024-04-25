@@ -1,9 +1,6 @@
 .layout {
   position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
 }
 
 .layout__col-1 {
@@ -22,10 +19,7 @@
 .layout__col-2 {
   position: absolute;
   z-index: $z-index-layout-col-3;
-  left: 240px;
-  top: 0;
-  bottom: 0;
-  right: 0;
+  inset: 0 0 0 240px;
 
   .layout--collapsed & {
     left: 48px;
@@ -54,8 +48,5 @@
 .layout__col-2-2 {
   position: absolute;
   z-index: $z-index-layout-col-3-2;
-  left: 0;
-  top: 52px;
-  right: 0;
-  bottom: 0;
+  inset: 52px 0 0;
 }
