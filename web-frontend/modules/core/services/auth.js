@@ -60,6 +60,16 @@ export default (client) => {
         new_password: newPassword,
       })
     },
+    sendVerifyEmail(email) {
+      return client.post(`/user/send-verify-email/`, {
+        email,
+      })
+    },
+    verifyEmail(token) {
+      return client.post(`/user/verify-email/`, {
+        token,
+      })
+    },
     dashboard() {
       return client.get('/user/dashboard/')
     },

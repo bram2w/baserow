@@ -11,8 +11,10 @@ from .views import (
     ResetPasswordView,
     ScheduleAccountDeletionView,
     SendResetPasswordEmailView,
+    SendVerifyEmailView,
     UndoView,
     UserView,
+    VerifyEmailAddressView,
     VerifyJSONWebToken,
 )
 
@@ -40,6 +42,10 @@ urlpatterns = [
     re_path(
         r"^change-password/$", ChangePasswordView.as_view(), name="change_password"
     ),
+    re_path(
+        r"^send-verify-email/$", SendVerifyEmailView.as_view(), name="send_verify_email"
+    ),
+    re_path(r"^verify-email/$", VerifyEmailAddressView.as_view(), name="verify_email"),
     re_path(r"^dashboard/$", DashboardView.as_view(), name="dashboard"),
     re_path(r"^undo/$", UndoView.as_view(), name="undo"),
     re_path(r"^redo/$", RedoView.as_view(), name="redo"),

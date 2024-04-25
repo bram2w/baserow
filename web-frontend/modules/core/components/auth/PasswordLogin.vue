@@ -139,6 +139,13 @@ export default {
         }
       }
     }
+    const emailVerified = this.$route.query.emailVerified
+    if (emailVerified) {
+      this.$store.dispatch('toast/info', {
+        title: this.$i18n.t('verifyEmailAddress.emailVerifiedTitle'),
+        message: this.$i18n.t('verifyEmailAddress.emailVerifiedDescription'),
+      })
+    }
   },
   methods: {
     async login() {
@@ -184,6 +191,10 @@ export default {
                 this.$t('clientHandler.disabledPasswordProviderTitle'),
                 this.$t('clientHandler.disabledPasswordProviderMessage')
               )
+            } else if (
+              response.data?.error === 'ERROR_EMAIL_VERIFICATION_REQUIRED'
+            ) {
+              this.$emit('email-not-verified', this.values.email)
             } else {
               this.showError(
                 this.$t('error.incorrectCredentialTitle'),

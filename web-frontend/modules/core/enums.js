@@ -3,6 +3,14 @@ export const IMAGE_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
 export const FAVICON_IMAGE_FILE_TYPES = [...IMAGE_FILE_TYPES, 'image/x-icon']
 
 // Keep these in sync with the backend options in
+// baserow.core.models.Settings.EmailVerificationOptions
+export const EMAIL_VERIFICATION_OPTIONS = {
+  NO_VERIFICATION: 'no_verification',
+  RECOMMENDED: 'recommended',
+  ENFORCED: 'enforced',
+}
+
+// Keep these in sync with the backend options in
 // baserow.core.models.UserProfile.EmailNotificationFrequencyOptions
 export const EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS = {
   INSTANT: 'instant',

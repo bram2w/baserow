@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-31 17:08+0000\n"
+"POT-Creation-Date: 2024-04-22 17:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,35 +17,36 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: baserow_enterprise/audit_log/job_types.py:143
+
+#: baserow_enterprise/audit_log/job_types.py:37
 msgid "User Email"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:144
+#: baserow_enterprise/audit_log/job_types.py:41
 msgid "User ID"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:145
+#: baserow_enterprise/audit_log/job_types.py:45
 msgid "Group Name"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:146
+#: baserow_enterprise/audit_log/job_types.py:49
 msgid "Group ID"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:147
+#: baserow_enterprise/audit_log/job_types.py:53
 msgid "Action Type"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:148
+#: baserow_enterprise/audit_log/job_types.py:57
 msgid "Description"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:149
+#: baserow_enterprise/audit_log/job_types.py:61
 msgid "Timestamp"
 msgstr ""
 
-#: baserow_enterprise/audit_log/job_types.py:150
+#: baserow_enterprise/audit_log/job_types.py:65
 msgid "IP Address"
 msgstr ""
 
@@ -61,15 +62,19 @@ msgstr ""
 msgid "REDONE"
 msgstr ""
 
-#: baserow_enterprise/role/actions.py:30
-msgid "Assign role"
+#: baserow_enterprise/role/actions.py:28
+msgid "Assign multiple roles"
+msgstr ""
+
+#: baserow_enterprise/role/actions.py:29
+msgid "Multiple roles have been assigned"
 msgstr ""
 
 #: baserow_enterprise/role/actions.py:32
 #, python-format
 msgid ""
-"Role %(role_uid)s assigned to %(subject_type)s %(subject_id)s on "
-"%(scope_type)s %(scope_id)s"
+"Role %(role_uid)s assigned to subject type \"%(subject_type_name)s"
+"\" (%(subject_id)s) on scope type \"%(scope_type_name)s\" (%(scope_id)s)."
 msgstr ""
 
 #: baserow_enterprise/teams/actions.py:21
@@ -86,38 +91,38 @@ msgstr ""
 msgid "Team \"%(name)s\" (%(team_id)s) created."
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:101
+#: baserow_enterprise/teams/actions.py:105
 msgid "Update team"
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:102
+#: baserow_enterprise/teams/actions.py:106
 #, python-format
 msgid "Team \"%(name)s\" (%(team_id)s) updated."
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:193
+#: baserow_enterprise/teams/actions.py:203
 msgid "Delete team"
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:194
+#: baserow_enterprise/teams/actions.py:204
 #, python-format
 msgid "Team \"%(team_name)s\" (%(team_id)s) deleted."
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:240
+#: baserow_enterprise/teams/actions.py:253
 msgid "Create team subject"
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:240
+#: baserow_enterprise/teams/actions.py:253
 #, python-format
 msgid "Subject (%(subject_id)s) created"
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:320
+#: baserow_enterprise/teams/actions.py:338
 msgid "Delete team subject"
 msgstr ""
 
-#: baserow_enterprise/teams/actions.py:321
+#: baserow_enterprise/teams/actions.py:339
 #, python-format
 msgid "Subject (%(subject_id)s) deleted"
 msgstr ""

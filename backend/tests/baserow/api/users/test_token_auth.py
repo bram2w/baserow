@@ -14,9 +14,11 @@ from rest_framework.status import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from baserow.core.models import BlacklistedToken, UserLogEntry
+from baserow.core.handler import CoreHandler
+from baserow.core.models import BlacklistedToken, Settings, UserLogEntry
 from baserow.core.registries import Plugin, plugin_registry
 from baserow.core.user.handler import UserHandler
+from baserow.core.user.utils import generate_session_tokens_for_user
 from baserow.core.utils import generate_hash
 
 User = get_user_model()
@@ -198,6 +200,44 @@ def test_token_auth(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_token_auth_email_verification_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_EMAIL_VERIFICATION_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_token_auth_email_verification_not_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.RECOMMENDED
+    settings.save()
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "access_token" in response_json
+
+
+@pytest.mark.django_db
 def test_token_password_auth_disabled(api_client, data_fixture):
     data_fixture.create_password_provider(enabled=False)
     user, token = data_fixture.create_user_and_token(
@@ -341,6 +381,108 @@ def test_refresh_token_is_invalidated_after_password_change(api_client, data_fix
 
 
 @pytest.mark.django_db
+def test_refresh_token_email_verification_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is not possible any more
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_EMAIL_VERIFICATION_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_refresh_token_email_verification_not_enforced(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.RECOMMENDED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_refresh_token_email_verification_not_required(api_client, data_fixture):
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    # the auth claim will not be set to password authentication
+    tokens = generate_session_tokens_for_user(
+        user, include_refresh_token=True, verified_email_claim=None
+    )
+    refresh_token = tokens["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_token_verify(api_client, data_fixture):
     class TmpPlugin(Plugin):
         type = "tmp_plugin"
@@ -382,6 +524,73 @@ def test_token_verify(api_client, data_fixture):
             json={"refresh_token": str(RefreshToken.for_user(user))},
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_token_verify_email_verification_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is not possible any more
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_EMAIL_VERIFICATION_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_token_verify_email_verification_not_required(api_client, data_fixture):
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    # the auth claim will not be set to password authentication
+    tokens = generate_session_tokens_for_user(
+        user, include_refresh_token=True, verified_email_claim=None
+    )
+    refresh_token = tokens["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db
