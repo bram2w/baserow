@@ -16,7 +16,7 @@ export default function ({ store, req, app, route, redirect }) {
   let refreshToken = route.query.token
   if (refreshToken) {
     setToken(app, refreshToken, userSourceCookieTokenName, {
-      sameSite: 'Strict',
+      sameSite: 'Lax',
     })
   } else {
     refreshToken = getTokenIfEnoughTimeLeft(app, userSourceCookieTokenName)
