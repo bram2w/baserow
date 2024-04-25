@@ -1,3 +1,4 @@
+/* stylelint-disable selector-class-pattern */
 // This file changes the existing datepicker styling such that it is conform the style
 // of Baserow.
 
@@ -29,13 +30,14 @@
   }
 
   header {
-    @include flex-align-items();
+    @include flex-align-items;
 
     line-height: 25px;
     justify-content: space-around;
   }
 
   .prev {
+    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
     @extend .iconoir-nav-arrow-left;
     @extend %icon;
 
@@ -45,6 +47,7 @@
   }
 
   .next {
+    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
     @extend .iconoir-nav-arrow-right;
     @extend %icon;
   }

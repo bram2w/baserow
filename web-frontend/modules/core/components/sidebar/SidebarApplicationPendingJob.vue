@@ -4,7 +4,7 @@
       <a class="tree__link">
         <i class="tree__icon tree__icon--type" :class="jobIconClass"></i>
         <span class="tree__link-text">{{ jobSidebarText }}</span>
-        <div class="tree__progress_percentage">
+        <div class="tree__progress-percentage">
           {{ job.progress_percentage }} %
         </div>
       </a>

@@ -9,7 +9,8 @@
   }
 
   .simple-grid__left {
-    .simple-grid__cell:not(.simple-grid__cell--first):not(
+    .simple-grid__cell:not(
+        .simple-grid__cell--first,
         .simple-grid__cell--single
       ) {
       width: 200px;
@@ -62,6 +63,7 @@
   z-index: 1;
   border-bottom: solid 2px $color-neutral-200;
   padding: 0 0 0 15px;
+
   @include flex-align-items(15px);
 }
 

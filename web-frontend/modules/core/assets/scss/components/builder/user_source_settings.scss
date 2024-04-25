@@ -5,12 +5,12 @@
 }
 
 .user-source-settings__loader {
-  @include loading();
+  @include loading;
 
   margin: auto;
 }
 
-.user-source_settings__user-source-actions {
+.user-source-settings__user-source-actions {
   display: flex;
   align-items: center;
   gap: 4px;

@@ -23,5 +23,5 @@
 }
 
 .list__right-side {
-  @include flex-align-items();
+  @include flex-align-items;
 }

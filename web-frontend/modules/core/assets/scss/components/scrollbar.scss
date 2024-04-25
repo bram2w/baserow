@@ -23,17 +23,16 @@
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
+
   @include rounded($rounded);
 }
 
 .scrollbars__vertical {
   @extend %scrollbar;
-
   @include absolute(auto, 0, auto, 0);
 }
 
 .scrollbars__horizontal {
   @extend %scrollbar;
-
   @include absolute(0, auto, 0, auto);
 }

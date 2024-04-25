@@ -4,18 +4,18 @@
 }
 
 .hidings__head {
-  padding: 4px 16px 0 16px;
+  padding: 4px 16px 0;
 }
 
 .hidings__cover {
-  margin: 16px 0 10px 0;
+  margin: 16px 0 10px;
 }
 
 .hidings__search {
   position: relative;
   border-bottom: 1px solid $color-neutral-200;
 
-  @include flex-align-items();
+  @include flex-align-items;
 }
 
 .hidings__search-icon {
@@ -43,7 +43,7 @@
 .hidings__list {
   position: relative;
   list-style: none;
-  margin: 8px 0 0 0;
+  margin: 8px 0 0;
   padding: 0;
 }
 
@@ -76,7 +76,7 @@
   display: flex;
   width: 100%;
   flex-direction: row;
-  padding: 8px 16px 16px 16px;
+  padding: 8px 16px 16px;
 }
 
 .hidings__footer-button:not(:last-child) {

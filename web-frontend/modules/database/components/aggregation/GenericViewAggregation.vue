@@ -1,12 +1,12 @@
 <template functional>
   <div class="grid-view-aggregation__generic">
-    <span class="grid-view-aggregation__generic__name">{{
+    <span class="grid-view-aggregation__generic-name">{{
       props.aggregationType.getShortName()
     }}</span>
     <span
-      class="grid-view-aggregation__generic__value"
+      class="grid-view-aggregation__generic-value"
       :class="{
-        'grid-view-aggregation__generic__value--loading': props.loading,
+        'grid-view-aggregation__generic-value--loading': props.loading,
       }"
       >{{ props.value }}</span
     >

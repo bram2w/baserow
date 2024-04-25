@@ -53,8 +53,7 @@
           "
           class="filters__value--formula-toggle"
           :class="{
-            'filters__value--formula-toggle--disabled':
-              !filter.value_is_formula,
+            'filters__value-formula-toggle--disabled': !filter.value_is_formula,
           }"
           @click="handleFormulaToggleClick(filter, emitUpdate)"
         >

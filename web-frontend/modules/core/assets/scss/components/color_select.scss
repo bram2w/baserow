@@ -15,10 +15,11 @@
   position: relative;
   height: 28px;
   width: 28px;
+
   @include rounded($rounded);
 
   &:not(.active):hover {
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 0 2px rga(0, 0, 0, 8%);
   }
 }
 

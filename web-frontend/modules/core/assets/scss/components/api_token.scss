@@ -2,6 +2,7 @@
   border: solid 1px $color-neutral-200;
   overflow: hidden;
   margin: 20px 0;
+
   @include rounded($rounded-md);
 }
 
@@ -76,6 +77,7 @@
   padding: 0 6px;
   margin-left: 6px;
   color: $color-neutral-900;
+
   @include rounded($rounded);
 
   &:hover {

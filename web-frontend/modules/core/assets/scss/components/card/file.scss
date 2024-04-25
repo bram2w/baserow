@@ -10,13 +10,14 @@
   flex-wrap: nowrap;
   height: 22px + 15px;
   list-style: none;
-  padding: 0 16px 15px 16px;
+  padding: 0 16px 15px;
   margin: 0;
   overflow-x: scroll;
 }
 
-%card-file__border {
+%card-file-border {
   border: solid 1px $color-neutral-400;
+
   @include rounded($rounded);
 }
 
@@ -31,7 +32,7 @@
 }
 
 .card-file__image {
-  @extend %card-file__border;
+  @extend %card-file-border;
 
   display: block;
   width: auto;
@@ -39,7 +40,7 @@
 }
 
 .card-file__icon {
-  @extend %card-file__border;
+  @extend %card-file-border;
 
   display: flex;
   align-items: center;

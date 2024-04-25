@@ -5,6 +5,7 @@
   font-weight: 600;
   padding: 0 20px;
   color: $color-neutral-900;
+
   @include rounded($rounded-md);
   @include flex-align-items(20px);
 
@@ -33,7 +34,7 @@
 }
 
 .view-sharing__shared-link {
-  padding: 25px 25px;
+  padding: 25px;
 }
 
 .view-sharing__shared-link-title {
@@ -58,6 +59,7 @@
   font-family: monospace;
   font-size: 10px;
   min-width: 0;
+
   @include rounded($rounded);
 }
 
@@ -69,6 +71,7 @@
   color: $color-neutral-900;
   font-size: 14px;
   text-align: center;
+
   @include rounded($rounded);
 
   &:not(.view-sharing__shared-link-action--loading):hover {
@@ -135,6 +138,7 @@ p.box__description {
 
 .view-sharing__option-change-password {
   margin-left: 12px;
+
   @include flex-align-items(4px);
 
   &:hover {

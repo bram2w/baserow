@@ -22,7 +22,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  margin: 0 30px 0 30px;
+  margin: 0 30px;
   height: 100%;
   border-top-left-radius: 6px;
 }
@@ -169,7 +169,7 @@
 
   .rich-text-editor__content {
     border: 1px solid #9fa4ab;
-    padding: 8px 12px 8px 12px;
+    padding: 8px 12px;
 
     @include rounded($rounded);
   }
@@ -212,7 +212,7 @@
   }
 }
 
-.row_comments__comment-text-actions {
+.row-comments__comment-text-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;

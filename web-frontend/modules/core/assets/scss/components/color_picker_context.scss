@@ -9,9 +9,7 @@
 }
 
 .color-picker-context__color-type {
-  flex-basis: 70px;
-  flex-grow: 0;
-  flex-shrink: 0;
+  flex: 0 0 70px;
 }
 
 .color-picker-context__color-hex {
@@ -33,9 +31,7 @@
 }
 
 .color-picker-context__color-opacity {
-  flex-basis: 70px;
-  flex-grow: 0;
-  flex-shrink: 0;
+  flex: 0 0 70px;
   margin-left: auto;
 }
 

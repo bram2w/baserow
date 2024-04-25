@@ -24,13 +24,13 @@
         <div v-if="navigationLoading" class="loading"></div>
         <template v-else>
           <a
-            class="row-edit-modal__navigation__item"
+            class="row-edit-modal__navigation-item"
             @click="$emit('navigate-previous', previousRow)"
           >
             <i class="iconoir-nav-arrow-up"></i>
           </a>
           <a
-            class="row-edit-modal__navigation__item"
+            class="row-edit-modal__navigation-item"
             @click="$emit('navigate-next', nextRow)"
           >
             <i class="iconoir-nav-arrow-down"></i>
@@ -38,7 +38,7 @@
         </template>
       </div>
       <div class="box__title">
-        <h2 class="row_modal__title">
+        <h2 class="row-modal__title">
           {{ heading }}
         </h2>
       </div>

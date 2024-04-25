@@ -146,13 +146,13 @@ exports[`Field footer component Change type 3`] = `
     class="grid-view-aggregation__generic"
   >
     <span
-      class="grid-view-aggregation__generic__name"
+      class="grid-view-aggregation__generic-name"
     >
       viewAggregationType.emptyCount
     </span>
      
     <span
-      class="grid-view-aggregation__generic__value"
+      class="grid-view-aggregation__generic-value"
     >
       10
     </span>
@@ -178,13 +178,13 @@ exports[`Field footer component Default component 2`] = `
     class="grid-view-aggregation__generic"
   >
     <span
-      class="grid-view-aggregation__generic__name"
+      class="grid-view-aggregation__generic-name"
     >
       viewAggregationType.notEmptyCount
     </span>
      
     <span
-      class="grid-view-aggregation__generic__value"
+      class="grid-view-aggregation__generic-value"
     >
       
     </span>
@@ -201,13 +201,13 @@ exports[`Field footer component Default component 3`] = `
     class="grid-view-aggregation__generic"
   >
     <span
-      class="grid-view-aggregation__generic__name"
+      class="grid-view-aggregation__generic-name"
     >
       viewAggregationType.notEmptyCount
     </span>
      
     <span
-      class="grid-view-aggregation__generic__value"
+      class="grid-view-aggregation__generic-value"
     >
       75%
     </span>

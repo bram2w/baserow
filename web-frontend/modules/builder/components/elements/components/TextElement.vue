@@ -102,7 +102,7 @@ export default {
           return renderer.renderToken(tokens, idx, options)
         },
         image: (tokens, idx, options, env, renderer) => {
-          tokens[idx].attrJoin('class', 'image_element__img')
+          tokens[idx].attrJoin('class', 'image-element__img')
           return renderer.renderToken(tokens, idx, options)
         },
         paragraph_open: (tokens, idx, options, env, renderer) => {

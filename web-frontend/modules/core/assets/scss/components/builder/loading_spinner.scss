@@ -10,7 +10,7 @@
   }
 
   &::after {
-    @include loading();
+    @include loading;
     @include absolute(50%, 50%, auto, auto);
 
     content: '';

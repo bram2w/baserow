@@ -18,7 +18,7 @@
     color: $palette-neutral-500;
   }
 
-  &:hover:not(.button-text--loading):not([disabled]) {
+  &:hover:not(.button-text--loading, [disabled]) {
     color: $palette-neutral-1300;
   }
 
@@ -70,11 +70,11 @@
     color: $palette-neutral-500;
   }
 
-  .button-text:hover:not(.button-text--loading):not([disabled]) & {
+  .button-text:hover:not(.button-text--loading, [disabled]) & {
     color: $palette-neutral-1300;
   }
 
-  .button-text:active:not(.button-text--loading):not([disabled]) & {
+  .button-text:active:not(.button-text--loading, [disabled]) & {
     color: $palette-neutral-700;
   }
 }

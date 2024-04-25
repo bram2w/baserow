@@ -20,6 +20,7 @@
   width: 100%;
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .ProseMirror div.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;

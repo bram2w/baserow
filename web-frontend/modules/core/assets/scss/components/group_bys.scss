@@ -39,6 +39,7 @@
 .group-bys__item {
   position: relative;
   padding: 0 12px;
+
   @include rounded($rounded);
   @include flex-align-items(10px);
 
@@ -65,7 +66,7 @@
   justify-content: center;
   width: 22px;
 
-  @include flex-align-items();
+  @include flex-align-items;
 
   &:hover {
     text-decoration: none;
@@ -109,6 +110,7 @@
   font-weight: 600;
   width: 80px;
   font-size: 14px;
+
   @include rounded($rounded);
   @include flex-align-items(5px);
 

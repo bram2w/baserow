@@ -13,7 +13,7 @@
     <Avatar
       v-for="(sample, index) in props.row[props.column.key]"
       :key="index"
-      class="subject_sample_field-list__avatar"
+      class="subject-sample-field-list__avatar"
       rounded
       size="large"
       :initials="sample.subject_label | nameAbbreviation"

@@ -2,8 +2,7 @@
   box-sizing: border-box;
   display: flex;
   flex: 0 1 auto;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   margin: 0 calc(var(--gap, #{$grid-width}) * -1);
 }
 

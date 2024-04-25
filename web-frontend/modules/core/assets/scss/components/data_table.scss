@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 30px 0 20px 0;
+  margin: 30px 0 20px;
   padding: 0 40px;
   color: $color-neutral-900;
 }
@@ -109,7 +109,7 @@
   }
 }
 
-%data-table__table-cell-content {
+%data-table-table-cell-content {
   position: relative;
   display: flex;
   align-items: center;
@@ -127,7 +127,7 @@
 }
 
 .data-table__table-cell-content {
-  @extend %data-table__table-cell-content;
+  @extend %data-table-table-cell-content;
 
   height: 60px;
   font-size: 14px;
@@ -156,7 +156,7 @@
 }
 
 .data-table__table-cell-head {
-  @extend %data-table__table-cell-content;
+  @extend %data-table-table-cell-content;
 
   height: 48px;
   color: $color-neutral-600;
@@ -177,6 +177,7 @@
 
 .data-table__table-cell-head-sort-icon {
   font-size: 14px;
+
   @include flex-align-items(4px);
 }
 

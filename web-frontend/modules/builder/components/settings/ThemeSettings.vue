@@ -1,5 +1,5 @@
 <template>
-  <div class="theme_settings">
+  <div class="theme-settings">
     <component
       :is="themeConfigBlock.component"
       v-for="themeConfigBlock in themeConfigBlocks"

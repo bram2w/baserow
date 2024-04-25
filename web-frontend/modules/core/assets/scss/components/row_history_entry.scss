@@ -1,11 +1,11 @@
 .row-history-entry {
   display: flex;
   flex-direction: column;
-  margin: 24px 20px 0 20px;
+  margin: 24px 20px 0;
 }
 
 .row-history-entry--first {
-  margin: 24px 20px 24px 20px;
+  margin: 24px 20px;
 }
 
 .row-history-entry__header {
@@ -16,7 +16,7 @@
 }
 
 .row-history-entry__content {
-  padding: 10px 14px 0 14px;
+  padding: 10px 14px 0;
   border: 1px solid #d9dbde;
   border-radius: 3px;
   background-color: #f0f0f0;
@@ -30,7 +30,7 @@
   font-weight: 400;
 }
 
-.row_history-entry__initials {
+.row-history-entry__initials {
   flex: 0 0 24px;
   font-weight: bold;
   color: $white;
@@ -47,6 +47,7 @@
   font-size: 12px;
   font-weight: 400;
   color: $color-neutral-400;
+
   // Prevent long characters like 'g' in the time display being cut off
   // partway down.
   height: 14px;
@@ -70,7 +71,7 @@
 
 .row-history-entry__diff {
   display: inline-block;
-  padding: 2px 4px 2px 4px;
+  padding: 2px 4px;
   border-radius: 3px;
   font-size: 12px;
   font-style: normal;

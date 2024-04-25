@@ -8,7 +8,7 @@
   border: 1px solid $color-neutral-200;
 
   @include rounded($rounded);
-  @include flex-align-items();
+  @include flex-align-items;
 
   &.field-boolean__checkbox--disabled {
     cursor: initial;

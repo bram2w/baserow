@@ -1,4 +1,4 @@
-.integration_settings__integration {
+.integration-settings__integration {
   display: flex;
   padding: 10px 0;
   overflow: hidden;
@@ -6,12 +6,12 @@
 }
 
 .integration-settings__loader {
-  @include loading();
+  @include loading;
 
   margin: auto;
 }
 
-.integration_settings__integration-actions {
+.integration-settings__integration-actions {
   display: flex;
   align-items: center;
   gap: 4px;

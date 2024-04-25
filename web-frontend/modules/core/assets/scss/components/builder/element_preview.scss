@@ -117,6 +117,7 @@
   line-height: 20px;
   padding: 0 4px;
   white-space: nowrap;
+
   @include rounded($rounded);
 
   .element-preview--first-element & {

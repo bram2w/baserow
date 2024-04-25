@@ -1,6 +1,7 @@
 .decorator-item {
   display: flex;
   width: 100%;
+
   @include rounded($rounded);
 }
 

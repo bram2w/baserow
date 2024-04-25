@@ -1,4 +1,4 @@
-.theme_settings {
+.theme-settings {
   position: relative;
   height: 100%;
   padding: 32px 0;
@@ -11,23 +11,22 @@
   }
 }
 
-.theme_settings__section {
+.theme-settings__section {
   display: flex;
   width: 100%;
 }
 
-.theme_settings__section-properties {
+.theme-settings__section-properties {
   flex: 50% 0 0;
   padding: 0 20px;
 }
 
-.theme_settings__section-title {
+.theme-settings__section-title {
   color: $color-neutral-900;
   font-size: 14px;
   font-weight: bold;
   display: flex;
-  justify-content: space-between;
-  align-content: center;
+  place-content: center space-between;
   margin-bottom: 20px;
 
   &:hover {
@@ -35,16 +34,16 @@
   }
 }
 
-.theme_settings__section-title-icon {
+.theme-settings__section-title-icon {
   font-size: 12px;
 }
 
-.theme_settings__section-preview {
+.theme-settings__section-preview {
   flex: 50% 0 0;
   width: 50%;
   padding: 0 32px;
 }
 
-.theme_settings__section-ellipsis {
+.theme-settings__section-ellipsis {
   @extend %ellipsis;
 }

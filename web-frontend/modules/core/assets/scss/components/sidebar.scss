@@ -91,6 +91,7 @@
   font-size: 13px;
   color: $color-neutral-400;
   padding-left: 6px;
+
   @include flex-align-items(4px);
 
   &:hover {
@@ -108,14 +109,14 @@
 
   display: flex;
   width: 100%;
-  padding: 0 16px 16px 16px;
+  padding: 0 16px 16px;
   align-items: center;
   justify-content: space-between;
 
   .layout--collapsed & {
     flex-direction: column;
     height: 56px;
-    padding: 0 8px 8px 8px;
+    padding: 0 8px 8px;
   }
 
   // Is needed temporarily while the undo redo functionality is behind the

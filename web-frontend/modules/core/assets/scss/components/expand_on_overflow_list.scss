@@ -26,6 +26,7 @@
   margin-bottom: 10px;
   background-color: $color-neutral-100;
   box-sizing: border-box;
+
   @include rounded($rounded-2xl);
 }
 
@@ -54,6 +55,7 @@
   margin-top: 10px;
   margin-bottom: 9px;
   user-select: none;
+
   @include rounded($rounded-2xl);
 
   &:hover {

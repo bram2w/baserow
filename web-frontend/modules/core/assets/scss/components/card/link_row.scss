@@ -1,6 +1,7 @@
 .card-link-row {
   padding: 0 5px;
   background-color: $color-primary-100;
+
   @include rounded($rounded);
 }
 

@@ -2,6 +2,7 @@
   border: solid 1px $color-neutral-200;
   margin-top: 20px;
   overflow: hidden;
+
   @include rounded($rounded-md);
 }
 
@@ -138,14 +139,14 @@
 
 .webhook__header-delete {
   width: 32px;
-  padding: 0 0;
+  padding: 0;
 
   @include absolute(0, 0, 0, auto);
 }
 
 .webhook__header-add {
   width: 32px;
-  padding: 0 0;
+  padding: 0;
 
   @include absolute(0, 0, 0, auto);
 }
@@ -265,7 +266,7 @@
 .webhook__call-body {
   display: none;
   width: 100%;
-  padding: 16px 0 0 0;
+  padding: 16px 0 0;
 
   .webhook__call--open & {
     display: flex;

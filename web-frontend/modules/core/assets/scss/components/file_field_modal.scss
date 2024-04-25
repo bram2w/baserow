@@ -139,6 +139,7 @@
 .file-field-modal__nav-image {
   display: block;
   height: 48px;
+
   @include rounded($rounded);
 
   .file-field-modal__nav-link.active & {
@@ -170,8 +171,9 @@
   font-size: 20px;
   width: 32px;
   height: 32px;
+
   @include rounded($rounded);
-  @include flex-align-items();
+  @include flex-align-items;
 
   &:not(:last-child) {
     margin-right: 8px;

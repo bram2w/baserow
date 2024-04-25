@@ -15,7 +15,7 @@
     cursor: pointer;
   }
 
-  &:not(.calendar-card--disabled):not(.calendar-card--dragging):hover {
+  &:not(.calendar-card--disabled, .calendar-card--dragging):hover {
     cursor: pointer;
     background-color: $color-neutral-100;
   }
@@ -23,7 +23,7 @@
 
 .calendar-card__content {
   display: flex;
-  margin: 0 8px 0 8px;
+  margin: 0 8px;
   gap: 6px;
   height: 24px;
 

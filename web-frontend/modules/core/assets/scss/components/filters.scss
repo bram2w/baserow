@@ -45,6 +45,7 @@
   grid-template-columns: 68px 1fr;
   margin-left: 5px;
   column-gap: 10px;
+
   @include rounded($rounded);
 
   &.filters__item--level-1 {
@@ -94,7 +95,7 @@
   justify-content: center;
 
   @include elevation($elevation-low);
-  @include flex-align-items();
+  @include flex-align-items;
 
   &:hover {
     text-decoration: none;
@@ -142,7 +143,7 @@
   line-height: 36px;
 }
 
-.filters__combined_value-input {
+.filters__combined-value-input {
   &.filters__value-input--small {
     width: 50px;
   }
@@ -163,6 +164,7 @@
 .filters__value-rating {
   border: solid 1px $palette-neutral-400;
   padding: 6px 12px;
+
   @include rounded($rounded);
   @include elevation($elevation-low);
 }
@@ -179,6 +181,7 @@
   padding: 0 10px;
   background-color: $white;
   width: 100%;
+
   @include rounded($rounded);
   @include elevation($elevation-low);
 
