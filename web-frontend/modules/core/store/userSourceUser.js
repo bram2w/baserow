@@ -83,7 +83,7 @@ export const actions = {
     if (setCookie) {
       // Set the token for next page load
       setToken(this.app, getters.refreshToken, userSourceCookieTokenName, {
-        sameSite: 'Strict',
+        sameSite: 'Lax',
       })
     }
   },
