@@ -11,7 +11,7 @@ export class LoginPage extends BaserowPage {
     super(page)
     this.emailInput = page.locator('input[type="email"]').first()
     this.passwordInput = page.locator('input[type="password"]').first()
-    this.loginButton = page.locator('button:text("Sign in")').first()
+    this.loginButton = page.locator('button span:text("Sign in")').first()
   }
 
   async loginWithPassword(email: string, password: string) {
