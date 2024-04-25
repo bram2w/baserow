@@ -670,6 +670,27 @@ def test_password_reset(data_fixture, client):
     assert response.status_code == HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.django_db(transaction=True)
+def test_password_reset_email_verified_email(data_fixture, client, mailoutbox):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user()
+    handler = UserHandler()
+    signer = handler.get_reset_password_signer()
+
+    with freeze_time("2020-01-01 12:00"):
+        token = signer.dumps(user.id)
+
+        response = client.post(
+            reverse("api:user:reset_password"),
+            {"token": token, "password": "newpassword"},
+            format="json",
+        )
+        assert response.status_code == 204
+
+        user.refresh_from_db()
+        assert user.profile.email_verified is True
+
+
 @pytest.mark.django_db
 def test_change_password(data_fixture, client):
     data_fixture.create_password_provider()
@@ -993,3 +1014,114 @@ def test_create_user_password_auth_disabled(api_client, data_fixture):
         "error": "ERROR_AUTH_PROVIDER_DISABLED",
         "detail": "Authentication provider is disabled.",
     }
+
+
+@pytest.mark.django_db
+def test_verify_email_address(client, data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+
+    response = client.post(
+        reverse("api:user:verify_email"),
+        {"token": token},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    user.profile.email_verified is True
+
+
+@pytest.mark.django_db
+def test_verify_email_address_already_verified(client, data_fixture):
+    user = data_fixture.create_user()
+    profile = user.profile
+    profile.email_verified = True
+    profile.save()
+    token = UserHandler().create_email_verification_token(user)
+
+    response = client.post(
+        reverse("api:user:verify_email"),
+        {"token": token},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_verify_email_address_inactive_user(client, data_fixture):
+    user = data_fixture.create_user(is_active=False)
+    token = UserHandler().create_email_verification_token(user)
+
+    response = client.post(
+        reverse("api:user:verify_email"),
+        {"token": token},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db(transaction=True)
+def test_send_verify_email_address(client, data_fixture, mailoutbox):
+    user, token = data_fixture.create_user_and_token()
+
+    response = client.post(
+        reverse("api:user:send_verify_email"),
+        {
+            "email": user.email,
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert len(mailoutbox) == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_send_verify_email_address_user_not_found(client, data_fixture, mailoutbox):
+    response = client.post(
+        reverse("api:user:send_verify_email"),
+        {
+            "email": "doesntexist@example.com",
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert len(mailoutbox) == 0
+
+
+@pytest.mark.django_db
+def test_send_verify_email_address_already_verified(client, data_fixture, mailoutbox):
+    user, token = data_fixture.create_user_and_token()
+    profile = user.profile
+    profile.email_verified = True
+    profile.save()
+
+    response = client.post(
+        reverse("api:user:send_verify_email"),
+        {
+            "email": user.email,
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert len(mailoutbox) == 0
+
+
+@pytest.mark.django_db
+def test_send_verify_email_address_inactive_user(client, data_fixture, mailoutbox):
+    user, token = data_fixture.create_user_and_token(is_active=False)
+
+    response = client.post(
+        reverse("api:user:send_verify_email"),
+        {
+            "email": user.email,
+        },
+        format="json",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert len(mailoutbox) == 0

@@ -1,61 +1,66 @@
 <template>
   <div>
-    <div v-if="displayHeader">
-      <div class="auth__logo">
-        <nuxt-link :to="{ name: 'index' }">
-          <Logo />
-        </nuxt-link>
-      </div>
-      <div class="auth__head">
-        <h1 class="auth__head-title">
-          {{ $t('login.title') }}
-        </h1>
-        <LangPicker />
-      </div>
-    </div>
-    <div v-if="redirectByDefault && defaultRedirectUrl">
-      {{ $t('login.redirecting') }}
-    </div>
-    <div v-else>
-      <LoginButtons
-        show-border="bottom"
-        :hide-if-no-buttons="loginButtonsCompact"
-        :invitation="invitation"
-        :original="original"
-      />
-      <PasswordLogin
-        v-if="!passwordLoginHidden"
-        :invitation="invitation"
-        @success="success"
-      >
-      </PasswordLogin>
-      <LoginActions :invitation="invitation" :original="original">
-        <li v-if="passwordLoginHidden">
-          <a @click="passwordLoginHiddenIfDisabled = false">
-            {{ $t('login.displayPasswordLogin') }}
-          </a>
-        </li>
-        <li v-if="settings.allow_reset_password && !passwordLoginHidden">
-          <nuxt-link :to="{ name: 'forgot-password' }">
-            {{ $t('login.forgotPassword') }}
+    <EmailNotVerified v-if="displayEmailNotVerified" :email="emailToVerify">
+    </EmailNotVerified>
+    <template v-if="!displayEmailNotVerified">
+      <div v-if="displayHeader">
+        <div class="auth__logo">
+          <nuxt-link :to="{ name: 'index' }">
+            <Logo />
           </nuxt-link>
-        </li>
-        <li v-if="settings.allow_new_signups">
-          <slot name="signup">
-            {{ $t('login.signUpText') }}
-            <nuxt-link :to="{ name: 'signup' }">
-              {{ $t('login.signUp') }}
+        </div>
+        <div class="auth__head">
+          <h1 class="auth__head-title">
+            {{ $t('login.title') }}
+          </h1>
+          <LangPicker />
+        </div>
+      </div>
+      <div v-if="redirectByDefault && defaultRedirectUrl">
+        {{ $t('login.redirecting') }}
+      </div>
+      <div v-else>
+        <LoginButtons
+          show-border="bottom"
+          :hide-if-no-buttons="loginButtonsCompact"
+          :invitation="invitation"
+          :original="original"
+        />
+        <PasswordLogin
+          v-if="!passwordLoginHidden"
+          :invitation="invitation"
+          @success="success"
+          @email-not-verified="emailNotVerified"
+        >
+        </PasswordLogin>
+        <LoginActions :invitation="invitation" :original="original">
+          <li v-if="passwordLoginHidden">
+            <a @click="passwordLoginHiddenIfDisabled = false">
+              {{ $t('login.displayPasswordLogin') }}
+            </a>
+          </li>
+          <li v-if="settings.allow_reset_password && !passwordLoginHidden">
+            <nuxt-link :to="{ name: 'forgot-password' }">
+              {{ $t('login.forgotPassword') }}
             </nuxt-link>
-          </slot>
-        </li>
-      </LoginActions>
-    </div>
+          </li>
+          <li v-if="settings.allow_new_signups">
+            <slot name="signup">
+              {{ $t('login.signUpText') }}
+              <nuxt-link :to="{ name: 'signup' }">
+                {{ $t('login.signUp') }}
+              </nuxt-link>
+            </slot>
+          </li>
+        </LoginActions>
+      </div>
+    </template>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-
+import EmailNotVerified from '@baserow/modules/core/components/auth/EmailNotVerified.vue'
 import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
 import LoginActions from '@baserow/modules/core/components/auth/LoginActions'
 import PasswordLogin from '@baserow/modules/core/components/auth/PasswordLogin'
@@ -67,7 +72,13 @@ import {
 import VueRouter from 'vue-router'
 
 export default {
-  components: { PasswordLogin, LoginButtons, LangPicker, LoginActions },
+  components: {
+    PasswordLogin,
+    LoginButtons,
+    LangPicker,
+    LoginActions,
+    EmailNotVerified,
+  },
   props: {
     original: {
       type: String,
@@ -103,6 +114,8 @@ export default {
   data() {
     return {
       passwordLoginHiddenIfDisabled: true,
+      displayEmailNotVerified: false,
+      emailToVerify: null,
     }
   },
   computed: {
@@ -162,6 +175,10 @@ export default {
           }
         }
       }
+    },
+    emailNotVerified(email) {
+      this.displayEmailNotVerified = true
+      this.emailToVerify = email
     },
   },
 }

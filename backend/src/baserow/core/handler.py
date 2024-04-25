@@ -172,6 +172,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "track_workspace_usage",
                 "show_baserow_help_request",
                 "co_branding_logo",
+                "email_verification",
             ],
             settings_instance,
         )

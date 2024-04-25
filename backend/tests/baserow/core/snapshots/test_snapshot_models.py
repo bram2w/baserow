@@ -1,3 +1,5 @@
+from django.apps import apps
+
 import pytest
 
 from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED, JOB_PENDING
@@ -16,7 +18,10 @@ def test_migration_remove_dangling_snapshots(
 
     migrator.migrate(migrate_from)
 
-    user = data_fixture.create_user()
+    user_model = apps.get_model("auth", "User")
+    user = user_model()
+    user.save()
+
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
     snapshotted_database = data_fixture.create_database_application(workspace=workspace)
@@ -79,11 +84,9 @@ def test_migration_remove_dangling_snapshots(
 
     assert Snapshot.objects.count() == 4
     snapshot_ids = set(Snapshot.objects.all().values_list("id", flat=True))
-    assert snapshot_ids == set(
-        [
-            snapshot_finished.id,
-            snapshot_pending.id,
-            snapshot_marked_for_deletion.id,
-            snapshot_failed_but_created.id,
-        ]
-    )
+    assert snapshot_ids == {
+        snapshot_finished.id,
+        snapshot_pending.id,
+        snapshot_marked_for_deletion.id,
+        snapshot_failed_but_created.id,
+    }

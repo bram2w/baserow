@@ -124,6 +124,23 @@
     "dashboardWorkspace": {
         "createApplication": "Create new"
     },
+    "dashboardVerifyEmail": {
+        "title": "Please check your mailbox and click on the link to verify your email.",
+        "resendConfirmationEmail": "Resend confirmation email"
+      },
+    "resendEmailVerification": {
+        "confirmationEmailSentTitle": "Confirmation email sent",
+        "confirmationEmailSentDescription": "The confirmation email has been sent."
+    },
+    "verifyEmailAddress": {
+        "emailVerifiedTitle": "Email verified",
+        "emailVerifiedDescription": "The email address has been verified."
+    },
+    "emailNotVerified": {
+        "title": "Email verification required",
+        "description": "Please check your mailbox and click on the link to verify. Once verified, your account will be activated.",
+        "resend": "Resend confirmation email"
+    },
     "workspaceInvitation": {
         "title": "Invitation",
         "message": "{by} has invited you to join {workspace}.",
@@ -405,12 +422,17 @@
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "New users will have a workspace automatically created for them where they are an Admin.",
         "settingTrackWorkspaceUsage": "Track workspace usage",
         "settingTrackWorkspaceUsageDescription": "Enables a nightly job that counts row and file usage per workspace, displayed on the premium workspace admin page.",
-        "userDeletionGraceDelay": "User deletion",
-        "settingUserDeletionGraceDelay": "Grace delay",
+        "userSettings": "User",
+        "settingUserDeletionGraceDelay": "Delete grace delay",
         "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
         "invalidAccountDeletionGraceDelay": "This value is required and must be a positive integer smaller than 32000",
         "enabled": "enabled",
-        "maintenance": "Maintenance"
+        "maintenance": "Maintenance",
+        "emailVerification": "Email verification",
+        "emailVerificationDescription": "Controls whether email addresses have to be verified.",
+        "emailVerificationNoVerification": "No verification",
+        "emailVerificationRecommended": "Recommended",
+        "emailVerificationEnforced": "Enforced"
     },
     "formSidebar": {
         "actions": {

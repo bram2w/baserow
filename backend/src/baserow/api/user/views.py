@@ -1,6 +1,7 @@
 from typing import List
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
@@ -42,7 +43,10 @@ from baserow.api.workspaces.invitations.errors import (
 )
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import ActionScopeStr, action_type_registry
-from baserow.core.auth_provider.exceptions import AuthProviderDisabled
+from baserow.core.auth_provider.exceptions import (
+    AuthProviderDisabled,
+    EmailVerificationRequired,
+)
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
@@ -50,19 +54,24 @@ from baserow.core.exceptions import (
     WorkspaceInvitationDoesNotExist,
     WorkspaceInvitationEmailMismatch,
 )
-from baserow.core.models import Template, WorkspaceInvitation
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Settings, Template, WorkspaceInvitation
 from baserow.core.user.actions import (
     ChangeUserPasswordActionType,
     CreateUserActionType,
     ResetUserPasswordActionType,
     ScheduleUserDeletionActionType,
     SendResetUserPasswordActionType,
+    SendVerifyEmailAddressActionType,
     UpdateUserActionType,
+    VerifyEmailAddressActionType,
 )
 from baserow.core.user.exceptions import (
     DeactivatedUserException,
     DisabledSignupError,
+    EmailAlreadyVerified,
     InvalidPassword,
+    InvalidVerificationToken,
     RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
     UserAlreadyExist,
@@ -79,9 +88,12 @@ from .errors import (
     ERROR_DEACTIVATED_USER,
     ERROR_DISABLED_RESET_PASSWORD,
     ERROR_DISABLED_SIGNUP,
+    ERROR_EMAIL_ALREADY_VERIFIED,
+    ERROR_EMAIL_VERIFICATION_REQUIRED,
     ERROR_INVALID_CREDENTIALS,
     ERROR_INVALID_OLD_PASSWORD,
     ERROR_INVALID_REFRESH_TOKEN,
+    ERROR_INVALID_VERIFICATION_TOKEN,
     ERROR_REFRESH_TOKEN_ALREADY_BLACKLISTED,
     ERROR_UNDO_REDO_LOCK_CONFLICT,
     ERROR_USER_IS_LAST_ADMIN,
@@ -100,13 +112,16 @@ from .serializers import (
     RegisterSerializer,
     ResetPasswordBodyValidationSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
+    SendVerifyEmailAddressSerializer,
     TokenBlacklistSerializer,
     TokenObtainPairWithUserSerializer,
     TokenRefreshWithUserSerializer,
     TokenVerifyWithUserSerializer,
     UserSerializer,
+    VerifyEmailAddressSerializer,
 )
 
+User = get_user_model()
 UndoRedoRequestSerializer = get_undo_request_serializer()
 
 
@@ -128,10 +143,14 @@ class ObtainJSONWebToken(TokenObtainPairView):
         ),
         responses={
             200: create_user_response_schema,
-            401: {
-                "description": "An active user with the provided email and password "
-                "could not be found."
-            },
+            401: get_error_schema(
+                [
+                    "ERROR_INVALID_CREDENTIALS",
+                    "ERROR_DEACTIVATED_USER",
+                    "ERROR_AUTH_PROVIDER_DISABLED",
+                    "ERROR_EMAIL_VERIFICATION_REQUIRED",
+                ]
+            ),
         },
         auth=[],
     )
@@ -140,6 +159,7 @@ class ObtainJSONWebToken(TokenObtainPairView):
             AuthenticationFailed: ERROR_INVALID_CREDENTIALS,
             DeactivatedUserException: ERROR_DEACTIVATED_USER,
             AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
+            EmailVerificationRequired: ERROR_EMAIL_VERIFICATION_REQUIRED,
         }
     )
     def post(self, *args, **kwargs):
@@ -158,11 +178,18 @@ class RefreshJSONWebToken(TokenRefreshView):
         ),
         responses={
             200: authenticate_user_schema,
-            401: {"description": "The JWT refresh token is invalid or expired."},
+            401: get_error_schema(
+                ["ERROR_INVALID_REFRESH_TOKEN", "ERROR_EMAIL_VERIFICATION_REQUIRED"]
+            ),
         },
         auth=[],
     )
-    @map_exceptions({InvalidToken: ERROR_INVALID_REFRESH_TOKEN})
+    @map_exceptions(
+        {
+            InvalidToken: ERROR_INVALID_REFRESH_TOKEN,
+            EmailVerificationRequired: ERROR_EMAIL_VERIFICATION_REQUIRED,
+        }
+    )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
@@ -179,11 +206,18 @@ class VerifyJSONWebToken(TokenVerifyView):
         ),
         responses={
             200: verify_user_schema,
-            401: {"description": "The JWT refresh token is invalid or expired."},
+            401: get_error_schema(
+                ["ERROR_INVALID_REFRESH_TOKEN", "ERROR_EMAIL_VERIFICATION_REQUIRED"]
+            ),
         },
         auth=[],
     )
-    @map_exceptions({InvalidToken: ERROR_INVALID_REFRESH_TOKEN})
+    @map_exceptions(
+        {
+            InvalidToken: ERROR_INVALID_REFRESH_TOKEN,
+            EmailVerificationRequired: ERROR_EMAIL_VERIFICATION_REQUIRED,
+        }
+    )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
 
@@ -287,15 +321,21 @@ class UserView(APIView):
 
         response = {"user": UserSerializer(user).data}
 
-        if data["authenticate"]:
-            response.update(
-                {
-                    **generate_session_tokens_for_user(
-                        user, include_refresh_token=True
-                    ),
-                    **user_data_registry.get_all_user_data(user, request),
-                }
-            )
+        settings = CoreHandler().get_settings()
+
+        if (
+            data["authenticate"]
+            and settings.email_verification
+            != Settings.EmailVerificationOptions.ENFORCED
+        ):
+            response |= {
+                **generate_session_tokens_for_user(
+                    user,
+                    verified_email_claim=Settings.EmailVerificationOptions.ENFORCED,
+                    include_refresh_token=True,
+                ),
+                **user_data_registry.get_all_user_data(user, request),
+            }
 
         return Response(response)
 
@@ -469,6 +509,77 @@ class AccountView(APIView):
             request.user, **data
         )
         return Response(AccountSerializer(user).data)
+
+
+class SendVerifyEmailView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        tags=["User"],
+        operation_id="send_verify_email",
+        description=(
+            "Sends an email to the user "
+            "with an email verification link "
+            "if the user's email is not verified yet."
+        ),
+        responses={
+            204: None,
+        },
+    )
+    @transaction.atomic
+    @validate_body(SendVerifyEmailAddressSerializer)
+    def post(self, request, data):
+        """
+        Sends a verify email link to the user.
+        """
+
+        try:
+            handler = UserHandler()
+            user = handler.get_active_user(email=data["email"])
+            action_type_registry.get(SendVerifyEmailAddressActionType.type).do(user)
+        except (EmailAlreadyVerified, UserNotFound):
+            # ignore as not to leak existing email addresses
+            ...
+        return Response(status=204)
+
+
+class VerifyEmailAddressView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        tags=["User"],
+        request=VerifyEmailAddressSerializer,
+        operation_id="verify_email",
+        description=(
+            "Passing the correct verification token will "
+            "confirm that the user's email address belongs to "
+            "the user."
+        ),
+        responses={
+            204: None,
+            400: get_error_schema(
+                [
+                    "ERROR_INVALID_VERIFICATION_TOKEN",
+                    "ERROR_EMAIL_ALREADY_VERIFIED",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            InvalidVerificationToken: ERROR_INVALID_VERIFICATION_TOKEN,
+            EmailAlreadyVerified: ERROR_EMAIL_ALREADY_VERIFIED,
+        }
+    )
+    @validate_body(VerifyEmailAddressSerializer)
+    def post(self, request, data):
+        """
+        Verifies that the user's email belong to the user.
+        """
+
+        action_type_registry.get(VerifyEmailAddressActionType.type).do(data["token"])
+        return Response(status=204)
 
 
 class ScheduleAccountDeletionView(APIView):

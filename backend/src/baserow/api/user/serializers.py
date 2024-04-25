@@ -23,11 +23,16 @@ from baserow.api.workspaces.invitations.serializers import (
     UserWorkspaceInvitationSerializer,
 )
 from baserow.core.action.registries import action_type_registry
-from baserow.core.auth_provider.exceptions import AuthProviderDisabled
+from baserow.core.auth_provider.exceptions import (
+    AuthProviderDisabled,
+    EmailVerificationRequired,
+)
 from baserow.core.auth_provider.handler import PasswordProviderHandler
-from baserow.core.models import Template, UserProfile
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Settings, Template, UserProfile
 from baserow.core.user.actions import SignInUserActionType
 from baserow.core.user.exceptions import DeactivatedUserException
+from baserow.core.user.handler import UserHandler
 from baserow.core.user.utils import (
     generate_session_tokens_for_user,
     normalize_email_address,
@@ -72,6 +77,10 @@ class UserSerializer(serializers.ModelSerializer):
         help_text="The maximum frequency at which the user wants to "
         "receive email notifications.",
     )
+    email_verified = serializers.BooleanField(
+        source="profile.email_verified",
+        help_text="Shows whether the user's email has been verified.",
+    )
 
     class Meta:
         model = User
@@ -83,11 +92,13 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "language",
             "email_notification_frequency",
+            "email_verified",
         )
         extra_kwargs = {
             "password": {"write_only": True},
             "is_staff": {"read_only": True},
             "id": {"read_only": True},
+            "email_verified": {"read_only": True},
         }
 
 
@@ -205,6 +216,14 @@ class ChangePasswordBodyValidationSerializer(serializers.Serializer):
     new_password = serializers.CharField(validators=[password_validation])
 
 
+class VerifyEmailAddressSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+
+class SendVerifyEmailAddressSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 class NormalizedEmailField(serializers.EmailField):
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -267,7 +286,19 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
         if not user.is_active:
             raise DeactivatedUserException()
 
-        data = generate_session_tokens_for_user(user, include_refresh_token=True)
+        settings = CoreHandler().get_settings()
+        if (
+            settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+            and not user.profile.email_verified
+        ):
+            UserHandler().send_email_pending_verification(user)
+            raise EmailVerificationRequired()
+
+        data = generate_session_tokens_for_user(
+            user,
+            include_refresh_token=True,
+            verified_email_claim=Settings.EmailVerificationOptions.ENFORCED,
+        )
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
 
         set_user_session_data_from_request(user, self.context["request"])
@@ -294,6 +325,17 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
         user = get_user_from_token(
             attrs["refresh"], RefreshToken, check_if_refresh_token_is_blacklisted=True
         )
+
+        token = RefreshToken(attrs["refresh"])
+        settings = CoreHandler().get_settings()
+        if (
+            settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+            and not user.profile.email_verified
+            and token.get("verified_email_claim")
+            == Settings.EmailVerificationOptions.ENFORCED
+        ):
+            raise EmailVerificationRequired()
+
         data = generate_session_tokens_for_user(user)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
         token_refreshes_counter.add(1)
@@ -319,6 +361,17 @@ class TokenVerifyWithUserSerializer(TokenVerifySerializer):
             token_class=RefreshToken,
             check_if_refresh_token_is_blacklisted=True,
         )
+
+        token = RefreshToken(refresh_token)
+        settings = CoreHandler().get_settings()
+        if (
+            settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+            and not user.profile.email_verified
+            and token.get("verified_email_claim")
+            == Settings.EmailVerificationOptions.ENFORCED
+        ):
+            raise EmailVerificationRequired()
+
         return get_all_user_data_serialized(user, self.context["request"])
 
 

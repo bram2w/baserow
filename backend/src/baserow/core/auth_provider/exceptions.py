@@ -6,6 +6,10 @@ class AuthProviderDisabled(Exception):
     """Raised when it is not possible to use a particular auth provider."""
 
 
+class EmailVerificationRequired(Exception):
+    """Raised when the user's email has not been verified yet."""
+
+
 class DifferentAuthProvider(Exception):
     """
     Raised when logging in an existing user that should not

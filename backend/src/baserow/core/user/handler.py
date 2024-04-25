@@ -14,11 +14,12 @@ from django.db.utils import IntegrityError
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeSerializer, URLSafeTimedSerializer
 from opentelemetry import trace
 
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
+from baserow.core.emails import EmailPendingVerificationEmail
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     WorkspaceInvitationEmailMismatch,
@@ -26,6 +27,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
     BlacklistedToken,
+    Settings,
     Template,
     UserLogEntry,
     UserProfile,
@@ -53,7 +55,9 @@ from .emails import (
 from .exceptions import (
     DeactivatedUserException,
     DisabledSignupError,
+    EmailAlreadyVerified,
     InvalidPassword,
+    InvalidVerificationToken,
     PasswordDoesNotMatchValidation,
     RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
@@ -238,6 +242,9 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             workspace_user = core_handler.accept_workspace_invitation(
                 user, workspace_invitation
             )
+            profile = user.profile
+            profile.email_verified = True
+            profile.save()
 
         # If we still don't have a `WorkspaceUser`, which will be because we weren't
         # invited to a workspace, and `allow_global_workspace_creation` is enabled,
@@ -263,6 +270,17 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if auth_provider is None:
             auth_provider = PasswordProviderHandler.get()
         auth_provider.user_signed_in(user)
+
+        settings = CoreHandler().get_settings()
+        email_verification_send_email_if = [
+            Settings.EmailVerificationOptions.RECOMMENDED,
+            Settings.EmailVerificationOptions.ENFORCED,
+        ]
+        if (
+            settings.email_verification in email_verification_send_email_if
+            and user.profile.email_verified is False
+        ):
+            UserHandler().send_email_pending_verification(user)
 
         return user
 
@@ -384,6 +402,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         # Update the last password change timestamp to invalidate old authentication
         # tokens.
         user.profile.last_password_change = timezone.now()
+        user.profile.email_verified = True
         user.profile.save()
 
         user_password_changed.send(
@@ -642,3 +661,91 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         hashed_token = generate_hash(refresh_token)
         return BlacklistedToken.objects.filter(hashed_token=hashed_token).exists()
+
+    def _get_email_verification_signer(self) -> URLSafeSerializer:
+        return URLSafeSerializer(settings.SECRET_KEY, "verify-email")
+
+    def create_email_verification_token(self, user: User) -> str:
+        """
+        Creates email verification token for the provided user
+        based on the current user's email address.
+
+        :param user: The user for which the token should be generated.
+        """
+
+        signer = self._get_email_verification_signer()
+        expires_at = datetime.datetime.now(datetime.timezone.utc) + timedelta(days=1)
+        return signer.dumps(
+            {
+                "user_id": user.id,
+                "email": user.email,
+                "expires_at": expires_at.isoformat(),
+            }
+        )
+
+    def verify_email_address(self, token: str) -> User:
+        """
+        Marks the user's email address as verified if the
+        provided token is a valid token that confirms the user's
+        email address.
+
+        :param token: The verification token.
+        :raises InvalidVerificationToken: Raised when the token is
+            expired, the user doesn't exist, or the user's email
+            address doesn't match the one the token was issued for.
+        :raises EmailAlreadyVerified: Raised when the user's
+            email is verified already.
+        """
+
+        signer = self._get_email_verification_signer()
+        token_data = signer.loads(token)
+
+        if datetime.datetime.fromisoformat(
+            token_data["expires_at"]
+        ) < datetime.datetime.now(tz=timezone.utc):
+            raise InvalidVerificationToken()
+
+        try:
+            user = self.get_active_user(user_id=token_data["user_id"])
+        except UserNotFound as ex:
+            raise InvalidVerificationToken() from ex
+
+        if user.profile.email_verified:
+            raise EmailAlreadyVerified()
+
+        if user.email != token_data["email"]:
+            raise InvalidVerificationToken()
+
+        user_profile = user.profile
+        user_profile.email_verified = True
+        user_profile.save()
+        return user
+
+    def send_email_pending_verification(self, user: User):
+        """
+        Sends out a pending verification email to the user.
+
+        :user: User that should receive the verification email.
+        :raises EmailAlreadyVerified: Raised when the user's
+            email is verified already.
+        """
+
+        if user.profile.email_verified:
+            raise EmailAlreadyVerified()
+
+        token = self.create_email_verification_token(user)
+
+        base_url = (
+            settings.BASEROW_EMBEDDED_SHARE_URL or settings.PUBLIC_WEB_FRONTEND_URL
+        )
+        if not base_url.endswith("/"):
+            base_url += "/"
+
+        confirm_url = urljoin(base_url, f"verify-email-address/{token}")
+
+        with translation.override(user.profile.language):
+            email = EmailPendingVerificationEmail(
+                to=[user.email],
+                confirm_url=confirm_url,
+            )
+            email.send(fail_silently=False)

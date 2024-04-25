@@ -6,7 +6,8 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
-from django.db import connections
+from django.db import connections, transaction
+from django.test import override_settings
 
 import pytest
 from freezegun import freeze_time
@@ -33,7 +34,9 @@ from baserow.core.models import BlacklistedToken, UserLogEntry, Workspace, Works
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     DisabledSignupError,
+    EmailAlreadyVerified,
     InvalidPassword,
+    InvalidVerificationToken,
     PasswordDoesNotMatchValidation,
     RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
@@ -694,3 +697,111 @@ def test_user_handler_delete_user_log_entries_older_than(data_fixture):
     UserHandler().delete_user_log_entries_older_than(cutoff)
 
     assert UserLogEntry.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_create_email_verification_token(data_fixture):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    user2.email = user.email
+
+    with freeze_time("2023-05-05"):
+        signer = UserHandler()._get_email_verification_signer()
+        token = UserHandler().create_email_verification_token(user)
+        token_data = signer.loads(token)
+        assert token_data["user_id"] == user.id
+        assert token_data["email"] == user.email
+        assert token_data["expires_at"] == "2023-05-06T00:00:00+00:00"
+
+        token2 = UserHandler().create_email_verification_token(user2)
+        token_data2 = signer.loads(token2)
+        assert token_data2["user_id"] == user2.id
+        assert token_data2["email"] == user2.email
+        assert token_data2["expires_at"] == "2023-05-06T00:00:00+00:00"
+
+        assert token != token2
+
+
+@pytest.mark.django_db
+def test_verify_email_address(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    assert user.profile.email_verified is False
+
+    UserHandler().verify_email_address(token)
+
+    user.refresh_from_db()
+    assert user.profile.email_verified is True
+
+
+@pytest.mark.django_db
+def test_verify_email_address_expired(data_fixture):
+    user = data_fixture.create_user()
+
+    with freeze_time("2023-05-05"):
+        token = UserHandler().create_email_verification_token(user)
+
+    with freeze_time("2023-05-07"), pytest.raises(InvalidVerificationToken):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db
+def test_verify_email_address_user_doesnt_exist(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    user.delete()
+
+    with pytest.raises(InvalidVerificationToken):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db
+def test_verify_email_address_user_different_email(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    user.email = "newemail@example.com"
+    user.save()
+
+    with pytest.raises(InvalidVerificationToken):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db
+def test_verify_email_address_already_verified(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    profile = user.profile
+    profile.email_verified = True
+    profile.save()
+
+    with pytest.raises(EmailAlreadyVerified):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(BASEROW_EMBEDDED_SHARE_HOSTNAME="http://test/")
+def test_send_email_pending_verification(data_fixture, mailoutbox):
+    user = data_fixture.create_user()
+
+    with transaction.atomic():
+        UserHandler().send_email_pending_verification(user)
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+
+    assert email.subject == "Please confirm email"
+    assert user.email in email.to
+
+    html_body = email.alternatives[0][0]
+    f"http://test/auth/verify-email/" in html_body
+
+
+@pytest.mark.django_db
+def test_send_email_pending_verification_already_verified(data_fixture):
+    user = data_fixture.create_user()
+    profile = user.profile
+    profile.email_verified = True
+    profile.save()
+
+    with pytest.raises(EmailAlreadyVerified):
+        UserHandler().send_email_pending_verification(user)

@@ -231,8 +231,10 @@ class CoreConfig(AppConfig):
             ResetUserPasswordActionType,
             ScheduleUserDeletionActionType,
             SendResetUserPasswordActionType,
+            SendVerifyEmailAddressActionType,
             SignInUserActionType,
             UpdateUserActionType,
+            VerifyEmailAddressActionType,
         )
 
         action_type_registry.register(CreateUserActionType())
@@ -243,6 +245,8 @@ class CoreConfig(AppConfig):
         action_type_registry.register(ChangeUserPasswordActionType())
         action_type_registry.register(SendResetUserPasswordActionType())
         action_type_registry.register(ResetUserPasswordActionType())
+        action_type_registry.register(SendVerifyEmailAddressActionType())
+        action_type_registry.register(VerifyEmailAddressActionType())
 
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,

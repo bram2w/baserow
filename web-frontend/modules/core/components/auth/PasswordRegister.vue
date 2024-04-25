@@ -225,7 +225,7 @@ export default {
           plugin.userCreated(this.account, this)
         })
 
-        this.$emit('success')
+        this.$emit('success', { email: values.email })
       } catch (error) {
         this.loading = false
         this.handleError(error, 'signup', {

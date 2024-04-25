@@ -11,6 +11,7 @@
           :key="index"
         ></component>
       </template>
+      <DashboardVerifyEmail></DashboardVerifyEmail>
       <WorkspaceInvitation
         v-for="invitation in workspaceInvitations"
         :key="'invitation-' + invitation.id"
@@ -69,6 +70,7 @@ import DashboardWorkspace from '@baserow/modules/core/components/dashboard/Dashb
 import DashboardHelp from '@baserow/modules/core/components/dashboard/DashboardHelp'
 import DashboardNoWorkspaces from '@baserow/modules/core/components/dashboard/DashboardNoWorkspaces'
 import DashboardSidebar from '@baserow/modules/core/components/dashboard/DashboardSidebar'
+import DashboardVerifyEmail from '@baserow/modules/core/components/dashboard/DashboardVerifyEmail'
 
 export default {
   components: {
@@ -78,6 +80,7 @@ export default {
     CreateWorkspaceModal,
     DashboardWorkspace,
     WorkspaceInvitation,
+    DashboardVerifyEmail,
   },
   layout: 'app',
   /**
