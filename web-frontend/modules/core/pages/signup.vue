@@ -25,9 +25,9 @@
           <template #title>{{ $t('signup.disabled') }}</template>
           <p>{{ $t('signup.disabledMessage') }}</p></Alert
         >
-        <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
-          {{ $t('action.backToLogin') }}
-        </nuxt-link>
+        <Button tag="nuxt-link" :to="{ name: 'login' }" full-width>
+          {{ $t('action.backToLogin') }}</Button
+        >
       </template>
       <template v-else>
         <PasswordRegister

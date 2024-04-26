@@ -107,6 +107,7 @@
       <div class="auth__action">
         <Button
           type="primary"
+          size="large"
           :loading="loading"
           full-width
           :disabled="loading"

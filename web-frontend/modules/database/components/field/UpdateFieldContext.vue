@@ -22,11 +22,7 @@
           {{ $t('action.cancel') }}
         </a>
 
-        <Button
-          size="large"
-          :loading="loading"
-          :disabled="loading || fieldTypeDisabled"
-        >
+        <Button :loading="loading" :disabled="loading || fieldTypeDisabled">
           {{ $t('action.save') }}
         </Button>
       </div>

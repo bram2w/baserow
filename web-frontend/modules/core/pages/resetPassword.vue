@@ -63,6 +63,7 @@
             <Button
               type="primary"
               full-width
+              size="large"
               :loading="loading"
               :disabled="loading || success"
             >
