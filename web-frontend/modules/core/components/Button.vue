@@ -77,6 +77,14 @@ export default {
       default: false,
     },
     /**
+     * Wether the button is active or not.
+     */
+    active: {
+      required: false,
+      type: Boolean,
+      default: false,
+    },
+    /**
      * Wether the button is disabled or not.
      */
     disabled: {
@@ -156,6 +164,7 @@ export default {
         'button--icon-only': hasIcon && !this.$slots.default,
         'button--loading': this.loading,
         'button--overflow': this.overflow,
+        'button--active': this.active,
       }
       return classObj
     },

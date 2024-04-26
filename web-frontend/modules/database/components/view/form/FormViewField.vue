@@ -90,7 +90,6 @@
               <RadioButton
                 v-for="(v, key) in fieldComponents"
                 :key="key"
-                type="chips"
                 :model-value="fieldOptions.field_component"
                 :value="key"
                 :disabled="readOnly"

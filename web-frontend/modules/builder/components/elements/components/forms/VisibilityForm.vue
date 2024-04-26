@@ -1,14 +1,7 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <Radio v-model="values.visibility" value="all">
-      {{ $t('visibilityForm.allVisitors') }}
-    </Radio>
-    <Radio v-model="values.visibility" value="logged-in">
-      {{ $t('visibilityForm.loggedInVisitors') }}
-    </Radio>
-    <Radio v-model="values.visibility" value="not-logged">
-      {{ $t('visibilityForm.notLoggedInVisitors') }}
-    </Radio>
+    <RadioGroup v-model="values.visibility" :options="options" vertical-layout>
+    </RadioGroup>
   </form>
 </template>
 
@@ -24,6 +17,17 @@ export default {
         visibility: 'all',
       },
       allowedFields: ['visibility'],
+      options: [
+        { value: 'all', label: this.$t('visibilityForm.allVisitors') },
+        {
+          value: 'logged-in',
+          label: this.$t('visibilityForm.loggedInVisitors'),
+        },
+        {
+          value: 'not-logged',
+          label: this.$t('visibilityForm.notLoggedInVisitors'),
+        },
+      ],
     }
   },
 }

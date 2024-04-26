@@ -15,10 +15,9 @@
         {{ $t('linkElementForm.variant') }}
       </label>
       <div class="control__elements control__elements--flex">
-        <RadioButton v-model="values.variant" type="chips" value="link">
-          {{ $t('linkElementForm.variantLink') }}
-        </RadioButton>
-        <RadioButton v-model="values.variant" type="chips" value="button">
+        <RadioButton v-model="values.variant" value="link">
+          {{ $t('linkElementForm.variantLink') }} </RadioButton
+        ><RadioButton v-model="values.variant" value="button">
           {{ $t('linkElementForm.variantButton') }}
         </RadioButton>
       </div>

@@ -183,12 +183,27 @@
               value: {{ radio }}
               <br />
               <br />
-              <Radio v-model="radio" value=""></Radio>
+              <span>Native Radio input</span>
+              <br />
+
               <Radio v-model="radio" value="a">Option A</Radio>
               <Radio v-model="radio" value="b">Option B</Radio>
               <Radio v-model="radio" value="c">Option C</Radio>
-              <Radio v-model="radio" value="d" :disabled="true">Option D</Radio>
-              <Radio v-model="radio" value="e" :loading="true">Option E</Radio>
+              <Radio v-model="radio" value="d" disabled>Option D</Radio>
+              <Radio v-model="radio" value="e" loading>Option E</Radio>
+              <br />
+              <br />
+              <span>Radio button</span>
+              <br />
+              <RadioButton v-model="radio" value="a">Option A</RadioButton>
+              <RadioButton v-model="radio" value="b">Option B</RadioButton>
+              <RadioButton v-model="radio" value="c">Option C</RadioButton>
+              <RadioButton v-model="radio" value="d" disabled
+                >Option D</RadioButton
+              >
+              <RadioButton v-model="radio" value="e" loading
+                >Option E</RadioButton
+              >
             </div>
           </div>
           <div class="control">
@@ -202,33 +217,21 @@
               <br />
 
               <div class="">
-                <RadioButton v-model="radioButton" type="chips" value=""
-                  >None</RadioButton
-                >
-                <RadioButton v-model="radioButton" type="chips" value="a"
+                <RadioButton v-model="radioButton" value="">None</RadioButton>
+                <RadioButton v-model="radioButton" value="a"
                   >Option A</RadioButton
                 >
-                <RadioButton v-model="radioButton" type="chips" value="b"
+                <RadioButton v-model="radioButton" value="b"
                   >Option B</RadioButton
                 >
-                <RadioButton v-model="radioButton" type="chips" value="c"
+                <RadioButton v-model="radioButton" value="c"
                   >Option C</RadioButton
                 >
 
-                <RadioButton
-                  v-model="radioButton"
-                  type="chips"
-                  value="g"
-                  :disabled="true"
-                >
+                <RadioButton v-model="radioButton" value="g" :disabled="true">
                   Option D
                 </RadioButton>
-                <RadioButton
-                  v-model="radioButton"
-                  type="chips"
-                  value="h"
-                  :loading="true"
-                >
+                <RadioButton v-model="radioButton" value="h" :loading="true">
                   Option E
                 </RadioButton>
               </div>

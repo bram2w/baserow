@@ -1,22 +1,16 @@
 <template>
-  <div class="radio-button">
-    <ButtonIcon
-      v-if="type === 'icon'"
-      type="primary"
-      v-bind="restProps"
-      @click.prevent="select(value)"
-    >
-    </ButtonIcon>
-
-    <Chips
-      v-if="type === 'chips'"
-      type="primary"
-      v-bind="restProps"
-      @click.prevent="select(value)"
-    >
-      <slot></slot>
-    </Chips>
-  </div>
+  <Button
+    type="secondary"
+    v-bind="restProps"
+    :loading="loading"
+    :disabled="disabled"
+    :icon="icon"
+    :title="title"
+    :active="selected"
+    @click.prevent="select(value)"
+  >
+    <slot></slot>
+  </Button>
 </template>
 
 <script>
@@ -27,14 +21,6 @@ export default {
     event: 'input',
   },
   props: {
-    type: {
-      type: String,
-      required: false,
-      validator: function (value) {
-        return ['icon', 'chips'].includes(value)
-      },
-      default: 'icon',
-    },
     value: {
       type: [String, Number, Boolean, Object],
       required: false,
@@ -42,6 +28,26 @@ export default {
     },
     modelValue: {
       type: [String, Number, Boolean, Object],
+      required: false,
+      default: '',
+    },
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    icon: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    title: {
+      type: String,
       required: false,
       default: '',
     },

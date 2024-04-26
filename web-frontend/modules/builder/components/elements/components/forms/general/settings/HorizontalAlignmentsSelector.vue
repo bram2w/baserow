@@ -3,16 +3,14 @@
     <label class="control__label">
       {{ $t('horizontalAlignmentSelector.alignment') }}
     </label>
-    <div class="control__elements control__elements--flex">
-      <RadioButton
-        v-for="alignment in alignmentValues"
-        :key="alignment.value"
+    <div class="control__elements">
+      <RadioGroup
         v-model="selected"
-        :value="alignment.value"
-        :icon="alignment.icon"
-        :title="$t(alignment.name)"
+        :options="alignmentValues"
+        type="button"
         @input="$emit('input', $event)"
-      />
+      >
+      </RadioGroup>
     </div>
   </div>
 </template>
@@ -41,7 +39,14 @@ export default {
   },
   computed: {
     alignmentValues() {
-      return Object.values(this.alignments)
+      const values = Object.values(this.alignments)
+      return values.map((value) => {
+        return {
+          icon: value.icon,
+          value: value.value,
+          title: this.$t(value.name),
+        }
+      })
     },
   },
   watch: {

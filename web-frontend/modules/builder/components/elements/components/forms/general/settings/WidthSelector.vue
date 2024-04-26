@@ -7,7 +7,6 @@
       <RadioButton
         v-for="width in widths"
         :key="width.value"
-        type="chips"
         :value="width.value"
         :model-value="value"
         @input="$emit('input', $event)"
