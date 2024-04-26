@@ -65,7 +65,7 @@
         @stop-edit="stopEdit(true)"
       />
     </div>
-    <div v-if="editing" class="row_comments__comment-text-actions">
+    <div v-if="editing" class="row-comments__comment-text-actions">
       <Button type="secondary" :disabled="updating" @click="stopEdit()">
         {{ $t('action.cancel') }}</Button
       >

@@ -84,7 +84,7 @@
             ></DateFilter>
           </FilterWrapper>
           <Button
-            class="audit-log__clear_filters_button"
+            class="audit-log__clear-filters-button"
             type="secondary"
             @click="clearFilters"
           >
