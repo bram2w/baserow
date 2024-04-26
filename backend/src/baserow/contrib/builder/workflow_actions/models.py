@@ -72,6 +72,15 @@ class LogoutWorkflowAction(BuilderWorkflowAction):
     pass
 
 
+class RefreshDataSourceWorkflowAction(BuilderWorkflowAction):
+    data_source = models.ForeignKey(
+        "builder.DataSource",
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="The data source we want to refresh for this action.",
+    )
+
+
 class BuilderWorkflowServiceAction(BuilderWorkflowAction):
     service = models.ForeignKey(
         Service,

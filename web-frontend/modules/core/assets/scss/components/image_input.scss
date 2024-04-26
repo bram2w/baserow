@@ -1,31 +1,31 @@
-.image_input {
+.image-input {
   display: flex;
   align-items: flex-start;
   gap: 18px;
 }
 
-.image_input__image-placeholder {
+.image-input__image-placeholder {
   position: relative;
 }
 
-.image_input__image-placeholder-img {
+.image-input__image-placeholder-img {
   width: 60px;
   height: 60px;
 }
 
-.image_input__image-upload {
+.image-input__image-upload {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 5px;
 }
 
-.image_input__image-upload-description {
+.image-input__image-upload-description {
   font-weight: lighter;
   color: $palette-neutral-900;
 }
 
-.image_input__thumbnail-remove {
+.image-input__thumbnail-remove {
   position: absolute;
   inset: 0;
   display: none;

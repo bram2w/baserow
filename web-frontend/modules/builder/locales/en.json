@@ -433,7 +433,8 @@
     "openPageLabel": "Open Page",
     "createRowLabel": "Create Row",
     "updateRowLabel": "Update Row",
-    "logoutLabel": "Logout"
+    "logoutLabel": "Logout",
+    "refreshDataSourceLabel": "Refresh data source"
   },
   "notificationWorkflowActionForm": {
     "titleLabel": "Title",

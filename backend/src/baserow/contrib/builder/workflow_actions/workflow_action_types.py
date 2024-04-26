@@ -16,6 +16,7 @@ from baserow.contrib.builder.workflow_actions.models import (
     LogoutWorkflowAction,
     NotificationWorkflowAction,
     OpenPageWorkflowAction,
+    RefreshDataSourceWorkflowAction,
 )
 from baserow.contrib.builder.workflow_actions.registries import (
     BuilderWorkflowActionType,
@@ -141,6 +142,37 @@ class LogoutWorkflowActionType(BuilderWorkflowActionType):
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {}
+
+
+class RefreshDataSourceWorkflowAction(BuilderWorkflowActionType):
+    type = "refresh_data_source"
+    model_class = RefreshDataSourceWorkflowAction
+    serializer_field_names = ["data_source_id"]
+    serializer_field_overrides = {
+        "data_source_id": serializers.IntegerField(
+            allow_null=True,
+            default=None,
+            required=False,
+            help_text="The ID of the Data Source to be refreshed.",
+        ),
+    }
+
+    class SerializedDict(BuilderWorkflowActionDict):
+        data_source_id: int
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {}
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + ["data_source_id"]
+
+    def deserialize_property(self, prop_name, value, id_mapping: Dict) -> Any:
+        data_sources = id_mapping.get("builder_data_sources", {})
+        if prop_name == "data_source_id" and value in data_sources:
+            return data_sources[value]
+
+        return super().deserialize_property(prop_name, value, id_mapping)
 
 
 class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):

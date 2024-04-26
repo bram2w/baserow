@@ -113,7 +113,6 @@ const actions = {
       commit('SET_LOADING', { element, value: false })
     }
   },
-
   clearElementContent({ commit }, { element }) {
     commit('CLEAR_CONTENT', { element })
   },
