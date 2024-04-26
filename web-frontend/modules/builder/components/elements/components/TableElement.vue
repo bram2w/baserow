@@ -156,6 +156,8 @@ export default {
     },
   },
   async mounted() {
+    // When the TableElement is added to the page after the initial loading, e.g.
+    // when it is duplicated, the element's contents must be fetched.
     if (this.element.data_source_id) {
       await this.fetchContent([0, this.element.items_per_page])
     }
