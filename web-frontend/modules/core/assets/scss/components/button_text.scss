@@ -20,6 +20,7 @@
 
   &:hover:not(.button-text--loading, [disabled]) {
     color: $palette-neutral-1300;
+    text-decoration: none;
   }
 
   &[disabled]:not(.button-text--loading) {

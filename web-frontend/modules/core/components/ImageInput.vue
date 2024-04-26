@@ -1,10 +1,10 @@
 <template>
-  <div class="image_input">
-    <div class="image_input__image-placeholder">
-      <img class="image_input__image-placeholder-img" :src="imageUrl" />
+  <div class="image-input">
+    <div class="image-input__image-placeholder">
+      <img class="image-input__image-placeholder-img" :src="imageUrl" />
       <a
         v-if="removable"
-        class="image_input__thumbnail-remove"
+        class="image-input__thumbnail-remove"
         @click="$emit('input', null)"
       >
         <i class="iconoir-cancel"></i>
@@ -12,8 +12,8 @@
       </a>
     </div>
     <div>
-      <div class="image_input__image-upload">
-        <span class="image_input__image-upload-description">
+      <div class="image-input__image-upload">
+        <span class="image-input__image-upload-description">
           {{ labelDescription || $t('imageInput.labelDescription') }}
         </span>
         <Button

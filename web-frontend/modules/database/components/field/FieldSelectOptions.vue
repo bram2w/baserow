@@ -37,7 +37,7 @@
         </a>
       </div>
     </div>
-    <ButtonText icon="iconoir-plus" @click="add()">
+    <ButtonText icon="iconoir-plus" tag="a" @click="add()">
       {{ $t('fieldSelectOptions.add') }}
     </ButtonText>
     <ColorSelectContext

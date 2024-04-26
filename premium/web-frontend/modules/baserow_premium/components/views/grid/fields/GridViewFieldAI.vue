@@ -11,10 +11,10 @@
           size="tiny"
           :disabled="!modelAvailable || generating"
           :loading="generating"
+          :icon="isDeactivated ? 'iconoir-lock' : ''"
           @click="generate()"
         >
           {{ $t('gridViewFieldAI.generate') }}
-          <i v-if="isDeactivated" class="iconoir-lock"></i>
         </Button>
       </div>
     </div>
