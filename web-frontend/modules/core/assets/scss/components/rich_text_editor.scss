@@ -23,7 +23,8 @@
   }
 }
 
-.rich-text-editor__content-blockquote {
+.rich-text-editor__content-blockquote,
+%rich-text-editor-content-blockquote {
   padding-left: 1rem;
   color: $color-neutral-700;
   border-left: 4px solid $color-neutral-300;

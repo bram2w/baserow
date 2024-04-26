@@ -1,9 +1,13 @@
-.grid-field-long-text__cell.active.editing,
+.grid-field-long-text__cell,
 %grid-field-long-text-cell {
-  bottom: auto;
-  right: auto;
-  height: auto;
-  min-width: calc(100% + 6px);
+  &.active {
+    &.editing {
+      bottom: auto;
+      right: auto;
+      height: auto;
+      min-width: calc(100% + 6px);
+    }
+  }
 }
 
 .grid-field-long-text,
