@@ -4,21 +4,13 @@
       <label class="control__label">
         {{ $t('imageElementForm.fileLabel') }}
       </label>
-      <div class="control__elements control__elements--flex">
-        <RadioButton
+      <div class="control__elements">
+        <RadioGroup
           v-model="values.image_source_type"
-          type="chips"
-          :value="IMAGE_SOURCE_TYPES.UPLOAD"
+          :options="imageSourceTypeOptions"
+          type="button"
         >
-          {{ $t('imageElementForm.fileSourceTypeUpload') }}
-        </RadioButton>
-        <RadioButton
-          v-model="values.image_source_type"
-          type="chips"
-          :value="IMAGE_SOURCE_TYPES.URL"
-        >
-          {{ $t('imageElementForm.fileSourceTypeURL') }}
-        </RadioButton>
+        </RadioGroup>
       </div>
     </FormElement>
     <FormElement
@@ -202,6 +194,18 @@ export default {
     },
     IMAGE_SOURCE_TYPES() {
       return IMAGE_SOURCE_TYPES
+    },
+    imageSourceTypeOptions() {
+      return [
+        {
+          label: this.$t('imageElementForm.fileSourceTypeUpload'),
+          value: IMAGE_SOURCE_TYPES.UPLOAD,
+        },
+        {
+          label: this.$t('imageElementForm.fileSourceTypeURL'),
+          value: IMAGE_SOURCE_TYPES.URL,
+        },
+      ]
     },
     IMAGE_FILE_TYPES() {
       return IMAGE_FILE_TYPES

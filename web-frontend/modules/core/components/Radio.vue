@@ -48,10 +48,7 @@ export default {
   computed: {
     classNames() {
       return {
-        'radio--has-content': Object.prototype.hasOwnProperty.call(
-          this.$slots,
-          'default'
-        ),
+        'radio--active': this.modelValue === this.value,
         'radio--disabled': this.disabled,
         'radio--loading': this.loading,
         selected: this.modelValue === this.value,
@@ -66,7 +63,7 @@ export default {
   },
   methods: {
     select(value) {
-      if (this.disabled || this.selected) {
+      if (this.disabled || this.selected || this.loading) {
         return
       }
       this.$emit('input', value)

@@ -67,7 +67,7 @@
             <div class="control__label">
               {{ $t('mainThemeConfigBlock.headingLabel', { i }) }}
             </div>
-            <div class="control__elements control__elements--flex">
+            <div class="control__elements">
               <ColorInput
                 :value="builder.theme[`heading_${i}_color`]"
                 @input="setPropertyInStore(`heading_${i}_color`, $event)"
