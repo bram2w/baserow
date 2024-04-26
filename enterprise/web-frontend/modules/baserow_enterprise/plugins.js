@@ -85,4 +85,13 @@ export class EnterprisePlugin extends BaserowPlugin {
   getLogoComponentOrder() {
     return 100
   }
+
+  /**
+   * This method can be used to hide certain features in `EnterpriseFeatures.vue`.
+   * If the array contains `[EnterpriseFeatures.RBAC]`, for example, then that entry
+   * will be hidden in the features.
+   */
+  getVisuallyHiddenFeatures() {
+    return []
+  }
 }
