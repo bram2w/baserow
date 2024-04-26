@@ -2,7 +2,7 @@ import {
   AdminRoleType,
   MemberRoleType,
 } from '@baserow/modules/database/roleTypes'
-import PremiumModal from '@baserow_premium/components/PremiumModal'
+import EnterpriseModal from '@baserow_enterprise/components/EnterpriseModal'
 import EnterpriseFeatures from '@baserow_enterprise/features'
 
 export class EnterpriseAdminRoleType extends AdminRoleType {
@@ -58,7 +58,7 @@ export class EnterpriseBuilderRoleType extends MemberRoleType {
   }
 
   getDeactivatedClickModal() {
-    return PremiumModal
+    return EnterpriseModal
   }
 }
 
@@ -94,7 +94,7 @@ export class EnterpriseEditorRoleType extends MemberRoleType {
   }
 
   getDeactivatedClickModal(workspaceId) {
-    return PremiumModal
+    return EnterpriseModal
   }
 }
 
@@ -130,7 +130,7 @@ export class EnterpriseCommenterRoleType extends MemberRoleType {
   }
 
   getDeactivatedClickModal(workspaceId) {
-    return PremiumModal
+    return EnterpriseModal
   }
 }
 
@@ -166,7 +166,7 @@ export class EnterpriseViewerRoleType extends MemberRoleType {
   }
 
   getDeactivatedClickModal(workspaceId) {
-    return PremiumModal
+    return EnterpriseModal
   }
 }
 
@@ -202,7 +202,7 @@ export class NoAccessRoleType extends MemberRoleType {
   }
 
   getDeactivatedClickModal(workspaceId) {
-    return PremiumModal
+    return EnterpriseModal
   }
 }
 
@@ -238,6 +238,6 @@ export class NoRoleLowPriorityRoleType extends MemberRoleType {
   }
 
   getDeactivatedClickModal(workspaceId) {
-    return PremiumModal
+    return EnterpriseModal
   }
 }

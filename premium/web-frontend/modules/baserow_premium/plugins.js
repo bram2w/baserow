@@ -20,10 +20,9 @@ export class PremiumPlugin extends BaserowPlugin {
   }
 
   /**
-   * A hook to provide different content for the
-   * PremiumModal.
+   * A hook to provide different action buttons to the premium features modal.
    */
-  getPremiumModalContentComponent() {
+  getPremiumModalButtonsComponent() {
     return null
   }
 }
