@@ -67,12 +67,12 @@
             <div class="control__label">
               {{ $t('mainThemeConfigBlock.headingLabel', { i }) }}
             </div>
-            <div class="control__elements">
+            <div class="control__elements control__elements--flex">
               <ColorInput
                 :value="builder.theme[`heading_${i}_color`]"
                 @input="setPropertyInStore(`heading_${i}_color`, $event)"
               />
-              <div class="input__with-icon">
+              <div class="input__with-icon margin-left-2">
                 <input
                   type="number"
                   class="input remove-number-input-controls"

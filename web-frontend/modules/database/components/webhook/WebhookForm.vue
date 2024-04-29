@@ -103,12 +103,12 @@
           {{ $t('webhookForm.inputLabels.events') }}
         </label>
         <div class="control__elements">
-          <Radio v-model="values.include_all_events" :value="true">{{
-            $t('webhookForm.radio.allEvents')
-          }}</Radio>
-          <Radio v-model="values.include_all_events" :value="false">
-            {{ $t('webhookForm.radio.customEvents') }}
-          </Radio>
+          <RadioGroup
+            v-model="values.include_all_events"
+            :options="eventsRadioOptions"
+            vertical-layout
+          >
+          </RadioGroup>
           <div v-if="!values.include_all_events" class="webhook__types">
             <Checkbox
               v-for="webhookEvent in webhookEventTypes"
@@ -246,7 +246,6 @@ import { required, maxLength } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
-import Radio from '@baserow/modules/core/components/Radio'
 import TestWebhookModal from '@baserow/modules/database/components/webhook/TestWebhookModal'
 import { isValidURLWithHttpScheme } from '@baserow/modules/core/utils/string'
 
@@ -254,7 +253,6 @@ export default {
   name: 'WebhookForm',
   components: {
     Checkbox,
-    Radio,
     TestWebhookModal,
   },
   mixins: [form, error],
@@ -295,6 +293,10 @@ export default {
       },
       headers: [],
       exampleWebhookEventType: '',
+      eventsRadioOptions: [
+        { value: true, label: this.$t('webhookForm.radio.allEvents') },
+        { value: false, label: this.$t('webhookForm.radio.customEvents') },
+      ],
     }
   },
   computed: {
