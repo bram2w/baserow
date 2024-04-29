@@ -111,8 +111,8 @@
             class="margin-bottom-2 theme-settings__section-ellipsis"
             :class="`ab-heading--h${i}`"
             :style="{
-              [`--heading-h${i}--color`]: builder.theme[`heading_${i}_color`],
-              [`--heading-h${i}--font-size`]:
+              [`--heading-h${i}-color`]: builder.theme[`heading_${i}_color`],
+              [`--heading-h${i}-font-size`]:
                 builder.theme[`heading_${i}_font_size`] + 'px',
             }"
           >
