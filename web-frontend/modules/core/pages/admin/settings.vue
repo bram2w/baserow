@@ -142,35 +142,11 @@
             </div>
           </div>
           <div class="admin-settings__control">
-            <Radio
-              :value="EMAIL_VERIFICATION_OPTIONS.NO_VERIFICATION"
+            <RadioGroup
               :model-value="settings.email_verification"
+              :options="emailVerificationOptions"
               @input="updateSettings({ email_verification: $event })"
-            >
-              {{ $t('settings.emailVerificationNoVerification') }}
-            </Radio>
-            <Radio
-              :value="EMAIL_VERIFICATION_OPTIONS.RECOMMENDED"
-              :model-value="settings.email_verification"
-              @input="
-                updateSettings({
-                  email_verification: $event,
-                })
-              "
-            >
-              {{ $t('settings.emailVerificationRecommended') }}
-            </Radio>
-            <Radio
-              :value="EMAIL_VERIFICATION_OPTIONS.ENFORCED"
-              :model-value="settings.email_verification"
-              @input="
-                updateSettings({
-                  email_verification: $event,
-                })
-              "
-            >
-              {{ $t('settings.emailVerificationEnforced') }}
-            </Radio>
+            ></RadioGroup>
           </div>
         </div>
         <div class="admin-settings__item">
@@ -252,7 +228,23 @@ export default {
     return { instanceId: data.instance_id }
   },
   data() {
-    return { account_deletion_grace_delay: null }
+    return {
+      account_deletion_grace_delay: null,
+      emailVerificationOptions: [
+        {
+          label: this.$t('settings.emailVerificationNoVerification'),
+          value: EMAIL_VERIFICATION_OPTIONS.NO_VERIFICATION,
+        },
+        {
+          label: this.$t('settings.emailVerificationRecommended'),
+          value: EMAIL_VERIFICATION_OPTIONS.RECOMMENDED,
+        },
+        {
+          label: this.$t('settings.emailVerificationEnforced'),
+          value: EMAIL_VERIFICATION_OPTIONS.ENFORCED,
+        },
+      ],
+    }
   },
   computed: {
     additionalSettingsComponents() {
@@ -287,6 +279,7 @@ export default {
   },
   methods: {
     async updateSettings(values) {
+      console.log(values)
       this.$v.$touch()
       if (this.$v.$invalid) {
         return

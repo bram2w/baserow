@@ -44,14 +44,13 @@
         </div>
       </div>
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': updateLoading }"
-          class="button button--large"
+        <Button
           :disabled="updateLoading || $v.$invalid || !$v.$anyDirty"
+          :loading="updateLoading"
+          icon="iconoir-edit-pencil"
         >
           {{ $t('generativeAIWorkspaceSettings.submitButton') }}
-          <i class="iconoir-edit-pencil"></i>
-        </button>
+        </Button>
       </div>
     </form>
   </div>

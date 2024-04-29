@@ -48,11 +48,11 @@
 
   &:hover {
     text-decoration: none;
-  }
 
-  &:not(.disabled, .active):hover {
-    background-color: $color-neutral-100;
-    color: $color-neutral-900;
+    &:not(.disabled, .active) {
+      background-color: $color-neutral-100;
+      color: $color-neutral-900;
+    }
   }
 
   &.disabled {
