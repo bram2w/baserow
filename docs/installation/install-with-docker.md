@@ -12,6 +12,8 @@ This guide assumes you already have Docker installed and have permissions to run
 containers. See the [Install on Ubuntu](install-on-ubuntu.md) for an installation from
 scratch.
 
+[comment]: <> (All content from here must be kept in sync with `deploy/all-in-one/README.md`)
+
 ## Quick Start
 
 Run the command below to start a Baserow server running locally listening on port `80`.
@@ -31,10 +33,10 @@ docker run \
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
-  external access.
+  external access. Ensure that this address matches the one you enter in your browser's
+  URL bar. Any different address will be considered a published application.
 * Add `-e BASEROW_CADDY_ADDRESSES=:443` to enable
-  [automatic Caddy HTTPS](https://caddyserver.com/docs/automatic-https)
-  .
+  [automatic Caddy HTTPS](https://caddyserver.com/docs/automatic-https).
 * Optionally add `-e DATABASE_URL=postgresql://user:pwd@host:port/db` to use an external
   Postgresql.
 * Optionally add `-e REDIS_URL=redis://user:pwd@host:port` to use an external Redis.
@@ -59,7 +61,7 @@ a single container for maximum ease of use.
 > If you are instead looking for images which are better suited for horizontal
 > scaling (e.g. when using [K8S](./install-with-k8s.md)) then please instead use our
 > [baserow/backend and baserow/web-frontend](./install-with-docker-compose.md) images
-> instead which deploy each Baserow service in its own container impotently.
+> instead which deploy each Baserow service in its own container independently.
 
 A quick summary of its features are:
 
