@@ -19,10 +19,10 @@ export default {
       }
       const headings = Array.from([1, 2, 3, 4, 5, 6]).reduce(
         (headings, level) => ({
-          [`--heading-h${level}--font-size`]: `${
+          [`--heading-h${level}-font-size`]: `${
             this.builder.theme[`heading_${level}_font_size`]
           }px`,
-          [`--heading-h${level}--color`]:
+          [`--heading-h${level}-color`]:
             this.builder.theme[`heading_${level}_color`],
           ...headings,
         }),
