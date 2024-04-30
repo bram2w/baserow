@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an edge-case where it'd be possible to publish an application to a deleted domain.",
+    "issue_number": 2548,
+    "bullet_points": [],
+    "created_at": "2024-04-22"
+}
