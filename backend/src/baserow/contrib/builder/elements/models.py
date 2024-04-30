@@ -115,7 +115,6 @@ class Element(
         choices=VISIBILITY_TYPES.choices,
         max_length=20,
         default=VISIBILITY_TYPES.ALL,
-        null=True,  # TODO remove me in next release
         db_index=True,
     )
 

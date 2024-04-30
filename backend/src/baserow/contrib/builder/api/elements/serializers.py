@@ -124,6 +124,9 @@ class CreateElementSerializer(serializers.ModelSerializer):
             "style_background_color",
             "style_width",
         )
+        extra_kwargs = {
+            "visibility": {"default": Element.VISIBILITY_TYPES.ALL},
+        }
 
 
 class UpdateElementSerializer(serializers.ModelSerializer):
