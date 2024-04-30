@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Table not visible in preview wasn't updated after login",
+    "issue_number": 2534,
+    "bullet_points": [],
+    "created_at": "2024-04-26"
+}

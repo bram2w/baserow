@@ -153,6 +153,7 @@ export default {
         }
       },
       deep: true,
+      immediate: true,
     },
   },
   async mounted() {
