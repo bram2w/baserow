@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix formula recursion error in create/update row action when using multiple formule with the same data source",
+    "issue_number": 2506,
+    "bullet_points": [],
+    "created_at": "2024-04-26"
+}
