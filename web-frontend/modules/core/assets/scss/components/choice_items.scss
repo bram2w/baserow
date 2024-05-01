@@ -49,7 +49,7 @@
   &:hover {
     text-decoration: none;
 
-    &:not(.disabled, .active) {
+    &:not(.disabled):not(.active) {
       background-color: $color-neutral-100;
       color: $color-neutral-900;
     }

@@ -12,12 +12,10 @@
   }
 
   &:hover {
-    cursor: pointer;
-  }
-
-  &:not(.calendar-card--disabled, .calendar-card--dragging):hover {
-    cursor: pointer;
-    background-color: $color-neutral-100;
+    &:not(.calendar-card--disabled):not(.calendar-card--dragging) {
+      cursor: pointer;
+      background-color: $color-neutral-100;
+    }
   }
 }
 

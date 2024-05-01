@@ -15,14 +15,14 @@
   @include rounded($rounded-md);
   @include elevation($elevation-low);
 
-  &:hover:not(.button-icon--loading, [disabled]) {
+  &:hover:not(.button-icon--loading):not([disabled]) {
     background: $palette-neutral-25;
     color: $palette-blue-600;
     text-decoration: none;
   }
 
   &.active,
-  &:active:not(.button-icon--loading, [disabled]) {
+  &:active:not(.button-icon--loading):not([disabled]) {
     background: $palette-neutral-50;
     color: $palette-blue-700;
     box-shadow: none !important;
