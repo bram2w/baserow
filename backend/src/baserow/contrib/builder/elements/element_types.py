@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
 from baserow.contrib.builder.elements.mixins import (
     CollectionElementTypeMixin,
+    CollectionElementWithFieldsTypeMixin,
     ContainerElementTypeMixin,
     FormElementTypeMixin,
 )
@@ -32,6 +33,7 @@ from baserow.contrib.builder.elements.models import (
     InputTextElement,
     LinkElement,
     NavigationElementMixin,
+    RepeatElement,
     TableElement,
     TextElement,
     VerticalAlignments,
@@ -192,11 +194,11 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
         return super().import_serialized(page, serialized_copy, id_mapping)
 
 
-class TableElementType(CollectionElementTypeMixin, ElementType):
+class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
     type = "table"
     model_class = TableElement
 
-    class SerializedDict(CollectionElementTypeMixin.SerializedDict):
+    class SerializedDict(CollectionElementWithFieldsTypeMixin.SerializedDict):
         button_color: str
 
     @property
@@ -218,6 +220,22 @@ class TableElementType(CollectionElementTypeMixin, ElementType):
                 help_text="Button color.",
             ),
         }
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {"data_source_id": None}
+
+
+class RepeatElementType(
+    CollectionElementTypeMixin, ContainerElementTypeMixin, ElementType
+):
+    type = "repeat"
+    model_class = RepeatElement
+
+    class SerializedDict(
+        CollectionElementTypeMixin.SerializedDict,
+        ContainerElementTypeMixin.SerializedDict,
+    ):
+        pass
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"data_source_id": None}

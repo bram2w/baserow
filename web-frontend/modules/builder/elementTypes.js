@@ -33,6 +33,8 @@ import CheckboxElement from '@baserow/modules/builder/components/elements/compon
 import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
 import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
 import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
+import RepeatElement from '@baserow/modules/builder/components/elements/components/RepeatElement'
+import RepeatElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RepeatElementForm'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { isNumeric, isValidEmail } from '@baserow/modules/core/utils/string'
 
@@ -626,7 +628,22 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
   }
 }
 
-const CollectionElementTypeMixin = (Base) => class extends Base {}
+const CollectionElementTypeMixin = (Base) =>
+  class extends Base {
+    getDisplayName(element, { page }) {
+      let suffix = ''
+
+      if (element.data_source_id) {
+        const dataSource = this.app.store.getters[
+          'dataSource/getPageDataSourceById'
+        ](page, element.data_source_id)
+
+        suffix = dataSource ? ` - ${dataSource.name}` : ''
+      }
+
+      return `${this.name}${suffix}`
+    }
+  }
 
 export class TableElementType extends CollectionElementTypeMixin(ElementType) {
   getType() {
@@ -693,20 +710,6 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
     })
     return collectionFieldsInError.includes(true)
   }
-
-  getDisplayName(element, { page }) {
-    let suffix = ''
-
-    if (element.data_source_id) {
-      const dataSource = this.app.store.getters[
-        'dataSource/getPageDataSourceById'
-      ](page, element.data_source_id)
-
-      suffix = dataSource ? ` - ${dataSource.name}` : ''
-    }
-
-    return `${this.name}${suffix}`
-  }
 }
 
 export class RepeatElementType extends ContainerElementTypeMixin(
@@ -726,6 +729,31 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 
   get iconClass() {
     return 'iconoir-repeat'
+  }
+
+  get component() {
+    return RepeatElement
+  }
+
+  get generalFormComponent() {
+    return RepeatElementForm
+  }
+
+  /**
+   * Return an array of placements that are disallowed for the elements to move
+   * in their container.
+   *
+   * @param {Object} page The page that is the parent component.
+   * @param {Number} element The child element for which the placements should
+   *    be calculated.
+   * @returns {Array} An array of placements that are disallowed for the element.
+   */
+  getPlacementsDisabledForChild(page, containerElement, element) {
+    return [
+      PLACEMENTS.LEFT,
+      PLACEMENTS.RIGHT,
+      ...this.getVerticalPlacementsDisabled(page, element),
+    ]
   }
 }
 /**

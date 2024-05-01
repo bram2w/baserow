@@ -169,6 +169,7 @@ class BuilderConfig(AppConfig):
             ImageElementType,
             InputTextElementType,
             LinkElementType,
+            RepeatElementType,
             TableElementType,
             TextElementType,
         )
@@ -182,6 +183,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(ColumnElementType())
         element_type_registry.register(ButtonElementType())
         element_type_registry.register(TableElementType())
+        element_type_registry.register(RepeatElementType())
         element_type_registry.register(FormContainerElementType())
         element_type_registry.register(DropdownElementType())
         element_type_registry.register(CheckboxElementType())

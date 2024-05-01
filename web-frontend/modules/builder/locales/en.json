@@ -424,6 +424,15 @@
     "empty": "No items have been found.",
     "showMore": "Show more"
   },
+  "repeatElement": {
+    "empty": "No items have been found.",
+    "showMore": "Show more"
+  },
+  "repeatElementForm": {
+    "dataSource": "Data source",
+    "itemsPerPage": "Items per page",
+    "itemsPerPagePlaceholder": "Enter value..."
+  },
   "currentRecordDataProviderType": {
     "index": "Index",
     "firstPartName": "Data source: {name}"

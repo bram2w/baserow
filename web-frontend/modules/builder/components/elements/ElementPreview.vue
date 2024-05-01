@@ -30,7 +30,7 @@
       @delete="deleteElement"
       @move="$emit('move', $event)"
       @duplicate="duplicateElement"
-      @select-parent="actionSelectElement({ element: parentElement })"
+      @select-parent="selectParentElement()"
     />
 
     <PageElement :element="element" :mode="mode" class="element--read-only" />
@@ -217,11 +217,15 @@ export default {
     }),
     onSelect($event) {
       // Here we check that the event has been emitted for this particular element
-      // If we found an intermediate DOM element with the class `element-preview`
-      // It means it hasn't been originated by this element so we don't select it.
+      // If we found an intermediate DOM element with the class `element-preview`,
+      // or `element-preview__menu`, then we don't select the element.
+      // It means it hasn't been originated by this element, so we don't select it.
       if (
         !checkIntermediateElements(this.$el, $event.target, (el) => {
-          return el.classList.contains('element-preview')
+          return (
+            el.classList.contains('element-preview') ||
+            el.classList.contains('element-preview__menu')
+          )
         })
       ) {
         this.actionSelectElement({ element: this.element })
@@ -259,6 +263,11 @@ export default {
         })
       } catch (error) {
         notifyIf(error)
+      }
+    },
+    selectParentElement() {
+      if (this.parentOfElementSelected) {
+        this.actionSelectElement({ element: this.parentOfElementSelected })
       }
     },
   },

@@ -435,10 +435,18 @@ const getters = {
       .filter((e) => e.parent_element_id === element.id)
   },
   getDescendants: (state, getters) => (page, element) => {
-    return getters
-      .getChildren(page, element)
-      .map((child) => [...getters.getChildren(page, child), child])
-      .flat()
+    const getAllDescendants = (page, element) => {
+      const children = getters.getChildren(page, element)
+      if (children.length === 0) {
+        return []
+      } else {
+        return children.flatMap((child) => [
+          child,
+          ...getAllDescendants(page, child),
+        ])
+      }
+    }
+    return getAllDescendants(page, element)
   },
   getParent: (state, getters) => (page, element) => {
     return getters.getElementById(page, element.parent_element_id)
