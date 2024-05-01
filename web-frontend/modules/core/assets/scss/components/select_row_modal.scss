@@ -9,8 +9,7 @@
   }
 
   .simple-grid__left {
-    .simple-grid__cell:not(
-        .simple-grid__cell--first,
+    .simple-grid__cell:not(.simple-grid__cell--first):not(
         .simple-grid__cell--single
       ) {
       width: 200px;

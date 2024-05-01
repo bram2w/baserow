@@ -48,5 +48,6 @@ module.exports = {
     'color-function-notation': 'legacy',
     'scss/no-global-function-names': null,
     'alpha-value-notation': 'number',
+    'selector-not-notation': 'simple',
   },
 }

@@ -242,7 +242,7 @@
     color: $palette-neutral-1200;
   }
 
-  :not(.select__item--loading, .select__item--no-options):hover > & {
+  :not(.select__item--loading):not(.select__item--no-options):hover > & {
     display: block;
   }
 }

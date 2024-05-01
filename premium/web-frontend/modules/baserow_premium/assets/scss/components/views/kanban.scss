@@ -161,13 +161,12 @@
     transition: transform 0.1s ease-out 0s;
   }
 
-  &:not(
-      .kanban-view__stack-card--disabled,
-      .kanban-view__stack-card--dragging
-    ):hover {
-    cursor: pointer;
+  &:hover {
+    &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging) {
+      cursor: pointer;
 
-    @include elevation($elevation-medium);
+      @include elevation($elevation-medium);
+    }
   }
 }
 

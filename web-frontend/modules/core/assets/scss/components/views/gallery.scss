@@ -40,12 +40,12 @@
     transition: transform 0.1s ease-out 0s;
   }
 
-  &:not(
-      .card--loading,
-      .gallery-view__card--disabled,
-      .gallery-view__card--dragging
-    ):hover {
-    cursor: pointer;
-    box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+  &:hover {
+    &:not(.card--loading):not(.gallery-view__card--disabled):not(
+        .gallery-view__card--dragging
+      ) {
+      cursor: pointer;
+      box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+    }
   }
 }

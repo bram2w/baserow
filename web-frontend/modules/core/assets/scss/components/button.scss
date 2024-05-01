@@ -28,7 +28,7 @@
     text-decoration: none;
   }
 
-  &:active:not(.button--loading, [disabled]) {
+  &:active:not(.button--loading):not([disabled]) {
     box-shadow: none !important;
   }
 
