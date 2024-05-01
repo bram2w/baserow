@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="mode === 'editing' || isVisible"
+    v-if="elementMode === 'editing' || isVisible"
     class="element__wrapper"
     :class="{
       'element__wrapper--full-width':
@@ -32,16 +32,21 @@ import { BACKGROUND_TYPES, WIDTH_TYPES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'PageElement',
-  inject: ['builder', 'page'],
+  inject: ['builder', 'page', 'mode'],
+  provide() {
+    return {
+      mode: this.elementMode,
+    }
+  },
   props: {
     element: {
       type: Object,
       required: true,
     },
-    mode: {
+    forceMode: {
       type: String,
       required: false,
-      default: '',
+      default: null,
     },
   },
   computed: {
@@ -50,10 +55,13 @@ export default {
     colorVariables() {
       return themeToColorVariables(this.builder.theme)
     },
+    elementMode() {
+      return this.forceMode !== null ? this.forceMode : this.mode
+    },
     component() {
       const elementType = this.$registry.get('element', this.element.type)
       const componentName =
-        this.mode === 'editing' ? 'editComponent' : 'component'
+        this.elementMode === 'editing' ? 'editComponent' : 'component'
       return elementType[componentName]
     },
     children() {

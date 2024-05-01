@@ -730,8 +730,6 @@ class CollectionElement(Element):
         ],
     )
 
-    fields = models.ManyToManyField(CollectionField)
-
     class Meta:
         abstract = True
 
@@ -747,6 +745,8 @@ class TableElement(CollectionElement):
         blank=True,
         help_text="The color of the button",
     )
+
+    fields = models.ManyToManyField(CollectionField)
 
 
 class IFrameElement(Element):
@@ -773,3 +773,12 @@ class IFrameElement(Element):
         help_text="Height in pixels of the iframe",
         default=300,
     )
+
+
+class RepeatElement(CollectionElement, ContainerElement):
+    """
+    A container and collection type element which repeats the child elements for each
+    item in the data source that it is bound to.
+    """
+
+    ...

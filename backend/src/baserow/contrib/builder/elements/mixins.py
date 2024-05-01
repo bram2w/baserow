@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.api.exceptions import RequestBodyValidationException
+from baserow.contrib.builder.api.elements.serializers import CollectionFieldSerializer
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
@@ -14,7 +15,6 @@ from baserow.contrib.builder.elements.models import (
     ContainerElement,
     Element,
     FormElement,
-    LinkElement,
     TableElement,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -22,6 +22,7 @@ from baserow.contrib.builder.elements.registries import (
     element_type_registry,
 )
 from baserow.contrib.builder.elements.signals import elements_moved
+from baserow.contrib.builder.elements.types import CollectionElementSubClass
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
 
@@ -29,6 +30,9 @@ from baserow.contrib.builder.types import ElementDict
 class ContainerElementTypeMixin:
     # Container element types are imported first.
     import_element_priority = 2
+
+    class SerializedDict(ElementDict):
+        pass
 
     @property
     def child_types_allowed(self) -> List[str]:
@@ -107,19 +111,14 @@ class ContainerElementTypeMixin:
 
 class CollectionElementTypeMixin:
     allowed_fields = ["data_source", "data_source_id", "items_per_page"]
-    serializer_field_names = ["data_source_id", "fields", "items_per_page"]
+    serializer_field_names = ["data_source_id", "items_per_page"]
 
     class SerializedDict(ElementDict):
         data_source_id: int
         items_per_page: int
-        fields: List[Dict]
 
     @property
     def serializer_field_overrides(self):
-        from baserow.contrib.builder.api.elements.serializers import (
-            CollectionFieldSerializer,
-        )
-
         return {
             "data_source_id": serializers.IntegerField(
                 allow_null=True,
@@ -132,11 +131,10 @@ class CollectionElementTypeMixin:
                 help_text=TableElement._meta.get_field("items_per_page").help_text,
                 required=False,
             ),
-            "fields": CollectionFieldSerializer(many=True, required=False),
         }
 
     def prepare_value_for_db(
-        self, values: Dict, instance: Optional[LinkElement] = None
+        self, values: Dict, instance: Optional[CollectionElementSubClass] = None
     ):
         if "data_source_id" in values:
             data_source_id = values.pop("data_source_id")
@@ -174,65 +172,6 @@ class CollectionElementTypeMixin:
 
         return super().prepare_value_for_db(values, instance)
 
-    def after_create(self, instance, values):
-        default_fields = [
-            {
-                "name": _("Column %(count)s") % {"count": 1},
-                "type": "text",
-                "config": {"value": ""},
-            },
-            {
-                "name": _("Column %(count)s") % {"count": 2},
-                "type": "text",
-                "config": {"value": ""},
-            },
-            {
-                "name": _("Column %(count)s") % {"count": 3},
-                "type": "text",
-                "config": {"value": ""},
-            },
-        ]
-
-        fields = values.get("fields", default_fields)
-
-        created_fields = CollectionField.objects.bulk_create(
-            [
-                CollectionField(**field, order=index)
-                for index, field in enumerate(fields)
-            ]
-        )
-        instance.fields.add(*created_fields)
-
-    def after_update(self, instance, values):
-        if "fields" in values:
-            # Remove previous fields
-            instance.fields.all().delete()
-
-            created_fields = CollectionField.objects.bulk_create(
-                [
-                    CollectionField(**field, order=index)
-                    for index, field in enumerate(values["fields"])
-                ]
-            )
-            instance.fields.add(*created_fields)
-
-    def before_delete(self, instance):
-        instance.fields.all().delete()
-
-    def serialize_property(self, element: Element, prop_name: str):
-        """
-        You can customize the behavior of the serialization of a property with this
-        hook.
-        """
-
-        if prop_name == "fields":
-            return [
-                collection_field_type_registry.get(f.type).export_serialized(f)
-                for f in element.fields.all()
-            ]
-
-        return super().serialize_property(element, prop_name)
-
     def deserialize_property(
         self,
         prop_name: str,
@@ -243,35 +182,7 @@ class CollectionElementTypeMixin:
         if prop_name == "data_source_id" and value:
             return id_mapping["builder_data_sources"][value]
 
-        if prop_name == "fields":
-            return [
-                # We need to add the data_source_id for the current row
-                # provider.
-                collection_field_type_registry.get(f["type"]).import_serialized(
-                    f, id_mapping, data_source_id=kwargs["data_source_id"]
-                )
-                for f in value
-            ]
-
         return super().deserialize_property(prop_name, value, id_mapping)
-
-    def create_instance_from_serialized(self, serialized_values: Dict[str, Any]):
-        """Deals with the fields"""
-
-        fields = serialized_values.pop("fields", [])
-
-        instance = super().create_instance_from_serialized(serialized_values)
-
-        # Add the field order
-        for i, f in enumerate(fields):
-            f.order = i
-
-        # Create fields
-        created_fields = CollectionField.objects.bulk_create(fields)
-
-        instance.fields.add(*created_fields)
-
-        return instance
 
     def import_serialized(
         self,
@@ -301,6 +212,122 @@ class CollectionElementTypeMixin:
             data_source_id=actual_data_source_id,
             **kwargs,
         )
+
+
+class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
+    """
+    As subclass of `CollectionElementTypeMixin` which extends its functionality to
+    include fields. This mixin is used for elements that have fields, like tables.
+    """
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + ["fields"]
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            "fields": CollectionFieldSerializer(many=True, required=False),
+        }
+
+    class SerializedDict(CollectionElementTypeMixin.SerializedDict):
+        fields: List[Dict]
+
+    def serialize_property(self, element: CollectionElementSubClass, prop_name: str):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "fields":
+            return [
+                collection_field_type_registry.get(f.type).export_serialized(f)
+                for f in element.fields.all()
+            ]
+
+        return super().serialize_property(element, prop_name)
+
+    def after_create(self, instance: CollectionElementSubClass, values):
+        default_fields = [
+            {
+                "name": _("Column %(count)s") % {"count": 1},
+                "type": "text",
+                "config": {"value": ""},
+            },
+            {
+                "name": _("Column %(count)s") % {"count": 2},
+                "type": "text",
+                "config": {"value": ""},
+            },
+            {
+                "name": _("Column %(count)s") % {"count": 3},
+                "type": "text",
+                "config": {"value": ""},
+            },
+        ]
+
+        fields = values.get("fields", default_fields)
+
+        created_fields = CollectionField.objects.bulk_create(
+            [
+                CollectionField(**field, order=index)
+                for index, field in enumerate(fields)
+            ]
+        )
+        instance.fields.add(*created_fields)
+
+    def after_update(self, instance: CollectionElementSubClass, values):
+        if "fields" in values:
+            # Remove previous fields
+            instance.fields.all().delete()
+
+            created_fields = CollectionField.objects.bulk_create(
+                [
+                    CollectionField(**field, order=index)
+                    for index, field in enumerate(values["fields"])
+                ]
+            )
+            instance.fields.add(*created_fields)
+
+    def before_delete(self, instance: CollectionElementSubClass):
+        instance.fields.all().delete()
+
+    def create_instance_from_serialized(self, serialized_values: Dict[str, Any]):
+        """Deals with the fields"""
+
+        fields = serialized_values.pop("fields", [])
+
+        instance = super().create_instance_from_serialized(serialized_values)
+
+        # Add the field order
+        for i, f in enumerate(fields):
+            f.order = i
+
+        # Create fields
+        created_fields = CollectionField.objects.bulk_create(fields)
+
+        instance.fields.add(*created_fields)
+
+        return instance
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        **kwargs,
+    ) -> Any:
+        if prop_name == "fields":
+            return [
+                # We need to add the data_source_id for the current row provider.
+                collection_field_type_registry.get(f["type"]).import_serialized(
+                    f, id_mapping, data_source_id=kwargs["data_source_id"]
+                )
+                for f in value
+            ]
+
+        return super().deserialize_property(prop_name, value, id_mapping)
 
 
 class FormElementTypeMixin:

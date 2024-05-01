@@ -156,75 +156,29 @@ import {
   minValue,
   maxValue,
 } from 'vuelidate/lib/validators'
-import { mapGetters } from 'vuex'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 
 export default {
   name: 'TableElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [elementForm],
+  mixins: [elementForm, collectionElementForm],
   data() {
     return {
       allowedValues: ['data_source_id', 'fields', 'items_per_page'],
       values: {
+        fields: [],
         data_source_id: null,
         items_per_page: 1,
-        fields: [],
       },
     }
   },
   computed: {
-    dataSources() {
-      return this.$store.getters['dataSource/getPageDataSources'](this.page)
-    },
-    availableDataSources() {
-      return this.dataSources.filter(
-        (dataSource) =>
-          dataSource.type &&
-          this.$registry.get('service', dataSource.type).returnsList
-      )
-    },
-    selectedDataSource() {
-      if (!this.values.data_source_id) {
-        return null
-      }
-      return this.$store.getters['dataSource/getPageDataSourceById'](
-        this.page,
-        this.values.data_source_id
-      )
-    },
-    selectedDataSourceType() {
-      if (!this.selectedDataSource || !this.selectedDataSource.type) {
-        return null
-      }
-      return this.$registry.get('service', this.selectedDataSource.type)
-    },
-    maxItemPerPage() {
-      if (!this.selectedDataSourceType) {
-        return 20
-      }
-      return this.selectedDataSourceType.maxResultLimit
-    },
     orderedCollectionTypes() {
       return this.$registry.getOrderedList('collectionField')
     },
     collectionTypes() {
       return this.$registry.getAll('collectionField')
-    },
-    ...mapGetters({
-      element: 'element/getSelected',
-    }),
-  },
-  watch: {
-    'dataSources.length'(newValue, oldValue) {
-      if (this.values.data_source_id && oldValue > newValue) {
-        if (
-          !this.dataSources.some(({ id }) => id === this.values.data_source_id)
-        ) {
-          // Remove the data_source_id if the related dataSource has been deleted.
-          this.values.data_source_id = null
-        }
-      }
     },
   },
   methods: {
