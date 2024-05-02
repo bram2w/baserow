@@ -21,9 +21,9 @@
         </div>
       </div>
       <div class="actions actions--right">
-        <Button type="upload" size="large" :loading="loading">
-          {{ $t('action.upload') }}</Button
-        >
+        <Button type="primary" size="large" :loading="loading">
+          {{ $t('action.upload') }}
+        </Button>
       </div>
     </form>
   </div>
