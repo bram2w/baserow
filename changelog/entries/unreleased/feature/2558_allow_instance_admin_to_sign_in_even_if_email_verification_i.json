@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Allow instance admin to sign in even if email verification is set to enforced",
+    "issue_number": 2558,
+    "bullet_points": [],
+    "created_at": "2024-04-26"
+}
