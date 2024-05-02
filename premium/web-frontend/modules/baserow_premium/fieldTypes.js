@@ -1,4 +1,7 @@
-import { FieldType } from '@baserow/modules/database/fieldTypes'
+import {
+  FieldType,
+  FormulaFieldType,
+} from '@baserow/modules/database/fieldTypes'
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
 import { collatedStringCompare } from '@baserow/modules/core/utils/string'
@@ -11,6 +14,7 @@ import GridViewFieldAI from '@baserow_premium/components/views/grid/fields/GridV
 import FunctionalGridViewFieldAI from '@baserow_premium/components/views/grid/fields/FunctionalGridViewFieldAI'
 import RowEditFieldAI from '@baserow_premium/components/row/RowEditFieldAI'
 import FieldAISubForm from '@baserow_premium/components/field/FieldAISubForm'
+import FormulaFieldAI from '@baserow_premium/components/field/FormulaFieldAI'
 import GridViewFieldAIGenerateValuesContextItem from '@baserow_premium/components/views/grid/fields/GridViewFieldAIGenerateValuesContextItem'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
 import PremiumFeatures from '@baserow_premium/features'
@@ -107,5 +111,11 @@ export class AIFieldType extends FieldType {
 
   getDeactivatedClickModal(workspaceId) {
     return PremiumModal
+  }
+}
+
+export class PremiumFormulaFieldType extends FormulaFieldType {
+  getAdditionalFormInputComponents() {
+    return [FormulaFieldAI]
   }
 }

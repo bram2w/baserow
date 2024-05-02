@@ -3591,6 +3591,14 @@ export class FormulaFieldType extends FieldType {
     return FieldFormulaSubForm
   }
 
+  /**
+   * Can optionally return additional components that are rendered directly below
+   * the field form formula input.
+   */
+  getAdditionalFormInputComponents() {
+    return []
+  }
+
   getIsReadOnly() {
     return true
   }

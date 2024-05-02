@@ -43,7 +43,10 @@ import {
   RowCommentNotificationType,
 } from '@baserow_premium/notificationTypes'
 import { CommentsRowModalSidebarType } from '@baserow_premium/rowModalSidebarTypes'
-import { AIFieldType } from '@baserow_premium/fieldTypes'
+import {
+  AIFieldType,
+  PremiumFormulaFieldType,
+} from '@baserow_premium/fieldTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -92,6 +95,7 @@ export default (context) => {
   app.$registry.register('exporter', new JSONTableExporter(context))
   app.$registry.register('exporter', new XMLTableExporter(context))
   app.$registry.register('field', new AIFieldType(context))
+  app.$registry.register('field', new PremiumFormulaFieldType(context))
   app.$registry.register('view', new KanbanViewType(context))
   app.$registry.register('view', new CalendarViewType(context))
 

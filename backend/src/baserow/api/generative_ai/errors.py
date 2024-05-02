@@ -10,3 +10,13 @@ ERROR_MODEL_DOES_NOT_BELONG_TO_TYPE = (
     HTTP_400_BAD_REQUEST,
     "The requested model does not belong to the provided type.",
 )
+ERROR_GENERATIVE_AI_PROMPT = (
+    "ERROR_GENERATIVE_AI_PROMPT",
+    HTTP_400_BAD_REQUEST,
+    "Something went wrong prompting the model",
+)
+ERROR_OUTPUT_PARSER = (
+    "ERROR_OUTPUT_PARSER",
+    HTTP_400_BAD_REQUEST,
+    "The model didn't respond with the correct output. Please try again.",
+)

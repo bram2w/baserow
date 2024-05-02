@@ -16,6 +16,14 @@
           @click="$emit('open-advanced-context', $refs.formulaInput)"
           @input="$emit('open-advanced-context', $refs.formulaInput)"
         />
+        <component
+          :is="component"
+          v-for="(component, index) in additionalInputComponents"
+          :key="index"
+          :database="database"
+          :table="table"
+          @update-formula="$emit('update-formula', $event)"
+        ></component>
         <div v-if="loading" class="loading"></div>
         <template v-else>
           <div v-if="error" class="error formula-field__error">
@@ -53,6 +61,7 @@ import form from '@baserow/modules/core/mixins/form'
 
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import FormulaTypeSubForms from '@baserow/modules/database/components/formula/FormulaTypeSubForms'
+import { FormulaFieldType } from '@baserow/modules/database/fieldTypes'
 
 export default {
   name: 'FieldFormulaInitialSubForm',
@@ -93,6 +102,11 @@ export default {
   computed: {
     showTypeFormattingOptions() {
       return !(this.loading || this.formulaTypeRefreshNeeded || this.error)
+    },
+    additionalInputComponents() {
+      return this.$registry
+        .get('field', FormulaFieldType.getType())
+        .getAdditionalFormInputComponents()
     },
   },
 }

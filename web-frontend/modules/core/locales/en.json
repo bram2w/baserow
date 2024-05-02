@@ -657,5 +657,9 @@
         "unorderedList": "Bullet list",
         "code": "Code",
         "taskList": "Task list"
+    },
+    "selectAIModelForm": {
+        "AIType": "AI Type",
+        "AIModel": "AI Model"
     }
 }
