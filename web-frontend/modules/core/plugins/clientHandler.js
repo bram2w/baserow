@@ -134,6 +134,14 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.disabledPasswordProviderTitle'),
         app.i18n.t('clientHandler.disabledPasswordProviderMessage')
       ),
+      ERROR_OUTPUT_PARSER: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.outputParserTitle'),
+        app.i18n.t('clientHandler.outputParserDescription')
+      ),
+      ERROR_GENERATIVE_AI_PROMPT: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.generateAIPromptTitle'),
+        app.i18n.t('clientHandler.generateAIPromptDescription')
+      ),
       // TODO: Move to enterprise module if possible
       ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS: new ResponseErrorMessage(
         app.i18n.t('clientHandler.cannotDisableAllAuthProvidersTitle'),

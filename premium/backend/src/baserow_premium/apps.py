@@ -22,6 +22,7 @@ class BaserowPremiumConfig(AppConfig):
             field_type_registry,
         )
 
+        from .fields.actions import GenerateFormulaWithAIActionType
         from .fields.field_converters import AIFieldConverter
         from .fields.field_types import AIFieldType
 
@@ -39,6 +40,8 @@ class BaserowPremiumConfig(AppConfig):
         )
         from baserow.core.action.registries import action_type_registry
         from baserow.core.registries import plugin_registry
+
+        action_type_registry.register(GenerateFormulaWithAIActionType())
 
         from .export.exporter_types import JSONTableExporter, XMLTableExporter
         from .plugins import PremiumPlugin
