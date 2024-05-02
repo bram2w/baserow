@@ -16,7 +16,11 @@ export class LocalBaserowIntegrationType extends IntegrationType {
   }
 
   getSummary(integration) {
-    return this.app.i18n.t('integrationType.localBaserowSummary', {
+    if (!integration.authorized_user) {
+      return this.app.i18n.t('localBaserowIntegrationType.localBaserowNoUser')
+    }
+
+    return this.app.i18n.t('localBaserowIntegrationType.localBaserowSummary', {
       name: integration.authorized_user.first_name,
       username: integration.authorized_user.username,
     })
@@ -27,7 +31,7 @@ export class LocalBaserowIntegrationType extends IntegrationType {
   }
 
   get warning() {
-    return this.app.i18n.t('integrationType.localBaserowWarning')
+    return this.app.i18n.t('localBaserowIntegrationType.localBaserowWarning')
   }
 
   getDefaultValues() {

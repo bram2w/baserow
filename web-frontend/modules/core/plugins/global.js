@@ -36,6 +36,7 @@ import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
 import FormRow from '@baserow/modules/core/components/FormRow'
 import Logo from '@baserow/modules/core/components/Logo'
+import ReadOnlyForm from '@baserow/modules/core/components/ReadOnlyForm'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -101,6 +102,7 @@ function setupVue(Vue) {
   Vue.component('ImageInput', ImageInput)
   Vue.component('SelectSearch', SelectSearch)
   Vue.component('Logo', Logo)
+  Vue.component('ReadOnlyForm', ReadOnlyForm)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

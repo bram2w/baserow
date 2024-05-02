@@ -883,42 +883,42 @@ def test_check_multiple_permissions(data_fixture, enterprise_data_fixture):
 
     checks = [
         PermissionCheck(
-            actor=user_2,
+            original_actor=user_2,
             operation_name=ReadApplicationOperationType.type,
             context=database1,
         ),
         PermissionCheck(
-            actor=user_2,
+            original_actor=user_2,
             operation_name=ReadDatabaseTableOperationType.type,
             context=table12,
         ),
         PermissionCheck(
-            actor=user_2,
+            original_actor=user_2,
             operation_name=ReadDatabaseTableOperationType.type,
             context=table21,
         ),
         PermissionCheck(
-            actor=user_3,
+            original_actor=user_3,
             operation_name=DeleteApplicationOperationType.type,
             context=workspace,
         ),
         PermissionCheck(
-            actor=user_3,
+            original_actor=user_3,
             operation_name=ReadApplicationOperationType.type,
             context=database2,
         ),
         PermissionCheck(
-            actor=user_4,
+            original_actor=user_4,
             operation_name=ReadApplicationOperationType.type,
             context=database1,
         ),
         PermissionCheck(
-            actor=user_4,
+            original_actor=user_4,
             operation_name=ReadDatabaseTableOperationType.type,
             context=table12,
         ),
         PermissionCheck(
-            actor=user_4,
+            original_actor=user_4,
             operation_name=ReadDatabaseTableOperationType.type,
             context=table21,
         ),
@@ -1753,14 +1753,16 @@ def test_check_multiple_permissions_perf(
             for op in db_op:
                 checks.append(
                     PermissionCheck(
-                        actor=user, operation_name=op.type, context=db.application_ptr
+                        original_actor=user,
+                        operation_name=op.type,
+                        context=db.application_ptr,
                     )
                 )
             for table in tables:
                 for op in table_op:
                     checks.append(
                         PermissionCheck(
-                            actor=user, operation_name=op.type, context=table
+                            original_actor=user, operation_name=op.type, context=table
                         )
                     )
 

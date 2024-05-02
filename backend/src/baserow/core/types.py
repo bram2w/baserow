@@ -24,9 +24,15 @@ SerializationProcessorScope = Union["Database", "Table", "Builder"]
 
 
 class PermissionCheck(NamedTuple):
-    actor: Actor
+    original_actor: Actor
     operation_name: str
     context: Optional[ContextObject] = None
+
+    @property
+    def actor(self) -> Actor:
+        from django.contrib.auth.models import AnonymousUser
+
+        return self.original_actor or AnonymousUser
 
 
 class PermissionObjectResult(TypedDict):

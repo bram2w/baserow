@@ -8,20 +8,30 @@
   >
     <template v-if="state === 'loaded'">
       <div v-if="dataSources.length > 0">
-        <DataSourceForm
+        <ReadOnlyForm
           v-for="dataSource in dataSources"
-          :id="dataSource.id"
-          :ref="`dataSourceForm_${dataSource.id}`"
           :key="dataSource.id"
-          :builder="builder"
-          :data-source="dataSource"
-          :page="page"
-          :default-values="dataSource"
-          :integrations="integrations"
-          :loading="dataSourcesLoading.includes(dataSource.id)"
-          @delete="deleteDataSource(dataSource)"
-          @values-changed="updateDataSource(dataSource, $event)"
-        />
+          :read-only="
+            !$hasPermission(
+              'builder.page.data_source.update',
+              dataSource,
+              workspace.id
+            )
+          "
+        >
+          <DataSourceForm
+            :id="dataSource.id"
+            :ref="`dataSourceForm_${dataSource.id}`"
+            :builder="builder"
+            :data-source="dataSource"
+            :page="page"
+            :default-values="dataSource"
+            :integrations="integrations"
+            :loading="dataSourcesLoading.includes(dataSource.id)"
+            @delete="deleteDataSource(dataSource)"
+            @values-changed="updateDataSource(dataSource, $event)"
+          />
+        </ReadOnlyForm>
       </div>
 
       <template v-else>
@@ -36,8 +46,12 @@
       </template>
 
       <ButtonText
-        icon="iconoir-plus"
+        v-if="
+          $hasPermission('builder.page.create_data_source', page, workspace.id)
+        "
         type="secondary"
+        icon="iconoir-plus"
+        size="small"
         :loading="creationInProgress"
         @click="createDataSource()"
       >
@@ -59,7 +73,7 @@ export default {
   name: 'DataSourceContext',
   components: { DataSourceForm },
   mixins: [context],
-  inject: ['builder'],
+  inject: ['workspace', 'builder'],
   props: {
     page: {
       type: Object,

@@ -1,5 +1,6 @@
 import secrets
 from datetime import datetime, timezone
+from functools import lru_cache
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,6 +28,7 @@ from .mixins import (
     ParentWorkspaceTrashableModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from .notifications.models import Notification
 from .services.models import Service
@@ -268,6 +270,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 
         return self.application_set(manager="objects_and_trash")
 
+    @lru_cache
     def has_template(self):
         return self.template_set.all().exists()
 
@@ -387,6 +390,7 @@ class Application(
     OrderableMixin,
     PolymorphicContentTypeMixin,
     GroupToWorkspaceCompatModelMixin,
+    WithRegistry,
     models.Model,
 ):
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=True)
@@ -407,6 +411,12 @@ class Application(
 
     class Meta:
         ordering = ("order",)
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import application_type_registry
+
+        return application_type_registry
 
     @classmethod
     def get_last_order(cls, workspace):

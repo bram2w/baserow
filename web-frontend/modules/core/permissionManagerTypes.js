@@ -130,3 +130,17 @@ export class StaffOnlySettingOperationPermissionManagerType extends PermissionMa
     }
   }
 }
+
+export class AllowIfTemplateOperationPermissionManagerType extends PermissionManagerType {
+  static getType() {
+    return 'allow_if_template'
+  }
+
+  hasPermission(permissions, operation, context, workspaceId) {
+    if (permissions.workspace_template_ids.includes(workspaceId)) {
+      if (permissions.allowed_operations_on_templates.includes(operation)) {
+        return true
+      }
+    }
+  }
+}

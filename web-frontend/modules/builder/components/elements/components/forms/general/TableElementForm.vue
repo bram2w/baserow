@@ -51,6 +51,11 @@
             v-sortable="{
               id: field.id,
               update: orderFields,
+              enabled: $hasPermission(
+                'builder.page.element.update',
+                element,
+                workspace.id
+              ),
               handle: '[data-sortable-handle]',
             }"
             class="table-element-form__field"

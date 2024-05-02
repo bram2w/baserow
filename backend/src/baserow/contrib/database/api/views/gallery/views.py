@@ -259,7 +259,6 @@ class GalleryViewView(APIView):
             ListRowsDatabaseTableOperationType.type,
             workspace=workspace,
             context=view.table,
-            allow_if_template=True,
         )
 
         search = query_params.get("search")

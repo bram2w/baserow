@@ -127,6 +127,7 @@ class AllApplicationsView(APIView):
             ).data
             for application in applications
         ]
+
         return Response(data)
 
 
@@ -184,7 +185,6 @@ class ApplicationsView(APIView):
             ListApplicationsWorkspaceOperationType.type,
             workspace=workspace,
             context=workspace,
-            allow_if_template=True,
         )
 
         applications = (
@@ -198,7 +198,6 @@ class ApplicationsView(APIView):
             ListApplicationsWorkspaceOperationType.type,
             applications,
             workspace=workspace,
-            allow_if_template=True,
         )
 
         applications = specific_iterator(

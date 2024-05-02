@@ -60,12 +60,20 @@ class AppAuthProviderHandler(BaseAuthProviderHandler):
         )
 
     @classmethod
-    def export_app_auth_provider(cls, app_auth_provider: AppAuthProviderType):
+    def export_app_auth_provider(
+        cls,
+        app_auth_provider: AppAuthProviderType,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         """
         Export an app auth provider.
         """
 
-        return app_auth_provider.get_type().export_serialized(app_auth_provider)
+        return app_auth_provider.get_type().export_serialized(
+            app_auth_provider, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     @classmethod
     def import_app_auth_provider(
@@ -75,6 +83,7 @@ class AppAuthProviderHandler(BaseAuthProviderHandler):
         id_mapping: Dict,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache=None,
     ):
         """
         Imports a serialized app_auth_provider.
@@ -87,7 +96,12 @@ class AppAuthProviderHandler(BaseAuthProviderHandler):
             serialized_app_auth_provider["type"]
         )
         app_auth_provider = app_auth_provider_type.import_serialized(
-            user_source, serialized_app_auth_provider, id_mapping
+            user_source,
+            serialized_app_auth_provider,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
         id_mapping["app_auth_providers"][

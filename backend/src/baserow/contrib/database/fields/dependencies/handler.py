@@ -427,9 +427,9 @@ class FieldDependencyHandler:
             if dependency_field.table_id != field.table_id:
                 perm_checks.append(
                     PermissionCheck(
-                        actor=user,
-                        operation_name=field_operation_name,
-                        context=dependency_field,
+                        user,
+                        field_operation_name,
+                        dependency_field,
                     )
                 )
 

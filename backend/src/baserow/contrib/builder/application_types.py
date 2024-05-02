@@ -135,21 +135,43 @@ class BuilderApplicationType(ApplicationType):
         be imported via the `import_serialized`.
         """
 
+        self.cache = {}
+
         serialized_integrations = [
-            IntegrationHandler().export_integration(i)
+            IntegrationHandler().export_integration(
+                i,
+                files_zip=files_zip,
+                storage=storage,
+                cache=self.cache,
+            )
             for i in IntegrationHandler().get_integrations(builder)
         ]
 
         serialized_user_sources = [
-            UserSourceHandler().export_user_source(us)
+            UserSourceHandler().export_user_source(
+                us,
+                files_zip=files_zip,
+                storage=storage,
+                cache=self.cache,
+            )
             for us in UserSourceHandler().get_user_sources(builder)
         ]
 
         pages = builder.page_set.all().prefetch_related("element_set", "datasource_set")
 
-        serialized_pages = [PageHandler().export_page(p) for p in pages]
+        serialized_pages = [
+            PageHandler().export_page(
+                p,
+                files_zip=files_zip,
+                storage=storage,
+                cache=self.cache,
+            )
+            for p in pages
+        ]
 
-        serialized_theme = ThemeHandler().export_theme(builder)
+        serialized_theme = ThemeHandler().export_theme(
+            builder,
+        )
 
         serialized_favicon_file = UserFileHandler().export_user_file(
             builder.favicon_file,
@@ -158,7 +180,10 @@ class BuilderApplicationType(ApplicationType):
         )
 
         serialized_builder = super().export_serialized(
-            builder, import_export_config, files_zip, storage
+            builder,
+            import_export_config,
+            files_zip=files_zip,
+            storage=storage,
         )
 
         return BuilderDict(

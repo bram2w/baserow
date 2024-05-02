@@ -77,6 +77,8 @@ def test_list_without_valid_premium_license(api_client, premium_data_fixture):
 
     premium_data_fixture.create_template(workspace=calendar.table.database.workspace)
 
+    calendar.table.database.workspace.has_template.cache_clear()
+
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
 
     assert response.status_code == HTTP_200_OK
@@ -276,9 +278,11 @@ def test_list_all_rows(api_client, premium_data_fixture):
     for datetime in datetimes:
         model.objects.create(
             **{
-                f"field_{date_field.id}": datetime.replace(tzinfo=timezone.utc)
-                if datetime is not None
-                else None,
+                f"field_{date_field.id}": (
+                    datetime.replace(tzinfo=timezone.utc)
+                    if datetime is not None
+                    else None
+                ),
             }
         )
 

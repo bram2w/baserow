@@ -224,12 +224,16 @@ def test_refresh_data_source_returns_value_from_id_mapping(mock_deserialize):
         # id_mapping is valid but value is empty
         (
             "",
-            {"builder_data_sources": {"foo": "bar"}},
+            {
+                "builder_data_sources": {"foo": "bar"},
+            },
         ),
         # value is valid but id_mapping doesn't have matching value
         (
             "foo",
-            {"builder_data_sources": {"baz": "bar"}},
+            {
+                "builder_data_sources": {"baz": "bar"},
+            },
         ),
     ],
 )
@@ -246,4 +250,6 @@ def test_refresh_data_source_returns_value_from_super_method(
     result = action.deserialize_property(*args)
 
     assert result is mock_result
-    mock_deserialize.assert_called_once_with(*args)
+    mock_deserialize.assert_called_once_with(
+        *args, files_zip=None, cache=None, storage=None
+    )

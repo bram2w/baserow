@@ -203,6 +203,7 @@ def test_list_rows(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=grid.table.database.workspace)
+    grid.table.database.workspace.has_template.cache_clear()
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK

@@ -547,5 +547,11 @@
     "allVisitors": "All visitors",
     "loggedInVisitors": "Logged-in visitors",
     "notLoggedInVisitors": "Logged-out visitors"
+  },
+  "userDataProviderType": {
+    "isAuthenticated": "Is authenticated",
+    "id": "Id",
+    "email": "Email",
+    "username": "Username"
   }
 }

@@ -47,7 +47,14 @@ class LocalBaserowIntegrationType(IntegrationType):
 
         return super().prepare_values(values, user)
 
-    def serialize_property(self, integration: Integration, prop_name: str):
+    def serialize_property(
+        self,
+        integration: Integration,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         """
         Replace the authorized user property with it's username. Better when loading the
         data later.
@@ -58,13 +65,25 @@ class LocalBaserowIntegrationType(IntegrationType):
                 return integration.authorized_user.username
             return None
 
-        return super().serialize_property(integration, prop_name)
+        return super().serialize_property(
+            integration, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
+
+    def after_template_install(
+        self, user: AbstractUser, instance: LocalBaserowIntegration
+    ):
+        """Add the user who installed the template as authorized user"""
+
+        instance.authorized_user = user
+        instance.save()
 
     def import_serialized(
         self,
         application: Application,
         serialized_values: Dict[str, Any],
         id_mapping: Dict,
+        files_zip=None,
+        storage=None,
         cache=None,
     ) -> LocalBaserowIntegration:
         """
@@ -94,7 +113,12 @@ class LocalBaserowIntegrationType(IntegrationType):
             )
 
         return super().import_serialized(
-            application, serialized_values, id_mapping, cache
+            application,
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
     def enhance_queryset(self, queryset):
@@ -118,10 +142,7 @@ class LocalBaserowIntegrationType(IntegrationType):
         in this list.
         """
 
-        if (
-            not integration.application.workspace_id
-            or not integration.specific.authorized_user
-        ):
+        if not integration.application.workspace_id:
             return []
 
         user = integration.specific.authorized_user

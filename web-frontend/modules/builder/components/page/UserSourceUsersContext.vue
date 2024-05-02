@@ -70,7 +70,7 @@
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions } from 'vuex'
 import UserSourceService from '@baserow/modules/core/services/userSource'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import _ from 'lodash'
@@ -88,10 +88,12 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({
-      loggedUser: 'userSourceUser/getUser',
-      isAuthenticated: 'userSourceUser/isAuthenticated',
-    }),
+    isAuthenticated() {
+      return this.$store.getters['userSourceUser/isAuthenticated'](this.builder)
+    },
+    loggedUser() {
+      return this.$store.getters['userSourceUser/getUser'](this.builder)
+    },
     userSources() {
       return this.$store.getters['userSource/getUserSources'](this.builder)
     },
@@ -143,12 +145,16 @@ export default {
       this.currentUser = user
       try {
         if (!user) {
-          await this.actionLogoff()
+          await this.actionLogoff({ application: this.builder })
         } else {
           const userSource = this.$store.getters[
             'userSource/getUserSourceById'
           ](this.builder, user.user_source_id)
-          await this.actionForceAuthenticate({ userSource, user })
+          await this.actionForceAuthenticate({
+            application: this.builder,
+            userSource,
+            user,
+          })
         }
       } catch {
         this.currentUser = previousUser

@@ -46,7 +46,6 @@ class DatabaseSerializer(serializers.ModelSerializer):
                 ListTablesDatabaseTableOperationType.type,
                 tables,
                 workspace=instance.workspace,
-                allow_if_template=True,
             )
 
         return TableSerializer(tables, many=True).data

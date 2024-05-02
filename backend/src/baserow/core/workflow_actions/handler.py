@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional, Type, cast
+from typing import Dict, Iterable, Optional, Type, cast
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -134,6 +134,7 @@ class WorkflowActionHandler(ABC):
         workflow_action,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
     ):
         """
         Serializes the given workflow action.
@@ -144,4 +145,6 @@ class WorkflowActionHandler(ABC):
         :return: The serialized version.
         """
 
-        return workflow_action.get_type().export_serialized(workflow_action)
+        return workflow_action.get_type().export_serialized(
+            workflow_action, files_zip=files_zip, storage=storage, cache=cache
+        )

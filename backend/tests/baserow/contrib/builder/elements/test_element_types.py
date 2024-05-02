@@ -1,4 +1,9 @@
 from collections import defaultdict
+from io import BytesIO
+from tempfile import tempdir
+from zipfile import ZIP_DEFLATED, ZipFile
+
+from django.core.files.storage import FileSystemStorage
 
 import pytest
 from rest_framework.exceptions import ValidationError
@@ -7,6 +12,7 @@ from baserow.contrib.builder.elements.element_types import (
     CheckboxElementType,
     DropdownElementType,
     IFrameElementType,
+    ImageElementType,
     InputTextElementType,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
@@ -19,6 +25,7 @@ from baserow.contrib.builder.elements.models import (
     DropdownElementOption,
     HeadingElement,
     IFrameElement,
+    ImageElement,
     InputTextElement,
     LinkElement,
 )
@@ -28,6 +35,7 @@ from baserow.contrib.builder.elements.registries import (
 )
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
+from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import MirrorDict
 
 
@@ -336,3 +344,47 @@ def test_iframe_element_import_export_formula(data_fixture):
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.url == expected_formula
     assert imported_element.embed == expected_formula
+
+
+@pytest.mark.django_db
+def test_image_element_import_export(data_fixture, fake):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = ImageElementType()
+
+    zip_buffer = BytesIO()
+    storage = FileSystemStorage(location=str(tempdir), base_url="http://localhost")
+
+    image_file = UserFileHandler().upload_user_file(
+        user, "test.jpg", BytesIO(fake.image()), storage=storage
+    )
+
+    element_to_export = data_fixture.create_builder_element(
+        ImageElement,
+        image_source_type="upload",
+        image_file=image_file,
+        image_url=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+
+    with ZipFile(zip_buffer, "a", ZIP_DEFLATED, False) as zip_file:
+        serialized = element_type.export_serialized(
+            element_to_export, files_zip=zip_file, storage=storage
+        )
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+
+    # Let check if the file is actually imported from the zip_file
+    image_file.delete()
+
+    with ZipFile(zip_buffer, "r", ZIP_DEFLATED, False) as files_zip:
+        imported_element = element_type.import_serialized(
+            page, serialized, id_mapping, files_zip=files_zip, storage=storage
+        )
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.image_url == expected_formula
+    assert imported_element.image_file_id != element_to_export.image_file_id

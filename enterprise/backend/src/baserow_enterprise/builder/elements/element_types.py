@@ -74,12 +74,23 @@ class AuthFormElementType(ElementType):
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ) -> Any:
         if prop_name == "user_source_id" and value:
             return id_mapping["user_sources"][value]
 
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def get_pytest_params(self, pytest_data_fixture):
         return {

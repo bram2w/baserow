@@ -724,9 +724,20 @@ class DatabaseConfig(AppConfig):
 
         from baserow.core.registries import permission_manager_type_registry
 
+        from .permission_manager import AllowIfTemplatePermissionManagerType
         from .tokens.permission_manager import TokenPermissionManagerType
 
         permission_manager_type_registry.register(TokenPermissionManagerType())
+
+        prev_manager = permission_manager_type_registry.get(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.unregister(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.register(
+            AllowIfTemplatePermissionManagerType(prev_manager)
+        )
 
         from baserow.core.registries import subject_type_registry
 

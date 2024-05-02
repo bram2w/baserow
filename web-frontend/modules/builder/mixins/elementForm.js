@@ -7,7 +7,7 @@ import {
 } from '@baserow/modules/builder/enums'
 
 export default {
-  inject: ['builder', 'page', 'mode'],
+  inject: ['workspace', 'builder', 'page', 'mode'],
   mixins: [form],
   computed: {
     colorVariables() {

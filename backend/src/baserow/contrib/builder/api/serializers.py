@@ -60,7 +60,6 @@ class BuilderSerializer(serializers.ModelSerializer):
                 ListPagesBuilderOperationType.type,
                 pages,
                 workspace=instance.workspace,
-                allow_if_template=True,
             )
 
         return PageSerializer(pages, many=True).data

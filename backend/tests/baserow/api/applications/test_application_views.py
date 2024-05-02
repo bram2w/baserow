@@ -98,7 +98,6 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     assert args[1] == ListApplicationsWorkspaceOperationType.type
     assert isinstance(args[2], QuerySet)
     assert kwargs["workspace"] == workspace_1
-    assert kwargs["allow_if_template"] is True
 
     assert response_json[0]["id"] == application_1.id
     assert response_json[0]["type"] == "database"
@@ -149,6 +148,7 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=workspace_1)
+    workspace_1.has_template.cache_clear()
     url = reverse("api:applications:list", kwargs={"workspace_id": workspace_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -189,9 +189,35 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
         assert response.status_code == HTTP_200_OK
-    assert len(query_for_n_tables.captured_queries) == len(
+
+    # the n +1 should have less or equal (because of some caching) queries
+    assert len(query_for_n_tables.captured_queries) >= len(
         query_for_n_plus_one_tables.captured_queries
     )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_list_applications_with_permissions(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    workspace_1 = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace(user=user)
+    database_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    database_2 = data_fixture.create_database_application(
+        workspace=workspace_2, order=1
+    )
+
+    response = api_client.get(
+        reverse("api:applications:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+    )
+    response_json = response.json()
+
+    assert len(response_json) == 2
+
+    assert [a["id"] for a in response_json] == [database_1.id, database_2.id]
 
 
 @pytest.mark.django_db

@@ -231,8 +231,16 @@ class IntegrationHandler:
             queryset=Integration.objects.filter(application=application)
         )
 
-    def export_integration(self, integration):
-        return integration.get_type().export_serialized(integration)
+    def export_integration(
+        self,
+        integration: Integration,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
+    ):
+        return integration.get_type().export_serialized(
+            integration, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def import_integration(
         self,
@@ -248,7 +256,12 @@ class IntegrationHandler:
 
         integration_type = integration_type_registry.get(serialized_integration["type"])
         integration = integration_type.import_serialized(
-            application, serialized_integration, id_mapping, cache=cache
+            application,
+            serialized_integration,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
         id_mapping["integrations"][serialized_integration["id"]] = integration.id

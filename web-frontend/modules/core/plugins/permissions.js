@@ -22,11 +22,13 @@ export default function ({ app }, inject) {
       // If we receive a `workspaceId`, then we can use the
       // permissions which are specific to this workspace.
       const workspace = store.getters['workspace/get'](workspaceId)
-      // If the workspace is not found, you don't have permissions to it.
+      // If the workspace is not found
+      // it might be a template so we return the global perms.
       if (workspace === undefined || !workspace._.permissionsLoaded) {
-        return false
+        perms = store.getters['auth/getGlobalUserPermissions']
+      } else {
+        perms = workspace._.permissions
       }
-      perms = workspace._.permissions
     }
 
     // Check all permission managers whether one accepts or refuses the operation

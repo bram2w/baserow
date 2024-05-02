@@ -9,7 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
@@ -293,7 +293,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         context: Optional[ContextObject] = None,
         include_trash: bool = False,
         raise_permission_exceptions: bool = True,
-        allow_if_template: bool = False,
     ) -> bool:
         """
         Checks whether a specific Actor has the Permission to execute an Operation
@@ -321,8 +320,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param raise_permission_exceptions: Raise an exception when the permission is
             disallowed when `True`. Return `False` instead when `False`.
             `True` by default.
-        :param allow_if_template: If true and if the workspace is related to a template,
-            then True is always returned and no exception will be raised.
         :raise PermissionException: If the operation is disallowed.
         :return: `True` if the operation is permitted or `False` if the operation is
             disallowed AND raise_permission_exceptions is `False`.
@@ -330,9 +327,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         if settings.DEBUG or settings.TESTS:
             self._ensure_context_matches_operation(context, operation_name)
-
-        if allow_if_template and workspace and workspace.has_template():
-            return True
 
         check = PermissionCheck(actor, operation_name, context)
 
@@ -438,7 +432,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional[Workspace] = None,
-        allow_if_template: Optional[bool] = False,
     ) -> QuerySet:
         """
         filters a given queryset accordingly to the actor permissions in the specified
@@ -454,13 +447,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             object that are in the same `ObjectScopeType` as the one described in the
             `OperationType` corresponding to the given `operation_name`.
         :param workspace: An optional workspace into which the operation occurs.
-        :param allow_if_template: If true and if the workspace is related to a template,
-            then we don't want to filter on the queryset.
         :return: The queryset, potentially filtered.
         """
 
-        if allow_if_template and workspace and workspace.has_template():
-            return queryset
+        if actor is None:
+            actor = AnonymousUser
 
         for permission_manager_name in settings.PERMISSION_MANAGERS:
             permission_manager_type = permission_manager_type_registry.get(
@@ -469,9 +460,23 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             if not permission_manager_type.actor_is_supported(actor):
                 continue
 
-            queryset = permission_manager_type.filter_queryset(
+            filtered_queryset = permission_manager_type.filter_queryset(
                 actor, operation_name, queryset, workspace=workspace
             )
+
+            if filtered_queryset is None:
+                continue
+
+            # a permission can return a tuple in which case the second value
+            # indicate whether it should be the last permission manager to be applied.
+            # If True, then no other permission manager are applied and the queryset
+            # is returned.
+            if isinstance(filtered_queryset, tuple):
+                queryset, stop = filtered_queryset
+                if stop:
+                    break
+            else:
+                queryset = filtered_queryset
 
         return queryset
 

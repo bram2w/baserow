@@ -361,6 +361,7 @@ class DataSourceHandler:
         data_source: DataSource,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict[str, any]] = None,
     ) -> DataSourceDict:
         """
         Serializes the given data source.
@@ -374,7 +375,9 @@ class DataSourceHandler:
         serialized_service = None
 
         if data_source.service:
-            serialized_service = ServiceHandler().export_service(data_source.service)
+            serialized_service = ServiceHandler().export_service(
+                data_source.service, files_zip=files_zip, storage=storage, cache=cache
+            )
 
         return DataSourceDict(
             id=data_source.id,
@@ -390,6 +393,7 @@ class DataSourceHandler:
         id_mapping: Dict[str, Dict[int, int]],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict[str, any]] = None,
     ):
         """
         Creates an instance using the serialized version previously exported with
@@ -426,6 +430,7 @@ class DataSourceHandler:
                 id_mapping,
                 files_zip=files_zip,
                 storage=storage,
+                cache=cache,
                 import_formula=import_formula,
             )
 

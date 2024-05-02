@@ -12,6 +12,7 @@
         class="input"
         :class="{ 'input--error': hasErrors }"
         type="text"
+        :disabled="disabled"
         @input="$emit('input', $event.target.value)"
         @blur="$emit('blur')"
       />
@@ -63,6 +64,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     hasErrors: {
       type: Boolean,

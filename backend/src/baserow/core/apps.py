@@ -40,6 +40,7 @@ class CoreConfig(AppConfig):
         formula_runtime_function_registry.register(RuntimeAdd())
 
         from baserow.core.permission_manager import (
+            AllowIfTemplatePermissionManagerType,
             BasicPermissionManagerType,
             CorePermissionManagerType,
             StaffOnlyPermissionManagerType,
@@ -65,6 +66,9 @@ class CoreConfig(AppConfig):
         )
         permission_manager_type_registry.register(
             StaffOnlySettingOperationPermissionManagerType()
+        )
+        permission_manager_type_registry.register(
+            AllowIfTemplatePermissionManagerType()
         )
 
         from .object_scopes import (
@@ -389,6 +393,8 @@ class CoreConfig(AppConfig):
         if getattr(settings, "HEROKU_ENABLED", False):
             plugin_dir.register(HerokuExternalFileStorageConfiguredHealthCheck)
         plugin_dir.register(DefaultFileStorageHealthCheck)
+
+        import baserow.core.integrations.receivers  # noqa: F403, F401
 
 
 # noinspection PyPep8Naming

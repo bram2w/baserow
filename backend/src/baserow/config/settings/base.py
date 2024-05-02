@@ -1065,6 +1065,7 @@ PERMISSION_MANAGERS = [
     "core",
     "setting_operation",
     "staff",
+    "allow_if_template",
     "allow_public_builder",
     "element_visibility",
     "member",

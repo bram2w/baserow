@@ -120,7 +120,10 @@ export default {
       }
     },
     selectPage({ application, value }) {
-      this.page = { application, value }
+      this.page = {
+        application,
+        value,
+      }
     },
   },
 }

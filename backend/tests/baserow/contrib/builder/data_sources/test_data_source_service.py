@@ -214,7 +214,6 @@ def test_get_data_sources(data_fixture, stub_check_permissions):
         queryset,
         workspace=None,
         context=None,
-        allow_if_template=False,
     ):
         return queryset.exclude(id=data_source1.id)
 

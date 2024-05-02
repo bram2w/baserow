@@ -195,7 +195,6 @@ def test_get_elements(data_fixture, stub_check_permissions):
         queryset,
         workspace=None,
         context=None,
-        allow_if_template=False,
     ):
         return queryset.exclude(id=element1.id)
 

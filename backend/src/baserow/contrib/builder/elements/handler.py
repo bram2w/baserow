@@ -486,6 +486,7 @@ class ElementHandler:
         element: Element,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
     ):
         """
         Serializes the given element.
@@ -496,7 +497,9 @@ class ElementHandler:
         :return: The serialized version.
         """
 
-        return element.get_type().export_serialized(element)
+        return element.get_type().export_serialized(
+            element, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def import_element(
         self,
@@ -505,6 +508,7 @@ class ElementHandler:
         id_mapping: Dict[str, Dict[int, int]],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
     ) -> Element:
         """
         Creates an instance using the serialized version previously exported with
@@ -524,7 +528,12 @@ class ElementHandler:
 
         element_type = element_type_registry.get(serialized_element["type"])
         created_instance = element_type.import_serialized(
-            page, serialized_element, id_mapping
+            page,
+            serialized_element,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
         id_mapping["builder_page_elements"][

@@ -12,11 +12,21 @@
         :title="pageSidePanelType.label"
         :disabled="!element || pageSidePanelType.isDeactivated(element)"
       >
-        <component
-          :is="pageSidePanelType.component"
+        <ReadOnlyForm
           v-if="element"
-          class="side-panels__panel"
-        />
+          :read-only="
+            !$hasPermission(
+              'builder.page.element.update',
+              element,
+              workspace.id
+            )
+          "
+        >
+          <component
+            :is="pageSidePanelType.component"
+            class="side-panels__panel"
+          />
+        </ReadOnlyForm>
         <EmptySidePanelState v-else />
       </Tab>
     </Tabs>
@@ -30,6 +40,7 @@ import EmptySidePanelState from '@baserow/modules/builder/components/page/sidePa
 export default {
   name: 'PageSidePanels',
   components: { EmptySidePanelState },
+  inject: ['workspace'],
   computed: {
     ...mapGetters({
       element: 'element/getSelected',

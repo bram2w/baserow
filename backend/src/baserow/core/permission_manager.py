@@ -3,11 +3,18 @@ from typing import List
 from django.contrib.auth import get_user_model
 
 from baserow.core.handler import CoreHandler
-from baserow.core.models import WorkspaceUser
+from baserow.core.integrations.operations import (
+    ListIntegrationsApplicationOperationType,
+)
+from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.notifications.operations import (
     ClearNotificationsOperationType,
     ListNotificationsOperationType,
     MarkNotificationAsReadOperationType,
+)
+from baserow.core.user_sources.operations import (
+    ListUserSourcesApplicationOperationType,
+    LoginUserSourceOperationType,
 )
 
 from .exceptions import (
@@ -22,6 +29,7 @@ from .operations import (
     DeleteWorkspaceInvitationOperationType,
     DeleteWorkspaceOperationType,
     DeleteWorkspaceUserOperationType,
+    ListApplicationsWorkspaceOperationType,
     ListInvitationsWorkspaceOperationType,
     ListWorkspacesOperationType,
     ListWorkspaceUsersWorkspaceOperationType,
@@ -32,7 +40,7 @@ from .operations import (
     UpdateWorkspaceUserOperationType,
 )
 from .registries import PermissionManagerType
-from .subjects import UserSubjectType
+from .subjects import AnonymousUserSubjectType, UserSubjectType
 
 User = get_user_model()
 
@@ -88,6 +96,53 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
         }
 
 
+class AllowIfTemplatePermissionManagerType(PermissionManagerType):
+    """
+    Allows read operation on templates.
+    """
+
+    type = "allow_if_template"
+    supported_actor_types = [UserSubjectType.type, AnonymousUserSubjectType.type]
+
+    OPERATION_ALLOWED_ON_TEMPLATES = [
+        ListApplicationsWorkspaceOperationType.type,
+        ListIntegrationsApplicationOperationType.type,
+        ListUserSourcesApplicationOperationType.type,
+        LoginUserSourceOperationType.type,
+    ]
+
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
+        result = {}
+        has_template = workspace and workspace.has_template()
+        for check in checks:
+            if (
+                has_template
+                and check.operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
+            ):
+                result[check] = True
+
+        return result
+
+    def get_permissions_object(self, actor, workspace=None):
+        return {
+            "allowed_operations_on_templates": self.OPERATION_ALLOWED_ON_TEMPLATES,
+            "workspace_template_ids": list(
+                Workspace.objects.exclude(template=None).values_list("id", flat=True)
+            ),
+        }
+
+    def filter_queryset(
+        self,
+        actor,
+        operation_name,
+        queryset,
+        workspace=None,
+    ):
+        has_template = workspace and workspace.has_template()
+        if has_template and operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES:
+            return queryset, True
+
+
 class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
     """
     To be able to operate on a workspace, the user must at least belongs
@@ -96,11 +151,41 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
 
     type = "member"
     supported_actor_types = [UserSubjectType.type]
-    ALWAYS_ALLOWED_OPERATIONS: List[str] = [
+    actor_cache_key = "_in_workspace_cache"
+
+    ALWAYS_ALLOWED_OPERATION_FOR_WORKSPACE_MEMBERS: List[str] = [
         ClearNotificationsOperationType.type,
         ListNotificationsOperationType.type,
         MarkNotificationAsReadOperationType.type,
     ]
+
+    def is_actor_in_workspace(self, actor, workspace, callback=None):
+        """
+        Check is an actor is in a workspace. This method cache the result on the actor
+        to prevent extra queries when used multiple times in a row. This is the case
+        when we check the permission first then we filter the queryset for instance.
+
+        :param actor: the actor to check.
+        :param workspace: the workspace to check the actor belongs to.
+        :param callback: an optional callback to check whether the actor belongs to the
+          workspace. By default a query is made if not provided.
+        """
+
+        # Add cache to prevent another query during the filtering if any
+        if not hasattr(actor, self.actor_cache_key):
+            setattr(actor, self.actor_cache_key, {})
+
+        if workspace.id not in getattr(actor, self.actor_cache_key):
+            if callback is not None:
+                in_workspace = callback()
+            else:
+                in_workspace = WorkspaceUser.objects.filter(
+                    user_id=actor.id, workspace_id=workspace.id
+                ).exists()
+
+            getattr(actor, self.actor_cache_key)[workspace.id] = in_workspace
+
+        return getattr(actor, self.actor_cache_key, {}).get(workspace.id, False)
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
         if workspace is None:
@@ -115,24 +200,41 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
         )
 
         permission_by_check = {}
+
+        def check_workspace(actor):
+            return lambda: actor.id in user_ids_in_workspace
+
         for check in checks:
-            if check.actor.id not in user_ids_in_workspace:
+            if self.is_actor_in_workspace(
+                check.actor, workspace, check_workspace(check.actor)
+            ):
+                if (
+                    check.operation_name
+                    in self.ALWAYS_ALLOWED_OPERATION_FOR_WORKSPACE_MEMBERS
+                ):
+                    permission_by_check[check] = True
+            else:
                 permission_by_check[check] = UserNotInWorkspace(check.actor, workspace)
-            elif check.operation_name in self.ALWAYS_ALLOWED_OPERATIONS:
-                permission_by_check[check] = True
 
         return permission_by_check
 
     def get_permissions_object(self, actor, workspace=None):
-        # Check if the user is a member of this workspace
-        if (
-            workspace
-            and WorkspaceUser.objects.filter(
-                user_id=actor.id, workspace_id=workspace.id
-            ).exists()
-        ):
+        """Check if the user is a member of this workspace"""
+
+        if workspace and self.is_actor_in_workspace(actor, workspace):
             return None
+
         return False
+
+    def filter_queryset(
+        self,
+        actor,
+        operation_name,
+        queryset,
+        workspace=None,
+    ):
+        if workspace and not self.is_actor_in_workspace(actor, workspace):
+            return queryset.none(), True
 
 
 class BasicPermissionManagerType(PermissionManagerType):

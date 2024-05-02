@@ -654,8 +654,6 @@ class PermissionManagerType(abc.ABC, Instance):
         :return: The queryset potentially filtered.
         """
 
-        return queryset
-
     def get_roles(self) -> List:
         """
         Get all the roles available for your permissions system

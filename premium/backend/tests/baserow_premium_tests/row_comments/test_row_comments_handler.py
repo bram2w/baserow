@@ -118,9 +118,18 @@ def test_row_comment_can_only_be_updated_by_author(premium_data_fixture):
     other_user = premium_data_fixture.create_user(
         first_name="other_user", has_active_premium_license=True
     )
+    other_user_in_same_workspace = premium_data_fixture.create_user(
+        first_name="other_user_same_workspace", has_active_premium_license=True
+    )
+
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
+
+    CoreHandler().add_user_to_workspace(
+        table.database.workspace, other_user_in_same_workspace
+    )
+
     message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     with freeze_time("2020-01-01 12:00"):
@@ -135,7 +144,9 @@ def test_row_comment_can_only_be_updated_by_author(premium_data_fixture):
     CoreHandler().add_user_to_workspace(table.database.workspace, other_user)
 
     with pytest.raises(UserNotRowCommentAuthorException):
-        RowCommentHandler.update_comment(other_user, c, updated_message)
+        RowCommentHandler.update_comment(
+            other_user_in_same_workspace, c, updated_message
+        )
 
     with freeze_time("2020-01-01 12:01"):
         updated_comment = RowCommentHandler.update_comment(user, c, updated_message)
@@ -185,9 +196,18 @@ def test_row_comment_can_only_be_deleted_by_author(premium_data_fixture):
     other_user = premium_data_fixture.create_user(
         first_name="other_user", has_active_premium_license=True
     )
+    other_user_in_same_workspace = premium_data_fixture.create_user(
+        first_name="other_user_same_workspace", has_active_premium_license=True
+    )
+
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
+
+    CoreHandler().add_user_to_workspace(
+        table.database.workspace, other_user_in_same_workspace
+    )
+
     message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     with freeze_time("2020-01-01 12:00"):
@@ -196,10 +216,8 @@ def test_row_comment_can_only_be_deleted_by_author(premium_data_fixture):
     with pytest.raises(UserNotInWorkspace):
         RowCommentHandler.delete_comment(other_user, c)
 
-    CoreHandler().add_user_to_workspace(table.database.workspace, other_user)
-
     with pytest.raises(UserNotRowCommentAuthorException):
-        RowCommentHandler.delete_comment(other_user, c)
+        RowCommentHandler.delete_comment(other_user_in_same_workspace, c)
 
     with freeze_time("2020-01-01 12:01"):
         RowCommentHandler.delete_comment(user, c)
