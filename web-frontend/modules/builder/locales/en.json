@@ -418,7 +418,8 @@
     "fieldType": "Type",
     "itemsPerPagePlaceholder": "Enter value...",
     "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
-    "buttonColor": "Button color"
+    "buttonColor": "Button color",
+    "refreshFieldsFromDataSource": "refresh fields from data source"
   },
   "tableElement": {
     "empty": "No items have been found.",

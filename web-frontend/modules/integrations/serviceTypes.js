@@ -2,7 +2,7 @@ import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
 import LocalBaserowGetRowForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm'
 import LocalBaserowListRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm'
-
+import { uuid } from '@baserow/modules/core/utils/string'
 export class LocalBaserowGetRowServiceType extends ServiceType {
   static getType() {
     return 'local_baserow_get_row'
@@ -91,6 +91,56 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
 
   get maxResultLimit() {
     return 100
+  }
+
+  getDefaultCollectionFields(service) {
+    return Object.keys(service.schema.items.properties)
+      .filter(
+        (field) =>
+          field !== 'id' &&
+          service.schema.items.properties[field].original_type !== 'file' && // we have no way to display files in a table &&
+          service.schema.items.properties[field].original_type !== 'formula' // every formula has different properties
+      )
+      .map((field) => {
+        const type = service.schema.items.properties[field].type
+        const originalType =
+          service.schema.items.properties[field].original_type
+        let outputType = 'text'
+        let valueFormula = `get('current_record.${field}')`
+        if (originalType === 'boolean') {
+          outputType = 'boolean'
+        } else if (originalType === 'url') {
+          return {
+            link_name: valueFormula,
+            name: service.schema.items.properties[field].title,
+            id: uuid(), // Temporary id
+            navigate_to_page_id: null,
+            navigate_to_url: valueFormula,
+            navigation_type: 'custom',
+            page_parameters: [],
+            target: 'blank',
+            type: 'link',
+          }
+        } else if (
+          originalType === 'last_modified_by' ||
+          originalType === 'created_by'
+        ) {
+          valueFormula = `get('current_record.${field}.name')`
+        } else if (originalType === 'single_select') {
+          valueFormula = `get('current_record.${field}.value')`
+        }
+        if (originalType === 'multiple_collaborators') {
+          valueFormula = `get('current_record.${field}.*.name')`
+        } else if (type === 'array') {
+          valueFormula = `get('current_record.${field}.*.value')`
+        }
+        return {
+          name: service.schema.items.properties[field].title,
+          type: outputType,
+          value: valueFormula,
+          id: uuid(), // Temporary id
+        }
+      })
   }
 
   getOrder() {
