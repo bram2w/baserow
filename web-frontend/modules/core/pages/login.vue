@@ -20,11 +20,7 @@ export default {
     if (store.getters['settings/get'].show_admin_signup_page === true) {
       return redirect({ name: 'signup' })
     } else if (store.getters['auth/isAuthenticated']) {
-      const newQueryParams = {}
-      if (route.query.emailVerified) {
-        newQueryParams.emailVerified = true
-      }
-      return redirect({ name: 'dashboard', query: newQueryParams })
+      return redirect({ name: 'dashboard' })
     }
     await store.dispatch('authProvider/fetchLoginOptions')
     return await workspaceInvitationToken.asyncData({ route, app })

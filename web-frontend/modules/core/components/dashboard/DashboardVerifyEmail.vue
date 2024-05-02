@@ -44,14 +44,5 @@ export default {
       return false
     },
   },
-  mounted() {
-    const emailVerified = this.$route.query.emailVerified
-    if (emailVerified) {
-      this.$store.dispatch('toast/info', {
-        title: this.$i18n.t('verifyEmailAddress.emailVerifiedTitle'),
-        message: this.$i18n.t('verifyEmailAddress.emailVerifiedDescription'),
-      })
-    }
-  },
 }
 </script>
