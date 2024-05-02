@@ -24,6 +24,7 @@ from baserow.contrib.database.rows.registries import (
     row_metadata_registry,
 )
 from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
@@ -892,7 +893,6 @@ def test_view_aggregations(api_client, data_fixture):
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
 
-    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
     # Test missing auth token
@@ -1875,6 +1875,913 @@ def test_can_get_aggregation_if_result_is_nan(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {f"field_{formula_field.id}": "NaN"}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_view_doesnt_exist(api_client):
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": "doesnt-exist"},
+    )
+    response = api_client.get(url)
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GRID_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_view_not_publicly_shared(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table, public=False)
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid.slug},
+    )
+
+    response = api_client.get(
+        url,
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GRID_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_accessed_with_password(api_client, data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_public_password_protected_grid_view(
+        user=user, password="12345678"
+    )
+
+    # wrong password
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public-field-aggregations",
+            kwargs={"slug": grid_view.slug},
+        ),
+        {"password": "wrong_password"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"
+
+    # correct password
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public-field-aggregations",
+            kwargs={"slug": grid_view.slug},
+        ),
+        {"password": "12345678"},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_trashed(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table, public=True)
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid.slug},
+    )
+
+    ViewHandler().delete_view(user, grid)
+
+    response = api_client.get(
+        url,
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GRID_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_trashed_parent(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table, public=True)
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid.slug},
+    )
+    TableHandler().delete_table(user, table)
+
+    response = api_client.get(
+        url,
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GRID_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_hidden_fields(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    public_field_option = data_fixture.create_grid_view_field_option(
+        grid, public_field, hidden=False
+    )
+    data_fixture.create_grid_view_field_option(grid, hidden_field, hidden=True)
+    RowHandler().create_row(user, table, values={})
+    aggregation_public_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=public_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+    aggregation_hidden_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=hidden_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public-field-aggregations",
+            kwargs={"slug": grid.slug},
+        )
+    )
+
+    assert response.json() == {f"field_{public_field.id}": 1}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+    grid = data_fixture.create_grid_view(table=table, public=True)
+    grid_2 = data_fixture.create_grid_view()
+
+    # Test normal response with no data and no aggregation
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid.slug},
+    )
+
+    response = api_client.get(
+        url,
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {}
+
+    field_option1 = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=text_field,
+        aggregation_type="",
+        aggregation_raw_type="",
+    )
+
+    field_option2 = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=number_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="sum",
+    )
+
+    field_option3 = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=boolean_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") is None
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") is None
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") is None
+    assert (
+        cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") is None
+    )
+
+    # Test normal response with no data and no cache
+    response = api_client.get(
+        url,
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {number_field.db_column: None, boolean_field.db_column: 0}
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": None,
+        "version": 1,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") is None
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 0,
+        "version": 1,
+    }
+    assert (
+        cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") is None
+    )
+
+    # Test normal response that use cache
+    cache.set(
+        f"aggregation_value__{grid.id}_{number_field.db_column}",
+        {"value": "sentinel", "version": 1},
+    )
+    cache.set(
+        f"aggregation_value__{grid.id}_{boolean_field.db_column}",
+        {"value": "sentinel", "version": 1},
+    )
+
+    response = api_client.get(
+        url,
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {
+        number_field.db_column: "sentinel",
+        boolean_field.db_column: "sentinel",
+    }
+
+    cache.set(
+        f"aggregation_value__{grid.id}_{number_field.db_column}",
+        {"value": "sentinel", "version": 1},
+    )
+    cache.set(
+        f"aggregation_value__{grid.id}_{boolean_field.db_column}",
+        {"value": "sentinel", "version": 3},
+    )
+    cache.set(
+        f"aggregation_version__{grid.id}_{boolean_field.db_column}",
+        3,
+    )
+
+    # Add data through the API to trigger cache update
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": "sentinel",
+        "version": 1,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 2
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": "sentinel",
+        "version": 3,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 4
+
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": "",
+            f"field_{number_field.id}": 0,
+            f"field_{boolean_field.id}": False,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": None,
+            f"field_{number_field.id}": 1200,
+            f"field_{boolean_field.id}": False,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    # Test normal response with data
+    response = api_client.get(
+        url,
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {number_field.db_column: 1210.0, boolean_field.db_column: 2}
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": 1210.0,
+        "version": 4,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 4
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 2,
+        "version": 6,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 6
+
+    # with total
+    response = api_client.get(
+        url + f"?include=total",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert response_json == {
+        number_field.db_column: 1210.0,
+        boolean_field.db_column: 2,
+        "total": 3,
+    }
+
+    # Does it work with filter
+    response = api_client.get(
+        url + f"?include=total&search=GREE",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 10.0,
+        boolean_field.db_column: 0,
+        "total": 1,
+    }
+
+    # But cache shouldn't be modified after a search as we don't use the cache
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 4
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 6
+
+    # Does it work with filter (use API to trigger cache update)
+    response = api_client.post(
+        reverse("api:database:views:list_filters", kwargs={"view_id": grid.id}),
+        {"field": number_field.id, "type": "higher_than", "value": "10"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    filter_id = response.json()["id"]
+
+    # Cache should be invalidated on filter creation
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1210),
+        "version": 4,
+    }
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 2,
+        "version": 6,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 5
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 7
+
+    response = api_client.get(
+        url + f"?include=total",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 1200.0,
+        boolean_field.db_column: 1,
+        "total": 1,
+    }
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1200),
+        "version": 5,
+    }
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 1,
+        "version": 7,
+    }
+
+    # Let's update the filter
+    api_client.patch(
+        reverse("api:database:views:filter_item", kwargs={"view_filter_id": filter_id}),
+        {"value": 5},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 6
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 8
+
+    response = api_client.get(
+        url + f"?include=total",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 1210.0,
+        boolean_field.db_column: 1,
+        "total": 2,
+    }
+
+    # Cache should also be invalidated on filter deletion
+    api_client.delete(
+        reverse("api:database:views:filter_item", kwargs={"view_filter_id": filter_id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 7
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 9
+
+    response = api_client.get(
+        url + f"?include=total",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 1210.0,
+        boolean_field.db_column: 2,
+        "total": 3,
+    }
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_hidden_field_query_filter(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    public_field_option = data_fixture.create_grid_view_field_option(
+        grid, public_field, hidden=False
+    )
+    data_fixture.create_grid_view_field_option(grid, hidden_field, hidden=True)
+    aggregation_public_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=public_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+    aggregation_hidden_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=hidden_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public-field-aggregations",
+            kwargs={"slug": grid.slug},
+        )
+        + f"?filter__field_{hidden_field.id}__contains=a"
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FILTER_FIELD_NOT_FOUND"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_hidden_field_advanced_filter(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    public_field_option = data_fixture.create_grid_view_field_option(
+        grid, public_field, hidden=False
+    )
+    data_fixture.create_grid_view_field_option(grid, hidden_field, hidden=True)
+    aggregation_public_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=public_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+    aggregation_hidden_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=hidden_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": hidden_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+
+    get_params = [f"filters={json.dumps(advanced_filters)}"]
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public-field-aggregations",
+            kwargs={"slug": grid.slug},
+        )
+        + f"?{'&'.join(get_params)}"
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FILTER_FIELD_NOT_FOUND"
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_hidden_field_search(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    public_field_option = data_fixture.create_grid_view_field_option(
+        grid, public_field, hidden=False
+    )
+    data_fixture.create_grid_view_field_option(grid, hidden_field, hidden=True)
+    aggregation_public_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=public_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="unique_count",
+    )
+    aggregation_hidden_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=hidden_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="unique_count",
+    )
+    # will be counted
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "a"})
+    # should not get counted because the field is hidden
+    RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{public_field.id}": "b", f"field_{hidden_field.id}": "a"},
+    )
+    # won't get counted because there is no match
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "c"})
+
+    response = api_client.get(
+        (
+            reverse(
+                "api:database:views:grid:public-field-aggregations",
+                kwargs={"slug": grid.slug},
+            )
+            + "?search=a"
+        )
+    )
+
+    assert response.json() == {f"field_{public_field.id}": 1}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_hidden_field_search_logged_in_user(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    public_field_option = data_fixture.create_grid_view_field_option(
+        grid, public_field, hidden=False
+    )
+    data_fixture.create_grid_view_field_option(grid, hidden_field, hidden=True)
+    aggregation_public_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=public_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="unique_count",
+    )
+    aggregation_hidden_field = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=hidden_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="unique_count",
+    )
+    # will be counted
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "a"})
+    # should not get counted because the field is hidden
+    RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{public_field.id}": "b", f"field_{hidden_field.id}": "a"},
+    )
+    # won't get counted because there is no match
+    RowHandler().create_row(user, table, values={f"field_{public_field.id}": "c"})
+
+    response = api_client.get(
+        (
+            reverse(
+                "api:database:views:grid:public-field-aggregations",
+                kwargs={"slug": grid.slug},
+            )
+            + "?search=a"
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.json() == {f"field_{public_field.id}": 1}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_no_adhoc_filtering_uses_view_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    # this filter would filters out all rows
+    equal_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="equal", value="y"
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid_view.slug},
+    )
+
+    # without ad hoc filters the view filter is applied
+    response = api_client.get(
+        url,
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {text_field.db_column: 0}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_adhoc_filtering_overrides_existing_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    # in usual scenario this filter would filtered out all rows
+    equal_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="equal", value="y"
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid_view.slug},
+    )
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+        ],
+    }
+    get_params = [f"filters={json.dumps(advanced_filters)}"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {text_field.db_column: 1}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_adhoc_filtering_advanced_filters_are_preferred_to_other_filter_query_params(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"text_field": "b"}, user_field_names=True
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid_view.slug},
+    )
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "a",
+            },
+            {
+                "field": text_field.id,
+                "type": "equal",
+                "value": "b",
+            },
+        ],
+    }
+    get_params = [
+        "filters=" + json.dumps(advanced_filters),
+        f"filter__field_{text_field.id}__equal=z",
+        f"filter_type=AND",
+    ]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {text_field.db_column: 2}
+
+
+@pytest.mark.django_db
+def test_public_view_aggregations_adhoc_filtering_invalid_advanced_filters(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    view_handler = ViewHandler()
+    view_handler.update_field_options(
+        view=grid_view,
+        field_options={
+            text_field.id: {
+                "aggregation_type": "unique_count",
+                "aggregation_raw_type": "unique_count",
+            }
+        },
+    )
+
+    RowHandler().create_row(
+        user, table, values={"text_field": "a"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid_view.slug},
+    )
+
+    expected_errors = [
+        (
+            "invalid_json",
+            {
+                "error": "The provided filters are not valid JSON.",
+                "code": "invalid_json",
+            },
+        ),
+        (
+            json.dumps({"filter_type": "invalid"}),
+            {
+                "filter_type": [
+                    {
+                        "error": '"invalid" is not a valid choice.',
+                        "code": "invalid_choice",
+                    }
+                ]
+            },
+        ),
+        (
+            json.dumps(
+                {"filter_type": "OR", "filters": "invalid", "groups": "invalid"}
+            ),
+            {
+                "filters": [
+                    {
+                        "error": 'Expected a list of items but got type "str".',
+                        "code": "not_a_list",
+                    }
+                ],
+                "groups": {
+                    "non_field_errors": [
+                        {
+                            "error": 'Expected a list of items but got type "str".',
+                            "code": "not_a_list",
+                        }
+                    ],
+                },
+            },
+        ),
+    ]
+
+    for filters, error_detail in expected_errors:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(f'{url}?{"&".join(get_params)}')
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"
+        assert response_json["detail"] == error_detail
+
+
+@pytest.mark.django_db
+def test_can_get_public_aggregation_if_result_is_nan(api_client, data_fixture):
+    table = data_fixture.create_database_table()
+    grid_view = data_fixture.create_grid_view(table=table, public=True, slug="abc")
+
+    # This formula will resolve  as NaN for every row
+    formula_field = data_fixture.create_formula_field(table=table, formula="1 / 0")
+
+    model = table.get_model()
+    model.objects.create()
+
+    ViewHandler().update_field_options(
+        view=grid_view,
+        field_options={
+            formula_field.id: {
+                "aggregation_type": "sum",
+                "aggregation_raw_type": "sum",
+            }
+        },
+    )
+
+    url = reverse(
+        "api:database:views:grid:public-field-aggregations",
+        kwargs={"slug": grid_view.slug},
+    )
+
+    response = api_client.get(url)
+
+    assert response.json() == {f"field_{formula_field.id}": "NaN"}
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db

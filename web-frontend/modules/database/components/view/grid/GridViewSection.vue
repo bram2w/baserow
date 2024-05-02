@@ -117,7 +117,7 @@
         <div v-if="includeRowDetails" class="grid-view__foot-info">
           {{ $tc('gridView.rowCount', count, { count }) }}
         </div>
-        <template v-if="!publicGrid">
+        <template>
           <div
             v-for="field in visibleFields"
             :key="field.id"

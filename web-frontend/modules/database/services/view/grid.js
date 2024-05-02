@@ -158,5 +158,42 @@ export default (client) => {
 
       return client.get(`/database/views/grid/${gridId}/aggregations/`, config)
     },
+    fetchPublicFieldAggregations({
+      slug,
+      publicAuthToken = null,
+      filters = {},
+      search = '',
+      searchMode = '',
+      signal = null,
+    }) {
+      const params = new URLSearchParams()
+
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
+
+      if (search) {
+        params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
+      }
+
+      const config = { params }
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+
+      if (signal !== null) {
+        config.signal = signal
+      }
+
+      return client.get(
+        `/database/views/grid/${slug}/public/aggregations/`,
+        config
+      )
+    },
   }
 }
