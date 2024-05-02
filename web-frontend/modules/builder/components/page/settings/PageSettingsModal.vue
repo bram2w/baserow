@@ -20,7 +20,7 @@
       </ul>
     </template>
     <template v-if="settingSelected" #content>
-      <component :is="settingSelected.component" :page="page"></component>
+      <component :is="settingSelected.component"></component>
     </template>
   </Modal>
 </template>

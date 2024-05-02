@@ -60,7 +60,7 @@ const orderElements = (elements, parentElementId = null) => {
 const updateCachedValues = (page) => {
   page.orderedElements = orderElements(page.elements)
   page.elementMap = Object.fromEntries(
-    page.orderedElements.map((element) => [element.id, element])
+    page.orderedElements.map((element) => [`${element.id}`, element])
   )
 }
 
@@ -338,6 +338,7 @@ const actions = {
     }
   ) {
     const element = getters.getElementById(page, elementId)
+    const { order: previousOrder, place_in_container: previousPlace } = element
 
     await dispatch('forceMove', {
       page,
@@ -359,10 +360,11 @@ const actions = {
           values: { ...elementUpdated },
         })
       } catch (error) {
+        // Restore previous order and place_in_container properties
         await dispatch('forceUpdate', {
           page,
           element,
-          values: element,
+          values: { order: previousOrder, place_in_container: previousPlace },
         })
         throw error
       }
@@ -419,7 +421,10 @@ const actions = {
 
 const getters = {
   getElementById: (state, getters) => (page, id) => {
-    return page.elementMap[id]
+    if (id && Object.prototype.hasOwnProperty.call(page.elementMap, `${id}`)) {
+      return page.elementMap[`${id}`]
+    }
+    return null
   },
   getElementsOrdered: (state, getters) => (page) => {
     return page.orderedElements
@@ -449,15 +454,15 @@ const getters = {
     return getAllDescendants(page, element)
   },
   getParent: (state, getters) => (page, element) => {
-    return getters.getElementById(page, element.parent_element_id)
+    return getters.getElementById(page, element?.parent_element_id)
   },
   getAncestors: (state, getters) => (page, element) => {
     const getElementAncestors = (element) => {
-      if (element.parent_element_id === null) {
-        return []
-      } else {
-        const parentElement = getters.getParent(page, element)
+      const parentElement = getters.getParent(page, element)
+      if (parentElement) {
         return [...getElementAncestors(parentElement), parentElement]
+      } else {
+        return []
       }
     }
     return getElementAncestors(element)

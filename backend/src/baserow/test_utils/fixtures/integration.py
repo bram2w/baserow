@@ -1,4 +1,5 @@
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowIntegration
+from baserow.core.integrations.registries import integration_type_registry
 
 
 class IntegrationFixtures:
@@ -11,6 +12,10 @@ class IntegrationFixtures:
 
         integration = self.create_integration(LocalBaserowIntegration, **kwargs)
         return integration
+
+    def create_integration_with_first_type(self, **kwargs):
+        first_type = list(integration_type_registry.get_all())[0]
+        return self.create_integration(first_type.model_class, **kwargs)
 
     def create_integration(self, model_class, user=None, application=None, **kwargs):
         if not application:

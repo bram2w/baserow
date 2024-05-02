@@ -177,18 +177,32 @@ class CollectionElementTypeMixin:
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ) -> Any:
         if prop_name == "data_source_id" and value:
             return id_mapping["builder_data_sources"][value]
 
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def import_serialized(
         self,
         parent: Any,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ):
         """
@@ -210,6 +224,9 @@ class CollectionElementTypeMixin:
             serialized_values,
             id_mapping,
             data_source_id=actual_data_source_id,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
             **kwargs,
         )
 
@@ -234,7 +251,15 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
     class SerializedDict(CollectionElementTypeMixin.SerializedDict):
         fields: List[Dict]
 
-    def serialize_property(self, element: CollectionElementSubClass, prop_name: str):
+    def serialize_property(
+        self,
+        element: CollectionElementSubClass,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
         """
         You can customize the behavior of the serialization of a property with this
         hook.
@@ -246,7 +271,14 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
                 for f in element.fields.all()
             ]
 
-        return super().serialize_property(element, prop_name)
+        return super().serialize_property(
+            element,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def after_create(self, instance: CollectionElementSubClass, values):
         default_fields = [
@@ -293,12 +325,25 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
     def before_delete(self, instance: CollectionElementSubClass):
         instance.fields.all().delete()
 
-    def create_instance_from_serialized(self, serialized_values: Dict[str, Any]):
+    def create_instance_from_serialized(
+        self,
+        serialized_values: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
         """Deals with the fields"""
 
         fields = serialized_values.pop("fields", [])
 
-        instance = super().create_instance_from_serialized(serialized_values)
+        instance = super().create_instance_from_serialized(
+            serialized_values,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
         # Add the field order
         for i, f in enumerate(fields):
@@ -316,6 +361,9 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ) -> Any:
         if prop_name == "fields":
@@ -327,7 +375,15 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
                 for f in value
             ]
 
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
 
 class FormElementTypeMixin:

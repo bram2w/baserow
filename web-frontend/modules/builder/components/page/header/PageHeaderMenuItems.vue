@@ -32,12 +32,7 @@
 <script>
 export default {
   name: 'PageHeaderMenuItems',
-  props: {
-    page: {
-      type: Object,
-      required: true,
-    },
-  },
+  inject: ['page'],
   computed: {
     pageHeaderItemTypes() {
       return this.$registry.getOrderedList('pageHeaderItem')

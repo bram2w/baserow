@@ -12,7 +12,10 @@
       :default-values="page"
       @submitted="updatePage"
     >
-      <div class="actions actions--right">
+      <div
+        v-if="$hasPermission('builder.page.update', page, workspace.id)"
+        class="actions actions--right"
+      >
         <Button size="large" :loading="loading" :disabled="loading">
           {{ $t('action.save') }}
         </Button>
@@ -31,13 +34,7 @@ export default {
   name: 'PageSettings',
   components: { PageSettingsForm },
   mixins: [error],
-  inject: ['builder'],
-  props: {
-    page: {
-      type: Object,
-      required: true,
-    },
-  },
+  inject: ['builder', 'page', 'workspace'],
   data() {
     return {
       loading: false,

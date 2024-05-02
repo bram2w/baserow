@@ -226,7 +226,6 @@ class KanbanViewView(APIView):
             ListRowsDatabaseTableOperationType.type,
             workspace=workspace,
             context=view.table,
-            allow_if_template=True,
         )
         single_select_option_field = view.single_select_field
 

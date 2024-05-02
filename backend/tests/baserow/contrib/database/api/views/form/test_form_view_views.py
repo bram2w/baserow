@@ -1746,7 +1746,7 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_conditions_update_num_queries(
-    api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_num_queries, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1905,7 +1905,7 @@ def test_patch_form_view_field_options_conditions_update_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_conditions_delete_num_queries(
-    api_client, data_fixture, django_assert_max_num_queries
+    api_client, data_fixture, django_assert_max_num_queries, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1984,7 +1984,7 @@ def test_patch_form_view_field_options_conditions_delete_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_condition_groups_delete_num_queries(
-    api_client, data_fixture, django_assert_max_num_queries
+    api_client, data_fixture, django_assert_max_num_queries, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -2687,7 +2687,7 @@ def test_user_can_update_form_to_receive_notification(api_client, data_fixture):
 
 @pytest.mark.django_db()
 def test_loading_form_views_does_not_increase_the_number_of_queries(
-    api_client, data_fixture
+    api_client, data_fixture, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
 

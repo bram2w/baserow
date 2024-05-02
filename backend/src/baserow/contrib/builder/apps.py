@@ -154,9 +154,20 @@ class BuilderConfig(AppConfig):
 
         from .domains.permission_manager import AllowPublicBuilderManagerType
         from .elements.permission_manager import ElementVisibilityPermissionManager
+        from .permission_manager import AllowIfTemplatePermissionManagerType
 
         permission_manager_type_registry.register(AllowPublicBuilderManagerType())
         permission_manager_type_registry.register(ElementVisibilityPermissionManager())
+
+        prev_manager = permission_manager_type_registry.get(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.unregister(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.register(
+            AllowIfTemplatePermissionManagerType(prev_manager)
+        )
 
         from .elements.element_types import (
             ButtonElementType,

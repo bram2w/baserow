@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, TypedDict, TypeVar, Union
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db import models
 
 from rest_framework import serializers
@@ -99,7 +101,14 @@ class ElementType(
         :param instance: The to be deleted element instance.
         """
 
-    def serialize_property(self, element: Element, prop_name: str):
+    def serialize_property(
+        self,
+        element: Element,
+        prop_name: str,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
+    ):
         """
         You can customize the behavior of the serialization of a property with this
         hook.
@@ -108,10 +117,19 @@ class ElementType(
         if prop_name == "order":
             return str(element.order)
 
-        return super().serialize_property(element, prop_name)
+        return super().serialize_property(
+            element, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
+        **kwargs,
     ) -> Any:
         """
         This hooks allow to customize the deserialization of a property.

@@ -287,7 +287,7 @@ def load_test_data():
                 "config": {
                     "navigation_type": "page",
                     "navigate_to_page_id": product_detail.id,
-                    "navigate_to_url": None,
+                    "navigate_to_url": "",
                     "page_parameters": [
                         {"name": "id", "value": "get('current_record.id')"},
                         {

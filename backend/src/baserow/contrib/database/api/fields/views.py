@@ -176,7 +176,6 @@ class FieldsView(APIView):
             ListFieldsOperationType.type,
             workspace=table.database.workspace,
             context=table,
-            allow_if_template=True,
         )
 
         TokenHandler().check_table_permissions(

@@ -57,20 +57,43 @@ class IntegrationType(
 
         return values
 
-    def serialize_property(self, integration: Integration, prop_name: str):
+    def serialize_property(
+        self,
+        integration: Integration,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         if prop_name == "order":
             return str(integration.order)
 
-        return super().serialize_property(integration, prop_name)
+        return super().serialize_property(
+            integration, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def import_serialized(
         self,
         parent: Any,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
         cache=None,
     ) -> IntegrationSubClass:
-        return super().import_serialized(parent, serialized_values, id_mapping)
+        return super().import_serialized(
+            parent,
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
+
+    def after_template_install(self, user: AbstractUser, instance: Integration):
+        """
+        Hook to trigger some post template installation logic.
+        """
 
     def get_context_data(self, instance: Integration) -> Optional[Dict]:
         """

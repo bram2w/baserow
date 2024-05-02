@@ -18,11 +18,12 @@
     </div>
     <InsertElementButton
       v-show="isSelected"
+      v-if="canCreate"
       class="element-preview__insert element-preview__insert--top"
       @click="showAddElementModal(PLACEMENTS.BEFORE)"
     />
     <ElementMenu
-      v-if="isSelected"
+      v-if="isSelected && canUpdate"
       :placements="placements"
       :placements-disabled="placementsDisabled"
       :is-duplicating="isDuplicating"
@@ -37,10 +38,12 @@
 
     <InsertElementButton
       v-show="isSelected"
+      v-if="canCreate"
       class="element-preview__insert element-preview__insert--bottom"
       @click="showAddElementModal(PLACEMENTS.AFTER)"
     />
     <AddElementModal
+      v-if="canCreate"
       ref="addElementModal"
       :element-types-allowed="elementTypesAllowed"
       :page="page"
@@ -71,7 +74,7 @@ export default {
     InsertElementButton,
     PageElement,
   },
-  inject: ['builder', 'page', 'mode'],
+  inject: ['workspace', 'builder', 'page', 'mode'],
   props: {
     element: {
       type: Object,
@@ -106,9 +109,13 @@ export default {
     isVisible() {
       switch (this.element.visibility) {
         case 'logged-in':
-          return this.$store.getters['userSourceUser/isAuthenticated']
+          return this.$store.getters['userSourceUser/isAuthenticated'](
+            this.builder
+          )
         case 'not-logged':
-          return !this.$store.getters['userSourceUser/isAuthenticated']
+          return !this.$store.getters['userSourceUser/isAuthenticated'](
+            this.builder
+          )
         default:
           return true
       }
@@ -137,6 +144,20 @@ export default {
     },
     elementTypesAllowed() {
       return this.parentElementType?.childElementTypes || null
+    },
+    canCreate() {
+      return this.$hasPermission(
+        'builder.page.create_element',
+        this.page,
+        this.workspace.id
+      )
+    },
+    canUpdate() {
+      return this.$hasPermission(
+        'builder.page.element.update',
+        this.element,
+        this.workspace.id
+      )
     },
     isSelected() {
       return this.element.id === this.elementSelected?.id

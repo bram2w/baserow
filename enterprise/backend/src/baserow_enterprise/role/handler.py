@@ -452,7 +452,8 @@ class RoleAssignmentHandler:
 
             for actor in actors:
                 workspace_level_role = self.get_role_by_uid(
-                    user_permissions_by_id[actor.id], use_fallback=True
+                    user_permissions_by_id.get(actor.id, NO_ACCESS_ROLE_UID),
+                    use_fallback=True,
                 )
                 if workspace_level_role.uid == NO_ROLE_LOW_PRIORITY_ROLE_UID:
                     # Low priority role -> Use team role or NO_ACCESS if no team role

@@ -90,8 +90,14 @@ export class LogoutWorkflowActionType extends WorkflowActionType {
     return this.app.i18n.t('workflowActionTypes.logoutLabel')
   }
 
-  execute() {
-    return this.app.store.dispatch('userSourceUser/logoff')
+  execute({ applicationContext }) {
+    return this.app.store.dispatch('userSourceUser/logoff', {
+      application: applicationContext.builder,
+    })
+  }
+
+  getDataSchema(applicationContext, workflowAction) {
+    return null
   }
 }
 

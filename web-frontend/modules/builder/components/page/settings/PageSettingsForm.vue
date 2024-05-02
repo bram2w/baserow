@@ -5,6 +5,7 @@
         <PageSettingsNameFormElement
           ref="name"
           v-model="values.name"
+          :disabled="!hasPermission"
           :has-errors="fieldHasErrors('name')"
           :validation-state="$v.values.name"
           :is-creation="isCreation"
@@ -14,6 +15,7 @@
       <div class="col col-6">
         <PageSettingsPathFormElement
           v-model="values.path"
+          :disabled="!hasPermission"
           :has-errors="fieldHasErrors('path')"
           :validation-state="$v.values.path"
           @blur="onPathBlur"
@@ -23,6 +25,7 @@
     <div class="row">
       <div class="col col-6">
         <PageSettingsPathParamsFormElement
+          :disabled="!hasPermission"
           :path-params="values.path_params"
           @update="onPathParamUpdate"
         />
@@ -59,16 +62,8 @@ export default {
     PageSettingsNameFormElement,
   },
   mixins: [form],
+  inject: ['workspace', 'builder', 'page'],
   props: {
-    builder: {
-      type: Object,
-      required: true,
-    },
-    page: {
-      type: Object,
-      required: false,
-      default: null,
-    },
     isCreation: {
       type: Boolean,
       required: false,
@@ -86,6 +81,21 @@ export default {
     }
   },
   computed: {
+    hasPermission() {
+      if (this.isCreation) {
+        return this.$hasPermission(
+          'builder.create_page',
+          this.builder,
+          this.workspace.id
+        )
+      } else {
+        return this.$hasPermission(
+          'builder.page.update',
+          this.page,
+          this.workspace.id
+        )
+      }
+    },
     defaultPathParamType() {
       return this.$registry.getOrderedList('pathParamType')[0].getType()
     },

@@ -1,0 +1,18 @@
+.read-only-form {
+  & input,
+  & .input,
+  & .formula-input-field,
+  & .dropdown,
+  & .color-input__preview,
+  & .checkbox,
+  & .radio,
+  & a,
+  & .button,
+  & .button-icon,
+  & .button-text,
+  & .chips {
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.7;
+  }
+}

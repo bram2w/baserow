@@ -508,7 +508,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             views,
             table.database.workspace,
-            allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
 
@@ -637,7 +636,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ReadViewOperationType.type,
             workspace=view.table.database.workspace,
             context=view,
-            allow_if_template=True,
         )
         return view
 
@@ -1098,12 +1096,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         workspace = view.table.database.workspace
+
         CoreHandler().check_permissions(
             user,
             ReadViewFieldOptionsOperationType.type,
             workspace=workspace,
             context=view,
-            allow_if_template=True,
         )
         view_type = view_type_registry.get_by_model(view)
         return view_type
@@ -2747,7 +2745,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 ListAggregationsViewOperationType.type,
                 workspace=view.table.database.workspace,
                 context=view,
-                allow_if_template=True,
                 raise_permission_exceptions=True,
             )
 
@@ -2892,7 +2889,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 ReadAggregationsViewOperationType.type,
                 workspace=view.table.database.workspace,
                 context=view,
-                allow_if_template=True,
             )
 
         if model is None:

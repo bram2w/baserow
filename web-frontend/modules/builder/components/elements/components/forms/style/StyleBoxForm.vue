@@ -6,7 +6,7 @@
         class="row margin-bottom-2"
         style="--gap: 6px"
       >
-        <div v-if="borderIsAllowed" class="col col-3">
+        <div v-if="borderIsAllowed" class="col col-4">
           <div class="margin-bottom-1">
             {{ $t('styleBoxForm.borderLabel') }}
           </div>
@@ -20,7 +20,7 @@
             @blur="$v.values.border_size.$touch()"
           />
         </div>
-        <div v-if="paddingIsAllowed" class="col col-3">
+        <div v-if="paddingIsAllowed" class="col col-4">
           <div class="margin-bottom-1">
             {{ $t('styleBoxForm.paddingLabel') }}
           </div>

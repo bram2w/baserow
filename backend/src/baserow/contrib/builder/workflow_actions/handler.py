@@ -68,6 +68,7 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
         id_mapping: Dict[str, Dict[int, int]],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict[str, any]] = None,
     ):
         """
         Creates an instance using the serialized version previously exported with
@@ -86,7 +87,12 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
             serialized_workflow_action["type"]
         )
         return workflow_action_type.import_serialized(
-            page, serialized_workflow_action, id_mapping
+            page,
+            serialized_workflow_action,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
     def order_workflow_actions(

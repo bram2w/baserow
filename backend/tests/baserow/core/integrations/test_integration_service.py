@@ -200,7 +200,6 @@ def test_get_integrations(data_fixture, stub_check_permissions):
         queryset,
         workspace=None,
         context=None,
-        allow_if_template=False,
     ):
         return queryset.exclude(id=integration1.id)
 

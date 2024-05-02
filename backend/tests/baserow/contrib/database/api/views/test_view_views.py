@@ -90,6 +90,7 @@ def test_list_views(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=table_1.database.workspace)
+    table_1.database.workspace.has_template.cache_clear()
     url = reverse("api:database:views:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -511,6 +512,7 @@ def test_get_view_field_options_as_template(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=grid.table.database.workspace)
+    grid.table.database.workspace.has_template.cache_clear()
     url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK

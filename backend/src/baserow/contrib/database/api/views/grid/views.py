@@ -346,7 +346,6 @@ class GridViewView(APIView):
             ListRowsDatabaseTableOperationType.type,
             workspace=workspace,
             context=view.table,
-            allow_if_template=True,
         )
         field_ids = get_include_exclude_field_ids(
             view.table, include_fields, exclude_fields

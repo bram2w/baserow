@@ -472,6 +472,7 @@ export function makeErrorResponseInterceptor(
  * Add the user related headers according to the current authentication status.
  */
 const prepareRequestHeaders = (store) => (config) => {
+  const application = store.getters['userSourceUser/getCurrentApplication']
   if (store.getters['auth/isAuthenticated']) {
     const token = store.getters['auth/token']
     config.headers.Authorization = `JWT ${token}`
@@ -483,13 +484,15 @@ const prepareRequestHeaders = (store) => (config) => {
     // This enables the "double" authentication.
     // We access the data with the permission of the currently logged Baserow user
     // but we can see the data of the user source user.
-    if (store.getters['userSourceUser/isAuthenticated']) {
-      const userSourceToken = store.getters['userSourceUser/accessToken']
+    if (store.getters['userSourceUser/isAuthenticated'](application)) {
+      const userSourceToken =
+        store.getters['userSourceUser/accessToken'](application)
       config.headers.UserSourceAuthorization = `JWT ${userSourceToken}`
     }
-  } else if (store.getters['userSourceUser/isAuthenticated']) {
+  } else if (store.getters['userSourceUser/isAuthenticated'](application)) {
     // Here we are logged as a user source user
-    const userSourceToken = store.getters['userSourceUser/accessToken']
+    const userSourceToken =
+      store.getters['userSourceUser/accessToken'](application)
     config.headers.Authorization = `JWT ${userSourceToken}`
   }
   if (store.getters['auth/webSocketId'] !== null) {
@@ -550,17 +553,26 @@ export default function ({ app, store, error }, inject) {
   client.interceptors.response.use(null, refreshAuthInterceptor)
 
   // User source auth refresh token (only active if it's not a double authentication)
-  const shouldInterceptUserSourceRequest = () =>
-    !store.getters['auth/isAuthenticated'] &&
-    store.getters['userSourceUser/shouldRefreshToken']()
+  const shouldInterceptUserSourceRequest = (req) => {
+    const application = store.getters['userSourceUser/getCurrentApplication']
+    return (
+      !store.getters['auth/isAuthenticated'] &&
+      store.getters['userSourceUser/shouldRefreshToken'](application)
+    )
+  }
 
-  const shouldInterceptUserSourceResponse = (error) =>
-    store.getters['userSourceUser/isAuthenticated'] &&
-    !store.getters['auth/isAuthenticated'] &&
-    error.response?.data?.error === 'ERROR_INVALID_ACCESS_TOKEN'
-
+  const shouldInterceptUserSourceResponse = (error) => {
+    const application = store.getters['userSourceUser/getCurrentApplication']
+    return (
+      !store.getters['auth/isAuthenticated'] &&
+      store.getters['userSourceUser/isAuthenticated'](application) &&
+      error.response?.data?.error === 'ERROR_INVALID_ACCESS_TOKEN'
+    )
+  }
   const refreshUserSourceToken = async () =>
-    await store.dispatch('userSourceUser/refreshAuth')
+    await store.dispatch('userSourceUser/refreshAuth', {
+      application: store.getters['userSourceUser/getCurrentApplication'],
+    })
 
   const refreshUserSourceUserInterceptor = makeRefreshAuthInterceptor(
     client,

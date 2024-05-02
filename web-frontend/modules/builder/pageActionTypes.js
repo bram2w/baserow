@@ -24,6 +24,10 @@ export class PageActionType extends Registerable {
     return 0
   }
 
+  isActive() {
+    return true
+  }
+
   /**
    * By default, we will assume that the component is a context menu and will be
    * positioned next to the icon clicked on.
@@ -52,6 +56,10 @@ export class PublishPageActionType extends PageActionType {
 
   onClick({ component }) {
     component.show()
+  }
+
+  isActive({ workspace, page }) {
+    return this.app.$hasPermission('builder.domain.publish', page, workspace.id)
   }
 
   getOrder() {
@@ -83,6 +91,10 @@ export class PreviewPageActionType extends PageActionType {
     )
     const resolvedPagePath = toPath(pageParams)
     return `/builder/${builderId}/preview${resolvedPagePath}`
+  }
+
+  isActive({ workspace, page }) {
+    return this.app.$hasPermission('builder.domain.publish', page, workspace.id)
   }
 
   onClick({ builder, page }) {

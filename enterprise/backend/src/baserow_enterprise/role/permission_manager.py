@@ -319,7 +319,7 @@ class RolePermissionManagerType(PermissionManagerType):
         """
 
         if workspace is None or not self.is_enabled(workspace):
-            return queryset
+            return
 
         operation_type = operation_type_registry.get(operation_name)
 

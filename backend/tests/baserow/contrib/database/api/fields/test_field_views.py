@@ -85,6 +85,7 @@ def test_list_fields(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=table_1.database.workspace)
+    table_1.database.workspace.has_template.cache_clear()
     url = reverse("api:database:fields:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK

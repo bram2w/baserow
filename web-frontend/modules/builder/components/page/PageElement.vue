@@ -70,9 +70,13 @@ export default {
     isVisible() {
       switch (this.element.visibility) {
         case 'logged-in':
-          return this.$store.getters['userSourceUser/isAuthenticated']
+          return this.$store.getters['userSourceUser/isAuthenticated'](
+            this.builder
+          )
         case 'not-logged':
-          return !this.$store.getters['userSourceUser/isAuthenticated']
+          return !this.$store.getters['userSourceUser/isAuthenticated'](
+            this.builder
+          )
         default:
           return true
       }

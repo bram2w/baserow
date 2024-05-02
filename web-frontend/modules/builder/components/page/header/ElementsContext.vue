@@ -23,7 +23,10 @@
     <div v-else class="context__description">
       {{ $t('elementsContext.noElements') }}
     </div>
-    <div class="elements-list__footer">
+    <div
+      v-if="$hasPermission('builder.page.create_element', page, workspace.id)"
+      class="elements-list__footer"
+    >
       <div class="elements-list__footer-create">
         <AddElementButton
           :class="{
@@ -34,6 +37,7 @@
       </div>
     </div>
     <AddElementModal
+      v-if="$hasPermission('builder.page.create_element', page, workspace.id)"
       ref="addElementModal"
       :page="page"
       @element-added="onElementAdded"
@@ -53,7 +57,7 @@ export default {
   name: 'ElementsContext',
   components: { AddElementModal, AddElementButton, ElementsList },
   mixins: [context],
-  inject: ['page', 'builder', 'mode'],
+  inject: ['workspace', 'page', 'builder', 'mode'],
   data() {
     return {
       search: null,

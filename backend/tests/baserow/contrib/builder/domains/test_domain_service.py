@@ -97,7 +97,6 @@ def test_get_domains_partial_permissions(data_fixture, stub_check_permissions):
         queryset,
         workspace=None,
         context=None,
-        allow_if_template=False,
     ):
         return queryset.exclude(id=domain_without_access.id)
 

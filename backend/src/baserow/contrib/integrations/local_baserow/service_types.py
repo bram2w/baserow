@@ -25,7 +25,6 @@ from rest_framework.serializers import ListSerializer, Serializer
 from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
-from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.database.api.fields.serializers import (
     DurationFieldSerializer,
     FieldSerializer,
@@ -221,7 +220,14 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return resolved_values
 
-    def serialize_property(self, service: ServiceSubClass, prop_name: str):
+    def serialize_property(
+        self,
+        service: ServiceSubClass,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         """
         Responsible for serializing the `filters` and `sortings` properties.
 
@@ -249,10 +255,20 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                 for s in service.service_sorts.all()
             ]
 
-        return super().serialize_property(service, prop_name)
+        return super().serialize_property(
+            service, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
+        **kwargs,
     ):
         """
         Get the view, table and field IDs from the mapping if they exists.
@@ -270,9 +286,20 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                 for item in value
             ]
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            import_formula=import_formula,
+            **kwargs,
+        )
 
-    def create_instance_from_serialized(self, serialized_values):
+    def create_instance_from_serialized(
+        self, serialized_values, files_zip=None, storage=None, cache=None, **kwargs
+    ):
         """
         Responsible for creating the `filters` and `sortings`.
 
@@ -285,7 +312,13 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         filters = serialized_values.pop("filters", [])
         sortings = serialized_values.pop("sortings", [])
 
-        service = super().create_instance_from_serialized(serialized_values)
+        service = super().create_instance_from_serialized(
+            serialized_values,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
         # Create filters
         LocalBaserowTableServiceFilter.objects.bulk_create(
@@ -467,6 +500,10 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
         """
@@ -476,7 +513,16 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         if prop_name == "view_id" and "database_views" in id_mapping:
             return id_mapping["database_views"].get(value, None)
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            import_formula=import_formula,
+            **kwargs,
+        )
 
     def prepare_values(
         self,
@@ -627,6 +673,8 @@ class LocalBaserowListRowsUserServiceType(
             return path
 
         original_field_id = int(field_dbname[6:])
+
+        # Here if the mapping is not found, let's keep the current field Id.
         field_id = id_mapping.get("database_fields", {}).get(
             original_field_id, original_field_id
         )
@@ -638,6 +686,9 @@ class LocalBaserowListRowsUserServiceType(
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
         import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
@@ -674,7 +725,14 @@ class LocalBaserowListRowsUserServiceType(
             ]
 
         return super().deserialize_property(
-            prop_name, value, id_mapping, import_formula=import_formula, **kwargs
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            import_formula=import_formula,
+            **kwargs,
         )
 
     def dispatch_data(
@@ -852,6 +910,8 @@ class LocalBaserowGetRowUserServiceType(
             return path
 
         original_field_id = int(field_dbname[6:])
+
+        # Here if the mapping is not found, let's keep the current field Id.
         field_id = id_mapping.get("database_fields", {}).get(
             original_field_id, original_field_id
         )
@@ -863,6 +923,9 @@ class LocalBaserowGetRowUserServiceType(
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
         import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
@@ -896,7 +959,14 @@ class LocalBaserowGetRowUserServiceType(
             return import_formula(value, id_mapping)
 
         return super().deserialize_property(
-            prop_name, value, id_mapping, import_formula=import_formula, **kwargs
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            import_formula=import_formula,
+            **kwargs,
         )
 
     def dispatch_transform(
@@ -1103,7 +1173,14 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 bulk_field_mappings
             )
 
-    def serialize_property(self, service: LocalBaserowUpsertRow, prop_name: str):
+    def serialize_property(
+        self,
+        service: LocalBaserowUpsertRow,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         """
         You can customize the behavior of the serialization of a property with this
         hook.
@@ -1118,10 +1195,20 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 for m in service.field_mappings.all()
             ]
 
-        return super().serialize_property(service, prop_name)
+        return super().serialize_property(
+            service, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
+        **kwargs,
     ):
         """
         Responsible for deserializing the `field_mappings`, if they're present.
@@ -1149,9 +1236,20 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 for item in value
             ]
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            import_formula=import_formula,
+            **kwargs,
+        )
 
-    def create_instance_from_serialized(self, serialized_values):
+    def create_instance_from_serialized(
+        self, serialized_values, files_zip=None, storage=None, cache=None, **kwargs
+    ):
         """
         Responsible for creating the service, and then if `field_mappings`
         are present, creating them in bulk.
@@ -1162,7 +1260,13 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
         field_mappings = serialized_values.pop("field_mappings", [])
 
-        service = super().create_instance_from_serialized(serialized_values)
+        service = super().create_instance_from_serialized(
+            serialized_values,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
         # Create the field mappings
         LocalBaserowTableServiceFieldMapping.objects.bulk_create(
@@ -1358,6 +1462,8 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             return path
 
         original_field_id = int(field_dbname[6:])
+
+        # Here if the mapping is not found, let's keep the current field Id.
         field_id = id_mapping.get("database_fields", {}).get(
             original_field_id, original_field_id
         )

@@ -32,7 +32,14 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
         return super().prepare_values(values, user, instance)
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs
     ) -> Any:
         """
         This hooks allow to customize the deserialization of a property.
@@ -51,7 +58,15 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
         if prop_name == "element_id":
             return id_mapping["builder_page_elements"][value]
 
-        return value
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs
+        )
 
 
 class BuilderWorkflowActionTypeRegistry(

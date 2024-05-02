@@ -6,6 +6,7 @@ from django.test.utils import override_settings
 
 import pytest
 
+from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
 from baserow.core.exceptions import (
     PermissionDenied,
@@ -13,9 +14,16 @@ from baserow.core.exceptions import (
     UserNotInWorkspace,
 )
 from baserow.core.handler import CoreHandler
+from baserow.core.integrations.models import Integration
+from baserow.core.integrations.operations import (
+    ListIntegrationsApplicationOperationType,
+    UpdateIntegrationOperationType,
+)
 from baserow.core.operations import (
+    CreateApplicationsWorkspaceOperationType,
     ListApplicationsWorkspaceOperationType,
     ListWorkspacesOperationType,
+    UpdateApplicationOperationType,
     UpdateSettingsOperationType,
     UpdateWorkspaceOperationType,
 )
@@ -33,6 +41,12 @@ from baserow.core.registries import (
     permission_manager_type_registry,
 )
 from baserow.core.types import PermissionCheck
+from baserow.core.user_sources.models import UserSource
+from baserow.core.user_sources.operations import (
+    ListUserSourcesApplicationOperationType,
+    LoginUserSourceOperationType,
+    UpdateUserSourceOperationType,
+)
 
 
 @pytest.mark.django_db
@@ -41,6 +55,7 @@ from baserow.core.types import PermissionCheck
         "core",
         "setting_operation",
         "staff",
+        "allow_if_template",
         "member",
         "token",
         "basic",
@@ -138,7 +153,6 @@ def test_check_permissions(data_fixture):
             UpdateWorkspaceOperationType.type,
             workspace=user_workspace_2.workspace,
             context=user_workspace_2.workspace,
-            allow_if_template=True,
         )
 
     assert CoreHandler().check_permissions(
@@ -146,7 +160,6 @@ def test_check_permissions(data_fixture):
         UpdateWorkspaceOperationType.type,
         workspace=user_workspace_3.workspace,
         context=user_workspace_3.workspace,
-        allow_if_template=True,
     )
 
     with pytest.raises(PermissionDenied):
@@ -154,9 +167,93 @@ def test_check_permissions(data_fixture):
             AnonymousUser(),
             ListApplicationsWorkspaceOperationType.type,
             workspace=user_workspace.workspace,
-            allow_if_template=True,
             context=user_workspace.workspace,
         )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_workspace_member_permission_manager(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    workspace_1 = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace()
+    database_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    database_2 = data_fixture.create_database_application(
+        workspace=workspace_2, order=1
+    )
+
+    perm_manager = WorkspaceMemberOnlyPermissionManagerType()
+
+    checks = [
+        PermissionCheck(user, UpdateApplicationOperationType.type, database_1),
+        PermissionCheck(user, ListApplicationsWorkspaceOperationType.type, workspace_1),
+    ]
+
+    result = perm_manager.check_multiple_permissions(checks, workspace_1)
+
+    list_result = [
+        (
+            c.actor.username,
+            c.operation_name,
+            (
+                result.get(c, None)
+                if not isinstance(result.get(c, None), Exception)
+                else False
+            ),
+        )
+        for c in checks
+    ]
+
+    assert list_result == [
+        ("test@test.nl", "application.update", None),
+        ("test@test.nl", "workspace.list_applications", None),
+    ]
+
+    checks = [
+        PermissionCheck(user, UpdateApplicationOperationType.type, database_2),
+        PermissionCheck(user, ListApplicationsWorkspaceOperationType.type, workspace_2),
+    ]
+
+    result = perm_manager.check_multiple_permissions(checks, workspace_2)
+
+    list_result = [
+        (
+            c.actor.username,
+            c.operation_name,
+            (
+                result.get(c, None)
+                if not isinstance(result.get(c, None), Exception)
+                else False
+            ),
+        )
+        for c in checks
+    ]
+
+    assert list_result == [
+        ("test@test.nl", "application.update", False),
+        ("test@test.nl", "workspace.list_applications", False),
+    ]
+
+    try:
+        perm_manager.check_permissions(
+            user, ListApplicationsWorkspaceOperationType.type, workspace_2, workspace_2
+        )
+    except Exception:  # noqa:W0718
+        ...
+
+    with django_assert_num_queries(0):
+        filtered = perm_manager.filter_queryset(
+            user,
+            ListApplicationsWorkspaceOperationType.type,
+            Database.objects.all(),
+            workspace_2,
+        )
+
+    assert isinstance(filtered, tuple)
+    assert len(filtered[0]) == 0
 
 
 @pytest.mark.django_db
@@ -390,6 +487,33 @@ def test_get_permissions(data_fixture):
                 "is_staff": True,
             },
         },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
+            },
+        },
         {"name": "member", "permissions": False},
     ]
 
@@ -410,6 +534,33 @@ def test_get_permissions(data_fixture):
             "permissions": {
                 "staff_only_operations": ["settings.update"],
                 "is_staff": True,
+            },
+        },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
             },
         },
         {
@@ -451,6 +602,33 @@ def test_get_permissions(data_fixture):
                 "is_staff": False,
             },
         },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
+            },
+        },
         {"name": "member", "permissions": False},
     ]
 
@@ -471,6 +649,33 @@ def test_get_permissions(data_fixture):
             "permissions": {
                 "staff_only_operations": ["settings.update"],
                 "is_staff": False,
+            },
+        },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
             },
         },
         {
@@ -512,6 +717,33 @@ def test_get_permissions(data_fixture):
                 "is_staff": False,
             },
         },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
+            },
+        },
         {"name": "member", "permissions": False},
     ]
 
@@ -532,6 +764,33 @@ def test_get_permissions(data_fixture):
             "permissions": {
                 "staff_only_operations": ["settings.update"],
                 "is_staff": False,
+            },
+        },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
             },
         },
         {
@@ -573,8 +832,267 @@ def test_get_permissions(data_fixture):
                 "is_staff": False,
             },
         },
+        {
+            "name": "allow_if_template",
+            "permissions": {
+                "allowed_operations_on_templates": [
+                    "workspace.list_applications",
+                    "application.list_integrations",
+                    "application.list_user_sources",
+                    "application.user_source.login",
+                    "database.list_tables",
+                    "database.table.list_fields",
+                    "database.table.list_rows",
+                    "database.table.list_views",
+                    "database.table.read_row",
+                    "database.table.view.read",
+                    "database.table.view.read_field_options",
+                    "database.table.view.list_decoration",
+                    "database.table.view.list_aggregations",
+                    "database.table.view.read_aggregation",
+                    "builder.list_pages",
+                    "builder.page.list_elements",
+                    "builder.page.list_workflow_actions",
+                    "builder.page.data_source.dispatch",
+                    "builder.page.list_data_sources",
+                ],
+                "workspace_template_ids": [],
+            },
+        },
         {"name": "member", "permissions": False},
     ]
+
+
+@pytest.mark.django_db
+@pytest.mark.django_db
+@override_settings(
+    PERMISSION_MANAGERS=[
+        "core",
+        "setting_operation",
+        "staff",
+        "allow_if_template",
+        "member",
+        "token",
+        "basic",
+    ]
+)
+def test_allow_if_template_permission_manager(data_fixture):
+    buser = data_fixture.create_user(username="Auth user")
+
+    workspace_0 = data_fixture.create_workspace(user=buser)
+
+    workspace_1 = data_fixture.create_workspace()
+    application_1 = data_fixture.create_builder_application(workspace=workspace_1)
+    integration_1 = data_fixture.create_integration_with_first_type(
+        application=application_1
+    )
+    user_source_1 = data_fixture.create_user_source_with_first_type(
+        application=application_1
+    )
+
+    workspace_2 = data_fixture.create_workspace()
+    data_fixture.create_template(workspace=workspace_2)
+    application_2 = data_fixture.create_builder_application(workspace=workspace_2)
+    integration_2 = data_fixture.create_integration_with_first_type(
+        application=application_2
+    )
+    user_source_2 = data_fixture.create_user_source_with_first_type(
+        application=application_2
+    )
+
+    template = [workspace_2, application_2, integration_2, user_source_2]
+
+    checks = []
+    for user in [
+        buser,
+        AnonymousUser(),
+    ]:
+        for perm_type, scope in [
+            (ListApplicationsWorkspaceOperationType.type, workspace_1),
+            (ListIntegrationsApplicationOperationType.type, application_1),
+            (ListUserSourcesApplicationOperationType.type, application_1),
+            (LoginUserSourceOperationType.type, user_source_1),
+            (CreateApplicationsWorkspaceOperationType.type, workspace_1),
+            (UpdateIntegrationOperationType.type, integration_1),
+            (UpdateUserSourceOperationType.type, user_source_1),
+        ]:
+            checks.append(PermissionCheck(user, perm_type, scope))
+
+    result_1 = CoreHandler().check_multiple_permissions(checks, workspace_1)
+
+    list_result_1 = [
+        (
+            c.actor.username or "Anonymous",
+            c.operation_name,
+            "template" if c.context in template else "Not a template",
+            result_1.get(c, None),
+        )
+        for c in checks
+    ]
+
+    checks = []
+    for user in [
+        buser,
+        AnonymousUser(),
+    ]:
+        for perm_type, scope in [
+            (ListApplicationsWorkspaceOperationType.type, workspace_2),
+            (ListIntegrationsApplicationOperationType.type, application_2),
+            (ListUserSourcesApplicationOperationType.type, application_2),
+            (LoginUserSourceOperationType.type, user_source_2),
+            (CreateApplicationsWorkspaceOperationType.type, workspace_2),
+            (UpdateIntegrationOperationType.type, integration_2),
+            (UpdateUserSourceOperationType.type, user_source_2),
+        ]:
+            checks.append(PermissionCheck(user, perm_type, scope))
+
+    result_2 = CoreHandler().check_multiple_permissions(checks, workspace_2)
+
+    list_result_2 = [
+        (
+            c.actor.username or "Anonymous",
+            c.operation_name,
+            "template" if c.context in template else "Not a template",
+            result_2.get(c, None),
+        )
+        for c in checks
+    ]
+
+    list_result = list_result_1 + list_result_2
+
+    assert list_result == [
+        ("Auth user", "workspace.list_applications", "Not a template", False),
+        ("Auth user", "application.list_integrations", "Not a template", False),
+        ("Auth user", "application.list_user_sources", "Not a template", False),
+        ("Auth user", "application.user_source.login", "Not a template", False),
+        ("Auth user", "workspace.create_application", "Not a template", False),
+        ("Auth user", "application.integration.update", "Not a template", False),
+        ("Auth user", "application.user_source.update", "Not a template", False),
+        ("Anonymous", "workspace.list_applications", "Not a template", False),
+        ("Anonymous", "application.list_integrations", "Not a template", False),
+        ("Anonymous", "application.list_user_sources", "Not a template", False),
+        ("Anonymous", "application.user_source.login", "Not a template", False),
+        ("Anonymous", "workspace.create_application", "Not a template", False),
+        ("Anonymous", "application.integration.update", "Not a template", False),
+        ("Anonymous", "application.user_source.update", "Not a template", False),
+        ("Auth user", "workspace.list_applications", "template", True),
+        ("Auth user", "application.list_integrations", "template", True),
+        ("Auth user", "application.list_user_sources", "template", True),
+        ("Auth user", "application.user_source.login", "template", True),
+        ("Auth user", "workspace.create_application", "template", False),
+        ("Auth user", "application.integration.update", "template", False),
+        ("Auth user", "application.user_source.update", "template", False),
+        ("Anonymous", "workspace.list_applications", "template", True),
+        ("Anonymous", "application.list_integrations", "template", True),
+        ("Anonymous", "application.list_user_sources", "template", True),
+        ("Anonymous", "application.user_source.login", "template", True),
+        ("Anonymous", "workspace.create_application", "template", False),
+        ("Anonymous", "application.integration.update", "template", False),
+        ("Anonymous", "application.user_source.update", "template", False),
+    ]
+
+
+@pytest.mark.django_db
+@pytest.mark.django_db
+@override_settings(
+    PERMISSION_MANAGERS=[
+        "core",
+        "setting_operation",
+        "staff",
+        "allow_if_template",
+        "member",
+        "token",
+        "basic",
+    ]
+)
+def test_allow_if_template_permission_manager_filter_queryset(data_fixture):
+    user = data_fixture.create_user(username="Auth user")
+
+    workspace_0 = data_fixture.create_workspace(user=user)
+
+    workspace_1 = data_fixture.create_workspace()
+    application_1 = data_fixture.create_builder_application(workspace=workspace_1)
+    integration_1 = data_fixture.create_integration_with_first_type(
+        application=application_1
+    )
+    user_source_1 = data_fixture.create_user_source_with_first_type(
+        application=application_1
+    )
+
+    workspace_2 = data_fixture.create_workspace()
+    data_fixture.create_template(workspace=workspace_2)
+    application_2 = data_fixture.create_builder_application(workspace=workspace_2)
+    integration_2 = data_fixture.create_integration_with_first_type(
+        application=application_2
+    )
+    user_source_2 = data_fixture.create_user_source_with_first_type(
+        application=application_2
+    )
+
+    tests_w1 = [
+        (
+            ListApplicationsWorkspaceOperationType.type,
+            workspace_1.application_set.all(),
+        ),
+        (
+            ListIntegrationsApplicationOperationType.type,
+            Integration.objects.filter(application__workspace=workspace_1),
+        ),
+        (
+            ListUserSourcesApplicationOperationType.type,
+            UserSource.objects.filter(application__workspace=workspace_1),
+        ),
+    ]
+
+    for operation_name, queryset in tests_w1:
+        assert (
+            sorted(
+                [
+                    a.id
+                    for a in CoreHandler().filter_queryset(
+                        user,
+                        operation_name,
+                        queryset,
+                        workspace=workspace_1,
+                    )
+                ]
+            )
+            == []
+        )
+
+    tests_w1 = [
+        (
+            ListApplicationsWorkspaceOperationType.type,
+            workspace_2.application_set.all(),
+            [application_2.id],
+        ),
+        (
+            ListIntegrationsApplicationOperationType.type,
+            Integration.objects.filter(application__workspace=workspace_2),
+            [integration_2.id],
+        ),
+        (
+            ListUserSourcesApplicationOperationType.type,
+            UserSource.objects.filter(application__workspace=workspace_2),
+            [user_source_2.id],
+        ),
+    ]
+
+    for operation_name, queryset, expected in tests_w1:
+        assert (
+            sorted(
+                [
+                    a.id
+                    for a in CoreHandler().filter_queryset(
+                        user,
+                        operation_name,
+                        queryset,
+                        workspace=workspace_2,
+                    )
+                ]
+            )
+            == expected
+        ), operation_name
 
 
 @pytest.mark.django_db

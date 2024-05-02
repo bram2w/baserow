@@ -11,7 +11,14 @@ from baserow.core.workflow_actions.types import WorkflowActionDictSubClass
 class WorkflowActionType(Instance, ModelInstanceMixin, EasyImportExportMixin, ABC):
     SerializedDict: Type[WorkflowActionDictSubClass]
 
-    def serialize_property(self, workflow_action: WorkflowAction, prop_name: str):
+    def serialize_property(
+        self,
+        workflow_action: WorkflowAction,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         """
         You can customize the behavior of the serialization of a property with this
         hook.
@@ -20,7 +27,13 @@ class WorkflowActionType(Instance, ModelInstanceMixin, EasyImportExportMixin, AB
         if prop_name == "type":
             return self.type
 
-        return getattr(workflow_action, prop_name)
+        return super().serialize_property(
+            workflow_action,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
 
     def prepare_values(
         self,

@@ -546,9 +546,12 @@ export class UserDataProviderType extends DataProviderType {
 
   getDataContent(applicationContext) {
     return {
-      is_authenticated:
-        this.app.store.getters['userSourceUser/isAuthenticated'],
-      ...this.app.store.getters['userSourceUser/getUser'],
+      is_authenticated: this.app.store.getters[
+        'userSourceUser/isAuthenticated'
+      ](applicationContext.builder),
+      ...this.app.store.getters['userSourceUser/getUser'](
+        applicationContext.builder
+      ),
     }
   }
 
@@ -556,10 +559,22 @@ export class UserDataProviderType extends DataProviderType {
     return {
       type: 'object',
       properties: {
-        is_authenticated: { title: 'isAuthenticated', type: 'boolean' },
-        id: { type: 'number', title: 'id' },
-        email: { type: 'string', title: 'email' },
-        username: { type: 'string', title: 'username' },
+        is_authenticated: {
+          title: this.app.i18n.t('userDataProviderType.isAuthenticated'),
+          type: 'boolean',
+        },
+        id: {
+          type: 'number',
+          title: this.app.i18n.t('userDataProviderType.id'),
+        },
+        email: {
+          type: 'string',
+          title: this.app.i18n.t('userDataProviderType.email'),
+        },
+        username: {
+          type: 'string',
+          title: this.app.i18n.t('userDataProviderType.username'),
+        },
       },
     }
   }

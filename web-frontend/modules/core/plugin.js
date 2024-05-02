@@ -33,6 +33,7 @@ import {
   StaffPermissionManagerType,
   WorkspaceMemberPermissionManagerType,
   StaffOnlySettingOperationPermissionManagerType,
+  AllowIfTemplateOperationPermissionManagerType,
 } from '@baserow/modules/core/permissionManagerTypes'
 
 import {
@@ -150,6 +151,11 @@ export default (context, inject) => {
     'permissionManager',
     new StaffOnlySettingOperationPermissionManagerType(context)
   )
+  registry.register(
+    'permissionManager',
+    new AllowIfTemplateOperationPermissionManagerType(context)
+  )
+
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(
     'userFileUpload',

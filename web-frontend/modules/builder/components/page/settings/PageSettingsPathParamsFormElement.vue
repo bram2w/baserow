@@ -21,6 +21,7 @@
         <Dropdown
           :value="pathParam.type"
           small
+          :disabled="disabled"
           @input="$emit('update', pathParam.name, $event)"
         >
           <DropdownItem
@@ -43,6 +44,11 @@ export default {
       type: Array,
       required: false,
       default: () => {},
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   computed: {

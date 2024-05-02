@@ -77,7 +77,6 @@ def test_list_applications(
     assert args[1] == ListApplicationsWorkspaceOperationType.type
     assert isinstance(args[2], QuerySet)
     assert kwargs["workspace"] == workspace_1
-    assert kwargs["allow_if_template"] is True
 
     assert response_json[0]["id"] == application_1.id
     assert response_json[0]["type"] == "database"

@@ -27,7 +27,18 @@ export default {
   name: 'CreatePageModal',
   components: { PageSettingsForm },
   mixins: [modal],
+  provide() {
+    return {
+      page: null,
+      builder: this.builder,
+      workspace: this.workspace,
+    }
+  },
   props: {
+    workspace: {
+      type: Object,
+      required: true,
+    },
     builder: {
       type: Object,
       required: true,

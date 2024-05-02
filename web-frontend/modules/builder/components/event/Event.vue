@@ -1,5 +1,5 @@
 <template>
-  <Expandable toggle-on-click>
+  <Expandable toggle-on-click :default-expanded="workflowActions.length < 2">
     <template #header="{ expanded }">
       <div class="event__header">
         <div class="event__header-left">
@@ -36,6 +36,11 @@
             id: workflowAction.id,
             handle: '[data-sortable-handle]',
             update: orderWorkflowActions,
+            enabled: $hasPermission(
+              'builder.page.element.update',
+              element,
+              workspace.id
+            ),
           }"
           class="event__workflow-action"
           :class="{ 'event__workflow-action--first': index === 0 }"
@@ -70,7 +75,7 @@ const DEFAULT_WORKFLOW_ACTION_TYPE = NotificationWorkflowActionType.getType()
 export default {
   name: 'Event',
   components: { WorkflowAction },
-  inject: ['builder', 'page'],
+  inject: ['workspace', 'builder', 'page'],
   props: {
     event: {
       type: Event,
