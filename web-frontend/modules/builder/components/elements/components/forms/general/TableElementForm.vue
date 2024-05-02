@@ -1,20 +1,19 @@
 <template>
-  <form @submit.prevent @keydown.enter.prevent>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('tableElementForm.dataSource') }}
-      </label>
+  <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
+    <FormGroup :label="$t('tableElementForm.dataSource')">
       <div class="control__elements">
-        <Dropdown v-model="values.data_source_id" :show-search="false">
-          <DropdownItem
-            v-for="dataSource in availableDataSources"
-            :key="dataSource.id"
-            :name="dataSource.name"
-            :value="dataSource.id"
-          />
-        </Dropdown>
+        <div @click="userHasChangedDataSource = true">
+          <Dropdown v-model="values.data_source_id" :show-search="false">
+            <DropdownItem
+              v-for="dataSource in availableDataSources"
+              :key="dataSource.id"
+              :name="dataSource.name"
+              :value="dataSource.id"
+            />
+          </Dropdown>
+        </div>
       </div>
-    </FormElement>
+    </FormGroup>
     <FormInput
       v-model="values.items_per_page"
       :label="$t('tableElementForm.itemsPerPage')"
@@ -34,11 +33,17 @@
       type="number"
       @blur="$v.values.items_per_page.$touch()"
     ></FormInput>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('tableElementForm.fields') }}
-      </label>
+    <FormGroup :label="$t('tableElementForm.fields')">
       <template v-if="values.data_source_id">
+        <ButtonText
+          type="primary"
+          icon="iconoir-refresh-double"
+          size="small"
+          class="table-element-form__refresh-fields-button"
+          @click="refreshFieldsFromDataSource"
+        >
+          {{ $t('tableElementForm.refreshFieldsFromDataSource') }}
+        </ButtonText>
         <div>
           <Expandable
             v-for="(field, index) in values.fields"
@@ -134,7 +139,7 @@
         </ButtonText>
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
-    </FormElement>
+    </FormGroup>
     <ColorInputGroup
       v-model="values.button_color"
       :label="$t('tableElementForm.buttonColor')"
@@ -171,6 +176,7 @@ export default {
         data_source_id: null,
         items_per_page: 1,
       },
+      userHasChangedDataSource: false,
     }
   },
   computed: {
@@ -179,6 +185,16 @@ export default {
     },
     collectionTypes() {
       return this.$registry.getAll('collectionField')
+    },
+  },
+  watch: {
+    async 'values.data_source_id'(newValue, oldValue) {
+      if (newValue && !oldValue) {
+        await this.$nextTick()
+        if (this.userHasChangedDataSource) {
+          this.refreshFieldsFromDataSource()
+        }
+      }
     },
   },
   methods: {
@@ -223,6 +239,17 @@ export default {
         field,
         builder: this.builder,
       })
+    },
+    refreshFieldsFromDataSource() {
+      if (this.selectedDataSource?.type) {
+        const serviceType = this.$registry.get(
+          'service',
+          this.selectedDataSource.type
+        )
+        this.values.fields = serviceType.getDefaultCollectionFields(
+          this.selectedDataSource
+        )
+      }
     },
   },
   validations() {

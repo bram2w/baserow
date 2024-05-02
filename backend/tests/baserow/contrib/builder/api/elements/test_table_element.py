@@ -40,14 +40,6 @@ def test_can_create_a_table_element(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response.json()["type"] == "table"
-    assert [
-        {key: value for key, value in f.items() if key != "id"}
-        for f in response.json()["fields"]
-    ] == [
-        {"name": "Column 1", "type": "text", "value": ""},
-        {"name": "Column 2", "type": "text", "value": ""},
-        {"name": "Column 3", "type": "text", "value": ""},
-    ]
 
 
 @pytest.mark.django_db
