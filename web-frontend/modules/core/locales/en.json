@@ -133,8 +133,8 @@
         "confirmationEmailSentDescription": "The confirmation email has been sent."
     },
     "verifyEmailAddress": {
-        "emailVerifiedTitle": "Email verified",
-        "emailVerifiedDescription": "The email address has been verified."
+        "confirmation": "Your email address has been verified.",
+        "goToDashboard": "Go to dashboard"
     },
     "emailNotVerified": {
         "title": "Email verification required",
