@@ -292,7 +292,8 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
             and not user.profile.email_verified
         ):
             UserHandler().send_email_pending_verification(user)
-            raise EmailVerificationRequired()
+            if not user.is_staff:
+                raise EmailVerificationRequired()
 
         data = generate_session_tokens_for_user(
             user,
@@ -331,6 +332,7 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
         if (
             settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
             and not user.profile.email_verified
+            and not user.is_staff
             and token.get("verified_email_claim")
             == Settings.EmailVerificationOptions.ENFORCED
         ):
@@ -367,6 +369,7 @@ class TokenVerifyWithUserSerializer(TokenVerifySerializer):
         if (
             settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
             and not user.profile.email_verified
+            and not user.is_staff
             and token.get("verified_email_claim")
             == Settings.EmailVerificationOptions.ENFORCED
         ):
