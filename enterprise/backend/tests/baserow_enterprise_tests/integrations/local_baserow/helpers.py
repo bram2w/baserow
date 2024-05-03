@@ -31,6 +31,7 @@ def populate_local_baserow_test_data(data_fixture):
             ["test@baserow.io", "Test", make_password("super not secret")],
             ["test2@baserow.io", "Test2", make_password("super not secret")],
             ["test3@baserow.io", "Test3", make_password("super not secret")],
+            ["test4@baserow.io", "Test4", None],
         ],
     )
 

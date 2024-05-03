@@ -1107,6 +1107,11 @@ def test_local_baserow_user_source_authentication_bad_creds(
             user_source, email="testt@baserow.io", password="super not secret"
         )
 
+    with pytest.raises(AuthenticationFailed):
+        user_source_type.authenticate(
+            user_source, email="test4@baserow.io", password="super not secret"
+        )
+
 
 @pytest.mark.django_db
 def test_local_baserow_user_source_authentication_list_users(
@@ -1117,14 +1122,17 @@ def test_local_baserow_user_source_authentication_list_users(
     user_source = data["user_source"]
     user_source_type = user_source.get_type()
 
-    first_user, second_user, third_user = data["user_table"].get_model().objects.all()
+    first_user, second_user, third_user, fourth_user = (
+        data["user_table"].get_model().objects.all()
+    )
 
     result = user_source_type.list_users(user_source)
 
-    assert len(result) == 3
+    assert len(result) == 4
     assert result[0].id == first_user.id
     assert result[1].id == second_user.id
     assert result[2].id == third_user.id
+    assert result[3].id == fourth_user.id
 
     result = user_source_type.list_users(user_source, count=2)
 
