@@ -220,7 +220,7 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
         password_field = auth_provider.password_field
         encoded_password = getattr(user.original_user, password_field.db_column)
 
-        if check_password(password, encoded_password):
+        if encoded_password and check_password(password, encoded_password):
             return user
         else:
             raise exceptions.AuthenticationFailed(
