@@ -209,7 +209,6 @@ class GenerateFormulaWithAIView(APIView):
             ListFieldsOperationType.type,
             workspace=table.database.workspace,
             context=table,
-            allow_if_template=True,
         )
 
         formula = action_type_registry.get(GenerateFormulaWithAIActionType.type).do(

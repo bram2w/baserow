@@ -1705,7 +1705,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
     # is slow, and so we disable instrumenting it to save significant resources in
     # telemetry platforms receiving the instrumentation.
     @disable_instrumentation
-    def sync_templates(self, storage=None, template_search_glob="*.json"):
+    def sync_templates(self, storage=None, template_search_glob=None):
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
@@ -1718,12 +1718,18 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         don't have updating capability, we delete the old workspace and create a new one
         where we can import the export into.
 
-        :param storage:
-        :type storage:
+        :param storage: Storage to use to get the files.
         :param template_search_glob: A glob pattern used to select which template files
             to sync. Defaults to just syncing all templates but can be used to restrict
-            the syncing to specific templates only.
+            the syncing to specific templates only. In the last case it also deletes the
+            templates that don't exist anymore.
         """
+
+        clean_templates = False
+        if template_search_glob is None:
+            # We clean the template list only if we have the full list of templates
+            clean_templates = True
+            template_search_glob = "*.json"
 
         installed_templates = (
             Template.objects.all()
@@ -1841,20 +1847,21 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
             installed_template.categories.set(template_category_ids)
 
-        # Delete all the installed templates that were installed, but don't exist in
-        # the template directory anymore.
-        slugs = [
-            ".".join(template_file_path.name.split(".")[:-1])
-            for template_file_path in templates
-        ]
-        for template in Template.objects.filter(~Q(slug__in=slugs)):
-            TrashHandler.permanently_delete(template.workspace)
-            template.delete()
+        if clean_templates:
+            # Delete all the installed templates that were installed, but don't exist in
+            # the template directory anymore.
+            slugs = [
+                ".".join(template_file_path.name.split(".")[:-1])
+                for template_file_path in templates
+            ]
+            for template in Template.objects.filter(~Q(slug__in=slugs)):
+                TrashHandler.permanently_delete(template.workspace)
+                template.delete()
 
-        # Delete all the categories that don't have any templates anymore.
-        TemplateCategory.objects.annotate(num_templates=Count("templates")).filter(
-            num_templates=0
-        ).delete()
+            # Delete all the categories that don't have any templates anymore.
+            TemplateCategory.objects.annotate(num_templates=Count("templates")).filter(
+                num_templates=0
+            ).delete()
 
     def get_valid_template_path_or_raise(self, template):
         file_name = f"{template.slug}.json"

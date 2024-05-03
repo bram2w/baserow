@@ -12,8 +12,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "search",
+            "--search",
             type=str,
+            nargs="?",
+            default="",
             help="The search pattern to load only some templates.",
         )
 
