@@ -1,6 +1,6 @@
 <template>
   <aside class="side-panels">
-    <Tabs :key="element?.id" :full-height="true">
+    <Tabs :key="element?.id" full-height>
       <Tab
         v-for="pageSidePanelType in pageSidePanelTypes"
         :key="pageSidePanelType.getType()"

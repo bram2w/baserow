@@ -99,7 +99,7 @@
         {{ errorReport.join(', ') }}
       </Alert>
 
-      <Tabs v-if="dataLoaded" :no-separation="true">
+      <Tabs v-if="dataLoaded" no-padding>
         <Tab
           v-if="!isTableCreation"
           :title="$t('importFileModal.importPreview')"

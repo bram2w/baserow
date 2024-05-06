@@ -1,5 +1,5 @@
 <template>
-  <Tabs :full-height="true" :navigation="true" :large="true">
+  <Tabs offset full-height :route="$route" large-offset>
     <Tab
       v-for="page in pages"
       :key="page.type"

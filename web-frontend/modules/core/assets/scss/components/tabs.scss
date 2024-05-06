@@ -13,38 +13,35 @@
   display: flex;
   flex-wrap: nowrap;
   list-style: none;
-  padding: 0 15px;
+  padding: 0;
   margin: 0;
   gap: 24px;
-  border-bottom: solid 1px $palette-neutral-200;
+  font-weight: 500;
+  border-bottom: solid 1px $palette-neutral-100;
+  padding-left: 15px;
 
-  .tabs--no-separation & {
-    border-bottom: unset;
-    padding: 0;
+  .tabs--large-offset & {
+    padding-left: 40px;
   }
 
-  .tabs--large & {
-    padding: 0 0 0 40px;
-  }
-
-  &.tabs__header--full-width {
-    gap: 0;
-    padding: 0;
+  .tabs--nopadding & {
+    padding-left: 0;
   }
 }
 
 .tabs__item {
   position: relative;
+  text-align: center;
 
   &.tabs__item--disabled {
     user-select: none;
-    color: $color-neutral-900;
+    color: $palette-neutral-600;
     opacity: 0.6;
     text-decoration: none;
+  }
 
-    a {
-      cursor: not-allowed;
-    }
+  .tabs--grow-items & {
+    flex-grow: 1;
   }
 
   &.tabs__item--active::after {
@@ -54,35 +51,29 @@
 
     @include absolute(auto, 0, -1px, 0);
   }
-
-  &.tabs__item--full-width {
-    width: 100%;
-    text-align: center;
-  }
 }
 
 .tabs__link {
-  color: $palette-neutral-900;
   display: block;
   padding: 12px 0;
-  font-weight: 500;
+  color: $palette-neutral-900;
 
-  .tabs--large & {
-    font-size: 14px;
-    padding: 18px 0;
+  .tabs__item--disabled & {
+    text-decoration: none;
+    cursor: not-allowed;
   }
 
   .tabs__item--active & {
     color: $palette-neutral-1200;
   }
 
-  &:hover {
+  .tabs__item--active &:hover {
+    color: $palette-blue-500;
+  }
+
+  .tabs__item:not(.tabs__item--disabled) &:hover {
     text-decoration: none;
     color: $palette-neutral-1200;
-
-    .tabs__item--active & {
-      color: $palette-blue-500;
-    }
   }
 }
 
@@ -95,8 +86,7 @@
     height: 100%;
   }
 
-  .tabs--no-separation & {
-    padding-left: 0;
-    padding-right: 0;
+  .tabs--nopadding & {
+    padding: 14px 0;
   }
 }
