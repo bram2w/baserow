@@ -5,6 +5,7 @@ services:
     image: postgres:12
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
+    command: "${POSTGRES_DEV_EXTRA_ARGS}"
 
   redis:
     ports:
