@@ -3,17 +3,12 @@
     class="tabs"
     :class="{
       'tabs--full-height': fullHeight,
-      'tabs--no-separation': noSeparation,
-      'tabs--large': large,
+      'tabs--large-offset': largeOffset,
+      'tabs--nopadding': noPadding,
+      'tabs--grow-items': growItems,
     }"
   >
-    <ul
-      v-if="!collapseOneTab || tabs.length > 1"
-      class="tabs__header"
-      :class="{
-        'tabs__header--full-width': fullWidthHeader,
-      }"
-    >
+    <ul class="tabs__header">
       <li
         v-for="(tab, index) in tabs"
         :key="tab.title"
@@ -22,7 +17,6 @@
         :class="{
           'tabs__item--active': isActive(index),
           'tabs__item--disabled': tab.disabled,
-          'tabs__item--full-width': fullWidthHeader,
         }"
         @click="tab.disabled ? null : selectTab(index)"
       >
@@ -44,37 +38,52 @@
 export default {
   name: 'Tabs',
   props: {
+    /**
+     * The index of the selected tab.
+     */
     selectedIndex: {
       type: Number,
       required: false,
       default: 0,
     },
+    /**
+     * Whether the tabs should take the full height of the parent.
+     */
     fullHeight: {
       type: Boolean,
       required: false,
       default: false,
     },
-    noSeparation: {
+    /**
+     * The Vue route object. If provided the tabs will be used for navigation.
+     * and the active tab will be set according to the current route.
+     * The child Tab components should have a `to` prop set.
+     */
+    route: {
+      type: Object,
+      required: false,
+      default: null,
+    },
+    /**
+     * Whether the tabs container should add some extra space to the left.
+     */
+    largeOffset: {
       type: Boolean,
       required: false,
       default: false,
     },
-    navigation: {
+    /**
+     * Removes the padding from the tabs container and header.
+     */
+    noPadding: {
       type: Boolean,
       required: false,
       default: false,
     },
-    large: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    fullWidthHeader: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    collapseOneTab: {
+    /**
+     * Whether the tabs header items should grow to use all the available space.
+     */
+    growItems: {
       type: Boolean,
       required: false,
       default: false,
@@ -89,7 +98,7 @@ export default {
   watch: {
     selectedIndex: {
       handler(i) {
-        if (!this.navigation && i !== undefined) {
+        if (!this.route && i !== undefined) {
           this.internalSelectedIndex = i
         }
       },
@@ -100,36 +109,30 @@ export default {
     this.tabs = this.$children
   },
   mounted() {
-    if (this.navigation) {
+    if (this.route) {
       this.tabs.forEach((tab) => {
-        tab.isActive = this.$route.name === tab.to.name
+        tab.isActive = this.route.name === tab.to.name
       })
-    } else {
-      this.selectTab(this.internalSelectedIndex)
-    }
+    } else this.selectTab(this.internalSelectedIndex)
   },
   methods: {
     isActive(i) {
-      if (this.navigation) {
-        return this.$route.name === this.tabs[i].to.name
-      } else {
-        return this.internalSelectedIndex === i
-      }
+      if (this.route) return this.route.name === this.tabs[i].to.name
+      else return this.internalSelectedIndex === i
     },
     getHref(i) {
-      if (this.navigation) {
+      if (this.route) {
         const tab = this.tabs[i]
         return !tab.disabled ? this.$router.match(tab.to).path : null
-      } else {
-        return null
       }
+      return null
     },
     selectTab(i) {
-      if (this.navigation) {
-        this.$emit('update:selected-index', i)
+      if (this.route) {
+        this.$emit('update:selectedIndex', i)
         this.$router.push(this.tabs[i].to)
       } else {
-        this.$emit('update:selected-index', i)
+        this.$emit('update:selectedIndex', i)
         this.internalSelectedIndex = i
       }
       this.tabs.forEach((tab, index) => {

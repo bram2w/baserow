@@ -21,13 +21,39 @@ import Tab from '@baserow/modules/core/components/Tab'
     }}
     decorators={[withDesign]}
     argTypes={{
-        default: {
-            defaultValue: 'Label',
+        selectedIndex: {
+            control: {
+                type: 'number',
+            },
+            defaultValue: 1,
+        },
+        fullHeight: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        largeOffset: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
+        },
+        noPadding: {
+            control: {
+                type: 'boolean',
+                options: [true, false],
+            },
+            defaultValue: false,
         },
     }}
 />
 
 # Tabs
+
+The tabs component is used to display a set of tabs.
 
 export const Template = (args, { argTypes, updateArgs }) => ({
     methods: {
@@ -71,7 +97,16 @@ export const designConfig = {
 ## Example
 
 ```javascript
-<Tabs></Tabs>
+<Tabs>
+    <Tab title="Tab 1">This is a tab content</Tab>
+    <Tab title="Tab 2">This is another tab content</Tab>
+    <Tab title="Tab 3">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
+    </Tab>
+    <Tab title="Tab 4">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit
+    </Tab>
+</Tabs>
 ```
 
 ## Props
