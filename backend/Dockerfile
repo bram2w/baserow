@@ -1,5 +1,5 @@
 # syntax = docker/dockerfile:1.3
-FROM debian:bullseye-slim as base
+FROM debian:bookworm-slim as base
 
 ARG UID
 ENV UID=${UID:-9999}
@@ -40,6 +40,7 @@ RUN apt-get update &&  \
     python3 \
     python3-pip \
     python3-dev \
+    python3-virtualenv \
     nano \
     vim \
     git \
@@ -57,8 +58,7 @@ COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
 # Install non-dev base dependencies into a virtual env.
 COPY --chown=$UID:$GID ./backend/requirements/base.txt /baserow/requirements/
-RUN python3 -m pip install --no-cache-dir --no-warn-script-location --disable-pip-version-check --upgrade pip==23.1.2
-RUN python3 -m pip install --no-cache-dir --no-warn-script-location --upgrade virtualenv==20.23.1 && python3 -m virtualenv /baserow/venv
+RUN python3 -m virtualenv /baserow/venv
 
 ENV PIP_CACHE_DIR=/tmp/baserow_pip_cache
 # hadolint ignore=SC1091,DL3042
