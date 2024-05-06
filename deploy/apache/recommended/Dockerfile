@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 #Don't ask questions during install
 ENV DEBIAN_FRONTEND noninteractive
 
