@@ -13,7 +13,6 @@ def migrate_wf_actions(apps, schema_editor):
         action.page_parameters = []
         action.target = "self"
         action.save()
-    print(f"\nMigrated {len(actions)} OpenPageWorkflowAction URLs\n")
 
 
 def migrate_collection_links(apps, schema_editor):
@@ -22,7 +21,6 @@ def migrate_collection_links(apps, schema_editor):
     for field in fields:
         field.target = "self"
         field.save()
-    print(f'\nAdded target = "self" to {len(fields)} CollectionField of type "link"\n')
 
 
 class Migration(migrations.Migration):
