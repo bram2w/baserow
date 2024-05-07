@@ -17,7 +17,10 @@
     <div v-if="description" class="control__description">
       {{ description }}
     </div>
-    <div class="control__elements control__elements--flex">
+    <div
+      class="control__elements"
+      :class="{ 'control__elements--flex': $slots['after-input'] }"
+    >
       <div class="flex-grow-1">
         <slot />
       </div>
