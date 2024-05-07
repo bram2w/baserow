@@ -1,8 +1,23 @@
 import pytest
 from rest_framework.exceptions import ValidationError
 
-from baserow.contrib.builder.elements.element_types import ColumnElementType
+from baserow.contrib.builder.elements.element_types import (
+    ButtonElementType,
+    CheckboxElementType,
+    ColumnElementType,
+    DropdownElementType,
+    HeadingElementType,
+    IFrameElementType,
+    ImageElementType,
+    InputTextElementType,
+    LinkElementType,
+    TableElementType,
+    TextElementType,
+)
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import Element
+from baserow.core.db import specific_iterator
+from baserow_enterprise.builder.elements.element_types import AuthFormElementType
 
 
 @pytest.mark.django_db
@@ -69,3 +84,111 @@ def test_validate_place_in_container(data_fixture):
         ColumnElementType().validate_place_in_container("1", column_element)
     except ValidationError:
         pytest.fail("Should not have raised since 1 is between 0-1")
+
+
+@pytest.mark.django_db
+def test_column_element_type_can_have_children(data_fixture):
+    """
+    We are using the column element type here to test it with the ElementHandler.
+    Ideally, every element type that can be added to a column element should be tested
+    """
+
+    page = data_fixture.create_builder_page()
+    container = ElementHandler().create_element(ColumnElementType(), page=page)
+    element_inside_container_one = ElementHandler().create_element(
+        HeadingElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_two = ElementHandler().create_element(
+        TextElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_three = ElementHandler().create_element(
+        ImageElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_four = ElementHandler().create_element(
+        IFrameElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_five = ElementHandler().create_element(
+        LinkElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_six = ElementHandler().create_element(
+        ButtonElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_seven = ElementHandler().create_element(
+        TableElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_eight = ElementHandler().create_element(
+        InputTextElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_nine = ElementHandler().create_element(
+        DropdownElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_ten = ElementHandler().create_element(
+        CheckboxElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_eleven = ElementHandler().create_element(
+        AuthFormElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+
+    assert list(specific_iterator(container.children.all())) == [
+        element_inside_container_one,
+        element_inside_container_two,
+        element_inside_container_three,
+        element_inside_container_four,
+        element_inside_container_five,
+        element_inside_container_six,
+        element_inside_container_seven,
+        element_inside_container_eight,
+        element_inside_container_nine,
+        element_inside_container_ten,
+        element_inside_container_eleven,
+    ]
+    assert container.is_root_element is True
+    assert element_inside_container_one.is_root_element is False
+    assert element_inside_container_two.is_root_element is False
+    assert list(
+        specific_iterator(element_inside_container_one.get_sibling_elements())
+    ) == [
+        element_inside_container_two,
+        element_inside_container_three,
+        element_inside_container_four,
+        element_inside_container_five,
+        element_inside_container_six,
+        element_inside_container_seven,
+        element_inside_container_eight,
+        element_inside_container_nine,
+        element_inside_container_ten,
+        element_inside_container_eleven,
+    ]

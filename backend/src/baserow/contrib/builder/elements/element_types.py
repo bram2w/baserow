@@ -402,6 +402,9 @@ class NavigationElementManager:
     A base class that adds navigation properties to an element. (not an actual element)
     """
 
+    def __init__(self, type=None):
+        self.type = type
+
     serializer_field_names = [
         "navigation_type",
         "navigate_to_page_id",
@@ -502,6 +505,11 @@ class NavigationElementManager:
     def prepare_value_for_db(
         self, values: Dict, instance: Optional[LinkElement] = None
     ):
+        """
+        set the type of the element for the prepare_value_for_db method in case we're
+        adding to a parent element which requires a type check
+        """
+
         page_params = values.get("page_parameters", [])
         navigate_to_page_id = values.get(
             "navigate_to_page_id", getattr(instance, "navigate_to_page_id", None)
@@ -662,7 +670,9 @@ class LinkElementType(ElementType):
     def prepare_value_for_db(
         self, values: Dict, instance: Optional[LinkElement] = None
     ):
-        return NavigationElementManager().prepare_value_for_db(values, instance)
+        return NavigationElementManager(self.type).prepare_value_for_db(
+            values, instance
+        )
 
 
 class ImageElementType(ElementType):
