@@ -3,9 +3,12 @@ import BooleanField from '@baserow/modules/builder/components/elements/component
 import TextField from '@baserow/modules/builder/components/elements/components/collectionField/TextField'
 import LinkField from '@baserow/modules/builder/components/elements/components/collectionField/LinkField'
 import BooleanFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/BooleanFieldForm'
+import TagsField from '@baserow/modules/builder/components/elements/components/collectionField/TagsField.vue'
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
+import TagsFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TagsFieldForm.vue'
 import LinkFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/LinkFieldForm'
 import {
+  ensureArray,
   ensureBoolean,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
@@ -144,5 +147,39 @@ export class LinkCollectionFieldType extends CollectionFieldType {
    */
   isInError({ field, builder }) {
     return pathParametersInError(field, builder)
+  }
+}
+
+export class TagsCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'tags'
+  }
+
+  get name() {
+    return this.app.i18n.t('collectionFieldType.tags')
+  }
+
+  get component() {
+    return TagsField
+  }
+
+  get formComponent() {
+    return TagsFieldForm
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    const values = ensureArray(resolveFormula(field.values))
+    const colors = field.colors_is_formula
+      ? ensureArray(resolveFormula(field.colors))
+      : [field.colors]
+    const tags = values.map((value, index) => ({
+      value,
+      color: colors[index % colors.length],
+    }))
+    return { tags }
+  }
+
+  getOrder() {
+    return 10
   }
 }

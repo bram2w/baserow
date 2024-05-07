@@ -19,6 +19,10 @@ module.exports = {
       __dirname,
       '/../../premium/web-frontend/test/$1'
     ),
+    '^.+\\.(scss|sass)$': path.join(
+      __dirname,
+      '/../../web-frontend/test/helpers/scss.js'
+    ),
     '^@/(.*)$': path.join(__dirname, '/../../web-frontend/$1'),
     '^~/(.*)$': path.join(__dirname, '/../../web-frontend/$1'),
     '^vue$': path.join(

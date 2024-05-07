@@ -12,7 +12,11 @@
       }
     "
     v-on="$listeners"
-  ></FormulaInputGroup>
+  >
+    <template #after-input>
+      <slot name="after-input"></slot>
+    </template>
+  </FormulaInputGroup>
 </template>
 
 <script>

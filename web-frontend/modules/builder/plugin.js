@@ -98,6 +98,7 @@ import {
   BooleanCollectionFieldType,
   TextCollectionFieldType,
   LinkCollectionFieldType,
+  TagsCollectionFieldType,
 } from '@baserow/modules/builder/collectionFieldTypes'
 
 export default (context) => {
@@ -280,5 +281,9 @@ export default (context) => {
   app.$registry.register(
     'collectionField',
     new LinkCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
+    new TagsCollectionFieldType(context)
   )
 }

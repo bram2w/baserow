@@ -458,7 +458,8 @@
   "collectionFieldType": {
     "boolean": "Boolean",
     "text": "Text",
-    "link": "Link"
+    "link": "Link",
+    "tags": "Tags"
   },
   "textFieldForm": {
     "fieldValueLabel": "Value",
@@ -470,6 +471,12 @@
     "fieldLinkNameLabel": "Link text",
     "fieldLinkNamePlaceholder": "Enter value...",
     "buttonColor": "Button color"
+  },
+  "tagsFieldForm": {
+    "fieldValuesLabel": "Values",
+    "fieldValuesPlaceholder": "Enter values...",
+    "fieldColorsLabel": "Colors",
+    "fieldColorsPlaceholder": "Enter colors..."
   },
   "linkField": {
     "details": "Details"

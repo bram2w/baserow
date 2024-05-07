@@ -261,6 +261,7 @@ class BuilderConfig(AppConfig):
         from .elements.collection_field_types import (
             BooleanCollectionFieldType,
             LinkCollectionFieldType,
+            TagsCollectionFieldType,
             TextCollectionFieldType,
         )
         from .elements.registries import collection_field_type_registry
@@ -268,6 +269,7 @@ class BuilderConfig(AppConfig):
         collection_field_type_registry.register(BooleanCollectionFieldType())
         collection_field_type_registry.register(TextCollectionFieldType())
         collection_field_type_registry.register(LinkCollectionFieldType())
+        collection_field_type_registry.register(TagsCollectionFieldType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

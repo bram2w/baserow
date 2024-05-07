@@ -33,11 +33,10 @@
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
-import { resolveFormula } from '@baserow/modules/core/formula'
 import { uuid } from '@baserow/modules/core/utils/string'
 import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
-import { ensureString } from '@baserow/modules/core/utils/validator'
 import collectionElement from '@baserow/modules/builder/mixins/collectionElement'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'TableElement',
@@ -108,9 +107,7 @@ export default {
         }
       )
       try {
-        return ensureString(
-          resolveFormula(formula, this.formulaFunctions, formulaContext)
-        )
+        return ensureString(this.resolveFormula(formula, formulaContext))
       } catch {
         return ''
       }
