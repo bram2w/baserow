@@ -17,8 +17,11 @@
     <div v-if="description" class="control__description">
       {{ description }}
     </div>
-    <div class="control__elements">
-      <slot />
+    <div class="control__elements control__elements--flex">
+      <div class="flex-grow-1">
+        <slot />
+      </div>
+      <slot name="after-input"></slot>
       <div v-if="hasError" class="error">
         {{ error }}
       </div>

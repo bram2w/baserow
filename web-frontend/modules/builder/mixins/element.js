@@ -67,12 +67,12 @@ export default {
     },
   },
   methods: {
-    resolveFormula(formula) {
+    resolveFormula(formula, formulaContext = null) {
       try {
         return resolveFormula(
           formula,
           this.formulaFunctions,
-          this.runtimeFormulaContext
+          formulaContext || this.runtimeFormulaContext
         )
       } catch (e) {
         return ''
