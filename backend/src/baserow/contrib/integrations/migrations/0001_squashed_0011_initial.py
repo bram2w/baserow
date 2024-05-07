@@ -9,23 +9,6 @@ import baserow.core.formula.field
 
 
 class Migration(migrations.Migration):
-    replaces = [
-        ("integrations", "0001_initial"),
-        ("integrations", "0002_migrate_localbaserow_to_views"),
-        ("integrations", "0003_add_localbaserow_service_search_query"),
-        ("integrations", "0004_add_localbaserowservice_table"),
-        (
-            "integrations",
-            "0005_localbaserowtableservicesort_localbaserowtableservicefilter",
-        ),
-        ("integrations", "0006_localbaserowtableservice_filter_type"),
-        ("integrations", "0007_localbaserow_filter_order"),
-        ("integrations", "0008_ordering_field_changes"),
-        ("integrations", "0009_local_baserow_table_service_managers"),
-        ("integrations", "0010_local_baserow_upsert_field_mapping_models"),
-        ("integrations", "0011_add_upsert_row_id"),
-    ]
-
     initial = True
 
     dependencies = [

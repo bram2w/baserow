@@ -70,53 +70,6 @@ def migrate_existing_domains_0020_forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    replaces = [
-        ("builder", "0001_initial"),
-        ("builder", "0002_page"),
-        ("builder", "0003_duplicatepagejob"),
-        ("builder", "0004_element_headingelement_paragraphelement"),
-        ("builder", "0005_domain"),
-        ("builder", "0006_delete_all_pages"),
-        ("builder", "0007_add_path_to_page"),
-        ("builder", "0008_change_page_params"),
-        ("builder", "0009_add_domain_publish"),
-        ("builder", "0010_linkelement"),
-        ("builder", "0011_synced_datetime_field"),
-        ("builder", "0012_imageelement"),
-        ("builder", "0013_datasource"),
-        ("builder", "0014_initial_styling"),
-        ("builder", "0015_inputtextelement"),
-        ("builder", "0016_column_element"),
-        ("builder", "0017_mainthemeconfigblock"),
-        ("builder", "0018_buttonelement"),
-        ("builder", "0019_sub_domains"),
-        ("builder", "0020_migrate_existing_domains"),
-        ("builder", "0021_alter_domain_content_type"),
-        ("builder", "0022_collectionelementfield_tableelement"),
-        ("builder", "0023_headingelement_font_color"),
-        (
-            "builder",
-            "0024_builderworkflowaction_notificationworkflowaction_openpageworkflowaction",
-        ),
-        ("builder", "0025_tableelement_items_per_page"),
-        ("builder", "0026_element_styling_properties"),
-        ("builder", "0027_collectionelementfield_type"),
-        ("builder", "0028_add_collection_field_config"),
-        ("builder", "0029_inputtextelement_label"),
-        ("builder", "0030_builderworkflowaction_order"),
-        ("builder", "0031_formcontainerelement"),
-        (
-            "builder",
-            "0032_localbaserowcreaterowworkflowaction_localbaserowupdaterowworkflowaction",
-        ),
-        ("builder", "0033_auto_20231215_1041"),
-        ("builder", "0034_dropdownelement_dropdownelementoption"),
-        ("builder", "0035_add_more_styles"),
-        ("builder", "0036_checkboxelement"),
-        ("builder", "0037_auto_20240111_1001"),
-        ("builder", "0038_iframeelement"),
-    ]
-
     initial = True
 
     dependencies = [

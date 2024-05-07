@@ -6,7 +6,6 @@ from django.db import migrations
 def remove_orphans(apps, schema_editor):
     CollectionField = apps.get_model("builder", "CollectionField")
     orphan_count, _ = CollectionField.objects.filter(tableelement=None).delete()
-    print(f"\nDeleted {orphan_count}  orphan collection fields\n")
 
 
 class Migration(migrations.Migration):
