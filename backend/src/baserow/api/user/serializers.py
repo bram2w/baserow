@@ -249,6 +249,34 @@ def get_all_user_data_serialized(
     }
 
 
+def log_in_user(request, user):
+    password_provider = PasswordProviderHandler.get()
+    if not password_provider.enabled and user.is_staff is False:
+        raise AuthProviderDisabled()
+    if not user.is_active:
+        raise DeactivatedUserException()
+
+    settings = CoreHandler().get_settings()
+    if (
+        settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+        and not user.profile.email_verified
+    ):
+        UserHandler().send_email_pending_verification(user)
+        if not user.is_staff:
+            raise EmailVerificationRequired()
+
+    data = generate_session_tokens_for_user(
+        user,
+        include_refresh_token=True,
+        verified_email_claim=Settings.EmailVerificationOptions.ENFORCED,
+    )
+    data.update(**get_all_user_data_serialized(user, request))
+
+    set_user_session_data_from_request(user, request)
+    action_type_registry.get(SignInUserActionType.type).do(user, password_provider)
+    return data
+
+
 @extend_schema_serializer(deprecate_fields=["username"])
 class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
     email = NormalizedEmailField(required=False)
@@ -278,34 +306,7 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
             attrs[self.username_field] = email
 
         super().validate(attrs)
-
-        user = self.user
-        password_provider = PasswordProviderHandler.get()
-        if not password_provider.enabled and user.is_staff is False:
-            raise AuthProviderDisabled()
-        if not user.is_active:
-            raise DeactivatedUserException()
-
-        settings = CoreHandler().get_settings()
-        if (
-            settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
-            and not user.profile.email_verified
-        ):
-            UserHandler().send_email_pending_verification(user)
-            if not user.is_staff:
-                raise EmailVerificationRequired()
-
-        data = generate_session_tokens_for_user(
-            user,
-            include_refresh_token=True,
-            verified_email_claim=Settings.EmailVerificationOptions.ENFORCED,
-        )
-        data.update(**get_all_user_data_serialized(user, self.context["request"]))
-
-        set_user_session_data_from_request(user, self.context["request"])
-        action_type_registry.get(SignInUserActionType.type).do(user, password_provider)
-
-        return data
+        return log_in_user(self.context["request"], self.user)
 
 
 @extend_schema_serializer(exclude_fields=["refresh"], deprecate_fields=["token"])

@@ -279,7 +279,6 @@ export default {
   },
   methods: {
     async updateSettings(values) {
-      console.log(values)
       this.$v.$touch()
       if (this.$v.$invalid) {
         return

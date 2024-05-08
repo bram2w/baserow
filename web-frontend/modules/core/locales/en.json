@@ -134,7 +134,10 @@
     },
     "verifyEmailAddress": {
         "confirmation": "Your email address has been verified.",
-        "goToDashboard": "Go to dashboard"
+        "goToDashboard": "Go to dashboard",
+        "invalidToken": "Not a valid confirmation token.",
+        "disabledPasswordProvider": "The password authentication provider has been disabled.",
+        "emailMismatchWarning": "Please note that the verified email doesn't belong to the account that you are currently using."
     },
     "emailNotVerified": {
         "title": "Email verification required",

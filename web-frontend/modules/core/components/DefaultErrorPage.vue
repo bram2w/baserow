@@ -74,7 +74,7 @@ export default {
       return this.error.message || this.$t('errorLayout.wrong')
     },
     content() {
-      return this.error.content || this.$t('errorLayout.error')
+      return this.error.content ?? this.$t('errorLayout.error')
     },
     showBackButton() {
       return !this.error.hideBackButton

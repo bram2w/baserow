@@ -119,6 +119,7 @@ from .serializers import (
     TokenVerifyWithUserSerializer,
     UserSerializer,
     VerifyEmailAddressSerializer,
+    log_in_user,
 )
 
 User = get_user_model()
@@ -553,14 +554,23 @@ class VerifyEmailAddressView(APIView):
         description=(
             "Passing the correct verification token will "
             "confirm that the user's email address belongs to "
-            "the user."
+            "the user. This endpoint also optionally returns "
+            "user information, access token and the refresh token "
+            "for automatically signing user in the system if the "
+            "request is performed by unauthenticated user."
         ),
         responses={
-            204: None,
+            200: create_user_response_schema,
             400: get_error_schema(
                 [
                     "ERROR_INVALID_VERIFICATION_TOKEN",
                     "ERROR_EMAIL_ALREADY_VERIFIED",
+                ]
+            ),
+            401: get_error_schema(
+                [
+                    "ERROR_DEACTIVATED_USER",
+                    "ERROR_AUTH_PROVIDER_DISABLED",
                 ]
             ),
         },
@@ -570,6 +580,8 @@ class VerifyEmailAddressView(APIView):
         {
             InvalidVerificationToken: ERROR_INVALID_VERIFICATION_TOKEN,
             EmailAlreadyVerified: ERROR_EMAIL_ALREADY_VERIFIED,
+            DeactivatedUserException: ERROR_DEACTIVATED_USER,
+            AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
         }
     )
     @validate_body(VerifyEmailAddressSerializer)
@@ -578,8 +590,15 @@ class VerifyEmailAddressView(APIView):
         Verifies that the user's email belong to the user.
         """
 
-        action_type_registry.get(VerifyEmailAddressActionType.type).do(data["token"])
-        return Response(status=204)
+        user = action_type_registry.get(VerifyEmailAddressActionType.type).do(
+            data["token"]
+        )
+
+        if request.user.is_anonymous:
+            data = log_in_user(request, user)
+            return Response(status=200, data=data)
+        else:
+            return Response(status=200, data={"email": user.email})
 
 
 class ScheduleAccountDeletionView(APIView):
