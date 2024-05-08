@@ -11,8 +11,11 @@
       {{ label }}
     </label>
     <div
-      class="control__elements control__elements--flex"
-      :class="{ 'control__elements--small': small }"
+      class="control__elements"
+      :class="{
+        'control__elements--small': small,
+        'control__elements--flex': $slots['after-input'],
+      }"
     >
       <FormulaInputField
         :value="value"
