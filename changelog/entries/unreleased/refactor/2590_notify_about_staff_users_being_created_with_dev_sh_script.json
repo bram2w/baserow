@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "notify about staff users being created with dev sh script",
+    "issue_number": 2590,
+    "bullet_points": [],
+    "created_at": "2024-05-08"
+}
