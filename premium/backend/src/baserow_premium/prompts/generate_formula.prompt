@@ -23,16 +23,16 @@ The markdown tables below contains the formula related functions.
 | --- | --- | --- | --- |
 | variance sample | Calculates the sample variance of the values and returns the result. The sample variance should be used when the provided values are only for a sample or subset of values for an underlying population. | variance_sample(numbers from lookup() or field()) | variance_sample(lookup("link field", "number field"))  variance_sample(field("lookup field"))  variance_sample(field("link field with number primary field")) |
 | variance pop | Calculates the population variance of the values and returns the result. The population variance should be used when the provided values contain a value for every single piece of data in the population. | variance_pop(numbers from lookup() or field()) | variance_pop(lookup("link field", "number field"))  variance_pop(field("lookup field"))  variance_pop(field("link field with number primary field")) |
-| sum | Sums all of the values and returns the result. | sum(numbers from lookup() or field()) | sum(lookup("link field", "number field"))  sum(field("lookup field"))  sum(field("link field with number primary field")) |
-| stddev sample | Calculates the sample standard deviation of the values and returns the result. The sample deviation should be used when the provided values are only for a sample or subset of values for an underlying population. | stddev_sample(numbers from lookup() or field()) | stddev_sample(lookup("link field", "number field"))  stddev_sample(field("lookup field"))  stddev_sample(field("link field with number primary field")) |
-| stddev pop | Calculates the population standard deviation of the values and returns the result. The population standard deviation should be used when the provided values contain a value for every single piece of data in the population. | stddev_pop(numbers from lookup() or field()) | stddev_pop(lookup("link field", "number field"))  stddev_pop(field("lookup field"))  stddev_pop(field("link field with number primary field")) |
-| min | Returns the smallest number from all the looked up values provided. | min(numbers from a lookup() or field()) | min(lookup("link field", "number field"))  min(field("lookup field"))  min(field("link field with text primary field")) |
-| max | Returns the largest number from all the looked up values provided. | max(numbers from a lookup() or field()) | max(lookup("link field", "number field"))  max(field("lookup field"))  max(field("link field with text primary field")) |
+| sum | Sums all of the values and returns the result. | sum(numbers from lookup() or field()) | sum(lookup("link field", "number field"))  sum(lookup("link field", "duration field"))  sum(field("lookup field"))  sum(field("link field with number primary field")) |
+| stddev sample | Calculates the sample standard deviation of the values and returns the result. The sample deviation should be used when the provided values are only for a sample or subset of values for an underlying population. | stddev_sample(numbers from lookup() or field()) | stddev_sample(lookup("link field", "number field"))  stddev_sample(lookup("link field", "duration field"))  stddev_sample(field("lookup field"))  stddev_sample(field("link field with number primary field")) |
+| stddev pop | Calculates the population standard deviation of the values and returns the result. The population standard deviation should be used when the provided values contain a value for every single piece of data in the population. | stddev_pop(numbers from lookup() or field()) | stddev_pop(lookup("link field", "number field"))  stddev_pop(lookup("link field", "duration field")) . stddev_pop(field("lookup field"))  stddev_pop(field("link field with number primary field")) |
+| min | Returns the smallest number from all the looked up values provided. | min(numbers from a lookup() or field()) | min(lookup("link field", "number field"))  min(lookup("link field", "duration field")) . min(field("lookup field"))  min(field("link field with text primary field")) |
+| max | Returns the largest number from all the looked up values provided. | max(numbers from a lookup() or field()) | max(lookup("link field", "number field"))  max(lookup("link field", "duration field")) max(field("lookup field"))  max(field("link field with text primary field")) |
 | join | Concats all of the values from the first input together using the values from the second input. | join(text from lookup() or field(), text) | join(lookup("link field", "number field"), "_")  join(field("lookup field"), field("different lookup field"))  join(field("link field with text primary field"), ",") |
 | filter | Filters down an expression involving a lookup/link field reference or a lookup function call. | filter(an expression involving lookup() or field(a link/lookup field), boolean) | sum(filter(lookup("link field", "number field"), lookup("link field", "number field") > 10))  filter(field("lookup field"), contains(field("lookup field"), "a"))  filter(field("link field") + "a", length(field("link field")) > 10") |
 | every | Returns true if every one of the provided looked up values is true, false otherwise. | every(boolean values from a lookup() or field()) | every(field("my lookup") = "test") |
 | count | Returns the number of items in its first argument. | count(array) | count(field('my link row field')) |
-| avg | Averages all of the values and returns the result. | avg(numbers from lookup() or field()) | avg(lookup("link field", "number field"))  avg(field("lookup field"))  avg(field("link field with number primary field")) |
+| avg | Averages all of the values and returns the result. | avg(numbers from lookup() or field()) | avg(lookup("link field", "number field"))  avg(lookup("link field", "duration field"))  avg(field("lookup field"))  avg(field("link field with number primary field")) |
 | any | Returns true if any one of the provided looked up values is true, false if they are all false. | any(boolean values from a lookup() or field()) | any(field("my lookup") = "test") |
 ```
 
@@ -41,10 +41,10 @@ The markdown tables below contains the formula related functions.
 | --- | --- | --- | --- |
 | when empty | If the first input is calculated to be empty the second input will be returned instead, otherwise if the first input is not empty the first will be returned. | when_empty(any, same type as the first) | when_empty(field("a"), "default") |
 | row id | Returns the rows unique identifying number. | row_id() | concat("Row ", row_id()) |
-| minus `-` | Returns its two arguments subtracted. | number - number  minus(number, number)  date - date  date - date_interval  date_interval - date_interval | 3-1 = 2 |
+| minus `-` | Returns its two arguments subtracted. | number - number  minus(number, number)  date - date  date - duration  duration - duration | 3-1 = 2 |
 | lookup | Looks up the values from a field in another table for rows in a link row field. The first argument should be the name of a link row field in the current table and the second should be the name of a field in the linked table. | lookup('a link row field name', 'field name in other the table') | lookup('link row field', 'first name') = lookup('link row field', 'last name') |
 | field | Returns the field named by the single text argument. | field('a field name') | field('my text field') = 'flag' |
-| add `+` | Returns its two arguments added together. | number + number  text + text  date + date_interval  date_interval + date_interval  date_interval + date  add(number, number) | 1+1 = 2  'a' + 'b' = 'ab' |
+| add `+` | Returns its two arguments added together. | number + number  text + text  date + duration  duration + duration  duration + date  add(number, number) | 1+1 = 2  'a' + 'b' = 'ab' |
 | date interval | Returns the date interval corresponding to the provided argument. | date_interval(text) | date_interval('1 year')  date_interval('2 seconds') |
 ```
 
@@ -66,7 +66,9 @@ Functions | Details | Syntax | Examples |
 | day | Returns the day of the month as a number between 1 to 31 from the argument. | day(date) | day(todate('20210101', 'YYYYMMDD')) = 1 |
 | datetime_format | Converts the date to text given a way of formatting the date. | datetime_format(date, text) | datetime_format(field('date field'), 'YYYY') |
 | date_diff | Given a date unit to measure in as the first argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns the number of units from the second argument to the third. | date_diff(text, date, date) | date_diff('yy', todate('2000-01-01', 'YYYY-MM-DD'),  todate('2020-01-01', 'YYYY-MM-DD')) = 20 |
-| datetime_format_tz|
+| datetime_format_tz| Returns the first argument converted into a date given a date format string as the second argument and the timezone provided as third argument. | datetime_format_tz(date, text, text) | datetime_format(field('date field'), 'YYYY', 'Europe/Rome')|
+| toduration | Converts the number of seconds provided into a duration. | toduration(number) | toduration(3600) = date_interval('1 hour') | 
+| toseconds | Converts the duration provided into the corresponding number of seconds. | toseconds(duration) | toseconds(date_interval('1 hour')) == 3600 |
 
 Boolean functions
 
@@ -101,7 +103,7 @@ The markdown table below contains the number functions.
 | sqrt | Returns the square root of the argument provided. | sqrt(number) | sqrt(9) = 3 |
 | least | Returns the smallest of the two inputs. | least(number, number) | least(1,2) = 1 |
 | greatest | Returns the greatest value of the two inputs. | greatest(number, number) | greatest(1,2) = 2 |
-| divide `/` | Returns its two arguments divided, the first divided by the second. | number / number  divide(number, number) | 10/2 = 5 |
+| divide `/` | Returns its two arguments divided, the first divided by the second. | number / number  duration / number  divide(number, number) | 10/2 = 5  date_interval('1 minute') / 60 = date_interval('1 second') |
 | abs | Returns the absolute value for the argument number provided. | abs(number) | abs(1.49) = 1.49 |
 | ceil | Returns the smallest integer that is greater than or equal the argument number provided. | ceil(number) | ceil(1.49) = 2 |
 | even | Returns true if the argument provided is an even number, false otherwise. | even(number) | even(2) = true |
@@ -111,7 +113,7 @@ The markdown table below contains the number functions.
 | ln | Natural logarithm function: returns the exponent to which the constant e ≈ 2.718 must be raised to produce the argument. | ln(number) | ln(2.718) = 1.000 |
 | log | Logarithm function: returns the exponent to which the first argument must be raised to produce the second argument. | log(number, number) | log(3, 9) = 2 |
 | mod | Returns the remainder of the division between the first argument and the second argument. | mod(number, number) | mod(5, 2) = 1 |
-| multiply `*` | Returns its two arguments multiplied together. | multiply(number, number) | 2*5 = 10 |
+| multiply `*` | Returns its two arguments multiplied together. | multiply(number, number)  multiply(duration, number) | 2*5 = 10  date_interval('1 second') * 60 = date_interval('1 minute') |
 | odd | Returns true if the argument provided is an odd number, false otherwise. | odd(number) | odd(2) = false |
 | power | Returns the result of the first argument raised to the second argument exponent. | power(number, number) | power(3, 2) = 9 |
 | round | Returns first argument rounded to the number of digits specified by the second argument. | round(number, number) | round(1.12345,2) = 1.12 |
@@ -209,7 +211,9 @@ Use the todate function to create a constant date inside a formula like so: toda
 
 Using Date intervals
 
-Subtracting two dates returns the difference in time between the two dates: field('date a') - field('date b'). The date_interval function lets you create intervals inside the formula to work with.
+Subtracting two dates returns a duration representing the difference in time between the two dates: field('date a') - field('date b'). The date_interval function lets you create intervals inside the formula to work with.
+
+Multiplying a duration and a number the result will be a duration where the number of seconds are multiplied for the number argument.
 
 Need to calculate a new date based on a date/time interval? Use the date_interval function like so: field('my date column') - date_interval('1 year')
 

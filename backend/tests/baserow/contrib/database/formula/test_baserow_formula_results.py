@@ -176,6 +176,13 @@ VALID_FORMULA_TESTS = [
         -366 * 24 * 3600,
     ),
     ("date_interval('1 year') - date_interval('1 day')", 364 * 24 * 3600),
+    ("date_interval('1 minute') * 2", 60 * 2),
+    ("3 * date_interval('1 minute')", 60 * 3),
+    ("date_interval('1 minute') / 2", 30),
+    ("date_interval('1 minute') / 0", None),
+    ("toseconds(date_interval('1 minute'))", "60"),
+    ("toseconds(toduration(60))", "60"),
+    ("toduration(1 / 0)", None),
     ("now() > todate('20200101', 'YYYYMMDD')", True),
     ("todate('01123456', 'DDMMYYYY') < now()", False),
     ("todate('01123456', 'DDMMYYYY') < today()", False),
@@ -593,7 +600,7 @@ def test_can_lookup_date_intervals(data_fixture, api_client):
     )
     assert response.status_code == HTTP_200_OK
     assert [o[lookup_formula.db_column] for o in response.json()["results"]] == [
-        [{"id": row_1.id, "value": 2 * 24 * 3600}]
+        [{"id": row_1.id, "value": 172800}],
     ]
 
 
@@ -1003,8 +1010,8 @@ INVALID_FORMULA_TESTS = [
         "ERROR_WITH_FORMULA",
         (
             "Error with formula: argument number 1 given to function sum was of type "
-            "number but the only usable type for this argument is a list of number "
-            "values obtained from a lookup."
+            "number but the only usable type for this argument is a list of number, or "
+            "duration values obtained from a lookup."
         ),
     ),
     (
@@ -1029,8 +1036,8 @@ INVALID_FORMULA_TESTS = [
         (
             "Error with formula: argument number 1 given to function sum was of type "
             "link "
-            "but the only usable type for this argument is a list of number values "
-            "obtained from a lookup."
+            "but the only usable type for this argument is a list of number, or "
+            "duration values obtained from a lookup."
         ),
     ),
     (
@@ -1605,6 +1612,8 @@ NULLABLE_FORMULA_TESTS = [
     ([{"type": "date", "name": "dt"}], "totext(field('dt'))", False),
     ([{"type": "date", "name": "dt"}], "field('dt') + date_interval('1d')", True),
     ([{"type": "date", "name": "dt"}], "field('dt') - date_interval('1d')", True),
+    ([], "date_interval('1d') / 2", True),
+    ([], "date_interval('1d') * 2", True),
     (
         [
             {"type": "date", "name": "dt"},

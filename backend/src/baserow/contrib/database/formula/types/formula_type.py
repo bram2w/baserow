@@ -154,6 +154,14 @@ class BaserowFormulaType(abc.ABC):
         return []
 
     @property
+    def multipliable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    @property
+    def dividable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    @property
     @abc.abstractmethod
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         """
@@ -401,6 +409,28 @@ class BaserowFormulaType(abc.ABC):
     ) -> "tree.BaserowExpression[BaserowFormulaType]":
         return minus_func_call.with_invalid_type(
             f"cannot perform subtraction on type {arg1.expression_type} and "
+            f"{arg2.expression_type}"
+        )
+
+    def multiply(
+        self,
+        multiply_func_call: "tree.BaserowFunctionCall[UnTyped]",
+        arg1: "tree.BaserowExpression[BaserowFormulaValidType]",
+        arg2: "tree.BaserowExpression[BaserowFormulaValidType]",
+    ) -> "tree.BaserowExpression[BaserowFormulaType]":
+        return multiply_func_call.with_invalid_type(
+            f"cannot perform multiplication on type {arg1.expression_type} and "
+            f"{arg2.expression_type}"
+        )
+
+    def divide(
+        self,
+        divide_func_call: "tree.BaserowFunctionCall[UnTyped]",
+        arg1: "tree.BaserowExpression[BaserowFormulaValidType]",
+        arg2: "tree.BaserowExpression[BaserowFormulaValidType]",
+    ) -> "tree.BaserowExpression[BaserowFormulaType]":
+        return divide_func_call.with_invalid_type(
+            f"cannot perform division on type {arg1.expression_type} and "
             f"{arg2.expression_type}"
         )
 

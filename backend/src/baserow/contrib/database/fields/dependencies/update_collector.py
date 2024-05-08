@@ -180,8 +180,26 @@ class PathBasedUpdateStatementCollector:
 
         updated_rows = 0
         if self.update_statements:
-            updated_rows = qs.exclude(**self.update_statements).update(
-                **self.update_statements
+            annotations, filters = {}, Q()
+            for field, expr in self.update_statements.items():
+                if expr is None or not field.startswith("field_"):
+                    continue
+
+                annotated_field = f"{field}_expr"
+                annotations[annotated_field] = expr
+                # Because the expression can evaluate to null and because of how the
+                # comparison with null should be handle in SQL
+                # (https://www.postgresql.org/docs/15/functions-comparison.html), we
+                # need to properly filter rows to correctly update only the ones that
+                # need to be updated.
+                filters |= Q(
+                    **{f"{field}__isnull": False, f"{annotated_field}__isnull": True}
+                ) | ~Q(**{field: expr})
+
+            updated_rows = (
+                qs.annotate(**annotations)
+                .filter(filters)
+                .update(**self.update_statements)
             )
         return updated_rows
 

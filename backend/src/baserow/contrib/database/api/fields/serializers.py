@@ -18,7 +18,10 @@ from baserow.contrib.database.fields.constants import (
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.utils.duration import prepare_duration_value_for_db
+from baserow.contrib.database.fields.utils.duration import (
+    postgres_interval_to_seconds,
+    prepare_duration_value_for_db,
+)
 from baserow.core.utils import split_comma_separated_string
 
 
@@ -300,12 +303,19 @@ class DurationFieldSerializer(serializers.Field):
         )
 
     def to_representation(self, value):
-        if isinstance(value, (int, float)):
-            # Durations are stored as the number of seconds for lookups/arrays in
-            # formula land, so just return the value in that case.
+        if isinstance(value, timedelta):
+            return value.total_seconds()
+        elif isinstance(value, str):
+            # Durations are stored as strings in the postgres format for lookups/arrays
+            # in formula land, so parse the string accordingly and return the value in
+            # seconds.
+            return postgres_interval_to_seconds(value)
+        elif isinstance(value, (int, float)):
+            # DEPRECATED: durations were stored as the number of seconds in formula
+            # land, so just return the value in that case.
             return value
         else:
-            return value.total_seconds()
+            raise ValueError("Invalid duration value.")
 
 
 class PasswordSerializer(serializers.CharField):

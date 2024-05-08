@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import timedelta
 from io import BytesIO
 
@@ -788,6 +789,65 @@ def test_duration_field_can_be_used_in_formulas(data_fixture):
 
 @pytest.mark.field_duration
 @pytest.mark.django_db
+def test_toduration_formula_set_null_values_if_the_argument_is_invalid(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table, formula=f"field('{number_field.name}') / 2"
+    )
+    toduration_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"toduration(field('{formula_field.name}'))",
+    )
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {number_field.db_column: 3600},
+            {number_field.db_column: 60},
+            {},
+        ],
+    )
+
+    model = table.get_model()
+    assert list(
+        model.objects.all().values(
+            formula_field.db_column,
+            toduration_field.db_column,
+        )
+    ) == [
+        {
+            formula_field.db_column: 1800,
+            toduration_field.db_column: timedelta(seconds=1800),
+        },
+        {
+            formula_field.db_column: 30,
+            toduration_field.db_column: timedelta(seconds=30),
+        },
+        {
+            formula_field.db_column: 0,
+            toduration_field.db_column: timedelta(seconds=0),
+        },
+    ]
+
+    FieldHandler().update_field(
+        user=user, field=formula_field, formula=f"field('{number_field.name}') / 0"
+    )
+
+    rows = model.objects.all().values(
+        formula_field.db_column,
+        toduration_field.db_column,
+    )
+
+    for r in rows:
+        assert math.isnan(r[formula_field.db_column])
+        assert r[toduration_field.db_column] is None
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
 def test_duration_field_can_be_looked_up(data_fixture):
     user = data_fixture.create_user()
     table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
@@ -813,14 +873,14 @@ def test_duration_field_can_be_looked_up(data_fixture):
         user=user,
         table=table_b,
         rows_values=[
-            {duration_field.db_column: 3600},
+            {duration_field.db_column: 24 * 3600},
             {duration_field.db_column: 60},
         ],
         model=model_b,
     )
 
     assert list(model_b.objects.values_list(duration_formula.db_column, flat=True)) == [
-        timedelta(seconds=3600 + 60),
+        timedelta(seconds=24 * 3600 + 60),
         timedelta(seconds=60 + 60),
     ]
 
@@ -834,13 +894,13 @@ def test_duration_field_can_be_looked_up(data_fixture):
         model=model_a,
     )
     assert getattr(row, f"field_{lookup_field.id}") == [
-        {"id": row_b_1.id, "value": 3600},
-        {"id": row_b_2.id, "value": 60},
+        {"id": row_b_1.id, "value": "1 day"},
+        {"id": row_b_2.id, "value": "00:01:00"},
     ]
 
     assert getattr(row, f"field_{lookup_formula.id}") == [
-        {"id": row_b_1.id, "value": 3600 + 60},
-        {"id": row_b_2.id, "value": 60 + 60},
+        {"id": row_b_1.id, "value": "1 day 00:01:00"},
+        {"id": row_b_2.id, "value": "00:02:00"},
     ]
 
 

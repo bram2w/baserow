@@ -1,5 +1,5 @@
 <template functional>
-  <div v-if="props.value" class="array-field__item">
+  <div v-if="props.value !== null" class="array-field__item">
     <span>
       {{ $options.methods.formatValue(props.field, props.value) }}
     </span>

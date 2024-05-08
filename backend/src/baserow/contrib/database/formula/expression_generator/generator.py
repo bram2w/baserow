@@ -18,7 +18,7 @@ from django.db.models import (
     When,
     fields,
 )
-from django.db.models.functions import Cast, Coalesce, Extract, JSONObject
+from django.db.models.functions import Cast, Coalesce, JSONObject
 
 from baserow.contrib.database.formula.ast.exceptions import UnknownFieldReference
 from baserow.contrib.database.formula.ast.tree import (
@@ -372,7 +372,6 @@ class BaserowExpressionToDjangoExpressionGenerator(
         self, db_column: str, model_field: fields.Field, already_in_subquery: bool
     ) -> Expression:
         from baserow.contrib.database.fields.fields import (
-            DurationField,
             MultipleSelectManyToManyField,
             SingleSelectForeignKey,
         )
@@ -418,14 +417,6 @@ class BaserowExpressionToDjangoExpressionGenerator(
                     ),
                     Value([], output_field=JSONField()),
                 )
-        elif isinstance(model_field, DurationField) and already_in_subquery:
-            # already_in_subquery is set to True in a lookup, but the JSON produced by
-            # looking up a duration field cannot contains intervals/timedelta, so we
-            # need to convert the value to a number of seconds instead.
-            return ExpressionWrapper(
-                Extract(db_column, "epoch"),
-                output_field=model_field,
-            )
         else:
             return ExpressionWrapper(
                 F(db_column),

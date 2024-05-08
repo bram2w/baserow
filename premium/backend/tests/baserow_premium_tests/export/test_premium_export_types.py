@@ -102,6 +102,8 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_multipleselect": [],
     "count": 0,
     "rollup": "0.000",
+    "duration_rollup_sum": "0:00",
+    "duration_rollup_avg": "0:00",
     "lookup": [],
     "uuid": "00000000-0000-4000-8000-000000000002",
     "autonumber": 1,
@@ -149,7 +151,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "link_row": [
         "linked_row_1",
         "linked_row_2",
-        "unnamed row 3"
+        ""
     ],
     "self_link_row": [
         "unnamed row 1"
@@ -215,6 +217,8 @@ def test_can_export_every_interesting_different_field_to_json(
     ],
     "count": 3,
     "rollup": "-122.222",
+    "duration_rollup_sum": "0:04",
+    "duration_rollup_avg": "0:02",
     "lookup": [
         "linked_row_1",
         "linked_row_2",
@@ -369,6 +373,8 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-multipleselect/>
       <count>0</count>
       <rollup>0.000</rollup>
+      <duration-rollup-sum>0:00</duration-rollup-sum>
+      <duration-rollup-avg>0:00</duration-rollup-avg>
       <lookup/>
       <uuid>00000000-0000-4000-8000-000000000002</uuid>
       <autonumber>1</autonumber>
@@ -416,7 +422,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <link-row>
          <item>linked_row_1</item>
          <item>linked_row_2</item>
-         <item>unnamed row 3</item>
+         <item/>
       </link-row>
       <self-link-row>
          <item>unnamed row 1</item>
@@ -482,6 +488,8 @@ def test_can_export_every_interesting_different_field_to_xml(
       </formula-multipleselect>
       <count>3</count>
       <rollup>-122.222</rollup>
+      <duration-rollup-sum>0:04</duration-rollup-sum>
+      <duration-rollup-avg>0:02</duration-rollup-avg>
       <lookup>
          <item>linked_row_1</item>
          <item>linked_row_2</item>

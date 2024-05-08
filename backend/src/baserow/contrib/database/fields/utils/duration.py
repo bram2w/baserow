@@ -51,6 +51,51 @@ def total_secs(
     )
 
 
+POSTGRES_INTERVAL_FORMAT = re.compile(
+    r"""
+    (?P<years>-?\d+)\s+years?\s*|
+    (?P<months>-?\d+)\s+mons?\s*|
+    (?P<days>-?\d+)\s+days?\s*|
+    (?P<time>(-?\d{1,2}):(\d{2}):(\d{2}))?
+""",
+    re.VERBOSE,
+)
+
+
+def postgres_interval_to_seconds(interval_str: str) -> Optional[float]:
+    matches = POSTGRES_INTERVAL_FORMAT.finditer(interval_str)
+
+    params = {
+        "days": 0,
+        "seconds": 0,
+        "microseconds": 0,
+        "milliseconds": 0,
+        "minutes": 0,
+        "hours": 0,
+        "weeks": 0,
+    }
+
+    valid = False
+    for match in matches:
+        if match.group("years"):
+            params["days"] += int(match.group("years")) * 365
+            valid = True
+        if match.group("months"):
+            params["days"] += int(match.group("months")) * 30
+            valid = True
+        if match.group("days"):
+            params["days"] += int(match.group("days"))
+            valid = True
+        if match.group("time"):
+            time_parts = match.group("time").split(":")
+            params["hours"] += int(time_parts[0])
+            params["minutes"] += int(time_parts[1])
+            params["seconds"] += int(time_parts[2])
+            valid = True
+
+    return timedelta(**params).total_seconds() if valid else None
+
+
 # These regexps are supposed to tokenize the provided duration value and to return a
 # proper number of seconds based on format and the tokens. NOTE: Keep these in sync with
 # web-frontend/modules/database/utils/duration.js:DURATION_REGEXPS
@@ -401,7 +446,12 @@ def parse_duration_value(formatted_value: str, format: str) -> float:
             except TypeError:
                 pass
 
-    # None of the regexps matches the formatted value
+    # If it's not one of the known formats, try to parse it as a postgres interval
+    # Lookups formula save duration in the postgres interval format in the database.
+    total_seconds = postgres_interval_to_seconds(formatted_value)
+    if total_seconds is not None:
+        return total_seconds
+
     raise ValueError(f"{formatted_value} is not a valid duration string.")
 
 

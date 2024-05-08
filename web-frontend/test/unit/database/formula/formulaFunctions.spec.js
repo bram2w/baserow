@@ -76,6 +76,8 @@ describe('Formula Functions Test', () => {
       'todate',
       'todate_tz',
       'today',
+      'toduration',
+      'toseconds',
       'date_diff',
       'date_interval',
       'add',

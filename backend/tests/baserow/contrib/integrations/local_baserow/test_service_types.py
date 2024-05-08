@@ -1642,6 +1642,20 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
+        field_db_column_by_name["duration_rollup_sum"]: {
+            "default": None,
+            "metadata": {},
+            "original_type": "rollup",
+            "title": "duration_rollup_sum",
+            "type": "string",
+        },
+        field_db_column_by_name["duration_rollup_avg"]: {
+            "default": None,
+            "metadata": {},
+            "original_type": "rollup",
+            "title": "duration_rollup_avg",
+            "type": "string",
+        },
         field_db_column_by_name["lookup"]: {
             "title": "lookup",
             "default": None,

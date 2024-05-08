@@ -94,7 +94,7 @@ export default {
     },
     rollupFunctions() {
       return Object.values(this.$registry.getAll('formula_function')).filter(
-        (f) => f.isRollupCompatible()
+        (f) => f.isRollupCompatible(this.targetFieldFormulaType)
       )
     },
   },
