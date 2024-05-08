@@ -21,7 +21,10 @@ from baserow.contrib.database.fields.expressions import (
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.mixins import get_date_time_format
-from baserow.contrib.database.fields.utils.duration import D_H_M_S
+from baserow.contrib.database.fields.utils.duration import (
+    D_H_M_S,
+    postgres_interval_to_seconds,
+)
 from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
     BaserowDecimalLiteral,
@@ -309,6 +312,14 @@ class BaserowFormulaNumberType(
     def subtractable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return [type(self)]
 
+    @property
+    def multipliable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self), BaserowFormulaDurationType]
+
+    @property
+    def dividable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self)]
+
     def add(
         self,
         add_func_call: "BaserowFunctionCall[UnTyped]",
@@ -327,6 +338,31 @@ class BaserowFormulaNumberType(
     ):
         return minus_func_call.with_valid_type(
             calculate_number_type([arg1.expression_type, arg2.expression_type])
+        )
+
+    def multiply(
+        self,
+        multiply_func_call: "BaserowFunctionCall[UnTyped]",
+        arg1: "BaserowExpression[BaserowFormulaNumberType]",
+        arg2: "BaserowExpression[BaserowFormulaNumberType]",
+    ):
+        if isinstance(arg2.expression_type, BaserowFormulaDurationType):
+            return multiply_func_call.with_valid_type(arg2.expression_type)
+        else:
+            return multiply_func_call.with_valid_type(
+                calculate_number_type([arg1.expression_type, arg2.expression_type])
+            )
+
+    def divide(
+        self,
+        divide_func_call: "BaserowFunctionCall[UnTyped]",
+        arg1: "BaserowExpression[BaserowFormulaNumberType]",
+        arg2: "BaserowExpression[BaserowFormulaNumberType]",
+    ):
+        from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
+
+        return divide_func_call.with_valid_type(
+            BaserowFormulaNumberType(NUMBER_MAX_DECIMAL_PLACES)
         )
 
     def should_recreate_when_old_type_was(self, old_type: "BaserowFormulaType") -> bool:
@@ -538,7 +574,8 @@ class BaserowFormulaDateIntervalType(
     def placeholder_empty_baserow_expression(
         self,
     ) -> "BaserowExpression[BaserowFormulaValidType]":
-        return literal(datetime.timedelta(hours=0))
+        func = formula_function_registry.get("date_interval")
+        return func(literal("0 hours"))
 
     def is_searchable(self, field):
         return True
@@ -575,8 +612,16 @@ class BaserowFormulaDurationType(
         return [type(self), BaserowFormulaDateType]
 
     @property
+    def multipliable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [BaserowFormulaNumberType]
+
+    @property
     def subtractable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return [type(self)]
+
+    @property
+    def dividable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [BaserowFormulaNumberType]
 
     def add(
         self,
@@ -601,13 +646,40 @@ class BaserowFormulaDurationType(
             )
         )
 
+    def multiply(
+        self,
+        multiply_func_call: "BaserowFunctionCall[UnTyped]",
+        arg1: "BaserowExpression[BaserowFormulaNumberType]",
+        arg2: "BaserowExpression[BaserowFormulaNumberType]",
+    ):
+        return multiply_func_call.with_valid_type(
+            BaserowFormulaDurationType(
+                duration_format=self.duration_format,
+                nullable=arg1.expression_type.nullable or arg2.expression_type.nullable,
+            )
+        )
+
+    def divide(
+        self,
+        multiply_func_call: "BaserowFunctionCall[UnTyped]",
+        arg1: "BaserowExpression[BaserowFormulaNumberType]",
+        arg2: "BaserowExpression[BaserowFormulaNumberType]",
+    ):
+        return multiply_func_call.with_valid_type(
+            BaserowFormulaDurationType(
+                duration_format=self.duration_format,
+                nullable=arg1.expression_type.nullable or arg2.expression_type.nullable,
+            )
+        )
+
     def placeholder_empty_value(self):
         return Value(datetime.timedelta(hours=0), output_field=models.DurationField())
 
     def placeholder_empty_baserow_expression(
         self,
     ) -> "BaserowExpression[BaserowFormulaValidType]":
-        return literal(datetime.timedelta(hours=0))
+        func = formula_function_registry.get("date_interval")
+        return func(literal("0 hours"))
 
     def get_order_by_in_array_expr(self, field, field_name, order_direction):
         return JSONBSingleKeyArrayExpression(
@@ -1085,9 +1157,10 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
                 list_item = parser.isoparse(list_item)
             elif list_item is not None and self.sub_type.type == "duration":
                 # Arrays are stored as JSON which means the durations are converted to
-                # the number of seconds, we need to reparse them back first before
+                # a string, we need to parse them back first before
                 # giving the duration field type.
-                list_item = datetime.timedelta(seconds=list_item)
+                total_seconds = postgres_interval_to_seconds(list_item)
+                list_item = datetime.timedelta(seconds=total_seconds)
             export_value = map_func(list_item)
             if export_value is None:
                 export_value = ""
@@ -1398,7 +1471,7 @@ def _lookup_formula_type_from_string(formula_type_string):
 
 
 def literal(
-    arg: Union[str, int, bool, Decimal, datetime.timedelta]
+    arg: Union[str, int, bool, Decimal]
 ) -> BaserowExpression[BaserowFormulaValidType]:
     """
     A helper function for building BaserowExpressions with literals
@@ -1420,10 +1493,8 @@ def literal(
         return decimal_literal_expr.with_valid_type(
             BaserowFormulaNumberType(decimal_literal_expr.num_decimal_places())
         )
-    elif isinstance(arg, datetime.timedelta):
-        return formula_function_registry.get("date_interval")(literal("0 hours"))
-
-    raise TypeError(f"Unknown literal type {type(arg)}")
+    else:
+        raise TypeError(f"Unknown literal type {type(arg)}")
 
 
 class JSONBSingleKeyArrayExpression(Expression):

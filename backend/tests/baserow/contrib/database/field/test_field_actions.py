@@ -17,7 +17,6 @@ from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.field_types import TextFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field,
     LinkRowField,
     MultipleSelectField,
     NumberField,
@@ -1363,13 +1362,15 @@ def test_can_undo_redo_duplicate_fields_of_interesting_table(api_client, data_fi
     database = data_fixture.create_database_application(user=user)
     field_handler = FieldHandler()
 
-    table, _, _, _, context = setup_interesting_test_table(data_fixture, user, database)
+    table, _, _, _, _ = setup_interesting_test_table(data_fixture, user, database)
     original_field_set = list(table.field_set.all())
 
+    duplicated_fields = {}
     for field in original_field_set:
-        duplicated_field, updated_fields = action_type_registry.get_by_type(
+        duplicated_field, _ = action_type_registry.get_by_type(
             DuplicateFieldActionType
-        ).do(user, field, duplicate_data=True)
+        ).do(user, field.specific, duplicate_data=True)
+        duplicated_fields[field.id] = duplicated_field
 
         assert field_handler.get_field(duplicated_field.id).name == f"{field.name} 2"
 
@@ -1401,9 +1402,7 @@ def test_can_undo_redo_duplicate_fields_of_interesting_table(api_client, data_fi
     for row in response_json["results"]:
         for field in original_field_set:
             row_1_value = extract_serialized_field_value(row[field.db_column])
-            duplicated_field = Field.objects.get(
-                table_id=table.id, name=f"{field.name} 2"
-            )
+            duplicated_field = duplicated_fields[field.id]
             row_2_value = extract_serialized_field_value(
                 row[duplicated_field.db_column]
             )

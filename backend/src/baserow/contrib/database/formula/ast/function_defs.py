@@ -1,4 +1,5 @@
 from abc import ABC
+from datetime import timedelta
 from decimal import Decimal
 from typing import List
 
@@ -204,6 +205,8 @@ def register_formula_functions(registry):
     registry.register(BaserowToDateTz())
     # Date interval functions
     registry.register(BaserowDateInterval())
+    registry.register(BaserowSecondsToDuration())
+    registry.register(BaserowDurationToSeconds())
     # Special functions
     registry.register(BaserowAdd())
     registry.register(BaserowMinus())
@@ -541,18 +544,33 @@ class BaserowMultiply(TwoArgumentBaserowFunction):
     arg1_type = [BaserowFormulaNumberType]
     arg2_type = [BaserowFormulaNumberType]
 
+    @property
+    def arg_types(self) -> BaserowArgumentTypeChecker:
+        def type_checker(arg_index: int, arg_types: List[BaserowFormulaType]):
+            if arg_index == 1:
+                return arg_types[0].multipliable_types
+            else:
+                return [BaserowFormulaValidType]
+
+        return type_checker
+
     def type_function(
         self,
         func_call: BaserowFunctionCall[UnTyped],
         arg1: BaserowExpression[BaserowFormulaNumberType],
         arg2: BaserowExpression[BaserowFormulaNumberType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(
-            calculate_number_type([arg1.expression_type, arg2.expression_type])
-        )
+        return arg1.expression_type.multiply(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return ExpressionWrapper(arg1 * arg2, output_field=arg1.output_field)
+        if isinstance(arg1.output_field, fields.DurationField):
+            total_secs = Extract(arg1, "epoch", output_field=arg2.output_field) * arg2
+            return ExpressionWrapper(
+                timedelta(seconds=1) * total_secs,
+                output_field=arg1.output_field,
+            )
+        else:
+            return ExpressionWrapper(arg1 * arg2, output_field=arg1.output_field)
 
 
 class BaserowMinus(TwoArgumentBaserowFunction):
@@ -1098,6 +1116,16 @@ class BaserowDivide(TwoArgumentBaserowFunction):
     arg1_type = [BaserowFormulaNumberType]
     arg2_type = [BaserowFormulaNumberType]
 
+    @property
+    def arg_types(self) -> BaserowArgumentTypeChecker:
+        def type_checker(arg_index: int, arg_types: List[BaserowFormulaType]):
+            if arg_index == 1:
+                return arg_types[0].dividable_types
+            else:
+                return [BaserowFormulaValidType]
+
+        return type_checker
+
     def type_function(
         self,
         func_call: BaserowFunctionCall[UnTyped],
@@ -1106,32 +1134,37 @@ class BaserowDivide(TwoArgumentBaserowFunction):
     ) -> BaserowExpression[BaserowFormulaType]:
         # Show all the decimal places we can by default if the user makes a formula
         # with a division to prevent weird results like `1/3=0`
-        return func_call.with_valid_type(
-            BaserowFormulaNumberType(NUMBER_MAX_DECIMAL_PLACES)
-        )
+        return arg1.expression_type.divide(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        # Prevent divide by zero's by swapping 0 for NaN causing the entire expression
-        # to evaluate to NaN. The front-end then treats NaN values as a per cell error
-        # to display to the user.
-        max_dp_output = fields.DecimalField(
-            max_digits=BaserowFormulaNumberType.MAX_DIGITS,
-            decimal_places=NUMBER_MAX_DECIMAL_PLACES,
-        )
-        return ExpressionWrapper(
-            arg1
-            / Case(
-                When(
-                    condition=(
-                        EqualsExpr(arg2, Value(0), output_field=fields.BooleanField())
-                    ),
-                    then=Value(Decimal("NaN")),
+        if isinstance(arg1.output_field, fields.DurationField):
+            expression = timedelta(seconds=1) * (
+                Extract(arg1, "epoch", output_field=arg2.output_field) / arg2
+            )
+            output_field = arg1.output_field
+            safe_value = Value(None)
+        else:
+            # Prevent divide by zero's by swapping 0 for NaN causing the entire
+            # expression to evaluate to NaN. The front-end then treats NaN values as a
+            # per cell error to display to the user.
+            output_field = fields.DecimalField(
+                max_digits=BaserowFormulaNumberType.MAX_DIGITS,
+                decimal_places=NUMBER_MAX_DECIMAL_PLACES,
+            )
+            expression = arg1 / Cast(arg2, output_field=output_field)
+            safe_value = Value(Decimal("NaN"))
+        safe_expression = Case(
+            When(
+                condition=(
+                    EqualsExpr(arg2, Value(0), output_field=fields.BooleanField())
                 ),
-                default=arg2,
-                output_field=max_dp_output,
+                then=safe_value,
             ),
-            output_field=max_dp_output,
+            default=expression,
+            output_field=output_field,
         )
+
+        return ExpressionWrapper(safe_expression, output_field=output_field)
 
 
 class BaserowHasOption(TwoArgumentBaserowFunction):
@@ -1294,6 +1327,54 @@ class BaserowIf(ThreeArgumentBaserowFunction):
             When(condition=arg1, then=arg2),
             default=arg3,
             output_field=arg2.output_field,
+        )
+
+
+class BaserowDurationToSeconds(OneArgumentBaserowFunction):
+    type = "toseconds"
+    arg_type = [BaserowFormulaDurationType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Extract(arg, "epoch", output_field=int_like_numeric_output_field())
+
+
+class BaserowSecondsToDuration(OneArgumentBaserowFunction):
+    type = "toduration"
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaDurationType(nullable=True))
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return ExpressionWrapper(
+            Case(
+                When(
+                    condition=(
+                        EqualsExpr(
+                            arg,
+                            Value(Decimal("NaN")),
+                            output_field=fields.BooleanField(),
+                        )
+                    ),
+                    then=Value(None),
+                ),
+                default=timedelta(seconds=1) * arg,
+                output_field=fields.DurationField(),
+            ),
+            output_field=fields.DurationField(),
         )
 
 
@@ -2291,6 +2372,7 @@ class BaserowCount(OneArgumentBaserowFunction):
         BaserowFormulaMultipleSelectType,
     ]
     aggregate = True
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2375,6 +2457,26 @@ class BaserowFilter(TwoArgumentBaserowFunction):
         )
 
 
+def _to_django_aggregate_number_or_duration_expression(
+    func: Expression, arg: Expression, **func_kwargs
+):
+    """
+    An utility function to create an aggregate expression for a number or duration
+    field.
+
+    :param func: The aggregate function to use.
+    :param arg: The expression to aggregate.
+    :param func_kwargs: Additional keyword arguments to pass to the aggregate function.
+    :return: The aggregate expression.
+    """
+
+    if isinstance(arg.output_field, fields.DurationField):
+        expr = func(Extract(arg, "epoch"), **func_kwargs) * timedelta(seconds=1)
+    else:
+        expr = func(arg, **func_kwargs)
+    return ExpressionWrapper(expr, output_field=arg.output_field)
+
+
 class BaserowAny(OneArgumentBaserowFunction):
     type = "any"
     arg_type = [MustBeManyExprChecker(BaserowFormulaBooleanType)]
@@ -2415,9 +2517,11 @@ class BaserowMax(OneArgumentBaserowFunction):
             BaserowFormulaNumberType,
             BaserowFormulaCharType,
             BaserowFormulaDateType,
+            BaserowFormulaDurationType,
         ),
     ]
     aggregate = True
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2427,7 +2531,7 @@ class BaserowMax(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Max(arg, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(Max, arg)
 
 
 class BaserowMin(OneArgumentBaserowFunction):
@@ -2438,9 +2542,11 @@ class BaserowMin(OneArgumentBaserowFunction):
             BaserowFormulaNumberType,
             BaserowFormulaCharType,
             BaserowFormulaDateType,
+            BaserowFormulaDurationType,
         ),
     ]
     aggregate = True
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2450,15 +2556,16 @@ class BaserowMin(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Min(arg, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(Min, arg)
 
 
 class BaserowAvg(OneArgumentBaserowFunction):
     type = "avg"
     arg_type = [
-        MustBeManyExprChecker(BaserowFormulaNumberType),
+        MustBeManyExprChecker(BaserowFormulaNumberType, BaserowFormulaDurationType),
     ]
     aggregate = True
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2468,13 +2575,16 @@ class BaserowAvg(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Avg(arg, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(Avg, arg)
 
 
 class BaserowStdDevPop(OneArgumentBaserowFunction):
     type = "stddev_pop"
-    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
+    arg_type = [
+        MustBeManyExprChecker(BaserowFormulaNumberType, BaserowFormulaDurationType)
+    ]
     aggregate = True
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2484,13 +2594,18 @@ class BaserowStdDevPop(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return StdDev(arg, sample=False, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(
+            StdDev, arg, sample=False
+        )
 
 
 class BaserowStdDevSample(OneArgumentBaserowFunction):
     type = "stddev_sample"
-    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
+    arg_type = [
+        MustBeManyExprChecker(BaserowFormulaNumberType, BaserowFormulaDurationType)
+    ]
     aggregate = True
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2500,7 +2615,9 @@ class BaserowStdDevSample(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return StdDev(arg, sample=True, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(
+            StdDev, arg, sample=True
+        )
 
 
 class BaserowAggJoin(TwoArgumentBaserowFunction):
@@ -2555,7 +2672,9 @@ class BaserowAggJoin(TwoArgumentBaserowFunction):
 class BaserowSum(OneArgumentBaserowFunction):
     type = "sum"
     aggregate = True
-    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
+    arg_type = [
+        MustBeManyExprChecker(BaserowFormulaNumberType, BaserowFormulaDurationType),
+    ]
 
     def type_function(
         self,
@@ -2565,13 +2684,16 @@ class BaserowSum(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Sum(arg, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(Sum, arg)
 
 
 class BaserowVarianceSample(OneArgumentBaserowFunction):
     type = "variance_sample"
     aggregate = True
-    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
+    arg_type = [
+        MustBeManyExprChecker(BaserowFormulaNumberType, BaserowFormulaDurationType)
+    ]
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2581,13 +2703,18 @@ class BaserowVarianceSample(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Variance(arg, sample=True, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(
+            Variance, arg, sample=True
+        )
 
 
 class BaserowVariancePop(OneArgumentBaserowFunction):
     type = "variance_pop"
     aggregate = True
-    arg_type = [MustBeManyExprChecker(BaserowFormulaNumberType)]
+    arg_type = [
+        MustBeManyExprChecker(BaserowFormulaNumberType, BaserowFormulaDurationType)
+    ]
+    try_coerce_nullable_args_to_not_null = False
 
     def type_function(
         self,
@@ -2597,7 +2724,9 @@ class BaserowVariancePop(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Variance(arg, sample=False, output_field=arg.output_field)
+        return _to_django_aggregate_number_or_duration_expression(
+            Variance, arg, sample=False
+        )
 
 
 class BaserowGetSingleSelectValue(OneArgumentBaserowFunction):

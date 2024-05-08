@@ -362,10 +362,12 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                 "formula_text": "test FORMULA",
                 "count": "3",
                 "rollup": "-122.222",
+                "duration_rollup_sum": 240.0,
+                "duration_rollup_avg": 120.0,
                 "lookup": [
                     {"id": 1, "value": "linked_row_1"},
                     {"id": 2, "value": "linked_row_2"},
-                    {"id": 3, "value": None},
+                    {"id": 3, "value": ""},
                 ],
                 "formula_link_url_only": {"label": None, "url": "https://google.com"},
                 "formula_link_with_label": {

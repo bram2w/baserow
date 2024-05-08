@@ -141,6 +141,8 @@ import {
   BaserowIf,
   BaserowIsBlank,
   BaserowIsNull,
+  BaserowDurationToSeconds,
+  BaserowSecondsToDuration,
   BaserowLessThan,
   BaserowLessThanOrEqual,
   BaserowLower,
@@ -562,7 +564,16 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowDateDiff(context))
   // Date interval functions
   app.$registry.register('formula_function', new BaserowDateInterval(context))
-  // Special functions
+  app.$registry.register(
+    'formula_function',
+    new BaserowDurationToSeconds(context)
+  )
+  app.$registry.register(
+    'formula_function',
+    new BaserowSecondsToDuration(context)
+  )
+  // Special functions. NOTE: rollup compatible functions are shown field sub-form in
+  // the same order as they are listed here.
   app.$registry.register('formula_function', new BaserowAdd(context))
   app.$registry.register('formula_function', new BaserowMinus(context))
   app.$registry.register('formula_function', new BaserowField(context))
@@ -581,16 +592,16 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowWhenEmpty(context))
   app.$registry.register('formula_function', new BaserowAny(context))
   app.$registry.register('formula_function', new BaserowEvery(context))
-  app.$registry.register('formula_function', new BaserowMax(context))
   app.$registry.register('formula_function', new BaserowMin(context))
+  app.$registry.register('formula_function', new BaserowMax(context))
   app.$registry.register('formula_function', new BaserowCount(context))
+  app.$registry.register('formula_function', new BaserowSum(context))
+  app.$registry.register('formula_function', new BaserowAvg(context))
   app.$registry.register('formula_function', new BaserowJoin(context))
   app.$registry.register('formula_function', new BaserowStddevPop(context))
   app.$registry.register('formula_function', new BaserowStddevSample(context))
   app.$registry.register('formula_function', new BaserowVarianceSample(context))
   app.$registry.register('formula_function', new BaserowVariancePop(context))
-  app.$registry.register('formula_function', new BaserowAvg(context))
-  app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
   app.$registry.register('formula_function', new BaserowTrunc(context))
   app.$registry.register('formula_function', new BaserowIsNaN(context))

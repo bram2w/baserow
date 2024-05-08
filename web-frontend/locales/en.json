@@ -475,6 +475,8 @@
     "getImageHeightDescription": "Returns the image height from a single file returned from the index function.",
     "getIsImageDescription": "Returns if the single file returned from the index function is an image or not.",
     "indexDescription": "Returns the file from a file field at the position provided by the second argument.",
+    "secondsToDurationDescription": "Converts the number of seconds provided into a duration.",
+    "durationToSecondsDescription": "Converts the duration provided into the corresponding number of seconds.",
     "hasOptionDescription": "Returns true if the first argument is a multiple select field or a lookup to a single select field and the second argument is one of the options."
   },
   "functionnalGridViewFieldLinkRow": {

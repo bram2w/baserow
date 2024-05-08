@@ -232,28 +232,28 @@ def test_can_export_every_interesting_different_field_to_csv(
         "file_link_row,file,single_select,multiple_select,multiple_collaborators,"
         "phone_number,formula_text,formula_int,formula_bool,formula_decimal,formula_dateinterval,"
         "formula_date,formula_singleselect,formula_email,formula_link_with_label,"
-        "formula_link_url_only,formula_multipleselect,count,rollup,lookup,uuid,"
-        "autonumber,password,ai\r\n"
+        "formula_link_url_only,formula_multipleselect,count,rollup,duration_rollup_sum,"
+        "duration_rollup_avg,lookup,uuid,autonumber,password,ai\r\n"
         "1,,,,,,,,,0,False,,,,,,,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,02/01/2021 13:00,"
         "user@example.com,user@example.com,,,,,,,,,,,,,,,,,,,test FORMULA,1,True,33.3333333333,"
-        "1d 0:00,2020-01-01,,,label (https://google.com),https://google.com,,0,0.000,,"
-        "00000000-0000-4000-8000-000000000002,1,,\r\n"
+        "1d 0:00,2020-01-01,,,label (https://google.com),https://google.com,,0,0.000,"
+        "0:00,0:00,,00000000-0000-4000-8000-000000000002,1,,\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,3,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,01/02/2020 02:23,"
         "01/02/2020 02:23,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,user@example.com,user@example.com,"
         "1:01,1:01:06,1:01:06.6,1:01:06.66,1:01:06.666,1d 1h,1d 1:01,1d 1:01:06,"
-        '"linked_row_1,linked_row_2,unnamed row 3",unnamed row 1,'
+        '"linked_row_1,linked_row_2,",unnamed row 1,'
         '"linked_row_1,linked_row_2","1.234,-123.456,unnamed row 3",'
         '"name.txt (http://localhost:8000/media/user_files/test_hash.txt),unnamed row 2",'
         '"a.txt (http://localhost:8000/media/user_files/hashed_name.txt),'
         'b.txt (http://localhost:8000/media/user_files/other_name.txt)",A,"D,C,E",'
         '"user2@example.com,user3@example.com",\'+4412345678,test FORMULA,1,True,33.3333333333,'
         "1d 0:00,2020-01-01,A,test@example.com,label (https://google.com),https://google.com,"
-        '"D,C,E",3,-122.222,"linked_row_1,linked_row_2,",00000000-0000-4000-8000-000000000003,'
-        "2,True,I'm an AI.\r\n"
+        '"D,C,E",3,-122.222,0:04,0:02,"linked_row_1,linked_row_2,",'
+        "00000000-0000-4000-8000-000000000003,2,True,I'm an AI.\r\n"
     )
 
     assert contents == expected

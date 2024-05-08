@@ -223,7 +223,21 @@ def construct_all_possible_field_kwargs(
                 "target_field_name": "decimal_field",
                 "rollup_function": "sum",
                 "number_decimal_places": 3,
-            }
+            },
+            {
+                "name": "duration_rollup_sum",
+                "through_field_name": "link_row",
+                "target_field_name": "duration_field",
+                "rollup_function": "sum",
+                "duration_format": "h:mm",
+            },
+            {
+                "name": "duration_rollup_avg",
+                "through_field_name": "link_row",
+                "target_field_name": "duration_field",
+                "rollup_function": "avg",
+                "duration_format": "h:mm",
+            },
         ],
         "lookup": [
             {
