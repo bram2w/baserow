@@ -113,11 +113,14 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
         result = {}
-        has_template = workspace and workspace.has_template()
+
+        def has_template():
+            return workspace and workspace.has_template()
+
         for check in checks:
             if (
-                has_template
-                and check.operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
+                check.operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
+                and has_template()
             ):
                 result[check] = True
 
@@ -138,8 +141,10 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
         queryset,
         workspace=None,
     ):
-        has_template = workspace and workspace.has_template()
-        if has_template and operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES:
+        def has_template():
+            return workspace and workspace.has_template()
+
+        if operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES and has_template():
             return queryset, True
 
 

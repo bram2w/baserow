@@ -1,8 +1,9 @@
 import inspect
 
 from django.contrib.auth.models import AnonymousUser
+from django.db import connection
 from django.db.models import Q, QuerySet
-from django.test.utils import override_settings
+from django.test.utils import CaptureQueriesContext, override_settings
 
 import pytest
 
@@ -1093,6 +1094,51 @@ def test_allow_if_template_permission_manager_filter_queryset(data_fixture):
             )
             == expected
         ), operation_name
+
+
+@pytest.mark.django_db
+@pytest.mark.django_db
+@override_settings(
+    PERMISSION_MANAGERS=[
+        "core",
+        "setting_operation",
+        "staff",
+        "allow_if_template",
+        "member",
+        "token",
+        "basic",
+    ]
+)
+def test_allow_if_template_permission_manager_query_count(data_fixture):
+    buser = data_fixture.create_user(username="Auth user")
+
+    workspace_1 = data_fixture.create_workspace(user=buser)
+    application_1 = data_fixture.create_builder_application(workspace=workspace_1)
+
+    integration_1 = data_fixture.create_integration_with_first_type(
+        application=application_1
+    )
+
+    with CaptureQueriesContext(connection) as query_for_template:
+        CoreHandler().check_permissions(
+            buser,
+            ListIntegrationsApplicationOperationType.type,
+            context=application_1,
+            workspace=workspace_1,
+        )
+
+    with CaptureQueriesContext(connection) as query_not_for_template:
+        CoreHandler().check_permissions(
+            buser,
+            UpdateIntegrationOperationType.type,
+            context=integration_1,
+            workspace=workspace_1,
+        )
+
+    # We should have one more query when we query a template authorized permission
+    assert len(query_not_for_template.captured_queries) + 1 == len(
+        query_for_template.captured_queries
+    )
 
 
 @pytest.mark.django_db
