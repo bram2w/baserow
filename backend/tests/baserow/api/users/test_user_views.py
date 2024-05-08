@@ -1017,7 +1017,7 @@ def test_create_user_password_auth_disabled(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_verify_email_address(client, data_fixture):
+def test_verify_email_address_with_login(client, data_fixture):
     user = data_fixture.create_user()
     token = UserHandler().create_email_verification_token(user)
 
@@ -1027,8 +1027,33 @@ def test_verify_email_address(client, data_fixture):
         format="json",
     )
 
-    assert response.status_code == HTTP_204_NO_CONTENT
-    user.profile.email_verified is True
+    response_json = response.json()
+    assert "token" in response_json
+    assert "refresh_token" in response_json
+    assert "user" in response_json
+    assert response_json["user"]["username"] == user.email
+    assert response.status_code == HTTP_200_OK
+    user.refresh_from_db()
+    assert user.profile.email_verified is True
+
+
+@pytest.mark.django_db
+def test_verify_email_address_no_login(client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    token = UserHandler().create_email_verification_token(user)
+
+    response = client.post(
+        reverse("api:user:verify_email"),
+        {"token": token},
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response_json["email"] == user.email
+    assert response.status_code == HTTP_200_OK
+    user.refresh_from_db()
+    assert user.profile.email_verified is True
 
 
 @pytest.mark.django_db
