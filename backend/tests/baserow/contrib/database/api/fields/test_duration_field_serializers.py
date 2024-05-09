@@ -174,7 +174,6 @@ def test_postgres_interval_to_seconds(user_input, parsed_value):
 @pytest.mark.parametrize(
     "duration_format,user_input",
     [
-        ("h:mm", -1),
         ("h:mm", ""),
         ("h:mm", "1.0:1.0"),
         ("h:mm", "1:1:1:1"),

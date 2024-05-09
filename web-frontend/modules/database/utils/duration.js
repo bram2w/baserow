@@ -3,6 +3,8 @@ import _ from 'lodash'
 const MOST_ACCURATE_DURATION_FORMAT = 'h:mm:ss.sss'
 // taken from backend timedelta.max.total_seconds() == 1_000_000_000 days
 export const MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS = 86400000000000
+export const MIN_BACKEND_DURATION_VALUE_NUMBER_OF_SECS =
+  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS * -1
 export const DEFAULT_DURATION_FORMAT = 'h:mm'
 
 const D_H = 'd h'
@@ -303,6 +305,11 @@ export const parseDurationValue = (
     return inputValue > 0 ? inputValue : null
   }
 
+  let multiplier = 1
+  if (inputValue.startsWith('-')) {
+    multiplier = -1
+    inputValue = inputValue.substring(1)
+  }
   for (const [fmtRegExp, formatFuncs] of DURATION_REGEXPS) {
     let matchedGroups = {}
     // exec may be null, which will throw an exception
@@ -315,11 +322,11 @@ export const parseDurationValue = (
 
     // the regex is using named groups, so the handler function should too
     if (!_.isEmpty(matchedGroups)) {
-      return formatFunc(matchedGroups)
+      return formatFunc(matchedGroups) * multiplier
     }
     // no named groups, so we use positional args
     if (match) {
-      return formatFunc(...match.slice(1))
+      return formatFunc(...match.slice(1)) * multiplier
     }
   }
   return null
@@ -332,12 +339,16 @@ export const formatDurationValue = (value, format) => {
   if (value === null || value === undefined || value === '') {
     return ''
   }
-
+  let sign = ''
+  if (value < 0) {
+    sign = '-'
+    value = -1 * value
+  }
   const days = Math.floor(value / 86400)
   const hours = Math.floor((value % 86400) / 3600)
   const mins = Math.floor((value % 3600) / 60)
   const secs = value % 60
 
   const formatFunc = DURATION_FORMATS.get(format).toString
-  return formatFunc(days, hours, mins, secs)
+  return `${sign}${formatFunc(days, hours, mins, secs)}`
 }
