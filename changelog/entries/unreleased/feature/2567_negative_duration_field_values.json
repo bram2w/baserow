@@ -1,0 +1,10 @@
+{
+  "type": "feature",
+  "message": "Support for negative duration field values.",
+  "issue_number": 2567,
+  "bullet_points": [
+    "duration field->text conversion values will match selected format",
+    "text->duration field conversion values should match selected format (otherwise the resulting value will be empty)"
+  ],
+  "created_at": "2024-04-25"
+}

@@ -200,6 +200,7 @@ from .utils.duration import (
     get_duration_search_expression,
     is_duration_format_conversion_lossy,
     prepare_duration_value_for_db,
+    text_value_sql_to_duration,
 )
 
 User = get_user_model()
@@ -1785,7 +1786,9 @@ class DurationFieldType(FieldType):
             duration_format = to_field.duration_format
             sql_round_func = DURATION_FORMATS[duration_format]["sql_round_func"]
 
-            return f"p_in = {sql_round_func} * INTERVAL '1 second';"
+            return f"p_in = make_interval(secs=>{sql_round_func});"
+        elif from_field_type.type in (TextFieldType.type, LongTextFieldType.type):
+            return f"p_in = {text_value_sql_to_duration(to_field)}"
 
     def serialize_to_input_value(self, field: Field, value: any) -> any:
         return value.total_seconds()

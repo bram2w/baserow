@@ -1,4 +1,5 @@
 import re
+import typing
 from datetime import timedelta
 from typing import List, Optional, Union
 
@@ -26,21 +27,25 @@ D_H_M_S_NO_COLONS = "d h mm ss"  # 1d2h3m4s, 1h 2m
 
 MOST_ACCURATE_DURATION_FORMAT = H_M_S_SSS
 
+if typing.TYPE_CHECKING:
+    from baserow.contrib.database.fields.models import DurationField
+
 
 def total_secs(
     days: Optional[int] = None,
     hours: Optional[int] = None,
     mins: Optional[int] = None,
-    secs: Optional[int] = None,
+    secs: Optional[Union[int, float]] = None,
 ) -> float:
     """
-    Calculate number of seconds from higher-order units
+    Calculate number of seconds from higher-order units.
 
-    :param days:
-    :param hours:
-    :param mins:
-    :param secs:
-    :return:
+    :param days: number of days
+    :param hours: number of hours
+    :param mins: number of minutes
+    :param secs: number of seconds (with milliseconds if provided as a float)
+
+    :return: number of seconds
     """
 
     return (
@@ -203,75 +208,151 @@ def rround(value: float, ndigits: int = 0) -> int:
     """
 
     digit_value = 10**ndigits
-    return int(value * digit_value + 0.5) / digit_value
+    # note: for values below 0 we need to round down
+    return int(value * digit_value + (0.5 if value >= 0 else -0.5)) / digit_value
 
 
+# for `sql_interval_to_text_format` values see
+# https://www.postgresql.org/docs/11/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE
+
+# `ms_precision` tells what microseconds precision should be used in db
+# `sql_text_to_interval_format` operates on a tuple of regexes in following order:
+# day
+# hour
+# minute
+# second+mseconds
 DURATION_FORMATS = {
     H_M: {
         "name": "hours:minutes",
         "round_func": lambda value: rround(value / 60) * 60,
         "sql_round_func": "(EXTRACT(EPOCH FROM p_in::INTERVAL) / 60)::int * 60",
         "format_func": lambda d, h, m, s: "%d:%02d" % (d * 24 + h, m),
+        "sql_interval_to_text_format": "FMHH24:MI",
+        "ms_precision": None,
+        "sql_text_to_interval_format": (
+            None,
+            r"^(\d+):",
+            r"^\d+:(\d+)",
+            None,
+        ),
     },
     H_M_S: {
         "name": "hours:minutes:seconds",
         "round_func": lambda value: rround(value, 0),
         "sql_round_func": "EXTRACT(EPOCH FROM p_in::INTERVAL)::int",
         "format_func": lambda d, h, m, s: "%d:%02d:%02d" % (d * 24 + h, m, s),
+        "sql_interval_to_text_format": "FMHH24:MI:SS",
+        "ms_precision": None,
+        "sql_text_to_interval_format": (
+            None,
+            r"^(\d+):",
+            r"^\d+:(\d+)",
+            r"^\d+:\d+:(\d+\.?\d*)",
+        ),
     },
     H_M_S_S: {
         "name": "hours:minutes:seconds:deciseconds",
         "round_func": lambda value: rround(value, 1),
         "sql_round_func": "ROUND(EXTRACT(EPOCH FROM p_in::INTERVAL)::NUMERIC, 1)",
         "format_func": lambda d, h, m, s: "%d:%02d:%04.1f" % (d * 24 + h, m, s),
+        "sql_interval_to_text_format": "FMHH24:MI:SS.MS",
+        "ms_precision": 1,
+        "sql_text_to_interval_format": (
+            None,
+            r"^(\d+):",
+            r"^\d+:(\d+)",
+            r"^\d+:\d+:(\d+\.?\d*)",
+        ),
     },
     H_M_S_SS: {
         "name": "hours:minutes:seconds:centiseconds",
         "round_func": lambda value: rround(value, 2),
         "sql_round_func": "ROUND(EXTRACT(EPOCH FROM p_in::INTERVAL)::NUMERIC, 2)",
         "format_func": lambda d, h, m, s: "%d:%02d:%05.2f" % (d * 24 + h, m, s),
+        "sql_interval_to_text_format": "FMHH24:MI:SS.MS",
+        "ms_precision": 2,
+        "sql_text_to_interval_format": (
+            None,
+            r"^(\d+):",
+            r"^\d+:(\d+)",
+            r"^\d+:\d+:(\d+\.?\d*)",
+        ),
     },
     H_M_S_SSS: {
         "name": "hours:minutes:seconds:milliseconds",
         "round_func": lambda value: rround(value, 3),
         "sql_round_func": "ROUND(EXTRACT(EPOCH FROM p_in::INTERVAL)::NUMERIC, 3)",
         "format_func": lambda d, h, m, s: "%d:%02d:%06.3f" % (d * 24 + h, m, s),
+        "sql_interval_to_text_format": "FMHH24:MI:SS.MS",
+        "ms_precision": 3,
+        "sql_text_to_interval_format": (
+            None,
+            r"^(\d+):",
+            r"^\d+:(\d+)",
+            r"^\d+:\d+:(\d+\.?\d*)",
+        ),
     },
     D_H: {
         "name": "days:hours",
         "round_func": lambda value: rround(value / 3600) * 3600,
         "sql_round_func": "(EXTRACT(EPOCH FROM p_in::INTERVAL) / 3600)::int * 3600",
         "format_func": lambda d, h, m, s: "%dd %dh" % (d, h),
+        "sql_interval_to_text_format": 'FMDD"d" FMHH24"h"',
+        "ms_precision": None,
+        "sql_text_to_interval_format": (r"^(\d+)d\s*", r"^\dd\s*(\d+)h", None, None),
     },
     D_H_M: {
         "name": "days:hours:minutes",
         "round_func": lambda value: rround(value / 60) * 60,
         "sql_round_func": "(EXTRACT(EPOCH FROM p_in::INTERVAL) / 60)::int * 60",
         "format_func": lambda d, h, m, s: "%dd %d:%02d" % (d, h, m),
+        "sql_interval_to_text_format": 'FMDD"d" FMHH24":"MI',
+        "ms_precision": None,
+        "sql_text_to_interval_format": (r"^(\d+)d", r"(\d+):", r":(\d+)", None),
     },
     D_H_M_S: {
         "name": "days:hours:minutes:seconds",
         "round_func": lambda value: rround(value, 0),
         "sql_round_func": "EXTRACT(EPOCH FROM p_in::INTERVAL)::int",
         "format_func": lambda d, h, m, s: "%dd %d:%02d:%02d" % (d, h, m, s),
+        "sql_interval_to_text_format": 'FMDD"d" FMHH24":"MI":"SS',
+        "ms_precision": None,
+        "sql_text_to_interval_format": (
+            r"^(\d+)d",
+            r"\d+d\s*(\d+):",
+            r"\d+d\s*\d+:(\d+)",
+            r":\d+:(\d+\.?\d*)",
+        ),
     },
     D_H_M_NO_COLONS: {
         "name": "days:hours:minutes:with_spaces",
         "round_func": lambda value: rround(value / 60) * 60,
         "sql_round_func": "(EXTRACT(EPOCH FROM p_in::INTERVAL) / 60)::int * 60",
         "format_func": lambda d, h, m, s: "%dd %dh %02dm" % (d, h, m),
+        "sql_interval_to_text_format": 'FMDD"d" FMHH24"h" MI"m"',
+        "ms_precision": None,
+        "sql_text_to_interval_format": (
+            r"^(\d+)d",
+            r"(\d+)h",
+            r"(\d+)m",
+            None,
+        ),
     },
     D_H_M_S_NO_COLONS: {
         "name": "days:hours:minutes:seconds:with_spaces",
         "round_func": lambda value: rround(value, 0),
         "sql_round_func": "EXTRACT(EPOCH FROM p_in::INTERVAL)::int",
         "format_func": lambda d, h, m, s: "%dd %dh %02dm %02ds" % (d, h, m, s),
+        "sql_interval_to_text_format": 'FMDD"d" FMHH24"h" MI"m" SS"s"',
+        "ms_precision": 0,
+        "sql_text_to_interval_format": (
+            r"^(\d+)d",
+            r"(\d+)h",
+            r"(\d+)m",
+            r"(\d+\.?\d*)s",
+        ),
     },
 }
-
-HOURS_WITH_DAYS_SQL_TO_TEXT = (
-    "(EXTRACT(HOUR FROM CAST(p_in AS INTERVAL))::INTEGER %% 24)"
-)
 
 
 def hours_with_days_search_expr(field_name):
@@ -288,9 +369,6 @@ def hours_with_days_search_expr(field_name):
 # be necessary to backup data beforehand to prevent loss of precision.
 DURATION_FORMAT_TOKENS = {
     "d": {
-        "sql_to_text": {
-            "default": "CASE WHEN p_in IS null THEN null ELSE CONCAT(TRUNC(EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::INTEGER / 86400), 'd') END",
-        },
         "search_expr": {
             "default": lambda field_name: Func(
                 Cast(
@@ -308,14 +386,6 @@ DURATION_FORMAT_TOKENS = {
         },
     },
     "h": {
-        "sql_to_text": {
-            D_H: f"CASE WHEN p_in IS null THEN null ELSE CONCAT({HOURS_WITH_DAYS_SQL_TO_TEXT}, 'h') END",
-            D_H_M: HOURS_WITH_DAYS_SQL_TO_TEXT,
-            D_H_M_S: HOURS_WITH_DAYS_SQL_TO_TEXT,
-            D_H_M_NO_COLONS: HOURS_WITH_DAYS_SQL_TO_TEXT,
-            D_H_M_S_NO_COLONS: HOURS_WITH_DAYS_SQL_TO_TEXT,
-            "default": "TRUNC(EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::INTEGER / 3600)",
-        },
         "search_expr": {
             D_H: lambda field_name: Func(
                 hours_with_days_search_expr(field_name), Value("h"), function="CONCAT"
@@ -336,9 +406,6 @@ DURATION_FORMAT_TOKENS = {
         },
     },
     "mm": {
-        "sql_to_text": {
-            "default": "TO_CHAR(EXTRACT(MINUTE FROM CAST(p_in AS INTERVAL))::INTEGER, 'FM00')",
-        },
         "search_expr": {
             "default": lambda field_name: Func(
                 Extract(field_name, "minutes", output_field=IntegerField()),
@@ -349,9 +416,6 @@ DURATION_FORMAT_TOKENS = {
         },
     },
     "ss": {
-        "sql_to_text": {
-            "default": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 0)), 'FM00')",
-        },
         "search_expr": {
             "default": lambda field_name: Func(
                 Cast(
@@ -365,9 +429,6 @@ DURATION_FORMAT_TOKENS = {
         },
     },
     "ss.s": {
-        "sql_to_text": {
-            "default": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 1)), 'FM00.0')"
-        },
         "search_expr": {
             "default": lambda field_name: Func(
                 Cast(
@@ -381,9 +442,6 @@ DURATION_FORMAT_TOKENS = {
         },
     },
     "ss.ss": {
-        "sql_to_text": {
-            "default": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 2)), 'FM00.00')"
-        },
         "search_expr": {
             "default": lambda field_name: Func(
                 Cast(
@@ -397,9 +455,6 @@ DURATION_FORMAT_TOKENS = {
         },
     },
     "ss.sss": {
-        "sql_to_text": {
-            "default": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 3)), 'FM00.000')"
-        },
         "search_expr": {
             "default": lambda field_name: Func(
                 Cast(
@@ -429,6 +484,11 @@ def parse_duration_value(formatted_value: str, format: str) -> float:
 
     if format not in DURATION_FORMATS:
         raise ValueError(f"{format} is not a valid duration format.")
+    # support for negative values
+    multiplier = 1
+    if formatted_value.startswith("-"):
+        formatted_value = formatted_value[1:]
+        multiplier = -1
 
     for regex, format_funcs in DURATION_REGEXPS.items():
         match = regex.match(formatted_value)
@@ -437,11 +497,10 @@ def parse_duration_value(formatted_value: str, format: str) -> float:
             # handle named groups in regexps
             captured = match.groupdict()
             if any(v for v in captured.values()):
-                out = format_func(**captured)
-                return out
+                return format_func(**captured) * multiplier
             # if no named groups, use standard args
             try:
-                return format_func(*match.groups())
+                return format_func(*match.groups()) * multiplier
             # invalid number of args
             except TypeError:
                 pass
@@ -488,7 +547,8 @@ def duration_value_to_timedelta(
     except ValueError:
         pass
 
-    if isinstance(value, (int, float)) and value >= 0:
+    # any value is valid if this is a number
+    if isinstance(value, (int, float)):
         total_seconds = value
     elif isinstance(value, str):
         total_seconds = parse_duration_value(value, format)
@@ -546,14 +606,17 @@ def format_duration_value(
 
     if duration is None:
         return None
-
+    sign = ""
+    if duration < timedelta(0):
+        duration = -1 * duration
+        sign = "-"
     days = duration.days
     hours = duration.seconds // 3600
     mins = duration.seconds % 3600 // 60
     secs = duration.seconds % 60 + duration.microseconds / 10**6
 
     format_func = DURATION_FORMATS[duration_format]["format_func"]
-    return format_func(days, hours, mins, secs)
+    return f"{sign}{format_func(days, hours, mins, secs)}"
 
 
 def tokenize_formatted_duration(duration_format: str) -> List[str]:
@@ -607,7 +670,7 @@ def get_duration_search_expression(field) -> Func:
     return Func(*exprs, function="CONCAT")
 
 
-def duration_value_sql_to_text(field) -> str:
+def duration_value_sql_to_text(field: "DurationField") -> str:
     """
     Returns a SQL expression that can be used to convert the duration value to a
     formatted string.
@@ -617,20 +680,25 @@ def duration_value_sql_to_text(field) -> str:
         duration value to a formatted string.
     """
 
-    format_func = ""
-    tokens = tokenize_formatted_duration(field.duration_format)
-    for i, format_token in enumerate(tokens):
-        sql_to_text_funcs = DURATION_FORMAT_TOKENS[format_token]["sql_to_text"]
-        sql_to_text = sql_to_text_funcs.get(
-            field.duration_format, sql_to_text_funcs["default"]
-        )
-        format_func += sql_to_text
-
-        # Add the proper separator between each token, if it's not the last one
-        if i == len(tokens) - 1:
-            break
-        elif format_token == "d":  # nosec b105
-            format_func += " || ' ' || "
-        else:
-            format_func += " || ':' || "
+    field_format = field.duration_format
+    conversion_format = DURATION_FORMATS[field_format]["sql_interval_to_text_format"]
+    ms_precision = DURATION_FORMATS[field_format]["ms_precision"]
+    format_func = f"br_interval_to_text(p_in::interval, '{conversion_format}'::text, {ms_precision or 'NULL'})"
     return format_func
+
+
+def text_value_sql_to_duration(field: "DurationField") -> str:
+    """
+    Returns a SQL expression that can be used to convert a text value to duration value.
+
+    Note: text value should conform duration format's patterns to be properly extracted.
+
+    :param field: target DurationField
+    :return: SQL expression string
+    """
+
+    db_function_args = DURATION_FORMATS[field.duration_format][
+        "sql_text_to_interval_format"
+    ]
+    args = [f"'{arg or 'NULL'}'" for arg in db_function_args]
+    return f"br_text_to_interval(p_in, {','.join(args)});"

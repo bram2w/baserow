@@ -628,6 +628,19 @@ const queryParametersForParsing = [
     input: { value: 61, field: { field: { duration_format: 'h:mm' } } },
     output: 60, // the value is rounded according to the duration format
   },
+  {
+    fieldType: new DurationFieldType(),
+    input: {
+      value: '-1d 2:30:40',
+      field: { field: { duration_format: 'h:mm' } },
+    },
+    output: -((24 + 2) * 3600 + 31 * 60),
+  },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: '-31m', field: { field: { duration_format: 'd h' } } },
+    output: -3600,
+  },
 ]
 
 const queryParametersAsyncForParsing = [

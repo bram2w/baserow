@@ -131,7 +131,7 @@
     "invalidEmail": "Invalid email",
     "invalidPhoneNumber": "Invalid Phone Number",
     "invalidDuration": "Invalid format ({durationFormat}).",
-    "overflowDuration": "Value is too large.",
+    "overflowDuration": "Value is out of bounds.",
     "maxChars": "Max {max} chars.",
     "minChars": "Min {min} chars."
   },

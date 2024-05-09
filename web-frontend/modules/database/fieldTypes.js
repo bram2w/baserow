@@ -1,10 +1,11 @@
 import BigNumber from 'bignumber.js'
 import {
+  DURATION_FORMATS,
   formatDurationValue,
+  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
+  MIN_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
   parseDurationValue,
   roundDurationValueToFormat,
-  DURATION_FORMATS,
-  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
 } from '@baserow/modules/database/utils/duration'
 import {
   collatedStringCompare,
@@ -2413,7 +2414,10 @@ export class DurationFieldType extends FieldType {
       return this.app.i18n.t('fieldErrors.invalidDuration', {
         durationFormat: this.getDocsRequestExample(field),
       })
-    } else if (totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS) {
+    } else if (
+      totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS ||
+      totalSecs < MIN_BACKEND_DURATION_VALUE_NUMBER_OF_SECS
+    ) {
       return this.app.i18n.t('fieldErrors.overflowDuration')
     }
     return null
