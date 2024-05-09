@@ -28,7 +28,7 @@ Baserow version | Supported versions | Tested versions | Recommended versions
 
 Baserow version | Supported versions | Tested versions | Recommended versions
 ----------------|--------------------|-----------------|---------------------
-1.11            | >= 18.15.0         | 18.15.0         | 18.15.0
+1.11            | >= 21.7.3          | 21.7.3          | 21.7.3
 
 ## Docker
 
