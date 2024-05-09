@@ -6,7 +6,7 @@
   "author": "Bram Wiepjes (Baserow)",
   "license": "MIT",
   "engines": {
-    "node": ">=18.15.0"
+    "node": ">=21.7.3"
   },
   "scripts": {
     "build": "NODE_ENV=production nuxt build",

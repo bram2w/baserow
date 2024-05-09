@@ -1,4 +1,4 @@
-FROM node:16-bookworm as base
+FROM node:21.7.3-bookworm as base
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
