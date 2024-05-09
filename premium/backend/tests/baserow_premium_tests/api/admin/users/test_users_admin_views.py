@@ -643,7 +643,7 @@ def test_admin_cannot_create_user_that_already_exists(api_client, premium_data_f
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_admin_can_create_user(api_client, premium_data_fixture):
-    user, token = premium_data_fixture.create_user_and_token(
+    user = premium_data_fixture.create_user(
         email="test@test.nl",
         password="password",
         first_name="Test1",
@@ -653,6 +653,7 @@ def test_admin_can_create_user(api_client, premium_data_fixture):
     )
     url = reverse("api:premium:admin:users:list")
     with freeze_time("2020-01-02 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             url,
             {

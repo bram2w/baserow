@@ -1,10 +1,8 @@
-from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.urls import reverse
 
 import pytest
-from freezegun import freeze_time
 from rest_framework import exceptions
 from rest_framework.status import (
     HTTP_200_OK,
@@ -900,17 +898,17 @@ def test_user_source_token_blacklist(api_client, data_fixture):
 
     us_user = data_fixture.create_user_source_user(user_source=user_source)
 
-    with freeze_time("2020-01-01 12:00"):
-        refresh_token = str(us_user.get_refresh_token())
+    refresh_token = us_user.get_refresh_token()
+    refresh_token_str = str(us_user.get_refresh_token())
 
-        response = api_client.post(
-            reverse("api:user_sources:token_blacklist"),
-            {"refresh_token": refresh_token},
-            format="json",
-        )
+    response = api_client.post(
+        reverse("api:user_sources:token_blacklist"),
+        {"refresh_token": refresh_token_str},
+        format="json",
+    )
 
-        assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_204_NO_CONTENT
 
-        token = BlacklistedToken.objects.all().first()
-        assert token.hashed_token == generate_hash(refresh_token)
-        assert token.expires_at == datetime(2020, 1, 8, 12, 00, tzinfo=timezone.utc)
+    token = BlacklistedToken.objects.all().first()
+    assert token.hashed_token == generate_hash(refresh_token_str)
+    assert token.expires_at.timestamp() == refresh_token.payload["exp"]

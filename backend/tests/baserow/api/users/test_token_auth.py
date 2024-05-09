@@ -725,57 +725,49 @@ def test_token_blacklist(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    with freeze_time("2020-01-01 12:00"):
-        refresh_token = str(RefreshToken.for_user(user))
+    response = api_client.post(
+        reverse("api:user:token_blacklist"),
+        {"refresh_token": "INVALID_TOKEN"},
+        format="json",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
-        response = api_client.post(
-            reverse("api:user:token_blacklist"),
-            {"refresh_token": "INVALID_TOKEN"},
-            format="json",
-        )
-        assert response.status_code == HTTP_401_UNAUTHORIZED
+    response = api_client.post(
+        reverse("api:user:token_blacklist"),
+        {},
+        format="json",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
-        response = api_client.post(
-            reverse("api:user:token_blacklist"),
-            {},
-            format="json",
-        )
-        assert response.status_code == HTTP_400_BAD_REQUEST
+    refresh_token = RefreshToken.for_user(user)
+    refresh_token_str = str(RefreshToken.for_user(user))
 
-        # response = api_client.post(
-        #     reverse("api:user:token_refresh"),
-        #     {"refresh_token": refresh_token},
-        #     format="json",
-        # )
-        # assert response.status_code == HTTP_200_OK
-        # response_json = response.json()
-        # access_token = response_json["access_token"]
+    response = api_client.post(
+        reverse("api:user:token_blacklist"),
+        {"refresh_token": refresh_token_str},
+        format="json",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
 
-        response = api_client.post(
-            reverse("api:user:token_blacklist"),
-            {"refresh_token": refresh_token},
-            format="json",
-        )
-        assert response.status_code == HTTP_204_NO_CONTENT
+    token = BlacklistedToken.objects.all().first()
 
-        token = BlacklistedToken.objects.all().first()
-        assert token.hashed_token == generate_hash(refresh_token)
-        assert token.expires_at == datetime(2020, 1, 8, 12, 00, tzinfo=timezone.utc)
+    assert refresh_token.payload["exp"] == token.expires_at.timestamp()
+    assert token.hashed_token == generate_hash(refresh_token_str)
 
-        response = api_client.post(
-            reverse("api:user:token_refresh"),
-            {"token": refresh_token},
-            format="json",
-        )
-        response_json = response.json()
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"token": refresh_token_str},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
 
-        response = api_client.post(
-            reverse("api:user:token_verify"),
-            {"refresh_token": refresh_token},
-            format="json",
-        )
-        response_json = response.json()
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token_str},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"

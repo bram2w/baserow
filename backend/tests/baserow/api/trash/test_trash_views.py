@@ -20,16 +20,18 @@ from baserow.core.trash.handler import TrashHandler
 def test_deleting_a_workspace_moves_it_to_the_trash_and_hides_it(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
     url = reverse(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse("api:workspaces:list"),
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -74,16 +76,18 @@ def test_deleting_a_workspace_moves_it_to_the_trash_and_hides_it(
 
 @pytest.mark.django_db
 def test_can_restore_a_deleted_trash_item(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
     url = reverse(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+        assert response.status_code == HTTP_204_NO_CONTENT
 
+    token = data_fixture.generate_token(user)
     response = api_client.patch(
         reverse(
             "api:trash:restore",
@@ -123,7 +127,7 @@ def test_can_restore_a_deleted_trash_item(api_client, data_fixture):
 def test_cant_restore_a_deleted_trash_item_if_not_in_workspace(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     other_user, other_token = data_fixture.create_user_and_token()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
@@ -131,6 +135,7 @@ def test_cant_restore_a_deleted_trash_item_if_not_in_workspace(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
@@ -172,7 +177,7 @@ def test_cant_restore_a_non_existent_trashed_item(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_cant_restore_a_trashed_item_with_a_missing_parent(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_database_application(
         user=user, workspace=workspace
@@ -185,9 +190,11 @@ def test_cant_restore_a_trashed_item_with_a_missing_parent(api_client, data_fixt
         "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+        assert response.status_code == HTTP_204_NO_CONTENT
 
+    token = data_fixture.generate_token(user)
     response = api_client.patch(
         reverse(
             "api:trash:restore",
@@ -246,7 +253,7 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
 
 @pytest.mark.django_db
 def test_can_get_trash_structure(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace_to_delete = data_fixture.create_workspace()
     normal_workspace = data_fixture.create_workspace()
     data_fixture.create_user_workspace(
@@ -266,16 +273,18 @@ def test_can_get_trash_structure(api_client, data_fixture):
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+        assert response.status_code == HTTP_204_NO_CONTENT
 
     url = reverse(
         "api:applications:item", kwargs={"application_id": trashed_application.id}
     )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+        assert response.status_code == HTTP_204_NO_CONTENT
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse(
             "api:trash:list",
@@ -391,7 +400,7 @@ def test_getting_a_app_for_diff_workspace_returns_400(api_client, data_fixture):
 def test_user_cant_get_trash_contents_for_workspace_they_are_not_a_member_of(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     (
         other_unpermissioned_user,
         unpermissioned_token,
@@ -403,8 +412,9 @@ def test_user_cant_get_trash_contents_for_workspace_they_are_not_a_member_of(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+        assert response.status_code == HTTP_204_NO_CONTENT
 
     url = reverse(
         "api:trash:contents",
@@ -412,6 +422,8 @@ def test_user_cant_get_trash_contents_for_workspace_they_are_not_a_member_of(
             "workspace_id": workspace_to_delete.id,
         },
     )
+
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         url,
         HTTP_AUTHORIZATION=f"JWT {unpermissioned_token}",
@@ -478,13 +490,14 @@ def test_can_get_trash_contents_for_undeleted_app(api_client, data_fixture):
 def test_emptying_a_trashed_workspace_marks_it_for_perm_deletion(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
     url = reverse(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
@@ -494,6 +507,7 @@ def test_emptying_a_trashed_workspace_marks_it_for_perm_deletion(
             "workspace_id": workspace_to_delete.id,
         },
     )
+    token = data_fixture.generate_token(user)
     response = api_client.delete(
         f"{url}",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -580,7 +594,7 @@ def test_emptying_a_app_for_diff_workspace_returns_400(api_client, data_fixture)
 def test_user_cant_empty_trash_contents_for_workspace_they_are_not_a_member_of(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     (
         other_unpermissioned_user,
         unpermissioned_token,
@@ -592,6 +606,7 @@ def test_user_cant_empty_trash_contents_for_workspace_they_are_not_a_member_of(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
@@ -601,6 +616,7 @@ def test_user_cant_empty_trash_contents_for_workspace_they_are_not_a_member_of(
             "workspace_id": workspace_to_delete.id,
         },
     )
+    token = data_fixture.generate_token(user)
     response = api_client.delete(
         url,
         HTTP_AUTHORIZATION=f"JWT {unpermissioned_token}",
@@ -612,7 +628,7 @@ def test_user_cant_empty_trash_contents_for_workspace_they_are_not_a_member_of(
 
 @pytest.mark.django_db
 def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     trashed_database = data_fixture.create_database_application(
         user=user, workspace=workspace
@@ -622,6 +638,7 @@ def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixt
         "api:applications:item", kwargs={"application_id": trashed_database.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
@@ -631,6 +648,7 @@ def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixt
             "workspace_id": workspace.id,
         },
     )
+    token = data_fixture.generate_token(user)
     response = api_client.delete(
         f"{url}",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -663,7 +681,7 @@ def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixt
 def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     other_user, other_token = data_fixture.create_user_and_token()
     workspace_to_delete = data_fixture.create_workspace(user=user)
     data_fixture.create_user_workspace(user=other_user, workspace=workspace_to_delete)
@@ -672,11 +690,13 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
         "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
     user.delete()
 
+    token = data_fixture.generate_token(other_user)
     response = api_client.get(
         reverse(
             "api:trash:contents",
@@ -716,7 +736,7 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
 def test_restoring_an_item_which_doesnt_need_parent_id_with_one_returns_error(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_database_application(
         user=user, workspace=workspace
@@ -724,9 +744,11 @@ def test_restoring_an_item_which_doesnt_need_parent_id_with_one_returns_error(
 
     url = reverse("api:applications:item", kwargs={"application_id": application.id})
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
+    token = data_fixture.generate_token(user)
     response = api_client.patch(
         reverse(
             "api:trash:restore",
@@ -748,7 +770,7 @@ def test_restoring_an_item_which_doesnt_need_parent_id_with_one_returns_error(
 def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
     api_client, data_fixture
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_database_application(
         user=user, workspace=workspace
@@ -761,9 +783,11 @@ def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
         "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row.id}
     )
     with freeze_time("2020-01-01 12:00"):
+        token = data_fixture.generate_token(user)
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
+    token = data_fixture.generate_token(user)
     response = api_client.patch(
         reverse(
             "api:trash:restore",
@@ -782,7 +806,7 @@ def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
 
 @pytest.mark.django_db
 def test_cant_delete_same_item_twice(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(user=user)
@@ -792,33 +816,41 @@ def test_cant_delete_same_item_twice(api_client, data_fixture):
     )
     row = rows[0]
 
+    def get_token():
+        return data_fixture.generate_token(user)
+
     url = reverse("api:workspaces:item", kwargs={"workspace_id": workspace.id})
     _assert_delete_called_twice_returns_correct_api_error(
-        api_client, workspace, token, url
+        api_client, workspace, get_token, url
     )
 
     url = reverse("api:applications:item", kwargs={"application_id": database.id})
     _assert_delete_called_twice_returns_correct_api_error(
-        api_client, database, token, url
+        api_client, database, get_token, url
     )
     url = reverse("api:database:tables:item", kwargs={"table_id": table.id})
-    _assert_delete_called_twice_returns_correct_api_error(api_client, table, token, url)
+    _assert_delete_called_twice_returns_correct_api_error(
+        api_client, table, get_token, url
+    )
 
     url = reverse("api:database:fields:item", kwargs={"field_id": field.id})
     _assert_delete_called_twice_returns_correct_api_error(
-        api_client, field, token, url, response_code=HTTP_200_OK
+        api_client, field, get_token, url, response_code=HTTP_200_OK
     )
 
     url = reverse(
         "api:database:rows:item", kwargs={"table_id": row_table.id, "row_id": row.id}
     )
-    _assert_delete_called_twice_returns_correct_api_error(api_client, row, token, url)
+    _assert_delete_called_twice_returns_correct_api_error(
+        api_client, row, get_token, url
+    )
 
 
 def _assert_delete_called_twice_returns_correct_api_error(
-    api_client, deletable_item, token, url, response_code=HTTP_204_NO_CONTENT
+    api_client, deletable_item, get_token, url, response_code=HTTP_204_NO_CONTENT
 ):
     with freeze_time("2020-01-01 12:00"):
+        token = get_token()
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == response_code
     # Fake two requests doing the deletion at once by manually unsetting the trashed
