@@ -2320,6 +2320,7 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     with patch("baserow.core.user_files.handler.default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
+            token = data_fixture.generate_token(user)
             response = api_client.post(
                 reverse(
                     "api:database:views:form:upload_file",
@@ -2349,6 +2350,7 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     assert file_path.isfile()
 
     with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        token = data_fixture.generate_token(user)
         file = SimpleUploadedFile("test.txt", b"Hello World")
         response_2 = api_client.post(
             reverse(
@@ -2361,6 +2363,7 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
         )
 
     # The old file should be provided.
+    assert response_2.status_code == HTTP_200_OK
     assert response_2.json()["name"] == response_json["name"]
     assert response_json["original_name"] == "test.txt"
 

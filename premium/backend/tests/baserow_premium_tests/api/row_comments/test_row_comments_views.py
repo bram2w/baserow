@@ -52,6 +52,7 @@ def test_row_comments_api_view(premium_data_fixture, api_client):
     )
 
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -76,6 +77,7 @@ def test_row_comments_api_view(premium_data_fixture, api_client):
     }
     assert response.json() == expected_comment_json
 
+    token = premium_data_fixture.generate_token(user)
     response = api_client.get(
         reverse(
             "api:premium:row_comments:list",
@@ -418,6 +420,7 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
     message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -429,6 +432,7 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
         )
     assert response.status_code == HTTP_200_OK
 
+    token = premium_data_fixture.generate_token(user)
     response = api_client.get(
         reverse(
             "api:premium:row_comments:list",
@@ -493,6 +497,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
         "My test comment"
     )
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -519,6 +524,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
         )
     assert response.status_code == HTTP_200_OK
 
+    token = premium_data_fixture.generate_token(user)
     response = api_client.get(
         reverse(
             "api:premium:row_comments:list",
@@ -563,6 +569,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
     )
 
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -589,6 +596,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
         )
     assert response.status_code == HTTP_200_OK
 
+    token = premium_data_fixture.generate_token(user)
     response = api_client.get(
         reverse(
             "api:premium:row_comments:list",
@@ -1113,6 +1121,7 @@ def test_user_can_be_mentioned_in_message(premium_data_fixture, api_client):
     message = premium_data_fixture.create_comment_message_with_mentions([user_2])
 
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -1156,6 +1165,7 @@ def test_user_cant_be_mentioned_in_comments_if_outside_workspace(
     message = premium_data_fixture.create_comment_message_with_mentions([user_2])
 
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -1190,6 +1200,7 @@ def test_multiple_users_can_be_mentioned_in_a_comment(premium_data_fixture, api_
     )
 
     with freeze_time("2020-01-01 12:00"):
+        token = premium_data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",

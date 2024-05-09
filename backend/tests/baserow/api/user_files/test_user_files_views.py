@@ -71,6 +71,7 @@ def test_upload_file_with_jwt_auth(api_client, data_fixture, tmpdir):
     with patch("baserow.core.user_files.handler.default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
+            token = data_fixture.generate_token(user)
             response = api_client.post(
                 reverse("api:user_files:upload_file"),
                 data={"file": file},
@@ -98,6 +99,7 @@ def test_upload_file_with_jwt_auth(api_client, data_fixture, tmpdir):
 
     with patch("baserow.core.user_files.handler.default_storage", new=storage):
         file = SimpleUploadedFile("test.txt", b"Hello World")
+        token = data_fixture.generate_token(user)
         response_2 = api_client.post(
             reverse("api:user_files:upload_file"),
             data={"file": file},
@@ -106,6 +108,7 @@ def test_upload_file_with_jwt_auth(api_client, data_fixture, tmpdir):
         )
 
     # The old file should be provided.
+    assert response_2.status_code == HTTP_200_OK
     assert response_2.json()["name"] == response_json["name"]
     assert response_json["original_name"] == "test.txt"
 

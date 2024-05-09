@@ -320,6 +320,7 @@ def test_workspace_audit_log_can_export_to_csv_filtered_entries(
     with freeze_time("2023-01-02 12:00"), django_capture_on_commit_callbacks(
         execute=True
     ):
+        admin_token = enterprise_data_fixture.generate_token(admin_user)
         response = api_client.post(
             reverse("api:enterprise:audit_log:async_export"),
             data={**csv_settings, **filters},
@@ -332,6 +333,7 @@ def test_workspace_audit_log_can_export_to_csv_filtered_entries(
     assert job["state"] == "pending"
     assert job["type"] == "audit_log_export"
 
+    admin_token = enterprise_data_fixture.generate_token(admin_user)
     response = api_client.get(
         reverse(
             "api:jobs:item",

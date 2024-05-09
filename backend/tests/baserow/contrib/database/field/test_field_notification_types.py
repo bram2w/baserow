@@ -49,6 +49,7 @@ def test_notification_creation_on_adding_users_on_collaborator_fields(
     )
 
     with freeze_time("2023-07-06 12:00"):
+        token_1 = data_fixture.generate_token(user_1)
         response = api_client.patch(
             reverse(
                 "api:database:rows:item",
@@ -245,6 +246,7 @@ def test_notifications_are_grouped_when_user_is_added_to_multiple_rows(
     )
 
     with freeze_time("2023-07-06 12:00"):
+        token_1 = data_fixture.generate_token(user_1)
         url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
         request_body = {
             "items": [
@@ -397,6 +399,7 @@ def test_notifications_are_not_created_if_the_field_parameter_is_false(
     )
 
     with freeze_time("2023-07-06 12:00"):
+        token_1 = data_fixture.generate_token(user_1)
         response = api_client.patch(
             reverse(
                 "api:database:rows:item",
@@ -452,6 +455,7 @@ def test_email_notifications_are_created_correctly_for_collaborators_added(
     )
 
     with freeze_time("2023-07-06 12:00"):
+        token_1 = data_fixture.generate_token(user_1)
         response = api_client.patch(
             reverse(
                 "api:database:rows:item",

@@ -1105,7 +1105,7 @@ def test_batch_update_rows(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_update_rows_last_modified_field(api_client, data_fixture):
-    user, jwt_token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(
         table=table, order=0, name="Color", text_default="white"
@@ -1147,6 +1147,7 @@ def test_batch_update_rows_last_modified_field(api_client, data_fixture):
     }
 
     with freeze_time("2022-04-18 00:00:00"):
+        jwt_token = data_fixture.generate_token(user)
         response = api_client.patch(
             url,
             request_body,
