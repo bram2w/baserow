@@ -148,7 +148,7 @@ def load_test_data():
             variant="button",
             alignment="right",
             navigation_type="page",
-            navigate_to_page=homepage,
+            navigate_to_page_id=homepage.id,
         )
 
         # Button for homepage
@@ -159,7 +159,7 @@ def load_test_data():
             variant="button",
             alignment="right",
             navigation_type="page",
-            navigate_to_page=terms,
+            navigate_to_page_id=terms.id,
         )
 
         ElementHandler().create_element(
@@ -316,7 +316,7 @@ def load_test_data():
             variant="button",
             alignment="right",
             navigation_type="page",
-            navigate_to_page=homepage,
+            navigate_to_page_id=homepage.id,
         )
 
         # Button back from detail page
@@ -327,7 +327,7 @@ def load_test_data():
             variant="button",
             alignment="left",
             navigation_type="page",
-            navigate_to_page=products,
+            navigate_to_page_id=products.id,
         )
 
         # Button back from detail page
@@ -338,5 +338,5 @@ def load_test_data():
             variant="button",
             alignment="left",
             navigation_type="page",
-            navigate_to_page=products,
+            navigate_to_page_id=products.id,
         )
