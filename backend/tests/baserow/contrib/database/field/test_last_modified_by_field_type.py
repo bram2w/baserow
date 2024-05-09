@@ -462,3 +462,44 @@ def test_last_modified_by_field_type_sorting(data_fixture):
     rows = view_handler.apply_sorting(grid_view, model.objects.all())
     row_ids = [row.id for row in rows]
     assert row_ids == [row1.id, row4.id, row2.id, row3.id, row5.id]
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db
+def test_last_modified_by_field_view_aggregations(data_fixture):
+    user_a = data_fixture.create_user(email="user1@baserow.io", first_name="User a")
+    user_b = data_fixture.create_user(email="user2@baserow.io", first_name="User b")
+    user_c = data_fixture.create_user(email="user3@baserow.io", first_name="User c")
+
+    database = data_fixture.create_database_application(user=user_a, name="Placeholder")
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_b)
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_c)
+    table = data_fixture.create_database_table(name="Example", database=database)
+    view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_last_modified_by_field(
+        user=user_a, table=table, name="Last modified by"
+    )
+    model = table.get_model()
+    view_handler = ViewHandler()
+
+    model.objects.create(last_modified_by=user_c)
+    model.objects.create(last_modified_by=user_b)
+    model.objects.create(last_modified_by=user_a)
+    model.objects.create(last_modified_by=user_c)
+    model.objects.create(last_modified_by=None)
+
+    result = view_handler.get_field_aggregations(user_a, view, [(field, "empty_count")])
+    assert result[field.db_column] == 1
+
+    result = view_handler.get_field_aggregations(
+        user_a, view, [(field, "unique_count")]
+    )
+    assert result[field.db_column] == 3
+
+    result = view_handler.get_field_aggregations(
+        user_a, view, [(field, "not_empty_count")]
+    )
+    assert result[field.db_column] == 4
+
+    result = view_handler.get_field_aggregations(user_a, view, [(field, "empty_count")])
+    assert result[field.db_column] == 1
