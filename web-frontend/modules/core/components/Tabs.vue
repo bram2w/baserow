@@ -18,7 +18,9 @@
           'tabs__item--active': isActive(index),
           'tabs__item--disabled': tab.disabled,
         }"
-        @click="tab.disabled ? null : selectTab(index)"
+        @click="
+          tab.disabled ? $emit('click-disabled', index) : selectTab(index)
+        "
       >
         <a
           :href="getHref(index)"
@@ -26,6 +28,7 @@
           :class="{ 'tabs__link--disabled': tab.disabled }"
           @click.prevent
         >
+          <i v-if="tab.icon" :class="tab.icon"></i>
           {{ tab.title }}
         </a>
       </li>

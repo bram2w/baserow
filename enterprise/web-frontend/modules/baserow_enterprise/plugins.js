@@ -16,15 +16,10 @@ export class EnterprisePlugin extends BaserowPlugin {
   }
 
   getSidebarWorkspaceComponents(workspace) {
-    const supportEnabled = this.app.$hasFeature(
-      EnterpriseFeatures.SUPPORT,
-      workspace.id
-    )
-    const sidebarItems = []
-    if (supportEnabled) {
-      sidebarItems.push(ChatwootSupportSidebarWorkspace)
-    }
-    sidebarItems.push(AuditLogSidebarWorkspace)
+    const sidebarItems = [
+      ChatwootSupportSidebarWorkspace,
+      AuditLogSidebarWorkspace,
+    ]
     return sidebarItems
   }
 

@@ -1,23 +1,49 @@
 <template>
-  <li class="tree__item" :class="{ 'tree__item--loading': loading }">
+  <li
+    class="tree__item"
+    :class="{
+      'tree__item--loading': loading,
+      'tree__action--deactivated': deactivated,
+    }"
+  >
     <div class="tree__action">
-      <a class="tree__link" @click="open">
+      <a
+        v-if="deactivated"
+        href="#"
+        class="tree__link"
+        @click.prevent="$refs.enterpriseModal.show()"
+      >
+        <i class="tree__icon tree__icon--type iconoir-lock"></i>
+        <span class="tree__link-text">{{
+          $t('chatwootSupportSidebarWorkspace.directSupport')
+        }}</span>
+      </a>
+      <a v-else class="tree__link" @click="open">
         <i class="tree__icon tree__icon--type iconoir-chat-bubble-question"></i>
         <span class="tree__link-text">{{
           $t('chatwootSupportSidebarWorkspace.directSupport')
         }}</span>
       </a>
     </div>
+    <EnterpriseModal
+      ref="enterpriseModal"
+      :workspace="workspace"
+      :name="$t('chatwootSupportSidebarWorkspace.directSupport')"
+    ></EnterpriseModal>
   </li>
 </template>
 
 <script>
+import EnterpriseFeatures from '@baserow_enterprise/features'
+import EnterpriseModal from '@baserow_enterprise/components/EnterpriseModal'
+
 /**
  * The Chatwoot docs can be found here:
  * https://www.chatwoot.com/docs/product/channels/live-chat/sdk/setup
  */
 export default {
   name: 'ChatwootSupportSidebarWorkspace',
+  components: { EnterpriseModal },
   props: {
     workspace: {
       type: Object,
@@ -29,6 +55,11 @@ export default {
       ready: false,
       loading: false,
     }
+  },
+  computed: {
+    deactivated() {
+      return !this.$hasFeature(EnterpriseFeatures.SUPPORT, this.workspace.id)
+    },
   },
   mounted() {
     // It could be that chatwoot is ready. In that case, $chatwoot should be set on the

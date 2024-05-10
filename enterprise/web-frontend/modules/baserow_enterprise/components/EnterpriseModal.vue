@@ -28,7 +28,7 @@
         >
         <component
           :is="buttonsComponent"
-          v-if="buttonsComponent"
+          v-if="workspace && buttonsComponent"
           :name="name"
           :workspace="workspace"
           @hide="hide()"
@@ -53,8 +53,9 @@ export default {
       required: true,
     },
     workspace: {
-      type: Object,
-      required: true,
+      type: [Object, null],
+      required: false,
+      default: null,
     },
   },
   computed: {

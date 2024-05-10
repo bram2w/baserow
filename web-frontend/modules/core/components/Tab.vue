@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isActive" class="tab">
+  <div v-if="isActive" class="tab" @click="$emit('click', $event)">
     <slot></slot>
   </div>
 </template>
@@ -25,6 +25,11 @@ export default {
       type: Object,
       default: () => {},
       required: false,
+    },
+    icon: {
+      type: String,
+      required: false,
+      default: null,
     },
   },
   data() {
