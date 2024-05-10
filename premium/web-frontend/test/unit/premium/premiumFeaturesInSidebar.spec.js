@@ -100,7 +100,6 @@ describe('Sidebar Premium Features Snapshot tests', () => {
     await UIHelpers.selectSidebarItem(sidebarComponent, 'sidebar.admin')
     expect(UIHelpers.getDisabledSidebarItemNames(sidebarComponent)).toEqual(
       expect.arrayContaining([
-        'sidebar.admin',
         'premium.adminType.dashboard',
         'premium.adminType.users',
         'premium.adminType.workspaces',
@@ -119,7 +118,7 @@ describe('Sidebar Premium Features Snapshot tests', () => {
 
     expect(
       UIHelpers.getDisabledSidebarItemNames(sidebarComponent)
-    ).toStrictEqual([openedPage])
+    ).toStrictEqual([])
     const sidebarItemNames = UIHelpers.getSidebarItemNames(sidebarComponent)
     expect(sidebarItemNames).toEqual(
       expect.arrayContaining([

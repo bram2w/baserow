@@ -1,13 +1,14 @@
 import { AdminType } from '@baserow/modules/core/adminTypes'
 import PremiumFeatures from '@baserow_premium/features'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
 
 class PremiumAdminType extends AdminType {
-  getDeactivatedText() {
-    return this.app.i18n.t('premium.deactivated')
-  }
-
   isDeactivated() {
     return !this.app.$hasFeature(PremiumFeatures.PREMIUM)
+  }
+
+  getDeactivatedModal() {
+    return PremiumModal
   }
 }
 

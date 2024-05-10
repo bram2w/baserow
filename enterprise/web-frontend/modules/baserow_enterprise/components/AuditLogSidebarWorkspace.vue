@@ -1,18 +1,28 @@
 <template>
   <li
     v-if="hasPermission"
-    v-tooltip="deactivated ? $t('auditLogSidebarWorkspace.deactivated') : null"
     class="tree__item"
     :class="{
       'tree__item--loading': loading,
-      'tree__action--disabled': deactivated,
       'tree__action--deactivated': deactivated,
       active: $route.matched.some(({ name }) => name === 'workspace-audit-log'),
     }"
   >
     <div class="tree__action">
+      <a
+        v-if="deactivated"
+        href="#"
+        class="tree__link"
+        @click.prevent="$refs.enterpriseModal.show()"
+      >
+        <i class="tree__icon tree__icon--type iconoir-lock"></i>
+        <span class="tree__link-text">{{
+          $t('auditLogSidebarWorkspace.title')
+        }}</span>
+      </a>
       <nuxt-link
-        :event="deactivated || !hasPermission ? null : 'click'"
+        v-else
+        :event="!hasPermission ? null : 'click'"
         class="tree__link"
         :to="{
           name: 'workspace-audit-log',
@@ -25,14 +35,21 @@
         }}</span>
       </nuxt-link>
     </div>
+    <EnterpriseModal
+      ref="enterpriseModal"
+      :workspace="workspace"
+      :name="$t('auditLogSidebarWorkspace.title')"
+    ></EnterpriseModal>
   </li>
 </template>
 
 <script>
 import EnterpriseFeatures from '@baserow_enterprise/features'
+import EnterpriseModal from '@baserow_enterprise/components/EnterpriseModal'
 
 export default {
   name: 'AuditLogSidebarWorkspace',
+  components: { EnterpriseModal },
   props: {
     workspace: {
       type: Object,

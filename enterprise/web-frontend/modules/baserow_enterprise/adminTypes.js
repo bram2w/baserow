@@ -1,9 +1,10 @@
 import { AdminType } from '@baserow/modules/core/adminTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
+import EnterpriseModal from '@baserow_enterprise/components/EnterpriseModal'
 
 class EnterpriseAdminType extends AdminType {
-  getDeactivatedText() {
-    return this.app.i18n.t('enterprise.deactivated')
+  getDeactivatedModal() {
+    return EnterpriseModal
   }
 }
 

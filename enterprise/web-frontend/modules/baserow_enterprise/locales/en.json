@@ -8,7 +8,6 @@
     "sidebarTooltip": "Your account has access to the enterprise features globally",
     "rbac": "RBAC",
     "sso": "SSO",
-    "deactivated": "Available in advanced/enterprise",
     "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any workspace then they will use a paid seat automatically.",
     "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each workspaces members page."
   },
@@ -283,8 +282,7 @@
     "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
   },
   "auditLogSidebarWorkspace": {
-    "title": "Audit log",
-    "deactivated": "Available in advanced/enterprise"
+    "title": "Audit log"
   },
   "localBaserowUserSourceType": {
     "notConfigured": "Not configured"
