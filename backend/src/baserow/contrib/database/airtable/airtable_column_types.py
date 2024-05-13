@@ -15,6 +15,7 @@ from baserow.contrib.database.fields.models import (
     CreatedOnField,
     DateField,
     EmailField,
+    Field,
     FileField,
     LastModifiedField,
     LinkRowField,
@@ -338,10 +339,23 @@ class MultipleAttachmentAirtableColumnType(AirtableColumnType):
 class SelectAirtableColumnType(AirtableColumnType):
     type = "select"
 
+    def to_baserow_export_serialized_value(
+        self,
+        row_id_mapping: Dict[str, Dict[str, int]],
+        raw_airtable_column: dict,
+        baserow_field: Field,
+        value: Any,
+        files_to_download: Dict[str, str],
+    ):
+        # use field id and option id for uniqueness
+        return f"{raw_airtable_column.get('id')}_{value}"
+
     def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         field = SingleSelectField()
         field = set_select_options_on_field(
-            field, raw_airtable_column.get("typeOptions", {})
+            field,
+            raw_airtable_column.get("id", ""),
+            raw_airtable_column.get("typeOptions", {}),
         )
         return field
 
@@ -349,10 +363,24 @@ class SelectAirtableColumnType(AirtableColumnType):
 class MultiSelectAirtableColumnType(AirtableColumnType):
     type = "multiSelect"
 
+    def to_baserow_export_serialized_value(
+        self,
+        row_id_mapping: Dict[str, Dict[str, int]],
+        raw_airtable_column: dict,
+        baserow_field: Field,
+        value: Any,
+        files_to_download: Dict[str, str],
+    ):
+        # use field id and option id for uniqueness
+        column_id = raw_airtable_column.get("id")
+        return [f"{column_id}_{val}" for val in value]
+
     def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
         field = MultipleSelectField()
         field = set_select_options_on_field(
-            field, raw_airtable_column.get("typeOptions", {})
+            field,
+            raw_airtable_column.get("id", ""),
+            raw_airtable_column.get("typeOptions", {}),
         )
         return field
 

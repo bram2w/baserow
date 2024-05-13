@@ -27,7 +27,9 @@ from baserow.core.utils import Progress
 @pytest.mark.django_db
 @responses.activate
 def test_fetch_publicly_shared_base():
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     path = os.path.join(base_path, "airtable_base.html")
 
     with open(path, "rb") as file:
@@ -66,7 +68,9 @@ def test_fetch_publicly_shared_base_not_base_request_id_missing():
 @pytest.mark.django_db
 @responses.activate
 def test_fetch_table():
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     path = os.path.join(base_path, "airtable_base.html")
     application_response_path = os.path.join(base_path, "airtable_application.json")
     table_response_path = os.path.join(base_path, "airtable_table.json")
@@ -133,7 +137,9 @@ def test_fetch_table():
 @pytest.mark.django_db
 @responses.activate
 def test_extract_schema():
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     user_table_path = os.path.join(base_path, "airtable_application.json")
     data_table_path = os.path.join(base_path, "airtable_table.json")
     user_table_json = json.loads(Path(user_table_path).read_text())
@@ -152,7 +158,9 @@ def test_extract_schema():
 @pytest.mark.django_db
 @responses.activate
 def test_to_baserow_database_export():
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     path = os.path.join(base_path, "airtable_base.html")
     user_table_path = os.path.join(base_path, "airtable_application.json")
     data_table_path = os.path.join(base_path, "airtable_table.json")
@@ -301,7 +309,9 @@ def test_to_baserow_database_export():
 @pytest.mark.django_db
 @responses.activate
 def test_to_baserow_database_export_without_primary_value():
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     path = os.path.join(base_path, "airtable_base.html")
     user_table_path = os.path.join(base_path, "airtable_application.json")
     user_table_json = json.loads(Path(user_table_path).read_text())
@@ -356,7 +366,9 @@ def test_import_from_airtable_to_workspace(
     data_fixture, tmpdir, django_assert_num_queries
 ):
     workspace = data_fixture.create_workspace()
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with open(os.path.join(base_path, "file-sample.txt"), "rb") as file:
@@ -453,9 +465,122 @@ def test_import_from_airtable_to_workspace(
 
 @pytest.mark.django_db
 @responses.activate
+def test_import_from_airtable_to_workspace_duplicated_single_select(
+    data_fixture, tmpdir, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/single_select_duplicated"
+    )
+    storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
+
+    with open(os.path.join(base_path, "airtable_base.html"), "rb") as file:
+        responses.add(
+            responses.GET,
+            "https://airtable.com/shra2B9gmVj6kxvNz",
+            status=200,
+            body=file.read(),
+            headers={"Set-Cookie": "brw=test;"},
+        )
+
+    with open(os.path.join(base_path, "airtable_application.json"), "rb") as file:
+        responses.add(
+            responses.GET,
+            "https://airtable.com/v0.3/application/appHI27Un8BKJ9iKA/read",
+            status=200,
+            body=file.read(),
+        )
+
+    progress = Progress(1000)
+
+    database = AirtableHandler.import_from_airtable_to_workspace(
+        workspace,
+        "shra2B9gmVj6kxvNz",
+        storage=storage,
+        progress_builder=progress.create_child_builder(represents_progress=1000),
+    )
+
+    table = database.table_set.all()[0]
+    data = table.get_model(attribute_names=True)
+    row1, row2, row3, row4 = data.objects.all()
+    assert row1.so.value == "o1"
+    assert row1.so_copy.value == "o11"
+
+    assert row2.so.value == "o2"
+    assert row2.so_copy.value == "o21"
+
+    assert row3.so is None
+    assert row3.so_copy.value == "o31"
+
+    assert row4.so.value == "o4"
+    assert row4.so_copy is None
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_import_from_airtable_to_workspace_duplicated_multi_select(
+    data_fixture, tmpdir, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/multi_select_duplicated"
+    )
+    storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
+
+    with open(os.path.join(base_path, "airtable_base.html"), "rb") as file:
+        responses.add(
+            responses.GET,
+            "https://airtable.com/shra2B9gmVj6kxvNz",
+            status=200,
+            body=file.read(),
+            headers={"Set-Cookie": "brw=test;"},
+        )
+
+    with open(os.path.join(base_path, "airtable_application.json"), "rb") as file:
+        responses.add(
+            responses.GET,
+            "https://airtable.com/v0.3/application/appHI27Un8BKJ9iKA/read",
+            status=200,
+            body=file.read(),
+        )
+
+    progress = Progress(1000)
+
+    database = AirtableHandler.import_from_airtable_to_workspace(
+        workspace,
+        "shra2B9gmVj6kxvNz",
+        storage=storage,
+        progress_builder=progress.create_child_builder(represents_progress=1000),
+    )
+
+    table = database.table_set.all()[0]
+    data = table.get_model(attribute_names=True)
+    row1, row2, row3, row4 = data.objects.all()
+
+    assert list(row1.mo.values_list("value", flat=True)) == ["mo1"]
+    assert list(row1.mo_copy.values_list("value", flat=True)) == ["mo11"]
+
+    assert list(row2.mo.values_list("value", flat=True)) == ["mo1", "mo3"]
+    assert list(row2.mo_copy.values_list("value", flat=True)) == ["mo11", "mo33"]
+
+    assert row3.mo.count() == 0
+    assert row3.mo_copy.count() == 0
+
+    assert list(row4.mo.values_list("value", flat=True)) == ["mo2"]
+    assert list(row4.mo_copy.values_list("value", flat=True)) == [
+        "mo22",
+        "mo33",
+        "mo11",
+    ]
+
+
+@pytest.mark.django_db
+@responses.activate
 def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
     workspace = data_fixture.create_workspace()
-    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    base_path = os.path.join(
+        settings.BASE_DIR, "../../../tests/airtable_responses/basic"
+    )
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
     with open(os.path.join(base_path, "airtable_view.html"), "rb") as file:
