@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Show only visible roles in the team member creation/edit modal.",
+    "issue_number": 2574,
+    "bullet_points": [],
+    "created_at": "2024-04-29"
+}

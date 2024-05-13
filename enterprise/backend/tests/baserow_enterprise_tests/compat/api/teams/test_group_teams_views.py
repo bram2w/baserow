@@ -1,7 +1,7 @@
 from django.shortcuts import reverse
 
 import pytest
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 
 @pytest.fixture(autouse=True)
@@ -87,7 +87,16 @@ def test_create_team(api_client, data_fixture, group_compat_timebomb):
     workspace = data_fixture.create_workspace(user=user)
 
     response = api_client.post(
-        reverse("api:enterprise:teams:list", kwargs={"group_id": workspace.id}),
+        reverse("api:enterprise:teams:list", kwargs={"workspace_id": workspace.id}),
+        {"name": "Executives", "default_role": "ThisRoleDoesNotExist"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROLE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:enterprise:teams:list", kwargs={"workspace_id": workspace.id}),
         {"name": "Executives"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
