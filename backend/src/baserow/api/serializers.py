@@ -54,8 +54,13 @@ class NaturalKeyRelatedField(serializers.ListField):
     A related field that use the natural key instead of the Id to reference the object.
     """
 
-    def __init__(self, model=None, **kwargs):
+    def __init__(
+        self, model=None, custom_does_not_exist_exception_class=None, **kwargs
+    ):
         self._model = model
+        self._custom_does_not_exist_exception_class = (
+            custom_does_not_exist_exception_class
+        )
         super().__init__(**kwargs)
 
     def to_representation(self, value):
@@ -71,4 +76,12 @@ class NaturalKeyRelatedField(serializers.ListField):
             data = [data]
 
         natural_key = super().to_internal_value(data)
-        return self._model.objects.get_by_natural_key(*natural_key)
+        try:
+            return self._model.objects.get_by_natural_key(*natural_key)
+        except self._model.DoesNotExist as e:
+            if self._custom_does_not_exist_exception_class:
+                raise self._custom_does_not_exist_exception_class(
+                    f"Object with natural key {natural_key} for model {self._model} does not exist."
+                )
+            else:
+                raise e

@@ -35,7 +35,7 @@ from baserow_enterprise.api.teams.serializers import (
     TeamSubjectResponseSerializer,
     TeamSubjectSerializer,
 )
-from baserow_enterprise.exceptions import RoleUnsupported
+from baserow_enterprise.exceptions import RoleNotExist, RoleUnsupported
 from baserow_enterprise.role.constants import NO_ACCESS_ROLE_UID
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.teams.actions import (
@@ -159,6 +159,7 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
         {
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             RoleUnsupported: ERROR_ROLE_DOES_NOT_EXIST,
+            RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
             WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             TeamNameNotUnique: ERROR_TEAM_NAME_NOT_UNIQUE,
             TeamSubjectBadRequest: ERROR_SUBJECT_BAD_REQUEST,
