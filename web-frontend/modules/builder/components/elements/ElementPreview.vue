@@ -105,6 +105,7 @@ export default {
     ...mapGetters({
       elementSelected: 'element/getSelected',
       elementAncestors: 'element/getAncestors',
+      getClosestSiblingElement: 'element/getClosestSiblingElement',
     }),
     isVisible() {
       switch (this.element.visibility) {
@@ -230,6 +231,11 @@ export default {
       deep: true,
     },
   },
+  mounted() {
+    if (this.isFirstElement) {
+      this.actionSelectElement({ element: this.element })
+    }
+  },
   methods: {
     ...mapActions({
       actionDuplicateElement: 'element/duplicate',
@@ -278,10 +284,17 @@ export default {
     },
     async deleteElement() {
       try {
+        const siblingElementToSelect = this.getClosestSiblingElement(
+          this.page,
+          this.elementSelected
+        )
         await this.actionDeleteElement({
           page: this.page,
           elementId: this.element.id,
         })
+        if (siblingElementToSelect?.id) {
+          await this.actionSelectElement({ element: siblingElementToSelect })
+        }
       } catch (error) {
         notifyIf(error)
       }
