@@ -324,7 +324,12 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "conditions": [],
         "condition_groups": [],
         "show_when_matching_conditions": False,
-        "field": {"id": text_field.id, "type": "text", "text_default": ""},
+        "field": {
+            "id": text_field.id,
+            "name": text_field.name,
+            "type": "text",
+            "text_default": "",
+        },
         "field_component": "default",
     }
     assert response_json["fields"][1] == {
@@ -338,6 +343,7 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "show_when_matching_conditions": False,
         "field": {
             "id": number_field.id,
+            "name": number_field.name,
             "type": "number",
             "number_decimal_places": 0,
             "number_negative": False,
