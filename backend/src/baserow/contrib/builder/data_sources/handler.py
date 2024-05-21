@@ -229,12 +229,6 @@ class DataSourceHandler:
                 if new_service_type.integration_type != integration_type:
                     integration = None
 
-                # The API consumer may have sent an integration. If they have, pop it
-                # off as we're providing the integration separately. Ours is more
-                # important as it'll be fetched above, and if the new service type is
-                # incompatible with the old integration, we want to use `None` instead.
-                kwargs.pop("integration", None)
-
                 service = self.service_handler.create_service(
                     service_type=new_service_type,
                     integration=integration,
