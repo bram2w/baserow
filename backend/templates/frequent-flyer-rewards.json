@@ -12,7 +12,7 @@
         "points"
     ],
     "categories": [
-        "Personal"
+        "Personal and Hobbies"
     ],
     "export": [
         {
@@ -1127,7 +1127,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if(field('Points')>0,'\u2705','\u274c')",
+                            "formula": "if(field('Points')>0,'✅','❌')",
                             "formula_type": "text"
                         },
                         {
@@ -2710,7 +2710,7 @@
                                 3,
                                 1
                             ],
-                            "field_644886": "8500 Pe\u00f1a Blvd, Denver, CO 80249",
+                            "field_644886": "8500 Peña Blvd, Denver, CO 80249",
                             "field_654414": null,
                             "field_654415": null,
                             "field_654432": [
@@ -2726,7 +2726,7 @@
                             "order": "6.00000000000000000000",
                             "created_on": "2022-09-27T15:19:47.346143+00:00",
                             "updated_on": "2022-10-03T18:29:38.788741+00:00",
-                            "field_641671": "Adolfo Su\u00e1rez Madrid\u2013Barajas Airport",
+                            "field_641671": "Adolfo Suárez Madrid–Barajas Airport",
                             "field_641672": "MAD",
                             "field_641674": [
                                 13

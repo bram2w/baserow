@@ -15,9 +15,7 @@
         "contracting"
     ],
     "categories": [
-        "Project Management",
-        "Human Resources",
-        "Professional"
+        "Business Operations"
     ],
     "export": [
         {
@@ -82,55 +80,55 @@
                             "select_options": [
                                 {
                                     "id": 160243,
-                                    "value": "\ud83d\udcd6 Accounting",
+                                    "value": "📖 Accounting",
                                     "color": "light-gray",
                                     "order": 0
                                 },
                                 {
                                     "id": 160244,
-                                    "value": "\ud83d\udc6e Administrative",
+                                    "value": "👮 Administrative",
                                     "color": "light-gray",
                                     "order": 1
                                 },
                                 {
                                     "id": 160245,
-                                    "value": "\ud83d\udcde Customer service",
+                                    "value": "📞 Customer service",
                                     "color": "light-gray",
                                     "order": 2
                                 },
                                 {
                                     "id": 160246,
-                                    "value": "\ud83d\udce3 Digital marketing",
+                                    "value": "📣 Digital marketing",
                                     "color": "light-gray",
                                     "order": 3
                                 },
                                 {
                                     "id": 160247,
-                                    "value": "\ud83d\uded2 eCommerce",
+                                    "value": "🛒 eCommerce",
                                     "color": "light-gray",
                                     "order": 4
                                 },
                                 {
                                     "id": 160248,
-                                    "value": "\ud83e\uddd1\u200d\ud83e\udd1d\u200d\ud83e\uddd1 HR and recruiting",
+                                    "value": "🧑‍🤝‍🧑 HR and recruiting",
                                     "color": "light-gray",
                                     "order": 5
                                 },
                                 {
                                     "id": 160249,
-                                    "value": "\ud83c\udfe0 Real estate",
+                                    "value": "🏠 Real estate",
                                     "color": "light-gray",
                                     "order": 6
                                 },
                                 {
                                     "id": 160250,
-                                    "value": "\ud83d\udcbb Software development",
+                                    "value": "💻 Software development",
                                     "color": "light-gray",
                                     "order": 7
                                 },
                                 {
                                     "id": 160251,
-                                    "value": "\ud83e\ude7a Therapy",
+                                    "value": "🩺 Therapy",
                                     "color": "light-gray",
                                     "order": 8
                                 }
@@ -4587,7 +4585,7 @@
                             "created_on": "2022-06-27T10:59:17.989652+00:00",
                             "updated_on": "2022-06-27T13:32:52.249018+00:00",
                             "field_462807": "Mojito Systems",
-                            "field_462808": "Mojito Systems, which began in 2005 with the production of a single beer in a single brewery, has expanded its offerings over the past decade to include a wide variety of beer styles and flavors to meet the needs of beer drinkers in every region of Asia. As of now, its portfolio includes ten well-known and respected beer labels.\u00a0\n\n\nWith nine production facilities spread out across Asia, Mojito Systems can guarantee both the availability and freshness of its products. It also has a well-developed distribution network that supplies more than 200,000 stores.",
+                            "field_462808": "Mojito Systems, which began in 2005 with the production of a single beer in a single brewery, has expanded its offerings over the past decade to include a wide variety of beer styles and flavors to meet the needs of beer drinkers in every region of Asia. As of now, its portfolio includes ten well-known and respected beer labels. \n\n\nWith nine production facilities spread out across Asia, Mojito Systems can guarantee both the availability and freshness of its products. It also has a well-developed distribution network that supplies more than 200,000 stores.",
                             "field_462864": null,
                             "field_462865": 160318,
                             "field_462866": 160331,
@@ -4662,55 +4660,55 @@
                             "select_options": [
                                 {
                                     "id": 160336,
-                                    "value": "\ud83d\udcd6 Accounting",
+                                    "value": "📖 Accounting",
                                     "color": "light-gray",
                                     "order": 0
                                 },
                                 {
                                     "id": 160337,
-                                    "value": "\ud83d\udc6e Administrative",
+                                    "value": "👮 Administrative",
                                     "color": "light-gray",
                                     "order": 1
                                 },
                                 {
                                     "id": 160338,
-                                    "value": "\ud83d\udcde Customer service",
+                                    "value": "📞 Customer service",
                                     "color": "light-gray",
                                     "order": 2
                                 },
                                 {
                                     "id": 160339,
-                                    "value": "\ud83d\udce3 Digital marketing",
+                                    "value": "📣 Digital marketing",
                                     "color": "light-gray",
                                     "order": 3
                                 },
                                 {
                                     "id": 160340,
-                                    "value": "\ud83d\uded2 Ecommerce",
+                                    "value": "🛒 Ecommerce",
                                     "color": "light-gray",
                                     "order": 4
                                 },
                                 {
                                     "id": 160341,
-                                    "value": "\ud83e\uddd1\u200d\ud83e\udd1d\u200d\ud83e\uddd1 HR and recruiting",
+                                    "value": "🧑‍🤝‍🧑 HR and recruiting",
                                     "color": "light-gray",
                                     "order": 5
                                 },
                                 {
                                     "id": 160342,
-                                    "value": "\ud83c\udfe0 Real estate",
+                                    "value": "🏠 Real estate",
                                     "color": "light-gray",
                                     "order": 6
                                 },
                                 {
                                     "id": 160343,
-                                    "value": "\ud83d\udcbb Software development",
+                                    "value": "💻 Software development",
                                     "color": "light-gray",
                                     "order": 7
                                 },
                                 {
                                     "id": 160344,
-                                    "value": "\ud83e\ude7a Therapy",
+                                    "value": "🩺 Therapy",
                                     "color": "light-gray",
                                     "order": 8
                                 }

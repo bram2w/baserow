@@ -15,9 +15,7 @@
         "employees"
     ],
     "categories": [
-        "Project Management",
-        "Human Resources",
-        "Professional"
+        "HR and Recruiting"
     ],
     "export": [
         {
@@ -2517,7 +2515,7 @@
                             "created_on": "2022-03-18T12:59:50.158961+00:00",
                             "updated_on": "2022-04-16T03:37:20.372221+00:00",
                             "field_308455": "Software Engineer",
-                            "field_308456": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements \u2014 all via software programming languages.",
+                            "field_308456": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements — all via software programming languages.",
                             "field_308542": [
                                 3,
                                 26,
@@ -3489,7 +3487,7 @@
                             "nullable": true,
                             "date_force_timezone": null,
                             "array_formula_type": null,
-                            "formula": "if(field('Rating average')>=4.5,'\ud83d\udd35 FE - Far exceeds expectations', \nif(field('Rating average')>=3.75,'\ud83d\udfe2 EX - Exceeds expectations', \nif(field('Rating average')>=3,'\ud83d\udfe1 ME - Meets expectations', \nif(field('Rating average')>=2,'\ud83d\udfe0 DR - Development required', \nif(field('Rating average')<2,'\ud83d\udd34 IR - Improvement required', '')))))",
+                            "formula": "if(field('Rating average')>=4.5,'🔵 FE - Far exceeds expectations', \nif(field('Rating average')>=3.75,'🟢 EX - Exceeds expectations', \nif(field('Rating average')>=3,'🟡 ME - Meets expectations', \nif(field('Rating average')>=2,'🟠 DR - Development required', \nif(field('Rating average')<2,'🔴 IR - Improvement required', '')))))",
                             "formula_type": "text"
                         },
                         {
@@ -3742,7 +3740,7 @@
                             },
                             "submit_text": "Submit",
                             "submit_action": "MESSAGE",
-                            "submit_action_message": "Thank you for completing the Staff Performance Review Form. Please get back to the \u201cReviews Grid\u201d under the Reviews Table of the Performance Review Database to validate your recent review and attach review files under the Supporting Documents field of your new record.",
+                            "submit_action_message": "Thank you for completing the Staff Performance Review Form. Please get back to the “Reviews Grid” under the Reviews Table of the Performance Review Database to validate your recent review and attach review files under the Supporting Documents field of your new record.",
                             "submit_action_redirect_url": "",
                             "field_options": [
                                 {
@@ -3821,7 +3819,7 @@
                                     "id": 15627,
                                     "field_id": 306977,
                                     "name": "",
-                                    "description": "In a dynamic work environment, communication is one of the most important parts of how things work together. It's important to be able to communicate well with supervisors, coworkers, and clients in a lot of different businesses. Communication that is clear makes people more comfortable with each other, which makes them more likely to share and exchange ideas. It also makes everyone more productive because it bridges the gap between departments and helps everyone work together. \r\rRating Scales:\u00a0 5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
+                                    "description": "In a dynamic work environment, communication is one of the most important parts of how things work together. It's important to be able to communicate well with supervisors, coworkers, and clients in a lot of different businesses. Communication that is clear makes people more comfortable with each other, which makes them more likely to share and exchange ideas. It also makes everyone more productive because it bridges the gap between departments and helps everyone work together. \r\rRating Scales:  5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
                                     "enabled": true,
                                     "required": true,
                                     "order": 6,
@@ -3845,7 +3843,7 @@
                                     "id": 15629,
                                     "field_id": 306979,
                                     "name": "",
-                                    "description": "When you focus on your customers and give them good service, you can build long-term relationships with them. Employees need to learn skills that will help customers have a better experience. Customer can either be internal or external \u2013 project stakeholders can be viewed as customers or clients as well.\u00a0 Rating Scales:\u00a0 5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
+                                    "description": "When you focus on your customers and give them good service, you can build long-term relationships with them. Employees need to learn skills that will help customers have a better experience. Customer can either be internal or external – project stakeholders can be viewed as customers or clients as well.  Rating Scales:  5 Stars = FE (Far Exceeds); \r4 Stars = EX (Exceeds Expectations); \r3 Stars = ME (Meets Expectations); \r2 Stars = DR (Development Required); \r1 Star = IR (Improvement Required).",
                                     "enabled": true,
                                     "required": true,
                                     "order": 8,

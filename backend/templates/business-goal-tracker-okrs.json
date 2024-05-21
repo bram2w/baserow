@@ -11,9 +11,7 @@
         "progress tracker"
     ],
     "categories": [
-        "Local Business",
-        "Professional",
-        "Startup"
+        "Business Strategy"
     ],
     "export": [
         {
@@ -261,7 +259,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  or( \n    isblank(join(field(\"Related key results\"), \"\")), \n    length(join(field(\"Related key results\"), \"\")) < 1 \n  ), \n  \"\", \n  if( \n    any(totext(lookup(\"Related key results\", \"Status\")) = \"Missed\"), \n    \"\u274c Missed\", \n    if( \n      every(totext(lookup(\"Related key results\", \"Status\")) = \"Cancelled\"), \n      \"\u2702\ufe0f Cancelled\", \n      if( \n        every(totext(lookup(\"Related key results\", \"Status\")) = \"On hold\"), \n        \"\ud83e\udd76 On hold\", \n        if( \n          or( \n            every(totext(lookup(\"Related key results\", \"Status\")) = \"Completed\"), \n            avg(lookup(\"Related key results\", \"Progress status (%)\")) = 100 \n          ), \n          \"\ud83c\udfc6 Achieved\", \n          if( \n            or( \n              every(totext(lookup(\"Related key results\", \"Status\")) = \"In progress\"), \n              avg(lookup(\"Related key results\", \"Progress status (%)\")) > 0 \n            ), \n            \"\u23f3 In progress\", \n            if( \n              every(totext(lookup(\"Related key results\", \"Status\")) = \"New\"), \n              \"\ud83d\udca1 New\", \n              if( \n                every(totext(lookup(\"Related key results\", \"Status\")) = \"Scheduled\"), \n                \"\ud83d\udcc6 Scheduled\", \n                if( \n                  any(totext(lookup(\"Related key results\", \"Status\")) = \"Scheduled\"), \n                  \"\ud83d\udcc6 Scheduled\", \n                  \"\ud83d\udca1 New\" \n                ) \n              ) \n            ) \n            ) \n          ) \n      ) \n    ) \n  ) \n)",
+                            "formula": "if( \n  or( \n    isblank(join(field(\"Related key results\"), \"\")), \n    length(join(field(\"Related key results\"), \"\")) < 1 \n  ), \n  \"\", \n  if( \n    any(totext(lookup(\"Related key results\", \"Status\")) = \"Missed\"), \n    \"❌ Missed\", \n    if( \n      every(totext(lookup(\"Related key results\", \"Status\")) = \"Cancelled\"), \n      \"✂️ Cancelled\", \n      if( \n        every(totext(lookup(\"Related key results\", \"Status\")) = \"On hold\"), \n        \"🥶 On hold\", \n        if( \n          or( \n            every(totext(lookup(\"Related key results\", \"Status\")) = \"Completed\"), \n            avg(lookup(\"Related key results\", \"Progress status (%)\")) = 100 \n          ), \n          \"🏆 Achieved\", \n          if( \n            or( \n              every(totext(lookup(\"Related key results\", \"Status\")) = \"In progress\"), \n              avg(lookup(\"Related key results\", \"Progress status (%)\")) > 0 \n            ), \n            \"⏳ In progress\", \n            if( \n              every(totext(lookup(\"Related key results\", \"Status\")) = \"New\"), \n              \"💡 New\", \n              if( \n                every(totext(lookup(\"Related key results\", \"Status\")) = \"Scheduled\"), \n                \"📆 Scheduled\", \n                if( \n                  any(totext(lookup(\"Related key results\", \"Status\")) = \"Scheduled\"), \n                  \"📆 Scheduled\", \n                  \"💡 New\" \n                ) \n              ) \n            ) \n            ) \n          ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "text"
                         }
                     ],
@@ -12422,7 +12420,7 @@
                             "created_on": "2022-05-11T12:48:19.622836+00:00",
                             "updated_on": "2022-06-10T12:09:40.832866+00:00",
                             "field_865580": "Software Engineer",
-                            "field_865581": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements \u2014 all via software programming languages.",
+                            "field_865581": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements — all via software programming languages.",
                             "field_865582": [
                                 11,
                                 12

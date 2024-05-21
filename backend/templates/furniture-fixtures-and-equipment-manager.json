@@ -11,9 +11,7 @@
         "asset lifecycle"
     ],
     "categories": [
-        "Local Business",
-        "Professional",
-        "Finance"
+        "Business Operations"
     ],
     "export": [
         {
@@ -261,7 +259,7 @@
                             "array_formula_type": null,
                             "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "formula": "if(field('Replacement date') < today(),'\u2705','')",
+                            "formula": "if(field('Replacement date') < today(),'✅','')",
                             "formula_type": "text"
                         },
                         {

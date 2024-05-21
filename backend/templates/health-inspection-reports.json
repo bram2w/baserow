@@ -14,8 +14,7 @@
         "regulation"
     ],
     "categories": [
-        "Professional",
-        "Health"
+        "Health and Wellness"
     ],
     "export": [
         {
@@ -180,7 +179,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if(field('Requires follow-up') = true,'\u2705','\u274c')",
+                            "formula": "if(field('Requires follow-up') = true,'✅','❌')",
                             "formula_type": "text"
                         }
                     ],
@@ -1335,19 +1334,19 @@
                             "select_options": [
                                 {
                                     "id": 93382,
-                                    "value": "Bar \ud83c\udf7b",
+                                    "value": "Bar 🍻",
                                     "color": "light-blue",
                                     "order": 0
                                 },
                                 {
                                     "id": 93383,
-                                    "value": "Restaurant \ud83c\udf7d",
+                                    "value": "Restaurant 🍽",
                                     "color": "light-green",
                                     "order": 1
                                 },
                                 {
                                     "id": 93384,
-                                    "value": "Cafe \u2615\ufe0f",
+                                    "value": "Cafe ☕️",
                                     "color": "light-orange",
                                     "order": 2
                                 }
@@ -3666,19 +3665,19 @@
                             "select_options": [
                                 {
                                     "id": 93234,
-                                    "value": "1\ufe0f\u20e3 Primary priority - immediate health hazard",
+                                    "value": "1️⃣ Primary priority - immediate health hazard",
                                     "color": "dark-red",
                                     "order": 0
                                 },
                                 {
                                     "id": 93235,
-                                    "value": "2\ufe0f\u20e3 Secondary priority - potential health hazard",
+                                    "value": "2️⃣ Secondary priority - potential health hazard",
                                     "color": "orange",
                                     "order": 1
                                 },
                                 {
                                     "id": 93236,
-                                    "value": "3\ufe0f\u20e3 Tertiary core - not following best practices",
+                                    "value": "3️⃣ Tertiary core - not following best practices",
                                     "color": "gray",
                                     "order": 2
                                 }

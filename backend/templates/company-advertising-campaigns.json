@@ -14,9 +14,7 @@
         "campaigns"
     ],
     "categories": [
-        "Project Management",
-        "Content Marketing",
-        "Professional"
+        "Marketing"
     ],
     "export": [
         {
@@ -47,25 +45,25 @@
                             "select_options": [
                                 {
                                     "id": 455752,
-                                    "value": "\ud83c\udf6c Low",
+                                    "value": "🍬 Low",
                                     "color": "dark-blue",
                                     "order": 0
                                 },
                                 {
                                     "id": 455753,
-                                    "value": "\ud83d\udece\ufe0f Normal",
+                                    "value": "🛎️ Normal",
                                     "color": "dark-green",
                                     "order": 1
                                 },
                                 {
                                     "id": 455754,
-                                    "value": "\u23f0 High",
+                                    "value": "⏰ High",
                                     "color": "dark-orange",
                                     "order": 2
                                 },
                                 {
                                     "id": 455755,
-                                    "value": "\ud83d\udea8 Urgent",
+                                    "value": "🚨 Urgent",
                                     "color": "dark-red",
                                     "order": 3
                                 }
@@ -2120,7 +2118,7 @@
                             "date_show_tzinfo": null,
                             "date_force_timezone": null,
                             "nullable": false,
-                            "formula": "concat( \n  \"\ud83c\udfc1=\", \n  count(\n    filter( \n      lookup(\"Related campaigns\", \"Status\"), \n      totext(lookup(\"Related campaigns\", \"Status\")) = \"Completed\" \n    ) \n  ), \n  \"  |  \ud83c\udfc3\u200d\u2642\ufe0f=\", \n  count(\n    filter( \n      lookup(\"Related campaigns\", \"Status\"), \n      totext(lookup(\"Related campaigns\", \"Status\")) = \"Running\" \n    ) \n  ), \n  \"  |  \u270d\ufe0f=\", \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"Planned\" \n      ) \n    ) + \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"Preparation\" \n      ) \n    ) + \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"For approval\" \n      ) \n    ) + \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"Awaiting release\" \n      ) \n    )\n  , \n  \"  |  \ud83d\udeab=\", \n  count(\n    filter( \n      lookup(\"Related campaigns\", \"Status\"), \n      totext(lookup(\"Related campaigns\", \"Status\")) = \"Cancelled\" \n    ) \n  )\n)",
+                            "formula": "concat( \n  \"🏁=\", \n  count(\n    filter( \n      lookup(\"Related campaigns\", \"Status\"), \n      totext(lookup(\"Related campaigns\", \"Status\")) = \"Completed\" \n    ) \n  ), \n  \"  |  🏃‍♂️=\", \n  count(\n    filter( \n      lookup(\"Related campaigns\", \"Status\"), \n      totext(lookup(\"Related campaigns\", \"Status\")) = \"Running\" \n    ) \n  ), \n  \"  |  ✍️=\", \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"Planned\" \n      ) \n    ) + \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"Preparation\" \n      ) \n    ) + \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"For approval\" \n      ) \n    ) + \n    count(\n      filter( \n        lookup(\"Related campaigns\", \"Status\"), \n        totext(lookup(\"Related campaigns\", \"Status\")) = \"Awaiting release\" \n      ) \n    )\n  , \n  \"  |  🚫=\", \n  count(\n    filter( \n      lookup(\"Related campaigns\", \"Status\"), \n      totext(lookup(\"Related campaigns\", \"Status\")) = \"Cancelled\" \n    ) \n  )\n)",
                             "formula_type": "text"
                         },
                         {
@@ -3020,7 +3018,7 @@
                             "updated_on": "2023-03-20T12:41:10.755227+00:00",
                             "field_945757": "Performance reviews version 1.0 release",
                             "field_945758": 460288,
-                            "field_945759": "This web application will help you conduct and manage employee performance reviews. Maintaining records of employee performance assessments can get really messy, really quickly. This is especially true at a company with thousands, or even hundreds of thousands, of employees.\u00a0\n\nYou can use this web application to make sure that your team and the company are moving in the right direction with its most important asset\u2014its employees.",
+                            "field_945759": "This web application will help you conduct and manage employee performance reviews. Maintaining records of employee performance assessments can get really messy, really quickly. This is especially true at a company with thousands, or even hundreds of thousands, of employees. \n\nYou can use this web application to make sure that your team and the company are moving in the right direction with its most important asset—its employees.",
                             "field_945797": null,
                             "field_945798": [
                                 2,

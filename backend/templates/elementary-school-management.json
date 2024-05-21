@@ -14,8 +14,7 @@
         "education"
     ],
     "categories": [
-        "Professional",
-        "Education"
+        "Teachers"
     ],
     "export": [
         {
@@ -2045,25 +2044,25 @@
                             "select_options": [
                                 {
                                     "id": 136151,
-                                    "value": "Peanuts \ud83e\udd5c",
+                                    "value": "Peanuts 🥜",
                                     "color": "dark-gray",
                                     "order": 0
                                 },
                                 {
                                     "id": 136152,
-                                    "value": "Tree nuts \ud83c\udf30",
+                                    "value": "Tree nuts 🌰",
                                     "color": "dark-orange",
                                     "order": 1
                                 },
                                 {
                                     "id": 136153,
-                                    "value": "Shellfish \ud83e\udd90",
+                                    "value": "Shellfish 🦐",
                                     "color": "green",
                                     "order": 2
                                 },
                                 {
                                     "id": 136154,
-                                    "value": "Latex \ud83e\udde4",
+                                    "value": "Latex 🧤",
                                     "color": "blue",
                                     "order": 3
                                 }
@@ -5977,7 +5976,7 @@
                             "select_options": [
                                 {
                                     "id": 136172,
-                                    "value": "Computer  \ud83d\udda5",
+                                    "value": "Computer  🖥",
                                     "color": "light-green",
                                     "order": 0
                                 },

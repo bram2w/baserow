@@ -15,7 +15,7 @@
         "healthy"
     ],
     "categories": [
-        "Personal"
+        "Personal and Hobbies"
     ],
     "export": [
         {
@@ -185,7 +185,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "concat(\n    sum(lookup('Meals eaten', 'Calories')), \n    ' \ud83d\udd25 / ',\n    sum(lookup('Meals eaten', 'Protein (g)')), \n    'g \ud83e\udd69 / ',\n    sum(lookup('Meals eaten', 'Carbs (g)')), \n    'g \ud83e\udd54 / ',\n    sum(lookup('Meals eaten', 'Fats (g)')), \n    'g \ud83e\uddc8'\n)",
+                            "formula": "concat(\n    sum(lookup('Meals eaten', 'Calories')), \n    ' 🔥 / ',\n    sum(lookup('Meals eaten', 'Protein (g)')), \n    'g 🥩 / ',\n    sum(lookup('Meals eaten', 'Carbs (g)')), \n    'g 🥔 / ',\n    sum(lookup('Meals eaten', 'Fats (g)')), \n    'g 🧈'\n)",
                             "formula_type": "text"
                         },
                         {
@@ -215,7 +215,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if(field('Hours of sleep')<8, '\u274c','\u2705')",
+                            "formula": "if(field('Hours of sleep')<8, '❌','✅')",
                             "formula_type": "text"
                         },
                         {
@@ -1688,7 +1688,7 @@
                             "field_167005": "110/60",
                             "field_167006": "60",
                             "field_167007": 15970,
-                            "field_167008": "Began incorporating meditation. \ud83e\uddd8\u200d\u2642\ufe0f",
+                            "field_167008": "Began incorporating meditation. 🧘‍♂️",
                             "field_167443": "62",
                             "field_167444": "6.0",
                             "field_168657": [
@@ -1790,7 +1790,7 @@
                             "field_167005": "110/70",
                             "field_167006": "55",
                             "field_167007": 15970,
-                            "field_167008": "Caught up with friends \ud83d\udc6f\u200d\u2640\ufe0f",
+                            "field_167008": "Caught up with friends 👯‍♀️",
                             "field_167443": "60",
                             "field_167444": "5.0",
                             "field_168657": [
@@ -2428,7 +2428,7 @@
                             "created_on": "2021-10-04T13:40:00.572703+00:00",
                             "updated_on": "2022-01-14T19:20:17.083978+00:00",
                             "field_166910": "Tuna wrap",
-                            "field_166994": "2 drops grapeseed oil , for brushing\n2 x 140g fresh tuna fillets, defrosted\n1 ripe avocado\n\u00bd tsp English mustard powder\n1 tsp cider vinegar\n1 tbsp capers\n8 romaine lettuce leaves\n16 cherry tomatoes , preferably on the vine, halved",
+                            "field_166994": "2 drops grapeseed oil , for brushing\n2 x 140g fresh tuna fillets, defrosted\n1 ripe avocado\n½ tsp English mustard powder\n1 tsp cider vinegar\n1 tbsp capers\n8 romaine lettuce leaves\n16 cherry tomatoes , preferably on the vine, halved",
                             "field_166995": "340",
                             "field_166999": [
                                 15809,
@@ -2450,7 +2450,7 @@
                             "created_on": "2021-10-04T13:40:04.749482+00:00",
                             "updated_on": "2022-01-14T19:20:36.285721+00:00",
                             "field_166910": "Chicken salad",
-                            "field_166994": "1 oz. (\u00bd cup) leafy greens\n\u00bd (\u00bc oz.) scallion, sliced\n1 (2\u00bc oz.) carrot\n1 (7 oz.) avocado\n1 oz. red bell peppers\n1 oz. cherry tomatoes\n4 oz. smoked salmon or rotisserie chicken\n\u00bc cup mayonnaise or vegan mayonnaise or olive oil",
+                            "field_166994": "1 oz. (½ cup) leafy greens\n½ (¼ oz.) scallion, sliced\n1 (2¼ oz.) carrot\n1 (7 oz.) avocado\n1 oz. red bell peppers\n1 oz. cherry tomatoes\n4 oz. smoked salmon or rotisserie chicken\n¼ cup mayonnaise or vegan mayonnaise or olive oil",
                             "field_166995": "400",
                             "field_166999": [
                                 15810
@@ -2479,7 +2479,7 @@
                                 3,
                                 4
                             ],
-                            "field_167517": "One of my faves \ud83d\ude0b",
+                            "field_167517": "One of my faves 😋",
                             "field_235543": "4",
                             "field_235544": "12",
                             "field_235545": "1"
@@ -2490,7 +2490,7 @@
                             "created_on": "2021-10-04T13:40:12.954624+00:00",
                             "updated_on": "2022-01-14T19:20:02.930071+00:00",
                             "field_166910": "Chicken wrap",
-                            "field_166994": "5 oz. chicken breasts, bone-in with skin\nsalt and pepper\n1 tbsp olive oil\n3 oz. bacon\n7 oz. Romaine lettuce, chopped\n\u00bd cup (11\u20443 oz.) shredded Parmesan cheese",
+                            "field_166994": "5 oz. chicken breasts, bone-in with skin\nsalt and pepper\n1 tbsp olive oil\n3 oz. bacon\n7 oz. Romaine lettuce, chopped\n½ cup (11⁄3 oz.) shredded Parmesan cheese",
                             "field_166995": "280",
                             "field_166999": [
                                 15809
@@ -2509,7 +2509,7 @@
                             "created_on": "2021-10-04T13:42:48.722462+00:00",
                             "updated_on": "2022-01-14T19:20:21.357035+00:00",
                             "field_166910": "Chicken salad",
-                            "field_166994": "2 tsp low-fat mayonnaise\nslices cooked chicken\n\u00bd small avocado , diced\nsqueeze of lemon\nchopped red onion\ncoriander leaves\nhalved cherry tomatoes\nslice wholemeal seeded bread or rye, or wholegrain pitta, to serve",
+                            "field_166994": "2 tsp low-fat mayonnaise\nslices cooked chicken\n½ small avocado , diced\nsqueeze of lemon\nchopped red onion\ncoriander leaves\nhalved cherry tomatoes\nslice wholemeal seeded bread or rye, or wholegrain pitta, to serve",
                             "field_166995": "340",
                             "field_166999": [
                                 15811,
@@ -2529,7 +2529,7 @@
                             "created_on": "2021-10-04T13:44:11.398243+00:00",
                             "updated_on": "2022-01-14T19:20:41.299309+00:00",
                             "field_166910": "Lentil salad",
-                            "field_166994": "250g dried Puy or green lentil , rinsed\njuice \u00bd lime and juice \u00bd lemon\n1 tbsp white wine or cider vinegar\n1 red onion , thinly sliced into rings\n2 tbsp extra-virgin olive oil\n1 tsp ground cumin\n1 small garlic clove , crushed\n2 tbsp mango chutney\nhandful coriander , roughly chopped\n250g cherry vine tomato , halved\n85g baby spinach , washed and thoroughly dried",
+                            "field_166994": "250g dried Puy or green lentil , rinsed\njuice ½ lime and juice ½ lemon\n1 tbsp white wine or cider vinegar\n1 red onion , thinly sliced into rings\n2 tbsp extra-virgin olive oil\n1 tsp ground cumin\n1 small garlic clove , crushed\n2 tbsp mango chutney\nhandful coriander , roughly chopped\n250g cherry vine tomato , halved\n85g baby spinach , washed and thoroughly dried",
                             "field_166995": "400",
                             "field_166999": [
                                 15811
@@ -2921,7 +2921,7 @@
                             "order": "1.00000000000000000000",
                             "created_on": "2021-10-03T21:02:41.578470+00:00",
                             "updated_on": "2021-10-06T01:46:18.609849+00:00",
-                            "field_166950": "Quadriceps\ud83e\uddb5",
+                            "field_166950": "Quadriceps🦵",
                             "field_166951": "Back Squat 3 x 8-10 reps\nFront Squat 3 x 8-10 reps\nDB Plie Squat 4 x 8-12 reps\nDB Step Up 4 x 8-12 reps\nWalking Lunge 3 x 8-12 reps\nGlute bridge 3 x 10 (+ 2 second hold)",
                             "field_167009": "7",
                             "field_167010": "Personal record for front squat is 100 kg",
@@ -2978,7 +2978,7 @@
                             "order": "4.99999999999999999999",
                             "created_on": "2021-10-05T14:23:49.569467+00:00",
                             "updated_on": "2021-10-05T14:25:40.634534+00:00",
-                            "field_166950": "Biceps \ud83d\udcaa",
+                            "field_166950": "Biceps 💪",
                             "field_166951": "Hammer Curls 3 x 10\nCable Curls 3 x 10\nZotterman Curls 3 x 10\nProne Front Raise 3 x 10",
                             "field_167009": "7",
                             "field_167010": "15 lbs used",

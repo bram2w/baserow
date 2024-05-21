@@ -9,11 +9,13 @@
         "units",
         "car distributor inventory",
         "vehicle inventory",
-        "sales"
+        "sales",
+        "retail",
+        "cars"
     ],
     "categories": [
-        "Local Business",
-        "Professional"
+        "Business Operations",
+        "Sales and CRM"
     ],
     "export": [
         {
@@ -3689,7 +3691,7 @@
                                     "id": 100750,
                                     "field_id": 725759,
                                     "name": "",
-                                    "description": "Please select the staff\u00a0member in\u00a0charge\u00a0of\u00a0getting\u00a0this\u00a0vehicle.",
+                                    "description": "Please select the staff member in charge of getting this vehicle.",
                                     "enabled": true,
                                     "required": true,
                                     "order": 16,
@@ -3848,7 +3850,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 15gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 15gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "WAD8792",
                             "field_725756": "4T1BG22K6VR3P2NHM",
                             "field_725757": [
@@ -3899,7 +3901,7 @@
                             "field_725750": [],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 15gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 15gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "WDF3287",
                             "field_725756": "4T1FA38P66CCHVR3U",
                             "field_725757": [
@@ -3950,7 +3952,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 15gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 15gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "WFA3217",
                             "field_725756": "4T1BK36B39ZFMJPY8",
                             "field_725757": [
@@ -4003,7 +4005,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 17gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 17gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "MDA9852",
                             "field_725756": "1Z5HT48N263VH4ZP3",
                             "field_725757": [
@@ -4054,7 +4056,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 17gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 17gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "MFT1238",
                             "field_725756": "1Z5HC32N56KLYDLT8",
                             "field_725757": [
@@ -4107,7 +4109,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 12gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 12gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "ZDF5379",
                             "field_725756": "4F4CR16U2X9PLYKFX",
                             "field_725757": [
@@ -4158,7 +4160,7 @@
                             "field_725750": [],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 12gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 12gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "ZRT3189",
                             "field_725756": "4F4CR16X1X93DF3GU",
                             "field_725757": [
@@ -4211,7 +4213,7 @@
                             ],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NEJ3648",
                             "field_725756": "3HGCS11319HBC4ER3",
                             "field_725757": [
@@ -4262,7 +4264,7 @@
                             "field_725750": [],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NRA8527",
                             "field_725756": "3HGCM55806FGG6J1R",
                             "field_725757": [
@@ -4313,7 +4315,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NYC1327",
                             "field_725756": "3HGCG665821P989FA",
                             "field_725757": [
@@ -4366,7 +4368,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 8gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 8gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "GFA9873",
                             "field_725756": "3TMLU4EN2AA13VSBJ",
                             "field_725757": [
@@ -4417,7 +4419,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 8gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 8gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "GDY1379",
                             "field_725756": "3TMPX4EN0AX2J7LH7",
                             "field_725757": [
@@ -4468,7 +4470,7 @@
                             "field_725750": [],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 8gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 8gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "GPS9382",
                             "field_725756": "3TMNX22N39D8Z571K",
                             "field_725757": [
@@ -4521,7 +4523,7 @@
                             ],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 8gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 8gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "GSP7913",
                             "field_725756": "3TMTX4GN7AXAL1AZF",
                             "field_725757": [
@@ -4574,7 +4576,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 8gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 8gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "GDT7193",
                             "field_725756": "3TMUU42NX81P12KEF",
                             "field_725757": [
@@ -4627,7 +4629,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 8gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 8gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "GSE2817",
                             "field_725756": "3TMJX4GN5BXDZZ7GL",
                             "field_725757": [
@@ -4678,7 +4680,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NAD7182",
                             "field_725756": "5FNRL18963D5XMPMH",
                             "field_725757": [
@@ -4729,7 +4731,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NHS9382",
                             "field_725756": "5FNRL3H54A8T25TZD",
                             "field_725757": [
@@ -4780,7 +4782,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NKL8271",
                             "field_725756": "5FNYF488495LXXAHW",
                             "field_725757": [
@@ -4831,7 +4833,7 @@
                             "field_725750": [],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NLA3917",
                             "field_725756": "5FNYF186046P6BNMZ",
                             "field_725757": [
@@ -4884,7 +4886,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 17gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 17gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "MTR5391",
                             "field_725756": "1Z5HC22K56HGKPKEX",
                             "field_725757": [
@@ -4935,7 +4937,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 17gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 17gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "MHA5179",
                             "field_725756": "1Z5HT38K86LDNJ2FL",
                             "field_725757": [
@@ -4988,7 +4990,7 @@
                             ],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NRT5379",
                             "field_725756": "3HGCG55692W647XFU",
                             "field_725757": [
@@ -5041,7 +5043,7 @@
                             ],
                             "field_725751": "15",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NXL3971",
                             "field_725756": "3HGCG554025YSENJP",
                             "field_725757": [
@@ -5092,7 +5094,7 @@
                             "field_725750": [],
                             "field_725751": "20",
                             "field_725752": null,
-                            "field_725753": "\u2022 Free 10gal fuel\n\u2022 Windshield and window tints\n\u2022 Reverse parking sensor\n\u2022 Toolbox\n\u2022 Floor matting",
+                            "field_725753": "• Free 10gal fuel\n• Windshield and window tints\n• Reverse parking sensor\n• Toolbox\n• Floor matting",
                             "field_725755": "NSY1973",
                             "field_725756": "3HGCP2F64BLMTSH3R",
                             "field_725757": [
@@ -10149,7 +10151,7 @@
                             "order": "3.00000000000000000000",
                             "created_on": "2022-11-14T15:53:58.855608+00:00",
                             "updated_on": "2022-12-01T22:49:08.628732+00:00",
-                            "field_725766": "Baldov\u00edn Delgado",
+                            "field_725766": "Baldovín Delgado",
                             "field_725767": [
                                 {
                                     "name": "c5bo3rb3mL3Y8yYpis5M6SLgJxAuESzN_3e4ea491bc171831d98bd16209e167056256efec656b03792cc985f56c52d625.jpg",
@@ -10164,7 +10166,7 @@
                             "field_725868": [],
                             "field_725872": "x9772",
                             "field_725873": "(739) 257-7172",
-                            "field_725874": "baldov\u00edn.delgado@cardealzbr.biz",
+                            "field_725874": "baldovín.delgado@cardealzbr.biz",
                             "field_725875": "Great business background.",
                             "field_725876": "true",
                             "field_725897": [

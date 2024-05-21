@@ -14,9 +14,7 @@
         "bookkeeping"
     ],
     "categories": [
-        "Local Business",
-        "Professional",
-        "Finance"
+        "Finance and Accounting"
     ],
     "export": [
         {
@@ -3991,7 +3989,7 @@
                             "created_on": "2022-05-17T17:19:23.296388+00:00",
                             "updated_on": "2022-05-17T18:31:38.313186+00:00",
                             "field_382010": "Real estate losses",
-                            "field_382011": "Depending on your adjusted gross income, you can deduct up to a certain amount of losses against your income if you actively participate in renting your property, \"A real estate loss occurs when the expenses associated with a rental property exceed the rental income.\" You can deduct real estate losses without a cap if you are a real estate professional, which means you spend more than half of your working hours\u2014a minimum of 751 hours per year\u2014in the real estate business. \"",
+                            "field_382011": "Depending on your adjusted gross income, you can deduct up to a certain amount of losses against your income if you actively participate in renting your property, \"A real estate loss occurs when the expenses associated with a rental property exceed the rental income.\" You can deduct real estate losses without a cap if you are a real estate professional, which means you spend more than half of your working hours—a minimum of 751 hours per year—in the real estate business. \"",
                             "field_382012": null,
                             "field_385309": null,
                             "field_385319": []
@@ -4085,7 +4083,7 @@
                             "created_on": "2022-05-17T17:19:32.281776+00:00",
                             "updated_on": "2022-05-21T15:26:50.944350+00:00",
                             "field_382010": "Utilities, telephone, and internet",
-                            "field_382011": "You can deduct all of your business's utility costs. Water, electricity, garbage, and phone costs all fall under this category. Even if you work from home, you can deduct successive phone lines, but not the first one you purchase because you'll be using it for your home office.\n\nServices like internet and phone that are essential to your company's operations can be deducted from your company's income. Your first line of phone service, even if exclusively used for work, cannot be written off if you have a landline at home. You can, however, deduct the expense of a second phone line for commercial purposes.\u00a0\n\nIt is not possible to deduct the total cost of your cell phone and internet connection if they are used for both personal and business purposes.",
+                            "field_382011": "You can deduct all of your business's utility costs. Water, electricity, garbage, and phone costs all fall under this category. Even if you work from home, you can deduct successive phone lines, but not the first one you purchase because you'll be using it for your home office.\n\nServices like internet and phone that are essential to your company's operations can be deducted from your company's income. Your first line of phone service, even if exclusively used for work, cannot be written off if you have a landline at home. You can, however, deduct the expense of a second phone line for commercial purposes. \n\nIt is not possible to deduct the total cost of your cell phone and internet connection if they are used for both personal and business purposes.",
                             "field_382012": "100.0",
                             "field_385309": null,
                             "field_385319": [
@@ -4434,7 +4432,7 @@
                             "created_on": "2022-05-18T13:44:29.438265+00:00",
                             "updated_on": "2022-05-18T16:47:27.318258+00:00",
                             "field_385023": "Beyond Meant",
-                            "field_385024": "Beyond Meant is a Los Angeles\u2013based producer of plant-based meat substitutes founded in 2009 by Dwayne Browner.",
+                            "field_385024": "Beyond Meant is a Los Angeles–based producer of plant-based meat substitutes founded in 2009 by Dwayne Browner.",
                             "field_385025": "Standard St El Segundo, CA 90245",
                             "field_385294": "(866) 756-4112",
                             "field_385295": "support@beyongmeantbr.net",
@@ -4538,7 +4536,7 @@
                             "created_on": "2022-05-18T16:35:47.739911+00:00",
                             "updated_on": "2022-05-18T16:48:49.003305+00:00",
                             "field_385023": "The Packaging Company",
-                            "field_385024": "We\u2019ve built our company with the needs of online retailers in mind and it shows from our intuitive online storefront and eco-friendly products to our dedicated team of customer service and packaging experts.",
+                            "field_385024": "We’ve built our company with the needs of online retailers in mind and it shows from our intuitive online storefront and eco-friendly products to our dedicated team of customer service and packaging experts.",
                             "field_385025": "Goreway Dr, Brampton, Ontario, L6T 0B7, Canada",
                             "field_385294": "(905) 494-1191",
                             "field_385295": "sales@thepackagingcobr.net",
@@ -8864,7 +8862,7 @@
                             "created_on": "2022-05-16T15:05:09.008062+00:00",
                             "updated_on": "2022-05-16T15:05:21.819994+00:00",
                             "field_381990": "Software Engineer",
-                            "field_381992": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements \u2014 all via software programming languages.",
+                            "field_381992": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements — all via software programming languages.",
                             "field_381994": null,
                             "field_385099": [
                                 12,
