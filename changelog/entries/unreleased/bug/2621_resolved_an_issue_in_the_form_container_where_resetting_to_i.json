@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an issue in the form container where resetting to initial values after submission wasn't working properly.",
+    "issue_number": 2621,
+    "bullet_points": [],
+    "created_at": "2024-05-17"
+}
