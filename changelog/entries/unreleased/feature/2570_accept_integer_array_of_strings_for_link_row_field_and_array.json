@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "The API now accepts a single integer or a CSV string or an array of strings as value for link row field type and an array of string or a CSV string for file field type.",
+    "issue_number": 2570,
+    "bullet_points": [],
+    "created_at": "2024-04-26"
+}

@@ -62,6 +62,7 @@ from baserow.contrib.database.api.fields.serializers import (
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
     IntegerOrStringField,
+    LinkRowRequestSerializer,
     LinkRowValueSerializer,
     ListOrStringField,
     MustBeEmptyField,
@@ -2299,13 +2300,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         representing the related row ids.
         """
 
-        return ListOrStringField(
-            **{
-                "child": IntegerOrStringField(min_value=0),
-                "required": False,
-                **kwargs,
-            }
-        )
+        return LinkRowRequestSerializer(required=False, **kwargs)
 
     def get_response_serializer_field(self, instance, **kwargs):
         """
@@ -2324,7 +2319,8 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             "This field accepts an `array` containing the ids or the names of the "
             "related rows. "
             "A name is the value of the primary key of the related row. "
-            "This field also accepts a string with names separated by a comma. "
+            "This field also accepts a string with names separated by a comma or an "
+            "array of row names. You can also provide a unique row Id."
             "The response contains a list of objects containing the `id` and "
             "the primary field's `value` as a string for display purposes."
         )
@@ -3127,14 +3123,9 @@ class FileFieldType(FieldType):
         return values_by_row
 
     def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
-        return serializers.ListSerializer(
-            **{
-                "child": FileFieldRequestSerializer(),
-                "required": required,
-                "allow_null": not required,
-                **kwargs,
-            }
+        required = kwargs.pop("required", False)
+        return FileFieldRequestSerializer(
+            required=required, allow_null=not required, **kwargs
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
@@ -3913,7 +3904,8 @@ class MultipleSelectFieldType(
             "when getting or listing the field. "
             "You can also send a list of option names in which case the option are "
             "searched by name. The first one that matches is used. "
-            "This field also accepts a string with names separated by a comma. "
+            "This field also accepts a string with names separated by a comma or an "
+            "array of file names. "
             "The response represents chosen field, but also the value and "
             "color is exposed."
         )

@@ -92,6 +92,193 @@ def test_batch_create_rows_file_field(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_file
 @pytest.mark.api_rows
+def test_batch_create_rows_file_field_with_csv_string(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+    file3 = data_fixture.create_user_file(
+        original_name="test3.txt",
+        is_image=True,
+    )
+
+    # Test with only one field name
+    request_body = {
+        "items": [
+            {
+                f"field_{file_field.id}": file1.name,
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+
+    model = table.get_model()
+    rows = model.objects.all()
+
+    assert len(getattr(rows[0], f"field_{file_field.id}")) == 1
+
+    # Test with multiple field names
+    request_body = {
+        "items": [
+            {
+                f"field_{file_field.id}": f"{file1.name},{file2.name},{file3.name}",
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+
+    rows = model.objects.all()
+
+    assert len(getattr(rows[1], f"field_{file_field.id}")) == 3
+
+    # Test with array of field names
+    request_body = {
+        "items": [
+            {
+                f"field_{file_field.id}": [file1.name, file2.name],
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+
+    rows = model.objects.all()
+
+    assert len(getattr(rows[2], f"field_{file_field.id}")) == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+@pytest.mark.api_rows
+def test_batch_create_rows_file_field_mixed_types(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+
+    request_body = {
+        "items": [
+            {
+                f"field_{file_field.id}": [file1.name, {"name": file2.name}],
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json == {
+        "error": "ERROR_REQUEST_BODY_VALIDATION",
+        "detail": {
+            "items": {
+                "0": {
+                    f"field_{file_field.id}": [
+                        {
+                            "error": "All list values must be same type.",
+                            "code": "not_same_type",
+                        }
+                    ]
+                }
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+@pytest.mark.api_rows
+def test_batch_create_rows_file_field_invalid_values(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+
+    request_body = {
+        "items": [
+            {
+                f"field_{file_field.id}": [1, 2],
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json == {
+        "error": "ERROR_REQUEST_BODY_VALIDATION",
+        "detail": {
+            "items": {
+                "0": {
+                    f"field_{file_field.id}": [
+                        {
+                            "error": "The provided value should be a list of valid "
+                            "string or objects containing a value property.",
+                            "code": "invalid",
+                        }
+                    ]
+                }
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+@pytest.mark.api_rows
 def test_batch_create_rows_file_field_without_name_property(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -120,9 +307,11 @@ def test_batch_create_rows_file_field_without_name_property(api_client, data_fix
                 "0": {
                     f"field_{file_field.id}": [
                         {
-                            "name": [
-                                {"error": "This field is required.", "code": "required"}
-                            ]
+                            "error": (
+                                "A name property is required for all values "
+                                "of the list."
+                            ),
+                            "code": "required",
                         }
                     ]
                 }

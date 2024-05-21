@@ -140,22 +140,50 @@ class LinkRowValueSerializer(serializers.Serializer):
     )
 
 
-class FileFieldRequestSerializer(serializers.Serializer):
-    visible_name = serializers.CharField(
-        required=False, help_text="A visually editable name for the field."
-    )
-    name = serializers.CharField(
-        required=True,
-        validators=[user_file_name_validator],
-        help_text="Accepts the name of the already uploaded user file.",
-    )
+class FileFieldRequestSerializer(serializers.ListField):
+    """
+    A serializer field that accept a List or a CSV string that will be converted to
+    an Array.
+    """
 
-    def validate(self, data):
-        if "name" not in data:
+    def to_internal_value(self, data):
+        if not isinstance(data, (str, list)):
             raise serializers.ValidationError(
-                {"name": "This field is required."}, code="required"
+                "This value must be a list or a string.",
+                code="not_a_list",
             )
-        return data
+
+        if not data:
+            return []
+
+        if isinstance(data, str):
+            data = split_comma_separated_string(data)
+
+        if any([not isinstance(i, type(data[0])) for i in data]):
+            raise serializers.ValidationError(
+                "All list values must be same type.", code="not_same_type"
+            )
+
+        if isinstance(data[0], str):
+            [user_file_name_validator(name) for name in data]  # noqa W0106
+            data = [{"name": name} for name in data]
+
+        elif isinstance(data[0], dict):
+            for val in data:
+                if "name" not in val:
+                    raise serializers.ValidationError(
+                        "A name property is required for all values of the list.",
+                        code="required",
+                    )
+                user_file_name_validator(val["name"])
+        else:
+            raise serializers.ValidationError(
+                "The provided value should be a list of valid string or objects "
+                "containing a value property.",
+                code="invalid",
+            )
+
+        return super().to_internal_value(data)
 
 
 class FileFieldResponseSerializer(
@@ -172,6 +200,41 @@ class FileFieldResponseSerializer(
 
     def get_instance_attr(self, instance, name):
         return instance[name]
+
+
+class LinkRowRequestSerializer(serializers.ListField):
+    """
+    A serializer field that accept a List or a CSV string that will be converted to
+    an Array.
+    """
+
+    def to_internal_value(self, data):
+        if not data:
+            return []
+
+        if isinstance(data, list):
+            if any([not isinstance(i, type(data[0])) for i in data]):
+                raise serializers.ValidationError(
+                    "All list values must be same type.", code="not_same_type"
+                )
+            if not isinstance(data[0], (str, int)):
+                raise serializers.ValidationError(
+                    "The provided value must be a list of valid integer or string",
+                    code="invalid",
+                )
+
+        elif isinstance(data, str):
+            data = split_comma_separated_string(data)
+
+        elif isinstance(data, int):
+            data = [data]
+        else:
+            raise serializers.ValidationError(
+                "This provided value must be a list, an integer or a string.",
+                code="invalid",
+            )
+
+        return super().to_internal_value(data)
 
 
 @extend_schema_field(OpenApiTypes.NONE)

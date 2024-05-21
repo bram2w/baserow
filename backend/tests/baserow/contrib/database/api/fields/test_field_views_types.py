@@ -555,9 +555,7 @@ def test_file_field_type(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert (
-        response_json["detail"][f"field_{field_id}"][0]["name"][0]["code"] == "invalid"
-    )
+    assert response_json["detail"][f"field_{field_id}"][0]["code"] == "invalid"
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
