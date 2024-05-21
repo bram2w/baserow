@@ -16,6 +16,7 @@ from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
 
 from itsdangerous import URLSafeSerializer
+from loguru import logger
 from opentelemetry import trace
 from tqdm import tqdm
 
@@ -1700,7 +1701,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         return template
 
-    @transaction.atomic
     # This single function generates a huge number of spans and events, we know it
     # is slow, and so we disable instrumenting it to save significant resources in
     # telemetry platforms receiving the instrumentation.
@@ -1755,113 +1755,151 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             desc="Syncing Baserow templates. Disable by setting "
             "BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=false.",
         ):
-            content = Path(template_file_path).read_text()
-            parsed_json = json.loads(content)
-
-            if "baserow_template_version" not in parsed_json:
-                continue
-
-            slug = ".".join(template_file_path.name.split(".")[:-1])
-            installed_template = next(
-                (t for t in installed_templates if t.slug == slug), None
-            )
-            hash_json = json.dumps(parsed_json["export"])
-            export_hash = hashlib.sha256(hash_json.encode("utf-8")).hexdigest()
-            keywords = (
-                ",".join(parsed_json["keywords"]) if "keywords" in parsed_json else ""
-            )
-
-            # If the installed template and workspace exist, and if there is a hash
-            # mismatch, we need to delete the old workspace and all the related
-            # applications in it. This is because a new workspace will be created.
-            if (
-                installed_template
-                and installed_template.workspace
-                and installed_template.export_hash != export_hash
-            ):
-                TrashHandler.permanently_delete(installed_template.workspace)
-
-            # If the installed template does not yet exist or if there is a export
-            # hash mismatch, which means the workspace has already been deleted, we can
-            # create a new workspace and import the exported applications into that
-            # workspace.
-            if not installed_template or installed_template.export_hash != export_hash:
-                # It is optionally possible for a template to have additional files.
-                # They are stored in a ZIP file and are generated when the template
-                # is exported. They for example contain file field files.
-                try:
-                    files_file_path = f"{os.path.splitext(template_file_path)[0]}.zip"
-                    files_buffer = open(files_file_path, "rb")
-                except FileNotFoundError:
-                    # If the file is not found, we provide a BytesIO buffer to
-                    # maintain backward compatibility and to not brake anything.
-                    files_buffer = BytesIO()
-
-                workspace = Workspace.objects.create(name=parsed_json["name"])
-                self.import_applications_to_workspace(
-                    workspace,
-                    parsed_json["export"],
-                    files_buffer=files_buffer,
-                    import_export_config=sync_templates_import_export_config,
-                    storage=storage,
+            with transaction.atomic():
+                self._sync_template(
+                    template_file_path,
+                    sync_templates_import_export_config,
+                    installed_templates,
+                    installed_categories,
+                    storage,
                 )
-
-                if files_buffer:
-                    files_buffer.close()
-            else:
-                workspace = installed_template.workspace
-                workspace.name = parsed_json["name"]
-                workspace.save()
-
-            kwargs = {
-                "name": parsed_json["name"],
-                "icon": parsed_json["icon"],
-                "export_hash": export_hash,
-                "keywords": keywords,
-                "workspace": workspace,
-            }
-
-            if not installed_template:
-                installed_template = Template.objects.create(slug=slug, **kwargs)
-            else:
-                # If the installed template already exists, we only need to update the
-                # values to the latest version according to the JSON template.
-                for key, value in kwargs.items():
-                    setattr(installed_template, key, value)
-                installed_template.save()
-
-            # Loop over the categories related to the template and check which ones
-            # already exist and which need to be created. Based on that we can create
-            # a list of category ids that we can set for the template.
-            template_category_ids = []
-            for category_name in parsed_json["categories"]:
-                installed_category = next(
-                    (c for c in installed_categories if c.name == category_name), None
-                )
-                if not installed_category:
-                    installed_category = TemplateCategory.objects.create(
-                        name=category_name
-                    )
-                    installed_categories.append(installed_category)
-                template_category_ids.append(installed_category.id)
-
-            installed_template.categories.set(template_category_ids)
 
         if clean_templates:
             # Delete all the installed templates that were installed, but don't exist in
             # the template directory anymore.
+            logger.info(
+                "Deleting templates that were installed but no longer exist in the "
+                "templates dir..."
+            )
+
             slugs = [
                 ".".join(template_file_path.name.split(".")[:-1])
                 for template_file_path in templates
             ]
+
             for template in Template.objects.filter(~Q(slug__in=slugs)):
-                TrashHandler.permanently_delete(template.workspace)
-                template.delete()
+                with transaction.atomic():
+                    TrashHandler.permanently_delete(template.workspace)
+                    template.delete()
 
             # Delete all the categories that don't have any templates anymore.
             TemplateCategory.objects.annotate(num_templates=Count("templates")).filter(
                 num_templates=0
             ).delete()
+
+    def _sync_template(
+        self,
+        template_file_path,
+        config,
+        installed_templates,
+        installed_categories,
+        storage,
+    ):
+        """
+        Sync a specific template to the database.
+
+        :param template_file_path: Path of the template that should be synced.
+        :type template_file_path: Path
+        :param config: Configuration to use when syncing the template.
+        :type config: ImportExportConfig
+        :param installed_templates: List of installed Templates.
+        :type installed_templates: List[Template]
+        :param installed_categories: List of installed Template Categories.
+        :type installed_categories: List[TemplateCategory]
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
+        :return: None
+        """
+
+        content = Path(template_file_path).read_text()
+        parsed_json = json.loads(content)
+
+        if "baserow_template_version" not in parsed_json:
+            return
+
+        slug = ".".join(template_file_path.name.split(".")[:-1])
+        installed_template = next(
+            (t for t in installed_templates if t.slug == slug), None
+        )
+        hash_json = json.dumps(parsed_json["export"])
+        export_hash = hashlib.sha256(hash_json.encode("utf-8")).hexdigest()
+        keywords = (
+            ",".join(parsed_json["keywords"]) if "keywords" in parsed_json else ""
+        )
+
+        # If the installed template and workspace exist, and if there is a hash
+        # mismatch, we need to delete the old workspace and all the related
+        # applications in it. This is because a new workspace will be created.
+        if (
+            installed_template
+            and installed_template.workspace
+            and installed_template.export_hash != export_hash
+        ):
+            TrashHandler.permanently_delete(installed_template.workspace)
+
+        # If the installed template does not yet exist or if there is a export
+        # hash mismatch, which means the workspace has already been deleted, we can
+        # create a new workspace and import the exported applications into that
+        # workspace.
+        if not installed_template or installed_template.export_hash != export_hash:
+            # It is optionally possible for a template to have additional files.
+            # They are stored in a ZIP file and are generated when the template
+            # is exported. They for example contain file field files.
+            try:
+                files_file_path = f"{os.path.splitext(template_file_path)[0]}.zip"
+                files_buffer = open(files_file_path, "rb")
+            except FileNotFoundError:
+                # If the file is not found, we provide a BytesIO buffer to
+                # maintain backward compatibility and to not brake anything.
+                files_buffer = BytesIO()
+
+            workspace = Workspace.objects.create(name=parsed_json["name"])
+            self.import_applications_to_workspace(
+                workspace,
+                parsed_json["export"],
+                files_buffer=files_buffer,
+                import_export_config=config,
+                storage=storage,
+            )
+
+            if files_buffer:
+                files_buffer.close()
+        else:
+            workspace = installed_template.workspace
+            workspace.name = parsed_json["name"]
+            workspace.save()
+
+        kwargs = {
+            "name": parsed_json["name"],
+            "icon": parsed_json["icon"],
+            "export_hash": export_hash,
+            "keywords": keywords,
+            "workspace": workspace,
+        }
+
+        if not installed_template:
+            installed_template = Template.objects.create(slug=slug, **kwargs)
+        else:
+            # If the installed template already exists, we only need to update the
+            # values to the latest version according to the JSON template.
+            for key, value in kwargs.items():
+                setattr(installed_template, key, value)
+            installed_template.save()
+
+        # Loop over the categories related to the template and check which ones
+        # already exist and which need to be created. Based on that we can create
+        # a list of category ids that we can set for the template.
+        template_category_ids = []
+        for category_name in parsed_json["categories"]:
+            installed_category = next(
+                (c for c in installed_categories if c.name == category_name), None
+            )
+            if not installed_category:
+                installed_category = TemplateCategory.objects.create(name=category_name)
+                installed_categories.append(installed_category)
+            template_category_ids.append(installed_category.id)
+
+        installed_template.categories.set(template_category_ids)
 
     def get_valid_template_path_or_raise(self, template):
         file_name = f"{template.slug}.json"
