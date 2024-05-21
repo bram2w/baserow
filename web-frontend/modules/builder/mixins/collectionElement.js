@@ -99,7 +99,11 @@ export default {
           range,
           replace,
         })
+        this.currentOffset += this.element.items_per_page
       } catch (error) {
+        // We need to only launch one toast error message per element,
+        // not one per element fetch, or we can end up with many error
+        // toasts per element sharing a datasource.
         if (!this.errorNotified) {
           this.errorNotified = true
           notifyIf(error)
@@ -111,8 +115,6 @@ export default {
         [this.currentOffset, this.element.items_per_page],
         replace
       )
-
-      this.currentOffset += this.element.items_per_page
     },
   },
 }

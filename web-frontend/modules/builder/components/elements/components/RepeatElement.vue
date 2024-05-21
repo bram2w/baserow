@@ -65,6 +65,7 @@
       <ABButton
         v-if="hasMorePage && children.length > 0"
         :disabled="contentLoading"
+        :loading="contentLoading"
         @click="loadMore()"
       >
         {{ $t('repeatElement.showMore') }}

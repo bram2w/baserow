@@ -22,6 +22,7 @@
       <ABButton
         v-if="hasMorePage"
         :disabled="contentLoading"
+        :loading="contentLoading"
         @click="loadMore()"
       >
         {{ $t('tableElement.showMore') }}
