@@ -10,6 +10,10 @@ module.exports = {
   ],
   modulePaths: [path.join(__dirname, '/../../web-frontend/node_modules/')],
   moduleNameMapper: {
+    '^@baserow/(.*).(scss|sass)$': path.join(
+      __dirname,
+      '/../../web-frontend/test/helpers/scss.js'
+    ),
     '^@baserow/(.*)$': path.join(__dirname, '/../../web-frontend/$1'),
     '^@baserow_premium/(.*)$': path.join(
       __dirname,
@@ -18,10 +22,6 @@ module.exports = {
     '^@baserow_premium_test/(.*)$': path.join(
       __dirname,
       '/../../premium/web-frontend/test/$1'
-    ),
-    '^.+\\.(scss|sass)$': path.join(
-      __dirname,
-      '/../../web-frontend/test/helpers/scss.js'
     ),
     '^@/(.*)$': path.join(__dirname, '/../../web-frontend/$1'),
     '^~/(.*)$': path.join(__dirname, '/../../web-frontend/$1'),
