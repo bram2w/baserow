@@ -142,11 +142,15 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
     ]
 
     class SerializedDict(ElementDict):
-        submit_button_label: BaserowFormula
         button_color: str
+        submit_button_label: BaserowFormula
+        reset_initial_values_post_submission: bool
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
-        return {"submit_button_label": "'Submit'"}
+        return {
+            "submit_button_label": "'Submit'",
+            "reset_initial_values_post_submission": True,
+        }
 
     @property
     def serializer_field_overrides(self):
