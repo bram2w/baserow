@@ -10,7 +10,7 @@
         "content tracker"
     ],
     "categories": [
-        "Content Marketing"
+        "Marketing"
     ],
     "export": [
         {
@@ -365,7 +365,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if(field('Meta description length')<=160, '\u2705', '\u274c')",
+                            "formula": "if(field('Meta description length')<=160, '✅', '❌')",
                             "formula_type": "text"
                         },
                         {

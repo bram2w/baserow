@@ -13,10 +13,7 @@
         "staff records"
     ],
     "categories": [
-        "Human Resources",
-        "Local Business",
-        "Professional",
-        "Startup"
+        "HR and Recruiting"
     ],
     "export": [
         {
@@ -3209,7 +3206,7 @@
                             "created_on": "2022-05-11T12:48:19.622836+00:00",
                             "updated_on": "2022-06-10T12:09:40.832866+00:00",
                             "field_373170": "Software Engineer",
-                            "field_373171": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements \u2014 all via software programming languages.",
+                            "field_373171": "Software Engineers are responsible for implementing engineering principles in the development of software. Their responsibilities include analyzing and modifying existing software as well as designing, building, and testing end-user applications that meet user requirements — all via software programming languages.",
                             "field_373772": [
                                 11,
                                 12

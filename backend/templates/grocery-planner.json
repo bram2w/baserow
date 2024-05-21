@@ -14,7 +14,7 @@
         "store"
     ],
     "categories": [
-        "Personal"
+        "Personal and Hobbies"
     ],
     "export": [
         {
@@ -57,7 +57,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "concat( \n  \"  \ud83e\udd57 \", \n  count( \n    filter( \n      lookup(\"Related meal plans\", \"Grocery before plan\"), \n      and( \n        lookup(\"Related meal plans\", \"Grocery before plan\") > -1, \n        lookup(\"Related meal plans\", \"Is grocery fulfilled\") = \"No\" \n      ) \n    ) \n  ), \n  \" --:-- \ud83e\ude81 \", \n  count( \n    filter( \n      lookup(\"Related activity plans\", \"Grocery before plan\"), \n      and( \n        lookup(\"Related activity plans\", \"Grocery before plan\") > -1, \n        lookup(\"Related activity plans\", \"Is grocery fulfilled\") = \"No\" \n      ) \n    ) \n  ) \n)",
+                            "formula": "concat( \n  \"  🥗 \", \n  count( \n    filter( \n      lookup(\"Related meal plans\", \"Grocery before plan\"), \n      and( \n        lookup(\"Related meal plans\", \"Grocery before plan\") > -1, \n        lookup(\"Related meal plans\", \"Is grocery fulfilled\") = \"No\" \n      ) \n    ) \n  ), \n  \" --:-- 🪁 \", \n  count( \n    filter( \n      lookup(\"Related activity plans\", \"Grocery before plan\"), \n      and( \n        lookup(\"Related activity plans\", \"Grocery before plan\") > -1, \n        lookup(\"Related activity plans\", \"Is grocery fulfilled\") = \"No\" \n      ) \n    ) \n  ) \n)",
                             "formula_type": "text"
                         },
                         {
@@ -2198,7 +2198,7 @@
                                 }
                             ],
                             "field_790469": 339715,
-                            "field_790470": "Roasted red bell peppers. Red peppers can be roasted in different ways. They can be cooked by holding them over an open flame, like the flame of a gas burner on the stove, or by putting them on a grill, under a broiler, or saut\u00e9ing them in a pan. The peppers are roasted until the outsides are black and the skin has started to bubble. After they are roasted, the skins are taken off and the insides are cut open to get the seeds out.",
+                            "field_790470": "Roasted red bell peppers. Red peppers can be roasted in different ways. They can be cooked by holding them over an open flame, like the flame of a gas burner on the stove, or by putting them on a grill, under a broiler, or sautéing them in a pan. The peppers are roasted until the outsides are black and the skin has started to bubble. After they are roasted, the skins are taken off and the insides are cut open to get the seeds out.",
                             "field_790471": "Usually purchased in small jars.",
                             "field_790472": 339721,
                             "field_790473": "1.85",
@@ -2627,7 +2627,7 @@
                                 }
                             ],
                             "field_790469": 339710,
-                            "field_790470": "Spinach is a plant of the goosefoot family,\u00a0cultivated for its edible, wrinkly or flat leaves.",
+                            "field_790470": "Spinach is a plant of the goosefoot family, cultivated for its edible, wrinkly or flat leaves.",
                             "field_790471": "Check the leaves for damages.",
                             "field_790472": 339721,
                             "field_790473": "2.57",
@@ -3169,7 +3169,7 @@
                                 }
                             ],
                             "field_790469": 339715,
-                            "field_790470": "Used as a condiment and preservative, vinegar is a sour liquid containing acetic acid that is made by fermenting a solution (such as fermented rice or\u00a0wine) containing ethanol produced by a previous fermentation.",
+                            "field_790470": "Used as a condiment and preservative, vinegar is a sour liquid containing acetic acid that is made by fermenting a solution (such as fermented rice or wine) containing ethanol produced by a previous fermentation.",
                             "field_790471": "",
                             "field_790472": 339721,
                             "field_790473": "2.25",
@@ -4076,7 +4076,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "if( \n  or( \n    isblank(field(\"Plan date\")), \n    isblank(field(\"Grocery day\")) \n  ), \n  \"\", \n  if( \n    field(\"Grocery before plan\") < 0, \n    \"\ud83d\ude21 Missed\", \n    if( \n      and( \n        field(\"Grocery before plan\") = 0, \n        field(\"Is grocery fulfilled\") = \"No\" \n      ), \n      \"\ud83d\uded2 On grocery day\", \n      if( \n        and( \n          field(\"Grocery before plan\") > 7, \n          field(\"Is grocery fulfilled\") = \"No\" \n        ), \n        \"\u270d\ud83c\udffc To do\", \n        if( \n          field(\"Is grocery fulfilled\") = \"Yes\", \n          \"\ud83d\udcb8 Completed\", \n          \"\ud83d\udcc5 Timely\" \n        ) \n      ) \n    ) \n  ) \n)",
+                            "formula": "if( \n  or( \n    isblank(field(\"Plan date\")), \n    isblank(field(\"Grocery day\")) \n  ), \n  \"\", \n  if( \n    field(\"Grocery before plan\") < 0, \n    \"😡 Missed\", \n    if( \n      and( \n        field(\"Grocery before plan\") = 0, \n        field(\"Is grocery fulfilled\") = \"No\" \n      ), \n      \"🛒 On grocery day\", \n      if( \n        and( \n          field(\"Grocery before plan\") > 7, \n          field(\"Is grocery fulfilled\") = \"No\" \n        ), \n        \"✍🏼 To do\", \n        if( \n          field(\"Is grocery fulfilled\") = \"Yes\", \n          \"💸 Completed\", \n          \"📅 Timely\" \n        ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "array"
                         },
                         {
@@ -5166,7 +5166,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-07",
                             "field_790433": "Smoked mackerel and greens",
-                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7\u20139 minutes. P\u00e2t\u00e9 in the center of the plate, with horseradish on the side.",
+                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7–9 minutes. Pâté in the center of the plate, with horseradish on the side.",
                             "field_790542": [
                                 1,
                                 2,
@@ -5193,7 +5193,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-10",
                             "field_790433": "Bean and baked eggs",
-                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5\u20137 minutes.",
+                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5–7 minutes.",
                             "field_790542": [
                                 7,
                                 8,
@@ -5220,7 +5220,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-11",
                             "field_790433": "Garlic chicken",
-                            "field_790485": "Step 1: Preheat the oven to 200\u00b0C (180\u00b0C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
+                            "field_790485": "Step 1: Preheat the oven to 200°C (180°C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
                             "field_790542": [
                                 11,
                                 12,
@@ -5274,7 +5274,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-14",
                             "field_790433": "Veggie chili",
-                            "field_790485": "Turn the oven on and set it to 200\u00b0C or 180\u00b0C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12\u201317 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
+                            "field_790485": "Turn the oven on and set it to 200°C or 180°C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12–17 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
                             "field_790542": [
                                 8,
                                 22,
@@ -5299,7 +5299,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-15",
                             "field_790433": "Salmon and spinach pasta",
-                            "field_790485": "Follow the directions on the package for how to cook the pasta. Fry the salmon in the oil from the tomatoes for 5\u20137 minutes. Flake the fish in the pan, then add the spinach and pasta that have been rinsed and drained. Stir for 2\u20133 minutes, until the spinach has softened.",
+                            "field_790485": "Follow the directions on the package for how to cook the pasta. Fry the salmon in the oil from the tomatoes for 5–7 minutes. Flake the fish in the pan, then add the spinach and pasta that have been rinsed and drained. Stir for 2–3 minutes, until the spinach has softened.",
                             "field_790542": [
                                 25,
                                 26,
@@ -5376,7 +5376,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-11",
                             "field_790433": "Grilled ribs",
-                            "field_790485": "Step 1: Put the ribs out in the open for 30 minutes. Cut the pork ribs into pieces with 2 or 3 ribs. Add salt and pepper.\n\nStep 2: Prepare a grill over medium heat. Hold your palm about 7\" above the grill grate for 8\u20139 seconds to see if the heat is medium.\n\nStep 3: Grill the ribs, bone-side down, for 18 minutes. Turn the ribs over and cook for 18 more minutes, until they are crisp.\n\nStep 4: Cut between the bones of the ribs and put them on a dish.",
+                            "field_790485": "Step 1: Put the ribs out in the open for 30 minutes. Cut the pork ribs into pieces with 2 or 3 ribs. Add salt and pepper.\n\nStep 2: Prepare a grill over medium heat. Hold your palm about 7\" above the grill grate for 8–9 seconds to see if the heat is medium.\n\nStep 3: Grill the ribs, bone-side down, for 18 minutes. Turn the ribs over and cook for 18 more minutes, until they are crisp.\n\nStep 4: Cut between the bones of the ribs and put them on a dish.",
                             "field_790542": [
                                 37,
                                 38,
@@ -5427,7 +5427,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-14",
                             "field_790433": "Pork adobo",
-                            "field_790485": "Mix the pork, soy sauce, and garlic in a bowl and let them sit for 45 minutes.\nAdd the pork, oil, and soy sauce marinade to a medium- to large-sized pot and cook over high heat until the pork is golden brown. Watch the garlic carefully so it doesn't burn.\nBring the soy sauce marinade and the rest of the ingredients to a boil. Turn the heat down to a simmer and cook the pork and carrots for 45\u201360 minutes, uncovered, until they are soft.",
+                            "field_790485": "Mix the pork, soy sauce, and garlic in a bowl and let them sit for 45 minutes.\nAdd the pork, oil, and soy sauce marinade to a medium- to large-sized pot and cook over high heat until the pork is golden brown. Watch the garlic carefully so it doesn't burn.\nBring the soy sauce marinade and the rest of the ingredients to a boil. Turn the heat down to a simmer and cook the pork and carrots for 45–60 minutes, uncovered, until they are soft.",
                             "field_790542": [
                                 40,
                                 1,
@@ -5490,7 +5490,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-15",
                             "field_790433": "Smoked mackerel and greens",
-                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7\u20139 minutes. P\u00e2t\u00e9 in the center of the plate, with horseradish on the side.",
+                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7–9 minutes. Pâté in the center of the plate, with horseradish on the side.",
                             "field_790542": [
                                 1,
                                 2,
@@ -5517,7 +5517,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-17",
                             "field_790433": "Bean and baked eggs",
-                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5\u20137 minutes.",
+                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5–7 minutes.",
                             "field_790542": [
                                 5,
                                 7,
@@ -5544,7 +5544,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-18",
                             "field_790433": "Garlic chicken",
-                            "field_790485": "Step 1: Preheat the oven to 200\u00b0C (180\u00b0C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
+                            "field_790485": "Step 1: Preheat the oven to 200°C (180°C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
                             "field_790542": [
                                 11,
                                 12,
@@ -5598,7 +5598,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-20",
                             "field_790433": "Veggie chili",
-                            "field_790485": "Turn the oven on and set it to 200\u00b0C or 180\u00b0C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12\u201317 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
+                            "field_790485": "Turn the oven on and set it to 200°C or 180°C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12–17 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
                             "field_790542": [
                                 8,
                                 22,
@@ -5623,7 +5623,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-22",
                             "field_790433": "Salmon and spinach pasta",
-                            "field_790485": "Follow the directions on the package for how to cook the pasta. Fry the salmon in the oil from the tomatoes for 5\u20137 minutes. Flake the fish in the pan, then add the spinach and pasta that have been rinsed and drained. Stir for 2\u20133 minutes, until the spinach has softened.",
+                            "field_790485": "Follow the directions on the package for how to cook the pasta. Fry the salmon in the oil from the tomatoes for 5–7 minutes. Flake the fish in the pan, then add the spinach and pasta that have been rinsed and drained. Stir for 2–3 minutes, until the spinach has softened.",
                             "field_790542": [
                                 25,
                                 26,
@@ -5700,7 +5700,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-25",
                             "field_790433": "Grilled ribs",
-                            "field_790485": "Step 1: Put the ribs out in the open for 30 minutes. Cut the pork ribs into pieces with 2 or 3 ribs. Add salt and pepper.\n\nStep 2: Prepare a grill over medium heat. Hold your palm about 7\" above the grill grate for 8\u20139 seconds to see if the heat is medium.\n\nStep 3: Grill the ribs, bone-side down, for 18 minutes. Turn the ribs over and cook for 18 more minutes, until they are crisp.\n\nStep 4: Cut between the bones of the ribs and put them on a dish.",
+                            "field_790485": "Step 1: Put the ribs out in the open for 30 minutes. Cut the pork ribs into pieces with 2 or 3 ribs. Add salt and pepper.\n\nStep 2: Prepare a grill over medium heat. Hold your palm about 7\" above the grill grate for 8–9 seconds to see if the heat is medium.\n\nStep 3: Grill the ribs, bone-side down, for 18 minutes. Turn the ribs over and cook for 18 more minutes, until they are crisp.\n\nStep 4: Cut between the bones of the ribs and put them on a dish.",
                             "field_790542": [
                                 37,
                                 38,
@@ -5751,7 +5751,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-28",
                             "field_790433": "Pork adobo",
-                            "field_790485": "Mix the pork, soy sauce, and garlic in a bowl and let them sit for 45 minutes.\nAdd the pork, oil, and soy sauce marinade to a medium- to large-sized pot and cook over high heat until the pork is golden brown. Watch the garlic carefully so it doesn't burn.\nBring the soy sauce marinade and the rest of the ingredients to a boil. Turn the heat down to a simmer and cook the pork and carrots for 45\u201360 minutes, uncovered, until they are soft.",
+                            "field_790485": "Mix the pork, soy sauce, and garlic in a bowl and let them sit for 45 minutes.\nAdd the pork, oil, and soy sauce marinade to a medium- to large-sized pot and cook over high heat until the pork is golden brown. Watch the garlic carefully so it doesn't burn.\nBring the soy sauce marinade and the rest of the ingredients to a boil. Turn the heat down to a simmer and cook the pork and carrots for 45–60 minutes, uncovered, until they are soft.",
                             "field_790542": [
                                 1,
                                 5,
@@ -5782,7 +5782,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-29",
                             "field_790433": "Smoked mackerel and greens",
-                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7\u20139 minutes. P\u00e2t\u00e9 in the center of the plate, with horseradish on the side.",
+                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7–9 minutes. Pâté in the center of the plate, with horseradish on the side.",
                             "field_790542": [
                                 1,
                                 2,
@@ -5809,7 +5809,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-30",
                             "field_790433": "Bean and baked eggs",
-                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5\u20137 minutes.",
+                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5–7 minutes.",
                             "field_790542": [
                                 5,
                                 7,
@@ -5836,7 +5836,7 @@
                             "field_790431": null,
                             "field_790432": "2023-01-31",
                             "field_790433": "Garlic chicken",
-                            "field_790485": "Step 1: Preheat the oven to 200\u00b0C (180\u00b0C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
+                            "field_790485": "Step 1: Preheat the oven to 200°C (180°C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
                             "field_790542": [
                                 11,
                                 12,
@@ -5890,7 +5890,7 @@
                             "field_790431": null,
                             "field_790432": "2023-02-02",
                             "field_790433": "Veggie chili",
-                            "field_790485": "Turn the oven on and set it to 200\u00b0C or 180\u00b0C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12\u201317 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
+                            "field_790485": "Turn the oven on and set it to 200°C or 180°C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12–17 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
                             "field_790542": [
                                 8,
                                 22,
@@ -5915,7 +5915,7 @@
                             "field_790431": null,
                             "field_790432": "2023-02-14",
                             "field_790433": "Smoked mackerel and greens",
-                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7\u20139 minutes. P\u00e2t\u00e9 in the center of the plate, with horseradish on the side.",
+                            "field_790485": "Step 1: Cover the potatoes and microwave them with a bit of water for 7 minutes.\n\nStep 2: Put the oil in a skillet and heat it over medium heat. Add the leeks and cook for 10 minutes, stirring them often so they don't stick. If you turn up the heat, the potatoes will get crispier.\n\nStep 3: Do four gaps in the pan with the leek mix. Put an egg in each well and sprinkle with salt. Simmer for 7–9 minutes. Pâté in the center of the plate, with horseradish on the side.",
                             "field_790542": [
                                 1,
                                 3,
@@ -5942,7 +5942,7 @@
                             "field_790431": null,
                             "field_790432": "2023-02-15",
                             "field_790433": "Bean and baked eggs",
-                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5\u20137 minutes.",
+                            "field_790485": "Step 1: Put the tomato-bean salad in a frying pan or casserole dish that can go in the oven or on the stovetop without burning. Simmer for 8 minutes. Spinach needs 3 minutes to soften.\n\nStep 2: Preheat the grill to a medium temperature. Using the back of a spoon, make four indents in the mix. Grill the ham for 5–7 minutes.",
                             "field_790542": [
                                 5,
                                 7,
@@ -5969,7 +5969,7 @@
                             "field_790431": null,
                             "field_790432": "2023-02-17",
                             "field_790433": "Garlic chicken",
-                            "field_790485": "Step 1: Preheat the oven to 200\u00b0C (180\u00b0C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
+                            "field_790485": "Step 1: Preheat the oven to 200°C (180°C fan). Make a cut in each chicken breast, then use a rolling pin to flatten them.\n\nStep 2: Cut the pastry in half lengthwise and lay it on a baking sheet. Place a chicken breast on each side, then put cheese in the spaces. Salt and pepper should be added to the lemon zest on the pastry before serving. Every package's seal should be on the bottom. Bake for 35 minutes until brown.\n\nStep 3: Boil or steam the greens for 9 minutes, until they are soft. Chicken tossed in oil needs seasoning. Cut lemon wedges into wedges for squeezing over chicken packages.",
                             "field_790542": [
                                 11,
                                 12,
@@ -6023,7 +6023,7 @@
                             "field_790431": null,
                             "field_790432": "2023-02-19",
                             "field_790433": "Veggie chili",
-                            "field_790485": "Turn the oven on and set it to 200\u00b0C or 180\u00b0C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12\u201317 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
+                            "field_790485": "Turn the oven on and set it to 200°C or 180°C. Cook the vegetables for 12 minutes in a casserole dish. Add the beans and tomatoes, season with salt and pepper, and cook for another 12–17 minutes, until the dish is very hot. Heat the pouch on high for 45 seconds in the microwave, and serve with the chili.",
                             "field_790542": [
                                 8,
                                 22,
@@ -6146,7 +6146,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "if( \n  or( \n    isblank(field(\"Plan date\")), \n    isblank(field(\"Grocery day\")) \n  ), \n  \"\", \n  if( \n    field(\"Grocery before plan\") < 0, \n    \"\ud83d\ude21 Missed\", \n    if( \n      and( \n        field(\"Grocery before plan\") = 0, \n        field(\"Is grocery fulfilled\") = \"No\" \n      ), \n      \"\ud83d\uded2 On grocery day\", \n      if( \n        and( \n          field(\"Grocery before plan\") > 7, \n          field(\"Is grocery fulfilled\") = \"No\" \n        ), \n        \"\u270d\ud83c\udffc To do\", \n        if( \n          field(\"Is grocery fulfilled\") = \"Yes\", \n          \"\ud83d\udcb8 Completed\", \n          \"\ud83d\udcc5 Timely\" \n        ) \n      ) \n    ) \n  ) \n)",
+                            "formula": "if( \n  or( \n    isblank(field(\"Plan date\")), \n    isblank(field(\"Grocery day\")) \n  ), \n  \"\", \n  if( \n    field(\"Grocery before plan\") < 0, \n    \"😡 Missed\", \n    if( \n      and( \n        field(\"Grocery before plan\") = 0, \n        field(\"Is grocery fulfilled\") = \"No\" \n      ), \n      \"🛒 On grocery day\", \n      if( \n        and( \n          field(\"Grocery before plan\") > 7, \n          field(\"Is grocery fulfilled\") = \"No\" \n        ), \n        \"✍🏼 To do\", \n        if( \n          field(\"Is grocery fulfilled\") = \"Yes\", \n          \"💸 Completed\", \n          \"📅 Timely\" \n        ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "array"
                         },
                         {
@@ -8393,7 +8393,7 @@
                             "field_790439": "true",
                             "field_790497": null,
                             "field_790502": 339732,
-                            "field_790518": "This supermarket is a large, self-service building with different departments that specializes in food and some other things. \u00a0Unlike \"consumer durables,\" \"fast-moving consumer goods\" are the main focus in this supermarket. The variety of products in this supermarket is very important because they need to be set up so that customers are drawn to them and they sell more quickly.",
+                            "field_790518": "This supermarket is a large, self-service building with different departments that specializes in food and some other things.  Unlike \"consumer durables,\" \"fast-moving consumer goods\" are the main focus in this supermarket. The variety of products in this supermarket is very important because they need to be set up so that customers are drawn to them and they sell more quickly.",
                             "field_790520": "1707 Cecil Street, Chicago, Illinois(IL), 60610",
                             "field_790521": "(773) 388-9038",
                             "field_790524": "contact@marketmarket.br.com",

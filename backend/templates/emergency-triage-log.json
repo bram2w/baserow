@@ -17,7 +17,8 @@
         "clinics"
     ],
     "categories": [
-        "Health"
+        "Health and Wellness",
+        "Business Operations"
     ],
     "export": [
         {
@@ -95,7 +96,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "if(tonumber(left(field(\"ESI level\"), 1))=5,\"\ud83e\ude79\", \nif(tonumber(left(field(\"ESI level\"), 1))=4,\"\ud83d\udc8a\", \nif(tonumber(left(field(\"ESI level\"), 1))=3,\"\ud83d\udc89\", \nif(tonumber(left(field(\"ESI level\"), 1))=2,\"\ud83e\ude78\", \nif(tonumber(left(field(\"ESI level\"), 1))=1,\"\ud83d\udea8\", \"\")))))\n+\"  \"\n+totext(field(\"Admission time\") + date_interval(field(\"Attention needed within\")))",
+                            "formula": "if(tonumber(left(field(\"ESI level\"), 1))=5,\"🩹\", \nif(tonumber(left(field(\"ESI level\"), 1))=4,\"💊\", \nif(tonumber(left(field(\"ESI level\"), 1))=3,\"💉\", \nif(tonumber(left(field(\"ESI level\"), 1))=2,\"🩸\", \nif(tonumber(left(field(\"ESI level\"), 1))=1,\"🚨\", \"\")))))\n+\"  \"\n+totext(field(\"Admission time\") + date_interval(field(\"Attention needed within\")))",
                             "formula_type": "array"
                         },
                         {
@@ -208,7 +209,7 @@
                                 },
                                 {
                                     "id": 93992,
-                                    "value": "05-Transferred to a designated cancer center or children\u2019s hospital",
+                                    "value": "05-Transferred to a designated cancer center or children’s hospital",
                                     "color": "light-green",
                                     "order": 4
                                 },
@@ -1310,13 +1311,13 @@
                             "select_options": [
                                 {
                                     "id": 93698,
-                                    "value": "\u2642\ufe0f Male",
+                                    "value": "♂️ Male",
                                     "color": "blue",
                                     "order": 0
                                 },
                                 {
                                     "id": 93699,
-                                    "value": "\u2640\ufe0f Female",
+                                    "value": "♀️ Female",
                                     "color": "red",
                                     "order": 1
                                 }
@@ -3752,7 +3753,7 @@
                             "field_362131": [
                                 4
                             ],
-                            "field_362132": "A man who is 24 and in good health asks the triage nurse. He says he can't see his dentist until next week and asked for medication for the pain. He\u00a0says\u00a0the\u00a0pain\u00a0started\u00a0yesterday\u00a0and\u00a0is\u00a0a\u00a010/10\u00a0on\u00a0the\u00a0pain\u00a0scale.\u00a0There\u00a0is\u00a0no\u00a0obvious\u00a0facial\u00a0swelling.",
+                            "field_362132": "A man who is 24 and in good health asks the triage nurse. He says he can't see his dentist until next week and asked for medication for the pain. He says the pain started yesterday and is a 10/10 on the pain scale. There is no obvious facial swelling.",
                             "field_362189": [
                                 4
                             ],
@@ -5554,7 +5555,7 @@
                             "field_357938": "3 - Urgent",
                             "field_357939": "30 minutes",
                             "field_357940": "Serious conditions that necessitate immediate treatment.",
-                            "field_357942": "The patient requires many resources and vital signs tests.\n \nDanger Zone Vital Signs\nConsider uptriage to ESI 2 if any vital sign criterion is exceeded.\n \nPediatric Fever Considerations\n\u2022 1 to 28 days of age: assign at least ESI 2 if temp >38.0 C (100.4F)\n\u2022 1-3 months of age: consider assigning ESI 2 if temp >38.0 C (100.4F)\n\u2022 3 months to 3 yrs of age: consider assigning ESI 3 if: temp >39.0 C (102.2 F), or incomplete immunizations, or no obvious source of fever \n \nResources: Count the number of different types of resources, not the individual tests or x-rays (examples: CBC, electrolytes and coags equal one resource; CBC plus chest x-ray equals two resources). \n \nResources\n\u2022 Labs (blood, urine)\n\u2022 ECG, X-rays\n\u2022 CT-MRI-ultrasound-angiography\n\u2022 IV fluids (hydration)\n\u2022 IV or IM or nebulized medications\n\u2022 Specialty consultation\n\u2022 Simple procedure =1 (lac repair, foley cath)\n\u2022 Complex procedure =2 (conscious sedation)",
+                            "field_357942": "The patient requires many resources and vital signs tests.\n \nDanger Zone Vital Signs\nConsider uptriage to ESI 2 if any vital sign criterion is exceeded.\n \nPediatric Fever Considerations\n• 1 to 28 days of age: assign at least ESI 2 if temp >38.0 C (100.4F)\n• 1-3 months of age: consider assigning ESI 2 if temp >38.0 C (100.4F)\n• 3 months to 3 yrs of age: consider assigning ESI 3 if: temp >39.0 C (102.2 F), or incomplete immunizations, or no obvious source of fever \n \nResources: Count the number of different types of resources, not the individual tests or x-rays (examples: CBC, electrolytes and coags equal one resource; CBC plus chest x-ray equals two resources). \n \nResources\n• Labs (blood, urine)\n• ECG, X-rays\n• CT-MRI-ultrasound-angiography\n• IV fluids (hydration)\n• IV or IM or nebulized medications\n• Specialty consultation\n• Simple procedure =1 (lac repair, foley cath)\n• Complex procedure =2 (conscious sedation)",
                             "field_362134": [
                                 1
                             ]
@@ -5567,7 +5568,7 @@
                             "field_357938": "4 - Less urgent",
                             "field_357939": "60 minutes",
                             "field_357940": "Conditions that are associated with patient distress or probable complications that require attention.",
-                            "field_357942": "This patient requires just one resource. \n \nResources\n\u2022 Labs (blood, urine)\n\u2022 ECG, X-rays\n\u2022 CT-MRI-ultrasound-angiography\n\u2022 IV fluids (hydration)\n\u2022 IV or IM or nebulized medications\n\u2022 Specialty consultation\n\u2022 Simple procedure =1 (lac repair, foley cath)\n\u2022 Complex procedure =2 (conscious sedation)",
+                            "field_357942": "This patient requires just one resource. \n \nResources\n• Labs (blood, urine)\n• ECG, X-rays\n• CT-MRI-ultrasound-angiography\n• IV fluids (hydration)\n• IV or IM or nebulized medications\n• Specialty consultation\n• Simple procedure =1 (lac repair, foley cath)\n• Complex procedure =2 (conscious sedation)",
                             "field_362134": [
                                 2
                             ]

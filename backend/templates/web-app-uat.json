@@ -11,8 +11,8 @@
         "client testing"
     ],
     "categories": [
-        "Project Management",
-        "Professional"
+        "Software Development",
+        "Product Management"
     ],
     "export": [
         {
@@ -2646,7 +2646,7 @@
                                     "id": 37244,
                                     "field_id": 497965,
                                     "name": "",
-                                    "description": "Select the specific desktop\u00a0internet browser required for this test.",
+                                    "description": "Select the specific desktop internet browser required for this test.",
                                     "enabled": true,
                                     "required": false,
                                     "order": 32767,
@@ -2658,7 +2658,7 @@
                                     "id": 37245,
                                     "field_id": 497966,
                                     "name": "",
-                                    "description": "Select the specific desktop\u00a0operating system required for this test.",
+                                    "description": "Select the specific desktop operating system required for this test.",
                                     "enabled": true,
                                     "required": false,
                                     "order": 32767,
@@ -7778,7 +7778,7 @@
                             "created_on": "2022-07-13T08:40:51.699685+00:00",
                             "updated_on": "2022-07-13T08:48:25.760627+00:00",
                             "field_497950": "Mojito Systems",
-                            "field_497951": "Mojito Systems, which began in 2005 with the production of a single beer in a single brewery, has expanded its offerings over the past decade to include a wide variety of beer styles and flavors to meet the needs of beer drinkers in every region of Asia. As of now, its portfolio includes ten well-known and respected beer labels.\u00a0\n\nWith nine production facilities spread out across Asia, Mojito Systems can guarantee both the availability and freshness of its products. It also has a well-developed distribution network that supplies more than 200,000 stores.",
+                            "field_497951": "Mojito Systems, which began in 2005 with the production of a single beer in a single brewery, has expanded its offerings over the past decade to include a wide variety of beer styles and flavors to meet the needs of beer drinkers in every region of Asia. As of now, its portfolio includes ten well-known and respected beer labels. \n\nWith nine production facilities spread out across Asia, Mojito Systems can guarantee both the availability and freshness of its products. It also has a well-developed distribution network that supplies more than 200,000 stores.",
                             "field_497970": [
                                 4
                             ],

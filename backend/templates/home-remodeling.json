@@ -12,8 +12,7 @@
         "reparations"
     ],
     "categories": [
-        "Personal",
-        "Hobbies"
+        "Personal and Hobbies"
     ],
     "export": [
         {
@@ -65,7 +64,7 @@
                         {
                             "id": 562465,
                             "type": "number",
-                            "name": "Size (m\u00b2)",
+                            "name": "Size (m²)",
                             "order": 2,
                             "primary": false,
                             "number_decimal_places": 1,
