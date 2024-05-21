@@ -61,6 +61,7 @@
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import form from '@baserow/modules/core/mixins/form'
 import { required, maxLength } from 'vuelidate/lib/validators'
+import _ from 'lodash'
 
 export default {
   name: 'DataSourceContext',
@@ -131,6 +132,23 @@ export default {
         : !this.$v.values.name.unique
         ? this.$t('dataSourceForm.errorUniqueName')
         : ''
+    },
+  },
+  watch: {
+    'values.type': {
+      handler(value) {
+        if (value) {
+          const serviceType = this.$registry.get('service', value)
+          const integrationsOfType = this.integrations.filter(
+            (integration) =>
+              integration.type === serviceType.integrationType.type
+          )
+          this.values.integration_id = integrationsOfType.length
+            ? _.sortBy(integrationsOfType, (i) => i.order)[0].id
+            : null
+        }
+      },
+      deep: true,
     },
   },
   methods: {

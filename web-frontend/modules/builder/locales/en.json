@@ -353,7 +353,7 @@
   },
   "integrationSettings": {
     "title": "Integrations",
-    "noIntegrationMessage": "You have not yet created any connection. They can be created by adding data source, action or user authentication.",
+    "noIntegrationMessage": "You have not yet created any integrations. They can be created by adding data source, action or user authentication.",
     "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
   },
   "dataSourceForm": {
