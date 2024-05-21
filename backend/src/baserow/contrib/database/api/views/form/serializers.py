@@ -58,6 +58,7 @@ class PublicFormViewFieldSerializer(FieldSerializer):
         model = Field
         fields = (
             "id",
+            "name",
             "type",
         )
 

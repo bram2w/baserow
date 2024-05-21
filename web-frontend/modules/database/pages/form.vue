@@ -41,6 +41,7 @@ import FormService from '@baserow/modules/database/services/view/form'
 import {
   getHiddenFieldNames,
   getPrefills,
+  prefillField,
 } from '@baserow/modules/database/utils/form'
 import { matchSearchFilters } from '@baserow/modules/database/utils/view'
 import FormViewPoweredBy from '@baserow/modules/database/components/view/form/FormViewPoweredBy'
@@ -93,7 +94,8 @@ export default {
         values[`field_${field.field.id}`] = value
       }
 
-      const prefill = prefills[field.name]
+      const prefill = prefillField(field, prefills)
+
       values[`field_${field.field.id}`] = fieldType.getEmptyValue(field.field) // Default value
       if (
         prefill !== undefined &&
