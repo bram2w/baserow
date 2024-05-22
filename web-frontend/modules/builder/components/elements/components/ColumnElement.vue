@@ -31,7 +31,10 @@
         </div>
       </template>
       <AddElementZone
-        v-else-if="mode === 'editing'"
+        v-else-if="
+          mode === 'editing' &&
+          $hasPermission('builder.page.create_element', page, workspace.id)
+        "
         @add-element="showAddElementModal(columnIndex)"
       />
     </div>
