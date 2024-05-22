@@ -3377,7 +3377,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         qs_per_level = defaultdict(lambda: Q())
         unique_value_per_level = defaultdict(set)
-        annotations = {}
+        all_annotations = {}
 
         for row in rows:
             all_values = tuple()
@@ -3406,7 +3406,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                     )
 
                     all_filters.update(**filters)
-                    annotations.update(**annotations)
+                    all_annotations.update(**annotations)
                     qs_per_level[level] |= Q(**all_filters)
                     unique_value_per_level[level].add(all_values)
 
@@ -3424,8 +3424,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 id__in=base_queryset.clear_multi_field_prefetch().values("id")
             ).values()
 
-            if len(annotations) > 0:
-                queryset = queryset.annotate(**annotations)
+            if len(all_annotations) > 0:
+                queryset = queryset.annotate(**all_annotations)
 
             queryset = (
                 queryset.filter(q)
