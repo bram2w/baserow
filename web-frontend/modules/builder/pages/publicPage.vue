@@ -29,6 +29,7 @@ export default {
   components: { PageContent, Toasts },
   provide() {
     return {
+      workspace: this.workspace,
       builder: this.builder,
       page: this.page,
       mode: this.mode,
