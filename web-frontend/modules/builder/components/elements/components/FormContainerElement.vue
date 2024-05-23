@@ -4,7 +4,13 @@
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
   >
-    <div v-if="mode === 'editing' && children.length === 0">
+    <div
+      v-if="
+        mode === 'editing' &&
+        children.length === 0 &&
+        $hasPermission('builder.page.create_element', page, workspace.id)
+      "
+    >
       <AddElementZone @add-element="showAddElementModal"></AddElementZone>
       <AddElementModal
         ref="addElementModal"

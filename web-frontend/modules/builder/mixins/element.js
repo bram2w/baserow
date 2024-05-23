@@ -9,7 +9,7 @@ import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
-  inject: ['builder', 'page', 'mode'],
+  inject: ['workspace', 'builder', 'page', 'mode'],
   props: {
     element: {
       type: Object,
