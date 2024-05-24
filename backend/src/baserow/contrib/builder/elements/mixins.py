@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Type
 
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -311,6 +311,17 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
     def after_update(self, instance: CollectionElementSubClass, values):
         if "fields" in values:
+            # If the collection element contains fields that are being deleted,
+            # we also need to delete the associated workflow actions.
+            query = Q()
+            for field in values["fields"]:
+                if "uid" in field:
+                    query |= Q(uid=field["uid"])
+
+            # Call before delete hook of removed fields
+            for field in instance.fields.exclude(query):
+                field.get_type().before_delete(field)
+
             # Remove previous fields
             instance.fields.all().delete()
 
@@ -323,6 +334,10 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
             instance.fields.add(*created_fields)
 
     def before_delete(self, instance: CollectionElementSubClass):
+        # Call the before_delete hook of all fields
+        for field in instance.fields.all():
+            field.get_type().before_delete(field)
+
         instance.fields.all().delete()
 
     def create_instance_from_serialized(

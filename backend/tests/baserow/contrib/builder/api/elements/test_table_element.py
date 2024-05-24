@@ -1,3 +1,5 @@
+import uuid
+
 from django.urls import reverse
 
 import pytest
@@ -48,20 +50,32 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
     table_element = data_fixture.create_builder_table_element(user=user)
 
     url = reverse("api:builder:element:item", kwargs={"element_id": table_element.id})
+    uuids = [str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())]
 
     response = api_client.patch(
         url,
         {
             "fields": [
-                {"name": "Name", "type": "text", "value": "get('test1')"},
+                {
+                    "name": "Name",
+                    "type": "text",
+                    "value": "get('test1')",
+                    "uid": uuids[0],
+                },
                 {
                     "name": "Color",
                     "type": "link",
                     "navigate_to_url": "get('test2')",
                     "link_name": "get('test3')",
                     "target": "self",
+                    "uid": uuids[1],
                 },
-                {"name": "Question", "type": "text", "value": "get('test3')"},
+                {
+                    "name": "Question",
+                    "type": "text",
+                    "value": "get('test3')",
+                    "uid": uuids[2],
+                },
             ],
         },
         format="json",
@@ -70,10 +84,10 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert [
-        {key: value for key, value in f.items() if key != "id"}
+        {key: value for key, value in f.items() if key not in ["id"]}
         for f in response.json()["fields"]
     ] == [
-        {"name": "Name", "type": "text", "value": "get('test1')"},
+        {"name": "Name", "type": "text", "value": "get('test1')", "uid": uuids[0]},
         {
             "name": "Color",
             "type": "link",
@@ -81,8 +95,9 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
             "navigate_to_url": "get('test2')",
             "link_name": "get('test3')",
             "target": "self",
+            "uid": uuids[1],
         },
-        {"name": "Question", "type": "text", "value": "get('test3')"},
+        {"name": "Question", "type": "text", "value": "get('test3')", "uid": uuids[2]},
     ]
 
 

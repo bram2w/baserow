@@ -212,12 +212,20 @@ export default {
         value: '',
         type: 'text',
         id: uuid(), // Temporary id
+        uid: uuid(),
       })
     },
     changeFieldType(fieldToUpdate, newType) {
       this.values.fields = this.values.fields.map((field) => {
         if (field.id === fieldToUpdate.id) {
-          return { id: field.id, name: field.name, type: newType }
+          // When the type of the workflow action changes we assign a new UID to
+          // trigger the backend workflow action removal
+          return {
+            id: field.id,
+            uid: uuid(),
+            name: field.name,
+            type: newType,
+          }
         }
         return field
       })

@@ -573,3 +573,9 @@ def test_get_first_ancestor_of_type(data_fixture, django_assert_num_queries):
         )
 
     assert nearest_column_ancestor.specific == grandparent
+
+    nearest_column_ancestor = ElementHandler().get_first_ancestor_of_type(
+        grandparent.id, ColumnElementType
+    )
+
+    assert nearest_column_ancestor.specific == grandparent

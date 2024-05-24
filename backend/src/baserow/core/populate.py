@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from baserow.core.models import WorkspaceUser
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.user.exceptions import UserAlreadyExist
 from baserow.core.user.handler import UserHandler
 
@@ -24,9 +25,18 @@ def load_test_data():
         admin.is_staff = True
         admin.save()
 
-        workspace = admin.workspaceuser_set.all().order_by("id").first().workspace
-        workspace.name = f"Acme Corp ({i +1})" if i > 0 else "Acme Corp"
-        workspace.save()
+        try:
+            workspace = Workspace.objects.get(
+                name=f"Acme Corp ({i +1})" if i > 0 else "Acme Corp"
+            )
+        except Workspace.DoesNotExist:
+            workspace = (
+                CoreHandler()
+                .create_workspace(
+                    admin, name=f"Acme Corp ({i +1})" if i > 0 else "Acme Corp"
+                )
+                .workspace
+            )
 
         # Create a second admin for the workspace
         email = f"admin{i + 1}_bis@baserow.io" if i > 0 else "admin_bis@baserow.io"

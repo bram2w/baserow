@@ -127,7 +127,7 @@ export default {
         await this.actionCreateWorkflowAction({
           page: this.page,
           workflowActionType: DEFAULT_WORKFLOW_ACTION_TYPE,
-          eventType: this.event.getType(),
+          eventType: this.event.name,
           configuration: {
             element_id: this.element.id,
           },

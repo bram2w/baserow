@@ -17,6 +17,9 @@
         :is="component"
         :element="element"
         :children="children"
+        :application-context-additions="{
+          element,
+        }"
         class="element"
       />
     </div>
@@ -29,20 +32,12 @@ import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 import { BACKGROUND_TYPES, WIDTH_TYPES } from '@baserow/modules/builder/enums'
+import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
 
 export default {
   name: 'PageElement',
-  inject: ['builder', 'page', 'mode', 'applicationContext'],
-  provide() {
-    return {
-      mode: this.elementMode,
-      applicationContext: {
-        ...this.applicationContext,
-        element: this.element,
-        ...this.applicationContextAdditions,
-      },
-    }
-  },
+  mixins: [applicationContextMixin],
+  inject: ['builder', 'page', 'mode'],
   props: {
     element: {
       type: Object,
@@ -50,11 +45,6 @@ export default {
     },
     forceMode: {
       type: String,
-      required: false,
-      default: null,
-    },
-    applicationContextAdditions: {
-      type: Object,
       required: false,
       default: null,
     },

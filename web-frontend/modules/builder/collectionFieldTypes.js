@@ -2,6 +2,8 @@ import { Registerable } from '@baserow/modules/core/registry'
 import BooleanField from '@baserow/modules/builder/components/elements/components/collectionField/BooleanField'
 import TextField from '@baserow/modules/builder/components/elements/components/collectionField/TextField'
 import LinkField from '@baserow/modules/builder/components/elements/components/collectionField/LinkField'
+import ButtonField from '@baserow/modules/builder/components/elements/components/collectionField/ButtonField.vue'
+import ButtonFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/ButtonFieldForm.vue'
 import BooleanFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/BooleanFieldForm'
 import TagsField from '@baserow/modules/builder/components/elements/components/collectionField/TagsField.vue'
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
@@ -14,6 +16,7 @@ import {
 } from '@baserow/modules/core/utils/validator'
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
+import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -26,6 +29,10 @@ export class CollectionFieldType extends Registerable {
 
   get formComponent() {
     return null
+  }
+
+  get events() {
+    return []
   }
 
   getProps(field, { resolveFormula, applicationContext }) {
@@ -181,5 +188,31 @@ export class TagsCollectionFieldType extends CollectionFieldType {
 
   getOrder() {
     return 10
+  }
+}
+
+export class ButtonCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'button'
+  }
+
+  get name() {
+    return 'Button'
+  }
+
+  get component() {
+    return ButtonField
+  }
+
+  get formComponent() {
+    return ButtonFieldForm
+  }
+
+  get events() {
+    return [ClickEvent]
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    return { label: ensureString(resolveFormula(field.label)) }
   }
 }

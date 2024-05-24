@@ -96,7 +96,9 @@ def test_create_workflow_action_event_does_not_exist(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
-    assert response.status_code == HTTP_400_BAD_REQUEST
+    # NOTE: Event names are no longer bound to a list of choices, so
+    #       the API will not raise a 400 Bad Request error
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db

@@ -160,7 +160,7 @@ export default {
     validateAndSubmitEvent() {
       this.setFormElementDescendantsTouched(true)
       if (!this.formElementChildrenAreInvalid) {
-        this.fireSubmitEvent()
+        this.fireEvent(this.elementType.getEventByName(this.element, 'submit'))
         this.resetFormContainerElements()
       }
     },

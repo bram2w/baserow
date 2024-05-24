@@ -142,6 +142,10 @@ export class RefreshDataSourceWorkflowActionType extends WorkflowActionType {
       }
     )
   }
+
+  getDataSchema(workflowAction) {
+    return null
+  }
 }
 
 export class WorkflowActionServiceType extends WorkflowActionType {

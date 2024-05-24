@@ -8,41 +8,31 @@ import { resolveFormula } from '@baserow/modules/core/formula'
  * registry required.
  */
 export class Event {
-  constructor({ i18n, store, registry }) {
+  constructor({ i18n, store, $registry, name, label }) {
     this.i18n = i18n
     this.store = store
-    this.registry = registry
-  }
-
-  static getType() {
-    throw new Error('getType needs to be implemented')
-  }
-
-  getType() {
-    return this.constructor.getType()
-  }
-
-  get label() {
-    return null
+    this.$registry = $registry
+    this.name = name
+    this.label = label
   }
 
   async fire({ workflowActions, applicationContext }) {
     const additionalContext = {}
     for (let i = 0; i < workflowActions.length; i += 1) {
       const workflowAction = workflowActions[i]
-      const workflowActionType = this.registry.get(
+      const workflowActionType = this.$registry.get(
         'workflowAction',
         workflowAction.type
       )
       const localResolveFormula = (formula) => {
         const formulaFunctions = {
           get: (name) => {
-            return this.registry.get('runtimeFormulaFunction', name)
+            return this.$registry.get('runtimeFormulaFunction', name)
           },
         }
         const runtimeFormulaContext = new Proxy(
           new RuntimeFormulaContext(
-            this.registry.getAll('builderDataProvider'),
+            this.$registry.getAll('builderDataProvider'),
             { ...applicationContext, previousActionResults: additionalContext }
           ),
           {
@@ -89,31 +79,33 @@ export class Event {
 }
 
 export class ClickEvent extends Event {
-  static getType() {
-    return 'click'
-  }
-
-  get label() {
-    return this.i18n.t('eventTypes.clickLabel')
+  constructor({ namePrefix, labelSuffix, ...rest }) {
+    super({
+      ...rest,
+      name: namePrefix ? `${namePrefix}_click` : 'click',
+      label: labelSuffix
+        ? `${rest.i18n.t('eventTypes.clickLabel')} ${labelSuffix}`
+        : rest.i18n.t('eventTypes.clickLabel'),
+    })
   }
 }
 
 export class SubmitEvent extends Event {
-  static getType() {
-    return 'submit'
-  }
-
-  get label() {
-    return this.i18n.t('eventTypes.submitLabel')
+  constructor(args) {
+    super({
+      name: 'submit',
+      label: args.i18n.t('eventTypes.submitLabel'),
+      ...args,
+    })
   }
 }
 
 export class AfterLoginEvent extends Event {
-  static getType() {
-    return 'after_login'
-  }
-
-  get label() {
-    return this.i18n.t('eventTypes.afterLoginLabel')
+  constructor(args) {
+    super({
+      name: 'after_login',
+      label: args.i18n.t('eventTypes.afterLoginLabel'),
+      ...args,
+    })
   }
 }

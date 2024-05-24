@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add a new \"button\" field to table element that can trigger actions based on current rows.",
+    "issue_number": 2522,
+    "bullet_points": [],
+    "created_at": "2024-05-23"
+}

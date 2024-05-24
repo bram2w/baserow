@@ -156,7 +156,9 @@ export default {
         this.values.password = ''
         this.values.email = ''
         this.$v.$reset()
-        this.fireAfterLoginEvent()
+        this.fireEvent(
+          this.elementType.getEventByName(this.element, 'after_login')
+        )
       } catch (error) {
         if (error.handler) {
           const response = error.handler.response
