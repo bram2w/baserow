@@ -127,6 +127,7 @@
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
       @field-created="showFieldCreated"
+      @field-created-callback-done="afterFieldCreatedUpdateFieldOptions"
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
       @refresh-row="refreshRow"

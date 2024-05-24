@@ -174,7 +174,7 @@ def test_calendar_view_created(premium_data_fixture):
         .order_by("field_id")
         .values_list("hidden", flat=True)
     )
-    assert list(all_field_options) == [False, True, True, True]
+    assert list(all_field_options) == [False, False, False, False]
 
 
 @pytest.mark.django_db

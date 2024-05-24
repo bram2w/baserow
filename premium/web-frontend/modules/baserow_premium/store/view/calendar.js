@@ -453,7 +453,7 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters, rootGetters },
-    { view, field, values, readOnly = false }
+    { view, field, values, readOnly = false, undoRedoActionGroupId = null }
   ) {
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
@@ -470,6 +470,7 @@ export const actions = {
         await ViewService(this.$client).updateFieldOptions({
           viewId: calendarId,
           values: updateValues,
+          undoRedoActionGroupId,
         })
       } catch (error) {
         commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {

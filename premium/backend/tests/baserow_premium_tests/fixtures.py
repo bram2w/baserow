@@ -75,7 +75,7 @@ class PremiumFixtures:
 
         return LicenseUser.objects.create(**kwargs)
 
-    def create_kanban_view(self, user=None, **kwargs):
+    def create_kanban_view(self, user=None, create_options=True, **kwargs):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -91,7 +91,8 @@ class PremiumFixtures:
             )
 
         kanban_view = KanbanView.objects.create(**kwargs)
-        self.create_kanban_view_field_options(kanban_view)
+        if create_options:
+            self.create_kanban_view_field_options(kanban_view)
         return kanban_view
 
     def create_kanban_view_field_options(self, kanban_view, **kwargs):
@@ -106,7 +107,7 @@ class PremiumFixtures:
         )
         return field_options
 
-    def create_calendar_view(self, user=None, **kwargs):
+    def create_calendar_view(self, user=None, create_options=True, **kwargs):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -122,7 +123,8 @@ class PremiumFixtures:
             )
 
         calendar_view = CalendarView.objects.create(**kwargs)
-        self.create_calendar_view_field_options(calendar_view)
+        if create_options:
+            self.create_calendar_view_field_options(calendar_view)
         return calendar_view
 
     def create_calendar_view_field_options(self, calendar_view, **kwargs):

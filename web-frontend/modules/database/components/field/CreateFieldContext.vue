@@ -54,11 +54,6 @@ export default {
       required: false,
       default: null,
     },
-    useActionGroupId: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     allFieldsInTable: {
       type: Array,
       required: true,
@@ -79,9 +74,7 @@ export default {
 
       const type = values.type
       delete values.type
-      const actionGroupId = this.useActionGroupId
-        ? createNewUndoRedoActionGroupId()
-        : null
+      const actionGroupId = createNewUndoRedoActionGroupId()
       try {
         const {
           forceCreateCallback,

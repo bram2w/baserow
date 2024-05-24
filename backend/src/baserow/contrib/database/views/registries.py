@@ -174,6 +174,19 @@ class ViewType(
     options
     """
 
+    @property
+    def model_reference_field_name(self):
+        """
+        Returns the name of the field that is used to reference the view model. This
+        field is used to filter the field options based on the view.
+        """
+
+        from baserow.contrib.database.views.models import View
+
+        field_options_model = self.field_options_model_class
+        field_name = get_model_reference_field_name(field_options_model, View)
+        return field_name
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.can_share:
@@ -769,16 +782,41 @@ class ViewType(
         :param original_table_id: The id of the table where the field was moved from.
         """
 
-        from baserow.contrib.database.views.models import View
-
-        field_options_model = self.field_options_model_class
-        field_name = get_model_reference_field_name(field_options_model, View)
-        field_options_model.objects.filter(
+        self.field_options_model_class.objects.filter(
             **{
-                f"{field_name}__table_id": original_table_id,
+                f"{self.model_reference_field_name}__table_id": original_table_id,
                 "field_id": field.id,
             }
         ).delete()
+
+    def prepare_field_options(
+        self, view: "View", field_id: "int"
+    ) -> Type[django_models.Model]:
+        """
+        Returns the default field options for the provided view. This method can be
+        overridden to provide custom default field options attributes. By default
+        a field will be hidden if the view is public or if other fields are hidden.
+
+        :param view: The view for which the default field options must be returned.
+        :return: The default field options.
+        """
+
+        options_model_class = self.field_options_model_class
+        view_field_options = getattr(
+            view, f"{options_model_class._meta.model_name}_set"
+        ).all()
+        existing_options_field_ids = [option.field_id for option in view_field_options]
+
+        hidden_field_ids = self.get_hidden_fields(view, existing_options_field_ids)
+        hidden = view.public or bool(hidden_field_ids)
+
+        return options_model_class(
+            **{
+                self.model_reference_field_name: view,
+                "field_id": field_id,
+                "hidden": hidden,
+            },
+        )
 
 
 class ViewTypeRegistry(

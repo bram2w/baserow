@@ -356,6 +356,21 @@ export class ViewType extends Registerable {
         }
       })
   }
+
+  /**
+   * Helper function to call after the field is created in the table
+   * to set the default field options for the view where the field was created.
+   * This is useful for example when creating a new field in a publicly shared grid
+   * view to make the new field visible, otherwise by default the new field will be
+   * hidden if the view is shared. The default implementation returns null, which
+   * mean that is not necessary to update the field options. Return an object with
+   * the field options to update if necessary.
+   */
+  getInitialFieldOptionsForView(view) {
+    return {
+      hidden: false,
+    }
+  }
 }
 
 export class GridViewType extends ViewType {
@@ -1055,5 +1070,9 @@ export class FormViewType extends ViewType {
       storePrefix + 'view/form/forceUpdateAllFieldOptions',
       fieldOptions
     )
+  }
+
+  getInitialFieldOptionsForView(view) {
+    return null
   }
 }

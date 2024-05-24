@@ -47,7 +47,7 @@ class PublicWebsocketTester(Generic[T], abc.ABC):
 
 
 class GridViewPublicWebsocketTester(PublicWebsocketTester[GridView]):
-    newly_created_field_visible_by_default = True
+    newly_created_field_visible_by_default = False
 
     def create_public_view(
         self,
@@ -64,11 +64,11 @@ class GridViewPublicWebsocketTester(PublicWebsocketTester[GridView]):
             create_options=False,
             **kwargs,
         )
-        for f in hidden_fields or []:
-            self.data_fixture.create_grid_view_field_option(view, f, hidden=True)
+        for f in visible_fields or []:
+            self.data_fixture.create_grid_view_field_option(view, f, hidden=False)
 
-        # In a grid view all fields are visible by default when they don't have a grid
-        # view option so no need make explicit options for the hidden_fields list.
+        # In a shared grid view all fields are hidden by default when they don't have a
+        # grid view option so no need make explicit options for the hidden_fields list.
 
         return view
 
