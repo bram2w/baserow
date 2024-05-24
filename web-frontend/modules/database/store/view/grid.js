@@ -1064,7 +1064,7 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters, dispatch, rootGetters },
-    { field, values, oldValues, readOnly = false }
+    { field, values, oldValues, readOnly = false, undoRedoActionGroupId }
   ) {
     const previousOptions = getters.getAllFieldOptions[field.id]
     let needAggregationValueUpdate = false
@@ -1099,6 +1099,7 @@ export const actions = {
         await ViewService(this.$client).updateFieldOptions({
           viewId: gridId,
           values: updateValues,
+          undoRedoActionGroupId,
         })
       } catch (error) {
         commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {

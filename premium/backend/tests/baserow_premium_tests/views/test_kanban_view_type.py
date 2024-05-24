@@ -159,7 +159,7 @@ def test_newly_created_view(premium_data_fixture):
         .order_by("field_id")
         .values_list("hidden", flat=True)
     )
-    assert list(all_field_options) == [False, False, False, True]
+    assert list(all_field_options) == [False, False, False, False]
 
 
 @pytest.mark.django_db

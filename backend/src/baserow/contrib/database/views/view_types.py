@@ -304,12 +304,22 @@ class GridViewType(ViewType):
         view: GridView,
         field_ids_to_check: Optional[List[int]] = None,
     ) -> Set[int]:
-        field_options = [o for o in view.gridviewfieldoptions_set.all() if o.hidden]
-        if field_ids_to_check is not None:
-            field_options = [
-                o for o in field_options if o.field_id in field_ids_to_check
-            ]
-        return {o.field_id for o in field_options}
+        if field_ids_to_check is None:
+            field_ids_to_check = view.table.field_set.values_list("id", flat=True)
+
+        fields_with_options = view.gridviewfieldoptions_set.all()
+        field_ids_with_options = {o.field_id for o in fields_with_options}
+        hidden_field_ids = {o.field_id for o in fields_with_options if o.hidden}
+        # Hide fields in shared views by default if they don't have field_options.
+        if view.public:
+            additional_hidden_field_ids = {
+                f_id
+                for f_id in field_ids_to_check
+                if f_id not in field_ids_with_options
+            }
+            hidden_field_ids |= additional_hidden_field_ids
+
+        return hidden_field_ids
 
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("gridviewfieldoptions_set")
@@ -1151,3 +1161,10 @@ class FormViewType(ViewType):
 
     def enhance_field_options_queryset(self, queryset):
         return queryset.prefetch_related("conditions", "condition_groups")
+
+    def prepare_field_options(
+        self, view: FormView, field_id: int
+    ) -> FormViewFieldOptions:
+        return FormViewFieldOptions(
+            field_id=field_id, form_view_id=view.id, enabled=False
+        )

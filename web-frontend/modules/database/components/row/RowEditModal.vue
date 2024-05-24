@@ -117,6 +117,9 @@
           :all-fields-in-table="allFieldsInTable"
           :database="database"
           @field-created="$emit('field-created', $event)"
+          @field-created-callback-done="
+            $emit('field-created-callback-done', $event)
+          "
         ></CreateFieldContext>
       </div>
     </template>

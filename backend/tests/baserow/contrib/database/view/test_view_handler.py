@@ -52,6 +52,7 @@ from baserow.contrib.database.views.models import (
     OWNERSHIP_TYPE_COLLABORATIVE,
     FormView,
     GridView,
+    GridViewFieldOptions,
     View,
     ViewFilter,
     ViewFilterGroup,
@@ -2156,6 +2157,17 @@ def test_get_public_rows_queryset_and_field_ids_view_filters_applied(data_fixtur
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(grid_view)
 
     assert queryset.count() == 1
+    # By default new fields are hidden in shared grid views
+    assert list(field_ids) == []
+
+    GridViewFieldOptions.objects.filter(grid_view=grid_view).update(hidden=False)
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(grid_view)
+
+    assert queryset.count() == 1
     assert list(field_ids) == [field.id]
 
 
@@ -2164,6 +2176,7 @@ def test_get_public_rows_queryset_and_field_ids_view_filters_applied(data_fixtur
 def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture, search_mode):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field, hidden=False)
 
     model = grid_view.table.get_model()
     model.objects.create(**{f"field_{field.id}": 4})
@@ -2190,6 +2203,7 @@ def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture, search
 def test_get_public_rows_queryset_and_field_ids_view_order_by(data_fixture):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field, hidden=False)
 
     model = grid_view.table.get_model()
     model.objects.create(**{f"field_{field.id}": 1})
@@ -2224,6 +2238,8 @@ def test_get_public_rows_queryset_and_field_ids_view_group_by(data_fixture):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
     field_2 = data_fixture.create_number_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, field_2, hidden=False)
 
     model = grid_view.table.get_model()
     row_1 = model.objects.create(**{f"field_{field.id}": 1, f"field_{field_2.id}": 4})
@@ -2269,6 +2285,8 @@ def test_get_public_rows_queryset_and_field_ids_include_exclude_fields(data_fixt
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
     field_two = data_fixture.create_text_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, field_two, hidden=False)
 
     model = grid_view.table.get_model()
     model.objects.create(**{f"field_{field.id}": 1})
@@ -2293,6 +2311,7 @@ def test_get_public_rows_queryset_and_field_ids_include_exclude_fields(data_fixt
 def test_get_public_rows_queryset_and_field_ids_filter(data_fixture):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field, hidden=False)
 
     model = grid_view.table.get_model()
     model.objects.create(**{f"field_{field.id}": 1})

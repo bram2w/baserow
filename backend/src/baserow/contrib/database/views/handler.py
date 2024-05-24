@@ -1202,7 +1202,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             if exists:
                 field_options_object = existing_field_options[int(field_id)]
             else:
-                field_options_object = model(field_id=field_id, **{field_name: view})
+                field_options_object = view_type.prepare_field_options(view, field_id)
 
             allowed_values = extract_allowed(
                 options, view_type.field_options_allowed_fields

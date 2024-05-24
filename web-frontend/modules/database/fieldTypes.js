@@ -2605,7 +2605,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getValidationError(field, value) {
-    if (value === null || value === '') {
+    if (value === null || value === '' || value === undefined) {
       return null
     }
     if (value.length > 254) {

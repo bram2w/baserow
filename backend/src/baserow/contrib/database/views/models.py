@@ -282,37 +282,37 @@ class View(
         field_options = get_queryset()
 
         if create_if_missing:
-            fields_queryset = Field.objects.filter(table_id=self.table.id)
-
             if fields is None:
-                field_count = fields_queryset.count()
+                fields = Field.objects.filter(table_id=self.table.id)
+                field_count = fields.count()
             else:
                 field_count = len(fields)
 
             # The check there are missing field options must be as efficient as
             # possible because this is being done a lot.
             if len(field_options) < field_count:
-                if fields is None:
-                    fields = fields_queryset
-
-                # In the case when field options are missing, we can be more
-                # in-efficient because this rarely happens. The most important part
-                # is that the check is fast.
-                existing_field_ids = [options.field_id for options in field_options]
-                through_model.objects.bulk_create(
-                    [
-                        through_model(**{field_name: self, "field": field})
-                        for field in fields
-                        if field.id not in existing_field_ids
-                    ],
-                    ignore_conflicts=True,
-                )
-
-                # Invalidate the field options because new ones have been created and
-                # we always want to return a queryset.
+                self.create_missing_field_options(field_options, fields)
                 field_options = get_queryset()
 
         return field_options
+
+    def create_missing_field_options(self, existing_field_options, fields) -> Iterable:
+        view_type = view_type_registry.get_by_model(self.specific_class)
+        through_model = view_type.field_options_model_class
+
+        # In the case when field options are missing, we can be more
+        # in-efficient because this rarely happens. The most important part
+        # is that the check is fast.
+        existing_field_ids = [options.field_id for options in existing_field_options]
+        new_field_options = through_model.objects.bulk_create(
+            [
+                view_type.prepare_field_options(self, field.id)
+                for field in fields
+                if field.id not in existing_field_ids
+            ],
+            ignore_conflicts=True,
+        )
+        return new_field_options
 
 
 class ViewFilterManager(models.Manager):
