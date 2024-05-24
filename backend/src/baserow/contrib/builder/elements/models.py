@@ -781,4 +781,17 @@ class RepeatElement(CollectionElement, ContainerElement):
     item in the data source that it is bound to.
     """
 
-    ...
+    class ORIENTATIONS(models.TextChoices):
+        VERTICAL = "vertical"
+        HORIZONTAL = "horizontal"
+
+    orientation = models.CharField(
+        choices=ORIENTATIONS.choices,
+        max_length=10,
+        default=ORIENTATIONS.VERTICAL,
+    )
+    items_per_row = models.JSONField(
+        default=dict,
+        help_text="The amount repetitions per row, per device type. "
+        "Only applicable when the orientation is horizontal.",
+    )

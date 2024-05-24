@@ -15,6 +15,7 @@
       >
         <i :class="`header__filter-icon ${deviceType.iconClass}`"></i>
       </a>
+      <slot name="deviceTypeControl" :device-type="deviceType"></slot>
     </li>
   </ul>
 </template>

@@ -22,5 +22,9 @@
     .add-element-zone__icon {
       border-color: $color-primary-500;
     }
+
+    .add-element-zone__button--disabled {
+      cursor: not-allowed;
+    }
   }
 }

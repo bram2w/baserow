@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Introduced a new element type called 'Repeat'. Given a list datasource, will repeat its child elements n number of times for each result in the datasource.",
+    "issue_number": 2485,
+    "bullet_points": [],
+    "created_at": "2024-05-19"
+}

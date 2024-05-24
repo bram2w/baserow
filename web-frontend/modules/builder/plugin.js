@@ -179,10 +179,7 @@ export default (context) => {
   app.$registry.register('element', new InputTextElementType(context))
   app.$registry.register('element', new DropdownElementType(context))
   app.$registry.register('element', new CheckboxElementType(context))
-
-  if (app.$featureFlagIsEnabled('builder-repeat-element')) {
-    app.$registry.register('element', new RepeatElementType(context))
-  }
+  app.$registry.register('element', new RepeatElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))

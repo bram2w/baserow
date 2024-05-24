@@ -1,0 +1,17 @@
+.repeat-element--orientation-vertical {
+  display: flex;
+  flex-direction: column;
+}
+
+.repeat-element__device-selector {
+  gap: 10px;
+
+  input[type='number'] {
+    margin-top: 5px;
+    text-align: center;
+  }
+
+  .header__filter-icon {
+    margin: 0 auto;
+  }
+}
