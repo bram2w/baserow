@@ -34,6 +34,7 @@ export default {
       page: this.page,
       mode: this.mode,
       formulaComponent: ApplicationBuilderFormulaInputGroup,
+      applicationContext: this.applicationContext,
     }
   },
   async asyncData({ store, params, error, $registry, app, req, route }) {

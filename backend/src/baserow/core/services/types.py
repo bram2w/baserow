@@ -1,6 +1,7 @@
 from typing import NewType, Optional, TypedDict, TypeVar
 
-from .models import Service
+from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
+from baserow.core.services.models import Service
 
 
 class ServiceDict(TypedDict):
@@ -34,3 +35,7 @@ ServiceSortDictSubClass = TypeVar("ServiceSortDictSubClass", bound="ServiceSortD
 ServiceSubClass = TypeVar("ServiceSubClass", bound="Service")
 
 ServiceForUpdate = NewType("ServiceForUpdate", Service)
+
+RuntimeFormulaContextSubClass = TypeVar(
+    "RuntimeFormulaContextSubClass", bound=RuntimeFormulaContext
+)

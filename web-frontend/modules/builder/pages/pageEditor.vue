@@ -37,6 +37,7 @@ export default {
       page: this.page,
       mode,
       formulaComponent: ApplicationBuilderFormulaInputGroup,
+      applicationContext: this.applicationContext,
     }
   },
   /**

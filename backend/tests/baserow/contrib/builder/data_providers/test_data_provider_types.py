@@ -22,6 +22,7 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
+from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.user_sources.user_source_user import UserSourceUser
@@ -757,6 +758,72 @@ def test_user_data_provider_get_data_chunk(data_fixture):
         user_data_provider_type.get_data_chunk(dispatch_context, ["email"]) == "e@ma.il"
     )
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 42
+
+
+@pytest.mark.django_db
+def test_current_record_provider_get_data_chunk_without_record_index(data_fixture):
+    current_record_provider = CurrentRecordDataProviderType()
+
+    user, token = data_fixture.create_user_and_token()
+
+    fake_request = MagicMock()
+    fake_request.data = {}
+
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, event=EventTypes.CLICK, user=user
+    )
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, workflow_action)
+    assert current_record_provider.get_data_chunk(dispatch_context, ["path"]) is None
+
+
+@pytest.mark.django_db
+def test_current_record_provider_get_data_chunk(data_fixture):
+    current_record_provider = CurrentRecordDataProviderType()
+
+    user, token = data_fixture.create_user_and_token()
+
+    fake_request = MagicMock()
+    fake_request.user = user
+    fake_request.data = {"current_record": 0}
+
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Animal", "text"),
+        ],
+        rows=[
+            ["Badger"],
+            ["Horse"],
+            ["Bison"],
+        ],
+    )
+    field = table.field_set.get(name="Animal")
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page, table=table, integration_args={"authorized_user": user}
+    )
+    repeat_element = data_fixture.create_builder_repeat_element(
+        page=page, data_source=data_source
+    )
+    button_element = data_fixture.create_builder_button_element(
+        page=page, parent_element=repeat_element
+    )
+
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, element=button_element, event=EventTypes.CLICK, user=user
+    )
+
+    dispatch_context = BuilderDispatchContext(fake_request, page, workflow_action)
+
+    assert (
+        current_record_provider.get_data_chunk(dispatch_context, [field.db_column])
+        == "Badger"
+    )
 
 
 @pytest.mark.django_db

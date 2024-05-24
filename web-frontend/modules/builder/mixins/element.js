@@ -9,11 +9,25 @@ import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
-  inject: ['workspace', 'builder', 'page', 'mode'],
+  inject: ['workspace', 'builder', 'page', 'mode', 'applicationContext'],
+  provide() {
+    return {
+      applicationContext: {
+        ...this.applicationContext,
+        element: this.element,
+        ...this.applicationContextAdditions,
+      },
+    }
+  },
   props: {
     element: {
       type: Object,
       required: true,
+    },
+    applicationContextAdditions: {
+      type: Object,
+      required: false,
+      default: null,
     },
   },
   computed: {
@@ -30,14 +44,6 @@ export default {
     },
     isEditMode() {
       return this.mode === 'editing'
-    },
-    applicationContext() {
-      return {
-        builder: this.builder,
-        page: this.page,
-        mode: this.mode,
-        element: this.element,
-      }
     },
     runtimeFormulaContext() {
       /**

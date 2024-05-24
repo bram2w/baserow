@@ -372,22 +372,44 @@ export class ElementType extends Registerable {
 
 const ContainerElementTypeMixin = (Base) =>
   class extends Base {
-    isContainerElementType = true
+    isContainerElement = true
 
     get elementTypesAll() {
       return Object.values(this.app.$registry.getAll('element'))
     }
 
     /**
-     * Returns an array of element types that are not allowed as children of this element.
-     *
-     * @returns {Array}
+     * Returns an array of element types that are not allowed as children of this element type.
+     * @returns {Array} An array of forbidden child element types.
      */
     get childElementTypesForbidden() {
       return []
     }
 
-    get childElementTypes() {
+    /**
+     * Returns an array of element types that are allowed as children of this element.
+     * If the parent element we're trying to add a child to has a parent, we'll check
+     * each parent until the root element if they have any forbidden element types to
+     * include as well.
+     * @param page
+     * @param element
+     * @returns {Array} An array of permitted child element types.
+     */
+    childElementTypes(page, element) {
+      if (element.parent_element_id) {
+        const parentElement = this.app.store.getters['element/getElementById'](
+          page,
+          element.parent_element_id
+        )
+        const parentElementType = this.app.$registry.get(
+          'element',
+          parentElement.type
+        )
+        return _.difference(
+          parentElementType.childElementTypes(page, parentElement),
+          this.childElementTypesForbidden
+        )
+      }
       return _.difference(this.elementTypesAll, this.childElementTypesForbidden)
     }
 
@@ -475,6 +497,10 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
     return FormContainerElementForm
   }
 
+  /**
+   * Exclude element types which are not a form element.
+   * @returns {Array} An array of non-form element types.
+   */
   get childElementTypesForbidden() {
     return this.elementTypesAll.filter((type) => !type.isFormElement)
   }
@@ -530,9 +556,13 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
     return ColumnElementForm
   }
 
+  /**
+   * Exclude element types which are containers.
+   * @returns {Array} An array of container element types.
+   */
   get childElementTypesForbidden() {
     return this.elementTypesAll.filter(
-      (elementType) => elementType.isContainerElementType
+      (elementType) => elementType.isContainerElement
     )
   }
 
@@ -630,6 +660,7 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
 
 const CollectionElementTypeMixin = (Base) =>
   class extends Base {
+    isCollectionElement = true
     getDisplayName(element, { page }) {
       let suffix = ''
 
@@ -715,7 +746,7 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
 export class RepeatElementType extends ContainerElementTypeMixin(
   CollectionElementTypeMixin(ElementType)
 ) {
-  getType() {
+  static getType() {
     return 'repeat'
   }
 
@@ -737,6 +768,20 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 
   get generalFormComponent() {
     return RepeatElementForm
+  }
+
+  /**
+   * The repeat elements will disallow itself, all form elements, and the
+   * form container, from being added as children.
+   * @returns {Array} An array of disallowed child element types.
+   */
+  get childElementTypesForbidden() {
+    const repeatElement = this.app.$registry.get('element', 'repeat')
+    const formContainer = this.app.$registry.get('element', 'form_container')
+    return this.elementTypesAll.filter(
+      (type) =>
+        type.isFormElement || type === formContainer || type === repeatElement
+    )
   }
 
   /**

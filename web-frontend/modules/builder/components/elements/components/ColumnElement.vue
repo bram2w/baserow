@@ -21,12 +21,14 @@
           <ElementPreview
             v-if="mode === 'editing'"
             :element="childCurrent"
+            :application-context-additions="applicationContextAdditions"
             @move="move(childCurrent, $event)"
           ></ElementPreview>
           <PageElement
             v-else
             :element="childCurrent"
             :mode="mode"
+            :application-context-additions="applicationContextAdditions"
           ></PageElement>
         </div>
       </template>
@@ -41,7 +43,7 @@
     <AddElementModal
       ref="addElementModal"
       :page="page"
-      :element-types-allowed="elementType.childElementTypes"
+      :element-types-allowed="elementType.childElementTypes(page, element)"
     />
   </div>
 </template>
@@ -78,6 +80,11 @@ export default {
     element: {
       type: Object,
       required: true,
+    },
+    applicationContextAdditions: {
+      type: Object,
+      required: false,
+      default: null,
     },
   },
   computed: {

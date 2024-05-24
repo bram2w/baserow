@@ -13,6 +13,9 @@
               v-if="index === 0 && isEditMode"
               :key="child.id"
               :element="child"
+              :application-context-additions="{
+                recordIndex: index,
+              }"
               @move="moveElement(child, $event)"
             />
             <!-- Other iterations are not editable -->
@@ -22,6 +25,9 @@
               :key="child.id"
               :element="child"
               :force-mode="'preview'"
+              :application-context-additions="{
+                recordIndex: index,
+              }"
               :class="{
                 'repeat-element-preview': index > 0 && isEditMode,
               }"
@@ -36,7 +42,7 @@
         <AddElementModal
           ref="addElementModal"
           :page="page"
-          :element-types-allowed="elementType.childElementTypes"
+          :element-types-allowed="elementType.childElementTypes(page, element)"
         ></AddElementModal>
       </template>
     </template>
@@ -48,7 +54,7 @@
         <AddElementModal
           ref="addElementModal"
           :page="page"
-          :element-types-allowed="elementType.childElementTypes"
+          :element-types-allowed="elementType.childElementTypes(page, element)"
         ></AddElementModal>
       </template>
       <!-- We have no contents, but we do have children in edit mode -->

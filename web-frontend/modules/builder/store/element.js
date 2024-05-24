@@ -60,7 +60,7 @@ const orderElements = (elements, parentElementId = null) => {
 const updateCachedValues = (page) => {
   page.orderedElements = orderElements(page.elements)
   page.elementMap = Object.fromEntries(
-    page.orderedElements.map((element) => [`${element.id}`, element])
+    page.elements.map((element) => [`${element.id}`, element])
   )
 }
 
@@ -120,11 +120,7 @@ const actions = {
     elementType.afterUpdate(element, page)
   },
   forceDelete({ commit, getters }, { page, elementId }) {
-    const elementsOfPage = getters.getElementsOrdered(page)
-    const elementIndex = elementsOfPage.findIndex(
-      (element) => element.id === elementId
-    )
-    const elementToDelete = elementsOfPage[elementIndex]
+    const elementToDelete = getters.getElementById(page, elementId)
 
     if (getters.getSelected?.id === elementId) {
       commit('SELECT_ITEM', { element: null })
@@ -276,12 +272,7 @@ const actions = {
     })
   },
   async delete({ dispatch, getters }, { page, elementId }) {
-    const elementsOfPage = getters.getElementsOrdered(page)
-    const elementIndex = elementsOfPage.findIndex(
-      (element) => element.id === elementId
-    )
-    const elementToDelete = elementsOfPage[elementIndex]
-
+    const elementToDelete = getters.getElementById(page, elementId)
     const descendants = getters.getDescendants(page, elementToDelete)
 
     // First delete all children
@@ -456,17 +447,25 @@ const getters = {
   getParent: (state, getters) => (page, element) => {
     return getters.getElementById(page, element?.parent_element_id)
   },
-  getAncestors: (state, getters) => (page, element) => {
-    const getElementAncestors = (element) => {
-      const parentElement = getters.getParent(page, element)
-      if (parentElement) {
-        return [...getElementAncestors(parentElement), parentElement]
-      } else {
-        return []
+  /**
+   * Given an element, return all its ancestors until we reach the root element.
+   * If `parentFirst` is `true` then we reverse the array of elements so that
+   * the element's immediate parent is first, otherwise the root element will be first.
+   */
+  getAncestors:
+    (state, getters) =>
+    (page, element, parentFirst = true) => {
+      const getElementAncestors = (element) => {
+        const parentElement = getters.getParent(page, element)
+        if (parentElement) {
+          return [...getElementAncestors(parentElement), parentElement]
+        } else {
+          return []
+        }
       }
-    }
-    return getElementAncestors(element)
-  },
+      const ancestors = getElementAncestors(element)
+      return parentFirst ? ancestors.reverse() : ancestors
+    },
   getSiblings: (state, getters) => (page, element) => {
     return getters
       .getElementsOrdered(page)
