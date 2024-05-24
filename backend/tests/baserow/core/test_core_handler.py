@@ -1,7 +1,8 @@
 import os
+from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -11,7 +12,14 @@ import pytest
 from itsdangerous.exc import BadSignature
 
 from baserow.contrib.database.application_types import DatabaseApplicationType
-from baserow.contrib.database.models import Database
+from baserow.contrib.database.fields.models import (
+    BooleanField,
+    DateField,
+    LongTextField,
+    TextField,
+)
+from baserow.contrib.database.models import Database, Table
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInWorkspace,
@@ -43,7 +51,7 @@ from baserow.core.models import (
     WorkspaceUser,
 )
 from baserow.core.operations import ReadWorkspaceOperationType
-from baserow.core.registries import ImportExportConfig
+from baserow.core.registries import ImportExportConfig, plugin_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
@@ -1437,3 +1445,47 @@ def test_get_user_email_mapping(data_fixture):
     assert mapping == {
         f"{user_in_workspace.email}": user_in_workspace,
     }
+
+
+@pytest.mark.django_db
+def test_create_initial_workspace(data_fixture):
+    plugin_mock = MagicMock()
+    with patch.dict(plugin_registry.registry, {"mock": plugin_mock}):
+        user = data_fixture.create_user(first_name="Test1")
+        workspace_user = CoreHandler().create_initial_workspace(user)
+
+        assert Workspace.objects.all().count() == 1
+        workspace = Workspace.objects.all().first()
+        assert workspace.users.filter(id=user.id).count() == 1
+        assert workspace.name == "Test1's workspace"
+        assert workspace.id == workspace_user.workspace_id
+
+        assert Database.objects.all().count() == 1
+        assert Table.objects.all().count() == 2
+        assert GridView.objects.all().count() == 2
+        assert TextField.objects.all().count() == 3
+        assert LongTextField.objects.all().count() == 1
+        assert BooleanField.objects.all().count() == 2
+        assert DateField.objects.all().count() == 1
+        assert GridViewFieldOptions.objects.all().count() == 3
+
+        tables = Table.objects.all().order_by("id")
+
+        model_1 = tables[0].get_model()
+        model_1_results = model_1.objects.all()
+        assert len(model_1_results) == 5
+        assert model_1_results[0].order == Decimal("1.00000000000000000000")
+        assert model_1_results[1].order == Decimal("2.00000000000000000000")
+        assert model_1_results[2].order == Decimal("3.00000000000000000000")
+        assert model_1_results[3].order == Decimal("4.00000000000000000000")
+        assert model_1_results[4].order == Decimal("5.00000000000000000000")
+
+        model_2 = tables[1].get_model()
+        model_2_results = model_2.objects.all()
+        assert len(model_2_results) == 4
+        assert model_2_results[0].order == Decimal("1.00000000000000000000")
+        assert model_2_results[1].order == Decimal("2.00000000000000000000")
+        assert model_2_results[2].order == Decimal("3.00000000000000000000")
+        assert model_2_results[3].order == Decimal("4.00000000000000000000")
+
+        plugin_mock.create_initial_workspace.assert_called_with(user, workspace)

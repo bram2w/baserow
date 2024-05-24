@@ -175,6 +175,20 @@ class Plugin(APIUrlsInstanceMixin, Instance):
         :type template: Template or None
         """
 
+    def create_initial_workspace(
+        self,
+        user: "AbstractUser",
+        workspace: "Workspace" = None,
+    ):
+        """
+        A hook that is called after a new initial workspace is created. This is the
+        place to create some data the user can start with.
+
+        :param user: The user that requested the new workspace.
+        :param workspace: The newly created workspace where the additional data must
+            be added to.
+        """
+
     def user_signed_in(self, user):
         """
         A hook that is called after an existing user has signed in.

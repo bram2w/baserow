@@ -31,19 +31,18 @@
       </template>
       <template v-else>
         <PasswordRegister
-          v-if="afterSignupStep < 0 && passwordLoginEnabled"
+          v-if="passwordLoginEnabled"
           :invitation="invitation"
           @success="next"
         >
         </PasswordRegister>
         <LoginButtons
-          v-if="afterSignupStep < 0"
           show-border="top"
           :hide-if-no-buttons="true"
           :invitation="invitation"
         />
         <LoginActions
-          v-if="!shouldShowAdminSignupPage && afterSignupStep < 0"
+          v-if="!shouldShowAdminSignupPage"
           :invitation="invitation"
         >
           <li>
@@ -53,10 +52,6 @@
             </nuxt-link>
           </li>
         </LoginActions>
-        <component
-          :is="afterSignupStepComponents[afterSignupStep]"
-          @success="next"
-        ></component>
       </template>
     </template>
   </div>
@@ -90,7 +85,6 @@ export default {
   },
   data() {
     return {
-      afterSignupStep: -1,
       displayEmailNotVerified: false,
       emailToVerify: null,
     }
@@ -111,14 +105,6 @@ export default {
     shouldShowAdminSignupPage() {
       return this.settings.show_admin_signup_page
     },
-    afterSignupStepComponents() {
-      return Object.values(this.$registry.getAll('plugin'))
-        .reduce((components, plugin) => {
-          components = components.concat(plugin.getAfterSignupStepComponent())
-          return components
-        }, [])
-        .filter((component) => component !== null)
-    },
     ...mapGetters({
       settings: 'settings/get',
       loginActions: 'authProvider/getAllLoginActions',
@@ -131,9 +117,7 @@ export default {
         this.emailToVerify = params.email
       }
 
-      if (this.afterSignupStep + 1 < this.afterSignupStepComponents.length) {
-        this.afterSignupStep++
-      } else if (
+      if (
         this.emailToVerify &&
         this.settings.email_verification ===
           EMAIL_VERIFICATION_OPTIONS.ENFORCED &&

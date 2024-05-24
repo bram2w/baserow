@@ -5,6 +5,7 @@
     :class="{
       'simple-grid--full-height': fullHeight,
       'simple-grid--with-footer': withFooter,
+      'simple-grid--border': border,
     }"
   >
     <div
@@ -185,6 +186,11 @@ export default {
       default: false,
     },
     withFooter: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    border: {
       type: Boolean,
       required: false,
       default: false,

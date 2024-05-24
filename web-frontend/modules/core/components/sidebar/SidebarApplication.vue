@@ -9,6 +9,7 @@
     <div class="tree__action tree__action--has-options" data-sortable-handle>
       <a
         class="tree__link"
+        :class="{ 'tree__link--empty': application.name === '' }"
         :title="application.name"
         @click="$emit('selected', application)"
       >
@@ -17,6 +18,7 @@
           :class="application._.type.iconClass"
         ></i>
         <span class="tree__link-text">
+          <template v-if="application.name === ''">&nbsp;</template>
           <Editable
             ref="rename"
             :value="application.name"

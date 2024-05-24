@@ -246,10 +246,16 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             profile.email_verified = True
             profile.save()
 
-        # If we still don't have a `WorkspaceUser`, which will be because we weren't
-        # invited to a workspace, and `allow_global_workspace_creation` is enabled,
-        # we'll create a workspace for this new user.
-        if not workspace_user and instance_settings.allow_global_workspace_creation:
+        if (
+            # If the user signs up and installs a template, then we must create a
+            # workspace because the template must be installed in one.
+            template
+            # If we still don't have a `WorkspaceUser`, which will be because we weren't
+            # invited to a workspace, and `allow_global_workspace_creation` is enabled,
+            # we'll create a workspace for this new user.
+            and not workspace_user
+            and instance_settings.allow_global_workspace_creation
+        ):
             with translation.override(language):
                 workspace_user = core_handler.create_workspace(
                     user=user, name=_("%(name)s's workspace") % {"name": name}
@@ -261,6 +267,21 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         if not workspace_invitation_token and template and workspace:
             core_handler.install_template(user, workspace, template)
+
+        if (
+            # If the user accepted an invitation, then a workspace already exists
+            # making the onboarding redundant.
+            workspace_invitation
+            # If the user signups up with a template, then we must create a workspace
+            # because making the onboarding redundant.
+            or template
+            # If the user can't create a new workspace then the onboarding is
+            # redundant because it can't create a workspace anyway.
+            or not instance_settings.allow_global_workspace_creation
+        ):
+            profile = user.profile
+            profile.completed_onboarding = True
+            profile.save()
 
         # Call the user_created method for each plugin that is in the registry.
         for plugin in plugin_registry.registry.values():
@@ -290,6 +311,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         first_name: Optional[str] = None,
         language: Optional[str] = None,
         email_notification_frequency: Optional[str] = None,
+        completed_onboarding: Optional[bool] = None,
     ) -> AbstractUser:
         """
         Updates the user's account editable properties. Handles the scenario
@@ -300,6 +322,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         :param language: The language selected by the user.
         :param email_notification_frequency: The frequency chosen by the user to
             receive email notifications.
+        :param completed_onboarding: Whether the onboarding was completed.
         :return: The updated user object.
         """
 
@@ -316,6 +339,10 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if email_notification_frequency is not None:
             user.profile.email_notification_frequency = email_notification_frequency
             profile_fields_to_update.append("email_notification_frequency")
+
+        if completed_onboarding is not None:
+            user.profile.completed_onboarding = completed_onboarding
+            profile_fields_to_update.append("completed_onboarding")
 
         if profile_fields_to_update:
             user.profile.save(update_fields=profile_fields_to_update)

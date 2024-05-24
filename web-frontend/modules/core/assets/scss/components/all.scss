@@ -26,6 +26,7 @@
 @import 'tooltip';
 @import 'rating';
 @import 'progress';
+@import 'circle_progress_bar';
 @import 'logo';
 @import 'fields/boolean';
 @import 'fields/number';
@@ -170,3 +171,6 @@
 @import 'rich_text_editor';
 @import 'radio';
 @import 'read_only_form';
+@import 'onboarding';
+@import 'onboarding_user_preview';
+@import 'onboarding_tool_preview';

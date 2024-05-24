@@ -207,6 +207,8 @@ class UserProfile(models.Model):
     )
     # TODO Remove null=True in a future release.
     email_verified = models.BooleanField(null=True, default=False)
+    # TODO Remove null=True in a future release.
+    completed_onboarding = models.BooleanField(null=True, default=False)
 
     def iat_before_last_password_change(self, iat: int) -> bool:
         """

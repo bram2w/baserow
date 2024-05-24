@@ -81,6 +81,10 @@ class UserSerializer(serializers.ModelSerializer):
         source="profile.email_verified",
         help_text="Shows whether the user's email has been verified.",
     )
+    completed_onboarding = serializers.BooleanField(
+        source="profile.completed_onboarding",
+        help_text="Indicates whether the onboarding has been completed.",
+    )
 
     class Meta:
         model = User
@@ -93,12 +97,14 @@ class UserSerializer(serializers.ModelSerializer):
             "language",
             "email_notification_frequency",
             "email_verified",
+            "completed_onboarding",
         )
         extra_kwargs = {
             "password": {"write_only": True},
             "is_staff": {"read_only": True},
             "id": {"read_only": True},
             "email_verified": {"read_only": True},
+            "completed_onboarding": {"read_only": True},
         }
 
 
@@ -181,9 +187,18 @@ class AccountSerializer(serializers.Serializer):
         help_text="The maximum frequency at which the user wants to "
         "receive email notifications.",
     )
+    completed_onboarding = serializers.BooleanField(
+        source="profile.completed_onboarding",
+        required=False,
+        help_text="Indicates whether the user has completed the onboarding.",
+    )
 
     def validate(self, data):
-        profile_fields = ["language", "email_notification_frequency"]
+        profile_fields = [
+            "language",
+            "email_notification_frequency",
+            "completed_onboarding",
+        ]
         profile_data = data.get("profile", {})
         if "first_name" not in data and not any(
             f in profile_data for f in profile_fields

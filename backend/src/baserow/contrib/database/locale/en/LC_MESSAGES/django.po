@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-22 17:45+0000\n"
+"POT-Creation-Date: 2024-05-22 20:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,15 +26,16 @@ msgstr ""
 #: src/baserow/contrib/database/action/scopes.py:13
 #, python-format
 msgid ""
-"in table \"%(table_name)s\" (%(table_id)s) of database \"%(database_name)s"
-"\" (%(database_id)s)."
+"in table \"%(table_name)s\" (%(table_id)s) of database "
+"\"%(database_name)s\" (%(database_id)s)."
 msgstr ""
 
 #: src/baserow/contrib/database/action/scopes.py:19
 #, python-format
 msgid ""
-"in view \"%(view_name)s\" (%(view_id)s) of table \"%(table_name)s"
-"\" (%(table_id)s) in database \"%(database_name)s\" (%(database_id)s)."
+"in view \"%(view_name)s\" (%(view_id)s) of table "
+"\"%(table_name)s\" (%(table_id)s) in database "
+"\"%(database_name)s\" (%(database_id)s)."
 msgstr ""
 
 #: src/baserow/contrib/database/airtable/actions.py:22
@@ -44,9 +45,9 @@ msgstr ""
 #: src/baserow/contrib/database/airtable/actions.py:24
 #, python-format
 msgid ""
-"Imported database \"%(installed_application_name)s"
-"\" (%(installed_application_id)s) from Airtable share ID "
-"\"%(airtable_share_id)s\""
+"Imported database "
+"\"%(installed_application_name)s\" (%(installed_application_id)s) from "
+"Airtable share ID \"%(airtable_share_id)s\""
 msgstr ""
 
 #: src/baserow/contrib/database/application_types.py:236
@@ -124,58 +125,58 @@ msgid ""
 "%(table_name)s."
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:63
+#: src/baserow/contrib/database/plugins.py:46
 #, python-format
 msgid "%(first_name)s's company"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:70
+#: src/baserow/contrib/database/plugins.py:53
 msgid "Customers"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:72
-#: src/baserow/contrib/database/plugins.py:94
+#: src/baserow/contrib/database/plugins.py:55
+#: src/baserow/contrib/database/plugins.py:77
 #: src/baserow/contrib/database/table/handler.py:623
 #: src/baserow/contrib/database/table/handler.py:636
 msgid "Name"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:73
+#: src/baserow/contrib/database/plugins.py:56
 msgid "Last name"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:74
+#: src/baserow/contrib/database/plugins.py:57
 #: src/baserow/contrib/database/table/handler.py:624
 msgid "Notes"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:75
-#: src/baserow/contrib/database/plugins.py:96
+#: src/baserow/contrib/database/plugins.py:58
+#: src/baserow/contrib/database/plugins.py:79
 #: src/baserow/contrib/database/table/handler.py:625
 msgid "Active"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:92
+#: src/baserow/contrib/database/plugins.py:75
 msgid "Projects"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:95
+#: src/baserow/contrib/database/plugins.py:78
 msgid "Started"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:101
+#: src/baserow/contrib/database/plugins.py:84
 msgid "Calculator"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:102
+#: src/baserow/contrib/database/plugins.py:85
 msgid "Turing machine"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:103
+#: src/baserow/contrib/database/plugins.py:86
 msgid "Computer architecture"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:104
+#: src/baserow/contrib/database/plugins.py:87
 msgid "Cellular Automata"
 msgstr ""
 

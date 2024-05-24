@@ -177,6 +177,7 @@ class CoreConfig(AppConfig):
         from baserow.core.actions import (
             AcceptWorkspaceInvitationActionType,
             CreateApplicationActionType,
+            CreateInitialWorkspaceActionType,
             CreateWorkspaceActionType,
             CreateWorkspaceInvitationActionType,
             DeleteApplicationActionType,
@@ -209,6 +210,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(RejectWorkspaceInvitationActionType())
         action_type_registry.register(UpdateWorkspaceInvitationActionType())
         action_type_registry.register(LeaveWorkspaceActionType())
+        action_type_registry.register(CreateInitialWorkspaceActionType())
 
         from baserow.core.snapshots.actions import (
             CreateSnapshotActionType,

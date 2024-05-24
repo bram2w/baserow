@@ -103,6 +103,16 @@
   .tree__action--disabled &:hover {
     cursor: inherit;
   }
+
+  &--empty::before {
+    @extend %empty;
+
+    left: 24px;
+    right: 40px;
+    top: 8px;
+    height: 16px;
+    border-radius: 16px;
+  }
 }
 
 .tree__link-text {
@@ -195,6 +205,16 @@
   .active > & {
     font-weight: 600;
     color: $color-primary-600;
+  }
+
+  &--empty::before {
+    @extend %empty;
+
+    left: 32px;
+    right: 40px;
+    top: 8px;
+    height: 14px;
+    border-radius: 14px;
   }
 }
 

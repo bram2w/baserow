@@ -141,6 +141,10 @@
 .simple-grid {
   display: flex;
 
+  &.simple-grid--border {
+    border: 1px solid $color-neutral-200;
+  }
+
   &.simple-grid--full-height {
     height: 100%;
   }

@@ -266,6 +266,12 @@ import {
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 import { FieldsDataProviderType } from '@baserow/modules/database/dataProviderTypes'
 
+import {
+  DatabaseOnboardingType,
+  DatabaseScratchTrackOnboardingType,
+  DatabaseImportOnboardingType,
+} from '@baserow/modules/database/onboardingTypes'
+
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
 import nl from '@baserow/modules/database/locales/nl.json'
@@ -765,6 +771,16 @@ export default (context) => {
   app.$registry.register(
     'rowModalSidebar',
     new HistoryRowModalSidebarType(context)
+  )
+
+  app.$registry.register('onboarding', new DatabaseOnboardingType(context))
+  app.$registry.register(
+    'onboarding',
+    new DatabaseScratchTrackOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboarding',
+    new DatabaseImportOnboardingType(context)
   )
 
   registerRealtimeEvents(app.$realtime)

@@ -136,6 +136,7 @@ class UpdateUserActionType(ActionType):
         first_name: Optional[str] = None,
         language: Optional[str] = None,
         email_notification_frequency: Optional[str] = None,
+        completed_onboarding: Optional[bool] = None,
         **kwargs: Any,
     ) -> AbstractUser:
         """
@@ -146,6 +147,8 @@ class UpdateUserActionType(ActionType):
         :param language: The language of the user.
         :param email_notification_frequency: The frequency chosen by the user to
             receive email notifications.
+        :param completed_onboarding: Indicates whether the user has already completed
+            the onboarding.
         :return: The updated user.
         """
 
@@ -154,6 +157,7 @@ class UpdateUserActionType(ActionType):
             first_name=first_name,
             language=language,
             email_notification_frequency=email_notification_frequency,
+            completed_onboarding=completed_onboarding,
         )
 
         cls.register_action(

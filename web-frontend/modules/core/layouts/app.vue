@@ -3,7 +3,13 @@
     <Toasts></Toasts>
     <div :class="{ 'layout--collapsed': isCollapsed }" class="layout">
       <div class="layout__col-1">
-        <Sidebar></Sidebar>
+        <Sidebar
+          :workspaces="workspaces"
+          :selected-workspace="selectedWorkspace"
+          :applications="applications"
+          :user="user"
+          @selected-workspace="$store.dispatch('workspace/select', $event)"
+        ></Sidebar>
       </div>
       <div class="layout__col-2">
         <nuxt />
@@ -18,7 +24,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapState } from 'vuex'
 
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
@@ -47,8 +53,14 @@ export default {
         .map((plugin) => plugin.getAppLayoutComponent())
         .filter((component) => component !== null)
     },
+    ...mapState({
+      workspaces: (state) => state.workspace.items,
+      selectedWorkspace: (state) => state.workspace.selected,
+    }),
     ...mapGetters({
+      applications: 'application/getAll',
       isCollapsed: 'sidebar/isCollapsed',
+      user: 'auth/getUserObject',
     }),
   },
   created() {

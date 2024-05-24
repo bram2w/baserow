@@ -4,7 +4,12 @@ import { getWorkspaceCookie } from '@baserow/modules/core/utils/workspace'
  * This middleware will make sure that all the workspaces and applications belonging to
  * the user are fetched and added to the store.
  */
-export default async function WorkspacesAndApplications({ store, req, app }) {
+export default async function WorkspacesAndApplications({
+  store,
+  req,
+  app,
+  redirect,
+}) {
   // If nuxt generate, pass this middleware
   if (process.server && !req) return
 
@@ -34,5 +39,14 @@ export default async function WorkspacesAndApplications({ store, req, app }) {
     if (!store.getters['application/isLoaded']) {
       await store.dispatch('application/fetchAll')
     }
+  }
+
+  // If the user hasn't completed the onboarding, and the doesn't have any workspaces,
+  // then redirect to the on-boarding page so that the user can create their first
+  // one.
+  const user = store.getters['auth/getUserObject']
+  const workspaces = store.getters['workspace/getAll']
+  if (!user.completed_onboarding && workspaces.length === 0) {
+    return redirect({ name: 'onboarding' })
   }
 }

@@ -19,7 +19,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
     'When user does not have global premium enabled the sidebar does not show a' +
       ' premium badge',
     async () => {
-      const sidebarComponent = await testApp.mount(Sidebar, {})
+      const sidebarComponent = await testApp.mount(Sidebar, {
+        propsData: {
+          applications: [],
+          workspaces: [],
+          selectedWorkspace: {},
+        },
+      })
       expect(
         PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)
       ).toBe(false)
@@ -31,7 +37,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
       ' badge',
     async () => {
       testApp.giveCurrentUserGlobalPremiumFeatures()
-      const sidebarComponent = await testApp.mount(Sidebar, {})
+      const sidebarComponent = await testApp.mount(Sidebar, {
+        propsData: {
+          applications: [],
+          workspaces: [],
+          selectedWorkspace: {},
+        },
+      })
       expect(
         PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)
       ).toBe(true)
@@ -39,7 +51,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
   )
 
   test('A realtime update to global premium is reflected in the badge', async () => {
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     expect(PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)).toBe(
       false
     )
@@ -52,7 +70,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
 
   test('When user is staff without global premium they dont see a premium badge', async () => {
     testApp.updateCurrentUserToBecomeStaffMember()
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     expect(PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)).toBe(
       false
     )
@@ -61,14 +85,26 @@ describe('Sidebar Premium Features Snapshot tests', () => {
   test('When user is staff with global premium they see a premium badge', async () => {
     testApp.giveCurrentUserGlobalPremiumFeatures()
     testApp.updateCurrentUserToBecomeStaffMember()
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     expect(PremiumUIHelpers.sidebarShowsPremiumEnabled(sidebarComponent)).toBe(
       true
     )
   })
 
   test('A non staff user cannot see admin settings links', async () => {
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     expect(UIHelpers.getSidebarItemNames(sidebarComponent)).not.toContain(
       'sidebar.admin'
     )
@@ -79,7 +115,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
     testApp
       .getStore()
       .dispatch('workspace/forceCreate', { id: 1, name: 'testWorkspace' })
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     expect(UIHelpers.getSidebarItemNames(sidebarComponent)).not.toContain(
       'sidebar.admin'
     )
@@ -87,7 +129,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
 
   test('A staff user can see admin settings links', async () => {
     testApp.updateCurrentUserToBecomeStaffMember()
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     expect(UIHelpers.getSidebarItemNames(sidebarComponent)).toContain(
       'sidebar.admin'
     )
@@ -96,7 +144,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
   test('A staff user without global prem sees premium admin options locked', async () => {
     testApp.updateCurrentUserToBecomeStaffMember()
     testApp.setRouteToBe('admin-dashboard')
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     await UIHelpers.selectSidebarItem(sidebarComponent, 'sidebar.admin')
     expect(UIHelpers.getDisabledSidebarItemNames(sidebarComponent)).toEqual(
       expect.arrayContaining([
@@ -113,7 +167,13 @@ describe('Sidebar Premium Features Snapshot tests', () => {
     testApp.giveCurrentUserGlobalPremiumFeatures()
     testApp.setRouteToBe('admin-dashboard')
 
-    const sidebarComponent = await testApp.mount(Sidebar, {})
+    const sidebarComponent = await testApp.mount(Sidebar, {
+      propsData: {
+        applications: [],
+        workspaces: [],
+        selectedWorkspace: {},
+      },
+    })
     await UIHelpers.selectSidebarItem(sidebarComponent, openedPage)
 
     expect(
