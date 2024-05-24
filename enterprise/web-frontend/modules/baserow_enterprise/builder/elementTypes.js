@@ -28,8 +28,8 @@ export class AuthFormElementType extends ElementType {
     return AuthFormElementForm
   }
 
-  get events() {
-    return [AfterLoginEvent]
+  getEvents(element) {
+    return [new AfterLoginEvent({ ...this.app })]
   }
 
   isInError({ builder, element }) {

@@ -1332,6 +1332,9 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 )
                 raise ServiceImproperlyConfigured(message) from e
             except Exception as e:
+                import traceback
+
+                traceback.print_exc()
                 message = (
                     "Unknown error in formula for "
                     f"field {field_mapping.field.name}({field_mapping.field.id}): {str(e)}"

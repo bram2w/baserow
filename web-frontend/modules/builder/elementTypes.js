@@ -87,10 +87,6 @@ export class ElementType extends Registerable {
     return this.stylesAll
   }
 
-  get events() {
-    return []
-  }
-
   /**
    * Returns a display name for this element, so it can be distinguished from
    * other elements of the same type.
@@ -102,8 +98,12 @@ export class ElementType extends Registerable {
     return this.name
   }
 
-  getEvents() {
-    return this.events.map((EventType) => new EventType(this.app))
+  getEvents(element) {
+    return []
+  }
+
+  getEventByName(element, name) {
+    return this.getEvents(element).find((event) => event.name === name)
   }
 
   /**
@@ -505,12 +505,12 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
     return this.elementTypesAll.filter((type) => !type.isFormElement)
   }
 
-  get events() {
-    return [SubmitEvent]
-  }
-
   get childStylesForbidden() {
     return ['style_width']
+  }
+
+  getEvents(element) {
+    return [new SubmitEvent({ ...this.app })]
   }
 
   /**
@@ -699,6 +699,24 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
 
   get generalFormComponent() {
     return TableElementForm
+  }
+
+  getEvents(element) {
+    return (element.fields || [])
+      .map(({ type, name, uid }) => {
+        const collectionFieldType = this.app.$registry.get(
+          'collectionField',
+          type
+        )
+        return collectionFieldType.events.map((EventType) => {
+          return new EventType({
+            ...this.app,
+            namePrefix: uid,
+            labelSuffix: `- ${name}`,
+          })
+        })
+      })
+      .flat()
   }
 
   async onElementEvent(event, { page, element, dataSourceId }) {
@@ -1148,8 +1166,8 @@ export class ButtonElementType extends ElementType {
     return ButtonElementForm
   }
 
-  get events() {
-    return [ClickEvent]
+  getEvents(element) {
+    return [new ClickEvent({ ...this.app })]
   }
 
   getDisplayName(element, applicationContext) {

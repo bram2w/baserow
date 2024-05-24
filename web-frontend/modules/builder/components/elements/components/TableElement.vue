@@ -6,9 +6,14 @@
     class="table-element"
   >
     <BaserowTable :fields="element.fields" :rows="rows">
-      <template #cell-content="{ field, value }">
+      <template #cell-content="{ rowIndex, field, value }">
         <component
           :is="collectionFieldTypes[field.type].component"
+          :element="element"
+          :field="field"
+          :application-context-additions="{
+            recordIndex: rowIndex,
+          }"
           v-bind="value"
         />
       </template>

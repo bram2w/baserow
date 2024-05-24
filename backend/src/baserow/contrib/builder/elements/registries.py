@@ -203,6 +203,7 @@ class CollectionFieldType(
         )
 
         serialized = {
+            "uid": instance.uid,
             "name": instance.name,
             "type": instance.type,
             "config": serialized_config,
@@ -270,6 +271,7 @@ class CollectionFieldType(
             )
 
         deserialized_values = {
+            "uid": serialized_values["uid"],
             "config": deserialized_config,
             "type": serialized_values["type"],
             "name": serialized_values["name"],
@@ -309,6 +311,12 @@ class CollectionFieldType(
         )
 
         return serializer_class(model_instance_or_instances, context=context, **kwargs)
+
+    def before_delete(self, instance: CollectionField):
+        """
+        This hooks is called before we delete a collection field and gives the
+        opportunity to clean up things.
+        """
 
 
 CollectionFieldTypeSubClass = TypeVar(

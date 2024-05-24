@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING, Optional
 
 from django.contrib.contenttypes.models import ContentType
@@ -685,6 +686,7 @@ class CollectionField(models.Model):
     A field of a Collection element
     """
 
+    uid = models.UUIDField(default=uuid.uuid4)
     order = models.PositiveIntegerField()
     name = models.CharField(
         max_length=225,

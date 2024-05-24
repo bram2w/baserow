@@ -3,8 +3,10 @@ from typing import Any, Dict, Optional, TypedDict
 from rest_framework import serializers
 
 from baserow.contrib.builder.elements.element_types import NavigationElementManager
+from baserow.contrib.builder.elements.models import CollectionField
 from baserow.contrib.builder.elements.registries import CollectionFieldType
 from baserow.contrib.builder.formula_importer import import_formula
+from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.formula.serializers import FormulaSerializerField
 
 
@@ -185,3 +187,41 @@ class TagsCollectionFieldType(CollectionFieldType):
         return super().deserialize_property(
             prop_name, value, id_mapping, data_source_id
         )
+
+
+class ButtonCollectionFieldType(CollectionFieldType):
+    type = "button"
+    allowed_fields = ["label"]
+    serializer_field_names = ["label"]
+
+    class SerializedDict(TypedDict):
+        label: str
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            "label": FormulaSerializerField(
+                help_text="The string value.",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+        }
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        data_source_id: Optional[int] = None,
+    ) -> Any:
+        if prop_name == "label" and data_source_id:
+            return import_formula(value, id_mapping, data_source_id=data_source_id)
+
+        return super().deserialize_property(
+            prop_name, value, id_mapping, data_source_id
+        )
+
+    def before_delete(self, instance: CollectionField):
+        # We delete the related workflow actions
+        BuilderWorkflowAction.objects.filter(event__startswith=instance.uid).delete()

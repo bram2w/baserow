@@ -11,7 +11,7 @@
     <ul class="tabs__header">
       <li
         v-for="(tab, index) in tabs"
-        :key="tab.title"
+        :key="`${tab.title} ${tab.tooltip}`"
         v-tooltip="tab.tooltip"
         class="tabs__item"
         :class="{

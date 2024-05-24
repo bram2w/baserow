@@ -503,7 +503,7 @@ export class PreviousActionDataProviderType extends DataProviderType {
 
     const previousActions = this.app.store.getters[
       'workflowAction/getElementPreviousWorkflowActions'
-    ](page, applicationContext.element.id, applicationContext.workflowAction.id)
+    ](page, applicationContext.element.id, applicationContext.workflowAction)
 
     const previousActionSchema = _.chain(previousActions)
       // Retrieve the associated schema for each action

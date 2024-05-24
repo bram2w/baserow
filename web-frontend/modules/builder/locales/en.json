@@ -566,5 +566,12 @@
     "id": "Id",
     "email": "Email",
     "username": "Username"
+  },
+  "buttonField": {
+    "noLabel": "Unnamed..."
+  },
+  "buttonFieldForm": {
+    "infoMessage": "To configure actions for this button, open the \"Events\" tab of the current element.",
+    "labelPlaceholder": "Enter a label..."
   }
 }

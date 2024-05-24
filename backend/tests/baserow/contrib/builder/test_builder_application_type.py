@@ -393,7 +393,12 @@ def test_builder_application_export(data_fixture):
                         "items_per_page": 42,
                         "data_source_id": element4.data_source.id,
                         "fields": [
-                            {"name": f.name, "type": f.type, "config": f.config}
+                            {
+                                "name": f.name,
+                                "type": f.type,
+                                "config": f.config,
+                                "uid": f.uid,
+                            }
                             for f in element4.fields.all()
                         ],
                     },
@@ -523,10 +528,12 @@ IMPORT_REFERENCE = {
                             "name": "F 1",
                             "type": "text",
                             "config": {"value": "get('current_record.field_25')"},
+                            "uid": uuid.uuid4(),
                         },
                         {
                             "name": "F 2",
                             "type": "link",
+                            "uid": uuid.uuid4(),
                             "config": {
                                 "page_parameters": [],
                                 "navigation_type": "custom",

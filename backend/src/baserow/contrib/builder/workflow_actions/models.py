@@ -28,8 +28,7 @@ class BuilderWorkflowAction(
         on_delete=models.CASCADE,
     )
     event = models.CharField(
-        max_length=30,
-        choices=EventTypes.choices,
+        max_length=60,
         help_text="The event that triggers the execution",
     )
     page = models.ForeignKey(Page, on_delete=models.CASCADE)

@@ -1,33 +1,16 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
-import {
-  ClickEvent,
-  SubmitEvent,
-  AfterLoginEvent,
-} from '@baserow/modules/builder/eventTypes'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
+import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
 
 export default {
-  inject: ['workspace', 'builder', 'page', 'mode', 'applicationContext'],
-  provide() {
-    return {
-      applicationContext: {
-        ...this.applicationContext,
-        element: this.element,
-        ...this.applicationContextAdditions,
-      },
-    }
-  },
+  inject: ['workspace', 'builder', 'page', 'mode'],
+  mixins: [applicationContextMixin],
   props: {
     element: {
       type: Object,
       required: true,
-    },
-    applicationContextAdditions: {
-      type: Object,
-      required: false,
-      default: null,
     },
   },
   computed: {
@@ -84,7 +67,7 @@ export default {
         return ''
       }
     },
-    async fireEvent(EventType) {
+    async fireEvent(event) {
       if (this.mode !== 'editing') {
         if (this.workflowActionsInProgress) {
           return false
@@ -92,14 +75,12 @@ export default {
 
         const workflowActions = this.$store.getters[
           'workflowAction/getElementWorkflowActions'
-        ](this.page, this.element.id)
+        ](this.page, this.element.id).filter(
+          ({ event: eventName }) => eventName === event.name
+        )
 
         try {
-          await new EventType({
-            i18n: this.$i18n,
-            store: this.$store,
-            registry: this.$registry,
-          }).fire({
+          await event.fire({
             workflowActions,
             resolveFormula: this.resolveFormula,
             applicationContext: this.applicationContext,
@@ -125,15 +106,6 @@ export default {
           })
         }
       }
-    },
-    fireClickEvent() {
-      return this.fireEvent(ClickEvent)
-    },
-    fireSubmitEvent() {
-      this.fireEvent(SubmitEvent)
-    },
-    fireAfterLoginEvent() {
-      this.fireEvent(AfterLoginEvent)
     },
 
     resolveColor,

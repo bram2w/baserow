@@ -1,8 +1,8 @@
 <template>
   <div>
     <Event
-      v-for="event in elementType.getEvents()"
-      :key="event.getType()"
+      v-for="event in elementType.getEvents(element)"
+      :key="event.name"
       :element="element"
       :event="event"
       :available-workflow-action-types="availableWorkflowActionTypes"
@@ -34,7 +34,7 @@ export default {
   methods: {
     getWorkflowActionsForEvent(event) {
       return this.workflowActions.filter(
-        (workflowAction) => workflowAction.event === event.getType()
+        (workflowAction) => workflowAction.event === event.name
       )
     },
   },

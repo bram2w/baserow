@@ -9,7 +9,7 @@
     <ABButton
       :full-width="element.width === WIDTHS.FULL.value"
       :loading="workflowActionsInProgress"
-      @click="fireClickEvent"
+      @click="fireEvent(elementType.getEventByName(element, 'click'))"
     >
       {{ resolvedValue || $t('buttonElement.noValue') }}
     </ABButton>

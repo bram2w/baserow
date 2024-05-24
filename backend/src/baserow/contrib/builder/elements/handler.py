@@ -135,9 +135,11 @@ class ElementHandler:
         """
 
         element = ElementHandler().get_element(element_id)
+        if isinstance(element.get_type(), target_type):
+            return element
+
         for ancestor in self.get_ancestors(element_id, element.page):
-            ancestor_type = element_type_registry.get_by_model(ancestor.specific_class)
-            if isinstance(ancestor_type, target_type):
+            if isinstance(ancestor.get_type(), target_type):
                 return ancestor
 
     def get_element_for_update(
