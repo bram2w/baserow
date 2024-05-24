@@ -1,0 +1,11 @@
+%empty {
+  @include absolute(0, 0, 0, 0);
+
+  content: '';
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    rgba(247, 247, 247, 0.64) 100%,
+    rgba(240, 240, 240, 0.88) 100%
+  );
+}

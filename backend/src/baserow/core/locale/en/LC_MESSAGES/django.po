@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-01 19:55+0000\n"
+"POT-Creation-Date: 2024-05-22 20:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -108,8 +108,8 @@ msgstr ""
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
-"%(application_type)s duplicated from \"%(original_application_name)s"
-"\" (%(original_application_id)s)"
+"%(application_type)s duplicated from "
+"\"%(original_application_name)s\" (%(original_application_id)s)"
 msgstr ""
 
 #: src/baserow/core/actions.py:691
@@ -130,8 +130,8 @@ msgstr ""
 #: src/baserow/core/actions.py:778
 #, python-format
 msgid ""
-"Group invitation created for \"%(email)s\" to join \"%(group_name)s"
-"\" (%(group_id)s) as %(permissions)s."
+"Group invitation created for \"%(email)s\" to join "
+"\"%(group_name)s\" (%(group_id)s) as %(permissions)s."
 msgstr ""
 
 #: src/baserow/core/actions.py:833
@@ -188,6 +188,14 @@ msgstr ""
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
 msgstr ""
 
+#: src/baserow/core/actions.py:1114
+msgid "Create initial workspace"
+msgstr ""
+
+#: src/baserow/core/actions.py:1115
+msgid "Initial workspace created"
+msgstr ""
+
 #: src/baserow/core/emails.py:97
 #: src/baserow/core/templates/baserow/core/user/email_pending_verification.html:176
 msgid "Please confirm email"
@@ -205,6 +213,11 @@ msgstr ""
 #: src/baserow/core/emails.py:150
 #, python-format
 msgid "You have %(count)d new notifications - Baserow"
+msgstr ""
+
+#: src/baserow/core/handler.py:1985 src/baserow/core/user/handler.py:261
+#, python-format
+msgid "%(name)s's workspace"
 msgstr ""
 
 #: src/baserow/core/notification_types.py:92
@@ -364,8 +377,8 @@ msgstr ""
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:181
 #, python-format
 msgid ""
-"<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-"%(workspace_name)s</strong>."
+"<strong>%(first_name)s</strong> has invited you to collaborate on "
+"<strong>%(workspace_name)s</strong>."
 msgstr ""
 
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:199
@@ -407,8 +420,8 @@ msgstr ""
 #: src/baserow/core/user/actions.py:25
 #, python-format
 msgid ""
-"User \"%(user_email)s\" (%(user_id)s) created via \"%(auth_provider_type)s"
-"\" (%(auth_provider_id)s) auth provider (invitation: "
+"User \"%(user_email)s\" (%(user_id)s) created via "
+"\"%(auth_provider_type)s\" (%(auth_provider_id)s) auth provider (invitation: "
 "%(with_invitation_token)s)"
 msgstr ""
 
@@ -421,80 +434,80 @@ msgstr ""
 msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:174
+#: src/baserow/core/user/actions.py:176
 msgid "Schedule user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:176
+#: src/baserow/core/user/actions.py:178
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) scheduled to be deleted after grace "
 "time"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:210
+#: src/baserow/core/user/actions.py:212
 msgid "Cancel user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:212
+#: src/baserow/core/user/actions.py:214
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
 "process"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:246
+#: src/baserow/core/user/actions.py:248
 msgid "Sign In User"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:248
+#: src/baserow/core/user/actions.py:250
 #, python-format
 msgid ""
-"User \"%(user_email)s\" (%(user_id)s) signed in via \"%(auth_provider_type)s"
-"\" (%(auth_provider_id)s) auth provider"
+"User \"%(user_email)s\" (%(user_id)s) signed in via "
+"\"%(auth_provider_type)s\" (%(auth_provider_id)s) auth provider"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:305
+#: src/baserow/core/user/actions.py:307
 msgid "Send reset user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:306
+#: src/baserow/core/user/actions.py:308
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:339
+#: src/baserow/core/user/actions.py:341
 msgid "Change user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:340
+#: src/baserow/core/user/actions.py:342
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:379
+#: src/baserow/core/user/actions.py:381
 msgid "Reset user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:380
+#: src/baserow/core/user/actions.py:382
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:416
+#: src/baserow/core/user/actions.py:418
 msgid "Send verify email"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:417
+#: src/baserow/core/user/actions.py:419
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to verify email"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:450
+#: src/baserow/core/user/actions.py:452
 msgid "Verify email"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:451
+#: src/baserow/core/user/actions.py:453
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) verify email"
 msgstr ""
@@ -513,9 +526,4 @@ msgstr ""
 
 #: src/baserow/core/user/emails.py:74
 msgid "Account deletion cancelled - Baserow"
-msgstr ""
-
-#: src/baserow/core/user/handler.py:255
-#, python-format
-msgid "%(name)s's workspace"
 msgstr ""

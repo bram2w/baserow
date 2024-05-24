@@ -231,6 +231,7 @@ def test_user_account(data_fixture, api_client):
     assert response.status_code == HTTP_200_OK
     assert response_json["first_name"] == "NewOriginalName"
     assert response_json["language"] == "fr"
+    assert response_json["completed_onboarding"] is False
 
     user.refresh_from_db()
     assert user.first_name == "NewOriginalName"
@@ -247,7 +248,8 @@ def test_user_account(data_fixture, api_client):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response_json["detail"]["non_field_errors"][0]["code"] == "invalid"
     assert response_json["detail"]["non_field_errors"][0]["error"] == (
-        "At least one of the fields first_name, language, email_notification_frequency must be provided."
+        "At least one of the fields first_name, language, email_notification_frequency,"
+        " completed_onboarding must be provided."
     )
 
     response = api_client.patch(
@@ -299,6 +301,21 @@ def test_user_account(data_fixture, api_client):
     assert response_json["first_name"] == "NewOriginalName"
     assert response_json["language"] == "fr"
     assert response_json["email_notification_frequency"] == "daily"
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "completed_onboarding": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert response_json["first_name"] == "NewOriginalName"
+    assert response_json["language"] == "fr"
+    assert response_json["email_notification_frequency"] == "daily"
+    assert response_json["completed_onboarding"] is True
 
 
 @pytest.mark.django_db

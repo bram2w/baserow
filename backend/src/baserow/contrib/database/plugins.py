@@ -19,37 +19,20 @@ LOREM = (
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
-    from baserow.core.models import Template, Workspace, WorkspaceInvitation
+    from baserow.core.models import Workspace
 
 
 class DatabasePlugin(Plugin):
     type = "database"
 
-    def user_created(
+    def create_initial_workspace(
         self,
         user: "AbstractUser",
         workspace: "Workspace" = None,
-        workspace_invitation: "WorkspaceInvitation" = None,
-        template: "Template" = None,
     ):
         """
-        This method is called when a new user is created.
-
-        If we have created a `Workspace`, we are going to create a database, table,
-        view, fields and some rows here as an example for the user.
+        Called when an initial workspace is created. This adds an example database.
         """
-
-        # If the user registered without being invited, and the Setting
-        # `allow_global_workspace_creation` is set to `False`, then no `Workspace` will
-        # be created for this `user`.
-        if workspace is None:
-            return
-
-        # If the user created an account in combination with a workspace invitation we
-        # don't want to create the initial data in the workspace because data should
-        # already exist.
-        if workspace_invitation or template:
-            return
 
         core_handler = CoreHandler()
         table_handler = TableHandler()

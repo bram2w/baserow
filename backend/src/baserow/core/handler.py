@@ -14,12 +14,14 @@ from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
+from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeSerializer
 from loguru import logger
 from opentelemetry import trace
 from tqdm import tqdm
 
+from baserow.core.registries import plugin_registry
 from baserow.core.user.utils import normalize_email_address
 
 from .emails import WorkspaceInvitationEmail
@@ -2007,6 +2009,24 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         if is_subject_last_admin:
             raise LastAdminOfWorkspace()
+
+    def create_initial_workspace(self, user: AbstractUser) -> Workspace:
+        """
+        Creates an initial workspace with example data.
+
+        :param user: The user for whom the workspace must be created.
+        :return: The newly created workspace.
+        """
+
+        with translation.override(user.profile.language):
+            workspace_user = self.create_workspace(
+                user=user, name=_("%(name)s's workspace") % {"name": user.first_name}
+            )
+
+        for plugin in plugin_registry.registry.values():
+            plugin.create_initial_workspace(user, workspace_user.workspace)
+
+        return workspace_user
 
     @staticmethod
     def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:

@@ -1,9 +1,10 @@
 from django.db import models
 
+from baserow.contrib.database.models import Database
 from baserow.core.jobs.mixins import JobWithUserIpAddress
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import GroupToWorkspaceCompatModelMixin
-from baserow.core.models import Application, Workspace
+from baserow.core.models import Workspace
 
 
 class AirtableImportJob(JobWithUserIpAddress, Job, GroupToWorkspaceCompatModelMixin):
@@ -17,7 +18,7 @@ class AirtableImportJob(JobWithUserIpAddress, Job, GroupToWorkspaceCompatModelMi
         help_text="Public ID of the shared Airtable base that must be imported.",
     )
     database = models.ForeignKey(
-        Application,
+        Database,
         null=True,
         on_delete=models.SET_NULL,
         help_text="The imported Baserow database.",

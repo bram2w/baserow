@@ -2,7 +2,9 @@ from requests.exceptions import RequestException
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from baserow.api.applications.serializers import ApplicationSerializer
+from baserow.api.applications.serializers import (
+    PolymorphicApplicationResponseSerializer,
+)
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.contrib.database.airtable.exceptions import (
     AirtableBaseNotPublic,
@@ -83,7 +85,7 @@ class AirtableImportJobType(JobType):
             max_length=200,
             help_text="Public ID of the shared Airtable base that must be imported.",
         ),
-        "database": ApplicationSerializer(),
+        "database": PolymorphicApplicationResponseSerializer(),
     }
 
     def prepare_values(self, values, user):

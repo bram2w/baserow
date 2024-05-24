@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from django.conf import settings
@@ -14,16 +13,7 @@ from freezegun import freeze_time
 from itsdangerous.exc import BadSignature, SignatureExpired
 
 from baserow.contrib.database.fields.models import SelectOption
-from baserow.contrib.database.models import (
-    BooleanField,
-    Database,
-    DateField,
-    GridView,
-    LongTextField,
-    Table,
-    TextField,
-)
-from baserow.contrib.database.views.models import GridViewFieldOptions
+from baserow.contrib.database.models import Database, Table
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     WorkspaceInvitationDoesNotExist,
@@ -103,51 +93,11 @@ def test_create_user(data_fixture):
         assert user.email == "test@test.nl"
         assert user.username == "test@test.nl"
         assert user.profile.language == "en"
+        assert user.profile.completed_onboarding is False
 
-        assert Workspace.objects.all().count() == 1
-        workspace = Workspace.objects.all().first()
-        assert workspace.users.filter(id=user.id).count() == 1
-        assert workspace.name == "Test1's workspace"
+        assert Workspace.objects.all().count() == 0
 
-        assert Database.objects.all().count() == 1
-        assert Table.objects.all().count() == 2
-        assert GridView.objects.all().count() == 2
-        assert TextField.objects.all().count() == 3
-        assert LongTextField.objects.all().count() == 1
-        assert BooleanField.objects.all().count() == 2
-        assert DateField.objects.all().count() == 1
-        assert GridViewFieldOptions.objects.all().count() == 3
-
-        tables = Table.objects.all().order_by("id")
-
-        model_1 = tables[0].get_model()
-        model_1_results = model_1.objects.all()
-        assert len(model_1_results) == 5
-        assert model_1_results[0].order == Decimal("1.00000000000000000000")
-        assert model_1_results[1].order == Decimal("2.00000000000000000000")
-        assert model_1_results[2].order == Decimal("3.00000000000000000000")
-        assert model_1_results[3].order == Decimal("4.00000000000000000000")
-        assert model_1_results[4].order == Decimal("5.00000000000000000000")
-
-        model_2 = tables[1].get_model()
-        model_2_results = model_2.objects.all()
-        assert len(model_2_results) == 4
-        assert model_2_results[0].order == Decimal("1.00000000000000000000")
-        assert model_2_results[1].order == Decimal("2.00000000000000000000")
-        assert model_2_results[2].order == Decimal("3.00000000000000000000")
-        assert model_2_results[3].order == Decimal("4.00000000000000000000")
-
-        plugin_mock.user_created.assert_called_with(user, workspace, None, None)
-
-        # Test profile properties
-        user2 = user_handler.create_user(
-            "Test2", "test2@test.nl", "password", language="fr"
-        )
-        assert user2.profile.language == "fr"
-        assert (
-            Workspace.objects.filter(users__in=[user2.id])[0].name
-            == "Projet de « Test2 »"
-        )
+        plugin_mock.user_created.assert_called_with(user, None, None, None)
 
         with pytest.raises(UserAlreadyExist):
             user_handler.create_user("Test1", "test@test.nl", valid_password)
@@ -259,6 +209,8 @@ def test_create_user_with_invitation(data_fixture):
             workspace_invitation_token=signer.dumps(invitation.id),
         )
 
+        assert user.profile.completed_onboarding is True
+
         assert Workspace.objects.all().count() == 1
         assert Workspace.objects.all().first().id == invitation.workspace_id
         assert WorkspaceUser.objects.all().count() == 2
@@ -284,16 +236,42 @@ def test_create_user_with_template(data_fixture):
     template = data_fixture.create_template(slug="example-template")
     user_handler = UserHandler()
     valid_password = "thisIsAValidPassword"
-    user_handler.create_user(
+    user = user_handler.create_user(
         "Test1", "test0@test.nl", valid_password, template=template
     )
 
+    assert user.profile.completed_onboarding is True
     assert Workspace.objects.all().count() == 2
+    workspace = Workspace.objects.filter(users__in=[user.id]).first()
+    assert workspace.users.filter(id=user.id).count() == 1
+    assert workspace.name == "Test1's workspace"
+
     assert WorkspaceUser.objects.all().count() == 1
     # We expect the example template to be installed
     assert Database.objects.all().count() == 1
     assert Database.objects.all().first().name == "Event marketing"
     assert Table.objects.all().count() == 2
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+@pytest.mark.django_db
+def test_create_user_with_template_different_language(data_fixture):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR, "../../../tests/templates"
+    )
+    template = data_fixture.create_template(slug="example-template")
+    user_handler = UserHandler()
+    valid_password = "thisIsAValidPassword"
+    user = user_handler.create_user(
+        "Test1", "test0@test.nl", valid_password, template=template, language="fr"
+    )
+
+    assert Workspace.objects.all().count() == 2
+    workspace = Workspace.objects.filter(users__in=[user.id]).first()
+    assert workspace.users.filter(id=user.id).count() == 1
+    assert workspace.name == "Projet de « Test1 »"
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates
 

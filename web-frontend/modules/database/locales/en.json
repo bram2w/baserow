@@ -839,5 +839,42 @@
   "userMentionInRichTextFieldNotification": {
     "title": "{sender} mentioned you in field {fieldName} of row {rowId} in {tableName}",
     "deletedUser": "A deleted user"
+  },
+  "databaseImportStep": {
+    "title": "Import your data",
+    "description": "Move your data to Baserow, in just a few clicks.",
+    "tableNameLabel": "Table name"
+  },
+  "databaseScratchTrackStep": {
+    "title": "What would you like to track?",
+    "description": "Choose from popular use cases, or create your own.",
+    "addYourOwn": "Add your own",
+    "tableName": "Table name",
+    "rowName": "Row name",
+    "thisIncludes": "This includes:",
+    "projects": "Projects",
+    "productsRow1": "Rebranding website",
+    "productsRow2": "Customer research",
+    "productsRow3": "Paid ad campaign",
+    "teams": "Teams",
+    "teamsRow1": "Sales",
+    "teamsRow2": "HR",
+    "teamsRow3": "Marketing",
+    "tasks": "Tasks",
+    "tasksRow1": "Logo redesign",
+    "tasksRow2": "Send email",
+    "tasksRow3": "Write blog post",
+    "campaigns": "Campaigns",
+    "campaignsRow1": "Summer Sale",
+    "campaignsRow2": "Loyalty Rewards",
+    "campaignsRow3": "Brand Relaunch"
+  },
+  "databaseStep": {
+    "title": "Create your first database",
+    "description": "Let us know what you're working on.",
+    "databaseNameLabel": "Database name",
+    "scratch": "From scratch",
+    "import": "From file",
+    "airtable": "From Airtable"
   }
 }

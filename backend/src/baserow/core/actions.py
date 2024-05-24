@@ -1106,3 +1106,32 @@ class LeaveWorkspaceActionType(ActionType):
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
+
+
+class CreateInitialWorkspaceActionType(ActionType):
+    type = "create_initial_workspace"
+    description = ActionTypeDescription(
+        _("Create initial workspace"),
+        _("Initial workspace created"),
+    )
+    analytics_params = []
+
+    @dataclasses.dataclass
+    class Params:
+        pass
+
+    @classmethod
+    def do(cls, user: AbstractUser) -> WorkspaceUser:
+        workspace_user = CoreHandler().create_initial_workspace(user)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(),
+            scope=cls.scope(),
+            workspace=workspace_user.workspace,
+        )
+        return workspace_user
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()

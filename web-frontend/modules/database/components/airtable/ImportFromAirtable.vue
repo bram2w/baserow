@@ -1,59 +1,36 @@
 <template>
   <div>
-    <div class="control">
-      <label class="control__label">
-        {{ $t('importFromAirtable.airtableShareLinkTitle') }}
-      </label>
-      <p class="margin-bottom-2">
-        {{ $t('importFromAirtable.airtableShareLinkDescription') }}
-        <br /><br />
-        {{ $t('importFromAirtable.airtableShareLinkBeta') }}
-      </p>
-      <div class="control__elements">
-        <input
-          ref="airtableUrl"
-          v-model="airtableUrl"
-          :class="{ 'input--error': $v.airtableUrl.$error }"
-          type="text"
-          class="input"
-          :placeholder="$t('importFromAirtable.airtableShareLinkPaste')"
-          @blur="$v.airtableUrl.$touch()"
+    <AirtableImportForm @submitted="importFromAirtable">
+      <Error :error="error"></Error>
+      <div class="modal-progress__actions">
+        <ProgressBar
+          v-if="jobIsRunning || jobHasSucceeded"
+          :value="job.progress_percentage"
+          :status="jobHumanReadableState"
         />
-        <div v-if="$v.airtableUrl.$error" class="error">
-          {{ $t(importFromAirtable.linkError) }}
-        </div>
+
+        <Button
+          v-if="!jobHasSucceeded"
+          type="primary"
+          size="large"
+          class="modal-progress__export-button"
+          :loading="loading"
+          :disabled="loading"
+        >
+          {{ $t('importFromAirtable.importButtonLabel') }}
+        </Button>
+
+        <Button
+          v-else
+          type="secondary"
+          size="large"
+          class="modal-progress__export-button"
+          @click="openDatabase"
+        >
+          {{ $t('importFromAirtable.openButtonLabel') }}</Button
+        >
       </div>
-    </div>
-    <Error :error="error"></Error>
-    <div class="modal-progress__actions">
-      <ProgressBar
-        v-if="jobIsRunning || jobHasSucceeded"
-        :value="job.progress_percentage"
-        :status="jobHumanReadableState"
-      />
-
-      <Button
-        v-if="!jobHasSucceeded"
-        type="primary"
-        size="large"
-        class="modal-progress__export-button"
-        :loading="loading"
-        :disabled="loading"
-        @click="importFromAirtable"
-      >
-        {{ $t('importFromAirtable.openButtonLabel') }}
-      </Button>
-
-      <Button
-        v-else
-        type="secondary"
-        size="large"
-        class="modal-progress__export-button"
-        @click="openDatabase"
-      >
-        {{ $t('importFromAirtable.openButtonLabel') }}</Button
-      >
-    </div>
+    </AirtableImportForm>
   </div>
 </template>
 
@@ -64,14 +41,14 @@ import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandle
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 import AirtableService from '@baserow/modules/database/services/airtable'
+import AirtableImportForm from '@baserow/modules/database/components/airtable/AirtableImportForm'
 
 export default {
   name: 'ImportFromAirtable',
+  components: { AirtableImportForm },
   mixins: [error, jobProgress],
   data() {
     return {
-      importType: 'none',
-      airtableUrl: '',
       loading: false,
     }
   },
@@ -84,9 +61,8 @@ export default {
     this.stopPollIfRunning()
   },
   methods: {
-    async importFromAirtable() {
-      this.$v.$touch()
-      if (this.$v.$invalid && !this.loading) {
+    async importFromAirtable(values) {
+      if (this.loading) {
         return
       }
 
@@ -96,7 +72,7 @@ export default {
       try {
         const { data } = await AirtableService(this.$client).create(
           this.selectedWorkspaceId,
-          this.airtableUrl
+          values.airtableUrl
         )
         this.startJobPoller(data)
       } catch (error) {
@@ -150,14 +126,6 @@ export default {
     },
     onJobPollingError(error) {
       this.stopPollAndHandleError(error)
-    },
-  },
-  validations: {
-    airtableUrl: {
-      valid(value) {
-        const regex = /https:\/\/airtable.com\/[shr|app](.*)$/g
-        return !!value.match(regex)
-      },
     },
   },
 }

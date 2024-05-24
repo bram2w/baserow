@@ -240,7 +240,11 @@
                 },
               }"
             >
-              <li class="tree__item" :class="{ active: isExactActive }">
+              <li
+                data-highlight="members"
+                class="tree__item"
+                :class="{ active: isExactActive }"
+              >
                 <div class="tree__action">
                   <a :href="href" class="tree__link" @click="navigate">
                     <i
@@ -259,10 +263,10 @@
               :key="'sidebarWorkspaceComponents' + index"
               :workspace="selectedWorkspace"
             ></component>
-            <ul class="tree">
+            <ul class="tree" data-highlight="applications">
               <component
                 :is="getApplicationComponent(application)"
-                v-for="application in applications"
+                v-for="application in orderedApplicationsInSelectedWorkspace"
                 :key="application.id"
                 v-sortable="{
                   id: application.id,
@@ -332,7 +336,7 @@
               >
                 <a
                   class="tree__link tree__link--group"
-                  @click="$store.dispatch('workspace/select', workspace)"
+                  @click="$emit('selected-workspace', workspace)"
                   ><span class="tree__link-text">{{ workspace.name }}</span></a
                 >
                 <span
@@ -402,7 +406,7 @@
 </template>
 
 <script>
-import { mapGetters, mapState } from 'vuex'
+import { mapGetters } from 'vuex'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsModal from '@baserow/modules/core/components/settings/SettingsModal'
@@ -438,6 +442,20 @@ export default {
     BadgeCounter,
   },
   mixins: [editWorkspace, undoRedo],
+  props: {
+    applications: {
+      type: Array,
+      required: true,
+    },
+    workspaces: {
+      type: Array,
+      required: true,
+    },
+    selectedWorkspace: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       logoffLoading: false,
@@ -448,10 +466,13 @@ export default {
      * Because all the applications that belong to the user are in the store we will
      * filter on the selected workspace here.
      */
-    applications() {
-      return this.$store.getters['application/getAllOfWorkspace'](
-        this.selectedWorkspace
-      ).sort((a, b) => a.order - b.order)
+    orderedApplicationsInSelectedWorkspace() {
+      return this.applications
+        .filter(
+          (application) =>
+            application.workspace.id === this.selectedWorkspace.id
+        )
+        .sort((a, b) => a.order - b.order)
     },
     adminTypes() {
       return this.$registry.getAll('admin')
@@ -498,15 +519,13 @@ export default {
     avatarSize() {
       return this.isCollapsed ? 'large' : 'x-large'
     },
-    ...mapState({
-      workspaces: (state) => state.workspace.items,
-      selectedWorkspace: (state) => state.workspace.selected,
-    }),
+    hasSelectedWorkspace() {
+      return Object.prototype.hasOwnProperty.call(this.selectedWorkspace, 'id')
+    },
     ...mapGetters({
       isStaff: 'auth/isStaff',
       name: 'auth/getName',
       email: 'auth/getUsername',
-      hasSelectedWorkspace: 'workspace/hasSelected',
       isCollapsed: 'sidebar/isCollapsed',
       unreadNotificationCount: 'notification/getUnreadCount',
       unreadNotificationsInOtherWorkspaces:

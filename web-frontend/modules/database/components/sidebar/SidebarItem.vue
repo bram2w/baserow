@@ -2,6 +2,7 @@
   <li class="tree__sub" :class="{ active: table._.selected }">
     <a
       class="tree__sub-link"
+      :class="{ 'tree__sub-link--empty': table.name === '' }"
       :title="table.name"
       :href="resolveTableHref(database, table)"
       @mousedown.prevent

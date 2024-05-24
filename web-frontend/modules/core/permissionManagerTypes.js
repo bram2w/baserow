@@ -142,5 +142,12 @@ export class AllowIfTemplateOperationPermissionManagerType extends PermissionMan
         return true
       }
     }
+    // Workspace ID `0` can be used to fake workspace objects, like for example
+    // during the onboarding.
+    // @TODO this is not the nicest place to allow this. decide whether we want to
+    // implement it this way.
+    if (workspaceId === 0 && context?._?.is_onboarding) {
+      return true
+    }
   }
 }

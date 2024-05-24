@@ -1,0 +1,97 @@
+.onboarding {
+  background-color: $white;
+
+  @include absolute(0, 0, 0, 0);
+}
+
+.onboarding__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  @include absolute(0, 0, 0, 0);
+}
+
+.onboarding__loading-text {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.onboarding__loading-progress {
+  margin-top: 20px;
+  width: 320px;
+}
+
+.onboarding__form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @include absolute(0, 50%, 0, 0);
+
+  @media screen and (max-width: $onboarding-breakpoint) {
+    right: 0;
+  }
+}
+
+.onboarding__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 40px;
+}
+
+.onboarding__logo {
+  max-width: 107px;
+}
+
+.onboarding__body-wrapper {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding__body {
+  height: 100%;
+  margin: 40px auto;
+  max-width: 542px;
+  padding: 0 40px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding__actions {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.onboarding__skip {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.onboarding__cancel {
+  width: 100%;
+  border-top: solid 1px $palette-neutral-200;
+  padding: 28px;
+  text-align: center;
+}
+
+.onboarding__preview {
+  display: block;
+  overflow: hidden;
+  background-color: $palette-neutral-200;
+
+  @include absolute(0, 0, 0, 50%);
+
+  @media screen and (max-width: $onboarding-breakpoint) {
+    display: none;
+  }
+}

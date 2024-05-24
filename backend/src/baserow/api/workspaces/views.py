@@ -22,6 +22,7 @@ from baserow.api.utils import validate_data
 from baserow.api.workspaces.users.serializers import WorkspaceUserWorkspaceSerializer
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
+    CreateInitialWorkspaceActionType,
     CreateWorkspaceActionType,
     DeleteWorkspaceActionType,
     LeaveWorkspaceActionType,
@@ -417,3 +418,27 @@ class WorkspaceGenerativeAISettingsView(APIView):
             request.user, workspace, generative_ai_models_settings=data
         )
         return Response(WorkspaceSerializer(updated_workspace).data)
+
+
+class CreateInitialWorkspaceView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["Workspaces"],
+        operation_id="create_initial_workspace",
+        description=(
+            "Creates an initial workspace. This is typically called after the user "
+            "signs up and skips the onboarding in the frontend. It contains some "
+            "example data."
+        ),
+        responses={
+            200: WorkspaceUserWorkspaceSerializer,
+        },
+    )
+    @transaction.atomic
+    @map_exceptions()
+    def post(self, request):
+        workspace_user = action_type_registry.get_by_type(
+            CreateInitialWorkspaceActionType
+        ).do(request.user)
+        return Response(WorkspaceUserWorkspaceSerializer(workspace_user).data)

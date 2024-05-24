@@ -34,7 +34,7 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
     assert user.first_name == user_info.name
     assert user.password == ""
     assert User.objects.count() == 1
-    assert user.workspaceuser_set.count() == 1
+    assert user.workspaceuser_set.count() == 0
     assert user.auth_providers.filter(id=auth_provider_1.id).exists()
 
     # the next times the user is just retrieved
