@@ -21,7 +21,7 @@ def notify_notification_created(
     sender,
     notification: Notification,
     notification_recipients: List[NotificationRecipient],
-    **kwargs
+    **kwargs,
 ):
     """
     Sends a notification to the recipient of the notification.
@@ -54,7 +54,7 @@ def notify_notification_marked_as_read(
     notification_recipient: NotificationRecipient,
     user: AbstractUser,
     ignore_web_socket_id=None,
-    **kwargs
+    **kwargs,
 ):
     """
     Notify the user that the notification has been marked as read.

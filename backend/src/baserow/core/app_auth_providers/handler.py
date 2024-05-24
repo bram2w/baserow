@@ -43,7 +43,7 @@ class AppAuthProviderHandler(BaseAuthProviderHandler):
         user: AbstractUser,
         auth_provider_type: AppAuthProviderType,
         user_source: "UserSource",
-        **kwargs
+        **kwargs,
     ):
         """
         Creates an app auth provider for the given user source.

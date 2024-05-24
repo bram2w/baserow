@@ -12,7 +12,7 @@ class UserSourceUserFixtures:
         username=None,
         email=None,
         user_source_args=None,
-        **kwargs
+        **kwargs,
     ) -> UserSourceUser:
         if user_id is None:
             user_id = self.fake.unique.random_int()

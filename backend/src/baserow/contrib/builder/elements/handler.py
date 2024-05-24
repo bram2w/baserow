@@ -146,7 +146,7 @@ class ElementHandler:
         element_type: ElementType,
         page: Page,
         before: Optional[Element] = None,
-        **kwargs
+        **kwargs,
     ) -> Element:
         """
         Creates a new element for a page.

@@ -115,7 +115,7 @@ class IntegrationHandler:
         integration_type: IntegrationType,
         application: Application,
         before=None,
-        **kwargs
+        **kwargs,
     ) -> Integration:
         """
         Creates a new integration for an application.
@@ -170,7 +170,7 @@ class IntegrationHandler:
         self,
         integration_type: IntegrationType,
         integration: IntegrationForUpdate,
-        **kwargs
+        **kwargs,
     ) -> Integration:
         """
         Updates and integration with values. Will also check if the values are allowed

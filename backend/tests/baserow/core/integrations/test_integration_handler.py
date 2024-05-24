@@ -32,7 +32,7 @@ def test_create_integration(data_fixture, integration_type: IntegrationType):
     integration = IntegrationHandler().create_integration(
         integration_type,
         application=application,
-        **integration_type.prepare_values({}, user)
+        **integration_type.prepare_values({}, user),
     )
 
     assert integration.application.id == application.id
@@ -52,7 +52,7 @@ def test_create_integration_bad_application(data_fixture):
         IntegrationHandler().create_integration(
             integration_type,
             application=application,
-            **integration_type.prepare_values({}, user)
+            **integration_type.prepare_values({}, user),
         )
 
 

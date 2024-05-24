@@ -39,7 +39,7 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
         files_zip=None,
         storage=None,
         cache=None,
-        **kwargs
+        **kwargs,
     ) -> Any:
         """
         This hooks allow to customize the deserialization of a property.
@@ -65,7 +65,7 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
             files_zip=files_zip,
             storage=storage,
             cache=cache,
-            **kwargs
+            **kwargs,
         )
 
 
