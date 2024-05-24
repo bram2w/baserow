@@ -22,7 +22,11 @@ export function populatePage(page) {
 const state = {
   // Holds the value of which page is currently selected
   selected: {},
-  deviceTypeSelected: null,
+  // By default, the device type will be desktop. This will be overridden
+  // in the editor, and in the public page. We set a default as otherwise
+  // in the public page, we can trigger a repaint, causing some layouts to
+  // redraw.
+  deviceTypeSelected: 'desktop',
   // A job object that tracks the progress of a page duplication currently running
   duplicateJob: null,
 }

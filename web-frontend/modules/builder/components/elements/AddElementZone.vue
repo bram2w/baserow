@@ -1,6 +1,10 @@
 <template>
-  <div class="add-element-zone" @click="$emit('add-element')">
-    <div class="add-element-zone__content">
+  <div class="add-element-zone" @click="!disabled && $emit('add-element')">
+    <div
+      v-tooltip="disabled ? tooltip : null"
+      class="add-element-zone__content"
+      :class="{ 'add-element-zone__button--disabled': disabled }"
+    >
       <i class="iconoir-plus add-element-zone__icon"></i>
     </div>
   </div>
@@ -9,5 +13,17 @@
 <script>
 export default {
   name: 'AddElementZone',
+  props: {
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    tooltip: {
+      type: String,
+      required: false,
+      default: null,
+    },
+  },
 }
 </script>

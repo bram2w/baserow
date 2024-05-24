@@ -427,12 +427,18 @@
   },
   "repeatElement": {
     "empty": "No items have been found.",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "missingDataSourceTooltip": "Choose a data source to begin adding elements."
   },
   "repeatElementForm": {
     "dataSource": "Data source",
     "itemsPerPage": "Items per page",
-    "itemsPerPagePlaceholder": "Enter value..."
+    "itemsPerPagePlaceholder": "Enter value...",
+    "itemsPerRowLabel": "Items per row",
+    "itemsPerRowDescription": "Choose, per device type, what the number of repetitions per row should be.",
+    "orientationLabel": "Orientation",
+    "orientationVertical": "Vertical",
+    "orientationHorizontal": "Horizontal"
   },
   "currentRecordDataProviderType": {
     "index": "Index",

@@ -251,14 +251,26 @@ class RepeatElementType(
     type = "repeat"
     model_class = RepeatElement
 
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + ["orientation", "items_per_row"]
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + ["orientation", "items_per_row"]
+
     class SerializedDict(
         CollectionElementTypeMixin.SerializedDict,
         ContainerElementTypeMixin.SerializedDict,
     ):
-        pass
+        orientation: str
+        items_per_row: dict
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
-        return {"data_source_id": None}
+        return {
+            "data_source_id": None,
+            "orientation": RepeatElement.ORIENTATIONS.VERTICAL,
+        }
 
 
 class HeadingElementType(ElementType):

@@ -800,6 +800,16 @@ export class RepeatElementType extends ContainerElementTypeMixin(
       ...this.getVerticalPlacementsDisabled(page, element),
     ]
   }
+
+  /**
+   * A repeat element is in error whilst it has no data source.
+   * @param {Object} element - The repeat element
+   * @param {Object} builder - The builder application.
+   * @returns {Boolean} - Whether the element is in error.
+   */
+  isInError({ element, builder }) {
+    return element.data_source_id === null
+  }
 }
 /**
  * This class serves as a parent class for all form element types. Form element types
