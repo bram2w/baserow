@@ -44,7 +44,7 @@ export default {
     hasPremium() {
       return this.$hasFeature(
         PremiumFeatures.PREMIUM,
-        this.database.workspace_id
+        this.database.workspace.id
       )
     },
     workspace() {
