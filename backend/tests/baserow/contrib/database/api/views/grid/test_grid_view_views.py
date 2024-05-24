@@ -1217,6 +1217,7 @@ def test_view_aggregations_no_adhoc_filtering_uses_view_filters(
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -1263,6 +1264,7 @@ def test_view_aggregations_adhoc_filtering_overrides_existing_filters(
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -1314,6 +1316,7 @@ def test_view_aggregations_adhoc_filtering_advanced_filters_are_preferred_to_oth
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -1367,6 +1370,7 @@ def test_view_aggregations_adhoc_filtering_invalid_advanced_filters(
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -2542,6 +2546,7 @@ def test_public_view_aggregations_no_adhoc_filtering_uses_view_filters(
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -2587,6 +2592,7 @@ def test_public_view_aggregations_adhoc_filtering_overrides_existing_filters(
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -2636,6 +2642,7 @@ def test_public_view_aggregations_adhoc_filtering_advanced_filters_are_preferred
         view=grid_view,
         field_options={
             text_field.id: {
+                "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
             }
@@ -2768,6 +2775,7 @@ def test_can_get_public_aggregation_if_result_is_nan(api_client, data_fixture):
         view=grid_view,
         field_options={
             formula_field.id: {
+                "hidden": False,
                 "aggregation_type": "sum",
                 "aggregation_raw_type": "sum",
             }
