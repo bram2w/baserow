@@ -14,13 +14,14 @@ NPMBIN:=npm
 .PHONY: clean clean-all package-build build install deps-install-dev deps-install eslint\
 		stylelint format-scss lint lint-fix lint-javascript\
 		jest test ci-test-javascript update-snapshots\
-		deps deps-upgrade
+		deps deps-upgrade fix
 
 help:
 	@echo "web-frontend makefile. available targets:"
 	@echo " make build - dummy build target"
 	@echo " make install - install deps locally"
 	@echo " make lint - run lint/style tools"
+	@echo " make lint-fix - run lint/style tools and fix the code"
 	@echo " make test - run tests"
 	@echo " make clean - noop target"
 
@@ -58,6 +59,8 @@ format-scss:
 lint-fix:
 	$(YARNBIN) run fix
 
+# compatibility with previous convention
+fix: lint-fix
 
 lint: eslint stylelint
 

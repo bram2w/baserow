@@ -53,7 +53,7 @@ BACKEND_TESTS_DIRS_FROM_ROOT=backend/tests/ premium/backend/tests/ enterprise/ba
 	clean clean-all package-build package-clean deps deps-clean deps-install deps-install-dev deps-upgrade\
 	lint lint-fix lint-python format sort make-translations compile-translations\
 	test test-builder test-builder-parallel test-compat test-compat-parallel test-coverage test-parallel \
-	test-regenerate-ci-durations ci-test-python ci-check-startup-python ci-coverage-report
+	test-regenerate-ci-durations ci-test-python ci-check-startup-python ci-coverage-report fix
 
 
 # This is a first target in the file, will be executed as default if no targets
@@ -65,6 +65,8 @@ help:
 	@echo "   make deps-install - install deps to venv"
 	@echo " make install-oss - install Baserow OSS version without premium/enterprise"
 	@echo " make install-extra - install Baserow premium/enterprise only (this still requires install-oss)"
+	@echo " make lint - run lint/style tools"
+	@echo " make lint-fix - run lint/style tools and fix the code"
 	@echo " make package-build - build wheel package"
 	@echo " make docker-build - build docker image for backend only"
 	@echo " make clean - remove build artifacts"
@@ -154,6 +156,9 @@ format: .check-dev
 	$(VBLACK) --config=pyproject.toml $(BACKEND_SOURCE_DIRS) $(BACKEND_TESTS_DIRS) || exit;
 
 lint-fix: sort format
+
+# compatibility with previous convention
+fix: lint-fix
 
 sort: .check-dev
 	$(VISORT) --skip generated --overwrite-in-place $(BACKEND_SOURCE_DIRS) $(BACKEND_TESTS_DIRS) || exit;
