@@ -103,6 +103,7 @@ export default {
       actionUpdateDataSource: 'dataSource/debouncedUpdate',
       actionDeleteDataSource: 'dataSource/delete',
       actionFetchDataSources: 'dataSource/fetch',
+      clearElementContent: 'elementContent/clearElementContent',
     }),
     async shown() {
       try {

@@ -15,5 +15,14 @@ import elementSidePanel from '@baserow/modules/builder/mixins/elementSidePanel'
 export default {
   name: 'GeneralSidePanel',
   mixins: [elementSidePanel],
+  inject: ['applicationContext'],
+  provide() {
+    return {
+      applicationContext: {
+        ...this.applicationContext,
+        element: this.element,
+      },
+    }
+  },
 }
 </script>

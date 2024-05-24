@@ -10,6 +10,7 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
+    RepeatElement,
     TableElement,
     TextElement,
 )
@@ -94,6 +95,14 @@ class ElementFixtures:
 
     def create_builder_dropdown_element(self, user=None, page=None, **kwargs):
         element = self.create_builder_element(DropdownElement, user, page, **kwargs)
+        return element
+
+    def create_builder_repeat_element(self, user=None, page=None, **kwargs):
+        if "data_source" not in kwargs:
+            kwargs[
+                "data_source"
+            ] = self.create_builder_local_baserow_list_rows_data_source(page=page)
+        element = self.create_builder_element(RepeatElement, user, page, **kwargs)
         return element
 
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):

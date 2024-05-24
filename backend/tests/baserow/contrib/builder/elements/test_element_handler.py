@@ -54,13 +54,17 @@ def test_get_element_does_not_exist(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_elements(data_fixture):
+def test_get_elements(data_fixture, django_assert_num_queries):
     page = data_fixture.create_builder_page()
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_text_element(page=page)
 
-    elements = ElementHandler().get_elements(page)
+    with django_assert_num_queries(3):
+        elements = ElementHandler().get_elements(page)
+
+    # Cache of specific elements is set.
+    assert getattr(page, "_page_elements_specific") == elements
 
     assert [e.id for e in elements] == [
         element1.id,
@@ -69,7 +73,30 @@ def test_get_elements(data_fixture):
     ]
 
     assert isinstance(elements[0], HeadingElement)
+    assert isinstance(elements[1], HeadingElement)
     assert isinstance(elements[2], TextElement)
+
+    # Cache of specific elements is re-used.
+    with django_assert_num_queries(0):
+        elements = ElementHandler().get_elements(page)
+    assert getattr(page, "_page_elements_specific") == elements
+
+    # We request non-specific records, the cache changes.
+    with django_assert_num_queries(1):
+        elements = list(ElementHandler().get_elements(page, specific=False))
+        assert getattr(page, "_page_elements") == elements
+
+    # We request non-specific records, the cache is reused.
+    with django_assert_num_queries(0):
+        elements = list(ElementHandler().get_elements(page, specific=False))
+    assert getattr(page, "_page_elements") == elements
+
+    # We pass in a base queryset, no caching strategy is available.
+    base_queryset = Element.objects.filter(page=page, visibility="all")
+    with django_assert_num_queries(3):
+        ElementHandler().get_elements(page, base_queryset)
+    assert getattr(page, "_page_elements") is None
+    assert getattr(page, "_page_elements_specific") is None
 
 
 @pytest.mark.django_db
@@ -505,3 +532,44 @@ def test_duplicate_element_with_workflow_action_in_container(data_fixture):
     ]
     assert duplicated_workflow_action1.page_id == workflow_action1.page_id
     assert duplicated_workflow_action2.page_id == workflow_action2.page_id
+
+
+@pytest.mark.django_db
+def test_get_ancestors(data_fixture, django_assert_num_queries):
+    page = data_fixture.create_builder_page()
+    grandparent = data_fixture.create_builder_column_element(column_amount=1, page=page)
+    parent = data_fixture.create_builder_column_element(
+        column_amount=3, parent_element=grandparent, page=page
+    )
+    child = data_fixture.create_builder_heading_element(
+        page=page, parent_element=parent
+    )
+
+    # Query and cache the page's elements for the same context.
+    # Query 1: fetch the elements on the page.
+    # 2: fetch the specific column types.
+    # 3: fetch the specific heading type.
+    with django_assert_num_queries(3):
+        ancestors = ElementHandler().get_ancestors(child.id, page)
+
+    assert len(ancestors) == 2
+    assert ancestors == [parent, grandparent]
+
+
+@pytest.mark.django_db
+def test_get_first_ancestor_of_type(data_fixture, django_assert_num_queries):
+    page = data_fixture.create_builder_page()
+    grandparent = data_fixture.create_builder_column_element(column_amount=1, page=page)
+    parent = data_fixture.create_builder_form_container_element(
+        parent_element=grandparent, page=page
+    )
+    child = data_fixture.create_builder_dropdown_element(
+        page=page, parent_element=parent
+    )
+
+    with django_assert_num_queries(7):
+        nearest_column_ancestor = ElementHandler().get_first_ancestor_of_type(
+            child.id, ColumnElementType
+        )
+
+    assert nearest_column_ancestor.specific == grandparent

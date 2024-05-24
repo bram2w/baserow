@@ -22,6 +22,7 @@
 <script>
 import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
 import { DataSourceDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
+
 export default {
   name: 'ApplicationBuilderFormulaInputGroup',
   components: { FormulaInputGroup },

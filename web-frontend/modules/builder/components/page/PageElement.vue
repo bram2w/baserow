@@ -32,10 +32,15 @@ import { BACKGROUND_TYPES, WIDTH_TYPES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'PageElement',
-  inject: ['builder', 'page', 'mode'],
+  inject: ['builder', 'page', 'mode', 'applicationContext'],
   provide() {
     return {
       mode: this.elementMode,
+      applicationContext: {
+        ...this.applicationContext,
+        element: this.element,
+        ...this.applicationContextAdditions,
+      },
     }
   },
   props: {
@@ -45,6 +50,11 @@ export default {
     },
     forceMode: {
       type: String,
+      required: false,
+      default: null,
+    },
+    applicationContextAdditions: {
+      type: Object,
       required: false,
       default: null,
     },

@@ -34,7 +34,12 @@
       @select-parent="selectParentElement()"
     />
 
-    <PageElement :element="element" :mode="mode" class="element--read-only" />
+    <PageElement
+      :element="element"
+      :mode="mode"
+      class="element--read-only"
+      :application-context-additions="applicationContextAdditions"
+    />
 
     <InsertElementButton
       v-show="isSelected"
@@ -95,6 +100,11 @@ export default {
       required: false,
       default: false,
     },
+    applicationContextAdditions: {
+      type: Object,
+      required: false,
+      default: null,
+    },
   },
   data() {
     return {
@@ -144,7 +154,10 @@ export default {
       return elementType.getPlacementsDisabled(this.page, this.element)
     },
     elementTypesAllowed() {
-      return this.parentElementType?.childElementTypes || null
+      return (
+        this.parentElementType?.childElementTypes(this.page, this.element) ||
+        null
+      )
     },
     canCreate() {
       return this.$hasPermission(

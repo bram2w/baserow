@@ -13,7 +13,10 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.mixins import FormElementTypeMixin
+from baserow.contrib.builder.elements.mixins import (
+    CollectionElementTypeMixin,
+    FormElementTypeMixin,
+)
 from baserow.contrib.builder.elements.models import FormElement
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
@@ -185,9 +188,35 @@ class CurrentRecordDataProviderType(DataProviderType):
     type = "current_record"
 
     def get_data_chunk(self, dispatch_context: BuilderDispatchContext, path: List[str]):
-        """Doesn't make sense in the backend yet"""
+        """
+        Get the current record data from the request data.
 
-        return None
+        :param dispatch_context: The dispatch context.
+        :param path: The path to the data.
+        :return: The data at the path.
+        """
+
+        try:
+            current_record = dispatch_context.request.data["current_record"]
+        except KeyError:
+            return None
+
+        first_collection_element_ancestor = ElementHandler().get_first_ancestor_of_type(
+            dispatch_context.workflow_action.element_id,
+            CollectionElementTypeMixin,
+        )
+        data_source_id = first_collection_element_ancestor.specific.data_source_id
+
+        # Narrow down our range to just our record index.
+        dispatch_context = BuilderDispatchContext.from_context(
+            dispatch_context,
+            offset=current_record,
+            count=1,
+        )
+
+        return DataSourceDataProviderType().get_data_chunk(
+            dispatch_context, [data_source_id, "0", *path]
+        )
 
     def import_path(self, path, id_mapping, data_source_id=None, **kwargs):
         """

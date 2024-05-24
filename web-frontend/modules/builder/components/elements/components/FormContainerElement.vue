@@ -15,7 +15,7 @@
       <AddElementModal
         ref="addElementModal"
         :page="page"
-        :element-types-allowed="elementType.childElementTypes"
+        :element-types-allowed="elementType.childElementTypes(page, element)"
       ></AddElementModal>
     </div>
     <div v-else>

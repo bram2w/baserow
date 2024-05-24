@@ -254,6 +254,20 @@ const actions = {
       })
       throw error
     }
+    // After deleting the data source, find all collection elements
+    // which use this data source, and clear their element content.
+    const dataSourceCollectionElements = page.elements.filter((element) => {
+      return element.data_source_id === dataSourceToDelete.id
+    })
+    dataSourceCollectionElements.map(async (collectionElement) => {
+      await dispatch(
+        'elementContent/clearElementContent',
+        {
+          element: collectionElement,
+        },
+        { root: true }
+      )
+    })
     commit('SET_LOADING', { page, value: false })
   },
   async fetch({ dispatch, commit }, { page }) {
