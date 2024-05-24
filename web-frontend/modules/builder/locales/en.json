@@ -559,7 +559,9 @@
   "visibilityForm": {
     "allVisitors": "All visitors",
     "loggedInVisitors": "Logged-in visitors",
-    "notLoggedInVisitors": "Logged-out visitors"
+    "notLoggedInVisitors": "Logged-out visitors",
+    "warningTitle": "We’re constantly enhancing the security",
+    "warningMessage": "At the moment the visibility is only applied in the UI, the underlying data is still accessible from the API. Please check the <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentation</a> for more information on data security."
   },
   "userDataProviderType": {
     "isAuthenticated": "Is authenticated",
