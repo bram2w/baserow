@@ -46,7 +46,7 @@ class ImportDatabaseFromAirtableActionType(ActionType):
         workspace: Workspace,
         airtable_share_id: str,
         progress_builder: Optional[ChildProgressBuilder] = None,
-        **kwargs
+        **kwargs,
     ) -> Database:
         """
         Imports a database from an Airtable share ID. The database will be

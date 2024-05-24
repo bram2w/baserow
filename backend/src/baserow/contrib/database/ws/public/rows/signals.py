@@ -84,7 +84,7 @@ def public_rows_created(
     model,
     send_realtime_update=True,
     send_webhook_events=True,
-    **kwargs
+    **kwargs,
 ):
     if not send_realtime_update:
         return

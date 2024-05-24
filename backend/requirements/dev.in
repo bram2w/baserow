@@ -42,3 +42,5 @@ ipython
 django-fakeredis==0.1.2
 fakeredis[lua]==2.10.2
 ipdb
+# build is used to compile a wheel package with `python -m build .` command.
+build

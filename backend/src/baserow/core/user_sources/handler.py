@@ -147,7 +147,7 @@ class UserSourceHandler:
         user_source_type: UserSourceType,
         application: Application,
         before=None,
-        **kwargs
+        **kwargs,
     ) -> UserSource:
         """
         Creates a new user_source for an application.
@@ -196,7 +196,7 @@ class UserSourceHandler:
         self,
         user_source_type: UserSourceType,
         user_source: UserSourceForUpdate,
-        **kwargs
+        **kwargs,
     ) -> UserSource:
         """
         Updates and user_source with values. Will also check if the values are allowed

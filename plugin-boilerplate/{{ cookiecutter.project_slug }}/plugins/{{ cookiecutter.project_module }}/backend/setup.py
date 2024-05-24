@@ -3,7 +3,6 @@ import os
 
 from setuptools import find_packages, setup
 
-
 PROJECT_DIR = os.path.dirname(__file__)
 REQUIREMENTS_DIR = os.path.join(PROJECT_DIR, "requirements")
 VERSION = "1.0.0"
@@ -20,7 +19,6 @@ def get_requirements(env):
 
 install_requires = get_requirements("base")
 
-
 setup(
     name="{{ cookiecutter.project_slug }}",
     version=VERSION,
@@ -34,5 +32,5 @@ setup(
     package_dir={"": "src"},
     packages=find_packages("src"),
     include_package_data=True,
-    install_requires=install_requires,
+    install_requires=install_requires
 )

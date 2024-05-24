@@ -136,7 +136,7 @@ class UpdateUserActionType(ActionType):
         first_name: Optional[str] = None,
         language: Optional[str] = None,
         email_notification_frequency: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> AbstractUser:
         """
         Updates user's data.

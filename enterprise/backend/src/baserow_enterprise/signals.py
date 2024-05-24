@@ -64,7 +64,7 @@ def role_assignment_updated_event(
     workspace: Workspace,
     scope: ScopeObject,
     role: Role,
-    **kwargs
+    **kwargs,
 ):
     """
     This is triggered when a role assignment has been deleted in which case we want to
