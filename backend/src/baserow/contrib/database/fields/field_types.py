@@ -2300,7 +2300,8 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         representing the related row ids.
         """
 
-        return LinkRowRequestSerializer(required=False, **kwargs)
+        required = kwargs.pop("required", False)
+        return LinkRowRequestSerializer(required=required, **kwargs)
 
     def get_response_serializer_field(self, instance, **kwargs):
         """

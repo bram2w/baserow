@@ -25,7 +25,7 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptionsConditionGroup,
 )
 from baserow.core.user_files.models import UserFile
-from baserow.test_utils.helpers import setup_interesting_test_table
+from baserow.test_utils.helpers import AnyInt, setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -349,6 +349,52 @@ def test_meta_submit_form_view(api_client, data_fixture):
             "number_negative": False,
         },
         "field_component": "default",
+    }
+
+
+@pytest.mark.django_db
+def test_submit_form_with_link_row_field(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    primary_t2 = data_fixture.create_text_field(table=table_2, primary=True)
+
+    t2_model = table_2.get_model()
+    r1 = t2_model.objects.create(**{f"field_{primary_t2.id}": "a"})
+
+    form = data_fixture.create_form_view(
+        table=table,
+        public=True,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=table_2
+    )
+
+    data_fixture.create_form_view_field_option(
+        form, link_row_field, required=True, enabled=True, order=1
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(url, {}, format="json")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST, response_json
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 1
+    assert (
+        response_json["detail"][f"field_{link_row_field.id}"][0]["code"] == "required"
+    )
+
+    response = api_client.post(url, {link_row_field.db_column: [r1.id]}, format="json")
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "row_id": AnyInt(),
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
     }
 
 
