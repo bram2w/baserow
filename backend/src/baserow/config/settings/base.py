@@ -616,7 +616,7 @@ class AttrDict(dict):
 
 DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
-AWS_STORAGE_ENABLED = os.getenv("AWS_ACCESS_KEY_ID", "") != ""
+AWS_STORAGE_ENABLED = os.getenv("AWS_STORAGE_BUCKET_NAME", "") != ""
 GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
 AZURE_STORAGE_ENABLED = os.getenv("AZURE_ACCOUNT_NAME", "") != ""
 
