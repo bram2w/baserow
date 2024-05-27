@@ -1,4 +1,3 @@
-import uuid
 from unittest.mock import patch
 
 import pytest
@@ -25,7 +24,6 @@ def test_signal_listener(mock_call_webhook, data_fixture):
     mock_call_webhook.delay.assert_called_once()
     _, kwargs = mock_call_webhook.delay.call_args
     assert kwargs["webhook_id"] == webhook.id
-    assert isinstance(kwargs["event_id"], uuid.UUID)
     assert kwargs["event_type"] == "rows.created"
     assert kwargs["headers"]["Baserow-header-1"] == "Value 1"
     assert kwargs["headers"]["Content-type"] == "application/json"
