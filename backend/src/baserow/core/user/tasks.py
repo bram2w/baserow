@@ -47,6 +47,17 @@ def clean_up_user_log_entry(self):
     UserHandler().delete_user_log_entries_older_than(cutoff_datetime)
 
 
+@app.task(bind=True, queue="export")
+def share_onboarding_details_with_baserow(self, **kwargs):
+    """
+    Task wrapper that calls the `share_onboarding_details_with_baserow` method.
+    """
+
+    from baserow.core.user.handler import UserHandler
+
+    UserHandler().share_onboarding_details_with_baserow(**kwargs)
+
+
 # noinspection PyUnusedLocal
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):

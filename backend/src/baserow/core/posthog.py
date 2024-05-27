@@ -13,7 +13,34 @@ from baserow.core.models import Workspace
 from baserow.core.utils import exception_capturer
 
 
-def capture_event(
+def capture_event(distinct_id: str, event: str, properties: dict):
+    """
+    Capture a single Posthog event.
+
+    :param distinct_id: The distinct ID of the event.
+    :param event: The event type name.
+    :param properties: A dictionary containing all properties that must be added to
+        the event.
+    """
+
+    if not settings.POSTHOG_ENABLED:
+        return
+
+    try:
+        posthog.capture(
+            distinct_id=distinct_id,
+            event=event,
+            properties=properties,
+        )
+    except Exception as e:
+        logger.warning(
+            "Failed to log to Posthog because of {e}.",
+            e=str(e),
+        )
+        exception_capturer(e)
+
+
+def capture_user_event(
     user: AbstractUser,
     event: str,
     properties: dict,
@@ -21,7 +48,7 @@ def capture_event(
     workspace: Optional[Workspace] = None,
 ):
     """
-    Captures a Posthog event in a consistent property format.
+    Captures a Posthog event of a user in a consistent property format.
 
     :param user: The user that performed the event.
     :param event: Unique name identifying the event.
@@ -33,9 +60,6 @@ def capture_event(
     :param workspace: Optionally the workspace related to the event.
     """
 
-    if not settings.POSTHOG_ENABLED:
-        return
-
     properties["user_email"] = user.email
 
     if session is not None:
@@ -44,18 +68,7 @@ def capture_event(
     if workspace is not None:
         properties["workspace_id"] = workspace.id
 
-    try:
-        posthog.capture(
-            distinct_id=user.id,
-            event=event,
-            properties=properties,
-        )
-    except Exception as e:
-        logger.error(
-            "Failed to log to Posthog because of {e}.",
-            e=str(e),
-        )
-        exception_capturer(e)
+    capture_event(user.id, event, properties)
 
 
 @receiver(action_done)
@@ -78,6 +91,6 @@ def capture_event_action_done(
             key: action_params_copy.get(key, None)
             for key in action_type.analytics_params
         }
-        capture_event(
+        capture_user_event(
             user, action_type.type, properties, workspace=workspace, session=session
         )

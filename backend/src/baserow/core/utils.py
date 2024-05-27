@@ -15,6 +15,7 @@ from itertools import islice
 from numbers import Number
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import ForeignKey, ManyToManyField, Model
 from django.db.models.fields import NOT_PROVIDED
@@ -1017,3 +1018,22 @@ def escape_csv_cell(payload):
         payload = payload.replace("|", "\\|")
         payload = "'" + payload
     return payload
+
+
+def get_baserow_saas_base_url() -> [str, dict]:
+    """
+    Returns the base url of the Baserow SaaS host. In production we always want to
+    connect to api.baserow.io, but in development to the saas dev env for testing
+    purposes.
+
+    :return: The base url and the headers object that must be added to the request.
+    """
+
+    base_url = "https://api.baserow.io"
+    headers = {}
+
+    if settings.DEBUG:
+        base_url = "http://baserow-saas-backend:8000"
+        headers["Host"] = "localhost"
+
+    return base_url, headers

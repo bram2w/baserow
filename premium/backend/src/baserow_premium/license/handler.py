@@ -34,6 +34,7 @@ from baserow.core.exceptions import IsNotAdminError
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
 from baserow.core.registries import plugin_registry
+from baserow.core.utils import get_baserow_saas_base_url
 from baserow.ws.signals import broadcast_to_users
 
 from .constants import (
@@ -292,13 +293,7 @@ class LicenseHandler:
         settings_object = CoreHandler().get_settings()
 
         try:
-            base_url = "https://api.baserow.io"
-            headers = {}
-
-            if settings.DEBUG:
-                base_url = "http://baserow-saas-backend:8000"
-                headers["Host"] = "localhost"
-
+            base_url, headers = get_baserow_saas_base_url()
             authority_url = f"{base_url}/api/saas/licenses/check/"
 
             response = requests.post(
