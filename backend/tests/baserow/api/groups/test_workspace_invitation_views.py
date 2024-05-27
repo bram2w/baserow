@@ -1,4 +1,5 @@
 from django.shortcuts import reverse
+from django.test.utils import override_settings
 
 import pytest
 from freezegun import freeze_time
@@ -253,6 +254,48 @@ def test_create_workspace_invitation(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+@override_settings(BASEROW_MAX_PENDING_WORKSPACE_INVITES=1)
+def test_create_workspace_invitation_max_pending(api_client, data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token(email="test1@test.nl")
+    workspace_1 = data_fixture.create_workspace(user=user_1)
+
+    response = api_client.post(
+        reverse(
+            "api:workspaces:invitations:list", kwargs={"workspace_id": workspace_1.id}
+        ),
+        {
+            "email": "test@test.nl",
+            "permissions": "ADMIN",
+            "message": "Test",
+            "base_url": "http://localhost:3000/invite",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse(
+            "api:workspaces:invitations:list", kwargs={"workspace_id": workspace_1.id}
+        ),
+        {
+            "email": "test2@test.nl",
+            "permissions": "ADMIN",
+            "message": "Test",
+            "base_url": "http://localhost:3000/invite",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert (
+        response_json["error"]
+        == "ERROR_MAX_NUMBER_OF_PENDING_WORKSPACE_INVITES_REACHED"
+    )
 
 
 @pytest.mark.django_db

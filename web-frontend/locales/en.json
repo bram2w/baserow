@@ -330,7 +330,9 @@
     "outputParserTitle": "Wrong output",
     "outputParserDescription": "The model responded with an incorrect output. Please try again.",
     "generateAIPromptTitle": "Prompt error",
-    "generateAIPromptDescription": "Something was wrong with the constructed prompt."
+    "generateAIPromptDescription": "Something was wrong with the constructed prompt.",
+    "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Max pending invites reached",
+    "maxNumberOfPendingWorkspaceInvitesReachedDescription": "You've reached the maximum number of pending invites for this workspace. Please let invitees accept the invite or cancel existing ones to continue."
   },
   "importerType": {
     "csv": "Import a CSV file",
