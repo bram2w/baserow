@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import OperationalError, transaction
+from django.test.utils import override_settings
 
 import pytest
 from itsdangerous.exc import BadSignature
@@ -28,6 +29,7 @@ from baserow.core.exceptions import (
     DuplicateApplicationMaxLocksExceededException,
     IsNotAdminError,
     LastAdminOfWorkspace,
+    MaxNumberOfPendingWorkspaceInvitesReached,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserInvalidWorkspacePermissionsError,
@@ -700,6 +702,47 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
     assert invitation.permissions == "ADMIN"
     assert invitation.message == ""
     assert WorkspaceInvitation.objects.all().count() == 3
+
+
+@pytest.mark.django_db
+@patch("baserow.core.handler.CoreHandler.send_workspace_invitation_email")
+@override_settings(BASEROW_MAX_PENDING_WORKSPACE_INVITES=1)
+def test_create_workspace_invitation_max_pending(mock_send_email, data_fixture):
+    user_workspace = data_fixture.create_user_workspace()
+    user = user_workspace.user
+    workspace = user_workspace.workspace
+
+    handler = CoreHandler()
+
+    handler.create_workspace_invitation(
+        user=user,
+        workspace=workspace,
+        email="test@test.nl",
+        permissions="ADMIN",
+        message="Test",
+        base_url="http://localhost:3000/invite",
+    )
+
+    with pytest.raises(MaxNumberOfPendingWorkspaceInvitesReached):
+        handler.create_workspace_invitation(
+            user=user,
+            workspace=workspace,
+            email="test2@test.nl",
+            permissions="ADMIN",
+            message="Test",
+            base_url="http://localhost:3000/invite",
+        )
+
+    # This email address already exists, so it should just update the invite without
+    # failing.
+    handler.create_workspace_invitation(
+        user=user,
+        workspace=workspace,
+        email="test@test.nl",
+        permissions="MEMBER",
+        message="Test",
+        base_url="http://localhost:3000/invite",
+    )
 
 
 @pytest.mark.django_db

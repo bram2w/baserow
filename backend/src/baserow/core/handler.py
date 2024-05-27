@@ -33,6 +33,7 @@ from .exceptions import (
     DuplicateApplicationMaxLocksExceededException,
     InvalidPermissionContext,
     LastAdminOfWorkspace,
+    MaxNumberOfPendingWorkspaceInvitesReached,
     PermissionDenied,
     PermissionException,
     TemplateDoesNotExist,
@@ -1039,6 +1040,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :raises ValueError: If the provided permissions are not allowed.
         :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
             workspace or doesn't have right permissions in the workspace.
+        :raises MaxNumberOfPendingWorkspaceInvitesReached: When the maximum number of
+            pending invites have been reached.
         :return: The created workspace invitation.
         :rtype: WorkspaceInvitation
         """
@@ -1057,6 +1060,18 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).exists():
             raise WorkspaceUserAlreadyExists(
                 f"The user {email} is already part of the workspace."
+            )
+
+        max_invites = settings.BASEROW_MAX_PENDING_WORKSPACE_INVITES
+        if max_invites > 0 and (
+            WorkspaceInvitation.objects.filter(workspace=workspace)
+            .exclude(email=email)
+            .count()
+            >= max_invites
+        ):
+            raise MaxNumberOfPendingWorkspaceInvitesReached(
+                f"The maximum number of pending workspaces invites {max_invites} has "
+                f"been reached."
             )
 
         invitation, created = WorkspaceInvitation.objects.update_or_create(

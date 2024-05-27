@@ -163,6 +163,15 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.modelDoesNotBelongToTypeTitle'),
         app.i18n.t('clientHandler.modelDoesNotBelongToTypeDescription')
       ),
+      ERROR_MAX_NUMBER_OF_PENDING_WORKSPACE_INVITES_REACHED:
+        new ResponseErrorMessage(
+          app.i18n.t(
+            'clientHandler.maxNumberOfPendingWorkspaceInvitesReachedTitle'
+          ),
+          app.i18n.t(
+            'clientHandler.maxNumberOfPendingWorkspaceInvitesReachedDescription'
+          )
+        ),
     }
   }
 

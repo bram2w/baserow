@@ -55,6 +55,7 @@ export default {
   methods: {
     async inviteSubmitted(values) {
       this.inviteLoading = true
+      this.hideError()
 
       try {
         // The public accept url is the page where the user can publicly navigate too,
