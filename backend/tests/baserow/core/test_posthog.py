@@ -6,7 +6,7 @@ import pytest
 
 from baserow.core.action.registries import ActionType
 from baserow.core.action.signals import ActionCommandType
-from baserow.core.posthog import capture_event, capture_event_action_done
+from baserow.core.posthog import capture_event_action_done, capture_user_event
 
 
 class TestActionType(ActionType):
@@ -29,7 +29,7 @@ class TestActionType(ActionType):
 @patch("baserow.core.posthog.posthog")
 def test_not_capture_event_if_not_enabled(mock_posthog, data_fixture):
     user = data_fixture.create_user()
-    capture_event(user, "test", {})
+    capture_user_event(user, "test", {})
     mock_posthog.capture.assert_not_called()
 
 
@@ -39,7 +39,7 @@ def test_not_capture_event_if_not_enabled(mock_posthog, data_fixture):
 def test_capture_event_if_enabled(mock_posthog, data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace()
-    capture_event(user, "test", {}, session="session", workspace=workspace)
+    capture_user_event(user, "test", {}, session="session", workspace=workspace)
     mock_posthog.capture.assert_called_once_with(
         distinct_id=user.id,
         event="test",
@@ -52,7 +52,7 @@ def test_capture_event_if_enabled(mock_posthog, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.core.posthog.capture_event")
+@patch("baserow.core.posthog.capture_user_event")
 def test_capture_event_action_done(mock_capture_event, data_fixture):
     user = data_fixture.create_user()
 

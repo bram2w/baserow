@@ -3,6 +3,7 @@ from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 from django.db import OperationalError
+from django.test.utils import override_settings
 
 import pytest
 
@@ -20,6 +21,7 @@ from baserow.core.utils import (
     extract_allowed,
     find_intermediate_order,
     find_unused_name,
+    get_baserow_saas_base_url,
     get_value_at_path,
     grouper,
     random_string,
@@ -615,3 +617,16 @@ def test_safe_sample_payloads(input):
 @pytest.mark.parametrize("input", [1, 2, True])
 def test_safe_nonstr_sample_payloads(input):
     assert escape_csv_cell(input) == input
+
+
+@override_settings(DEBUG=False)
+def test_get_baserow_saas_base_url_without_debug():
+    assert get_baserow_saas_base_url() == ("https://api.baserow.io", {})
+
+
+@override_settings(DEBUG=True)
+def test_get_baserow_saas_base_url_with_debug():
+    assert get_baserow_saas_base_url() == (
+        "http://baserow-saas-backend:8000",
+        {"Host": "localhost"},
+    )

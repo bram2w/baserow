@@ -107,7 +107,9 @@ export default {
         this.what !== value &&
         Object.prototype.hasOwnProperty.call(this.whatItems, value)
       ) {
-        this.rows = this.whatItems[value]
+        this.row0 = this.whatItems[value][0]
+        this.row1 = this.whatItems[value][1]
+        this.row2 = this.whatItems[value][2]
       }
       this.what = value
       this.updateValue()

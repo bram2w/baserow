@@ -7,6 +7,7 @@ import TeamStep from '@baserow/modules/core/components/onboarding/TeamStep'
 import WorkspaceStep from '@baserow/modules/core/components/onboarding/WorkspaceStep'
 import AppLayoutPreview from '@baserow/modules/core/components/onboarding/AppLayoutPreview'
 import WorkspaceService from '@baserow/modules/core/services/workspace'
+import AuthService from '@baserow/modules/core/services/auth'
 import { MemberRoleType } from '@baserow/modules/database/roleTypes'
 
 export class OnboardingType extends Registerable {
@@ -131,6 +132,22 @@ export class MoreOnboardingType extends OnboardingType {
 
   canSkip() {
     return true
+  }
+
+  async complete(data, responses) {
+    const teamData = data[TeamOnboardingType.getType()]
+    const moreData = data[this.getType()]
+    const share = moreData?.share
+
+    if (share) {
+      const team = teamData?.team || 'undefined'
+      await AuthService(this.app.$client).shareOnboardingDetailsWithBaserow(
+        team,
+        moreData.role,
+        moreData.companySize,
+        moreData.country
+      )
+    }
   }
 }
 

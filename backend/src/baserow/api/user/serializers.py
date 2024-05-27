@@ -406,3 +406,22 @@ class DashboardSerializer(serializers.Serializer):
         many=True, source="workspace_invitations"
     )
     workspace_invitations = UserWorkspaceInvitationSerializer(many=True)
+
+
+class ShareOnboardingDetailsWithBaserowSerializer(serializers.Serializer):
+    team = serializers.CharField(
+        help_text="The team that the user has chosen during the onboarding.",
+        required=True,
+    )
+    role = serializers.CharField(
+        help_text="The role that the user has chosen during the onboarding",
+        required=True,
+    )
+    size = serializers.CharField(
+        help_text="The company size that the user has chosen during the onboarding.",
+        required=True,
+    )
+    country = serializers.CharField(
+        help_text="The country that the user has chosen during the onboarding.",
+        required=True,
+    )
