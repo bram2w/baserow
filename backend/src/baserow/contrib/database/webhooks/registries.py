@@ -72,7 +72,7 @@ class WebhookEventType(Instance):
             "table_id": webhook.table_id,
             "database_id": webhook.table.database_id,
             "workspace_id": webhook.table.database.workspace_id,
-            "event_id": event_id,
+            "event_id": str(event_id),
             "event_type": self.type,
         }
 
@@ -130,7 +130,7 @@ class WebhookEventType(Instance):
             headers.update(**webhook_handler.get_headers(self.type, event_id))
             call_webhook.delay(
                 webhook_id=webhook.id,
-                event_id=event_id,
+                event_id=str(event_id),
                 event_type=self.type,
                 method=webhook.request_method,
                 url=webhook.url,
