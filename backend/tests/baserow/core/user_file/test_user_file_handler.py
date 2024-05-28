@@ -233,6 +233,31 @@ def test_upload_user_file(data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
+def test_upload_user_file_with_truncated_image(data_fixture, tmpdir):
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    image = Image.new("RGB", (100, 140), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+
+    truncated_bytes = BytesIO(image_bytes.getvalue()[:-100])
+
+    user_file = handler.upload_user_file(
+        user, "truncated_image.png", truncated_bytes, storage=storage
+    )
+    assert user_file.mime_type == "image/png"
+    assert user_file.is_image is True
+    assert user_file.image_width == 100
+    assert user_file.image_height == 140
+
+    file_path = tmpdir.join("thumbnails", "tiny", user_file.name)
+    assert not file_path.isfile()
+
+
+@pytest.mark.django_db
 @httpretty.activate(verbose=True, allow_net_connect=False)
 def test_upload_user_file_by_url(data_fixture, tmpdir):
     user = data_fixture.create_user()
@@ -319,6 +344,135 @@ def test_upload_user_file_by_url_with_querystring(data_fixture, tmpdir) -> None:
     handler = UserFileHandler()
 
     remote_file = "https://baserow.io/test.txt?utm_source=google&utm_medium=email&utm_campaign=fall"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=b"Hello World",
+        status=200,
+        content_type="text/plain",
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert user_file.original_name == "test.txt"
+    assert user_file.original_extension == "txt"
+    assert len(user_file.unique) == 32
+    assert user_file.mime_type == "text/plain"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is False
+    assert user_file.image_width is None
+    assert user_file.image_height is None
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_image_without_extension_with_wrong_content_type(
+    data_fixture, tmpdir
+) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io/image-without-url"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=bytes(
+            [
+                0x42,
+                0x4D,
+                0x3A,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x36,
+                0x00,
+                0x00,
+                0x00,
+                0x28,
+                0x00,
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+                0x18,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x04,
+                0x00,
+                0x00,
+                0x00,
+                0x13,
+                0x0B,
+                0x00,
+                0x00,
+                0x13,
+                0x0B,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xFF,  # Red pixel data in BGR format
+            ]
+        ),
+        status=200,
+        content_type="image/jpeg",
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert user_file.original_name == "image-without-url"
+    assert user_file.original_extension == ""
+    assert user_file.mime_type == "image/bmp"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is True
+    assert user_file.image_width == 1
+    assert user_file.image_height == 1
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_slash(data_fixture, tmpdir) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io/test.txt/"
 
     httpretty.register_uri(
         httpretty.GET,

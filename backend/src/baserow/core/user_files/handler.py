@@ -159,17 +159,21 @@ class UserFileHandler:
             elif size_copy[1] is None and size_copy[0] is not None:
                 size_copy[1] = round(image_height / image_width * size_copy[0])
 
-            thumbnail = ImageOps.fit(image.copy(), size_copy, Image.LANCZOS)
-            thumbnail_stream = BytesIO()
-            thumbnail.save(thumbnail_stream, image.format)
-            thumbnail_stream.seek(0)
-            thumbnail_path = self.user_file_thumbnail_path(user_file, name)
+            try:
+                thumbnail = ImageOps.fit(image.copy(), size_copy, Image.LANCZOS)
+            except OSError:
+                pass
+            else:
+                thumbnail_stream = BytesIO()
+                thumbnail.save(thumbnail_stream, image.format)
+                thumbnail_stream.seek(0)
+                thumbnail_path = self.user_file_thumbnail_path(user_file, name)
 
-            handler = OverwritingStorageHandler(storage)
-            handler.save(thumbnail_path, thumbnail_stream)
+                handler = OverwritingStorageHandler(storage)
+                handler.save(thumbnail_path, thumbnail_stream)
 
-            del thumbnail
-            del thumbnail_stream
+                del thumbnail
+                del thumbnail_stream
 
     def upload_user_file(self, user, file_name, stream, storage=None):
         """
@@ -230,6 +234,7 @@ class UserFileHandler:
             is_image = True
             image_width = image.width
             image_height = image.height
+            mime_type = f"image/{image.format}".lower()
         except IOError:
             pass
 
@@ -290,7 +295,7 @@ class UserFileHandler:
 
         # Pluck out the parsed URL path (in the event we've been given
         # a URL with a querystring) and then extract the filename.
-        file_name = parsed_url.path.split("/")[-1]
+        file_name = parsed_url.path.rstrip("/").split("/")[-1]
 
         try:
             response = advocate.get(url, stream=True, timeout=10)

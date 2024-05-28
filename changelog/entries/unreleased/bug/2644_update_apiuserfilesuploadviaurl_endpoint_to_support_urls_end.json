@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Update /api/user-files/upload-via-url/ endpoint to support urls ending with /",
+    "issue_number": 2644,
+    "bullet_points": [],
+    "created_at": "2024-05-28"
+}
