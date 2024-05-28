@@ -199,11 +199,6 @@ services:
   backend:
     image: baserow/backend:1.24.2
     restart: unless-stopped
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./.env.docker
-        required: false
 
     environment:
       <<: *backend-variables
@@ -249,11 +244,6 @@ services:
       - backend
     networks:
       local:
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./.env.docker
-        required: false
 
   celery:
     image: baserow/backend:1.24.2
