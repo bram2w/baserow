@@ -95,7 +95,7 @@
         "alreadyExistsTitle": "A felhasználó már létezik",
         "alreadyExistsMessage": "Egy felhasználó ezzel az e-mail címmel már létezik.",
         "passwordRequired": "Jelszó megadása kötelező.",
-        "invalidEmail": "Érvénytelen e-mail cím. Kérlek adj meg érvényes e-mail címet.",
+        "invalidEmail": "Kérem, adjon meg érvényes e-mail címet.",
         "disabledAccountTitle": "Fiók tiltva",
         "disabledAccountMessage": "Ez a felhasználói fiók le van tiltva.",
         "incorrectCredentialTitle": "Helytelen hitelesítő adatok",
@@ -134,7 +134,8 @@
         "invitationFormTitle": "Meghívás e-mail alapján",
         "optionalMessagePlaceholder": "Opcionális üzenet",
         "errorInvalidEmail": "Kérlek érvényes e-mail címet adj meg.",
-        "errorTooLongMessage": "Az üzenet hossza maximum {amount} karakter lehet."
+        "errorTooLongMessage": "Az üzenet hossza maximum {amount} karakter lehet.",
+        "additionalRoles": "További szerepek"
     },
     "workspacesContext": {
         "search": "Munkaterületek keresése",
@@ -147,7 +148,8 @@
         "auditLog": "Audit napló",
         "viewTrash": "Lomtár megtekintése",
         "leaveWorkspace": "Munkaterület elhagyása",
-        "deleteWorkspace": "Munkaterület törlése"
+        "deleteWorkspace": "Munkaterület törlése",
+        "settings": "Beállítások"
     },
     "createWorkspaceModal": {
         "createNew": "Új munkaterület létrehozása",
@@ -257,7 +259,7 @@
         "content": "Adataid előkészítése folyamatban"
     },
     "clearingToast": {
-        "title": "",
+        "title": "Tisztítás...",
         "content": "Adataid előkészítése"
     },
     "undoRedoToast": {
@@ -267,12 +269,12 @@
         "undoneText": "Művelet visszavonva",
         "noMoreUndo": "Nincs több visszavonható művelet",
         "skippingUndoDueToError": "Művelet visszavonása sikertelen ismeretlen hiba miatt. A visszavonás kihagyásra kerül.",
-        "redoingTitle": "",
-        "redoingText": "",
-        "redoneTitle": "",
-        "redoneText": "",
-        "noMoreRedo": "",
-        "skippingRedoDueToError": "",
+        "redoingTitle": "Újrakészítés...",
+        "redoingText": "A művelet megismétlése",
+        "redoneTitle": "Újrakészítve",
+        "redoneText": "A művelet újra megtörtént",
+        "noMoreRedo": "Nincs több újra végrehajtandó művelet",
+        "skippingRedoDueToError": "Az ismétlés ismeretlen hiba miatt sikertelen, kihagyva.",
         "failed": "Sikertelen"
     },
     "permissionsUpdatedToast": {
@@ -446,7 +448,7 @@
                 "dateField": {
                     "title": "Dátum mező",
                     "description": "Dátum mező dátumot fogad a következő formátumok valamelyike szerint.",
-                    "codeSnippet": ""
+                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
                 }
             }
         }
@@ -528,7 +530,8 @@
         "remove": "Eltávolítás"
     },
     "editRoleContext": {
-        "billableRolesLink": "Számlázható szerepkör dokumentáció"
+        "billableRolesLink": "Számlázható szerepkör dokumentáció",
+        "additionalRoles": "További szerepek"
     },
     "highestPaidRoleField": {
         "billable": "Számlázható"
@@ -590,7 +593,10 @@
         "bold": "Félkövér",
         "italic": "Dőlt",
         "underline": "Aláhúzott",
-        "strikethrough": "Áthúzott"
+        "strikethrough": "Áthúzott",
+        "link": "Link",
+        "linkEditPlaceholder": "Link URL...",
+        "linkEditDone": "Kész"
     },
     "richTextEditorFloatingMenu": {
         "hierarchy": "Hierarchia",
@@ -603,5 +609,31 @@
         "unorderedList": "Pontozott lista",
         "code": "Kód",
         "taskList": "Feladatlista"
+    },
+    "generativeAIModelType": {
+        "openaiModelsLabel": "Engedélyezett modellek",
+        "openaiApiKeyLabel": "API kulcs",
+        "openai": "OpenAI",
+        "openaiOrganization": "Szervezet (opcionális)",
+        "openaiApiKeyDescription": "Adjon meg egy OpenAI API-kulcsot, ha engedélyezni szeretné az integrációt. [Útmutató az API-kulcs beszerzéséhez](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "ollamaHostDescription": "Adja meg a gazdagép nevét [Ollama](https://ollama.com/) szerverének. Ez általában helyileg fut a saját eszközén.",
+        "ollamaModelsLabel": "Engedélyezett modellek",
+        "ollamaModelsDescription": "Adja meg a vesszővel elválasztott [Ollama telepített modellek] listáját (https://ollama.com/library). Vegye figyelembe, hogy a modellt le kell tölteni és telepíteni kell a használat előtt. (pl. \"láma2,mistral\")",
+        "ollamaHostLabel": "Host",
+        "ollama": "Ollama",
+        "openaiModelsDescription": "Adja meg a Baserowban használható, vesszővel elválasztott [OpenAI-modellek] (https://platform.openai.com/docs/models/continuous-model-upgrades) listáját. (pl. \"gpt-3.5-turbo,gpt-4\")"
+    },
+    "workspaceSettingsModal": {
+        "title": "Munkaterület beállításai"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "Generatív AI"
+    },
+    "generativeAIWorkspaceSettings": {
+        "submitButton": "Frissítse a beállításokat",
+        "title": "Generatív AI beállítások",
+        "changedDescription": "A beállítások frissültek, és mostantól ezen a munkaterületen lesznek használatban.",
+        "description": "Ezeket a beállításokat opcionálisan használhatja a generatív AI konfigurációjának beállítására munkaterület szinten. Olyan funkciók, mint az AI mező, letilthatóak, mert hiányzik az API-kulcs valamelyik támogatott modellhez. Ha itt megadja a beállításokat, akkor engedélyezheti ezeket a funkciókat. Ha egy értéket üresen hagy, akkor az alapértelmezett visszatér a globális példány beállításaihoz. Fontos megjegyezni, hogy a munkaterület összes tagja meg fogja osztani ezeket a beállításokat.",
+        "changedTitle": "A beállítások megfelelően frissítve"
     }
 }

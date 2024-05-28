@@ -3,7 +3,10 @@
         "yes": "ano",
         "no": "ne",
         "wrong": "Nastala chyba",
-        "none": "Žádný"
+        "none": "Žádný",
+        "all": "Vše",
+        "billable": "Zúčtovatelné",
+        "comingSoon": "Již brzy..."
     },
     "action": {
         "upload": "Nahrát",
@@ -25,7 +28,16 @@
         "search": "Vyhledat",
         "copy": "Kopírovat",
         "activate": "Aktivovat",
-        "deactivate": "Deaktivovat"
+        "deactivate": "Deaktivovat",
+        "paste": "Vložit",
+        "logout": "Odhlášení",
+        "copyToClipboard": "Zkopírovat do schránky",
+        "reset": "Reset",
+        "set": "Nastavit",
+        "remove": "Odstranit",
+        "duplicate": "Duplikovat",
+        "login": "Přihlášení",
+        "download": "Stáhnout"
     },
     "adminType": {
         "settings": "Nastavení"
@@ -57,7 +69,7 @@
     },
     "permission": {
         "admin": "Administrativa",
-        "adminDescription": "Může plně nastavovat a měnit skupiny a aplikace.",
+        "adminDescription": "Může plně konfigurovat a editovat pracovní prostory a aplikace.",
         "member": "Člen",
         "memberDescription": "Může plně nastavovat a měnit aplikace."
     },

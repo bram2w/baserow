@@ -287,7 +287,7 @@
         "settingAllowSignupsViaWorkspaceInvitationsName": "Autoriser la création de compte sur invitation",
         "settingAllowSignupsViaWorkspaceInvitationDescription": "Cette option permet aux utilisateurs invités par d'autres de créer des comptes même si la création de compte à été désactivée de manière globale.",
         "userDeletionGraceDelay": "Suppression d'utilisateurs",
-        "settingUserDeletionGraceDelay": "Délai de grâce",
+        "settingUserDeletionGraceDelay": "Délai de grâce avant suppression",
         "invalidAccountDeletionGraceDelay": "Cette valeur est obligatoire et doit être un nombre entier positif inférieur à 32000",
         "settingUserDeletionGraceDelayDescription": "Il s'agit du nombre de jours sans connexion après lequel un compte planifié pour être supprimé est définitivement supprimé.",
         "settingAllowNonStaffCreateWorkspaceOperation": "Autoriser tout le monde à créer de nouveaux projets",
@@ -295,7 +295,13 @@
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "Un projet sera automatiquement créé pour les nouveaux utilisateurs s'ils sont administrateurs.",
         "settingTrackWorkspaceUsage": "Suivi de l'utilisation du projet",
         "settingTrackWorkspaceUsageDescription": "Active un travail nocturne qui compte l'utilisation des lignes et des fichiers par projet, affiché sur la page d'administration du projet premium.",
-        "maintenance": "Maintenance"
+        "maintenance": "Maintenance",
+        "emailVerificationDescription": "Indique si les adresses électroniques doivent être vérifiées.",
+        "emailVerificationNoVerification": "Pas de vérification",
+        "emailVerificationRecommended": "Recommandée",
+        "emailVerificationEnforced": "Obligatoire",
+        "userSettings": "Utilisateur",
+        "emailVerification": "Vérification de l'adresse électronique"
     },
     "copyingNotification": {
         "title": "Copie en cours...",
@@ -711,5 +717,72 @@
         "changedDescription": "Les paramètres ont été mis à jour et seront désormais utilisés dans ce Projet.",
         "submitButton": "Enregistrer",
         "description": "Ces paramètres peuvent être utilisés pour définir la configuration de l'IA générative au niveau da Projet. Des fonctionnalités telles que le champ IA peuvent être désactivées parce qu'elles ne disposent pas d'une clé API pour l'un des modèles pris en charge. En fournissant les paramètres ici, vous pouvez activer ces fonctionnalités. Si vous laissez une valeur vide, les paramètres globaux de l'instance sont rétablis par défaut. Notez que tous les utilisateurs du Projet partageront ces paramètres."
+    },
+    "dashboardVerifyEmail": {
+        "title": "Veuillez vérifier votre boîte aux lettres et cliquer sur le lien pour vérifier votre adresse électronique.",
+        "resendConfirmationEmail": "Renvoyer le courriel de confirmation"
+    },
+    "resendEmailVerification": {
+        "confirmationEmailSentTitle": "Courriel de confirmation envoyé",
+        "confirmationEmailSentDescription": "Le courriel de confirmation a été envoyé."
+    },
+    "verifyEmailAddress": {
+        "disabledPasswordProvider": "Le fournisseur d'authentification par mot de passe a été désactivé.",
+        "confirmation": "Votre adresse électronique a été vérifiée.",
+        "goToDashboard": "Aller à l'accueil",
+        "invalidToken": "Le jeton de confirmation n'est pas valide.",
+        "emailMismatchWarning": "Veuillez noter que l'adresse électronique vérifiée n'appartient pas au compte que vous utilisez actuellement."
+    },
+    "emailNotVerified": {
+        "title": "Vérification de l'adresse électronique requise",
+        "description": "Veuillez consulter votre boîte aux lettres et cliquer sur le lien de vérification. Une fois vérifié, votre compte sera activé.",
+        "resend": "Renvoyer le courriel de confirmation"
+    },
+    "inviteStep": {
+        "description": "Vous pouvez toujours en ajouter plus tard.",
+        "collaboratorsLabel": "Collaborateurs",
+        "title": "Inviter des collaborateurs"
+    },
+    "moreStep": {
+        "title": "Dites-nous en un peu plus",
+        "roleOrJob": "Rôle ou titre du poste...",
+        "people": "Combien de personnes composent votre équipe ?",
+        "share": "Je suis d'accord pour partager ceci avec l'équipe de Baserow",
+        "country": "Pays"
+    },
+    "teamStep": {
+        "marketingTeam": "Marketing",
+        "productAndDesignTeam": "Produit & Design",
+        "itAndSupportTeam": "Informatique & Support",
+        "hrAndLegalTeam": "RH & Juridique",
+        "financeTeam": "Finance",
+        "creativeProductionTeam": "Production créative",
+        "title": "Configurons ensemble votre premier Projet !",
+        "description": "À quelle équipe appartenez-vous ?",
+        "engineeringTeam": "Ingénieur",
+        "operationsTeam": "Opérations",
+        "salesAndAccountManagementTeam": "Ventes et gestion des comptes",
+        "customerServiceTeam": "Service clientèle",
+        "manufacturingTeam": "Industrie",
+        "otherPersonalTeam": "Autre / Personnel"
+    },
+    "onboarding": {
+        "skip": "Ignorer pour le moment",
+        "failedTitle": "Une erreur est survenue",
+        "title": "Assistant de configuration",
+        "creating": "Création de votre premier projet",
+        "continue": "Continuer",
+        "cancel": "Je ne souhaite pas d'aide pour la configuration",
+        "failedDescription": "La configuration n'est pas totalement terminées, cependant certaines parties ont pu être complétées.",
+        "failedTryAgain": "Réessayer",
+        "failedSkip": "Passer l'Assistant de configuration"
+    },
+    "selectAIModelForm": {
+        "AIType": "Type d'IA",
+        "AIModel": "Modèle d'IA"
+    },
+    "workspaceStep": {
+        "title": "Créez votre Projet",
+        "workspaceLabel": "Nom du projet"
     }
 }

@@ -380,5 +380,17 @@
     "premiumFieldType": {
         "ai": "AI prompt",
         "aiDescription": "Een alleen-lezen veld dat AI-gegenereerde tekst bevat op basis van de veldprompt."
+    },
+    "aiFormulaModal": {
+        "title": "Formule genereren met AI",
+        "description": "Let op dat de gegenereerde formules niet altijd werken zoals verwacht. We maken een prompt voor het model en we laden de uitvoer in de formule-invoer. Dit werkt het beste met een model met hoge parameters zoals gpt-4-turbo-preview.",
+        "label": "Prompt",
+        "labelDescription": "Beschrijf de formule die je wilt genereren",
+        "generate": "Genereren",
+        "noModels": "In je Baserow-instantie en workspace zijn geen AI-modellen geconfigureerd. Klik op de drie puntjes naast je workspace en vervolgens op instellingen om ze te configureren."
+    },
+    "formulaFieldAI": {
+        "generateWithAI": "Genereer met AI",
+        "featureName": "Genereer formule met AI"
     }
 }

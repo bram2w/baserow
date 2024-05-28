@@ -81,7 +81,8 @@
         "minValueField": "Le champ doit être supérieur ou égal à {min}.",
         "maxValueField": "Le champ doit être inférieur ou égal à {max}.",
         "minMaxValueField": "La valeur du champ doit être comprise entre {min} et {max}.",
-        "invalidNumber": "Le champ doit être un nombre."
+        "invalidNumber": "Le champ doit être un nombre.",
+        "email": "La valeur doit être un email."
     },
     "permission": {
         "admin": "Admin",
@@ -133,7 +134,7 @@
         "invalidEmail": "Adresse électronique invalide",
         "invalidPhoneNumber": "Num. téléphone invalide",
         "invalidDuration": "Format invalide ({durationFormat}).",
-        "overflowDuration": "La valeur est trop grande.",
+        "overflowDuration": "La valeur est hors limites.",
         "maxChars": "Max {max} caractères.",
         "minChars": "Min {min} caractères."
     },
@@ -141,7 +142,7 @@
         "readOnly": "Ce champ est en lecture seule.",
         "text": "Accepte une seule ligne de texte.",
         "longText": "Accepte le texte sur multi-lignes. Si le formatage de texte riche est activé, vous pouvez utiliser markdown pour formater le texte.",
-        "linkRow": "Accepte un tableau contenant les identifiants ou les valeurs textuelles des champs principaux des lignes liées de la table {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont mises à jour. Si un tableau vide est fourni, toutes les relations seront supprimées. Dans le cas d'une valeur textuelle au lieu d'un identifiant, une ligne avec la valeur correspondante pour son champ principal sera recherchée. Si plusieurs correspondances sont trouvées, la première dans l'ordre du tableau est sélectionnée. Vous pouvez également envoyer un chaine de caractères avec les noms séparés par des virgules, dans ce cas la chaine sera convertie en une liste de noms.",
+        "linkRow": "Accepte un tableau contenant les identifiants ou les valeurs textuelles des champs principaux des lignes liées de la table {table}. Tous les identifiants doivent être fournis à chaque fois que les relations sont mises à jour. Si un tableau vide est fourni, toutes les relations seront supprimées. Dans le cas d'une valeur textuelle au lieu d'un identifiant, une ligne avec la valeur correspondante pour son champ principal sera recherchée. Si plusieurs correspondances sont trouvées, la première dans l'ordre du tableau est sélectionnée. Vous pouvez également envoyer un chaine de caractères avec les noms séparés par des virgules, dans ce cas la chaine sera convertie en une liste de noms. Vous pouvez également envoyer un unique ID de ligne.",
         "number": "Accepte un entier.",
         "numberPositive": "Accepte un entier positive.",
         "decimal": "Accepte un nombre décimal.",
@@ -156,7 +157,7 @@
         "createdOnReadOnly": "La date de création de la ligne est en lecture seule.",
         "url": "Accepte une URL valide.",
         "email": "Accepte une adresse électronique valide.",
-        "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur. Vous pouvez utiliser l'API « Envoi de fichier » pour envoyer des fichiers. La réponse à ces appels peut-être fournie directement en tant qu'objet ici. Les différentes API sont listées dans la barre latérale gauche.",
+        "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur. Vous pouvez également fournir une chaine de charactères contenant les noms des fichiers séparés par des virgules ou bien un tableau de nom de fichiers. Vous pouvez utiliser l'API « Envoi de fichier » pour envoyer des fichiers. La réponse à ces appels peut-être fournie directement en tant qu'objet ici. Les différentes API sont listées dans la barre latérale gauche.",
         "singleSelect": "Accepte un nombre entier ou une valeur textuelle représentant l'identifiant de l'option de sélection choisie ou la valeur de l'option. Une valeur nulle signifie qu'aucune option n'est sélectionnée. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée.",
         "multipleSelect": "Accepte un tableau d'entiers mixtes ou de valeurs textuelles représentant chacun l'identifiant ou la valeur de l'option de sélection choisie. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée. Vous pouvez envoyer une chaîne de caractères contenant des noms séparé par des virgules. Dans ce cas la chaîne est convertie en une liste de noms.",
         "phoneNumber": "Accepte un numéro de téléphone d'une longueur maximum de 100 caractères qui doivent être des chiffres, des espaces ou les caractères suivants : Nx,._+*()#=;/- .",
@@ -213,7 +214,33 @@
         "lowerThanOrEqual": "inférieur ou égal",
         "isAnyOf": "est l'une des valeurs",
         "higherThanOrEqual": "supérieur ou égal",
-        "isNoneOf": "n'est aucune des valeurs"
+        "isNoneOf": "n'est aucune des valeurs",
+        "today": "aujourd'hui",
+        "yesterday": "hier",
+        "tomorrow": "demain",
+        "thisWeek": "cette semaine",
+        "oneMonthAgo": "il y a un mois",
+        "nextMonth": "le mois prochain",
+        "thisYear": "cette année",
+        "oneYearAgo": "il y a un an",
+        "nextYear": "l'année prochaine",
+        "oneWeekAgo": "il y a une semaine",
+        "nextWeek": "la semaine prochaine",
+        "thisMonth": "ce mois-ci",
+        "nrDaysAgo": "il y a X jours",
+        "nrWeeksAgo": "il y a X semaines",
+        "nrMonthsAgo": "il y a X mois",
+        "nrYearsAgo": "il y a X années",
+        "nrDaysFromNow": "dans X jours",
+        "nrWeeksFromNow": "dans X semaines",
+        "nrMonthsFromNow": "dans X mois",
+        "nrYearsFromNow": "dans X années",
+        "exactDate": "date exacte",
+        "isBefore": "est avant",
+        "isAfter": "est après",
+        "isOnOrBefore": "est au plus tard",
+        "isOnOrAfter": "est au plus tôt",
+        "isWithin": "est compris entre"
     },
     "viewType": {
         "grid": "Tableau",
@@ -330,7 +357,13 @@
         "modelDoesNotBelongToTypeTitle": "Le modèle sélectionné ne correspond pas au type d'IA",
         "generativeAIDoesNotExistTitle": "L'IA générative n'est pas disponible",
         "generativeAIDoesNotExistDescription": "Le modèle d'IA générative n'existe pas.",
-        "modelDoesNotBelongToTypeDescription": "Le modèle sélectionné ne correspond pas au type d'IA sélectionné."
+        "modelDoesNotBelongToTypeDescription": "Le modèle sélectionné ne correspond pas au type d'IA sélectionné.",
+        "generateAIPromptTitle": "Prompt incorrect",
+        "generateAIPromptDescription": "Quelque chose n'allait pas avec le prompt construit.",
+        "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Nombre maximum d'invitations en attente atteint",
+        "outputParserTitle": "Sortie erronée",
+        "outputParserDescription": "Le modèle a répondu de manière incorrecte. Veuillez réessayer.",
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Vous avez atteint le nombre maximum d'invitations en attente pour cet espace de travail. Veuillez laisser les invités accepter l'invitation ou annuler les invitations existantes pour continuer."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -478,7 +511,9 @@
         "encodeUriDescription": "Retourne une URI encodée à partir des paramètres fournis.",
         "getIsImageDescription": "Renvoie Vrai le fichier désigné par la fonction d'index est une image, Faux sinon.",
         "getFileMimeTypeDescription": "Renvoie le type de mime du fichier sélectionné par la fonction index.",
-        "hasOptionDescription": "Retourne `true` si le premier argument est un champ de sélection multiple ou une référence à un champ de sélection unique et que le second argument est l'une de ses options."
+        "hasOptionDescription": "Retourne `true` si le premier argument est un champ de sélection multiple ou une référence à un champ de sélection unique et que le second argument est l'une de ses options.",
+        "durationToSecondsDescription": "Convertit la durée fournie en nombre de secondes correspondant.",
+        "secondsToDurationDescription": "Convertit le nombre de secondes indiqué en durée."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

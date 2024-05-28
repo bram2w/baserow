@@ -166,7 +166,8 @@
         "primary": "Indica si el campo es un campo principal. Si es `verdadero`, el campo no se puede eliminar y el valor debe representar la fila completa.",
         "type": "Tipo definido para este campo.",
         "extraProps": "Algunas propiedades adicionales no se describen aquí porque son específicas del tipo.",
-        "readOnly": "Indica si el campo es de sólo lectura. Si es cierto, no es posible actualizar el valor de la celda."
+        "readOnly": "Indica si el campo es de sólo lectura. Si es cierto, no es posible actualizar el valor de la celda.",
+        "descriptionField": "Campo descripción"
     },
     "apiDocsTableDeleteRow": {
         "description": "Elimina una fila {name} existente.",
@@ -194,7 +195,8 @@
         "filter": "Filtro",
         "exampleValue": "Valor de ejemplo",
         "example": "Ejemplo completo",
-        "field": "campo {name}"
+        "field": "campo {name}",
+        "deprecated": "obsoleto"
     },
     "fieldTextSubForm": {
         "placeholder": "Texto predeterminado"
@@ -245,7 +247,9 @@
         "name": "Nombre",
         "fieldAlreadyExists": "Ya existe un campo con este nombre.",
         "nameNotAllowed": "Este nombre de campo no está permitido.",
-        "nameTooLong": "Este nombre de campo es demasiado largo."
+        "nameTooLong": "Este nombre de campo es demasiado largo.",
+        "addDescription": "Añadir descripción",
+        "description": "Descripción"
     },
     "fieldLookupSubForm": {
         "noTable": "Necesita al menos un campo de fila de vínculo para crear un campo de búsqueda.",
@@ -265,13 +269,13 @@
         "style": "Estilo"
     },
     "rowCreateModal": {
-        "addField": "Agregue campo"
+        "addField": "Añadir campo"
     },
     "selectRowContent": {
         "search": "Filas de búsqueda"
     },
     "rowEditModal": {
-        "addField": "Agregue campo",
+        "addField": "Añadir campo",
         "showHiddenFields": "Mostrar campos ocultos",
         "hideHiddenFields": "Ocultar campos ocultos"
     },
@@ -858,5 +862,46 @@
     "userMentionInRichTextFieldNotification": {
         "deletedUser": "Un usuario eliminado",
         "title": "{sender} le ha mencionado en el campo {fieldName} de la fila {rowId} en {tableName}."
+    },
+    "databaseImportStep": {
+        "tableNameLabel": "Nombre de la tabla",
+        "title": "Importa tus datos",
+        "description": "Mueve tus datos a Baserow, en sólo unos clics."
+    },
+    "databaseScratchTrackStep": {
+        "title": "¿Qué te gustaría seguir?",
+        "description": "Elige entre los casos de uso más populares o crea el tuyo propio.",
+        "addYourOwn": "Añade el tuyo",
+        "tableName": "Nombre de la tabla",
+        "productsRow1": "Rebranding del sitio web",
+        "productsRow3": "Campaña publicitaria de pago",
+        "teamsRow1": "Ventas",
+        "teamsRow2": "RH",
+        "teamsRow3": "Marketing",
+        "tasks": "Tareas",
+        "tasksRow1": "Rediseño del logo",
+        "campaignsRow1": "Venta de verano",
+        "campaignsRow2": "Premios de fidelidad",
+        "campaignsRow3": "Relanzamiento de la marca",
+        "rowName": "Nombre de la fila",
+        "thisIncludes": "Esto incluye:",
+        "projects": "Proyectos",
+        "productsRow2": "Investigación de clientes",
+        "teams": "Equipos",
+        "tasksRow2": "Enviar correo electrónico",
+        "tasksRow3": "Escribir una entrada en el blog",
+        "campaigns": "Campañas"
+    },
+    "databaseStep": {
+        "title": "Crea tu primera base de datos",
+        "description": "Cuéntanos en qué estás trabajando.",
+        "databaseNameLabel": "Nombre de la base de datos",
+        "scratch": "Desde cero",
+        "import": "De archivo",
+        "airtable": "Desde Airtable"
+    },
+    "ViewFilterTypeDateUpgradeToMultiStep": {
+        "migrateButtonText": "Migrar al filtro de fecha de varios pasos",
+        "migrateButtonTooltip": "Nuevo filtro disponible. Haga clic para actualizar. Funciona igual."
     }
 }

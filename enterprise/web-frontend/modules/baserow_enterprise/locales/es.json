@@ -269,7 +269,8 @@
         "sso": "Inicio de sesión único",
         "rbac": "Control de acceso basado en funciones",
         "auditLogs": "Registros de auditoría",
-        "coBranding": "Sustitución del logotipo de marca compartida"
+        "coBranding": "Sustitución del logotipo de marca compartida",
+        "support": "Apoyo directo"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Apoyo directo"
@@ -313,5 +314,12 @@
         "showBaserowHelpMessageDescription": "Indica si el mensaje de la solicitud de ayuda debe mostrarse en el panel.",
         "coBrandingLogo": "Logotipo",
         "coBrandingLogoDescription": "Reemplaza el logotipo de Baserow por una alternativa personalizada de un logotipo de una marca (176x29)."
+    },
+    "enterpriseModal": {
+        "title": "Actualiza para utilizar el {name}",
+        "description": "Tu cuenta no tiene acceso a las funciones avanzadas/empresariales. Actualízate a la versión avanzada/empresa para empezar a utilizar {nombre}. Puede actualizar su cuenta adquiriendo una licencia. Haz clic en el botón de abajo para ver los precios.",
+        "premium": "Premium",
+        "enterprise": "Enterprise",
+        "viewPricing": "Ver los precios"
     }
 }

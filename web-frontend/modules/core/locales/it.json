@@ -711,5 +711,25 @@
         "submitButton": "Aggiorna impostazioni",
         "title": "Impostazioni IA generativa",
         "description": "Queste impostazioni possono essere utilizzate per impostare facoltativamente la configurazione dell'intelligenza artificiale generativa a livello di progetto. Funzionalità come il campo IA possono essere disabilitate perché mancano di una chiave API per uno dei modelli supportati. Fornendo le impostazioni qui, puoi abilitare tali funzionalità. Lasciando un valore vuoto vengono ripristinate le impostazioni predefinite dell'istanza globale. Tieni presente che tutti nel progetto condivideranno queste impostazioni."
+    },
+    "dashboardVerifyEmail": {
+        "resendConfirmationEmail": "Invia nuovamente",
+        "title": "Per favore controlla la posta e clicca sul link ricevuto per confermare la tua email."
+    },
+    "resendEmailVerification": {
+        "confirmationEmailSentTitle": "Email di conferma inviata",
+        "confirmationEmailSentDescription": "La email di conferma è stata inviata."
+    },
+    "verifyEmailAddress": {
+        "confirmation": "Il tuo indirizzo email è stato verificato.",
+        "goToDashboard": "Vai alla dashboard",
+        "emailMismatchWarning": "Attenzione! L'indirizzo email verificato non coincide con quello dell'utente in uso.",
+        "invalidToken": "Il token di conferma non è valido.",
+        "disabledPasswordProvider": "Il metodo di autenticazione tramite password è stato disabilitato."
+    },
+    "emailNotVerified": {
+        "title": "Verifica email richiesta",
+        "description": "Verifica la tua posta e clicca il link ricevuto per email. Una volta effettuata la verifica, il tuo account verrà attivato.",
+        "resend": "Invia email di nuovo"
     }
 }

@@ -8,62 +8,64 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-31 17:08+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2024-04-20 16:54+0000\n"
+"Last-Translator: Norbert Bartus <nbartus21@gmail.com>\n"
+"Language-Team: Hungarian <https://hosted.weblate.org/projects/baserow/"
+"enterprise-backend/hu/>\n"
 "Language: hu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: baserow_enterprise/audit_log/job_types.py:143
 msgid "User Email"
-msgstr ""
+msgstr "Felhasználói Email"
 
 #: baserow_enterprise/audit_log/job_types.py:144
 msgid "User ID"
-msgstr ""
+msgstr "Felhasználói Azonosító"
 
 #: baserow_enterprise/audit_log/job_types.py:145
 msgid "Group Name"
-msgstr ""
+msgstr "Csoport Neve"
 
 #: baserow_enterprise/audit_log/job_types.py:146
 msgid "Group ID"
-msgstr ""
+msgstr "Csoport Azonosító"
 
 #: baserow_enterprise/audit_log/job_types.py:147
 msgid "Action Type"
-msgstr ""
+msgstr "Művelet Típusa"
 
 #: baserow_enterprise/audit_log/job_types.py:148
 msgid "Description"
-msgstr ""
+msgstr "Leírás"
 
 #: baserow_enterprise/audit_log/job_types.py:149
 msgid "Timestamp"
-msgstr ""
+msgstr "Időbélyeg"
 
 #: baserow_enterprise/audit_log/job_types.py:150
 msgid "IP Address"
-msgstr ""
+msgstr "IP Cím"
 
 #: baserow_enterprise/audit_log/models.py:30
 msgid "DONE"
-msgstr ""
+msgstr "ELVÉGEZVE"
 
 #: baserow_enterprise/audit_log/models.py:31
 msgid "UNDONE"
-msgstr ""
+msgstr "VISSZAVONT"
 
 #: baserow_enterprise/audit_log/models.py:32
 msgid "REDONE"
-msgstr ""
+msgstr "ÚJRAELVÉGEZVE"
 
 #: baserow_enterprise/role/actions.py:30
 msgid "Assign role"
-msgstr ""
+msgstr "Szerepkör hozzárendelése"
 
 #: baserow_enterprise/role/actions.py:32
 #, python-format
@@ -71,53 +73,55 @@ msgid ""
 "Role %(role_uid)s assigned to %(subject_type)s %(subject_id)s on "
 "%(scope_type)s %(scope_id)s"
 msgstr ""
+"%(role_uid)s szerepkör hozzárendelve %(subject_type)s %(subject_id)s-hez a "
+"%(scope_type)s %(scope_id)s-ben"
 
 #: baserow_enterprise/teams/actions.py:21
 #, python-format
 msgid "in team \"%(team_name)s\" (%(team_id)s) "
-msgstr ""
+msgstr "a(z) \"%(team_name)s\" csapatban (%(team_id)s) "
 
 #: baserow_enterprise/teams/actions.py:27
 msgid "Create team"
-msgstr ""
+msgstr "Csapat létrehozása"
 
 #: baserow_enterprise/teams/actions.py:28
 #, python-format
 msgid "Team \"%(name)s\" (%(team_id)s) created."
-msgstr ""
+msgstr "Csapat \"%(name)s\" (%(team_id)s) létrehozva."
 
 #: baserow_enterprise/teams/actions.py:101
 msgid "Update team"
-msgstr ""
+msgstr "Csapat frissítése"
 
 #: baserow_enterprise/teams/actions.py:102
 #, python-format
 msgid "Team \"%(name)s\" (%(team_id)s) updated."
-msgstr ""
+msgstr "Csapat \"%(name)s\" (%(team_id)s) frissítve."
 
 #: baserow_enterprise/teams/actions.py:193
 msgid "Delete team"
-msgstr ""
+msgstr "Csapat törlése"
 
 #: baserow_enterprise/teams/actions.py:194
 #, python-format
 msgid "Team \"%(team_name)s\" (%(team_id)s) deleted."
-msgstr ""
+msgstr "Csapat \"%(team_name)s\" (%(team_id)s) törölve."
 
 #: baserow_enterprise/teams/actions.py:240
 msgid "Create team subject"
-msgstr ""
+msgstr "Csapat téma létrehozása"
 
 #: baserow_enterprise/teams/actions.py:240
 #, python-format
 msgid "Subject (%(subject_id)s) created"
-msgstr ""
+msgstr "Téma (%(subject_id)s) létrehozva"
 
 #: baserow_enterprise/teams/actions.py:320
 msgid "Delete team subject"
-msgstr ""
+msgstr "Csapat téma törlése"
 
 #: baserow_enterprise/teams/actions.py:321
 #, python-format
 msgid "Subject (%(subject_id)s) deleted"
-msgstr ""
+msgstr "Téma (%(subject_id)s) törölve"

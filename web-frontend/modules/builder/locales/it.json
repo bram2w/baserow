@@ -13,7 +13,8 @@
         "integrationsName": "Integrazioni",
         "themeName": "Tema",
         "domainsName": "Domini",
-        "userSourcesName": "Utenti"
+        "userSourcesName": "Utenti",
+        "generalName": "Generale"
     },
     "createPageModal": {
         "header": "Crea pagina",
@@ -71,7 +72,9 @@
         "iframe": "IFrame",
         "authForm": "Modulo di login",
         "authFormDescription": "Un modulo di login utente",
-        "iframeDescription": "Frame in linea"
+        "iframeDescription": "Frame in linea",
+        "repeat": "Ripeti",
+        "repeatDescription": "Un set di elementi ripetibile"
     },
     "addElementButton": {
         "label": "Elemento"
@@ -303,7 +306,8 @@
         "fieldDefaultName": "Colonna",
         "fieldType": "Tipo",
         "selectSourceFirst": "Seleziona una sorgenti dati di tipo lista per iniziare a configurare i tuoi campi.",
-        "buttonColor": "Colore pulsante"
+        "buttonColor": "Colore pulsante",
+        "refreshFieldsFromDataSource": "aggiorna i campi dalla sorgente di dati"
     },
     "tableElement": {
         "showMore": "Mostra di più",
@@ -445,7 +449,10 @@
         "urlPlaceholder": "Inserisci una URL...",
         "url": "URL di destinazione",
         "paramsInErrorButton": "Modifica parametri",
-        "paramsInErrorDescription": "I parametri salvati non corrispondono ai parametri di pagina. La pagina è stata probabilmente cancellata o modificata."
+        "paramsInErrorDescription": "I parametri salvati non corrispondono ai parametri di pagina. La pagina è stata probabilmente cancellata o modificata.",
+        "target": "Aperto in...",
+        "targetSelf": "Stesso tab",
+        "targetNewTab": "Nuovo tab"
     },
     "dropdownOptionSelector": {
         "label": "Opzioni",
@@ -480,7 +487,11 @@
         "validationTypeAnyLabel": "Qualsiasi",
         "validationTypeIntegerLabel": "Numero",
         "validationTypeEmailDescription": "Obbliga ad inserire un indirizzo email in questo input.",
-        "validationTypeIntegerDescription": "Obbliga ad inserire un valore numerico per questo input."
+        "validationTypeIntegerDescription": "Obbliga ad inserire un valore numerico per questo input.",
+        "inputTypeTextLabel": "Testo",
+        "inputTypePasswordLabel": "Password",
+        "passwordTypeWarning": "Le password sono dati sensibili. Fai attenzione a come gestisci e salvi le password nella tua applicazione.",
+        "inputType": "Tipo di input"
     },
     "userSourceSettings": {
         "titleAddUserSource": "Nuova sorgente dati",
@@ -524,5 +535,30 @@
         "loggedInVisitors": "Visitatori loggati",
         "notLoggedInVisitors": "Visitatori non loggati",
         "allVisitors": "Tutti i visitatori"
+    },
+    "generalSettings": {
+        "titleOverview": "Generale",
+        "labelForm": "Favicon",
+        "labelButton": "Carica favicon",
+        "labelDescription": "Scegli una immagine 128x128 pixel di tipo ICO, PNG, GIF or JPEG.",
+        "cantUploadFaviconTitle": "Impossibile caricare Favicon",
+        "cantUploadFaviconDescription": "Non è stato possibile caricare l'immagine favicon. Assicurati che l'immagine sia in uno dei formati supportati.",
+        "cantUpdateApplicationTitle": "Non è stato possibile aggiornare l'applicazione",
+        "cantUpdateApplicationDescription": "Non è stato possibile aggiornare l'applicazione"
+    },
+    "repeatElement": {
+        "empty": "Nessun elemento trovato.",
+        "showMore": "Mostra di più",
+        "missingDataSourceTooltip": "Scegli una sorgente di dati per cominciare ad aggiungere elementi."
+    },
+    "repeatElementForm": {
+        "dataSource": "Sorgente di dati",
+        "itemsPerPagePlaceholder": "Inserisci un valore...",
+        "itemsPerRowLabel": "Elementi per riga",
+        "itemsPerPage": "Elementi per pagina"
+    },
+    "imageInput": {
+        "labelDescription": "Descrizione di default",
+        "labelButton": "Carica"
     }
 }

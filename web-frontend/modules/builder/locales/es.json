@@ -13,7 +13,8 @@
         "integrationsName": "Integraciones",
         "themeName": "Tema",
         "domainsName": "Dominios",
-        "userSourcesName": "Usuarios"
+        "userSourcesName": "Usuarios",
+        "generalName": "General"
     },
     "createPageModal": {
         "header": "Crear página",
@@ -49,7 +50,8 @@
         "itemsPerPagePlaceholder": "Introducir valor...",
         "fields": "Campos",
         "buttonColor": "Color de los botones",
-        "selectSourceFirst": "Elige una fuente de datos de lista para empezar a configurar tus campos."
+        "selectSourceFirst": "Elige una fuente de datos de lista para empezar a configurar tus campos.",
+        "refreshFieldsFromDataSource": "Actualizar los campos de la fuente de datos"
     },
     "linkElementForm": {
         "paramPlaceholder": "Introduce un valor...",
@@ -133,7 +135,9 @@
         "iframe": "iframe",
         "iframeDescription": "Marco en línea",
         "authForm": "Formulario de acceso",
-        "authFormDescription": "Un formulario de acceso de usuario"
+        "authFormDescription": "Un formulario de acceso de usuario",
+        "repeat": "Repetir",
+        "repeatDescription": "Un conjunto repetible de elementos"
     },
     "verticalAlignmentSelector": {
         "alignmentTop": "Arriba",
@@ -220,7 +224,11 @@
         "validationTypeIntegerDescription": "Aplicar un valor numérico en esta entrada.",
         "validationTypeEmailLabel": "Correo electrónico",
         "validationTypeEmailDescription": "Implemente un valor de dirección de correo electrónico en esta entrada.",
-        "validationTypeAnyDescription": "Permite establecer cualquier valor en esta entrada."
+        "validationTypeAnyDescription": "Permite establecer cualquier valor en esta entrada.",
+        "inputType": "Tipo de entrada",
+        "inputTypeTextLabel": "Texto",
+        "inputTypePasswordLabel": "Contraseña",
+        "passwordTypeWarning": "Las contraseñas son datos sensibles. Tenga cuidado con la forma en que maneja y almacena las contraseñas en su aplicación."
     },
     "widthSelector": {
         "widthFull": "Anchura completa",
@@ -241,7 +249,8 @@
         "createRowLabel": "Crear fila",
         "notificationLabel": "Mostrar notificación",
         "openPageLabel": "Abrir página",
-        "logoutLabel": "Cerrar sesión"
+        "logoutLabel": "Cerrar sesión",
+        "refreshDataSourceLabel": "Refrescar fuente de datos"
     },
     "widthTypes": {
         "full": "Anchura completa",
@@ -362,7 +371,9 @@
     },
     "collectionFieldType": {
         "text": "Texto",
-        "link": "Enlace"
+        "link": "Enlace",
+        "boolean": "Booleano",
+        "tags": "Etiquetas"
     },
     "elementsContext": {
         "searchPlaceholder": "Buscar elementos",
@@ -504,7 +515,10 @@
         "paramsInErrorButton": "Actualizar parámetros",
         "url": "URL de destino",
         "urlPlaceholder": "Introduce una URL...",
-        "paramsInErrorDescription": "Los parámetros guardados no coinciden con los parámetros de la página. Es probable que la página se haya eliminado o actualizado."
+        "paramsInErrorDescription": "Los parámetros guardados no coinciden con los parámetros de la página. Es probable que la página se haya eliminado o actualizado.",
+        "target": "Abrir en...",
+        "targetSelf": "Misma pestaña",
+        "targetNewTab": "Nueva pestaña"
     },
     "dispatchDataSourceError": {
         "defaultTitle": "Error de carga de datos",
@@ -536,6 +550,56 @@
     "visibilityForm": {
         "allVisitors": "Todos los visitantes",
         "loggedInVisitors": "Visitantes registrados",
-        "notLoggedInVisitors": "Visitantes no registrados"
+        "notLoggedInVisitors": "Visitantes no registrados",
+        "warningTitle": "Estamos mejorando constantemente la seguridad",
+        "warningMessage": "Por el momento, la visibilidad sólo se aplica en la interfaz de usuario, los datos subyacentes siguen siendo accesibles desde la API. Consulta la <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentación</a> para obtener más información sobre la seguridad de los datos."
+    },
+    "generalSettings": {
+        "titleOverview": "General",
+        "labelForm": "Favicon",
+        "labelDescription": "Escoge un ICO, PNG, GIF o JPEG de 128x128px.",
+        "cantUploadFaviconTitle": "No se puede cargar el archivo favicon",
+        "cantUpdateApplicationTitle": "No se ha podido actualizar la aplicación",
+        "cantUpdateApplicationDescription": "Lo sentimos, no se ha podido actualizar la aplicación.",
+        "labelButton": "Subir favicon",
+        "cantUploadFaviconDescription": "Lo sentimos, no se ha podido cargar la imagen del favicon. Asegúrese de que el archivo de imagen es único y tiene un formato de imagen compatible."
+    },
+    "repeatElement": {
+        "empty": "No se ha encontrado ningún artículo.",
+        "missingDataSourceTooltip": "Elige una fuente de datos para empezar a añadir elementos.",
+        "showMore": "Ver más"
+    },
+    "repeatElementForm": {
+        "dataSource": "Fuente de datos",
+        "itemsPerPage": "Artículos por página",
+        "itemsPerRowLabel": "Artículos por fila",
+        "orientationLabel": "Orientación",
+        "orientationHorizontal": "Horizontal",
+        "itemsPerPagePlaceholder": "Introduce el valor...",
+        "itemsPerRowDescription": "Elige, por tipo de dispositivo, cuál debe ser el número de repeticiones por fila.",
+        "orientationVertical": "Vertical"
+    },
+    "tagsFieldForm": {
+        "fieldValuesLabel": "Valores",
+        "fieldValuesPlaceholder": "Introducir valores...",
+        "fieldColorsPlaceholder": "Introducir colores...",
+        "fieldColorsLabel": "Colores"
+    },
+    "buttonFieldForm": {
+        "labelPlaceholder": "Introduce una etiqueta...",
+        "infoMessage": "Para configurar las acciones de este botón, abre la pestaña «Eventos» del elemento actual."
+    },
+    "imageInput": {
+        "labelDescription": "Descripción por defecto",
+        "labelButton": "Cargar"
+    },
+    "userDataProviderType": {
+        "isAuthenticated": "Está autenticado",
+        "id": "ID",
+        "email": "Correo electrónico",
+        "username": "Usuario"
+    },
+    "buttonField": {
+        "noLabel": "Sin nombre..."
     }
 }
