@@ -98,16 +98,16 @@
                             "name": "Tenants",
                             "order": 9,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": "text",
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8422,
                             "through_field_name": "Units",
                             "target_field_id": 8439,
@@ -119,16 +119,16 @@
                             "name": "Units count",
                             "order": 10,
                             "primary": false,
-                            "number_decimal_places": 0,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": 0,
                             "through_field_id": 8422
                         },
                         {
@@ -137,16 +137,16 @@
                             "name": "Rented units",
                             "order": 11,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": "text",
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "filter(lookup('Units','Name'),lookup('Units','Active lease') = true)",
                             "formula_type": "array"
                         },
@@ -156,16 +156,16 @@
                             "name": "Rented units count",
                             "order": 12,
                             "primary": false,
-                            "number_decimal_places": 0,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": 0,
                             "formula": "count(filter(lookup('Units','Name'),lookup('Units','Active lease') = true))",
                             "formula_type": "number"
                         },
@@ -175,16 +175,16 @@
                             "name": "Percentage occupied",
                             "order": 13,
                             "primary": false,
-                            "number_decimal_places": 0,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": 0,
                             "formula": "round(field('Rented units count') / field('Units count') * 100,0)",
                             "formula_type": "number"
                         },
@@ -194,16 +194,16 @@
                             "name": "Service requests count",
                             "order": 14,
                             "primary": false,
-                            "number_decimal_places": 0,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": 0,
                             "through_field_id": 8422,
                             "target_field_id": 8436,
                             "rollup_function": "count"
@@ -214,16 +214,16 @@
                             "name": "Occupation symbol",
                             "order": 15,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(field('Percentage occupied') > 66,'\ud83d\udfe2',if(field('Percentage occupied') <= 33 ,'\ud83d\udd34','\ud83d\udfe1'))",
                             "formula_type": "text"
                         },
@@ -233,16 +233,16 @@
                             "name": "Contacts email",
                             "order": 16,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "join(lookup('Contacts','Email'),' ')",
                             "formula_type": "text"
                         }
@@ -1862,16 +1862,16 @@
                             "name": "Building name",
                             "order": 6,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": true,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": true,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8434,
                             "target_field_id": 8417,
                             "rollup_function": "min"
@@ -1892,16 +1892,16 @@
                             "name": "Tenants",
                             "order": 8,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": "text",
-                            "nullable": true,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "nullable": true,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8438,
                             "through_field_name": "Leases",
                             "target_field_id": 8448,
@@ -1913,16 +1913,16 @@
                             "name": "Active lease",
                             "order": 9,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8438,
                             "target_field_id": 8453,
                             "rollup_function": "any"
@@ -1933,16 +1933,16 @@
                             "name": "Contacts email",
                             "order": 10,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "join(lookup('Building','Contacts email'),' ')",
                             "formula_type": "text"
                         },
@@ -1952,16 +1952,16 @@
                             "name": "Active lease symbol",
                             "order": 11,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(field('Active lease'),'\ud83d\udfe2','\ud83d\udd34')",
                             "formula_type": "text"
                         },
@@ -1971,16 +1971,16 @@
                             "name": "Tenants names",
                             "order": 12,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "join(field('Tenants'),' ')",
                             "formula_type": "text"
                         },
@@ -1990,16 +1990,16 @@
                             "name": "Open service requests",
                             "order": 13,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": "text",
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "filter(lookup('Service requests','Issue'),lookup('Service requests','Fixed') = false)",
                             "formula_type": "array"
                         },
@@ -2009,16 +2009,16 @@
                             "name": "Open service requests count",
                             "order": 14,
                             "primary": false,
-                            "number_decimal_places": 0,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": 0,
                             "formula": "count(filter(lookup('Service requests','Issue'),lookup('Service requests','Fixed') = false))",
                             "formula_type": "number"
                         }
@@ -3825,16 +3825,16 @@
                             "name": "Is active",
                             "order": 8,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "and(field('Start date') < now(), field('End date') > now())",
                             "formula_type": "boolean"
                         },
@@ -3854,16 +3854,16 @@
                             "name": "Building",
                             "order": 11,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": true,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": true,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8454,
                             "target_field_id": 8434,
                             "rollup_function": "min"
@@ -3874,16 +3874,16 @@
                             "name": "Is active symbol",
                             "order": 12,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(field('Is active'),'\ud83d\udfe2','\ud83d\udd34')",
                             "formula_type": "text"
                         }
@@ -5776,16 +5776,16 @@
                             "name": "Building",
                             "order": 8,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": "text",
-                            "nullable": true,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": "text",
+                            "date_time_format": null,
+                            "nullable": true,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8458,
                             "through_field_name": "Lease",
                             "target_field_id": 8455,
@@ -6690,16 +6690,16 @@
                             "name": "Potential contacts",
                             "order": 11,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "join(lookup('Unit','Contacts email'),' ')",
                             "formula_type": "text"
                         },
@@ -6709,16 +6709,16 @@
                             "name": "Vendor symbol",
                             "order": 12,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(count(field('Vendor responsible')) = 0,'\ud83d\udd34','\ud83d\udfe2')",
                             "formula_type": "text"
                         },
@@ -6728,16 +6728,16 @@
                             "name": "Contact symbol",
                             "order": 13,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(count(field('Contact responsible')) = 0,'\ud83d\udd34','\ud83d\udfe2')",
                             "formula_type": "text"
                         },
@@ -6747,16 +6747,16 @@
                             "name": "Priority symbol",
                             "order": 14,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(totext(field('Priority')) = 'Urgent','\u2757\u2757',if(totext(field('Priority')) = 'Moderate','\u2757',''))",
                             "formula_type": "text"
                         },
@@ -6766,16 +6766,16 @@
                             "name": "Fixed symbol",
                             "order": 15,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "formula": "if(not(field('Fixed')),'\ud83d\udd34','\ud83d\udfe2')",
                             "formula_type": "text"
                         }
@@ -7963,16 +7963,16 @@
                             "name": "All requests fixed",
                             "order": 10,
                             "primary": false,
-                            "number_decimal_places": null,
                             "date_show_tzinfo": null,
-                            "date_time_format": null,
-                            "date_force_timezone": null,
-                            "array_formula_type": null,
-                            "nullable": false,
+                            "date_include_time": null,
                             "duration_format": null,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "nullable": false,
+                            "date_force_timezone": null,
                             "date_format": null,
                             "error": null,
-                            "date_include_time": null,
+                            "number_decimal_places": null,
                             "through_field_id": 8483,
                             "target_field_id": 8464,
                             "rollup_function": "every"
@@ -9129,7 +9129,7 @@
                             "type": "link",
                             "parent_element_id": 1138,
                             "place_in_container": "0",
-                            "visibility": "all",
+                            "visibility": "logged-in",
                             "style_border_top_color": "border",
                             "style_border_top_size": 0,
                             "style_padding_top": 10,
@@ -9209,6 +9209,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "494569a9-ec51-48d8-afbc-c60a8b7e11c3",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -9216,6 +9217,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "cab4a691-960b-416d-96dd-b6b0cbabf9e3",
                                     "name": "Address",
                                     "type": "text",
                                     "config": {
@@ -9223,6 +9225,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "68ea8afb-ba82-432b-8dcc-c5b38618f3f5",
                                     "name": "Occupation rate",
                                     "type": "text",
                                     "config": {
@@ -9230,6 +9233,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e6d2deea-5529-4ede-9fb6-11354f36730d",
                                     "name": "Details",
                                     "type": "link",
                                     "config": {
@@ -9302,6 +9306,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "d9896386-70e2-48a2-98b4-7f13aee2b02a",
                                     "name": "Issue",
                                     "type": "text",
                                     "config": {
@@ -9309,6 +9314,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "3ec85956-b75e-4d39-83d1-bdd94c16ce66",
                                     "name": "Unit",
                                     "type": "text",
                                     "config": {
@@ -9316,6 +9322,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "c4aaeddc-6d99-44be-a0de-98c787e978bf",
                                     "name": "Date",
                                     "type": "text",
                                     "config": {
@@ -9323,6 +9330,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "7b83ed3d-bcc4-40c9-9bf1-50f5c8f1b50f",
                                     "name": "Est. completion",
                                     "type": "text",
                                     "config": {
@@ -9330,6 +9338,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ba3db07b-9373-4c04-8346-e6b569c1ead9",
                                     "name": "Vendor",
                                     "type": "text",
                                     "config": {
@@ -9337,6 +9346,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d5ca4263-2e83-4c14-9191-b19acf76e5a3",
                                     "name": "Contact",
                                     "type": "text",
                                     "config": {
@@ -9344,6 +9354,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "fa16a17c-e710-464c-bd16-013bcc61a02a",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -9955,6 +9966,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "d196b505-da1d-497a-a743-6d7793e2d4ea",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -9962,6 +9974,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "a3650972-6ee6-47e2-a9fd-53d5464a6d41",
                                     "name": "Floor",
                                     "type": "text",
                                     "config": {
@@ -9969,6 +9982,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "70596b48-2b98-4430-bda5-57fd0da39cf8",
                                     "name": "Tenants",
                                     "type": "text",
                                     "config": {
@@ -9976,6 +9990,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ea381ce8-f31b-4869-861d-5406f576b266",
                                     "name": "Open service requests",
                                     "type": "text",
                                     "config": {
@@ -9983,6 +9998,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "3781cd67-d60d-48a0-904f-0292b96ec6ef",
                                     "name": "Active lease",
                                     "type": "text",
                                     "config": {
@@ -9990,6 +10006,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "a34c8892-ed36-4a2c-a310-abcc0db1d847",
                                     "name": "Leases",
                                     "type": "text",
                                     "config": {
@@ -9997,6 +10014,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "f344bdf5-4009-4819-8fcc-d270aecf6da3",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -10388,6 +10406,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "988c6dcb-749f-486a-88e1-3bbf88303963",
                                     "name": "ID",
                                     "type": "text",
                                     "config": {
@@ -10395,6 +10414,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d90be9bd-f696-4905-ad26-702dcef4a6f6",
                                     "name": "Tenant",
                                     "type": "text",
                                     "config": {
@@ -10402,6 +10422,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "323e8a32-a24e-418e-ae37-d2a7cfb7fce9",
                                     "name": "From",
                                     "type": "text",
                                     "config": {
@@ -10409,6 +10430,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "0950b749-a5c7-4529-80f2-aa75bed93940",
                                     "name": "Until",
                                     "type": "text",
                                     "config": {
@@ -10416,6 +10438,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e48b7b6c-7d6f-41f2-9275-ff908c0e2e64",
                                     "name": "Is active",
                                     "type": "text",
                                     "config": {
@@ -10423,6 +10446,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d56b4d8a-bdeb-405e-b63a-6902103a3e15",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -10495,6 +10519,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "9a5a4133-271f-492b-a9cf-3aeac2cf49c5",
                                     "name": "Issue",
                                     "type": "text",
                                     "config": {
@@ -10502,6 +10527,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d6b131ad-d8a7-4459-a85c-1229e9ade3d5",
                                     "name": "Date",
                                     "type": "text",
                                     "config": {
@@ -10509,6 +10535,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "fb7fff7f-6471-48ed-8b99-70714b9efde5",
                                     "name": "Est. completion",
                                     "type": "text",
                                     "config": {
@@ -10516,6 +10543,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "43187abf-97fd-49a6-96fe-d2fa1d027e31",
                                     "name": "Vandor",
                                     "type": "text",
                                     "config": {
@@ -10523,6 +10551,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "35fd79f7-25cc-4cd8-b11f-43cb11978b52",
                                     "name": "Contact",
                                     "type": "text",
                                     "config": {
@@ -10530,6 +10559,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "1dab14da-9187-4fdd-b1dc-e7463672fa72",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -11675,6 +11705,7 @@
                             "items_per_page": 5,
                             "fields": [
                                 {
+                                    "uid": "865ba1f3-0363-46da-afcd-e281f06f1e1a",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -11682,6 +11713,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ebc6ec91-4b47-4392-80fe-555e6b68f3b5",
                                     "name": "Phone",
                                     "type": "text",
                                     "config": {
@@ -11689,6 +11721,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "22490dec-f8b6-4e1d-b816-63c7e33705c1",
                                     "name": "Role",
                                     "type": "text",
                                     "config": {
@@ -11696,6 +11729,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "12274090-f3da-4d43-a1b6-819079837341",
                                     "name": "Buildings",
                                     "type": "text",
                                     "config": {
@@ -11703,6 +11737,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "c548781f-6a28-4796-b752-a5c84a2667cb",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -11831,6 +11866,7 @@
                             "items_per_page": 5,
                             "fields": [
                                 {
+                                    "uid": "bbd95841-7e19-402d-96da-6c57e26a084d",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -11838,6 +11874,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "8772b41d-0101-49ee-a3ff-1ffd82844126",
                                     "name": "Contact",
                                     "type": "text",
                                     "config": {
@@ -11845,6 +11882,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "92c3478d-83b4-477c-b310-9207bf01992e",
                                     "name": "Phone",
                                     "type": "text",
                                     "config": {
@@ -11852,6 +11890,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "4612db7e-c5cd-4917-bae8-d00089e3777e",
                                     "name": "Specialty",
                                     "type": "text",
                                     "config": {
@@ -11859,6 +11898,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "bf28df40-b8f3-4863-aaff-195eedfcd029",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -13474,7 +13514,7 @@
             ],
             "favicon_file": null,
             "id": 210,
-            "name": "Service Requests Manageer",
+            "name": "Service Requests Manager",
             "order": 2,
             "type": "builder"
         }

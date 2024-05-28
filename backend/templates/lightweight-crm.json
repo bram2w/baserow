@@ -166,19 +166,19 @@
                         {
                             "id": 9638,
                             "type": "rollup",
-                            "name": "Total contract values",
+                            "name": "Total contract value",
                             "order": 9,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9633,
                             "target_field_id": 9660,
                             "rollup_function": "sum"
@@ -189,16 +189,16 @@
                             "name": "Total closed won",
                             "order": 10,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "sum(filter(lookup('Pipelines','Contract Value'),lookup('Pipelines','Stage') = 'Closed Won'))",
                             "formula_type": "number"
                         },
@@ -208,16 +208,16 @@
                             "name": "Total closed lost",
                             "order": 11,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "sum(filter(lookup('Pipelines','Contract Value'),lookup('Pipelines','Stage') = 'Closed Lost'))",
                             "formula_type": "number"
                         },
@@ -227,16 +227,16 @@
                             "name": "Total in progress",
                             "order": 12,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "sum(filter(lookup('Pipelines','Contract Value'),and(lookup('Pipelines','Stage') != 'Closed Lost',lookup('Pipelines','Stage') != 'Closed Won')))",
                             "formula_type": "number"
                         },
@@ -246,16 +246,16 @@
                             "name": "Pipelines count",
                             "order": 13,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9633
                         },
                         {
@@ -264,16 +264,16 @@
                             "name": "Active pipelines count",
                             "order": 14,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "count(filter(lookup('Pipelines','Stage'),and(lookup('Pipelines','Stage') != 'Closed Won',lookup('Pipelines','Stage') != 'Closed Lost')))",
                             "formula_type": "number"
                         }
@@ -928,16 +928,16 @@
                             "name": "Activities count",
                             "order": 9,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9649
                         },
                         {
@@ -946,16 +946,16 @@
                             "name": "Last activity",
                             "order": 10,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": "ISO",
+                            "date_time_format": "24",
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": false,
                             "date_include_time": false,
-                            "date_time_format": "24",
+                            "date_force_timezone": null,
+                            "date_format": "ISO",
                             "through_field_id": 9649,
                             "target_field_id": 9670,
                             "rollup_function": "max"
@@ -966,16 +966,16 @@
                             "name": "Company name",
                             "order": 11,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9646,
                             "target_field_id": 9630,
                             "rollup_function": "min"
@@ -986,18 +986,18 @@
                             "name": "Employee",
                             "order": 12,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
-                            "error": null,
-                            "nullable": false,
+                            "date_time_format": null,
+                            "error": "references the deleted or unknown field Employee Email in table Activities",
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "join(lookup('Activities','Employee Email'),' ')",
-                            "formula_type": "text"
+                            "formula_type": "invalid"
                         }
                     ],
                     "views": [
@@ -1850,16 +1850,16 @@
                             "name": "Company name",
                             "order": 9,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9656,
                             "target_field_id": 9630,
                             "rollup_function": "min"
@@ -1870,16 +1870,16 @@
                             "name": "Activities count",
                             "order": 10,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9662
                         },
                         {
@@ -1888,16 +1888,16 @@
                             "name": "Owner name",
                             "order": 11,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9663,
                             "target_field_id": 9679,
                             "rollup_function": "min"
@@ -1908,16 +1908,16 @@
                             "name": "Owner e-mail",
                             "order": 12,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "min(lookup('Owner','Email'))",
                             "formula_type": "char"
                         }
@@ -3382,16 +3382,16 @@
                             "name": "Contacts name",
                             "order": 8,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9669,
                             "target_field_id": 9644,
                             "rollup_function": "min"
@@ -3402,16 +3402,16 @@
                             "name": "Pipeline name",
                             "order": 9,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9672,
                             "target_field_id": 9655,
                             "rollup_function": "min"
@@ -3422,16 +3422,16 @@
                             "name": "Employee",
                             "order": 10,
                             "primary": false,
-                            "array_formula_type": "text",
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": "text",
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9672,
                             "through_field_name": "Pipeline",
                             "target_field_id": 9663,
@@ -3440,19 +3440,19 @@
                         {
                             "id": 9676,
                             "type": "formula",
-                            "name": "Employee Email",
+                            "name": "Employee email",
                             "order": 11,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "min(lookup('Pipeline','Owner e-mail'))",
                             "formula_type": "char"
                         },
@@ -3462,16 +3462,16 @@
                             "name": "Employee name",
                             "order": 12,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": true,
                             "number_decimal_places": null,
-                            "date_force_timezone": null,
+                            "nullable": true,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "min(lookup('Pipeline','Owner'))",
                             "formula_type": "text"
                         },
@@ -4649,16 +4649,16 @@
                             "name": "Active pipelines count",
                             "order": 4,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "formula": "count(filter(lookup('Pipelines','Stage'),and(lookup('Pipelines','Stage') != 'Closed Won',lookup('Pipelines','Stage') != 'Closed Lost')))",
                             "formula_type": "number"
                         },
@@ -4668,16 +4668,16 @@
                             "name": "Total pipelines count",
                             "order": 5,
                             "primary": false,
-                            "array_formula_type": null,
                             "duration_format": null,
-                            "date_format": null,
+                            "date_time_format": null,
                             "error": null,
-                            "nullable": false,
                             "number_decimal_places": 0,
-                            "date_force_timezone": null,
+                            "nullable": false,
+                            "array_formula_type": null,
                             "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "date_time_format": null,
+                            "date_force_timezone": null,
+                            "date_format": null,
                             "through_field_id": 9682
                         },
                         {
@@ -5436,6 +5436,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "a69e62de-aff3-4623-ace7-5eb86931ffed",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -5443,6 +5444,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "b98df986-1a76-40e9-bff4-9a803a580855",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -5450,6 +5452,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "960552b3-d929-4531-bec4-ebcf138ef94e",
                                     "name": "Company",
                                     "type": "text",
                                     "config": {
@@ -5457,6 +5460,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "aefb4b96-d005-4263-b723-ef9cbd0ac90c",
                                     "name": "Phone",
                                     "type": "text",
                                     "config": {
@@ -5464,6 +5468,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "c99b8af5-f2f4-48de-a6a7-61930c6209d7",
                                     "name": "Last activity",
                                     "type": "text",
                                     "config": {
@@ -5471,6 +5476,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "3e9a96b4-6a46-44b6-826a-b0b17417727e",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -5576,6 +5582,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "17904a6a-e739-4ae7-86db-5cfe95230ea4",
                                     "name": "Opportunity",
                                     "type": "text",
                                     "config": {
@@ -5583,6 +5590,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "8921d8b8-ebd6-48af-b77c-bbe199b50c71",
                                     "name": "Company",
                                     "type": "text",
                                     "config": {
@@ -5590,6 +5598,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "9f451d6b-08f7-4d57-a8ee-685bf773cbe9",
                                     "name": "Stage",
                                     "type": "text",
                                     "config": {
@@ -5597,6 +5606,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d2945dbb-7440-4cab-924d-c5f0ae0a352d",
                                     "name": "Close date",
                                     "type": "text",
                                     "config": {
@@ -5604,6 +5614,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ffb505e4-a9f7-45ab-a1cc-12f8d1b6af2f",
                                     "name": "Value",
                                     "type": "text",
                                     "config": {
@@ -5611,6 +5622,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d273f215-cef1-45b0-bcf2-378cf836d26e",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -5716,6 +5728,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "223fb3be-cb35-4cc9-8e35-a7e90a93fba4",
                                     "name": "Activity",
                                     "type": "text",
                                     "config": {
@@ -5723,6 +5736,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d8316868-73ef-4181-91c1-9eeaa9071f51",
                                     "name": "Contact",
                                     "type": "text",
                                     "config": {
@@ -5730,6 +5744,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "b3f306ce-58b1-4e8a-b28f-55bacf6d5022",
                                     "name": "Pipeline",
                                     "type": "text",
                                     "config": {
@@ -5737,6 +5752,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "4bd44873-72dd-4dd6-9c3b-3679711600b8",
                                     "name": "Date",
                                     "type": "text",
                                     "config": {
@@ -5744,6 +5760,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ebfa9995-7b04-47d5-a606-93a511a645c4",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -6294,6 +6311,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "ad80e9dc-9cb3-4ebb-a193-c9b2008abe76",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -6301,6 +6319,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "c4f5f3f8-4343-41a8-ad6d-31b8a1db99d1",
                                     "name": "Industry",
                                     "type": "text",
                                     "config": {
@@ -6308,6 +6327,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "df945b05-81c0-4720-99cc-a2173e491d8b",
                                     "name": "Size",
                                     "type": "text",
                                     "config": {
@@ -6315,6 +6335,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d96585b4-9b59-43f2-ad67-f6f33edf1fbe",
                                     "name": "Won",
                                     "type": "text",
                                     "config": {
@@ -6322,6 +6343,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "923fd099-d7a4-4fcd-a326-26492721773e",
                                     "name": "Lost",
                                     "type": "text",
                                     "config": {
@@ -6329,6 +6351,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e27ab4a7-9353-4abc-be30-901c39ccabea",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -6336,6 +6359,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "f657deff-04cb-4388-ad08-398829a42fda",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -7207,6 +7231,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "273a57a9-f4cf-4d0c-a327-b9ada38a431e",
                                     "name": "Opportunity",
                                     "type": "text",
                                     "config": {
@@ -7214,6 +7239,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "53ece985-d1a9-401e-9e12-84559006255e",
                                     "name": "Stage",
                                     "type": "text",
                                     "config": {
@@ -7221,6 +7247,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ab8128a1-1b58-43b9-9ebb-f9619050ab3d",
                                     "name": "Close date",
                                     "type": "text",
                                     "config": {
@@ -7228,6 +7255,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "3b9f4bb1-2694-43c7-b5dd-3be7cd54ba83",
                                     "name": "Value",
                                     "type": "text",
                                     "config": {
@@ -7235,6 +7263,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "04b93e04-6331-4af6-a186-662c19bd5225",
                                     "name": "Owner",
                                     "type": "text",
                                     "config": {
@@ -7242,6 +7271,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "9a30a578-f2a7-45b8-8566-3a6faf298486",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -7347,6 +7377,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "360947a4-1756-4aae-93d3-4b814aff37a4",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -7354,6 +7385,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "c4ff0c7e-d331-46dd-9f3e-df0d43a2d3c5",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -7361,6 +7393,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "be0f907d-f869-40e7-8284-6e2aa830b205",
                                     "name": "Phone",
                                     "type": "text",
                                     "config": {
@@ -7368,6 +7401,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "53bd2046-7aec-419d-9579-5dd16dc1724d",
                                     "name": "E-mail",
                                     "type": "text",
                                     "config": {
@@ -7375,6 +7409,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "0c8739aa-669d-433e-a8eb-f14e42409a20",
                                     "name": "Last activity",
                                     "type": "text",
                                     "config": {
@@ -7382,6 +7417,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "627af771-6aad-409e-b9bf-fb2112a7fdb6",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -7948,6 +7984,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "f5f4a98c-58b8-4cac-95b2-8fdd3f9c5767",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -7955,6 +7992,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "bb904261-8b69-42e0-94e4-5349fdb569eb",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -7962,6 +8000,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e5e2066a-8107-4d13-ae5b-c80f514855df",
                                     "name": "Company",
                                     "type": "text",
                                     "config": {
@@ -7969,6 +8008,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ded86425-946a-4392-ba06-ec363626819d",
                                     "name": "Phone",
                                     "type": "text",
                                     "config": {
@@ -7976,6 +8016,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "605e19b8-148f-442b-9424-29bd5faa70cf",
                                     "name": "Last activity",
                                     "type": "text",
                                     "config": {
@@ -7983,6 +8024,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ae34cee7-4c5d-4df5-9494-b1860f57ab8c",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -8731,6 +8773,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "e40acaf1-ee01-4764-a068-2416d2d9c63b",
                                     "name": "Activity",
                                     "type": "text",
                                     "config": {
@@ -8738,6 +8781,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "6addffa1-2dba-49a0-b098-6bbc6fa9a329",
                                     "name": "Pipeline",
                                     "type": "text",
                                     "config": {
@@ -8745,6 +8789,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "311d520e-b13b-45f6-ab7f-053bb2ee3aab",
                                     "name": "Date",
                                     "type": "text",
                                     "config": {
@@ -8752,6 +8797,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "367b3186-20ff-4a23-85ee-fd438811c9af",
                                     "name": "Employee",
                                     "type": "text",
                                     "config": {
@@ -8759,6 +8805,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "da4d7e1c-effc-424f-a357-e9575b606aed",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -9302,6 +9349,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "aec795e9-2ff8-4f94-a833-1133d4d4863e",
                                     "name": "Opportunity",
                                     "type": "text",
                                     "config": {
@@ -9309,6 +9357,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "afd0b65e-0b8e-40a3-a68b-0e4279836683",
                                     "name": "Company",
                                     "type": "text",
                                     "config": {
@@ -9316,6 +9365,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "f5d91935-08ed-440e-afd1-7111a3201716",
                                     "name": "Stage",
                                     "type": "text",
                                     "config": {
@@ -9323,6 +9373,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d3152464-cd89-4945-a06e-ee79c0199670",
                                     "name": "Close date",
                                     "type": "text",
                                     "config": {
@@ -9330,6 +9381,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ae83298b-4d8d-4b9f-8c5a-419ffb1a44d5",
                                     "name": "Value",
                                     "type": "text",
                                     "config": {
@@ -9337,6 +9389,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "95dd2ef8-92c7-4ac2-9d6d-19723aca7bbb",
                                     "name": "Owner",
                                     "type": "text",
                                     "config": {
@@ -9344,6 +9397,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "abb46f95-6d3e-488f-870c-e4b060485d5d",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -10110,6 +10164,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "a370de78-6352-40c3-b259-526cb3e5aaac",
                                     "name": "Activity",
                                     "type": "text",
                                     "config": {
@@ -10117,6 +10172,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "c3dc524a-62d1-4fb1-ae27-6390b46c68e6",
                                     "name": "Pipeline",
                                     "type": "text",
                                     "config": {
@@ -10124,6 +10180,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e5e52b8c-cbd8-4eed-9231-ce4a568ae644",
                                     "name": "Date",
                                     "type": "text",
                                     "config": {
@@ -10131,6 +10188,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "701e7248-209b-4d21-bd48-66008d741283",
                                     "name": "Employee",
                                     "type": "text",
                                     "config": {
@@ -10138,6 +10196,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "1e309912-fd3f-48af-83b4-585fcd686ec8",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -10712,6 +10771,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "d1e0eef3-daf0-4fed-92a3-3546dd2e81ed",
                                     "name": "Activity",
                                     "type": "text",
                                     "config": {
@@ -10719,6 +10779,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "d7d4a0a9-14a1-437c-9f3d-b32361e6e9da",
                                     "name": "Contact",
                                     "type": "text",
                                     "config": {
@@ -10726,6 +10787,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ecf49a59-c967-4ee7-a1e9-d144ca8543aa",
                                     "name": "Pipeline",
                                     "type": "text",
                                     "config": {
@@ -10733,6 +10795,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "6b12843d-d98e-4185-9a18-6ec22a6b88b8",
                                     "name": "Date",
                                     "type": "text",
                                     "config": {
@@ -10740,6 +10803,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "fda6d563-e5ae-41ef-a5e2-5d2623d5a58e",
                                     "name": "Employee",
                                     "type": "text",
                                     "config": {
@@ -10747,6 +10811,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e618ffbb-2807-48b9-9bf5-f9f2fd72991a",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
