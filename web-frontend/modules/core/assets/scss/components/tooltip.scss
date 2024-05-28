@@ -45,4 +45,35 @@
 
   @include fixed-height(26px, 12px);
   @include rounded($rounded);
+
+  &--expandable {
+    padding: 12px;
+    text-align: left;
+    white-space: nowrap;
+    max-height: 320px;
+    line-height: 20px;
+    font-size: 12px;
+    overflow: auto;
+    height: auto;
+    max-width: 320px;
+    text-wrap: wrap;
+
+    @include rounded($rounded);
+
+    &::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+      border-radius: 10px;
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background: $color-neutral-500;
+      background-clip: content-box;
+      border: 2px solid transparent;
+    }
+  }
 }

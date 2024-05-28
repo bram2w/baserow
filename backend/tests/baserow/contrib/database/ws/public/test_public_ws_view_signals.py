@@ -222,6 +222,7 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
                             "primary": False,
                             "text_default": "",
                             "read_only": False,
+                            "description": None,
                         }
                     ],
                     "view": view_serialized["view"],
@@ -298,6 +299,7 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
                             "primary": False,
                             "text_default": "",
                             "read_only": False,
+                            "description": None,
                         }
                     ],
                     "view": view_serialized["view"],

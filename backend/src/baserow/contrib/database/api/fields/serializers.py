@@ -34,10 +34,25 @@ class FieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("id", "table_id", "name", "order", "type", "primary", "read_only")
+        fields = (
+            "id",
+            "table_id",
+            "name",
+            "order",
+            "type",
+            "primary",
+            "read_only",
+            "description",
+        )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
+            "description": {
+                "required": False,
+                "default": None,
+                "allow_null": True,
+                "allow_blank": True,
+            },
         }
 
     @extend_schema_field(OpenApiTypes.STR)
@@ -84,7 +99,15 @@ class CreateFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("name", "type")
+        fields = ("name", "type", "description")
+        extra_kwargs = {
+            "description": {
+                "required": False,
+                "default": None,
+                "allow_null": True,
+                "allow_blank": True,
+            }
+        }
 
 
 class UpdateFieldSerializer(serializers.ModelSerializer):
@@ -94,9 +117,15 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("name", "type")
+        fields = ("name", "type", "description")
         extra_kwargs = {
             "name": {"required": False},
+            "description": {
+                "required": False,
+                "default": None,
+                "allow_null": True,
+                "allow_blank": True,
+            },
         }
 
 

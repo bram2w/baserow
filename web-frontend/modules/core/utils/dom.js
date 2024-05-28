@@ -56,6 +56,14 @@ export const findScrollableParent = (element) => {
   }
 }
 
+/**
+ * Detects clicks outside el element and call callback
+ *
+ * Returns a callback to unregister click handlers after successful outside click
+ * @param el
+ * @param callback
+ * @returns {(function(): void)|*}
+ */
 export const onClickOutside = (el, callback) => {
   const insideEvent = new Set()
 

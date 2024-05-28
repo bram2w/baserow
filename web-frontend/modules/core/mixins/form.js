@@ -109,7 +109,10 @@ export default {
      * Returns true if the field value has no errors
      */
     fieldHasErrors(fieldName) {
-      return this.$v.values[fieldName].$error
+      // a field can be without any validators
+      return this.$v.values[fieldName]
+        ? this.$v.values[fieldName].$error
+        : false
     },
     /**
      * Returns true is everything is valid.

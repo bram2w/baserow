@@ -966,6 +966,7 @@ def test_get_public_calendar_view_with_single_select_and_cover(
                 "date_include_time": False,
                 "date_show_tzinfo": False,
                 "date_time_format": "24",
+                "description": None,
             },
             {
                 "id": public_field.id,
@@ -976,6 +977,7 @@ def test_get_public_calendar_view_with_single_select_and_cover(
                 "text_default": "",
                 "type": "text",
                 "read_only": False,
+                "description": None,
             },
         ],
         "view": {

@@ -291,6 +291,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         return_updated_fields=False,
         primary_key=None,
         skip_search_updates=False,
+        description: Optional[str] = None,
         **kwargs,
     ) -> Union[Field, Tuple[Field, List[Field]]]:
         """
@@ -366,6 +367,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             primary=primary,
             pk=primary_key,
             tsvector_column_created=table.tsvectors_are_supported,
+            description=description,
             **field_values,
         )
 
@@ -510,7 +512,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             dependants_broken_due_to_type_change = []
             to_field_type = from_field_type
 
-        allowed_fields = ["name"] + to_field_type.allowed_fields
+        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
 
         self._validate_name_and_optionally_rename_if_collision(

@@ -175,6 +175,14 @@
   &--multiple-actions {
     justify-content: space-between;
   }
+
+  &--align-left {
+    justify-content: left;
+  }
+
+  &--align-right {
+    justify-content: right;
+  }
 }
 
 .context__menu-active-icon {
