@@ -1,6 +1,6 @@
 import moment from '@baserow/modules/core/moment'
 import {
-  splitTimezoneAndFilterValue,
+  splitMultiStepDateValue,
   DATE_FILTER_VALUE_SEPARATOR,
 } from '@baserow/modules/database/utils/date'
 import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
@@ -10,12 +10,16 @@ export default {
   data() {
     return {
       copy: '',
-      timezoneValue: null,
+      timezoneValue: '',
+      operatorValue: '',
     }
   },
   watch: {
-    'filter.value'(value) {
-      this.setCopy(value)
+    'filter.value': {
+      handler(value) {
+        this.setCopy(value)
+      },
+      immediate: true,
     },
   },
   created() {
@@ -29,28 +33,27 @@ export default {
       return this.field.date_force_timezone || moment.tz.guess()
     },
     getTimezone() {
-      if (this.timezoneValue === null || this.timezoneValue === undefined) {
+      if (!this.timezoneValue) {
         this.timezoneValue = this.getDefaultTimezone()
       }
       return this.timezoneValue
     },
     getTimezoneAbbr() {
       const timezone = this.getTimezone()
-      return timezone !== undefined ? moment.utc().tz(timezone).format('z') : ''
+      return timezone ? moment.utc().tz(timezone).format('z') : ''
     },
     splitCombinedValue(value) {
-      const [timezone, filterValue] = splitTimezoneAndFilterValue(value)
-      return [timezone, filterValue]
-    },
-    setCopy(value) {
-      const [timezone, filterValue] = this.splitCombinedValue(value)
-      this.copy = filterValue
-      this.timezoneValue = timezone
+      const [timezone, filterValue, operatorValue] =
+        splitMultiStepDateValue(value)
+      return [timezone, filterValue, operatorValue]
     },
     prepareValue(value, field) {
       const sep = this.getSeparator()
       const timezone = this.getTimezone()
-      return timezone ? `${timezone}${sep}${value}` : value
+      const valueAndOperator = `${value}${sep}${this.operatorValue}`
+      return timezone
+        ? `${timezone}${sep}${valueAndOperator}`
+        : valueAndOperator
     },
     delayedUpdate(value, immediately = false) {
       const combinedValue = this.prepareValue(value, this.field)

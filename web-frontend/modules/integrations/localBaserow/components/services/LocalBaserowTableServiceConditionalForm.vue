@@ -45,7 +45,9 @@
         }"
       >
         <a
-          v-if="propFilterType.hasEditableValue"
+          v-if="
+            propFilterType.hasEditableValue && !propFilterType.isDeprecated()
+          "
           :title="
             !filter.value_is_formula
               ? $t('localBaserowTableServiceConditionalForm.useFormulaForValue')

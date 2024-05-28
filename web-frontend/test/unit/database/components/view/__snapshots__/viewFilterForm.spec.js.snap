@@ -120,6 +120,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="Name"
                 >
                   Name
                 </span>
@@ -266,6 +267,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="viewFilter.is"
                 >
                   viewFilter.is
                 </span>
@@ -621,6 +623,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                
               <span
                 class="dropdown__selected-text"
+                title="viewFilterContext.and"
               >
                 viewFilterContext.and
               </span>
@@ -730,6 +733,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="Stars"
                 >
                   Stars
                 </span>
@@ -876,6 +880,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="viewFilter.is"
                 >
                   viewFilter.is
                 </span>
@@ -1243,6 +1248,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="Stars"
                 >
                   Stars
                 </span>
@@ -1389,6 +1395,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="viewFilter.is"
                 >
                   viewFilter.is
                 </span>
@@ -1757,6 +1764,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="Stars"
                 >
                   Stars
                 </span>
@@ -1903,6 +1911,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                  
                 <span
                   class="dropdown__selected-text"
+                  title="viewFilter.is"
                 >
                   viewFilter.is
                 </span>

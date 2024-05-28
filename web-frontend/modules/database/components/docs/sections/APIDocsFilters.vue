@@ -14,7 +14,15 @@
         </thead>
         <tbody>
           <tr v-for="filter in viewFilterTypes" :key="filter.type">
-            <td>{{ filter.type }}</td>
+            <td>
+              {{ filter.type }}
+              <Badge
+                v-if="filter.isDeprecated()"
+                color="yellow"
+                class="margin-left-1"
+                >{{ $t('apiDocsFilters.deprecated') }}</Badge
+              >
+            </td>
             <td>{{ filter.example }}</td>
             <td>
               {{ $t('apiDocsFilters.field', { name: filter.getName() }) }}

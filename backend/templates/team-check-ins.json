@@ -573,8 +573,8 @@
                                 {
                                     "id": 20115,
                                     "field_id": 314160,
-                                    "type": "date_equals_today",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??today"
                                 }
                             ],
                             "sortings": [],
@@ -667,8 +667,8 @@
                                 {
                                     "id": 20113,
                                     "field_id": 314160,
-                                    "type": "date_equals_month",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??this_month"
                                 }
                             ],
                             "sortings": [],

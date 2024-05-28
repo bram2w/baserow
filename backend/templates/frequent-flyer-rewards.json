@@ -1272,8 +1272,8 @@
                                 {
                                     "id": 57753,
                                     "field_id": 641657,
-                                    "type": "date_equals_year",
-                                    "value": "America/Chicago"
+                                    "type": "date_is",
+                                    "value": "America/Chicago??this_year"
                                 }
                             ],
                             "sortings": [

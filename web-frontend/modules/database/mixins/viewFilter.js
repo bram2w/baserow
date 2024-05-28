@@ -39,5 +39,8 @@ export default {
     primary() {
       return this.fields.find((f) => f.primary)
     },
+    filterType() {
+      return this.$registry.get('viewFilter', this.filter.type)
+    },
   },
 }

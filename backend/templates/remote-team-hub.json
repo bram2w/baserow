@@ -387,14 +387,14 @@
                                 {
                                     "id": 22242,
                                     "field_id": 316687,
-                                    "type": "date_before",
-                                    "value": "2023-01-01"
+                                    "type": "date_is_before",
+                                    "value": "?2023-01-01?exact_date"
                                 },
                                 {
                                     "id": 22243,
                                     "field_id": 316687,
-                                    "type": "date_after",
-                                    "value": "2021-12-31"
+                                    "type": "date_is_after",
+                                    "value": "?2021-12-31?exact_date"
                                 }
                             ],
                             "sortings": [

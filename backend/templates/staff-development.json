@@ -4923,8 +4923,8 @@
                                 {
                                     "id": 149413,
                                     "field_id": 1438644,
-                                    "type": "date_before_today",
-                                    "value": "Europe/Brussels?",
+                                    "type": "date_is_before",
+                                    "value": "Europe/Brussels??today",
                                     "group": null
                                 }
                             ],

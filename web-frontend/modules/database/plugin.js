@@ -36,8 +36,6 @@ import {
 import {
   EqualViewFilterType,
   NotEqualViewFilterType,
-  DateEqualViewFilterType,
-  DateNotEqualViewFilterType,
   ContainsViewFilterType,
   FilenameContainsViewFilterType,
   FilesLowerThanViewFilterType,
@@ -56,6 +54,28 @@ import {
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
+  LinkRowHasFilterType,
+  LinkRowHasNotFilterType,
+  MultipleSelectHasFilterType,
+  MultipleSelectHasNotFilterType,
+  MultipleCollaboratorsHasFilterType,
+  MultipleCollaboratorsHasNotFilterType,
+  LinkRowContainsFilterType,
+  LinkRowNotContainsFilterType,
+  ContainsWordViewFilterType,
+  DoesntContainWordViewFilterType,
+  UserIsFilterType,
+  UserIsNotFilterType,
+  DateIsEqualMultiStepViewFilterType,
+  DateIsBeforeMultiStepViewFilterType,
+  DateIsOnOrBeforeMultiStepViewFilterType,
+  DateIsAfterMultiStepViewFilterType,
+  DateIsOnOrAfterMultiStepViewFilterType,
+  DateIsWithinMultiStepViewFilterType,
+  DateIsNotEqualMultiStepViewFilterType,
+  // Deprecated date filter types
+  DateEqualViewFilterType,
+  DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
   DateBeforeTodayViewFilterType,
   DateAfterTodayViewFilterType,
@@ -74,18 +94,6 @@ import {
   DateAfterViewFilterType,
   DateAfterOrEqualViewFilterType,
   DateEqualsDayOfMonthViewFilterType,
-  LinkRowHasFilterType,
-  LinkRowHasNotFilterType,
-  MultipleSelectHasFilterType,
-  MultipleSelectHasNotFilterType,
-  MultipleCollaboratorsHasFilterType,
-  MultipleCollaboratorsHasNotFilterType,
-  LinkRowContainsFilterType,
-  LinkRowNotContainsFilterType,
-  ContainsWordViewFilterType,
-  DoesntContainWordViewFilterType,
-  UserIsFilterType,
-  UserIsNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -320,6 +328,35 @@ export default (context) => {
   app.$registry.register('view', new FormViewType(context))
   app.$registry.register('viewFilter', new EqualViewFilterType(context))
   app.$registry.register('viewFilter', new NotEqualViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DateIsEqualMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsNotEqualMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsBeforeMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsOnOrBeforeMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsAfterMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsOnOrAfterMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsWithinMultiStepViewFilterType(context)
+  )
+  // DEPRECATED
   app.$registry.register('viewFilter', new DateEqualViewFilterType(context))
   app.$registry.register('viewFilter', new DateNotEqualViewFilterType(context))
   app.$registry.register(
@@ -388,6 +425,7 @@ export default (context) => {
     'viewFilter',
     new DateAfterDaysAgoViewFilterType(context)
   )
+  // END
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))

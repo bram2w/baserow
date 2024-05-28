@@ -1,5 +1,6 @@
 <template>
   <li
+    v-if="visible"
     class="select__item select__item--no-options"
     :class="{
       hidden: !isVisible(query),

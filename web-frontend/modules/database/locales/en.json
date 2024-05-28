@@ -218,7 +218,8 @@
     "filter": "Filter",
     "exampleValue": "Example value",
     "example": "Full example",
-    "field": "field {name}"
+    "field": "field {name}",
+    "deprecated": "deprecated"
   },
   "apiDocsFiltersBuilderModal": {
     "title": "Filters parameter builder",
@@ -876,5 +877,9 @@
     "scratch": "From scratch",
     "import": "From file",
     "airtable": "From Airtable"
+  },
+  "ViewFilterTypeDateUpgradeToMultiStep": {
+    "migrateButtonText": "Migrate to multi-step date filter",
+    "migrateButtonTooltip": "New filter available. Click to upgrade. It works the same."
   }
 }

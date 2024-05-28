@@ -4270,8 +4270,8 @@
                                 {
                                     "id": 2185,
                                     "field_id": 8450,
-                                    "type": "date_equals_year",
-                                    "value": "America/Chicago",
+                                    "type": "date_is",
+                                    "value": "America/Chicago??this_year",
                                     "group": null
                                 }
                             ],

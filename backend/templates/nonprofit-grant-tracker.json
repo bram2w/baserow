@@ -504,14 +504,14 @@
                                 {
                                     "id": 21458,
                                     "field_id": 330652,
-                                    "type": "date_before",
-                                    "value": "2022-01-01"
+                                    "type": "date_is_before",
+                                    "value": "?2022-01-01?exact_date"
                                 },
                                 {
                                     "id": 21459,
                                     "field_id": 330652,
-                                    "type": "date_after",
-                                    "value": "2020-12-31"
+                                    "type": "date_is_after",
+                                    "value": "?2020-12-31?exact_date"
                                 }
                             ],
                             "sortings": [
@@ -628,8 +628,8 @@
                                 {
                                     "id": 21462,
                                     "field_id": 330652,
-                                    "type": "date_equals_year",
-                                    "value": "America/Chicago"
+                                    "type": "date_is",
+                                    "value": "America/Chicago??this_year"
                                 }
                             ],
                             "sortings": [

@@ -51,6 +51,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                    
                   <span
                     class="dropdown__selected-text"
+                    title="exportTableDropdown.exportEntireTable"
                   >
                     exportTableDropdown.exportEntireTable
                   </span>
@@ -233,6 +234,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title=","
                     >
                       ,
                     </span>
@@ -488,6 +490,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title="Unicode (UTF-8)"
                     >
                       Unicode (UTF-8)
                     </span>
@@ -1734,6 +1737,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                    
                   <span
                     class="dropdown__selected-text"
+                    title="mock_view_1"
                   >
                     mock_view_1
                   </span>
@@ -1916,6 +1920,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title=","
                     >
                       ,
                     </span>
@@ -2171,6 +2176,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title="Unicode (UTF-8)"
                     >
                       Unicode (UTF-8)
                     </span>

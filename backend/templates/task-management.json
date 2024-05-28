@@ -2577,8 +2577,8 @@
                                 {
                                     "id": 2414,
                                     "field_id": 9254,
-                                    "type": "date_within_days",
-                                    "value": "Europe/Brussels?30",
+                                    "type": "date_is_within",
+                                    "value": "Europe/Brussels?30?nr_days_from_now",
                                     "group": null
                                 }
                             ],

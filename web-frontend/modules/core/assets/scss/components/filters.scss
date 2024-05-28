@@ -133,8 +133,13 @@
 .filters__multi-value {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   flex-direction: row;
+  width: 100%;
+}
+
+.filters__multi-value-operator {
+  max-width: 144px;
 }
 
 .filters__value-input {
@@ -146,13 +151,16 @@
 .filters__combined-value-input {
   &.filters__value-input--small {
     width: 50px;
+    height: 36px;
+    padding: 12px;
+    text-align: center;
   }
 }
 
 .filters__value-date-timezone {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-direction: row;
 }
 
@@ -252,11 +260,11 @@
 
 .filters__condition-item {
   display: grid;
-  width: 500px;
+  width: 560px;
 
-  /* 60px = 36px (button) + (8px (gap) * 3 (number of gaps))  */
-  grid-template-columns: calc(42% - 60px) 26% 32% 36px;
-  column-gap: 8px;
+  /* 48px = 36px (button) + (4px (gap) * 3 (number of gaps))  */
+  grid-template-columns: calc(32% - 48px) 22% 46% 36px;
+  column-gap: 4px;
   align-items: center;
   position: relative;
 
