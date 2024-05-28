@@ -2554,6 +2554,10 @@ export class URLFieldType extends FieldType {
   getCanGroupByInView(field) {
     return true
   }
+
+  getCanImport() {
+    return true
+  }
 }
 
 export class EmailFieldType extends FieldType {
