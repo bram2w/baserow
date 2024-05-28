@@ -31,16 +31,16 @@
                             "name": "ID",
                             "order": 0,
                             "primary": true,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "concat( \n  \"OBJ\", \n  if( \n    row_id() < 10, \n    concat(\"0000\", row_id()), \n    if( \n      row_id() < 100, \n      concat(\"000\", row_id()), \n      if( \n        row_id() < 1000, \n        concat(\"00\", row_id()), \n        if( \n          row_id() < 10000, \n          concat(\"0\", row_id()), \n          row_id() \n        ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "text"
                         },
@@ -110,16 +110,16 @@
                             "name": "Key result count",
                             "order": 8,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "if( \n  or( \n    isblank(join(field(\"Related key results\"), \"\")), \n    length(join(field(\"Related key results\"), \"\")) < 1 \n  ), \n  \"N/A\", \n  count(field(\"Related key results\")) \n)",
                             "formula_type": "text"
                         },
@@ -137,16 +137,16 @@
                             "name": "Department for sorting",
                             "order": 12,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join(totext(field(\"Department\")), \"\")",
                             "formula_type": "text"
                         },
@@ -176,16 +176,16 @@
                             "name": "Progress status (%)",
                             "order": 16,
                             "primary": false,
-                            "number_decimal_places": 2,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 2,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "round( \n  avg( \n    filter( \n      lookup(\"Related key results\", \"Progress status (%)\"), \n      and( \n        totext(lookup(\"Related key results\", \"Status\")) != \"New\", \n        totext(lookup(\"Related key results\", \"Status\")) != \"Cancelled\" \n      ) \n    ) \n  ), \n  2 \n)",
                             "formula_type": "number"
                         },
@@ -195,16 +195,16 @@
                             "name": "Is department leader match",
                             "order": 18,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "if( \n  any(lookup(\"Leader\", \"Department\") = field(\"Department\")), \n  True, \n  False \n)",
                             "formula_type": "boolean"
                         },
@@ -277,16 +277,16 @@
                             "name": "Status",
                             "order": 21,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "if( \n  or( \n    isblank(join(field(\"Related key results\"), \"\")), \n    length(join(field(\"Related key results\"), \"\")) < 1 \n  ), \n  \"\", \n  if( \n    any(totext(lookup(\"Related key results\", \"Status\")) = \"Missed\"), \n    \"\u274c Missed\", \n    if( \n      every(totext(lookup(\"Related key results\", \"Status\")) = \"Cancelled\"), \n      \"\u2702\ufe0f Cancelled\", \n      if( \n        every(totext(lookup(\"Related key results\", \"Status\")) = \"On hold\"), \n        \"\ud83e\udd76 On hold\", \n        if( \n          or( \n            every(totext(lookup(\"Related key results\", \"Status\")) = \"Completed\"), \n            avg(lookup(\"Related key results\", \"Progress status (%)\")) = 100 \n          ), \n          \"\ud83c\udfc6 Achieved\", \n          if( \n            or( \n              every(totext(lookup(\"Related key results\", \"Status\")) = \"In progress\"), \n              avg(lookup(\"Related key results\", \"Progress status (%)\")) > 0 \n            ), \n            \"\u23f3 In progress\", \n            if( \n              every(totext(lookup(\"Related key results\", \"Status\")) = \"New\"), \n              \"\ud83d\udca1 New\", \n              if( \n                every(totext(lookup(\"Related key results\", \"Status\")) = \"Scheduled\"), \n                \"\ud83d\udcc6 Scheduled\", \n                if( \n                  any(totext(lookup(\"Related key results\", \"Status\")) = \"Scheduled\"), \n                  \"\ud83d\udcc6 Scheduled\", \n                  \"\ud83d\udca1 New\" \n                ) \n              ) \n            ) \n            ) \n          ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "text"
                         },
@@ -296,16 +296,16 @@
                             "name": "Department name",
                             "order": 22,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": true,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9537,
                             "target_field_id": 9612,
                             "rollup_function": "min"
@@ -316,16 +316,16 @@
                             "name": "Leader name",
                             "order": 23,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": true,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9540,
                             "target_field_id": 9583,
                             "rollup_function": "min"
@@ -612,7 +612,7 @@
                             "id": 4359,
                             "type": "grid",
                             "name": "All objectives in progress",
-                            "order": 2,
+                            "order": 3,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -896,7 +896,7 @@
                             "id": 4360,
                             "type": "grid",
                             "name": "All objectives grouped by Department",
-                            "order": 3,
+                            "order": 4,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -1178,7 +1178,7 @@
                             "id": 4361,
                             "type": "grid",
                             "name": "All objectives grouped by Leader",
-                            "order": 4,
+                            "order": 5,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -1460,7 +1460,7 @@
                             "id": 4362,
                             "type": "grid",
                             "name": "All objectives grouped by Status",
-                            "order": 5,
+                            "order": 6,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -1742,7 +1742,7 @@
                             "id": 4363,
                             "type": "grid",
                             "name": "Objectives for 2024-Q1",
-                            "order": 6,
+                            "order": 7,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -2026,7 +2026,7 @@
                             "id": 4364,
                             "type": "grid",
                             "name": "Objectives for 2024-Q2",
-                            "order": 7,
+                            "order": 8,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -2310,7 +2310,7 @@
                             "id": 4365,
                             "type": "grid",
                             "name": "Objectives for 2024-Q3",
-                            "order": 8,
+                            "order": 9,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -2594,7 +2594,7 @@
                             "id": 4366,
                             "type": "kanban",
                             "name": "By target period",
-                            "order": 9,
+                            "order": 10,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "filter_type": "AND",
@@ -2787,7 +2787,7 @@
                             "id": 4367,
                             "type": "form",
                             "name": "Add objective",
-                            "order": 10,
+                            "order": 11,
                             "ownership_type": "collaborative",
                             "owned_by": null,
                             "public": false,
@@ -3820,16 +3820,16 @@
                             "name": "ID",
                             "order": 0,
                             "primary": true,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "concat( \n  \"KR\", \n  if( \n    row_id() < 10, \n    concat(\"0000\", row_id()), \n    if( \n      row_id() < 100, \n      concat(\"000\", row_id()), \n      if( \n        row_id() < 1000, \n        concat(\"00\", row_id()), \n        if( \n          row_id() < 10000, \n          concat(\"0\", row_id()), \n          row_id() \n        ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "text"
                         },
@@ -3889,16 +3889,16 @@
                             "name": "Group bgcolor",
                             "order": 12,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join( \n  if( \n    or( \n      trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 1, \n      trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 6 \n    ), \n    \"S\", \n    if( \n      or( \n        trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 2, \n        trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 7 \n      ), \n      \"Y\", \n      if( \n        or( \n          trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 3, \n          trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 8 \n        ), \n        \"G\", \n        if( \n          or( \n            trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 4, \n            trunc(tonumber(right(totext(field(\"Objective ID\")), 1))) = 9 \n          ), \n          \"R\", \n          \"B\" \n        ) \n      ) \n    ) \n  ), \n  \"\" \n)",
                             "formula_type": "text"
                         },
@@ -3908,16 +3908,16 @@
                             "name": "Objective ID for sorting",
                             "order": 14,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join(totext(field(\"Objective ID\")), \"\")",
                             "formula_type": "text"
                         },
@@ -3997,16 +3997,16 @@
                             "name": "Update count",
                             "order": 18,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9564
                         },
                         {
@@ -4059,16 +4059,16 @@
                             "name": "Department",
                             "order": 23,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": true,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9555,
                             "target_field_id": 9537,
                             "rollup_function": "min"
@@ -4079,16 +4079,16 @@
                             "name": "Target period",
                             "order": 24,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join(totext(lookup(\"Objective ID\", \"Target period\")), \"\")",
                             "formula_type": "text"
                         },
@@ -4098,16 +4098,16 @@
                             "name": "Leader name",
                             "order": 25,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": true,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9568,
                             "target_field_id": 9583,
                             "rollup_function": "min"
@@ -8711,16 +8711,16 @@
                             "name": "ID",
                             "order": 0,
                             "primary": true,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "concat( \n  \"U\", \n  if( \n    row_id() < 10, \n    concat(\"0000\", row_id()), \n    if( \n      row_id() < 100, \n      concat(\"000\", row_id()), \n      if( \n        row_id() < 1000, \n        concat(\"00\", row_id()), \n        if( \n          row_id() < 10000, \n          concat(\"0\", row_id()), \n          row_id() \n        ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "text"
                         },
@@ -8790,16 +8790,16 @@
                             "name": "Key result ID for sorting",
                             "order": 7,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join(totext(field(\"Key result ID\")), \"\")",
                             "formula_type": "text"
                         },
@@ -8809,16 +8809,16 @@
                             "name": "Group bgcolor",
                             "order": 8,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join( \n  if( \n    or( \n      trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 1, \n      trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 6 \n    ), \n    \"S\", \n    if( \n      or( \n        trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 2, \n        trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 7 \n      ), \n      \"Y\", \n      if( \n        or( \n          trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 3, \n          trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 8 \n        ), \n        \"G\", \n        if( \n          or( \n            trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 4, \n            trunc(tonumber(right(totext(field(\"Key result ID\")), 1))) = 9 \n          ), \n          \"R\", \n          \"B\" \n        ) \n      ) \n    ) \n  ), \n  \"\" \n)",
                             "formula_type": "text"
                         },
@@ -8828,16 +8828,16 @@
                             "name": "Target period for filter",
                             "order": 9,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "join(lookup(\"Key result ID\", \"Target period\"), \"\")",
                             "formula_type": "text"
                         }
@@ -11321,16 +11321,16 @@
                             "name": "Objectives supervising",
                             "order": 22,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9602
                         },
                         {
@@ -11379,16 +11379,16 @@
                             "name": "Key results linked",
                             "order": 27,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "add( \n  count(field(\"Related key results as lead\")), \n  count(field(\"Related key results as member\")) \n)",
                             "formula_type": "number"
                         },
@@ -11398,16 +11398,16 @@
                             "name": "Department name",
                             "order": 28,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": true,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9585,
                             "target_field_id": 9612,
                             "rollup_function": "min"
@@ -11418,16 +11418,16 @@
                             "name": "Office locations name",
                             "order": 29,
                             "primary": false,
-                            "number_decimal_places": null,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": null,
                             "date_force_timezone": null,
                             "nullable": true,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9586,
                             "target_field_id": 9620,
                             "rollup_function": "min"
@@ -15107,16 +15107,16 @@
                             "name": "Employee count",
                             "order": 3,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "count(filter(field(\"Related employees\"), lookup(\"Related employees\", \"Is active\")))",
                             "formula_type": "number"
                         },
@@ -15918,16 +15918,16 @@
                             "name": "Employee count",
                             "order": 4,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "count(filter(field(\"Related employees\"), lookup(\"Related employees\", \"Is active\")))",
                             "formula_type": "number"
                         },
@@ -15947,16 +15947,16 @@
                             "name": "Objective count",
                             "order": 6,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "through_field_id": 9617
                         },
                         {
@@ -15965,16 +15965,16 @@
                             "name": "Objectives progress (%)",
                             "order": 7,
                             "primary": false,
-                            "number_decimal_places": 2,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 2,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "avg( \n  filter( \n    lookup(\"Related objectives\", \"Progress status (%)\"), \n    and( \n      isblank(lookup(\"Related objectives\", \"Status\")) = False, \n      and( \n        contains(totext(lookup(\"Related objectives\", \"Status\")), \"Cancelled\") = False, \n        and( \n          contains(totext(lookup(\"Related objectives\", \"Status\")), \"New\") = False, \n          contains(totext(lookup(\"Related objectives\", \"Status\")), \"Scheduled\") = False \n        ) \n      ) \n    ) \n  ) \n)",
                             "formula_type": "number"
                         }
@@ -16409,16 +16409,16 @@
                             "name": "Employee count",
                             "order": 11,
                             "primary": false,
-                            "number_decimal_places": 0,
-                            "date_time_format": null,
+                            "date_show_tzinfo": null,
                             "date_include_time": null,
-                            "array_formula_type": null,
                             "duration_format": null,
                             "date_format": null,
-                            "date_show_tzinfo": null,
-                            "error": null,
+                            "number_decimal_places": 0,
                             "date_force_timezone": null,
                             "nullable": false,
+                            "array_formula_type": null,
+                            "date_time_format": null,
+                            "error": null,
                             "formula": "count(filter(field(\"Related employees\"), lookup(\"Related employees\", \"Is active\")))",
                             "formula_type": "number"
                         },
@@ -16889,7 +16889,7 @@
                             "page_parameters": [],
                             "navigate_to_url": "",
                             "target": "self",
-                            "url": ""
+                            "url": "'/home'"
                         }
                     ]
                 },
@@ -17310,6 +17310,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "0cbdb96c-7fa6-4382-abec-16e76bf7cb80",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -17317,6 +17318,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e4d0460d-8596-4dfb-8cce-1dfc58d817a5",
                                     "name": "Leader",
                                     "type": "text",
                                     "config": {
@@ -17324,6 +17326,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "abe04422-7f6a-4048-a613-79e9377b8a5b",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -17331,6 +17334,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "69e6900e-546c-4043-be1d-44c5f0fd3a55",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -17338,6 +17342,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "622520d5-a5f7-44bd-9a32-fe6f67ecee7e",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -17410,6 +17415,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "15a47ada-098c-4806-9b99-166e36d6da70",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -17417,6 +17423,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "9937073c-15f9-4d01-8d0c-fe960fcece4f",
                                     "name": "Target period",
                                     "type": "text",
                                     "config": {
@@ -17424,6 +17431,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "4093008d-0801-480a-b228-66ab8338acb3",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -17431,6 +17439,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "323ea5b7-3f02-44f2-b1aa-8be3a417a09a",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -17438,6 +17447,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "50fbf12a-4460-4fde-a38a-4cf658b8874b",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -17537,6 +17547,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "703b99f2-6e91-4689-aa8e-0b7b5ae69fac",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -17544,6 +17555,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "70c7a89e-4353-41c8-b37f-8c0533cd25ea",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -17551,6 +17563,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "7bc25a31-acf8-457b-8e48-1ddce9614e9b",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -17558,6 +17571,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "851f13f2-c701-4db7-9424-0f638962cdca",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -17630,6 +17644,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "9a5be727-0ce7-4375-96e1-47d4d82f1d09",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -17637,6 +17652,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ab4dc68c-b1cf-492e-b50e-69bcaeac8a81",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -17644,6 +17660,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "b041cf2d-4042-4a7f-a3f4-699b77aebac7",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -17651,6 +17668,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "1d60fd63-0fe6-4ff4-98d6-e98587bd0895",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -18200,6 +18218,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "1c2e85d2-e1a7-49e9-bf71-6a6e18db32d5",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -18207,6 +18226,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "5746fc3c-b395-4500-ad34-360122af5cb3",
                                     "name": "Leader",
                                     "type": "text",
                                     "config": {
@@ -18214,6 +18234,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "85f3fb0e-76e9-4b69-b2d0-9701e34f0e68",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -18221,6 +18242,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "aedf0925-80d9-4ea8-aa55-82d973f16786",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -18228,6 +18250,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "15a93e30-001f-4be3-a4b2-50a44af22683",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -18708,6 +18731,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "9447d7a2-5550-43a1-ba30-0aeaff0b15b6",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -18715,6 +18739,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "ab8070e4-00d4-4a93-b2b0-3df8abcb39fd",
                                     "name": "Leader",
                                     "type": "text",
                                     "config": {
@@ -18722,6 +18747,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "1b47cf52-ca8f-4cc3-b5c2-d61fc5b53d59",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -18729,6 +18755,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "16e939ef-6f02-4ab8-92e4-572ea5aa19d8",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -18736,6 +18763,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "08f5334e-0ddd-49f1-bd00-03d356470086",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -19216,6 +19244,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "475323a2-10de-4844-95da-3dab5b80a65b",
                                     "name": "Name",
                                     "type": "text",
                                     "config": {
@@ -19223,6 +19252,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "32ff3658-7d9c-475d-8f8d-60fd0a0f82f7",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -19230,6 +19260,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "92c7a759-7529-4fea-a0f3-bf667f59423c",
                                     "name": "Departments",
                                     "type": "text",
                                     "config": {
@@ -19237,6 +19268,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "71558655-accd-4e1d-859a-876b69f674ee",
                                     "name": "Location",
                                     "type": "text",
                                     "config": {
@@ -19244,6 +19276,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "4550a75f-cf9c-4e8a-b074-6120432a208e",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -19982,6 +20015,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "ef3e160a-ca96-4a7d-87b7-3d5b3f179c7e",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -19989,6 +20023,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "fb7a842d-6ed4-433c-93dd-b9c9f51d7820",
                                     "name": "Leader",
                                     "type": "text",
                                     "config": {
@@ -19996,6 +20031,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "2693e2cc-973e-4004-9334-8487c25d3d26",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -20003,6 +20039,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "42cf2e72-04fd-4272-a5ae-671c707ebf14",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -20010,6 +20047,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "37764138-892d-40f8-a961-47a8782fed31",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -20824,6 +20862,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "c7a43632-cbed-4149-8961-1dd5c3302cd2",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -20831,6 +20870,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "5147f938-7ded-42e9-9499-e38cdd89e1af",
                                     "name": "Description",
                                     "type": "text",
                                     "config": {
@@ -21702,6 +21742,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "bffec171-6c2e-4b83-91f3-c160f28856c4",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -21709,6 +21750,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "8becd7e7-2071-410a-90df-d6c95b793928",
                                     "name": "Target period",
                                     "type": "text",
                                     "config": {
@@ -21716,6 +21758,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "9cd9e112-b4b1-4fdc-9b58-0e74dced5bcf",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -21723,6 +21766,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "e1bfc40d-62b8-4b29-ba2b-e85322477bd8",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -21730,6 +21774,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "a53ee16c-800d-4d24-813b-c8b42a462bd1",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -21881,6 +21926,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "f6551c27-cf87-43c7-8c4f-5873cac55cc3",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -21888,6 +21934,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "2bfc6525-050e-4510-916c-b7f30ea82d63",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -21895,6 +21942,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "6dff74e4-7f7e-42cc-9045-468e989bc42f",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -21902,6 +21950,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "4e53974c-0b46-41c8-8fb8-666a4d0c0022",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
@@ -22026,6 +22075,7 @@
                             "items_per_page": 20,
                             "fields": [
                                 {
+                                    "uid": "549cad00-3891-4e5d-8270-596419ad6f17",
                                     "name": "Title",
                                     "type": "text",
                                     "config": {
@@ -22033,6 +22083,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "9ccd4ff7-1860-4d0f-8e1f-e36725650fe4",
                                     "name": "Progress",
                                     "type": "text",
                                     "config": {
@@ -22040,6 +22091,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "af3a2a85-d5c7-496c-a27c-8cc0bdc769bf",
                                     "name": "Status",
                                     "type": "text",
                                     "config": {
@@ -22047,6 +22099,7 @@
                                     }
                                 },
                                 {
+                                    "uid": "515580b1-34a4-43fb-bf92-f5faa1f36a5b",
                                     "name": "-",
                                     "type": "link",
                                     "config": {
