@@ -33,7 +33,8 @@
         "themeName": "Thema",
         "integrationsName": "Integraties",
         "domainsName": "Domeinen",
-        "userSourcesName": "Gebruikers"
+        "userSourcesName": "Gebruikers",
+        "generalName": "Algemeen"
     },
     "elementMenu": {
         "moveUp": "Verplaats omhoog",
@@ -78,7 +79,9 @@
         "checkboxDescription": "Checkbox element",
         "iframe": "IFrame",
         "authForm": "Inlogformulier",
-        "authFormDescription": "Een login formulier voor gebruikers"
+        "authFormDescription": "Een login formulier voor gebruikers",
+        "repeat": "Herhaal",
+        "repeatDescription": "Een herhaalbare reeks elementen"
     },
     "addElementButton": {
         "label": "Element"
@@ -289,7 +292,8 @@
         "itemsPerPagePlaceholder": "Waarde invoeren...",
         "fields": "Velden",
         "selectSourceFirst": "Kies een lijstgegevensbron om te beginnen met het configureren van je velden.",
-        "buttonColor": "Kleur knop"
+        "buttonColor": "Kleur knop",
+        "refreshFieldsFromDataSource": "velden van gegevensbron verversen"
     },
     "linkFieldForm": {
         "fieldLinkNamePlaceholder": "Waarde invoeren...",
@@ -349,7 +353,11 @@
         "validationTypeEmailLabel": "E-mail",
         "validationTypeEmailDescription": "Dwing een e-mailadres waarde af in deze invoer.",
         "validationTypeAnyDescription": "Sta toe dat deze invoer een willekeurige waarde bevat.",
-        "validationTypeIntegerDescription": "Dwing een getalwaarde af in deze invoer."
+        "validationTypeIntegerDescription": "Dwing een getalwaarde af in deze invoer.",
+        "inputTypePasswordLabel": "Wachtwoord",
+        "passwordTypeWarning": "Wachtwoorden zijn gevoelige gegevens. Wees voorzichtig met hoe je wachtwoorden behandelt en opslaat in je applicatie.",
+        "inputType": "Input type",
+        "inputTypeTextLabel": "Tekst"
     },
     "widthSelector": {
         "widthFull": "Volledige breedte",
@@ -366,7 +374,8 @@
         "createRowLabel": "Rij maken",
         "notificationLabel": "Melding tonen",
         "openPageLabel": "Pagina openen",
-        "logoutLabel": "Uitloggen"
+        "logoutLabel": "Uitloggen",
+        "refreshDataSourceLabel": "Gegevensbron verversen"
     },
     "widthTypes": {
         "full": "Volledige breedte",
@@ -423,7 +432,9 @@
     },
     "collectionFieldType": {
         "text": "Tekst",
-        "link": "Link"
+        "link": "Link",
+        "boolean": "Boolean",
+        "tags": "Tags"
     },
     "createUserSourceForm": {
         "userSourceName": "Naam",
@@ -500,7 +511,10 @@
         "paramPlaceholder": "Voer een waarde in...",
         "url": "Bestemmings URL",
         "paramsInErrorDescription": "De opgeslagen parameters komen niet overeen met de paginaparameters. De pagina is waarschijnlijk verwijderd of bijgewerkt.",
-        "paramsInErrorButton": "Parameters bijwerken"
+        "paramsInErrorButton": "Parameters bijwerken",
+        "target": "Open in...",
+        "targetSelf": "Zelfde tab",
+        "targetNewTab": "Nieuw tabblad"
     },
     "iframeElementForm": {
         "empty": "Leeg IFrame...",
@@ -554,6 +568,56 @@
     "visibilityForm": {
         "allVisitors": "Alle bezoekers",
         "loggedInVisitors": "Aangemelde bezoekers",
-        "notLoggedInVisitors": "Uitgelogde bezoekers"
+        "notLoggedInVisitors": "Uitgelogde bezoekers",
+        "warningMessage": "Op dit moment wordt de zichtbaarheid alleen toegepast in de UI, de onderliggende gegevens zijn nog steeds toegankelijk via de API. Raadpleeg de <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentatie</a> voor meer informatie over gegevensbeveiliging.",
+        "warningTitle": "We verbeteren voortdurend de beveiliging"
+    },
+    "imageInput": {
+        "labelButton": "Uploaden",
+        "labelDescription": "Standaard beschrijving"
+    },
+    "generalSettings": {
+        "labelForm": "Favicon",
+        "labelDescription": "Kies een 128x128px ICO, PNG, GIF of JPEG.",
+        "labelButton": "Favicon uploaden",
+        "cantUploadFaviconTitle": "Kon favicon bestand niet uploaden",
+        "cantUploadFaviconDescription": "Sorry, kon favicon afbeelding niet uploaden. Zorg ervoor dat het afbeeldingsbestand uniek is en een ondersteund afbeeldingsformaat heeft.",
+        "cantUpdateApplicationTitle": "Applicatie kan niet worden bijgewerkt",
+        "cantUpdateApplicationDescription": "Sorry, kon de applicatie niet bijwerken.",
+        "titleOverview": "Algemeen"
+    },
+    "repeatElementForm": {
+        "dataSource": "Gegevensbron",
+        "itemsPerRowDescription": "Kies per apparaattype wat het aantal herhalingen per rij moet zijn.",
+        "orientationVertical": "Verticaal",
+        "orientationLabel": "Oriëntatie",
+        "orientationHorizontal": "Horizontaal",
+        "itemsPerPage": "Items per pagina",
+        "itemsPerPagePlaceholder": "Waarde invoeren...",
+        "itemsPerRowLabel": "Items per rij"
+    },
+    "userDataProviderType": {
+        "isAuthenticated": "Is ingelogd",
+        "id": "Id",
+        "email": "E-mail",
+        "username": "Gebruikersnaam"
+    },
+    "buttonField": {
+        "noLabel": "Naamloos..."
+    },
+    "repeatElement": {
+        "showMore": "Meer tonen",
+        "missingDataSourceTooltip": "Kies een gegevensbron om te beginnen met het toevoegen van elementen.",
+        "empty": "Er zijn geen items gevonden."
+    },
+    "tagsFieldForm": {
+        "fieldValuesLabel": "Waarden",
+        "fieldValuesPlaceholder": "Waarden invoeren...",
+        "fieldColorsLabel": "Kleuren",
+        "fieldColorsPlaceholder": "Voer kleuren in..."
+    },
+    "buttonFieldForm": {
+        "infoMessage": "Om acties voor deze knop te configureren, open je het tabblad \"Gebeurtenissen\" van het huidige element.",
+        "labelPlaceholder": "Voer een label in..."
     }
 }

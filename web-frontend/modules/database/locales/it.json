@@ -194,7 +194,8 @@
         "filter": "Filtra",
         "exampleValue": "Esempio di valore",
         "example": "Esempio completo",
-        "field": "campo {name}"
+        "field": "campo {name}",
+        "deprecated": "deprecato"
     },
     "fieldTextSubForm": {
         "placeholder": "Testo predefinito"
@@ -265,13 +266,13 @@
         "style": "Stile"
     },
     "rowCreateModal": {
-        "addField": "aggiungi campo"
+        "addField": "Aggiungi campo"
     },
     "selectRowContent": {
         "search": "Righe di ricerca"
     },
     "rowEditModal": {
-        "addField": "aggiungi campo",
+        "addField": "Aggiungi campo",
         "showHiddenFields": "Mostra campi nascosti",
         "hideHiddenFields": "Nascondi campi nascosti"
     },

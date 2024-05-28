@@ -63,5 +63,10 @@
     "localBaserowForm": {
         "user": "Usuario",
         "userMessage": "Al crear esta conexión, está autorizando a la aplicación a utilizar su cuenta para realizar cambios en su espacio de trabajo local Baserow."
+    },
+    "localBaserowIntegrationType": {
+        "localBaserowNoUser": "Baserow local - No configurado",
+        "localBaserowSummary": "Baserow local - {name}, {username}",
+        "localBaserowWarning": "Autorizar tu cuenta da a todos los que tienen permisos de edición en la aplicación acceso completo a los datos a los que tú tienes acceso. Es posible crear un segundo usuario, darle los permisos adecuados y utilizarlo."
     }
 }

@@ -239,7 +239,8 @@
         "sso": "Single Sign On",
         "rbac": "Rol gebaseerde toegangscontrole",
         "auditLogs": "Audit logs",
-        "coBranding": "Co-branding logo vervanging"
+        "coBranding": "Co-branding logo vervanging",
+        "support": "Directe ondersteuning"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Directe ondersteuning"
@@ -313,5 +314,12 @@
         "showBaserowHelpMessage": "Helpbericht tonen",
         "coBrandingLogo": "Logo",
         "coBrandingLogoDescription": "Vervangt het Baserow-logo voor een aangepast co-branded alternatief (176x29)."
+    },
+    "enterpriseModal": {
+        "title": "Upgrade om de {name} te gebruiken",
+        "description": "Uw account heeft geen toegang tot de advanced/enterprise functies. Upgrade naar de advanced/enterprise-versie om {name} te gaan gebruiken. Je kunt je account upgraden door een licentie aan te schaffen. Klik op de knop hieronder om de prijzen te bekijken.",
+        "premium": "Premium",
+        "enterprise": "Enterprise",
+        "viewPricing": "Bekijk prijzen"
     }
 }

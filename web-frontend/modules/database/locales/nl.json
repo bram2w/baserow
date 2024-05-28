@@ -166,7 +166,8 @@
         "primary": "Geeft aan of het veld een primair veld is. Indien `waar` (true) kan het veld niet worden verwijderd en moet de waarde de hele rij vertegenwoordigen.",
         "type": "Type gedefinieerd voor dit veld.",
         "extraProps": "Sommige extra eigenschappen worden hier niet beschreven omdat ze type-specifiek zijn.",
-        "readOnly": "Geeft aan of het veld een alleen-lezen veld is. Indien waar, is het niet mogelijk de celwaarde bij te werken."
+        "readOnly": "Geeft aan of het veld een alleen-lezen veld is. Indien waar, is het niet mogelijk de celwaarde bij te werken.",
+        "descriptionField": "Veldbeschrijving"
     },
     "apiDocsTableDeleteRow": {
         "description": "Verwijdert een bestaande {name} rij.",
@@ -194,7 +195,8 @@
         "filter": "Filter",
         "exampleValue": "Voorbeeldwaarde",
         "example": "Volledig voorbeeld",
-        "field": "veld {name}"
+        "field": "veld {name}",
+        "deprecated": "verouderd"
     },
     "fieldTextSubForm": {
         "placeholder": "Standaard tekst"
@@ -245,7 +247,9 @@
         "name": "Naam",
         "fieldAlreadyExists": "Een veld met deze naam bestaat al.",
         "nameNotAllowed": "Deze veldnaam is niet toegestaan.",
-        "nameTooLong": "Deze veldnaam is te lang."
+        "nameTooLong": "Deze veldnaam is te lang.",
+        "addDescription": "Beschrijving toevoegen",
+        "description": "Beschrijving"
     },
     "fieldLookupSubForm": {
         "noTable": "Je hebt minstens één link-rij veld nodig om een lookup veld te maken.",
@@ -858,5 +862,46 @@
     "userMentionInRichTextFieldNotification": {
         "title": "{sender} heeft u vermeld in veld {fieldName} van rij {rowId} in {tableName}",
         "deletedUser": "Een verwijderde gebruiker"
+    },
+    "databaseScratchTrackStep": {
+        "teamsRow2": "HR",
+        "addYourOwn": "Voeg je eigen toe",
+        "tableName": "Tabel naam",
+        "rowName": "Naam rij",
+        "projects": "Projecten",
+        "thisIncludes": "Dit omvat:",
+        "productsRow1": "Rebranding website",
+        "productsRow3": "Betaalde advertentiecampagne",
+        "productsRow2": "Klantonderzoek",
+        "teams": "Teams",
+        "teamsRow1": "Verkoop",
+        "teamsRow3": "Marketing",
+        "tasksRow3": "Blogbericht schrijven",
+        "tasks": "Taken",
+        "tasksRow1": "Logo herontwerp",
+        "tasksRow2": "Stuur e-mail",
+        "campaignsRow2": "Loyaliteit beloningen",
+        "campaigns": "Campagnes",
+        "campaignsRow1": "Zomer uitverkoop",
+        "campaignsRow3": "Herlancering merk",
+        "title": "Wat wil je bijhouden?",
+        "description": "Kies uit populaire use cases of maak je eigen."
+    },
+    "databaseStep": {
+        "airtable": "Van Airtable",
+        "import": "Van bestand",
+        "title": "Je eerste database maken",
+        "description": "Laat ons weten waar je aan werkt.",
+        "databaseNameLabel": "Database naam",
+        "scratch": "Uit het niets"
+    },
+    "databaseImportStep": {
+        "description": "Verplaats je gegevens naar Baserow, in slechts een paar klikken.",
+        "tableNameLabel": "Tabel naam",
+        "title": "Importeer je gegevens"
+    },
+    "ViewFilterTypeDateUpgradeToMultiStep": {
+        "migrateButtonText": "Migreren naar meerstaps datumfilter",
+        "migrateButtonTooltip": "Nieuw filter beschikbaar. Klik om te upgraden. Het werkt hetzelfde."
     }
 }

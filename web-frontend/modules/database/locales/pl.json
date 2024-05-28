@@ -66,7 +66,8 @@
         "createTable": "Utwórz tabelę"
     },
     "sidebarItem": {
-        "exportTable": "Eksportuj tabelę"
+        "exportTable": "Eksportuj tabelę",
+        "webhooks": "Webhooki"
     },
     "apiToken": {
         "create": "stwórz",
@@ -139,12 +140,14 @@
         "userFieldNames": "Jeśli podano jakąkolwiek wartość dla parametru `user_field_names` GET, wówczas nazwy pól zwrócone przez ten punkt końcowy będą rzeczywistymi nazwami pól.\n\n Jeśli `user_field_names` GET param nie jest podany, wtedy wszystkie zwrócone nazwy pól będą miały postać `field_` a następnie id pola. Na przykład `field_1` odnosi się do pola o id `1`.\n\n Dodatkowo, gdy `user_field_names` jest ustawione, wtedy zachowanie innych parametrów GET `order_by`, `include` i `exclude` zmienia się. Zamiast tego oczekują one listy rozdzielonych przecinkami nazw pól.",
         "search": "Jeśli zostanie podane, zostaną zwrócone tylko wiersze z danymi pasującymi do zapytania.",
         "orderBy": "Opcjonalnie wiersze mogą być uporządkowane według pól oddzielonych przecinkiem. Domyślnie lub po poprzedzeniu znakiem '+', pole jest uporządkowane rosnąco (A-Z), ale poprzedzeniu znakiem '-' może być uporządkowane malejąco (Z-A).\n\n #### Z `user_field_names`:\n\n `order_by` powinna być rozdzieloną przecinkami listą nazw pól, po których mają być zamawiane. Na przykład jeśli podasz następujący parametr GET `order_by=My Field,-My Field 2` wiersze zostaną uporządkowane według pola o nazwie `My Field` w porządku rosnącym. Jeśli niektóre pola mają tę samą wartość, ten podzbiór zostanie uporządkowany według pola o nazwie `My Field 2` w porządku malejącym.\n\n Upewnij się, że pola z nazwami zaczynającymi się od `+` lub `-` są wyraźnie poprzedzone innym `+` lub `-`. Np. `+-Name`.\n\n Nazwy pól zawierające przecinki muszą być otoczone cudzysłowami: `Name ,,`''. Jeśli nazwy pól zawierają cudzysłowy, to muszą one zostać usunięte przy użyciu znaku ``. Eg: `Name \\\"`. \n\n#### Bez `user_field_names`:\n\n `order_by` powinno być rozdzieloną przecinkami listą `field_`, po której następuje id pola, po którym ma być złożone zamówienie. Na przykład, jeśli podasz następujący parametr GET `order_by=field_1,-field_2` wiersze zostaną uporządkowane według `field_1` w porządku rosnącym. Jeśli niektóre pola mają tę samą wartość, ten podzbiór zostanie uporządkowany przez `field_2` w porządku malejącym.",
-        "filter": "Wiersze mogą być opcjonalnie filtrowane przy użyciu tych samych filtrów widoku, które są dostępne dla widoków. Można zastosować wiele filtrów, jeśli mają one ten sam format. Zmienne `field` i `filter` wskazują odpowiednio jak i gdzie zastosować filtr.\n\n#### Z `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `filter__Name__equal=test`, zwrócone zostaną tylko wiersze, w których wartość `Name` jest równa \"test\". Ta metoda jest kompatybilna wstecz i będzie sprawdzać `field_id`, jeśli nie powiedzie się na nazwie.\n\n#### Bez `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `filter__field_1__equal=test`, zwrócone zostaną tylko wiersze, w których wartość `field_1` jest równa 'test'.",
+        "filter": "Wiersze mogą być opcjonalnie filtrowane przy użyciu tych samych filtrów widoku, które są dostępne dla widoków. Można zastosować wiele filtrów, jeśli mają one ten sam format. Zmienne `field` i `filter` wskazują odpowiednio jak i gdzie zastosować filtr.\n\n#### Z `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `filter__Name__equal=test`, zwrócone zostaną tylko wiersze, w których wartość `Name` jest równa \"test\". Ta metoda jest kompatybilna wstecz i będzie sprawdzać `field_id`, jeśli nie powiedzie się na nazwie.\n\n#### Bez `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `filter__field_1__equal=test`, zwrócone zostaną tylko wiersze, w których wartość `field_1` jest równa 'test'.\n\nNależy pamiętać, że jeśli podano parametr filters, ten parametr zostanie zignorowany. ",
         "filterLink": "Listę wszystkich filtrów można znaleźć tutaj.",
         "filterType": "- `AND`: Wskazuje, że wiersze muszą pasować do wszystkich podanych filtrów.\n- `OR`: Wskazuje, że wiersze muszą pasować tylko do jednego z filtrów.\n\n Działa to tylko wtedy, gdy podane są dwa lub więcej filtrów.",
         "include": "Wszystkie pola są domyślnie zawarte w odpowiedzi. Możesz wybrać podzbiór pól do uwzględnienia poprzez podanie parametru zapytania include.\n\n #### Z `user_field_names`:\n\n `include` powinna być rozdzieloną przecinkami listą nazw pól, które mają być zawarte w wynikach. Na przykład, jeśli podasz następujący parametr GET: `include=My Field,-My Field 2` to tylko te pola zostaną uwzględnione (chyba, że zostaną wyraźnie wykluczone).\n\n Nazwy pól zawierające przecinki muszą być otoczone cudzysłowami: `\"Name ,\"`. Jeśli nazwy pól zawierają cudzysłowy, to muszą one zostać usunięte przy użyciu znaku `\\` . Na przykład: `Name \\\"`.\n\n #### Bez `user_field_names`:\n\n `include` powinno być rozdzieloną przecinkami listą `field_`, po której następuje id pola do uwzględnienia w wynikach. Na przykład: Jeśli podasz następujący parametr GET `exclude=field_1,field_2` to pola o id `1` i id `2` to tylko te pola zostaną uwzględnione (chyba, że zostaną jawnie wykluczone).",
         "exclude": "Wszystkie pola są domyślnie zawarte w odpowiedzi. Możesz wybrać podzbiór pól do wykluczenia poprzez podanie parametru zapytania exclude.\n\n #### Z `user_field_names`:\n\n `exclude` powinna być rozdzieloną przecinkami listą nazw pól, które mają być wykluczone z wyników. Na przykład, jeśli podasz następujący parametr GET: `exclude=My Field,-My Field 2` to te pola zostaną wykluczone.\n\n Nazwy pól zawierające przecinki muszą być otoczone cudzysłowami: `\"Name ,\"`. Jeśli nazwy pól zawierają cudzysłowy, to muszą one zostać usunięte przy użyciu znaku `\\`. Na przykład: `Name \\\"`.\n\n #### Bez `user_field_names`:\n\n `exclude` powinno być rozdzieloną przecinkami listą `field_`, po której następuje id pola do wykluczenia z wyników. Na przykład: Jeśli podasz następujący parametr GET `exclude=field_1,field_2` to pola o id `1` i id `2` zostaną wykluczone.",
-        "viewId": "Domyślnie nie są stosowane filtry i sortowania poza tymi, które zostały zdefiniowane w parametrach zapytania. Możesz dodać filtry i sortowania widoku poprzez podanie jego `id` w parametrze `view_id` GET. Na przykład, jeśli podasz następujący parametr GET `view_id=1` to filtry i sortowania zdefiniowane w widoku o id `1` zostaną zastosowane. Możesz znaleźć `view_id` w menu kontekstowym dowolnego widoku. Jest to liczba w nawiasach za nazwą widoku. \n\n #### Z `filter__{field}__{filter}`. \n\n Zastosowany zostanie zarówno filtr podany w parametrze zapytania, jak i filtry zdefiniowane w widoku.\n\n #### Z `order_by` \n\n Jeśli `order_by` jest podane, sortowanie zdefiniowane w widoku zostanie zignorowane."
+        "viewId": "Domyślnie nie są stosowane filtry i sortowania poza tymi, które zostały zdefiniowane w parametrach zapytania. Możesz dodać filtry i sortowania widoku poprzez podanie jego `id` w parametrze `view_id` GET. Na przykład, jeśli podasz następujący parametr GET `view_id=1` to filtry i sortowania zdefiniowane w widoku o id `1` zostaną zastosowane. Możesz znaleźć `view_id` w menu kontekstowym dowolnego widoku. Jest to liczba w nawiasach za nazwą widoku. \n\n #### Z `filter__{field}__{filter}`. \n\n Zastosowany zostanie zarówno filtr podany w parametrze zapytania, jak i filtry zdefiniowane w widoku.\n\n #### Z `order_by` \n\n Jeśli `order_by` jest podane, sortowanie zdefiniowane w widoku zostanie zignorowane.",
+        "filtersBuilder": "Otwórz kreator parametrów filtrów",
+        "filters": "Wiersze mogą być opcjonalnie filtrowane przy użyciu tych samych filtrów widoku, które są dostępne dla widoków. Ten parametr akceptuje serializowany ciąg JSON zawierający drzewo filtrów do zastosowania w tym widoku. Drzewo filtrów jest zagnieżdżoną strukturą zawierającą filtry, które należy zastosować. \n\n#### Z `user_field_names`:\n\nPrzykład prawidłowego drzewa filtrów jest następujący: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\"}]}.\n\n#### Bez `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`.\n\nNależy pamiętać, że jeśli ten parametr zostanie podany, wszystkie inne `filter__{field}__{filter}` zostaną zignorowane, podobnie jak parametr filter_type."
     },
     "apiDocsIntro": {
         "intro": "Baza danych {name} zapewnia łatwy sposób integracji danych z dowolnym systemem zewnętrznym. API podąża za semantyką REST, używa JSON do kodowania obiektów i opiera się na standardowych kodach HTTP, błędach odczytywanych maszynowo i przez człowieka, aby zasygnalizować wyniki operacji.",
@@ -417,7 +420,8 @@
         "relatedFieldNotFound": "Powiązane pole nie zostało znalezione.",
         "filterTypeNotFound": "Niezgodny typ filtra.",
         "noCompatibleFilterTypesErrorTitle": "Brak kompatybilnych typów filtrów",
-        "noCompatibleFilterTypesErrorMessage": "Żadne z twoich pól nie ma kompatybilnych typów filtrów"
+        "noCompatibleFilterTypesErrorMessage": "Żadne z twoich pól nie ma kompatybilnych typów filtrów",
+        "addFilterGroup": "Dodaj grupę filtrów"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "zdjęcie",
@@ -498,7 +502,9 @@
         "renameView": "Zmień nazwę widoku",
         "webhooks": "Webhooki",
         "importFile": "Importuj plik",
-        "deleteView": "Usunąć widok"
+        "deleteView": "Usunąć widok",
+        "toPersonal": "Do osobistych",
+        "toCollaborative": "Do współpracy"
     },
     "deleteViewModal": {
         "title": "Usuń {name}",
@@ -542,7 +548,12 @@
         "hiddenRowsInsertedMessage": "Dodano {number} nowych wierszy, ale nie są one widoczne z powodu aktywnych filtrów.",
         "copiedRowURLMessage": "Adres URL wiersza {id} został skopiowany do schowka.",
         "copiedRowURL": "Skopiowany adres URL wiersza",
-        "copyRowURL": "Skopiuj adres URL wiersza"
+        "copyRowURL": "Skopiuj adres URL wiersza",
+        "generateCellsValues": "Generowanie wartości za pomocą sztucznej inteligencji",
+        "tooManyItemsDescription": "Nie można zaktualizować więcej niż {limit} wierszy jednocześnie, więc zaktualizowaliśmy tylko pierwszy.",
+        "tooManyItemsTitle": "Zbyt wiele elementów",
+        "AIValuesGenerationErrorTitle": "Generowanie wartości AI nie powiodło się",
+        "AIValuesGenerationErrorMessage": "Sprawdź API_KEY i zweryfikuj wybrany model."
     },
     "gridViewFieldFile": {
         "dropHere": "Upuść tutaj",
@@ -650,11 +661,11 @@
         "linkError": "Link powinien wyglądać tak: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "dodaj pojedyncze pole wyboru",
+        "addSelectField": "Dodaj pojedyncze pole wyboru",
         "warningWhenNothingToChooseOrCreate": "Nie ma pojedynczych pól wyboru do wyboru i nie masz uprawnień do ich utworzenia."
     },
     "viewDecoratorContext": {
-        "addDecorator": "dodaj dekorator"
+        "addDecorator": "Dodaj dekorator"
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "Dokumentacja API"
@@ -663,7 +674,9 @@
         "required": "wymagane",
         "showWhenMatchingConditions": "pokaż, kiedy warunki są spełnione",
         "addCondition": "Dodaj warunek",
-        "descriptionPlaceholder": "Opis"
+        "descriptionPlaceholder": "Opis",
+        "addConditionGroup": "Dodaj grupę warunków",
+        "showFieldAs": "Pokaż pole jako"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplikuj pola",
@@ -673,7 +686,7 @@
     },
     "snapshotsModal": {
         "title": "migawki",
-        "description": "Migawki są pełną kopią bazy danych z momentu, w którym zostały utworzone. Duplikacja tych danych zostanie utworzona podczas przywracania. Migawki są automatycznie usuwane po roku.",
+        "description": "Migawki są pełną kopią danych {applicationTypeName} z momentu ich utworzenia. Podczas przywracania zostanie utworzona duplikacja tych danych. Migawki są automatycznie usuwane po upływie roku.",
         "descriptionLimits": "Możesz mieć maksymalnie {n} migawek na obszar roboczy. | Możesz mieć maksymalnie {n} migawek na obszar roboczy. | Możesz mieć maksymalnie {n} migawek na obszar roboczy.",
         "createLabel": "Utwórz nową migawkę",
         "create": "Utwórz migawkę",
@@ -788,13 +801,62 @@
         "selectTargetFieldLabel": "Wybierz pole do zestawienia"
     },
     "collaboratorAddedToRowNotification": {
-        "title": "{sender} przypisał cię do {fieldName} w wierszu {rowId} w {tableName}"
+        "title": "{sender} przypisał cię do {fieldName} w wierszu {rowId} w {tableName}",
+        "deletedUser": "Usunięty użytkownik"
     },
     "fieldCollaboratorSubForm": {
         "notifyUserWhenAdded": "Powiadomienie użytkownika o dodaniu"
     },
     "rowHistorySidebar": {
         "name": "Historia",
-        "empty": "Nie wprowadzono jeszcze żadnych zmian. Wszelkie zmiany w tym wierszu można śledzić tutaj."
+        "empty": "Nie wprowadzono jeszcze żadnych zmian. Wszelkie zmiany w tym wierszu można śledzić tutaj.",
+        "you": "Ty"
+    },
+    "formSubmittedNotification": {
+        "title": "{formName} został przesłany do tabeli {tableName}:",
+        "moreValues": "0 | i jeszcze 1 pole. | i {count} więcej pól."
+    },
+    "fieldPasswordSubForm": {
+        "description": "Nie jest jeszcze możliwe bezpośrednie zrobienie czegokolwiek z polem hasła, jest ono używane tylko przez uwierzytelnianie użytkownika w kreatorze aplikacji."
+    },
+    "rowEditFieldPassword": {
+        "setPassword": "Ustaw hasło"
+    },
+    "rowHistoryFieldPassword": {
+        "passwordDeleted": "Hasło zostało usunięte",
+        "passwordSet": "Hasło zostało ustawione",
+        "passwordUpdated": "Hasło zostało zaktualizowane"
+    },
+    "dataProviderTypes": {
+        "fieldsName": "Pola"
+    },
+    "apiDocsFiltersBuilderModal": {
+        "title": "Konstruktor parametrów filtrów",
+        "userFieldNames": "Nazwy pól użytkownika",
+        "json": "JSON",
+        "queryParameter": "Parametr zapytania"
+    },
+    "fieldDurationSubForm": {
+        "durationFormatLabel": "Format czasu trwania"
+    },
+    "viewGroupByContext": {
+        "noGroupByTitle": "Nie utworzono jeszcze żadnych grup",
+        "noGroupByText": "Grupowanie wierszy według pola.",
+        "groupBy": "Grupa według",
+        "thenBy": "Następnie przez",
+        "addGroupBy": "wybierz pole do grupowania według"
+    },
+    "userMentionInRichTextFieldNotification": {
+        "title": "{sender} wspomniał o Tobie w polu {fieldName} wiersza {rowId} w {tableName}",
+        "deletedUser": "Usunięty użytkownik"
+    },
+    "fieldLongTextSubForm": {
+        "enableRichTextFormatting": "Włącz formatowanie tekstu sformatowanego"
+    },
+    "viewFieldConditionsForm": {
+        "addCondition": "Dodaj warunek"
+    },
+    "viewGroupBy": {
+        "groupBy": "Grupuj | Grupuj według 1 pól | Grupuj według {count} pól"
     }
 }

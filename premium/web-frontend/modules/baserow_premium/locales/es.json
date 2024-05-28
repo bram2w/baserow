@@ -381,5 +381,17 @@
     },
     "functionalGridViewFieldAI": {
         "generate": "Generar"
+    },
+    "aiFormulaModal": {
+        "generate": "Generar",
+        "noModels": "Tu instancia de Baserow y tu espacio de trabajo no tienen ningún modelo AI configurado. Haz clic en los tres puntos junto a tu espacio de trabajo y luego en configuración para configurarlos.",
+        "title": "Generar fórmulas con IA",
+        "description": "Ten en cuenta que las fórmulas generadas pueden no funcionar siempre como se espera. Estamos construyendo un indicador para el modelo, y cargamos la salida en la entrada de la fórmula. Funciona mejor con un modelo de parámetros altos como gpt-4-turbo-preview.",
+        "label": "Pregunta",
+        "labelDescription": "Describe la fórmula que deseas generar"
+    },
+    "formulaFieldAI": {
+        "generateWithAI": "Generar con IA",
+        "featureName": "Generar fórmulas con IA"
     }
 }

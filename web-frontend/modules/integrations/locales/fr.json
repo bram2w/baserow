@@ -63,5 +63,10 @@
     },
     "userSourceType": {
         "localBaserow": "Authentification par table Baserow"
+    },
+    "localBaserowIntegrationType": {
+        "localBaserowSummary": "Baserow local - {name}, {username}",
+        "localBaserowNoUser": "Baserow local - Non configuré",
+        "localBaserowWarning": "Associer votre compte donne à tous ceux qui peuvent modifier l'application un accès complet aux données auxquelles vous avez accès. Il est possible de créer un deuxième utilisateur, donner les bonnes autorisations et utiliser celui-ci."
     }
 }

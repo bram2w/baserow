@@ -1,16 +1,16 @@
 {
     "paginator": {
-        "page": "",
-        "of": ""
+        "page": "صفحه",
+        "of": "از {pages}"
     },
     "copied": {
-        "label": ""
+        "label": "کپی شد!"
     },
     "sidebarApplication": {
-        "rename": "",
-        "duplicate": "",
-        "viewTrash": "",
-        "delete": "",
+        "rename": "تغییرنام",
+        "duplicate": "کپی‌کردن",
+        "viewTrash": "نمایش سطل‌آشغال",
+        "delete": "حذف کردن",
         "snapshots": ""
     },
     "duplicateApplicationJobType": {

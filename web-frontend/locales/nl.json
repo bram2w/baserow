@@ -81,7 +81,8 @@
         "minValueField": "Het veld moet groter dan of gelijk aan {min} zijn.",
         "maxValueField": "Het veld moet kleiner zijn dan of gelijk aan {max}.",
         "minMaxValueField": "De veldwaarde moet tussen {min} en {max} liggen.",
-        "invalidNumber": "Het veld moet een getal zijn."
+        "invalidNumber": "Het veld moet een getal zijn.",
+        "email": "Het veld moet een e-mail zijn."
     },
     "permission": {
         "admin": "Beheerder",
@@ -213,7 +214,33 @@
         "higherThanOrEqual": "hoger dan of gelijk aan",
         "lowerThanOrEqual": "lager dan of gelijk aan",
         "isAnyOf": "is een van",
-        "isNoneOf": "is geen van"
+        "isNoneOf": "is geen van",
+        "today": "Vandaag",
+        "nextWeek": "volgende week",
+        "thisMonth": "deze maand",
+        "oneMonthAgo": "een maand geleden",
+        "nrDaysAgo": "dagen geleden",
+        "nrWeeksAgo": "weken geleden",
+        "nrDaysFromNow": "dagen vanaf nu",
+        "isWithin": "is binnen",
+        "yesterday": "gisteren",
+        "tomorrow": "morgen",
+        "thisWeek": "deze week",
+        "oneWeekAgo": "een week geleden",
+        "nextMonth": "volgende maand",
+        "thisYear": "dit jaar",
+        "oneYearAgo": "een jaar geleden",
+        "isAfter": "is na",
+        "nextYear": "volgend jaar",
+        "nrMonthsAgo": "maanden geleden",
+        "exactDate": "exacte datum",
+        "nrYearsAgo": "jaren geleden",
+        "nrWeeksFromNow": "weken vanaf nu",
+        "nrMonthsFromNow": "maanden vanaf nu",
+        "nrYearsFromNow": "jaren vanaf nu",
+        "isBefore": "is voor",
+        "isOnOrBefore": "is op of voor",
+        "isOnOrAfter": "is op of na"
     },
     "viewType": {
         "grid": "Raster",
@@ -330,7 +357,13 @@
         "generativeAIDoesNotExistTitle": "Generatieve AI bestaat niet",
         "modelDoesNotBelongToTypeTitle": "Het geselecteerde model behoort niet tot het AI-type",
         "modelDoesNotBelongToTypeDescription": "Het geselecteerde model behoort niet tot het geselecteerde AI-type.",
-        "generativeAIDoesNotExistDescription": "Het generatieve AI-model bestaat niet."
+        "generativeAIDoesNotExistDescription": "Het generatieve AI-model bestaat niet.",
+        "generateAIPromptTitle": "Foutmelding",
+        "outputParserTitle": "Verkeerde uitvoer",
+        "outputParserDescription": "Het model reageerde met een onjuiste uitvoer. Probeer het opnieuw.",
+        "generateAIPromptDescription": "Er was iets mis met de samengestelde prompt.",
+        "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Max aantal uitnodigingen bereikt",
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Je hebt het maximale aantal uitnodigingen voor deze werkruimte bereikt. Laat genodigden de uitnodiging accepteren of annuleer bestaande uitnodigingen om door te gaan."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",
@@ -478,7 +511,9 @@
         "encodeUriDescription": "Retourneert een gecodeerde URI-tekenreeks van het opgegeven argument.",
         "getIsImageDescription": "Geeft als resultaat of het enkele bestand dat is geretourneerd door de indexfunctie een afbeelding is of niet.",
         "getFileMimeTypeDescription": "Retourneert het mime-type van een bestand dat is geretourneerd met de indexfunctie.",
-        "hasOptionDescription": "Geeft true terug als het eerste argument een meervoudig selectie veld is of een lookup naar een enkelvoudige selectie veld en het tweede argument een van de opties is."
+        "hasOptionDescription": "Geeft true terug als het eerste argument een meervoudig selectie veld is of een lookup naar een enkelvoudige selectie veld en het tweede argument een van de opties is.",
+        "secondsToDurationDescription": "Converteert het opgegeven aantal seconden naar een duur.",
+        "durationToSecondsDescription": "Converteert de opgegeven duur naar het overeenkomstige aantal seconden."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
