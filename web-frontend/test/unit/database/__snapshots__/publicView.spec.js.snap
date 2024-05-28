@@ -393,7 +393,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <span
+                      class="grid-view__description-options"
+                    >
+                      <!---->
+                       
+                      <!---->
+                    </span>
                      
                     <!---->
                      
@@ -427,7 +433,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <span
+                      class="grid-view__description-options"
+                    >
+                      <!---->
+                       
+                      <!---->
+                    </span>
                      
                     <!---->
                      
@@ -461,7 +473,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <span
+                      class="grid-view__description-options"
+                    >
+                      <!---->
+                       
+                      <!---->
+                    </span>
                      
                     <!---->
                      
@@ -495,7 +513,13 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <span
+                      class="grid-view__description-options"
+                    >
+                      <!---->
+                       
+                      <!---->
+                    </span>
                      
                     <!---->
                      

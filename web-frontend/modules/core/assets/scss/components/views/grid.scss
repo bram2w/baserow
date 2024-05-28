@@ -615,11 +615,20 @@
 
   .grid-view__description-options {
     margin-left: auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    vertical-align: center;
+  }
+
+  .grid-view__description-icon-trigger {
+    color: $color-neutral-600;
     cursor: pointer;
     padding: 0 10px;
     height: 100%;
     display: flex;
     align-items: center;
+    vertical-align: center;
 
     &:hover {
       color: $color-neutral-900;

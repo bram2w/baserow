@@ -568,7 +568,7 @@ export class FieldType extends Registerable {
    * @returns a sample for this field.
    */
   getDocsFieldResponseExample(
-    { id, table_id: tableId, name, order, type, primary },
+    { id, table_id: tableId, name, order, type, primary, description },
     readOnly
   ) {
     return {
@@ -579,6 +579,7 @@ export class FieldType extends Registerable {
       type,
       primary,
       read_only: readOnly,
+      description: description || 'A sample description',
     }
   }
 

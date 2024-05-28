@@ -816,6 +816,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
                 "text_default": "",
                 "type": "text",
                 "read_only": False,
+                "description": None,
             }
         ],
         "view": {

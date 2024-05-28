@@ -122,6 +122,9 @@ class Field(
         "search release which haven't been lazily migrated yet. Or for "
         "users who have turned off full text search entirely.",
     )
+    description = models.TextField(
+        help_text="Field description", default=None, null=True
+    )
 
     class Meta:
         ordering = (

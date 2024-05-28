@@ -329,3 +329,20 @@ span[data-type='mention'] {
     background-color: $palette-neutral-100;
   }
 }
+
+.rich-text-editor--fixed-size {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  max-height: 400px;
+  border: 1px solid $palette-neutral-400;
+  padding: 6px 12px;
+  outline: none;
+  line-height: 100%;
+  height: auto;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  border-radius: 4px;
+
+  @include elevation($elevation-low);
+}

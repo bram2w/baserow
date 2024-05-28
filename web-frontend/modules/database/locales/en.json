@@ -170,7 +170,8 @@
     "primary": "Indicates if the field is a primary field. If `true` the field cannot be deleted and the value should represent the whole row.",
     "type": "Type defined for this field.",
     "extraProps": "Some extra properties are not described here because they are type specific.",
-    "readOnly": "Indicates whether the field is a read only field. If true, it's not possible to update the cell value."
+    "readOnly": "Indicates whether the field is a read only field. If true, it's not possible to update the cell value.",
+    "descriptionField": "Field description"
   },
   "apiDocsTableDeleteRow": {
     "description": "Deletes an existing {name} row.",
@@ -280,9 +281,11 @@
   },
   "fieldForm": {
     "name": "Name",
+    "description": "Description",
     "fieldAlreadyExists": "A field with this name already exists.",
     "nameNotAllowed": "This field name is not allowed.",
-    "nameTooLong": "This field name is too long."
+    "nameTooLong": "This field name is too long.",
+    "addDescription": "Add description"
   },
   "fieldSelectThroughFieldSubForm": {
     "noTable": "You need at least one link to table field to create this field.",

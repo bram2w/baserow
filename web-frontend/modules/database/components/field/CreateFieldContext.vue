@@ -4,7 +4,10 @@
     class="field-form-context"
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
-    @shown="$emit('shown', $event)"
+    @shown="
+      onShow()
+      $emit('shown', $event)
+    "
   >
     <FieldForm
       ref="form"
@@ -16,7 +19,20 @@
       @submitted="submit"
       @keydown-enter="$refs.submitButton.focus()"
     >
-      <div class="context__form-actions">
+      <div
+        class="context__form-actions context__form-actions--multiple-actions"
+      >
+        <span class="context__form-actions--alight-left">
+          <ButtonText
+            v-if="!showDescription"
+            ref="showDescription"
+            icon="iconoir iconoir-plus"
+            type="secondary"
+            @click="showDescriptionField"
+          >
+            {{ $t('fieldForm.addDescription') }}
+          </ButtonText>
+        </span>
         <Button
           ref="submitButton"
           type="primary"
@@ -66,6 +82,7 @@ export default {
   data() {
     return {
       loading: false,
+      showDescription: false,
     }
   },
   methods: {
@@ -110,6 +127,18 @@ export default {
     },
     showFieldTypesDropdown(target) {
       this.$refs.form.showFieldTypesDropdown(target)
+    },
+    showDescriptionField(evt) {
+      this.hideDescriptionLink()
+      this.$refs.form.showDescriptionField()
+      evt.stopPropagation()
+      evt.preventDefault()
+    },
+    hideDescriptionLink() {
+      this.showDescription = true
+    },
+    onShow() {
+      this.showDescription = this.$refs.form.isDescriptionFieldNotEmpty()
     },
   },
 }

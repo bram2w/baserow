@@ -208,13 +208,19 @@ exports[`GridView component with decoration Default component with first_cell de
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -247,13 +253,19 @@ exports[`GridView component with decoration Default component with first_cell de
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -286,13 +298,19 @@ exports[`GridView component with decoration Default component with first_cell de
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -642,13 +660,19 @@ exports[`GridView component with decoration Default component with row wrapper d
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -681,13 +705,19 @@ exports[`GridView component with decoration Default component with row wrapper d
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -720,13 +750,19 @@ exports[`GridView component with decoration Default component with row wrapper d
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -1079,13 +1115,19 @@ exports[`GridView component with decoration Default component with unavailable d
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -1118,13 +1160,19 @@ exports[`GridView component with decoration Default component with unavailable d
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
@@ -1157,13 +1205,19 @@ exports[`GridView component with decoration Default component with unavailable d
              
             <!---->
              
-            <a
+            <span
               class="grid-view__description-options"
             >
-              <i
-                class="iconoir-nav-arrow-down"
-              />
-            </a>
+              <!---->
+               
+              <a
+                class="grid-view__description-icon-trigger"
+              >
+                <i
+                  class="iconoir-nav-arrow-down"
+                />
+              </a>
+            </span>
              
              
             <div
