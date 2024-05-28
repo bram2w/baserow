@@ -1,3 +1,4 @@
+import json
 import uuid
 from collections import defaultdict
 
@@ -433,6 +434,7 @@ def test_table_element_import_export(data_fixture):
     # Export the table element and check there are no table elements after deleting it
     exported = table_element_type.export_serialized(table_element)
     ElementService().delete_element(user, table_element)
+    assert json.dumps(exported)
     assert TableElement.objects.count() == 0
 
     # After importing the table element the fields should be properly imported too
@@ -447,3 +449,32 @@ def test_table_element_import_export(data_fixture):
         ).count()
         == 1
     )
+
+
+@pytest.mark.django_db
+def test_table_element_import_fields_with_no_uid(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+
+    exported = {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        "type": "table",
+        "fields": [
+            {
+                # NOTE: 'uid' property is missing here
+                "name": "Field",
+                "type": "button",
+                "config": {"label": "Click me"},
+            }
+        ],
+        "data_source_id": data_source.id,
+    }
+    table_element_type = data_fixture.create_builder_table_element().get_type()
+    id_mapping = defaultdict(lambda: MirrorDict())
+
+    table_element = table_element_type.import_serialized(page, exported, id_mapping)
+    assert table_element.fields.first().uid is not None
