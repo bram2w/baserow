@@ -26,6 +26,7 @@ from baserow.config.settings.utils import (
     str_to_bool,
 )
 from baserow.core.telemetry.utils import otel_is_enabled
+from baserow.throttling_types import RateLimit
 from baserow.version import VERSION
 
 # A comma separated list of feature flags used to enable in-progress or not ready
@@ -919,6 +920,10 @@ MAX_EMAILS_PER_MINUTE = int(os.getenv("BASEROW_MAX_EMAILS_PER_MINUTE", 50))
 CELERY_EMAIL_TASK_CONFIG = {
     "rate_limit": f"{int(MAX_EMAILS_PER_MINUTE / CELERY_EMAIL_CHUNK_SIZE)}/m",
 }
+
+BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT = RateLimit.from_string(
+    os.getenv("BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT", "5/h")
+)
 
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
