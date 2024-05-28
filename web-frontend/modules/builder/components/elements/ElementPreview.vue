@@ -224,7 +224,15 @@ export default {
      */
     isSelected(newValue, old) {
       if (newValue && !old) {
-        this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        const rect = this.$el.getBoundingClientRect()
+        const isTopVisible =
+          rect.top >= 0 &&
+          rect.top <=
+            (window.innerHeight || document.documentElement.clientHeight)
+
+        if (!isTopVisible) {
+          this.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
       }
     },
     /**

@@ -35,6 +35,7 @@ export default {
       page: this.page,
       mode,
       formulaComponent: ApplicationBuilderFormulaInputGroup,
+      applicationContext: { builder: this.builder, page: this.page, mode },
     }
   },
   props: {

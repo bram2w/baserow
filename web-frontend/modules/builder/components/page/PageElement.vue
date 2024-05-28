@@ -38,6 +38,9 @@ export default {
   name: 'PageElement',
   mixins: [applicationContextMixin],
   inject: ['builder', 'page', 'mode'],
+  provide() {
+    return { mode: this.elementMode }
+  },
   props: {
     element: {
       type: Object,
