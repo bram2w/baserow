@@ -8,6 +8,7 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.database.db.functions import RandomUUID
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
@@ -203,7 +204,7 @@ class CollectionFieldType(
         )
 
         serialized = {
-            "uid": instance.uid,
+            "uid": str(instance.uid),
             "name": instance.name,
             "type": instance.type,
             "config": serialized_config,
@@ -271,7 +272,7 @@ class CollectionFieldType(
             )
 
         deserialized_values = {
-            "uid": serialized_values["uid"],
+            "uid": serialized_values.get("uid", RandomUUID()),
             "config": deserialized_config,
             "type": serialized_values["type"],
             "name": serialized_values["name"],
