@@ -179,7 +179,7 @@
                                 {
                                     "id": 15854,
                                     "field_id": 273572,
-                                    "type": "date_equal",
+                                    "type": "date_is",
                                     "value": ""
                                 }
                             ],
@@ -486,14 +486,14 @@
                                 {
                                     "id": 15855,
                                     "field_id": 273572,
-                                    "type": "date_before",
-                                    "value": "2003-01-01"
+                                    "type": "date_is_before",
+                                    "value": "?2003-01-01?exact_date"
                                 },
                                 {
                                     "id": 15856,
                                     "field_id": 273572,
-                                    "type": "date_after",
-                                    "value": "2001-12-31"
+                                    "type": "date_is_after",
+                                    "value": "?2001-12-31?exact_date"
                                 }
                             ],
                             "sortings": [],

@@ -2385,14 +2385,14 @@
                                 {
                                     "id": 8111,
                                     "field_id": 173781,
-                                    "type": "date_before",
-                                    "value": "2021-12-01"
+                                    "type": "date_is_before",
+                                    "value": "?2021-12-01?exact_date"
                                 },
                                 {
                                     "id": 8112,
                                     "field_id": 173781,
-                                    "type": "date_after",
-                                    "value": "2021-10-31"
+                                    "type": "date_is_after",
+                                    "value": "?2021-10-31?exact_date"
                                 }
                             ],
                             "sortings": [
@@ -4683,14 +4683,14 @@
                                 {
                                     "id": 9464,
                                     "field_id": 175569,
-                                    "type": "date_before",
-                                    "value": "2021-11-01"
+                                    "type": "date_is_before",
+                                    "value": "?2021-11-01?exact_date"
                                 },
                                 {
                                     "id": 9465,
                                     "field_id": 175569,
-                                    "type": "date_after",
-                                    "value": "2021-09-30"
+                                    "type": "date_is_after",
+                                    "value": "?2021-09-30?exact_date"
                                 }
                             ],
                             "sortings": [

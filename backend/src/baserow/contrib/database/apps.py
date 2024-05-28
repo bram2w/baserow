@@ -284,6 +284,13 @@ class DatabaseConfig(AppConfig):
             DateEqualsTodayViewFilterType,
             DateEqualsYearsAgoViewFilterType,
             DateEqualViewFilterType,
+            DateIsAfterMultiStepFilterType,
+            DateIsBeforeMultiStepFilterType,
+            DateIsEqualMultiStepFilterType,
+            DateIsNotEqualMultiStepFilterType,
+            DateIsOnOrAfterMultiStepFilterType,
+            DateIsOnOrBeforeMultiStepFilterType,
+            DateIsWithinMultiStepFilterType,
             DateIsWithinXDaysViewFilterType,
             DateIsWithinXMonthsViewFilterType,
             DateIsWithinXWeeksViewFilterType,
@@ -353,6 +360,13 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsDayOfMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
+        view_filter_type_registry.register(DateIsEqualMultiStepFilterType())
+        view_filter_type_registry.register(DateIsNotEqualMultiStepFilterType())
+        view_filter_type_registry.register(DateIsBeforeMultiStepFilterType())
+        view_filter_type_registry.register(DateIsOnOrBeforeMultiStepFilterType())
+        view_filter_type_registry.register(DateIsAfterMultiStepFilterType())
+        view_filter_type_registry.register(DateIsOnOrAfterMultiStepFilterType())
+        view_filter_type_registry.register(DateIsWithinMultiStepFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectIsAnyOfViewFilterType())

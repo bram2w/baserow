@@ -1138,8 +1138,8 @@
                                 {
                                     "id": 2523,
                                     "field_id": 9652,
-                                    "type": "date_equals_months_ago",
-                                    "value": "Europe/Brussels?1",
+                                    "type": "date_is",
+                                    "value": "Europe/Brussels?1?nr_months_ago",
                                     "group": null
                                 }
                             ],
@@ -3621,8 +3621,8 @@
                                 {
                                     "id": 2526,
                                     "field_id": 9670,
-                                    "type": "date_after_today",
-                                    "value": "Europe/Brussels?",
+                                    "type": "date_is_after",
+                                    "value": "Europe/Brussels??today",
                                     "group": null
                                 }
                             ],

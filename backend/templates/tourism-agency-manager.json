@@ -4227,8 +4227,8 @@
                                 {
                                     "id": 107051,
                                     "field_id": 1061396,
-                                    "type": "date_equals_week",
-                                    "value": "Europe/Amsterdam?"
+                                    "type": "date_is",
+                                    "value": "Europe/Amsterdam??this_week"
                                 }
                             ],
                             "sortings": [

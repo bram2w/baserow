@@ -1533,14 +1533,14 @@
                                 {
                                     "id": 23103,
                                     "field_id": 350085,
-                                    "type": "date_equals_year",
-                                    "value": "America/Chicago"
+                                    "type": "date_is",
+                                    "value": "America/Chicago??this_year"
                                 },
                                 {
                                     "id": 23104,
                                     "field_id": 350086,
-                                    "type": "date_equals_year",
-                                    "value": "America/Chicago"
+                                    "type": "date_is",
+                                    "value": "America/Chicago??this_year"
                                 }
                             ],
                             "sortings": [

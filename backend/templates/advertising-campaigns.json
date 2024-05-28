@@ -2455,8 +2455,8 @@
                                 {
                                     "id": 112675,
                                     "field_id": 1123153,
-                                    "type": "date_equals_month",
-                                    "value": "Europe/Brussels?"
+                                    "type": "date_is",
+                                    "value": "Europe/Brussels??this_month"
                                 }
                             ],
                             "sortings": [
@@ -2539,8 +2539,8 @@
                                 {
                                     "id": 112676,
                                     "field_id": 1123153,
-                                    "type": "date_equals_week",
-                                    "value": "Europe/Brussels?"
+                                    "type": "date_is",
+                                    "value": "Europe/Brussels??this_week"
                                 }
                             ],
                             "sortings": [

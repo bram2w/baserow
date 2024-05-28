@@ -3079,8 +3079,8 @@
                                 {
                                     "id": 52098,
                                     "field_id": 606853,
-                                    "type": "date_equals_today",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??today"
                                 }
                             ],
                             "sortings": [
@@ -3220,8 +3220,8 @@
                                 {
                                     "id": 52099,
                                     "field_id": 606853,
-                                    "type": "date_before_today",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is_before",
+                                    "value": "Asia/Singapore??today"
                                 }
                             ],
                             "sortings": [
@@ -3361,8 +3361,8 @@
                                 {
                                     "id": 52100,
                                     "field_id": 606853,
-                                    "type": "date_after_today",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is_after",
+                                    "value": "Asia/Singapore??today"
                                 }
                             ],
                             "sortings": [
@@ -3502,8 +3502,8 @@
                                 {
                                     "id": 52101,
                                     "field_id": 606853,
-                                    "type": "date_equals_week",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??this_week"
                                 }
                             ],
                             "sortings": [
@@ -3643,8 +3643,8 @@
                                 {
                                     "id": 52102,
                                     "field_id": 606853,
-                                    "type": "date_equals_month",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??this_month"
                                 }
                             ],
                             "sortings": [

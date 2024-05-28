@@ -36,6 +36,11 @@ export default {
       required: false,
       default: false,
     },
+    visible: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   data() {
     return {

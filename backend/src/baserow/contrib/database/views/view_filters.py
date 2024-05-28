@@ -3,15 +3,16 @@ import zoneinfo
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from enum import Enum
 from math import ceil, floor
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
 from django.db.models import DateField, DateTimeField, IntegerField, Q
 from django.db.models.expressions import F, Func
 from django.db.models.functions import Extract, Length, Mod, TruncDate
 
 from dateutil import parser
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import MO, relativedelta
 
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
@@ -1464,3 +1465,451 @@ class EmptyViewFilterType(ViewFilterType):
 
 class NotEmptyViewFilterType(NotViewFilterTypeMixin, EmptyViewFilterType):
     type = "not_empty"
+
+
+class DateFilterOperators(Enum):
+    TODAY = "today"
+    YESTERDAY = "yesterday"
+    TOMORROW = "tomorrow"
+    ONE_WEEK_AGO = "one_week_ago"
+    ONE_MONTH_AGO = "one_month_ago"
+    ONE_YEAR_AGO = "one_year_ago"
+    THIS_WEEK = "this_week"
+    THIS_MONTH = "this_month"
+    THIS_YEAR = "this_year"
+    NEXT_WEEK = "next_week"
+    NEXT_MONTH = "next_month"
+    NEXT_YEAR = "next_year"
+    NR_DAYS_AGO = "nr_days_ago"
+    NR_WEEKS_AGO = "nr_weeks_ago"
+    NR_MONTHS_AGO = "nr_months_ago"
+    NR_YEARS_AGO = "nr_years_ago"
+    NR_DAYS_FROM_NOW = "nr_days_from_now"
+    NR_WEEKS_FROM_NOW = "nr_weeks_from_now"
+    NR_MONTHS_FROM_NOW = "nr_months_from_now"
+    NR_YEARS_FROM_NOW = "nr_years_from_now"
+    EXACT_DATE = "exact_date"
+
+
+DATE_FILTER_OPERATOR_FROM_VALUE = {
+    opr.value: opr for opr in DateFilterOperators.__members__.values()
+}
+
+
+class DateFilterBounds(NamedTuple):
+    """
+    The DateFilterBounds is a named tuple that contains the lower bound (inclusive) and
+    upper bound (exclusive) of the date filter. It's used to represent the range of
+    dates matching a specific date filter operator.
+    """
+
+    lower_bound: date
+    upper_bound: date
+
+
+# It contains the mapping between the filter operator and the function that should be
+# called to get the lower bound (inclusive) and upper bound (exclusive) of the filter.
+# The filter_date corresponds to datetime.now(tz=timezone).date() if the filter does not
+# have a specific date provided, while it automatically converts the provided string to
+# a date within the range if a value is provided. Look at
+# `DateMultiStepViewFilterType.get_filter_date` for more info.
+DATE_FILTER_OPERATOR_BOUNDS = {
+    DateFilterOperators.TODAY: lambda filter_date: DateFilterBounds(
+        filter_date,
+        filter_date + relativedelta(days=1),
+    ),
+    DateFilterOperators.YESTERDAY: lambda filter_date: DateFilterBounds(
+        filter_date - relativedelta(days=1),
+        filter_date,
+    ),
+    DateFilterOperators.TOMORROW: lambda filter_date: DateFilterBounds(
+        filter_date + relativedelta(days=1),
+        filter_date + relativedelta(days=2),
+    ),
+    DateFilterOperators.ONE_WEEK_AGO: lambda filter_date: DateFilterBounds(
+        filter_date + relativedelta(weekday=MO(-2)),
+        filter_date + relativedelta(weekday=MO(-1)),
+    ),
+    DateFilterOperators.ONE_MONTH_AGO: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1) - relativedelta(months=1),
+        filter_date.replace(day=1),
+    ),
+    DateFilterOperators.ONE_YEAR_AGO: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1, month=1) - relativedelta(years=1),
+        filter_date.replace(day=1, month=1),
+    ),
+    DateFilterOperators.THIS_WEEK: lambda filter_date: DateFilterBounds(
+        filter_date + relativedelta(weekday=MO(-1)),
+        filter_date + relativedelta(weekday=MO(+1)),
+    ),
+    DateFilterOperators.THIS_MONTH: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1),
+        filter_date.replace(day=1) + relativedelta(months=1),
+    ),
+    DateFilterOperators.THIS_YEAR: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1, month=1),
+        filter_date.replace(day=1, month=1) + relativedelta(years=1),
+    ),
+    DateFilterOperators.NEXT_WEEK: lambda filter_date: DateFilterBounds(
+        filter_date + relativedelta(weekday=MO(+1)),
+        filter_date + relativedelta(weekday=MO(+2)),
+    ),
+    DateFilterOperators.NEXT_MONTH: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1) + relativedelta(months=1),
+        filter_date.replace(day=1) + relativedelta(months=2),
+    ),
+    DateFilterOperators.NEXT_YEAR: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1, month=1) + relativedelta(years=1),
+        filter_date.replace(day=1, month=1) + relativedelta(years=2),
+    ),
+    DateFilterOperators.NR_DAYS_AGO: lambda filter_date: DateFilterBounds(
+        filter_date,
+        filter_date + relativedelta(days=1),
+    ),
+    DateFilterOperators.NR_WEEKS_AGO: lambda filter_date: DateFilterBounds(
+        filter_date + relativedelta(weekday=MO(-1)),
+        filter_date + relativedelta(weekday=MO(+1)),
+    ),
+    DateFilterOperators.NR_MONTHS_AGO: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1), filter_date.replace(day=1) + relativedelta(months=1)
+    ),
+    DateFilterOperators.NR_YEARS_AGO: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1, month=1),
+        filter_date.replace(day=1, month=1) + relativedelta(years=1),
+    ),
+    DateFilterOperators.NR_DAYS_FROM_NOW: lambda filter_date: DateFilterBounds(
+        filter_date,
+        filter_date + relativedelta(days=1),
+    ),
+    DateFilterOperators.NR_WEEKS_FROM_NOW: lambda filter_date: DateFilterBounds(
+        filter_date + relativedelta(weekday=MO(-1)),
+        filter_date + relativedelta(weekday=MO(+1)),
+    ),
+    DateFilterOperators.NR_MONTHS_FROM_NOW: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1), filter_date.replace(day=1) + relativedelta(months=1)
+    ),
+    DateFilterOperators.NR_YEARS_FROM_NOW: lambda filter_date: DateFilterBounds(
+        filter_date.replace(day=1, month=1),
+        filter_date.replace(day=1, month=1) + relativedelta(years=1),
+    ),
+    DateFilterOperators.EXACT_DATE: lambda filter_date: DateFilterBounds(
+        filter_date,
+        filter_date + relativedelta(days=1),
+    ),
+}
+
+DATE_FILTER_OPERATOR_DELTA_MAP = {
+    DateFilterOperators.NR_DAYS_AGO.value: lambda v: -timedelta(days=int(v or 0)),
+    DateFilterOperators.NR_DAYS_FROM_NOW.value: lambda v: timedelta(days=int(v or 0)),
+    DateFilterOperators.NR_WEEKS_AGO.value: lambda v: relativedelta(weeks=-int(v or 0)),
+    DateFilterOperators.NR_WEEKS_FROM_NOW.value: lambda v: relativedelta(
+        weeks=int(v or 0)
+    ),
+    DateFilterOperators.NR_MONTHS_AGO.value: lambda v: relativedelta(
+        months=-int(v or 0)
+    ),
+    DateFilterOperators.NR_MONTHS_FROM_NOW.value: lambda v: relativedelta(
+        months=int(v or 0)
+    ),
+    DateFilterOperators.NR_YEARS_AGO.value: lambda v: relativedelta(years=-int(v or 0)),
+    DateFilterOperators.NR_YEARS_FROM_NOW.value: lambda v: relativedelta(
+        years=int(v or 0)
+    ),
+}
+
+
+class DateMultiStepViewFilterType(ViewFilterType):
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(BaserowFormulaDateType.type),
+    ]
+
+    incompatible_operators = []
+
+    def get_filter_date(
+        self,
+        operator: str,
+        filter_value: str,
+        timezone: datetime_module.tzinfo,
+    ) -> date:
+        """
+        Returns the date that should be used to filter the field based on the provided
+        operator and filter value. The date returned is always in the provided timezone
+        and within the range of the provided operator, but not necessarily the beginning
+        of the period.
+
+        :param operator: The operator that should be used to filter the field.
+        :param filter_value: The value that has been provided by the user.
+        :param timezone: The timezone that should be used to filter the field.
+        :return: The date that should be used to filter the field.
+        """
+
+        if operator == DateFilterOperators.EXACT_DATE.value:
+            try:
+                return parser.isoparser().parse_isodate(filter_value)
+            except ValueError:
+                datetime_value = parser.isoparse(filter_value)
+                if datetime_value.tzinfo is None:
+                    return datetime_value.replace(tzinfo=timezone)
+            return datetime_value.astimezone(timezone)
+
+        date_value = datetime.now(tz=timezone).date()
+        if operator in DATE_FILTER_OPERATOR_DELTA_MAP:
+            date_value += DATE_FILTER_OPERATOR_DELTA_MAP[operator](filter_value)
+        return date_value
+
+    def _split_combined_value(
+        self, field, filter_value, separator
+    ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        operator = None
+        if separator in filter_value:  # specific timezone provided by the filter
+            splitted_value = filter_value.split(separator)
+            if len(splitted_value) == 2:  # partial, maybe coming from old date filters
+                timezone_value, filter_value = splitted_value
+                return timezone_value, filter_value, operator
+            elif len(splitted_value) == 3:
+                timezone_value, filter_value, operator = splitted_value
+                return timezone_value, filter_value, operator
+            else:
+                return None, None, None
+        elif filter_value in get_timezones():
+            # only a timezone value was provided with no filter value
+            return filter_value, None
+        else:
+            # default to the fields timezone if any and the provided value
+            return field.date_force_timezone, filter_value
+
+    def get_available_operators(self):
+        """
+        Returns a list of all available operators that can be used to filter the field.
+        """
+
+        return [
+            opr
+            for opr in DateFilterOperators.__members__.values()
+            if opr not in self.incompatible_operators
+        ]
+
+    def split_combined_value(
+        self, field, filter_value, separator=DATE_FILTER_TIMEZONE_SEPARATOR
+    ) -> Tuple[zoneinfo.ZoneInfo, str]:
+        """
+        Splits the timezone and the value from the provided value. If the value
+        does not contain a timezone then the default timezone will be used.
+
+        :param field: The field that is being filtered.
+        :param filter_value: The value that has been provided by the user.
+        :param separator: The separator that is used to split the timezone and
+            the value.
+        :return: A tuple containing the timezone and the filter_value string.
+        """
+
+        (
+            user_timezone_str,
+            parsed_filter_value,
+            operator,
+        ) = self._split_combined_value(field, filter_value, separator)
+
+        python_timezone = (
+            zoneinfo.ZoneInfo(user_timezone_str)
+            if user_timezone_str
+            else datetime_module.timezone.utc
+        )
+
+        validated_filter_value = (
+            parsed_filter_value
+            if parsed_filter_value is not None
+            else DATE_FILTER_EMPTY_VALUE
+        )
+
+        available_operator_values = [
+            opr.value for opr in self.get_available_operators()
+        ]
+        if operator not in available_operator_values:
+            raise ValueError(f"Invalid operator {operator} provided.")
+
+        return python_timezone, validated_filter_value, operator
+
+    def is_empty_filter(self, operator: str, filter_value: str) -> bool:
+        if operator not in ("exact_date", "nr_days_ago", "nr_days_from_now"):
+            return False
+        return filter_value == DATE_FILTER_EMPTY_VALUE
+
+    def get_filter_query_dict(
+        self,
+        operator: str,
+        field_name: str,
+        aware_filter_date: Union[datetime, date],
+        **kwargs,
+    ) -> Dict[str, Union[date, datetime]]:
+        """
+        Returns a dictionary that can be used to create a Q object.
+
+        :param operator: The operator that should be used to filter the field.
+        :param field_name: The name of the field that should be used in the
+            query.
+        :param aware_filter_date: The date that should be used to compare with
+            the field value.
+        """
+
+        raise NotImplementedError()
+
+    def get_filter(
+        self, field_name: str, value: str, model_field, field: Field
+    ) -> Union[Q, AnnotatedQ]:
+        """
+        Returns a Q object that can be used to filter the provided field.
+
+        :param field_name: The name of the field that should be used in the
+            query.
+        :param value: The value that has been provided by the user.
+        :param model_field: The Django model field of the database table that is
+            being filtered.
+        :param field: The Baserow field instance containing the metadata related
+            to the field.
+        :return: A Q object that can be used to filter the provided field.
+        """
+
+        try:
+            timezone, filter_value, operator = self.split_combined_value(
+                field, value.strip()
+            )
+            if self.is_empty_filter(operator, filter_value):
+                return Q()
+
+            filter_date = self.get_filter_date(operator, filter_value, timezone)
+        except (
+            OverflowError,
+            ValueError,
+            parser.ParserError,
+            zoneinfo.ZoneInfoNotFoundError,
+        ):
+            return Q(pk__in=[])
+
+        annotation = {}
+        query_field_name = field_name
+
+        if isinstance(model_field, DateTimeField):
+            if not isinstance(filter_date, datetime):
+                query_field_name = f"{field_name}_tzdate"
+                annotation[query_field_name] = TruncDate(field_name, tzinfo=timezone)
+
+        elif isinstance(model_field, DateField) and isinstance(filter_date, datetime):
+            filter_date = filter_date.date()
+
+        date_filter_operator = DATE_FILTER_OPERATOR_FROM_VALUE[operator]
+        lower_bound, upper_bound = DATE_FILTER_OPERATOR_BOUNDS[date_filter_operator](
+            filter_date
+        )
+
+        query_dict = {
+            f"{field_name}__isnull": False,  # makes `NotViewFilterTypeMixin` work with timezones
+            **self.get_filter_query_dict(
+                query_field_name, lower_bound, upper_bound, timezone
+            ),
+        }
+        return AnnotatedQ(annotation=annotation, q=query_dict)
+
+
+class DateIsEqualMultiStepFilterType(DateMultiStepViewFilterType):
+    type = "date_is"
+
+    def get_filter_query_dict(
+        self,
+        field_name: str,
+        lower_bound: Union[date, datetime],
+        upper_bound: Union[date, datetime],
+        timezone: datetime_module.tzinfo,
+    ) -> Dict[str, Union[date, datetime]]:
+        return {f"{field_name}__gte": lower_bound, f"{field_name}__lt": upper_bound}
+
+
+class DateIsNotEqualMultiStepFilterType(
+    NotViewFilterTypeMixin, DateIsEqualMultiStepFilterType
+):
+    type = "date_is_not"
+
+
+class DateIsBeforeMultiStepFilterType(DateMultiStepViewFilterType):
+    type = "date_is_before"
+
+    def get_filter_query_dict(
+        self,
+        field_name: str,
+        lower_bound: Union[date, datetime],
+        upper_bound: Union[date, datetime],
+        timezone: datetime_module.tzinfo,
+    ) -> Dict[str, Union[date, datetime]]:
+        return {f"{field_name}__lt": lower_bound}
+
+
+class DateIsOnOrBeforeMultiStepFilterType(DateMultiStepViewFilterType):
+    type = "date_is_on_or_before"
+
+    def get_filter_query_dict(
+        self,
+        field_name: str,
+        lower_bound: Union[date, datetime],
+        upper_bound: Union[date, datetime],
+        timezone: datetime_module.tzinfo,
+    ) -> Dict[str, Union[date, datetime]]:
+        return {f"{field_name}__lt": upper_bound}
+
+
+class DateIsAfterMultiStepFilterType(DateMultiStepViewFilterType):
+    type = "date_is_after"
+
+    def get_filter_query_dict(
+        self,
+        field_name: str,
+        lower_bound: Union[date, datetime],
+        upper_bound: Union[date, datetime],
+        timezone: datetime_module.tzinfo,
+    ) -> Dict[str, Union[date, datetime]]:
+        return {f"{field_name}__gte": upper_bound}
+
+
+class DateIsOnOrAfterMultiStepFilterType(DateMultiStepViewFilterType):
+    type = "date_is_on_or_after"
+
+    def get_filter_query_dict(
+        self,
+        field_name: str,
+        lower_bound: Union[date, datetime],
+        upper_bound: Union[date, datetime],
+        timezone: datetime_module.tzinfo,
+    ) -> Dict[str, Union[date, datetime]]:
+        return {f"{field_name}__gte": lower_bound}
+
+
+class DateIsWithinMultiStepFilterType(DateMultiStepViewFilterType):
+    type = "date_is_within"
+
+    incompatible_operators = [
+        DateFilterOperators.TODAY,
+        DateFilterOperators.YESTERDAY,
+        DateFilterOperators.ONE_WEEK_AGO,
+        DateFilterOperators.ONE_MONTH_AGO,
+        DateFilterOperators.ONE_YEAR_AGO,
+        DateFilterOperators.THIS_WEEK,
+        DateFilterOperators.THIS_MONTH,
+        DateFilterOperators.THIS_YEAR,
+        DateFilterOperators.NR_DAYS_AGO,
+        DateFilterOperators.NR_WEEKS_AGO,
+        DateFilterOperators.NR_MONTHS_AGO,
+        DateFilterOperators.NR_YEARS_AGO,
+    ]
+
+    def get_filter_query_dict(
+        self,
+        field_name: str,
+        lower_bound: Union[date, datetime],
+        upper_bound: Union[date, datetime],
+        timezone: datetime_module.tzinfo,
+    ) -> Dict[str, Union[date, datetime]]:
+        return {
+            f"{field_name}__gte": datetime.now(tz=timezone).date(),
+            f"{field_name}__lt": upper_bound,
+        }

@@ -1030,8 +1030,8 @@
                                 {
                                     "id": 48159,
                                     "field_id": 562437,
-                                    "type": "date_equal",
-                                    "value": "2022-08-03"
+                                    "type": "date_is",
+                                    "value": "?2022-08-03?exact_date"
                                 }
                             ],
                             "sortings": [
@@ -1825,7 +1825,7 @@
                                 {
                                     "id": 48006,
                                     "field_id": 562437,
-                                    "type": "date_equal",
+                                    "type": "date_is",
                                     "value": ""
                                 }
                             ],

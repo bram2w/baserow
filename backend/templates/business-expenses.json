@@ -1064,8 +1064,8 @@
                                 {
                                     "id": 26317,
                                     "field_id": 377941,
-                                    "type": "date_equals_month",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??this_month"
                                 }
                             ],
                             "sortings": [
@@ -1289,8 +1289,8 @@
                                 {
                                     "id": 26318,
                                     "field_id": 377941,
-                                    "type": "date_equals_year",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??this_month"
                                 }
                             ],
                             "sortings": [
@@ -2035,14 +2035,14 @@
                                 {
                                     "id": 26376,
                                     "field_id": 377941,
-                                    "type": "date_after",
-                                    "value": "2021-12-31"
+                                    "type": "date_is_after",
+                                    "value": "?2021-12-31?exact_date"
                                 },
                                 {
                                     "id": 26377,
                                     "field_id": 377941,
-                                    "type": "date_before",
-                                    "value": "2022-04-01"
+                                    "type": "date_is_before",
+                                    "value": "?2022-04-01?exact_date"
                                 }
                             ],
                             "sortings": [
@@ -2266,14 +2266,14 @@
                                 {
                                     "id": 26378,
                                     "field_id": 377941,
-                                    "type": "date_after",
-                                    "value": "2022-03-31"
+                                    "type": "date_is_after",
+                                    "value": "?2022-03-31?exact_date"
                                 },
                                 {
                                     "id": 26379,
                                     "field_id": 377941,
-                                    "type": "date_before",
-                                    "value": "2022-07-01"
+                                    "type": "date_is_before",
+                                    "value": "?2022-07-01?exact_date"
                                 }
                             ],
                             "sortings": [
@@ -2497,14 +2497,14 @@
                                 {
                                     "id": 26380,
                                     "field_id": 377941,
-                                    "type": "date_after",
-                                    "value": "2022-06-30"
+                                    "type": "date_is_after",
+                                    "value": "?2022-06-30?exact_date"
                                 },
                                 {
                                     "id": 26381,
                                     "field_id": 377941,
-                                    "type": "date_before",
-                                    "value": "2022-10-01"
+                                    "type": "date_is_before",
+                                    "value": "?2022-10-01?exact_date"
                                 }
                             ],
                             "sortings": [

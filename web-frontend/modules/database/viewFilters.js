@@ -7,15 +7,17 @@ import ViewFilterTypeDuration from '@baserow/modules/database/components/view/Vi
 import ViewFilterTypeRating from '@baserow/modules/database/components/view/ViewFilterTypeRating'
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
-import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
-import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
+import ViewFilterTypeDateUpgradeToMultiStep from '@baserow/modules/database/components/view/ViewFilterTypeDateUpgradeToMultiStep'
 import ViewFilterTypeNumberWithTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeNumberWithTimeZone'
+import ViewFilterTypeMultiStepDate from '@baserow/modules/database/components/view/ViewFilterTypeMultiStepDate'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import ViewFilterTypeMultipleSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions'
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
   splitTimezoneAndFilterValue,
-  DATE_FILTER_TIMEZONE_VALUE_SEPARATOR,
+  prepareMultiStepDateValue,
+  DATE_FILTER_VALUE_SEPARATOR,
+  splitMultiStepDateValue,
 } from '@baserow/modules/database/utils/date'
 import { isNumeric } from '@baserow/modules/core/utils/string'
 import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
@@ -151,6 +153,16 @@ export class ViewFilterType extends Registerable {
    */
   matches(rowValue, filterValue, field, fieldType) {
     throw new Error('The matches method must be implemented for every filter.')
+  }
+
+  /**
+   * Mark a filter type as deprecated. Deprecated filter types will not be shown in the
+   * filter type dropdown in the frontend, but will still be available for existing
+   * filters.
+   * @returns {boolean} Whether the filter type is deprecated or not.
+   */
+  isDeprecated() {
+    return false
   }
 }
 
@@ -514,9 +526,455 @@ export class LengthIsLowerThanViewFilterType extends ViewFilterType {
   }
 }
 
+const DateFilterOperators = {
+  TODAY: { value: 'today', stringKey: 'viewFilter.today' },
+  YESTERDAY: { value: 'yesterday', stringKey: 'viewFilter.yesterday' },
+  TOMORROW: { value: 'tomorrow', stringKey: 'viewFilter.tomorrow' },
+  ONE_WEEK_AGO: { value: 'one_week_ago', stringKey: 'viewFilter.oneWeekAgo' },
+  THIS_WEEK: { value: 'this_week', stringKey: 'viewFilter.thisWeek' },
+  NEXT_WEEK: { value: 'next_week', stringKey: 'viewFilter.nextWeek' },
+  ONE_MONTH_AGO: {
+    value: 'one_month_ago',
+    stringKey: 'viewFilter.oneMonthAgo',
+  },
+  THIS_MONTH: { value: 'this_month', stringKey: 'viewFilter.thisMonth' },
+  NEXT_MONTH: { value: 'next_month', stringKey: 'viewFilter.nextMonth' },
+  ONE_YEAR_AGO: { value: 'one_year_ago', stringKey: 'viewFilter.oneYearAgo' },
+  THIS_YEAR: { value: 'this_year', stringKey: 'viewFilter.thisYear' },
+  NEXT_YEAR: { value: 'next_year', stringKey: 'viewFilter.nextYear' },
+  NR_DAYS_AGO: {
+    value: 'nr_days_ago',
+    stringKey: 'viewFilter.nrDaysAgo',
+    hasNrInputValue: true,
+  },
+  NR_DAYS_FROM_NOW: {
+    value: 'nr_days_from_now',
+    stringKey: 'viewFilter.nrDaysFromNow',
+    hasNrInputValue: true,
+  },
+  NR_WEEKS_AGO: {
+    value: 'nr_weeks_ago',
+    stringKey: 'viewFilter.nrWeeksAgo',
+    hasNrInputValue: true,
+  },
+  NR_WEEKS_FROM_NOW: {
+    value: 'nr_weeks_from_now',
+    stringKey: 'viewFilter.nrWeeksFromNow',
+    hasNrInputValue: true,
+  },
+  NR_MONTHS_AGO: {
+    value: 'nr_months_ago',
+    stringKey: 'viewFilter.nrMonthsAgo',
+    hasNrInputValue: true,
+  },
+  NR_MONTHS_FROM_NOW: {
+    value: 'nr_months_from_now',
+    stringKey: 'viewFilter.nrMonthsFromNow',
+    hasNrInputValue: true,
+  },
+  NR_YEARS_AGO: {
+    value: 'nr_years_ago',
+    stringKey: 'viewFilter.nrYearsAgo',
+    hasNrInputValue: true,
+  },
+  NR_YEARS_FROM_NOW: {
+    value: 'nr_years_from_now',
+    stringKey: 'viewFilter.nrYearsFromNow',
+    hasNrInputValue: true,
+  },
+  EXACT_DATE: {
+    value: 'exact_date',
+    stringKey: 'viewFilter.exactDate',
+    hasDateInputValue: true,
+  },
+}
+
+const parseFilterValueAsDate = (
+  filterValue,
+  timezone = null,
+  dateFormat = 'YYYY-MM-DD'
+) => {
+  const filterDate = moment.utc(filterValue, dateFormat, true)
+  if (!filterDate.isValid()) {
+    throw new Error('Invalid date format')
+  } else if (timezone) {
+    filterDate.tz(timezone, true)
+  }
+  return filterDate
+}
+
+const parseFilterValueAsNumber = (filterValue) => {
+  try {
+    return parseInt(filterValue)
+  } catch {
+    return null
+  }
+}
+
+// Please be aware that momentjs modifies filterDate in place, so
+// make sure to clone it before modifying it.
+const DATE_FILTER_OPERATOR_BOUNDS = {
+  [DateFilterOperators.TODAY.value]: (filterDate) => [
+    filterDate.startOf('day'),
+    filterDate.clone().add(1, 'days'),
+  ],
+  [DateFilterOperators.YESTERDAY.value]: (filterDate) => [
+    filterDate.subtract(1, 'days').startOf('day'),
+    filterDate.clone().add(1, 'days'),
+  ],
+  [DateFilterOperators.TOMORROW.value]: (filterDate) => [
+    filterDate.add(1, 'days').startOf('day'),
+    filterDate.clone().add(1, 'days'),
+  ],
+  [DateFilterOperators.ONE_WEEK_AGO.value]: (filterDate) => [
+    filterDate.subtract(1, 'weeks').startOf('week').add(1, 'days'), // Start of the week is Sunday, so add 1 day to get Monday.
+    filterDate.clone().add(1, 'weeks'),
+  ],
+  [DateFilterOperators.ONE_MONTH_AGO.value]: (filterDate) => [
+    filterDate.subtract(1, 'months').startOf('month'),
+    filterDate.clone().add(1, 'months'),
+  ],
+  [DateFilterOperators.ONE_YEAR_AGO.value]: (filterDate) => [
+    filterDate.subtract(1, 'years').startOf('year'),
+    filterDate.clone().add(1, 'year'),
+  ],
+  [DateFilterOperators.THIS_WEEK.value]: (filterDate) => [
+    filterDate.startOf('week').add(1, 'days'), // Start of the week is Sunday, so add 1 day to get Monday.
+    filterDate.clone().add(1, 'week'),
+  ],
+  [DateFilterOperators.THIS_MONTH.value]: (filterDate) => [
+    filterDate.startOf('month'),
+    filterDate.clone().add(1, 'months'),
+  ],
+  [DateFilterOperators.THIS_YEAR.value]: (filterDate) => [
+    filterDate.startOf('year'),
+    filterDate.clone().add(1, 'years'),
+  ],
+  [DateFilterOperators.NEXT_WEEK.value]: (filterDate) => [
+    filterDate.add(1, 'weeks').startOf('week').add(1, 'days'), // Start of the week is Sunday, so add 1 day to get Monday.
+    filterDate.clone().add(1, 'week'),
+  ],
+  [DateFilterOperators.NEXT_MONTH.value]: (filterDate) => [
+    filterDate.add(1, 'months').startOf('month'),
+    filterDate.clone().add(1, 'months'),
+  ],
+  [DateFilterOperators.NEXT_YEAR.value]: (filterDate) => [
+    filterDate.add(1, 'years').startOf('year'),
+    filterDate.clone().add(1, 'years'),
+  ],
+  [DateFilterOperators.NR_DAYS_AGO.value]: (filterDate) => [
+    filterDate.startOf('day'),
+    filterDate.clone().add(1, 'days'),
+  ],
+  [DateFilterOperators.NR_WEEKS_AGO.value]: (filterDate) => [
+    filterDate.startOf('week').add(1, 'days'), // Start of the week is Sunday, so add 1 day to get Monday.
+    filterDate.clone().add(1, 'weeks'),
+  ],
+  [DateFilterOperators.NR_MONTHS_AGO.value]: (filterDate) => [
+    filterDate.startOf('month'),
+    filterDate.clone().add(1, 'months'),
+  ],
+  [DateFilterOperators.NR_YEARS_AGO.value]: (filterDate) => [
+    filterDate.startOf('year'),
+    filterDate.clone().add(1, 'years'),
+  ],
+  [DateFilterOperators.NR_DAYS_FROM_NOW.value]: (filterDate) => [
+    filterDate.startOf('day'),
+    filterDate.clone().add(1, 'days'),
+  ],
+  [DateFilterOperators.NR_WEEKS_FROM_NOW.value]: (filterDate) => [
+    filterDate.startOf('week').add(1, 'days'), // Start of the week is Sunday, so add 1 day to get Monday.
+    filterDate.clone().add(1, 'weeks'),
+  ],
+  [DateFilterOperators.NR_MONTHS_FROM_NOW.value]: (filterDate) => [
+    filterDate.startOf('month'),
+    filterDate.clone().add(1, 'months'),
+  ],
+  [DateFilterOperators.NR_YEARS_FROM_NOW.value]: (filterDate) => [
+    filterDate.startOf('year'),
+    filterDate.clone().add(1, 'years'),
+  ],
+  [DateFilterOperators.EXACT_DATE.value]: (filterDate) => [
+    filterDate.startOf('day'),
+    filterDate.clone().add(1, 'days'),
+  ],
+}
+
+const DATE_FILTER_OPERATOR_DELTA_MAP = {
+  [DateFilterOperators.EXACT_DATE.value]: (
+    filterDate,
+    filterValue,
+    timezone
+  ) => {
+    return parseFilterValueAsDate(filterValue, timezone)
+  },
+  // days
+  [DateFilterOperators.NR_DAYS_AGO.value]: (filterDate, filterValue) => {
+    return filterDate.subtract(parseFilterValueAsNumber(filterValue), 'days')
+  },
+  [DateFilterOperators.NR_DAYS_FROM_NOW.value]: (filterDate, filterValue) => {
+    return filterDate.add(parseFilterValueAsNumber(filterValue), 'days')
+  },
+  // weeks
+  [DateFilterOperators.NR_WEEKS_AGO.value]: (filterDate, filterValue) => {
+    return filterDate.subtract(parseFilterValueAsNumber(filterValue), 'weeks')
+  },
+  [DateFilterOperators.NR_WEEKS_FROM_NOW.value]: (filterDate, filterValue) => {
+    return filterDate.add(parseFilterValueAsNumber(filterValue), 'weeks')
+  },
+  // months
+  [DateFilterOperators.NR_MONTHS_AGO.value]: (filterDate, filterValue) => {
+    return filterDate.subtract(parseFilterValueAsNumber(filterValue), 'months')
+  },
+  [DateFilterOperators.NR_MONTHS_FROM_NOW.value]: (filterDate, filterValue) => {
+    return filterDate.add(parseFilterValueAsNumber(filterValue), 'months')
+  },
+  // years
+  [DateFilterOperators.NR_YEARS_AGO.value]: (filterDate, filterValue) => {
+    return filterDate.subtract(parseFilterValueAsNumber(filterValue), 'years')
+  },
+  [DateFilterOperators.NR_YEARS_FROM_NOW.value]: (filterDate, filterValue) => {
+    return filterDate.add(parseFilterValueAsNumber(filterValue), 'years')
+  },
+}
+
+export class DateMultiStepViewFilterType extends ViewFilterType {
+  getExample() {
+    return 'UTC??today'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeMultiStepDate
+  }
+
+  getDefaultTimezone(field) {
+    return field.date_force_timezone || moment.tz.guess()
+  }
+
+  getFilterDate(operatorValue, filterValue, timezone) {
+    const filterDate = moment.utc()
+    if (timezone) {
+      filterDate.tz(timezone)
+    }
+    if (DATE_FILTER_OPERATOR_DELTA_MAP[operatorValue] !== undefined) {
+      return DATE_FILTER_OPERATOR_DELTA_MAP[operatorValue](
+        filterDate,
+        filterValue,
+        timezone
+      )
+    } else {
+      return filterDate
+    }
+  }
+
+  getCompatibleOperators() {
+    const incompatibleOprs = this.getIncompatibleOperators()
+    return Object.values(DateFilterOperators).filter(
+      (opr) => !incompatibleOprs.includes(opr.value)
+    )
+  }
+
+  getIncompatibleOperators() {
+    return []
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  prepareValue(value, field, filterChanged = false) {
+    const sep = DATE_FILTER_VALUE_SEPARATOR
+    const [, filterValue, operator] = splitMultiStepDateValue(value, sep)
+    const timezone = this.getDefaultTimezone(field)
+    return value && !filterChanged
+      ? value
+      : `${timezone}${sep}${filterValue}${sep}${operator}`
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound) {
+    throw new Error(
+      'The rowAndFilterValueMatches method must be implemented for every filter.'
+    )
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (rowValue === null) {
+      return false
+    }
+
+    const sep = DATE_FILTER_VALUE_SEPARATOR
+    const [timezone, value, operatorValue] = splitMultiStepDateValue(
+      filterValue,
+      sep
+    )
+
+    // Check if the operator is compatible with the filter type.
+    const operator = this.getCompatibleOperators().find(
+      (opr) => opr.value === operatorValue
+    )
+    if (!operator) {
+      return false
+    } else if (operator.hasNrInputValue && value === '') {
+      return true // return all the rows if a proper value has not been set yet.
+    }
+
+    let filterDate
+    try {
+      filterDate = this.getFilterDate(operatorValue, value, timezone)
+    } catch {
+      return false
+    }
+
+    // Localize the filter date and the row date.
+    const rowDate = moment.utc(rowValue)
+    if (timezone !== null) {
+      rowDate.tz(timezone)
+    }
+    const [lowerBound, upperBound] =
+      DATE_FILTER_OPERATOR_BOUNDS[operatorValue](filterDate)
+
+    return this.rowMatches(rowDate, lowerBound, upperBound, timezone)
+  }
+}
+
+export class DateIsEqualMultiStepViewFilterType extends DateMultiStepViewFilterType {
+  static getType() {
+    return 'date_is'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.is')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    return rowDate.isSameOrAfter(lowerBound) && rowDate.isBefore(upperBound)
+  }
+}
+
+export class DateIsNotEqualMultiStepViewFilterType extends DateIsEqualMultiStepViewFilterType {
+  static getType() {
+    return 'date_is_not'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNot')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    return !super.rowMatches(rowDate, lowerBound, upperBound, timezone)
+  }
+}
+
+export class DateIsBeforeMultiStepViewFilterType extends DateMultiStepViewFilterType {
+  static getType() {
+    return 'date_is_before'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isBefore')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    return rowDate.isBefore(lowerBound)
+  }
+}
+
+export class DateIsOnOrBeforeMultiStepViewFilterType extends DateMultiStepViewFilterType {
+  static getType() {
+    return 'date_is_on_or_before'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isOnOrBefore')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    return rowDate.isBefore(upperBound)
+  }
+}
+
+export class DateIsAfterMultiStepViewFilterType extends DateMultiStepViewFilterType {
+  static getType() {
+    return 'date_is_after'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAfter')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    return rowDate.isSameOrAfter(upperBound, 'second')
+  }
+}
+
+export class DateIsOnOrAfterMultiStepViewFilterType extends DateMultiStepViewFilterType {
+  static getType() {
+    return 'date_is_on_or_after'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isOnOrAfter')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    return rowDate.isSameOrAfter(lowerBound)
+  }
+}
+
+export class DateIsWithinMultiStepViewFilterType extends DateMultiStepViewFilterType {
+  static getType() {
+    return 'date_is_within'
+  }
+
+  getIncompatibleOperators() {
+    return [
+      DateFilterOperators.TODAY.value,
+      DateFilterOperators.YESTERDAY.value,
+      DateFilterOperators.ONE_WEEK_AGO.value,
+      DateFilterOperators.ONE_MONTH_AGO.value,
+      DateFilterOperators.ONE_YEAR_AGO.value,
+      DateFilterOperators.THIS_WEEK.value,
+      DateFilterOperators.THIS_MONTH.value,
+      DateFilterOperators.THIS_YEAR.value,
+      DateFilterOperators.NR_DAYS_AGO.value,
+    ]
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isWithin')
+  }
+
+  rowMatches(rowDate, lowerBound, upperBound, timezone) {
+    const startOfToday = moment.utc()
+    if (timezone) {
+      startOfToday.tz(timezone)
+    }
+    startOfToday.startOf('day')
+    return rowDate.isSameOrAfter(startOfToday) && rowDate.isBefore(upperBound)
+  }
+}
+
+// DEPRECATED: This filter type is deprecated and should not be used anymore. It will
+// be removed in the future. Please use the DateMultiStepViewFilterType instead.
 class LocalizedDateViewFilterType extends ViewFilterType {
+  isDeprecated() {
+    return true
+  }
+
   getSeparator() {
-    return DATE_FILTER_TIMEZONE_VALUE_SEPARATOR
+    return DATE_FILTER_VALUE_SEPARATOR
   }
 
   getDateFormat() {
@@ -529,6 +987,10 @@ class LocalizedDateViewFilterType extends ViewFilterType {
 
   splitTimezoneAndValue(value) {
     return splitTimezoneAndFilterValue(value, this.getSeparator())
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDateUpgradeToMultiStep
   }
 
   prepareValue(value, field, filterChanged = false) {
@@ -552,8 +1014,16 @@ export class DateEqualViewFilterType extends LocalizedDateViewFilterType {
     return '2020-01-01'
   }
 
-  getInputComponent() {
-    return ViewFilterTypeDate
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.EXACT_DATE.value
+      ),
+    }
   }
 
   getCompatibleFieldTypes() {
@@ -582,9 +1052,22 @@ export class DateEqualViewFilterType extends LocalizedDateViewFilterType {
   }
 }
 
+// DEPRECATED
 export class DateNotEqualViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_not_equal'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsNotEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.EXACT_DATE.value
+      ),
+    }
   }
 
   getName() {
@@ -594,10 +1077,6 @@ export class DateNotEqualViewFilterType extends LocalizedDateViewFilterType {
 
   getExample() {
     return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
   }
 
   getCompatibleFieldTypes() {
@@ -627,9 +1106,22 @@ export class DateNotEqualViewFilterType extends LocalizedDateViewFilterType {
   }
 }
 
+// DEPRECATED
 export class DateBeforeViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_before'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsBeforeMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.EXACT_DATE.value
+      ),
+    }
   }
 
   getName() {
@@ -639,10 +1131,6 @@ export class DateBeforeViewFilterType extends LocalizedDateViewFilterType {
 
   getExample() {
     return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
   }
 
   getCompatibleFieldTypes() {
@@ -678,9 +1166,22 @@ export class DateBeforeViewFilterType extends LocalizedDateViewFilterType {
   }
 }
 
+// DEPRECATED
 export class DateBeforeOrEqualViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_before_or_equal'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsOnOrBeforeMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.EXACT_DATE.value
+      ),
+    }
   }
 
   getName() {
@@ -690,10 +1191,6 @@ export class DateBeforeOrEqualViewFilterType extends LocalizedDateViewFilterType
 
   getExample() {
     return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
   }
 
   getCompatibleFieldTypes() {
@@ -729,9 +1226,22 @@ export class DateBeforeOrEqualViewFilterType extends LocalizedDateViewFilterType
   }
 }
 
+// DEPRECATED
 export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_after'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsAfterMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.EXACT_DATE.value
+      ),
+    }
   }
 
   getName() {
@@ -741,10 +1251,6 @@ export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
 
   getExample() {
     return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
   }
 
   getCompatibleFieldTypes() {
@@ -777,9 +1283,23 @@ export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
     return rowDate.isAfter(filterDate, 'day')
   }
 }
+
+// DEPRECATED
 export class DateAfterDaysAgoViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_after_days_ago'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsOnOrAfterMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.NR_DAYS_AGO.value
+      ),
+    }
   }
 
   getName() {
@@ -789,10 +1309,6 @@ export class DateAfterDaysAgoViewFilterType extends LocalizedDateViewFilterType 
 
   getExample() {
     return '20'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeNumberWithTimeZone
   }
 
   getCompatibleFieldTypes() {
@@ -836,9 +1352,22 @@ export class DateAfterDaysAgoViewFilterType extends LocalizedDateViewFilterType 
   }
 }
 
+// DEPRECATED
 export class DateAfterOrEqualViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_after_or_equal'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsOnOrAfterMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.EXACT_DATE.value
+      ),
+    }
   }
 
   getName() {
@@ -848,10 +1377,6 @@ export class DateAfterOrEqualViewFilterType extends LocalizedDateViewFilterType 
 
   getExample() {
     return '2020-01-01'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeDate
   }
 
   getCompatibleFieldTypes() {
@@ -885,9 +1410,7 @@ export class DateAfterOrEqualViewFilterType extends LocalizedDateViewFilterType 
   }
 }
 
-/**
- * Base class for compare dates with today.
- */
+// DEPRECATED
 export class DateCompareTodayViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     throw new Error('Not implemented')
@@ -902,7 +1425,7 @@ export class DateCompareTodayViewFilterType extends LocalizedDateViewFilterType 
   }
 
   getInputComponent() {
-    return ViewFilterTypeTimeZone
+    return ViewFilterTypeDateUpgradeToMultiStep
   }
 
   getCompatibleFieldTypes() {
@@ -943,9 +1466,22 @@ export class DateCompareTodayViewFilterType extends LocalizedDateViewFilterType 
   }
 }
 
+// DEPRECATED
 export class DateEqualsTodayViewFilterType extends DateCompareTodayViewFilterType {
   static getType() {
     return 'date_equals_today'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        dateValue,
+        timezone,
+        DateFilterOperators.TODAY.value
+      ),
+    }
   }
 
   getName() {
@@ -964,9 +1500,22 @@ export class DateEqualsTodayViewFilterType extends DateCompareTodayViewFilterTyp
   }
 }
 
+// DEPRECATED
 export class DateBeforeTodayViewFilterType extends DateCompareTodayViewFilterType {
   static getType() {
     return 'date_before_today'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsBeforeMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.TODAY.value
+      ),
+    }
   }
 
   getName() {
@@ -984,9 +1533,22 @@ export class DateBeforeTodayViewFilterType extends DateCompareTodayViewFilterTyp
   }
 }
 
+// DEPRECATED
 export class DateAfterTodayViewFilterType extends DateCompareTodayViewFilterType {
   static getType() {
     return 'date_after_today'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsAfterMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        dateValue,
+        timezone,
+        DateFilterOperators.TODAY.value
+      ),
+    }
   }
 
   getName() {
@@ -1004,9 +1566,22 @@ export class DateAfterTodayViewFilterType extends DateCompareTodayViewFilterType
   }
 }
 
+// DEPRECATED
 export class DateEqualsCurrentWeekViewFilterType extends DateCompareTodayViewFilterType {
   static getType() {
     return 'date_equals_week'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        dateValue,
+        timezone,
+        DateFilterOperators.THIS_WEEK.value
+      ),
+    }
   }
 
   getName() {
@@ -1021,9 +1596,22 @@ export class DateEqualsCurrentWeekViewFilterType extends DateCompareTodayViewFil
   }
 }
 
+// DEPRECATED
 export class DateEqualsCurrentMonthViewFilterType extends DateCompareTodayViewFilterType {
   static getType() {
     return 'date_equals_month'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        dateValue,
+        timezone,
+        DateFilterOperators.THIS_MONTH.value
+      ),
+    }
   }
 
   getName() {
@@ -1038,9 +1626,22 @@ export class DateEqualsCurrentMonthViewFilterType extends DateCompareTodayViewFi
   }
 }
 
+// DEPRECATED
 export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilterType {
   static getType() {
     return 'date_equals_year'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.THIS_YEAR.value
+      ),
+    }
   }
 
   getName() {
@@ -1055,14 +1656,8 @@ export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilt
   }
 }
 
-/**
- * Base class for days, months, years ago filters.
- */
+// DEPRECATED
 export class LocalizedDateCompareViewFilterType extends LocalizedDateViewFilterType {
-  getInputComponent() {
-    return ViewFilterTypeNumberWithTimeZone
-  }
-
   getCompatibleFieldTypes() {
     return [
       'date',
@@ -1154,9 +1749,22 @@ function isRowValueBetweenDays(rowValue, dateToCompare, today) {
   return rowValue.isBetween(firstDay, lastDay, 'days', '[]')
 }
 
+// DEPRECATED
 export class DateWithinDaysViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_within_days'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsWithinMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.NR_DAYS_FROM_NOW.value
+      ),
+    }
   }
 
   getName() {
@@ -1173,9 +1781,22 @@ export class DateWithinDaysViewFilterType extends LocalizedDateCompareViewFilter
   }
 }
 
+// DEPRECATED
 export class DateWithinWeeksViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_within_weeks'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsWithinMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.NR_WEEKS_FROM_NOW.value
+      ),
+    }
   }
 
   getName() {
@@ -1196,9 +1817,22 @@ export class DateWithinWeeksViewFilterType extends LocalizedDateCompareViewFilte
   }
 }
 
+// DEPRECATED
 export class DateWithinMonthsViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_within_months'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsWithinMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.NR_MONTHS_FROM_NOW.value
+      ),
+    }
   }
 
   getName() {
@@ -1219,9 +1853,22 @@ export class DateWithinMonthsViewFilterType extends LocalizedDateCompareViewFilt
   }
 }
 
+// DEPRECATED
 export class DateEqualsDaysAgoViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_equals_days_ago'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, daysAgo] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        daysAgo,
+        timezone,
+        DateFilterOperators.NR_DAYS_AGO.value
+      ),
+    }
   }
 
   getName() {
@@ -1238,9 +1885,22 @@ export class DateEqualsDaysAgoViewFilterType extends LocalizedDateCompareViewFil
   }
 }
 
+// DEPRECATED
 export class DateEqualsMonthsAgoViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_equals_months_ago'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.NR_MONTHS_AGO.value
+      ),
+    }
   }
 
   getName() {
@@ -1257,9 +1917,22 @@ export class DateEqualsMonthsAgoViewFilterType extends LocalizedDateCompareViewF
   }
 }
 
+// DEPRECATED
 export class DateEqualsYearsAgoViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_equals_years_ago'
+  }
+
+  migrateToNewMultiStepDateFilter(filterValue) {
+    const [timezone, value] = this.splitTimezoneAndValue(filterValue)
+    return {
+      type: DateIsEqualMultiStepViewFilterType.getType(),
+      value: prepareMultiStepDateValue(
+        value,
+        timezone,
+        DateFilterOperators.NR_YEARS_AGO.value
+      ),
+    }
   }
 
   getName() {
@@ -1277,6 +1950,10 @@ export class DateEqualsYearsAgoViewFilterType extends LocalizedDateCompareViewFi
 }
 
 export class DateEqualsDayOfMonthViewFilterType extends LocalizedDateViewFilterType {
+  isDeprecated() {
+    return false
+  }
+
   static getType() {
     return 'date_equals_day_of_month'
   }
