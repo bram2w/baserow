@@ -1,6 +1,10 @@
+import time
+from collections import deque
+from functools import wraps
 from uuid import uuid4
 
 from django.conf import settings
+from django.core.cache import cache
 
 from django_redis import get_redis_connection
 from loguru import logger
@@ -8,6 +12,7 @@ from opentelemetry import trace
 from rest_framework.throttling import SimpleRateThrottle
 
 from baserow.core.telemetry.utils import baserow_trace_methods
+from baserow.throttling_types import RateLimit
 
 BASEROW_CONCURRENCY_THROTTLE_REQUEST_ID = "baserow_concurrency_throttle_request_id"
 
@@ -153,3 +158,54 @@ class ConcurrentUserRequestsThrottle(
 
     def wait(self):
         return self._wait
+
+
+class RateLimitExceededException(Exception):
+    """Raised when rate limit is exceeded."""
+
+    pass
+
+
+def rate_limit(rate: RateLimit, key: str, raise_exception: bool = True):
+    """
+    A general purpose throttling function decorator.
+
+    Currently the implementation is not suitable for highly concurrent access
+    as multiple callers can overwrite cached timestamps.
+
+    :param rate: The number of allowed calls over specified period.
+    :param key: The key parametrizes the same function calls that should be
+        throttled.
+    :param raise_exception: Whether exception should be raised when the rate
+        limit is exceeded.
+    :raises RateLimitExceededException: Raised when the rate
+        limit is exceeded.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            cache_key = f"{func.__name__}:{key}"
+            timestamps = cache.get(cache_key, deque())
+            current_time = time.time()
+
+            # Remove timestamps outside the current window
+            while timestamps and timestamps[0] <= current_time - rate.period_in_seconds:
+                timestamps.popleft()
+
+            if len(timestamps) >= rate.number_of_calls:
+                if raise_exception:
+                    raise RateLimitExceededException(
+                        f"Rate limit exceeded for {func.__name__}"
+                    )
+                else:
+                    return None
+
+            timestamps.append(current_time)
+            cache.set(cache_key, timestamps, timeout=rate.period_in_seconds)
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

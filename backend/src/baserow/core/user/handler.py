@@ -47,6 +47,7 @@ from baserow.core.signals import (
 )
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import generate_hash, get_baserow_saas_base_url
+from baserow.throttling import rate_limit
 
 from ..telemetry.utils import baserow_trace_methods
 from .emails import (
@@ -774,12 +775,19 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         confirm_url = urljoin(base_url, f"verify-email-address/{token}")
 
-        with translation.override(user.profile.language):
-            email = EmailPendingVerificationEmail(
-                to=[user.email],
-                confirm_url=confirm_url,
-            )
-            email.send(fail_silently=False)
+        def send_email():
+            with translation.override(user.profile.language):
+                email = EmailPendingVerificationEmail(
+                    to=[user.email],
+                    confirm_url=confirm_url,
+                )
+                email.send(fail_silently=False)
+
+        rate_limit(
+            rate=settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
+            key=user.username,
+            raise_exception=False,
+        )(send_email)()
 
     def start_share_onboarding_details_with_baserow(
         self, user, team: str, role: str, size: str, country: str
