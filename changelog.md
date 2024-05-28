@@ -1,5 +1,80 @@
 # Changelog
 
+## Released 1.25.0
+
+### New features
+* Add support for table field name and table field Id for form prefills [#1576](https://gitlab.com/baserow/baserow/-/issues/1576)
+* Add support for aggregations on public grid views [#1929](https://gitlab.com/baserow/baserow/-/issues/1929)
+* Support for rich text field description [#2090](https://gitlab.com/baserow/baserow/-/issues/2090)
+* Add aggregations support for last modified by and created by fields [#2114](https://gitlab.com/baserow/baserow/-/issues/2114)
+* Add a new Application Builder action to refresh a Data Source in a page. [#2192](https://gitlab.com/baserow/baserow/-/issues/2192)
+* Improved onboarding for new users. [#2212](https://gitlab.com/baserow/baserow/-/issues/2212)
+* Add email verification options to user accounts [#2264](https://gitlab.com/baserow/baserow/-/issues/2264)
+* Add support for `d h m` and `d h m s` duration formats. [#2284](https://gitlab.com/baserow/baserow/-/issues/2284)
+* Add support in Application Builder to add a custom favicon. [#2301](https://gitlab.com/baserow/baserow/-/issues/2301)
+* Links in table columns, and the "Open Page" action, will now support the same form configurations as the link element. [#2304](https://gitlab.com/baserow/baserow/-/issues/2304)
+* Add a new Collection Field Type of Boolean in Application Builder. [#2359](https://gitlab.com/baserow/baserow/-/issues/2359)
+* Templates are now compatible with application builder [#2387](https://gitlab.com/baserow/baserow/-/issues/2387)
+* Send information to baserow.io if user agrees during onboarding. [#2412](https://gitlab.com/baserow/baserow/-/issues/2412)
+* Add support for divisions,multiplications, and rollup formulas with the duration field. [#2416](https://gitlab.com/baserow/baserow/-/issues/2416)
+* Add support for multi tag collection fields in Application Builder table element [#2480](https://gitlab.com/baserow/baserow/-/issues/2480)
+* Introduced a new element type called 'Repeat'. Given a list datasource, will repeat its child elements n number of times for each result in the datasource. [#2485](https://gitlab.com/baserow/baserow/-/issues/2485)
+* automatically populate fields in a table when selecting the data source [#2497](https://gitlab.com/baserow/baserow/-/issues/2497)
+* Add a new "button" field to table element that can trigger actions based on current rows. [#2522](https://gitlab.com/baserow/baserow/-/issues/2522)
+* Improve date filters by allowing multi step combinations. [#2537](https://gitlab.com/baserow/baserow/-/issues/2537)
+* Prevent sending too many email verification emails [#2552](https://gitlab.com/baserow/baserow/-/issues/2552)
+* Automatically login users upon email verification [#2557](https://gitlab.com/baserow/baserow/-/issues/2557)
+* Allow instance admin to sign in even if email verification is set to enforced [#2558](https://gitlab.com/baserow/baserow/-/issues/2558)
+* Add email verified confirmation page [#2559](https://gitlab.com/baserow/baserow/-/issues/2559)
+* Support for negative duration field values. [#2567](https://gitlab.com/baserow/baserow/-/issues/2567)
+  * duration field->text conversion values will match selected format
+  * text->duration field conversion values should match selected format (otherwise the resulting value will be empty)
+* The API now accepts a single integer or a CSV string or an array of strings as value for link row field type and an array of string or a CSV string for file field type. [#2570](https://gitlab.com/baserow/baserow/-/issues/2570)
+* Automatically select the first element when the application builder page loads. [#2597](https://gitlab.com/baserow/baserow/-/issues/2597)
+* Add warning about security in the visibility side panel. [#2627](https://gitlab.com/baserow/baserow/-/issues/2627)
+* Allow generating a Baserow formula using AI
+* Optionally limit the number of pending invites using the `BASEROW_MAX_PENDING_WORKSPACE_INVITES` environment variable.
+* Show enterprise modal when clicking on disabled feature.
+* Update Node.js version to 21.7.3
+
+### Bug fixes
+* Fix for duplicated select fields import from airtable [#1235](https://gitlab.com/baserow/baserow/-/issues/1235)
+* Allow importing into a URL field. [#1437](https://gitlab.com/baserow/baserow/-/issues/1437)
+* Fix formula recursion error in create/update row action when using multiple formule with the same data source [#2506](https://gitlab.com/baserow/baserow/-/issues/2506)
+* Resolved an issue where the application builder sample pages getting created would result in an error. [#2512](https://gitlab.com/baserow/baserow/-/issues/2512)
+* Fix broken filter when filtering a data source using the `Or` operation in the published version of a builder application [#2525](https://gitlab.com/baserow/baserow/-/issues/2525)
+* Fix random loss of authentication in application builder [#2526](https://gitlab.com/baserow/baserow/-/issues/2526)
+* fix sorts management in data source [#2527](https://gitlab.com/baserow/baserow/-/issues/2527)
+* Table not visible in preview wasn't updated after login [#2534](https://gitlab.com/baserow/baserow/-/issues/2534)
+* Resolved an edge-case where it'd be possible to publish an application to a deleted domain. [#2548](https://gitlab.com/baserow/baserow/-/issues/2548)
+* Fixed a bug that prevented the possibility to add a link element to a column [#2565](https://gitlab.com/baserow/baserow/-/issues/2565)
+* Show only visible roles in the team member creation/edit modal. [#2574](https://gitlab.com/baserow/baserow/-/issues/2574)
+* Improved collection element (e.g. table, repeat) load more behaviour so that they are more resilient to slow/offline connections. [#2580](https://gitlab.com/baserow/baserow/-/issues/2580)
+* Fix a bug when a user was trying to log in and their password was empty [#2596](https://gitlab.com/baserow/baserow/-/issues/2596)
+* Resolved an issue where some application builder table element link-type fields were missing some data. [#2616](https://gitlab.com/baserow/baserow/-/issues/2616)
+* Resolved an issue in the form container where resetting to initial values after submission wasn't working properly. [#2621](https://gitlab.com/baserow/baserow/-/issues/2621)
+* Fix a bug causing the view to crash when grouping by a multiple select and a single select field. [#2624](https://gitlab.com/baserow/baserow/-/issues/2624)
+* Update /api/user-files/upload-via-url/ endpoint to support urls ending with / [#2644](https://gitlab.com/baserow/baserow/-/issues/2644)
+* Element visibility is now set to 'all' by default
+* Fix form print capabilities.
+
+### Refactors
+* Automatically hide newly created fields on views that are shared publicly [#1585](https://gitlab.com/baserow/baserow/-/issues/1585)
+* refactor buttons [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Python packaging updated, consistent python versions, makefile for automation [#2494](https://gitlab.com/baserow/baserow/-/issues/2494)
+  * each backend tree is installable python package
+  * makefile targets available for better automation
+* notify about staff users being created with dev sh script [#2590](https://gitlab.com/baserow/baserow/-/issues/2590)
+* Refactor the sync_templates command to use individual transactions for each template. [#2591](https://gitlab.com/baserow/baserow/-/issues/2591)
+* Activate AWS storage if `AWS_STORAGE_BUCKET_NAME` instead of `AWS_ACCESS_KEY_ID`.
+* Improved discoverability of paid features
+* Update debian version in docker images to bookworm
+* Update the list of unsupported field types for formula in our docs.
+
+### Breaking API changes
+* When sending a PATCH request to the api:applications:item endpoint, invalid payload keys will be ignored and will no longer cause an HTTP 400 error. [#2301](https://gitlab.com/baserow/baserow/-/issues/2301)
+
+
 ## Released 1.24.2
 
 ### Bug fixes

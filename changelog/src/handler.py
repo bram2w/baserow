@@ -81,6 +81,7 @@ class ChangelogHandler:
 
                 entry_file_path = f"{category_dir}/{entry_file_name}"
 
+                print(entry_file_path)
                 with open(entry_file_path, "r") as entry_file:
                     entry = json.load(entry_file)
                     entries[entry["type"]].append(entry)
