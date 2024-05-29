@@ -1,10 +1,4 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import {
-  BaserowFormulaBooleanType,
-  BaserowFormulaNumberType,
-  BaserowFormulaDurationType,
-  BaserowFormulaTextType,
-} from '@baserow/modules/database/formula/formulaTypes'
 
 export class BaserowFunctionDefinition extends Registerable {
   getDescription() {
@@ -2071,7 +2065,7 @@ export class BaserowAny extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return targetFieldType === BaserowFormulaBooleanType.getType()
+    return true
   }
 }
 
@@ -2098,7 +2092,7 @@ export class BaserowEvery extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return targetFieldType === BaserowFormulaBooleanType.getType()
+    return true
   }
 }
 
@@ -2130,11 +2124,7 @@ export class BaserowMax extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-      BaserowFormulaTextType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2166,11 +2156,7 @@ export class BaserowMin extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-      BaserowFormulaTextType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2228,10 +2214,7 @@ export class BaserowStddevPop extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2262,10 +2245,7 @@ export class BaserowStddevSample extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2296,10 +2276,7 @@ export class BaserowVarianceSample extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2330,10 +2307,7 @@ export class BaserowVariancePop extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2364,10 +2338,7 @@ export class BaserowAvg extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
@@ -2398,10 +2369,7 @@ export class BaserowSum extends BaserowFunctionDefinition {
   }
 
   isRollupCompatible(targetFieldType) {
-    return [
-      BaserowFormulaNumberType.getType(),
-      BaserowFormulaDurationType.getType(),
-    ].includes(targetFieldType)
+    return true
   }
 }
 
