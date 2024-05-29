@@ -8,12 +8,14 @@
         </div>
       </div>
       <div class="trash__title-right">
-        <a
+        <Button
           v-show="totalServerSideTrashContentsCount > 0 && !parentIsTrashed"
-          class="button button--error"
+          type="danger"
+          :loading="loadingContents"
           :disabled="loadingContents"
           @click="showEmptyModalIfNotLoading"
-          >{{ emptyButtonText }}</a
+        >
+          {{ emptyButtonText }}</Button
         >
       </div>
     </div>

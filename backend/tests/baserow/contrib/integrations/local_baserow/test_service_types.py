@@ -131,11 +131,15 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         view=view,
         table=view.table,
         search_query="get('page_parameter.id')",
+        filter_type="Or",
     )
 
     field = fields[0]
     service_filter = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="get('page_parameter.filter')", order=0
+        service=service,
+        field=field,
+        value="get('page_parameter.filter')",
+        order=0,
     )
     service_sort = data_fixture.create_local_baserow_table_service_sort(
         service=service, field=field, order_by=SORT_ORDER_ASC, order=0
@@ -150,6 +154,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         "table_id": service.table_id,
         "integration_id": service.integration_id,
         "search_query": service.search_query,
+        "filter_type": "Or",
         "filters": [
             {
                 "field_id": service_filter.field_id,
@@ -175,6 +180,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
     assert service.id != exported["id"]
     assert service.view_id == exported["view_id"]
     assert service.table_id == exported["table_id"]
+    assert service.filter_type == exported["filter_type"]
     assert service.search_query == exported["search_query"]
     assert service.integration_id == exported["integration_id"]
     assert isinstance(service, service_type.model_class)
@@ -405,6 +411,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
         view=view,
         table=view.table,
         search_query="get('page_parameter.id')",
+        filter_type="Or",
     )
     service_filter = data_fixture.create_local_baserow_table_service_filter(
         service=service, field=field, value="get('page_parameter.filter')", order=0
@@ -420,6 +427,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
         "table_id": service.table_id,
         "integration_id": service.integration_id,
         "search_query": service.search_query,
+        "filter_type": "Or",
         "filters": [
             {
                 "field_id": service_filter.field_id,
@@ -440,6 +448,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
     assert service.row_id == exported["row_id"]
     assert service.view_id == exported["view_id"]
     assert service.table_id == exported["table_id"]
+    assert service.filter_type == exported["filter_type"]
     assert service.search_query == exported["search_query"]
     assert service.integration_id == exported["integration_id"]
     assert isinstance(service, service_type.model_class)
@@ -1633,6 +1642,20 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
+        field_db_column_by_name["duration_rollup_sum"]: {
+            "default": None,
+            "metadata": {},
+            "original_type": "rollup",
+            "title": "duration_rollup_sum",
+            "type": "string",
+        },
+        field_db_column_by_name["duration_rollup_avg"]: {
+            "default": None,
+            "metadata": {},
+            "original_type": "rollup",
+            "title": "duration_rollup_avg",
+            "type": "string",
+        },
         field_db_column_by_name["lookup"]: {
             "title": "lookup",
             "default": None,
@@ -1995,6 +2018,64 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
 
     row.refresh_from_db()
     assert getattr(row, cost.db_column) == fake_request.data["page_parameter"]["id"]
+
+
+@pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user, authorized_user=user
+    )
+    database = data_fixture.create_database_application(workspace=builder.workspace)
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Cost", "number", {}),
+            ("Name", "text", {}),
+        ],
+    )
+    cost = table.field_set.get(name="Cost")
+    name = table.field_set.get(name="Name")
+    row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={cost.db_column: 5, name.db_column: "test"},
+    )
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page, table=table, integration=integration
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        row_id=f'get("data_source.{data_source.id}.id")',
+        integration=integration,
+    )
+    service_type = service.get_type()
+    service.field_mappings.create(
+        field=cost, value=f'get("data_source.{data_source.id}.{cost.db_column}")'
+    )
+    service.field_mappings.create(
+        field=name, value=f'get("data_source.{data_source.id}.{name.db_column}")'
+    )
+
+    fake_request = Mock()
+    fake_request.data = {"page_parameter": {"id": 10}}
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    row.refresh_from_db()
+    assert getattr(row, cost.db_column) == 5
 
 
 @pytest.mark.django_db

@@ -3,7 +3,7 @@
     <h2 class="box__title">{{ $t('domainSettings.titleOverview') }}</h2>
     <Error :error="error"></Error>
     <div class="actions actions--right">
-      <Button prepend-icon="baserow-icon-plus" @click="showForm = true">
+      <Button icon="iconoir-plus" @click="showForm = true">
         {{ $t('domainSettings.addDomain') }}
       </Button>
     </div>

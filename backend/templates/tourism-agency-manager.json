@@ -14,8 +14,7 @@
         "tour guides"
     ],
     "categories": [
-        "Local Business",
-        "Professional"
+        "Travel and Outdoors"
     ],
     "export": [
         {
@@ -906,7 +905,7 @@
                             "created_on": "2023-04-28T12:22:55.251144+00:00",
                             "updated_on": "2023-05-03T09:58:20.539975+00:00",
                             "field_1061343": "Hidden gems in Rotterdam",
-                            "field_1061344": "Rotterdam is a vibrant city that\u2019s sure to surprise and entice you in equal measure. Full of must-see attractions and world-famous architecture, there\u2019s also a whole other side to the Dutch city that\u2019s worth exploring. Here\u2019s your guide to the best of secret spots in Rotterdam, the futuristic city of the Netherlands!",
+                            "field_1061344": "Rotterdam is a vibrant city that’s sure to surprise and entice you in equal measure. Full of must-see attractions and world-famous architecture, there’s also a whole other side to the Dutch city that’s worth exploring. Here’s your guide to the best of secret spots in Rotterdam, the futuristic city of the Netherlands!",
                             "field_1061345": 553813,
                             "field_1061368": "16",
                             "field_1061369": "78.99",
@@ -999,7 +998,7 @@
                             "created_on": "2023-05-03T09:56:23.430906+00:00",
                             "updated_on": "2023-05-03T10:24:54.972414+00:00",
                             "field_1061343": "Artistic alternative tour",
-                            "field_1061344": "Learn about the artists from past and present during this bus tour. Perfect for new and seasoned visitors to NYC, hear little-known facts about Edgar Allan Poe, Bob Dylan, Jimi Hendrix, and countless others, that you wouldn\u2019t hear if exploring independently.",
+                            "field_1061344": "Learn about the artists from past and present during this bus tour. Perfect for new and seasoned visitors to NYC, hear little-known facts about Edgar Allan Poe, Bob Dylan, Jimi Hendrix, and countless others, that you wouldn’t hear if exploring independently.",
                             "field_1061345": 553815,
                             "field_1061368": "12",
                             "field_1061369": "36.13",
@@ -1153,7 +1152,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if(today() - field('Day of birth') > date_interval('18 years'),'\u2705','\u274c')",
+                            "formula": "if(today() - field('Day of birth') > date_interval('18 years'),'✅','❌')",
                             "formula_type": "text"
                         }
                     ],
@@ -1258,7 +1257,7 @@
                                     "id": 106994,
                                     "field_id": 1078744,
                                     "type": "equal",
-                                    "value": "\u2705"
+                                    "value": "✅"
                                 }
                             ],
                             "sortings": [
@@ -1351,7 +1350,7 @@
                                     "id": 106995,
                                     "field_id": 1078744,
                                     "type": "equal",
-                                    "value": "\u274c"
+                                    "value": "❌"
                                 }
                             ],
                             "sortings": [
@@ -3277,8 +3276,8 @@
                             "order": "3.00000000000000000000",
                             "created_on": "2023-05-03T09:49:42.120066+00:00",
                             "updated_on": "2023-05-16T12:33:19.743442+00:00",
-                            "field_1061381": "Caf\u00e9 De Riddert",
-                            "field_1061382": "Do you remember that time you were so drunk you fell over? Well, probably not.\n\nIn any case, Caf\u00e9 de Riddert is so small this wouldn\u2019t even be possible! This brown caf\u00e9, just around the corner from Centraal Station, offers special beers, whiskeys, and live music.\n\nThe beer casks are stored underneath the floor, so it happens quite often that you have to step away from the bar to make room for the floor to open up \u2014 it\u2019s magical! For this bar, we can say three make a crowd.",
+                            "field_1061381": "Café De Riddert",
+                            "field_1061382": "Do you remember that time you were so drunk you fell over? Well, probably not.\n\nIn any case, Café de Riddert is so small this wouldn’t even be possible! This brown café, just around the corner from Centraal Station, offers special beers, whiskeys, and live music.\n\nThe beer casks are stored underneath the floor, so it happens quite often that you have to step away from the bar to make room for the floor to open up — it’s magical! For this bar, we can say three make a crowd.",
                             "field_1061383": [
                                 {
                                     "name": "78XY0vDPz7AQAC6nxQgDww2PPjjnlIou_98b974b75d30d973afca37c3ce6de19a871ec97c5109a3d8d13c169d41856200.jpg",
@@ -3306,7 +3305,7 @@
                             "created_on": "2023-05-03T09:49:42.120379+00:00",
                             "updated_on": "2023-05-16T12:35:44.280916+00:00",
                             "field_1061381": "Park Schoonoord",
-                            "field_1061382": "Rotterdam has three famous parks to the north side of the river: Vroesenpark, Kralingse Bos, and Het Park (a.k.a. the Euromast park).\n\nBut did you know that next to Het Park, behind a little stream, some trees, and a fence, you can find a little park called Schoonoord? Walk past its gates and find yourself in a big garden dating back to the year 1706!\n\nThis place used to be someone\u2019s backyard, but now it\u2019s open and free to visit for everyone. The park has a beautiful pond, a botanical garden, birds, and trees over 250 years old! You can even adopt one of the trees, and no \u2014 you can\u2019t carve your name in it.\n\nThis is the perfect place to take your date and have a glass of wine. Just make sure it\u2019s a day-drinking date because the park closes at 4:30 PM.",
+                            "field_1061382": "Rotterdam has three famous parks to the north side of the river: Vroesenpark, Kralingse Bos, and Het Park (a.k.a. the Euromast park).\n\nBut did you know that next to Het Park, behind a little stream, some trees, and a fence, you can find a little park called Schoonoord? Walk past its gates and find yourself in a big garden dating back to the year 1706!\n\nThis place used to be someone’s backyard, but now it’s open and free to visit for everyone. The park has a beautiful pond, a botanical garden, birds, and trees over 250 years old! You can even adopt one of the trees, and no — you can’t carve your name in it.\n\nThis is the perfect place to take your date and have a glass of wine. Just make sure it’s a day-drinking date because the park closes at 4:30 PM.",
                             "field_1061383": [
                                 {
                                     "name": "IWoxWuyfcQoA6meC4EN2aKwUMJ50Crl1_cb1b32a50b9c8320aaba8fd15abbf47df987278418cf07805bb5842b461dd135.jpg",
@@ -3325,7 +3324,7 @@
                                 3
                             ],
                             "field_1093213": 592542,
-                            "field_1093285": "There\u2019s a tree more than 130 years old at Westersingel"
+                            "field_1093285": "There’s a tree more than 130 years old at Westersingel"
                         },
                         {
                             "id": 5,
@@ -3333,7 +3332,7 @@
                             "created_on": "2023-05-03T09:49:42.120587+00:00",
                             "updated_on": "2023-05-16T12:35:25.203615+00:00",
                             "field_1061381": "Island of Brienenoord",
-                            "field_1061382": "Close to the Feyenoord football stadium, an exit leads to a tiny bridge. This bridge will take you to Brienenoord Island. An island with forest, open waters, and Scottish Highlanders.\n\nThe animals are tame, so you can walk next to them. Just don\u2019t feed these furry friends! Have you seen that Gremlins movie? Well, then you\u2019ll know what happens if you feed them.\n\nHalfway through the island, you\u2019ll find little cottages with gardens full of veggies and plants. Walking underneath the Brienenoord bridge is quite impressive and a huge contrast with the rest of the island, full of nature. Because of the bridge and the noise of the cars, it may not be the perfect place for some quiet nature, but you do get some nice skyline views.",
+                            "field_1061382": "Close to the Feyenoord football stadium, an exit leads to a tiny bridge. This bridge will take you to Brienenoord Island. An island with forest, open waters, and Scottish Highlanders.\n\nThe animals are tame, so you can walk next to them. Just don’t feed these furry friends! Have you seen that Gremlins movie? Well, then you’ll know what happens if you feed them.\n\nHalfway through the island, you’ll find little cottages with gardens full of veggies and plants. Walking underneath the Brienenoord bridge is quite impressive and a huge contrast with the rest of the island, full of nature. Because of the bridge and the noise of the cars, it may not be the perfect place for some quiet nature, but you do get some nice skyline views.",
                             "field_1061383": [
                                 {
                                     "name": "x2Xk09GyC32nbA6ZI8NGHmR2Nif7ZtsL_d946495e01849df6522d04d74e07f62a7867e5afecfb6f497bb263a719830896.jpg",
@@ -3357,7 +3356,7 @@
                             "created_on": "2023-05-03T09:49:42.120784+00:00",
                             "updated_on": "2023-05-16T12:37:42.792768+00:00",
                             "field_1061381": "Restaurant Gare Du Nord train wagon",
-                            "field_1061382": "This is one of those hidden places, and you only find it if you are vegan or if you have watched way too many Thomas the Tank Engine episodes. We found this place when we were looking for a good pub-crawl route.\n\nYou\u2019ll find Gare Du Nord just behind the old Hofplein train station. Even though this place might sound fancy, it\u2019s not expensive. Just make sure you make a reservation if you are going for dinner. If you feel like a rebel and want to eat a sandwich on a train, this is for you.",
+                            "field_1061382": "This is one of those hidden places, and you only find it if you are vegan or if you have watched way too many Thomas the Tank Engine episodes. We found this place when we were looking for a good pub-crawl route.\n\nYou’ll find Gare Du Nord just behind the old Hofplein train station. Even though this place might sound fancy, it’s not expensive. Just make sure you make a reservation if you are going for dinner. If you feel like a rebel and want to eat a sandwich on a train, this is for you.",
                             "field_1061383": [
                                 {
                                     "name": "nbZbxwMxxHACZFq1O4DK6mkd8T9d5KB4_6b0faf83793542978c37d3f7ff0098582ff620a15d665999144961c8b73447e0.jpg",
@@ -3381,7 +3380,7 @@
                             "created_on": "2023-05-03T09:49:42.121041+00:00",
                             "updated_on": "2023-05-16T12:37:31.596992+00:00",
                             "field_1061381": "Hofplein train station roftoop",
-                            "field_1061382": "After you\u2019ve had your lovely hummus quinoa bean falafel potato herb burger, walk over to the old Hofplein train station to enjoy the view with a beer.\n\nThis station is built on top of the old train tracks, where you will find a little garden growing herbs, fruits, veggies, and other plants. In summer, you might even stumble upon an event.\n\nIf you always wanted to walk over train tracks without being hit, this is your chance! Rotterdam plans to convert all the old Hofplein train tracks into a 1.2 km long park, just like they did in New York. This station is connected to the famous yellow pedestrian bridge \u201cde Luchtsingel\u201d, which also connects to the Biergarten.",
+                            "field_1061382": "After you’ve had your lovely hummus quinoa bean falafel potato herb burger, walk over to the old Hofplein train station to enjoy the view with a beer.\n\nThis station is built on top of the old train tracks, where you will find a little garden growing herbs, fruits, veggies, and other plants. In summer, you might even stumble upon an event.\n\nIf you always wanted to walk over train tracks without being hit, this is your chance! Rotterdam plans to convert all the old Hofplein train tracks into a 1.2 km long park, just like they did in New York. This station is connected to the famous yellow pedestrian bridge “de Luchtsingel”, which also connects to the Biergarten.",
                             "field_1061383": [
                                 {
                                     "name": "N54ltyDtYCxpICChAXd02ohTfCbueln5_7eaa83eed74699037a25de8bb6b0e82ab4b4176ae7ea2a380900c68b9e58d4df.jpg",
@@ -3429,7 +3428,7 @@
                             "created_on": "2023-05-03T09:49:42.121456+00:00",
                             "updated_on": "2023-05-16T12:08:52.943767+00:00",
                             "field_1061381": "Noordereiland",
-                            "field_1061382": "You don\u2019t have to go to Zeeland or the north to find islands \u2014 there is one in Rotterdam! Noordereiland is floating between the north and south of Rotterdam and is connected by De Willemsbrug and Koninginnebrug.\n\nWhile the island is officially part of the city\u2019s south side and neighbourhood Feijenoord, people keep debating whether it is the \u201creal\u201d south. Noordereiland, therefore, remains stuck in the middle.\n\nThe island played a very important role at the beginning of World War II. When the German army caught the Dutch by surprise at the old Willemsbrug on May 10, 1940, the Dutch marines and army fought straight at the south side of the bridge for four days.\n\nEven though the Dutch army was weak, surprised, and not modernised yet, the Dutch were able to keep the German forces from taking the bridges. Of course, this changed after the city bombardment on May 14, 1940.\n\nNext to the island\u2019s rich history, it has great views and locations to take pictures. On the north side, you will have a great skyline view in front of the historical houses. On the west side, you\u2019ll find a unique angle of the Maastoren and Erasmusbrug.\n\nDid you know they have their own flag? The Rotterdam flag is horizontal green white stripes with a heart added in the middle. So, bring your camera or a book and put on \u201cStuck in the middle\u201d by Jimmy Eat World or \u201cStuck in the middle with you\u201d by Stealers Wheelers (pun intended).",
+                            "field_1061382": "You don’t have to go to Zeeland or the north to find islands — there is one in Rotterdam! Noordereiland is floating between the north and south of Rotterdam and is connected by De Willemsbrug and Koninginnebrug.\n\nWhile the island is officially part of the city’s south side and neighbourhood Feijenoord, people keep debating whether it is the “real” south. Noordereiland, therefore, remains stuck in the middle.\n\nThe island played a very important role at the beginning of World War II. When the German army caught the Dutch by surprise at the old Willemsbrug on May 10, 1940, the Dutch marines and army fought straight at the south side of the bridge for four days.\n\nEven though the Dutch army was weak, surprised, and not modernised yet, the Dutch were able to keep the German forces from taking the bridges. Of course, this changed after the city bombardment on May 14, 1940.\n\nNext to the island’s rich history, it has great views and locations to take pictures. On the north side, you will have a great skyline view in front of the historical houses. On the west side, you’ll find a unique angle of the Maastoren and Erasmusbrug.\n\nDid you know they have their own flag? The Rotterdam flag is horizontal green white stripes with a heart added in the middle. So, bring your camera or a book and put on “Stuck in the middle” by Jimmy Eat World or “Stuck in the middle with you” by Stealers Wheelers (pun intended).",
                             "field_1061383": [
                                 {
                                     "name": "4nbMPPcZkHGUwC138d6isIwLhVze9cna_35d7230da36647e28ad54040acb213f18a1c86d1339b0c5deffc8a72ca7cf19e.jpg",
@@ -3453,7 +3452,7 @@
                             "created_on": "2023-05-03T09:49:42.121644+00:00",
                             "updated_on": "2023-05-16T12:37:45.203652+00:00",
                             "field_1061381": "Pedestrian Maastunnel",
-                            "field_1061382": "The Maastunnel is the oldest \u201csunken\u201d tunnel in the Netherlands, opened in 1942 during World War II. The tunnel was built on the mainland and sunken into the water after.\n\nNext to the car tunnel, the city built a cyclist and pedestrian tunnel. If you ever feel like walking 1.2 kilometres to the other side of the city for no reason, this tunnel could be your friend!",
+                            "field_1061382": "The Maastunnel is the oldest “sunken” tunnel in the Netherlands, opened in 1942 during World War II. The tunnel was built on the mainland and sunken into the water after.\n\nNext to the car tunnel, the city built a cyclist and pedestrian tunnel. If you ever feel like walking 1.2 kilometres to the other side of the city for no reason, this tunnel could be your friend!",
                             "field_1061383": [
                                 {
                                     "name": "XOo3MWjDhaoMGy8TQjEWU4bfrl36Mo53_e0858ef66915228df392e49bcbb796def8580040cdfa6db0ea5f2a20cd646ab8.jpg",
@@ -3477,7 +3476,7 @@
                             "created_on": "2023-05-03T09:49:42.122271+00:00",
                             "updated_on": "2023-05-16T12:31:20.768608+00:00",
                             "field_1061381": "Hotel bar at De Rotterdam",
-                            "field_1061382": "Take the elevator to the 7th floor of De Rotterdam to enjoy even greater free skyline views. The fancy Nhow hotel bar has crazy expensive food, but it\u2019s a great place for a few drinks. Also, a good area to party in the night.",
+                            "field_1061382": "Take the elevator to the 7th floor of De Rotterdam to enjoy even greater free skyline views. The fancy Nhow hotel bar has crazy expensive food, but it’s a great place for a few drinks. Also, a good area to party in the night.",
                             "field_1061383": [
                                 {
                                     "name": "OiQI9co9bGdcESKLLnJImROPtKpvvYho_3a76cebc55354b9d683ac82767134c61eca47916681f10bd8357b4da753f430d.jpg",
@@ -3501,7 +3500,7 @@
                             "created_on": "2023-05-03T09:49:42.122478+00:00",
                             "updated_on": "2023-05-16T12:35:13.630006+00:00",
                             "field_1061381": "Townhall garden",
-                            "field_1061382": "Would we be right if we said that you probably hadn\u2019t discovered this cosy garden yet? The town hall at Coolsingel, built between 1914 and 1920, has two entrances on both sides of the building to enter the garden.\n\nIt\u2019s a public space and free to enter. The garden is pretty small, but hey, it is not about size. It is about the kind of sandwich you bring. Amazingly, this kind of silence is hidden in the city\u2019s centre.",
+                            "field_1061382": "Would we be right if we said that you probably hadn’t discovered this cosy garden yet? The town hall at Coolsingel, built between 1914 and 1920, has two entrances on both sides of the building to enter the garden.\n\nIt’s a public space and free to enter. The garden is pretty small, but hey, it is not about size. It is about the kind of sandwich you bring. Amazingly, this kind of silence is hidden in the city’s centre.",
                             "field_1061383": [
                                 {
                                     "name": "jmPZr8de8EknvFv65z4huYsWgrigjHOO_34d56863d61b1ced4d1afd08e2b4caeb0f97e403345fcc11a02671b4310be33a.jpg",
@@ -3550,7 +3549,7 @@
                             "created_on": "2023-05-03T09:49:42.124140+00:00",
                             "updated_on": "2023-05-16T12:36:20.094032+00:00",
                             "field_1061381": "Dakpark",
-                            "field_1061382": "I\u2019ll take you to the west part of town for this location. The M4H area is full of old renovated buildings that store artists, musicians, and creative and innovative concepts.\n\nThe neighbourhood used to be notorious for men roaming the streets, seeking a lady to satisfy them for five minutes. Mark our words, this area will be the new Katendrecht within 10 years. Meaning, there\u2019s not too much yet, but it will bloom and boom soon!\n\nOne of the bigger projects is the Dakpark on top of a big shopping centre. A nice place to relax if you happen to be in the neighbourhood.\n\nBring your children because in summer they turn on the water fountains! It has a rooftop restaurant, so you can always find restrooms and grab some beers. Just take the metro to Marconiplein, or park in the underground garage at Vierhavenstraat 79.",
+                            "field_1061382": "I’ll take you to the west part of town for this location. The M4H area is full of old renovated buildings that store artists, musicians, and creative and innovative concepts.\n\nThe neighbourhood used to be notorious for men roaming the streets, seeking a lady to satisfy them for five minutes. Mark our words, this area will be the new Katendrecht within 10 years. Meaning, there’s not too much yet, but it will bloom and boom soon!\n\nOne of the bigger projects is the Dakpark on top of a big shopping centre. A nice place to relax if you happen to be in the neighbourhood.\n\nBring your children because in summer they turn on the water fountains! It has a rooftop restaurant, so you can always find restrooms and grab some beers. Just take the metro to Marconiplein, or park in the underground garage at Vierhavenstraat 79.",
                             "field_1061383": [
                                 {
                                     "name": "NJNV2Gxxh2uVb3vveUy48Zdo70NnILk3_5d89375eab19fd736fd77304863bee51dc3459f47e02c234dc5cba30d35f1d7f.jpg",
@@ -3575,7 +3574,7 @@
                             "created_on": "2023-05-03T10:05:29.819662+00:00",
                             "updated_on": "2023-05-16T12:39:41.044625+00:00",
                             "field_1061381": "Little Italy",
-                            "field_1061382": "When Italian immigrants moved to this Manhattan neighborhood in the late 1800s, they brought their customs, food and language. That heritage remains evident today\u2014Little Italy\u2019s streets are lined with restaurants serving Italian staples on red-and-white checkered tablecloths.",
+                            "field_1061382": "When Italian immigrants moved to this Manhattan neighborhood in the late 1800s, they brought their customs, food and language. That heritage remains evident today—Little Italy’s streets are lined with restaurants serving Italian staples on red-and-white checkered tablecloths.",
                             "field_1061383": [
                                 {
                                     "name": "11r9BsqLB2H25cuCccMV0FCcW7v1jbTE_83c2a94460b275712cdc00a73729fa6f91ef49e613ce422ae7a3e70bf72dd538.jpg",
@@ -3700,7 +3699,7 @@
                             "created_on": "2023-05-03T10:06:36.140711+00:00",
                             "updated_on": "2023-05-16T12:38:33.367786+00:00",
                             "field_1061381": "Greenwich village",
-                            "field_1061382": "Greenwich Village and its winding streets were already here when the rest of Manhattan\u2019s streets were laid out as a grid in the early 19th century. See those crooked streets and more during a guided walking tour that covers more than 200 years of history. Check out the beautiful, historic brownstone residential buildings and the area\u2019s bars and restaurants.",
+                            "field_1061382": "Greenwich Village and its winding streets were already here when the rest of Manhattan’s streets were laid out as a grid in the early 19th century. See those crooked streets and more during a guided walking tour that covers more than 200 years of history. Check out the beautiful, historic brownstone residential buildings and the area’s bars and restaurants.",
                             "field_1061383": [
                                 {
                                     "name": "Jiphf4EzuAo45Cldho1cXXoRFSkeXloC_9b89c97f641f074563d9d5377f7df51bdec62037167a840dd2d0e73cc56ae4d1.jpg",
@@ -3724,7 +3723,7 @@
                             "created_on": "2023-05-03T10:07:17.356969+00:00",
                             "updated_on": "2023-05-16T12:40:46.018931+00:00",
                             "field_1061381": "Strawberry fields, John Lennon Memorial",
-                            "field_1061382": "Strawberry Fields is a 10,000 m\u00b2 section of New York's Central Park, dedicated to English musician John Lennon. The area is named after the Lennon-McCartney song Strawberry Fields Forever, which in turn is named after the children's home in Liverpool near where Lennon grew up.",
+                            "field_1061382": "Strawberry Fields is a 10,000 m² section of New York's Central Park, dedicated to English musician John Lennon. The area is named after the Lennon-McCartney song Strawberry Fields Forever, which in turn is named after the children's home in Liverpool near where Lennon grew up.",
                             "field_1061383": [
                                 {
                                     "name": "3wmVX7ksMNkbU1WTYUzVX0vRGEvlGdCi_6100edff73e78bb60d855ac351bbdbe7fa5debaacbc601d1df057d3c3a95dbea.jpg",
@@ -4000,7 +3999,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "if(field('Number of available places') > 0,'\u274c','\u2705')",
+                            "formula": "if(field('Number of available places') > 0,'❌','✅')",
                             "formula_type": "array"
                         },
                         {
@@ -4228,8 +4227,8 @@
                                 {
                                     "id": 107051,
                                     "field_id": 1061396,
-                                    "type": "date_equals_week",
-                                    "value": "Europe/Amsterdam?"
+                                    "type": "date_is",
+                                    "value": "Europe/Amsterdam??this_week"
                                 }
                             ],
                             "sortings": [

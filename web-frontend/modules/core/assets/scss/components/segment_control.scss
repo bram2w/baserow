@@ -3,6 +3,7 @@
   gap: 6px;
   padding: 6px;
   background: $palette-neutral-50;
+
   @include rounded($rounded-md);
 }
 
@@ -65,7 +66,8 @@
   color: $palette-neutral-1200;
   background-color: $white;
   border: 1px solid $palette-neutral-400;
-  @include add-elevation($elevation-low);
+
+  @include elevation($elevation-low);
 
   &:hover {
     border: 1px solid $palette-neutral-500;

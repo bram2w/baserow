@@ -21,18 +21,26 @@ def normalize_email_address(email):
 
 
 def generate_session_tokens_for_user(
-    user: AbstractUser, include_refresh_token: bool = False
+    user: AbstractUser,
+    include_refresh_token: bool = False,
+    verified_email_claim: Optional[str] = None,
 ) -> Dict[str, str]:
     """
     Generates a new access and refresh token (if requested) for the given user.
 
     :param user: The user for which the tokens must be generated.
     :param include_refresh_token: Whether or not a refresh token must be included.
+    :param verified_email_claim: Optionally stores which authentication
+        method was used.
     :return: A dictionary with the access and refresh token.
     """
 
     access_token = AccessToken.for_user(user)
     refresh_token = RefreshToken.for_user(user) if include_refresh_token else None
+
+    if refresh_token and verified_email_claim is not None:
+        refresh_token["verified_email_claim"] = verified_email_claim
+
     return prepare_user_tokens_payload(access_token, refresh_token)
 
 

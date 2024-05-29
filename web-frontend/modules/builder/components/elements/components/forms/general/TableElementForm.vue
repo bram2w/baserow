@@ -1,20 +1,19 @@
 <template>
-  <form @submit.prevent @keydown.enter.prevent>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('tableElementForm.dataSource') }}
-      </label>
+  <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
+    <FormGroup :label="$t('tableElementForm.dataSource')">
       <div class="control__elements">
-        <Dropdown v-model="values.data_source_id" :show-search="false">
-          <DropdownItem
-            v-for="dataSource in availableDataSources"
-            :key="dataSource.id"
-            :name="dataSource.name"
-            :value="dataSource.id"
-          />
-        </Dropdown>
+        <div @click="userHasChangedDataSource = true">
+          <Dropdown v-model="values.data_source_id" :show-search="false">
+            <DropdownItem
+              v-for="dataSource in availableDataSources"
+              :key="dataSource.id"
+              :name="dataSource.name"
+              :value="dataSource.id"
+            />
+          </Dropdown>
+        </div>
       </div>
-    </FormElement>
+    </FormGroup>
     <FormInput
       v-model="values.items_per_page"
       :label="$t('tableElementForm.itemsPerPage')"
@@ -34,11 +33,17 @@
       type="number"
       @blur="$v.values.items_per_page.$touch()"
     ></FormInput>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('tableElementForm.fields') }}
-      </label>
+    <FormGroup :label="$t('tableElementForm.fields')">
       <template v-if="values.data_source_id">
+        <ButtonText
+          type="primary"
+          icon="iconoir-refresh-double"
+          size="small"
+          class="table-element-form__refresh-fields-button"
+          @click="refreshFieldsFromDataSource"
+        >
+          {{ $t('tableElementForm.refreshFieldsFromDataSource') }}
+        </ButtonText>
         <div>
           <Expandable
             v-for="(field, index) in values.fields"
@@ -46,6 +51,11 @@
             v-sortable="{
               id: field.id,
               update: orderFields,
+              enabled: $hasPermission(
+                'builder.page.element.update',
+                element,
+                workspace.id
+              ),
               handle: '[data-sortable-handle]',
             }"
             class="table-element-form__field"
@@ -92,11 +102,7 @@
                 "
               >
                 <template v-if="values.fields.length > 1" #after-input>
-                  <Button
-                    icon="iconoir-bin"
-                    type="light"
-                    @click="removeField(field)"
-                  />
+                  <ButtonIcon icon="iconoir-bin" @click="removeField(field)" />
                 </template>
               </FormInput>
               <FormElement class="control control--horizontal">
@@ -128,17 +134,17 @@
             </template>
           </Expandable>
         </div>
-        <Button
-          prepend-icon="baserow-icon-plus"
-          type="link"
-          size="tiny"
+        <ButtonText
+          type="primary"
+          icon="iconoir-plus"
+          size="small"
           @click="addField"
         >
           {{ $t('tableElementForm.addField') }}
-        </Button>
+        </ButtonText>
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
-    </FormElement>
+    </FormGroup>
     <ColorInputGroup
       v-model="values.button_color"
       :label="$t('tableElementForm.buttonColor')"
@@ -160,73 +166,38 @@ import {
   minValue,
   maxValue,
 } from 'vuelidate/lib/validators'
-import { mapGetters } from 'vuex'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 
 export default {
   name: 'TableElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [elementForm],
+  mixins: [elementForm, collectionElementForm],
   data() {
     return {
       allowedValues: ['data_source_id', 'fields', 'items_per_page'],
       values: {
+        fields: [],
         data_source_id: null,
         items_per_page: 1,
-        fields: [],
       },
+      userHasChangedDataSource: false,
     }
   },
   computed: {
-    dataSources() {
-      return this.$store.getters['dataSource/getPageDataSources'](this.page)
-    },
-    availableDataSources() {
-      return this.dataSources.filter(
-        (dataSource) =>
-          dataSource.type &&
-          this.$registry.get('service', dataSource.type).returnsList
-      )
-    },
-    selectedDataSource() {
-      if (!this.values.data_source_id) {
-        return null
-      }
-      return this.$store.getters['dataSource/getPageDataSourceById'](
-        this.page,
-        this.values.data_source_id
-      )
-    },
-    selectedDataSourceType() {
-      if (!this.selectedDataSource || !this.selectedDataSource.type) {
-        return null
-      }
-      return this.$registry.get('service', this.selectedDataSource.type)
-    },
-    maxItemPerPage() {
-      if (!this.selectedDataSourceType) {
-        return 20
-      }
-      return this.selectedDataSourceType.maxResultLimit
-    },
     orderedCollectionTypes() {
       return this.$registry.getOrderedList('collectionField')
     },
     collectionTypes() {
       return this.$registry.getAll('collectionField')
     },
-    ...mapGetters({
-      element: 'element/getSelected',
-    }),
   },
   watch: {
-    'dataSources.length'(newValue, oldValue) {
-      if (this.values.data_source_id && oldValue > newValue) {
-        if (
-          !this.dataSources.some(({ id }) => id === this.values.data_source_id)
-        ) {
-          // Remove the data_source_id if the related dataSource has been deleted.
-          this.values.data_source_id = null
+    async 'values.data_source_id'(newValue, oldValue) {
+      if (newValue && !oldValue) {
+        await this.$nextTick()
+        if (this.userHasChangedDataSource) {
+          this.refreshFieldsFromDataSource()
         }
       }
     },
@@ -241,12 +212,20 @@ export default {
         value: '',
         type: 'text',
         id: uuid(), // Temporary id
+        uid: uuid(),
       })
     },
     changeFieldType(fieldToUpdate, newType) {
       this.values.fields = this.values.fields.map((field) => {
         if (field.id === fieldToUpdate.id) {
-          return { id: field.id, name: field.name, type: newType }
+          // When the type of the workflow action changes we assign a new UID to
+          // trigger the backend workflow action removal
+          return {
+            id: field.id,
+            uid: uuid(),
+            name: field.name,
+            type: newType,
+          }
         }
         return field
       })
@@ -273,6 +252,17 @@ export default {
         field,
         builder: this.builder,
       })
+    },
+    refreshFieldsFromDataSource() {
+      if (this.selectedDataSource?.type) {
+        const serviceType = this.$registry.get(
+          'service',
+          this.selectedDataSource.type
+        )
+        this.values.fields = serviceType.getDefaultCollectionFields(
+          this.selectedDataSource
+        )
+      }
     },
   },
   validations() {

@@ -14,7 +14,6 @@
         "tasks"
     ],
     "categories": [
-        "Local Business",
         "Project Management"
     ],
     "export": [
@@ -1093,8 +1092,8 @@
                                 {
                                     "id": 204908,
                                     "field_id": 1859524,
-                                    "type": "date_before_today",
-                                    "value": "Europe/Brussels?",
+                                    "type": "date_is_before",
+                                    "value": "Europe/Brussels??today",
                                     "group": null
                                 },
                                 {
@@ -1107,8 +1106,8 @@
                                 {
                                     "id": 204911,
                                     "field_id": 1859525,
-                                    "type": "date_after_today",
-                                    "value": "Europe/Brussels?",
+                                    "type": "date_is_after",
+                                    "value": "Europe/Brussels??today",
                                     "group": 1748
                                 }
                             ],

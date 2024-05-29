@@ -14,7 +14,7 @@
         "311"
     ],
     "categories": [
-        "Professional"
+        "Health and Wellness"
     ],
     "export": [
         {
@@ -460,14 +460,14 @@
                                 {
                                     "id": 63619,
                                     "field_id": 659354,
-                                    "type": "date_before",
-                                    "value": "2022-11-01"
+                                    "type": "date_is_before",
+                                    "value": "?2022-11-01?exact_date"
                                 },
                                 {
                                     "id": 63620,
                                     "field_id": 659354,
-                                    "type": "date_after",
-                                    "value": "2022-09-30"
+                                    "type": "date_is_after",
+                                    "value": "?2022-09-30?exact_date"
                                 }
                             ],
                             "sortings": [

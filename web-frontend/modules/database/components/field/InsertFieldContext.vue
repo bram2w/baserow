@@ -4,7 +4,6 @@
     :table="table"
     :view="view"
     :force-typed="forcedType"
-    :use-action-group-id="true"
     :all-fields-in-table="allFieldsInTable"
     :database="database"
     @field-created="$emit('field-created', $event)"

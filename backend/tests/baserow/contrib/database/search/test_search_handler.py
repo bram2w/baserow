@@ -23,9 +23,27 @@ def test_escape_query():
 
 def test_get_default_search_mode_for_table_with_tsvectors_supported():
     mock_table = Mock(tsvectors_are_supported=True)
+    mock_table.database = Mock()
+
+    mock_table.database.workspace = Mock()
+    mock_table.database.workspace.has_template = lambda: False
+
     assert (
         SearchHandler.get_default_search_mode_for_table(mock_table)
         == SearchModes.MODE_FT_WITH_COUNT
+    )
+
+
+def test_get_default_search_mode_for_table_with_tsvectors_for_templates():
+    mock_table = Mock(tsvectors_are_supported=True)
+    mock_table.database = Mock()
+
+    mock_table.database.workspace = Mock()
+    mock_table.database.workspace.has_template = lambda: True
+
+    assert (
+        SearchHandler.get_default_search_mode_for_table(mock_table)
+        == SearchModes.MODE_COMPAT
     )
 
 

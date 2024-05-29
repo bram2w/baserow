@@ -6,10 +6,13 @@
           <div class="margin-bottom-2">
             {{ $t('formViewModePreviewSurvey.deactivated') }}
           </div>
-          <a class="button button--primary" @click="$refs.premiumModal.show()">
+          <Button
+            type="primary"
+            icon="iconoir-no-lock"
+            @click="$refs.premiumModal.show()"
+          >
             {{ $t('formViewModePreviewSurvey.more') }}
-            <i class="iconoir-no-lock"></i>
-          </a>
+          </Button>
         </div>
         <PremiumModal
           ref="premiumModal"
@@ -47,11 +50,12 @@
               >
               </FormViewField>
               <div class="form-view__field-actions">
-                <a
+                <Button
                   v-if="index < fields.length - 1"
-                  class="button button--primary button--large"
+                  type="primary"
+                  size="large"
                   @click="next()"
-                  >Next</a
+                  >Next</Button
                 >
                 <template v-else-if="index >= fields.length - 1">
                   <Editable

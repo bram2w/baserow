@@ -169,7 +169,6 @@ class CalendarViewView(APIView):
             ListRowsDatabaseTableOperationType.type,
             workspace=workspace,
             context=view.table,
-            allow_if_template=True,
         )
 
         date_field = view.date_field

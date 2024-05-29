@@ -117,7 +117,7 @@
         <div v-if="includeRowDetails" class="grid-view__foot-info">
           {{ $tc('gridView.rowCount', count, { count }) }}
         </div>
-        <template v-if="!publicGrid">
+        <template>
           <div
             v-for="field in visibleFields"
             :key="field.id"
@@ -358,13 +358,16 @@ export default {
             if (row1 === undefined || row2 === undefined) {
               return false
             }
-
-            return !groupBys.slice(0, groupByIndex + 1).some((groupBy) => {
-              return !fieldType.isEqual(
+            return groupBys.slice(0, groupByIndex + 1).every((groupBy) => {
+              const row1Value = fieldType.getRowValueFromGroupValue(
                 field,
-                row1[`field_${groupBy.field}`],
+                row1[`field_${groupBy.field}`]
+              )
+              const row2Value = fieldType.getRowValueFromGroupValue(
+                field,
                 row2[`field_${groupBy.field}`]
               )
+              return fieldType.isEqual(field, row1Value, row2Value)
             })
           }
 

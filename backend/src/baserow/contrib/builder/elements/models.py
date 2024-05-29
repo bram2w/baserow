@@ -1,3 +1,4 @@
+import uuid
 from typing import TYPE_CHECKING, Optional
 
 from django.contrib.contenttypes.models import ContentType
@@ -115,7 +116,6 @@ class Element(
         choices=VISIBILITY_TYPES.choices,
         max_length=20,
         default=VISIBILITY_TYPES.ALL,
-        null=True,  # TODO remove me in next release
         db_index=True,
     )
 
@@ -393,29 +393,25 @@ class TextElement(Element):
     )
 
 
-class LinkElement(Element):
+class NavigationElementMixin(models.Model):
     """
-    A simple link.
+    Abstract base class for navigation elements.
     """
 
     class NAVIGATION_TYPES(models.TextChoices):
         PAGE = "page"
         CUSTOM = "custom"
 
-    class VARIANTS(models.TextChoices):
-        LINK = "link"
-        BUTTON = "button"
-
     class TARGETS(models.TextChoices):
         SELF = "self"
         BLANK = "blank"
 
-    value = FormulaField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
         help_text="The navigation type.",
         max_length=10,
         default=NAVIGATION_TYPES.PAGE,
+        null=True,
     )
     navigate_to_page = models.ForeignKey(
         "builder.Page",
@@ -429,23 +425,40 @@ class LinkElement(Element):
     navigate_to_url = FormulaField(
         default="",
         help_text="If no page is selected, this indicate the destination of the link.",
+        null=True,
     )
     page_parameters = models.JSONField(
         default=list,
         help_text="The parameters for each parameters of the selected page if any.",
-    )
-
-    variant = models.CharField(
-        choices=VARIANTS.choices,
-        help_text="The variant of the link.",
-        max_length=10,
-        default=VARIANTS.LINK,
+        null=True,
     )
     target = models.CharField(
         choices=TARGETS.choices,
         help_text="The target of the link when we click on it.",
         max_length=10,
         default=TARGETS.SELF,
+        null=True,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class LinkElement(Element, NavigationElementMixin):
+    """
+    A simple link.
+    """
+
+    class VARIANTS(models.TextChoices):
+        LINK = "link"
+        BUTTON = "button"
+
+    value = FormulaField(default="")
+    variant = models.CharField(
+        choices=VARIANTS.choices,
+        help_text="The variant of the link.",
+        max_length=10,
+        default=VARIANTS.LINK,
     )
     width = models.CharField(
         choices=WIDTHS.choices,
@@ -673,6 +686,7 @@ class CollectionField(models.Model):
     A field of a Collection element
     """
 
+    uid = models.UUIDField(default=uuid.uuid4)
     order = models.PositiveIntegerField()
     name = models.CharField(
         max_length=225,
@@ -718,8 +732,6 @@ class CollectionElement(Element):
         ],
     )
 
-    fields = models.ManyToManyField(CollectionField)
-
     class Meta:
         abstract = True
 
@@ -735,6 +747,8 @@ class TableElement(CollectionElement):
         blank=True,
         help_text="The color of the button",
     )
+
+    fields = models.ManyToManyField(CollectionField)
 
 
 class IFrameElement(Element):
@@ -760,4 +774,26 @@ class IFrameElement(Element):
     height = models.PositiveIntegerField(
         help_text="Height in pixels of the iframe",
         default=300,
+    )
+
+
+class RepeatElement(CollectionElement, ContainerElement):
+    """
+    A container and collection type element which repeats the child elements for each
+    item in the data source that it is bound to.
+    """
+
+    class ORIENTATIONS(models.TextChoices):
+        VERTICAL = "vertical"
+        HORIZONTAL = "horizontal"
+
+    orientation = models.CharField(
+        choices=ORIENTATIONS.choices,
+        max_length=10,
+        default=ORIENTATIONS.VERTICAL,
+    )
+    items_per_row = models.JSONField(
+        default=dict,
+        help_text="The amount repetitions per row, per device type. "
+        "Only applicable when the orientation is horizontal.",
     )

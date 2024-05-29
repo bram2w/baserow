@@ -69,13 +69,15 @@
         </div>
       </FormElement>
       <div class="auth__action">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--full-width"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
+          full-width
           :disabled="loading"
         >
           {{ $t('action.signIn') }}
-        </button>
+        </Button>
       </div>
     </form>
   </div>
@@ -182,6 +184,10 @@ export default {
                 this.$t('clientHandler.disabledPasswordProviderTitle'),
                 this.$t('clientHandler.disabledPasswordProviderMessage')
               )
+            } else if (
+              response.data?.error === 'ERROR_EMAIL_VERIFICATION_REQUIRED'
+            ) {
+              this.$emit('email-not-verified', this.values.email)
             } else {
               this.showError(
                 this.$t('error.incorrectCredentialTitle'),

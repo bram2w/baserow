@@ -2,7 +2,7 @@
   <Modal ref="modal">
     <form @submit.prevent="create">
       <div class="box__title">
-        <h2 class="row_modal__title">
+        <h2 class="row-modal__title">
           {{ heading }}
         </h2>
       </div>
@@ -53,13 +53,14 @@
       </RowEditModalHiddenFieldsSection>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="loading"
             :disabled="loading"
           >
             {{ $t('action.create') }}
-          </button>
+          </Button>
         </div>
       </div>
     </form>

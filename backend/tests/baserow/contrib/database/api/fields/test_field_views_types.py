@@ -555,9 +555,7 @@ def test_file_field_type(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert (
-        response_json["detail"][f"field_{field_id}"][0]["name"][0]["code"] == "invalid"
-    )
+    assert response_json["detail"][f"field_{field_id}"][0]["code"] == "invalid"
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -991,10 +989,9 @@ def test_phone_number_field_type(api_client, data_fixture):
 def test_last_modified_field_type(api_client, data_fixture):
     time_under_test = "2021-08-10 12:00"
 
-    with freeze_time(time_under_test):
-        user, token = data_fixture.create_user_and_token(
-            email="test@test.nl", password="password", first_name="Test1"
-        )
+    user = data_fixture.create_user(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
     table = data_fixture.create_database_table(user=user)
 
     # first add text field so that there is already a row with an
@@ -1002,6 +999,7 @@ def test_last_modified_field_type(api_client, data_fixture):
     text_field = data_fixture.create_text_field(user=user, table=table)
 
     with freeze_time(time_under_test):
+        token = data_fixture.generate_token(user)
         api_client.post(
             reverse("api:database:rows:list", kwargs={"table_id": table.id}),
             {f"field_{text_field.id}": "Test Text"},

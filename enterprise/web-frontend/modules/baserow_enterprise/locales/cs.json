@@ -1,1 +1,112 @@
-{}
+{
+    "enterprise": {
+        "sso": "SSO",
+        "deactivated": "Dostupné ve verzi advanced/enterprise",
+        "license": "Enterprise",
+        "sidebarTooltip": "Tvůj účet má celkový přístup k enterprise funkcím",
+        "rbac": "RBAC",
+        "licenseDescription": "Uživatelé typu Viewer jsou u verze Baserow Enterprise zdarma. Pokud má uživatel jakoukoliv další roli, bude v pracovním prostoru automaticky použita placená instance.",
+        "overflowWarning": "Počet uživatelů s rolí jinou než Viewer dosáhl maxima a jsou využity všechny placené pozice. Pro jejich uvolnění změň roli uživatelů na Viewer va každém pracovním prostoru v sekci Členové."
+    },
+    "clientHandler": {
+        "cannotDisableAllAuthProvidersTitle": "Poslední povolený poskytovatel",
+        "cannotDisableAllAuthProvidersDescription": "Nelze vypnout nebo smazat posledního povoleného poskytovatele."
+    },
+    "trashType": {
+        "team": "tým"
+    },
+    "createTeamModal": {
+        "title": "Vytvořit tým",
+        "invalidNameMessage": "Tento název týmu je v daném pracovním prostoru již použit.",
+        "invalidNameTitle": "Prosím, použij jiný název"
+    },
+    "updateTeamModal": {
+        "title": "Aktualizovat {teamName}",
+        "invalidNameTitle": "Prosím, použij jiný název",
+        "invalidNameMessage": "Tento název týmu je v daném pracovním prostoru již použit."
+    },
+    "manageTeamModals": {
+        "subheading": "Týmy umožňují přidělit nebo omezit oprávnění hromadně více lidem najednou."
+    },
+    "manageTeamForm": {
+        "submit": "Uložit",
+        "nameTitle": "Název",
+        "roleTitle": "Výchozí role",
+        "inviteMembers": "Přidat členy",
+        "membersTitle": "Členové",
+        "noSubjectsSelected": "Pro případné přidání členů do týmu klikni na '{buttonLabel}'.",
+        "roleHelpText": "Specifické uživatelské role budou vždy nadřazeny rolím definovaným pro tým."
+    },
+    "editTeamContext": {
+        "remove": "Smazat tým",
+        "edit": "Upravit tým"
+    },
+    "teamsTable": {
+        "title": "Počet týmů v {workspaceName} je: {teamCount}",
+        "createNew": "Vytvořit tým",
+        "nameColumn": "Název",
+        "createdColumn": "Datum vytvoření",
+        "subjectsColumn": "Členové",
+        "roleColumn": "Výchozí role",
+        "roleHelpText": "Lze přepsat pomocí rolí v databázích a tabulkách."
+    },
+    "teamsSettings": {
+        "teamsTabTitle": "Týmy"
+    },
+    "adminType": {
+        "AuditLog": "Protokol o auditu",
+        "Authentication": "Ověření"
+    },
+    "auditLog": {
+        "filterUserTitle": "Uživatel",
+        "filterActionTypeTitle": "Typ události",
+        "filterFromTimestampTitle": "Od",
+        "filterWorkspaceTitle": "Pracovní prostor",
+        "workspace": "Pracovní prostor",
+        "allWorkspaces": "Všechny pracovní prostory",
+        "adminTitle": "Protokol o auditu",
+        "workspaceTitle": "Protokol o auditu - {workspaceName}",
+        "filterToTimestampTitle": "Do",
+        "filterToTimestamp": "Do",
+        "user": "Uživatel",
+        "timestamp": "Časové razítko",
+        "actionType": "Typ události",
+        "description": "Popis",
+        "ip_address": "IP adresa",
+        "exportToCsv": "Export do CSV",
+        "exportModalTitle": "Export do CSV",
+        "clearFilters": "Vymazat",
+        "allUsers": "Všichni uživatelé",
+        "allActionTypes": "Všechny typy událostí",
+        "filterFromTimestamp": "Od"
+    },
+    "subjectSampleField": {
+        "titleAttr": "Počet členů v tomto týmu je {subjectCount}"
+    },
+    "auditLogExportModal": {
+        "title": "Export do CSV",
+        "exportFilename": "Export správcovského protokolu auditu - {date}",
+        "exportWorkspaceFilename": " Pracovní prostor ({workspaceId}) export protokolu auditu - {date}",
+        "cancelledTitle": "Export se nezdařil",
+        "cancelledDescription": "Během exportu protokolu auditu nastala chyba. Prosím zkus to znovu."
+    },
+    "authProviders": {
+        "noProviders": "Dosud nebyly nakonfigurováni žádní poskytovatelé ověření.",
+        "addProvider": "Přidat poskytovatele",
+        "title": "Poskytovatelé ověření"
+    },
+    "authProviderTypes": {
+        "password": "Ověření pomocí e-mailu a hesla"
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Upravit",
+        "delete": "Smazat"
+    },
+    "samlSettingsForm": {
+        "domain": "Doména",
+        "domainPlaceholder": "Vložte název domény společnosti...",
+        "invalidDomain": "Neplatný název domény",
+        "domainAlreadyExists": "Poskytovatel SAML pro tuto doménu již existuje",
+        "metadata": "Metadata"
+    }
+}

@@ -4,6 +4,7 @@
     class="field-form-context"
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
+    @shown="onShow"
   >
     <FieldForm
       ref="form"
@@ -14,21 +15,31 @@
       :all-fields-in-table="allFieldsInTable"
       :database="database"
       @submitted="submit"
+      @description-shown="hideDescriptionLink"
     >
       <div
         class="context__form-actions context__form-actions--multiple-actions"
       >
-        <a @click="cancel">
-          {{ $t('action.cancel') }}
-        </a>
-        <button
-          type="submit"
-          class="button"
-          :class="{ 'button--loading': loading }"
-          :disabled="loading || fieldTypeDisabled"
-        >
-          {{ $t('action.save') }}
-        </button>
+        <span class="context__form-actions--alight-left">
+          <ButtonText
+            v-if="!showDescription"
+            ref="showDescription"
+            icon="iconoir iconoir-plus"
+            type="secondary"
+            @click="showDescriptionField"
+          >
+            {{ $t('fieldForm.addDescription') }}
+          </ButtonText>
+        </span>
+
+        <span class="context__form-actions--align-right">
+          <span class="margin-right-2">
+            <a class="form-action" @click="cancel">{{ $t('action.cancel') }}</a>
+          </span>
+          <Button :loading="loading" :disabled="loading || fieldTypeDisabled">
+            {{ $t('action.save') }}
+          </Button>
+        </span>
       </div>
     </FieldForm>
   </Context>
@@ -68,6 +79,7 @@ export default {
   data() {
     return {
       loading: false,
+      showDescription: false,
     }
   },
   computed: {
@@ -91,6 +103,7 @@ export default {
   },
   methods: {
     reset() {
+      this.showDescription = false
       this.$nextTick(() => {
         this.$refs.form && this.$refs.form.reset()
       })
@@ -134,6 +147,19 @@ export default {
     cancel() {
       this.reset()
       this.hide()
+    },
+    onShow() {
+      this.showDescription = this.$refs.form.isDescriptionFieldNotEmpty()
+    },
+
+    showDescriptionField(evt) {
+      this.hideDescriptionLink()
+      this.$refs.form.showDescriptionField()
+      evt.stopPropagation()
+      evt.preventDefault()
+    },
+    hideDescriptionLink() {
+      this.showDescription = true
     },
   },
 }

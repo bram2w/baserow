@@ -8,7 +8,6 @@
     "sidebarTooltip": "Your account has access to the enterprise features globally",
     "rbac": "RBAC",
     "sso": "SSO",
-    "deactivated": "Available in advanced/enterprise",
     "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any workspace then they will use a paid seat automatically.",
     "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each workspaces members page."
   },
@@ -270,7 +269,8 @@
     "sso": "Single Sign On",
     "rbac": "Role-based access control",
     "auditLogs": "Audit logs",
-    "coBranding": "Co-branding logo replacement"
+    "coBranding": "Co-branding logo replacement",
+    "support": "Direct support"
   },
   "chatwootSupportSidebarWorkspace": {
     "directSupport": "Direct support"
@@ -282,8 +282,7 @@
     "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
   },
   "auditLogSidebarWorkspace": {
-    "title": "Audit log",
-    "deactivated": "Available in advanced/enterprise"
+    "title": "Audit log"
   },
   "localBaserowUserSourceType": {
     "notConfigured": "Not configured"
@@ -311,5 +310,12 @@
     "coBrandingLogo": "Logo",
     "coBrandingLogoDescription": "Replaces the Baserow logo for a custom co-branded alternative (176x29).",
     "uploadFileButton": "Upload image"
+  },
+  "enterpriseModal": {
+    "title": "Upgrade to use the {name}",
+    "description": "Your account doesn’t have access to the advanced/enterprise features. Upgrade to the advanced/enterprise version to begin using {name}. You can upgrade your account by getting a license. Click on the button below to view the pricing.",
+    "viewPricing": "View pricing",
+    "premium": "Premium",
+    "enterprise": "Enterprise"
   }
 }

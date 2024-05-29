@@ -5,31 +5,26 @@
         {{ $t('imageElementForm.fileLabel') }}
       </label>
       <div class="control__elements">
-        <RadioButton
+        <RadioGroup
           v-model="values.image_source_type"
-          :value="IMAGE_SOURCE_TYPES.UPLOAD"
+          :options="imageSourceTypeOptions"
+          type="button"
         >
-          {{ $t('imageElementForm.fileSourceTypeUpload') }}
-        </RadioButton>
-        <RadioButton
-          v-model="values.image_source_type"
-          :value="IMAGE_SOURCE_TYPES.URL"
-        >
-          {{ $t('imageElementForm.fileSourceTypeURL') }}
-        </RadioButton>
+        </RadioGroup>
       </div>
     </FormElement>
     <FormElement
       v-if="values.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD"
       class="control"
     >
-      <button
+      <Button
         v-if="values.image_file === null"
-        class="button"
+        type="upload"
         @click="openFileUploadModal"
       >
         {{ $t('imageElementForm.uploadFileButton') }}
-      </button>
+      </Button>
+
       <Thumbnail
         v-else
         removable
@@ -199,6 +194,18 @@ export default {
     },
     IMAGE_SOURCE_TYPES() {
       return IMAGE_SOURCE_TYPES
+    },
+    imageSourceTypeOptions() {
+      return [
+        {
+          label: this.$t('imageElementForm.fileSourceTypeUpload'),
+          value: IMAGE_SOURCE_TYPES.UPLOAD,
+        },
+        {
+          label: this.$t('imageElementForm.fileSourceTypeURL'),
+          value: IMAGE_SOURCE_TYPES.URL,
+        },
+      ]
     },
     IMAGE_FILE_TYPES() {
       return IMAGE_FILE_TYPES

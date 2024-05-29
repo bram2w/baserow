@@ -213,6 +213,26 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return true
   }
 
+  getFirstCollectionAncestor(page, element) {
+    if (!element) {
+      return null
+    }
+    const elementType = this.app.$registry.get('element', element.type)
+    if (elementType.isCollectionElement) {
+      return element
+    }
+    const ancestors = this.app.store.getters['element/getAncestors'](
+      page,
+      element
+    )
+    for (const ancestor of ancestors) {
+      const ancestorType = this.app.$registry.get('element', ancestor.type)
+      if (ancestorType.isCollectionElement) {
+        return ancestor
+      }
+    }
+  }
+
   // Loads all element contents
   async init(applicationContext) {
     const { page } = applicationContext
@@ -252,20 +272,26 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     )
   }
 
+  getActionDispatchContext(applicationContext) {
+    return applicationContext.recordIndex
+  }
+
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
     return getValueAtPath(content, path.join('.'))
   }
 
   getDataContent(applicationContext) {
-    const { element, recordIndex = 0 } = applicationContext
-
-    if (!element) {
+    const { page, element, recordIndex = 0 } = applicationContext
+    const collectionElement = this.getFirstCollectionAncestor(page, element)
+    if (!collectionElement) {
       return []
     }
 
     const rows =
-      this.app.store.getters['elementContent/getElementContent'](element)
+      this.app.store.getters['elementContent/getElementContent'](
+        collectionElement
+      )
 
     const row = { [this.indexKey]: recordIndex, ...rows[recordIndex] }
 
@@ -284,8 +310,9 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   }
 
   getDataSchema(applicationContext) {
-    const { page, element: { data_source_id: dataSourceId } = {} } =
-      applicationContext
+    const { page, element } = applicationContext
+    const collectionElement = this.getFirstCollectionAncestor(page, element)
+    const dataSourceId = collectionElement?.data_source_id
 
     if (!dataSourceId) {
       return null
@@ -312,8 +339,9 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 1) {
-      const { page, element: { data_source_id: dataSourceId } = {} } =
-        applicationContext
+      const { page, element } = applicationContext
+      const collectionElement = this.getFirstCollectionAncestor(page, element)
+      const dataSourceId = collectionElement?.data_source_id
 
       const dataSource = this.app.store.getters[
         'dataSource/getPageDataSourceById'
@@ -475,7 +503,7 @@ export class PreviousActionDataProviderType extends DataProviderType {
 
     const previousActions = this.app.store.getters[
       'workflowAction/getElementPreviousWorkflowActions'
-    ](page, applicationContext.element.id, applicationContext.workflowAction.id)
+    ](page, applicationContext.element.id, applicationContext.workflowAction)
 
     const previousActionSchema = _.chain(previousActions)
       // Retrieve the associated schema for each action
@@ -546,9 +574,12 @@ export class UserDataProviderType extends DataProviderType {
 
   getDataContent(applicationContext) {
     return {
-      is_authenticated:
-        this.app.store.getters['userSourceUser/isAuthenticated'],
-      ...this.app.store.getters['userSourceUser/getUser'],
+      is_authenticated: this.app.store.getters[
+        'userSourceUser/isAuthenticated'
+      ](applicationContext.builder),
+      ...this.app.store.getters['userSourceUser/getUser'](
+        applicationContext.builder
+      ),
     }
   }
 
@@ -556,10 +587,22 @@ export class UserDataProviderType extends DataProviderType {
     return {
       type: 'object',
       properties: {
-        is_authenticated: { title: 'isAuthenticated', type: 'boolean' },
-        id: { type: 'number', title: 'id' },
-        email: { type: 'string', title: 'email' },
-        username: { type: 'string', title: 'username' },
+        is_authenticated: {
+          title: this.app.i18n.t('userDataProviderType.isAuthenticated'),
+          type: 'boolean',
+        },
+        id: {
+          type: 'number',
+          title: this.app.i18n.t('userDataProviderType.id'),
+        },
+        email: {
+          type: 'string',
+          title: this.app.i18n.t('userDataProviderType.email'),
+        },
+        username: {
+          type: 'string',
+          title: this.app.i18n.t('userDataProviderType.username'),
+        },
       },
     }
   }

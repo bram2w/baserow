@@ -4,6 +4,7 @@ from .views import (
     GridViewFieldAggregationsView,
     GridViewFieldAggregationView,
     GridViewView,
+    PublicGridViewFieldAggregationsView,
     PublicGridViewRowsView,
 )
 
@@ -19,6 +20,11 @@ urlpatterns = [
         r"(?P<view_id>[0-9]+)/aggregations/$",
         GridViewFieldAggregationsView.as_view(),
         name="field-aggregations",
+    ),
+    re_path(
+        r"(?P<slug>[-\w]+)/public/aggregations/$",
+        PublicGridViewFieldAggregationsView.as_view(),
+        name="public-field-aggregations",
     ),
     re_path(r"(?P<view_id>[0-9]+)/$", GridViewView.as_view(), name="list"),
     re_path(

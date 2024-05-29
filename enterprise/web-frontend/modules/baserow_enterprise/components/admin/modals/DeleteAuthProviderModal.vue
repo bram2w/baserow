@@ -15,14 +15,15 @@
             <a @click="$emit('cancel')">{{ $t('action.cancel') }}</a>
           </li>
         </ul>
-        <button
-          class="button button--error"
-          :class="{ 'button--loading': loading }"
+
+        <Button
+          type="danger"
           :disabled="loading"
+          :loading="loading"
           @click="deleteProvider"
         >
-          {{ $t('action.delete') }}
-        </button>
+          {{ $t('action.delete') }}</Button
+        >
       </div>
     </div>
   </Modal>

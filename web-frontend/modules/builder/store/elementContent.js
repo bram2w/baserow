@@ -54,7 +54,6 @@ const actions = {
 
     const serviceType = this.app.$registry.get('service', dataSource.type)
 
-    const previousContent = [...getters.getElementContent(element)]
     commit('SET_LOADING', { element, value: true })
 
     try {
@@ -103,17 +102,18 @@ const actions = {
         })
       }
     } catch (e) {
-      commit('SET_CONTENT', { element, value: previousContent, range })
-      commit('SET_HAS_MORE_PAGE', {
-        element,
-        value: false,
-      })
+      // If fetching the content failed, and we're trying to
+      // replace the element's content, then we'll clear the
+      // element instead of reverting to our previousContent
+      // as it could be out of date anyway.
+      if (replace) {
+        commit('CLEAR_CONTENT', { element })
+      }
       throw e
     } finally {
       commit('SET_LOADING', { element, value: false })
     }
   },
-
   clearElementContent({ commit }, { element }) {
     commit('CLEAR_CONTENT', { element })
   },

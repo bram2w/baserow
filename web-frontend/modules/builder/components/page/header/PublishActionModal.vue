@@ -63,16 +63,14 @@
         :status="jobHumanReadableState"
       />
       <div class="align-right">
-        <button
-          class="button button--large"
-          :class="{
-            'button--loading': jobIsRunning || loading,
-          }"
+        <Button
+          size="large"
+          :loading="jobIsRunning || loading"
           :disabled="loading || jobIsRunning || !selectedDomain"
           @click="publishSite()"
         >
           {{ $t('publishActionModal.publish') }}
-        </button>
+        </Button>
       </div>
     </div>
   </Modal>

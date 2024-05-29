@@ -71,6 +71,9 @@ export default (client) => {
           values
         )
       },
+      createInitialWorkspace(values) {
+        return client.post('/workspaces/create-initial-workspace/', values)
+      },
     }
   )
 }

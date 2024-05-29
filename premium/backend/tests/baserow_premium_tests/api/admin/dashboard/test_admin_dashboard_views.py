@@ -16,12 +16,16 @@ from baserow.core.models import UserLogEntry
 @override_settings(DEBUG=True)
 def test_admin_dashboard(api_client, premium_data_fixture):
     with freeze_time("2020-01-01 00:01"):
-        normal_user, normal_token = premium_data_fixture.create_user_and_token(
+        normal_user = premium_data_fixture.create_user(
             is_staff=False, has_active_premium_license=True
         )
-        admin_user, admin_token = premium_data_fixture.create_user_and_token(
+        admin_user = premium_data_fixture.create_user(
             is_staff=True, has_active_premium_license=True
         )
+
+    with freeze_time("2020-01-01 00:01"):
+        normal_token = premium_data_fixture.generate_token(user=normal_user)
+        admin_token = premium_data_fixture.generate_token(user=admin_user)
 
         premium_data_fixture.create_database_application(user=normal_user)
         UserLogEntry.objects.create(actor=admin_user, action="SIGNED_IN")

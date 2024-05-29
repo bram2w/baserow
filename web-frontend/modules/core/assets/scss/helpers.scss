@@ -1,7 +1,13 @@
-.clearfix::after {
-  clear: both;
-  content: '';
-  display: table;
+%clearfix {
+  &::after {
+    clear: both;
+    content: '';
+    display: table;
+  }
+}
+
+.clearfix {
+  @extend %clearfix;
 }
 
 .hidden {
@@ -151,11 +157,11 @@
 }
 
 .remove-number-input-controls {
-  -moz-appearance: textfield !important;
+  appearance: textfield !important;
 
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
+    appearance: none;
     margin: 0;
   }
 }
@@ -166,9 +172,17 @@
   gap: var(--gap, 10px);
 }
 
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
 .flex-100 {
   width: 100%;
   flex-basis: 100%;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
 }
 
 .align-items-center {

@@ -1,21 +1,21 @@
 <template>
-  <ul v-auto-overflow-scroll class="select__items select__items--no-max-height">
-    <li
-      v-for="{ element, indented } in elementsAndChildren"
+  <ul
+    v-auto-overflow-scroll
+    class="elements-list__items elements-list__items--no-max-height"
+  >
+    <ElementsListItem
+      v-for="element in filteredElements"
       :key="element.id"
-      :class="{
-        'select__item--selected': element.id === elementSelectedId,
-        'select__item--indented': indented,
-      }"
-      class="select__item"
-    >
-      <ElementsListItem :element="element" @click="$emit('select', element)" />
-    </li>
+      :element="element"
+      :filtered-search-elements="filteredSearchElements"
+      @select="$emit('select', $event)"
+    />
   </ul>
 </template>
 
 <script>
 import ElementsListItem from '@baserow/modules/builder/components/elements/ElementsListItem'
+
 export default {
   name: 'ElementsList',
   components: { ElementsListItem },
@@ -25,34 +25,27 @@ export default {
       type: Array,
       required: true,
     },
-    elementSelected: {
-      type: Object,
+    filteredSearchElements: {
+      type: Array,
       required: false,
-      default: null,
+      default: () => [],
     },
   },
   computed: {
-    elementSelectedId() {
-      return this.elementSelected ? this.elementSelected.id : null
-    },
-    elementsAndChildren() {
-      return this.elements.reduce((acc, element) => {
-        acc.push({ element, indented: false })
-
-        const children = this.getChildren(element)
-        if (children.length) {
-          acc.push(
-            ...children.map((child) => ({ element: child, indented: true }))
-          )
-        }
-
-        return acc
-      }, [])
-    },
-  },
-  methods: {
-    getChildren(element) {
-      return this.$store.getters['element/getChildren'](this.page, element)
+    /**
+     * Responsible for returning elements to display in `ElementsListItem`.
+     * If we've been given an array of `filteredSearchElements`, we'll filter
+     * the elements to only include those that match the `id` of the element.
+     * If `filteredSearchElements` is empty, then we show all `elements`.
+     */
+    filteredElements() {
+      if (this.filteredSearchElements.length === 0) {
+        return this.elements
+      } else {
+        return this.elements.filter((element) => {
+          return this.filteredSearchElements.includes(element.id)
+        })
+      }
     },
   },
 }

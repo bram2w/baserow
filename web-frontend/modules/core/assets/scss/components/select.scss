@@ -1,5 +1,5 @@
 .select {
-  @extend .context;
+  @extend %context;
 
   max-width: 360px;
   display: flex;
@@ -21,7 +21,7 @@
   position: relative;
   border-bottom: 1px solid $palette-neutral-200;
 
-  @include flex-align-items();
+  @include flex-align-items;
 }
 
 .select__search-input {
@@ -113,8 +113,9 @@
 
 .select__item {
   position: relative;
-  margin: 0 4px 3px 4px;
+  margin: 0 4px 3px;
   user-select: none;
+
   @include rounded($rounded);
 
   &:last-child {
@@ -254,7 +255,7 @@
 .select__footer {
   flex: 0 0;
   border-top: 1px solid $palette-neutral-200;
-  padding: 4px 4px 0 4px;
+  padding: 4px 4px 0;
 }
 
 .select__footer-button {
@@ -295,6 +296,7 @@
   min-width: 0;
   line-height: 26px;
   font-size: 13px;
+
   @include rounded($rounded);
   @include flex-align-items(4px);
 

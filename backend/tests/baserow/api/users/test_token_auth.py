@@ -14,9 +14,11 @@ from rest_framework.status import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from baserow.core.models import BlacklistedToken, UserLogEntry
+from baserow.core.handler import CoreHandler
+from baserow.core.models import BlacklistedToken, Settings, UserLogEntry
 from baserow.core.registries import Plugin, plugin_registry
 from baserow.core.user.handler import UserHandler
+from baserow.core.user.utils import generate_session_tokens_for_user
 from baserow.core.utils import generate_hash
 
 User = get_user_model()
@@ -198,6 +200,65 @@ def test_token_auth(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_token_auth_email_verification_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_EMAIL_VERIFICATION_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_token_auth_email_verification_not_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.RECOMMENDED
+    settings.save()
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "access_token" in response_json
+
+
+@pytest.mark.django_db
+def test_token_auth_email_verification_not_required_staff(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(
+        email="test@example.com", password="password", is_staff=True
+    )
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "access_token" in response_json
+
+
+@pytest.mark.django_db
 def test_token_password_auth_disabled(api_client, data_fixture):
     data_fixture.create_password_provider(enabled=False)
     user, token = data_fixture.create_user_and_token(
@@ -341,6 +402,144 @@ def test_refresh_token_is_invalidated_after_password_change(api_client, data_fix
 
 
 @pytest.mark.django_db
+def test_refresh_token_email_verification_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is not possible any more
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_EMAIL_VERIFICATION_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_refresh_token_email_verification_not_enforced(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.RECOMMENDED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_refresh_token_email_verification_not_required(api_client, data_fixture):
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    # the auth claim will not be set to password authentication
+    tokens = generate_session_tokens_for_user(
+        user, include_refresh_token=True, verified_email_claim=None
+    )
+    refresh_token = tokens["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_refresh_token_email_verification_not_required_staff(api_client, data_fixture):
+    user = data_fixture.create_user(
+        email="test@example.com", password="password", is_staff=True
+    )
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_token_verify(api_client, data_fixture):
     class TmpPlugin(Plugin):
         type = "tmp_plugin"
@@ -385,6 +584,109 @@ def test_token_verify(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_token_verify_email_verification_required(api_client, data_fixture):
+    data_fixture.create_password_provider()
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is not possible any more
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_EMAIL_VERIFICATION_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_token_verify_email_verification_not_required(api_client, data_fixture):
+    user = data_fixture.create_user(email="test@example.com", password="password")
+
+    # obtain refresh token
+    # the auth claim will not be set to password authentication
+    tokens = generate_session_tokens_for_user(
+        user, include_refresh_token=True, verified_email_claim=None
+    )
+    refresh_token = tokens["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_token_verify_email_verification_not_required_staff(api_client, data_fixture):
+    user = data_fixture.create_user(
+        email="test@example.com", password="password", is_staff=True
+    )
+
+    # obtain refresh token
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@example.com", "password": "password"},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    refresh_token = response_json["refresh_token"]
+
+    # change email verification setting
+    settings = CoreHandler().get_settings()
+    settings.email_verification = Settings.EmailVerificationOptions.ENFORCED
+    settings.save()
+
+    profile = user.profile
+    profile.email_verified = False
+    profile.save()
+
+    # using the refresh token is possible
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token},
+        format="json",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_verify_token_is_invalidated_after_password_change(api_client, data_fixture):
     with freeze_time("2020-01-01 12:00"):
         user = data_fixture.create_user(
@@ -423,57 +725,49 @@ def test_token_blacklist(api_client, data_fixture):
         email="test@test.nl", password="password", first_name="Test1"
     )
 
-    with freeze_time("2020-01-01 12:00"):
-        refresh_token = str(RefreshToken.for_user(user))
+    response = api_client.post(
+        reverse("api:user:token_blacklist"),
+        {"refresh_token": "INVALID_TOKEN"},
+        format="json",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
-        response = api_client.post(
-            reverse("api:user:token_blacklist"),
-            {"refresh_token": "INVALID_TOKEN"},
-            format="json",
-        )
-        assert response.status_code == HTTP_401_UNAUTHORIZED
+    response = api_client.post(
+        reverse("api:user:token_blacklist"),
+        {},
+        format="json",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
-        response = api_client.post(
-            reverse("api:user:token_blacklist"),
-            {},
-            format="json",
-        )
-        assert response.status_code == HTTP_400_BAD_REQUEST
+    refresh_token = RefreshToken.for_user(user)
+    refresh_token_str = str(RefreshToken.for_user(user))
 
-        # response = api_client.post(
-        #     reverse("api:user:token_refresh"),
-        #     {"refresh_token": refresh_token},
-        #     format="json",
-        # )
-        # assert response.status_code == HTTP_200_OK
-        # response_json = response.json()
-        # access_token = response_json["access_token"]
+    response = api_client.post(
+        reverse("api:user:token_blacklist"),
+        {"refresh_token": refresh_token_str},
+        format="json",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
 
-        response = api_client.post(
-            reverse("api:user:token_blacklist"),
-            {"refresh_token": refresh_token},
-            format="json",
-        )
-        assert response.status_code == HTTP_204_NO_CONTENT
+    token = BlacklistedToken.objects.all().first()
 
-        token = BlacklistedToken.objects.all().first()
-        assert token.hashed_token == generate_hash(refresh_token)
-        assert token.expires_at == datetime(2020, 1, 8, 12, 00, tzinfo=timezone.utc)
+    assert refresh_token.payload["exp"] == token.expires_at.timestamp()
+    assert token.hashed_token == generate_hash(refresh_token_str)
 
-        response = api_client.post(
-            reverse("api:user:token_refresh"),
-            {"token": refresh_token},
-            format="json",
-        )
-        response_json = response.json()
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+    response = api_client.post(
+        reverse("api:user:token_refresh"),
+        {"token": refresh_token_str},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
 
-        response = api_client.post(
-            reverse("api:user:token_verify"),
-            {"refresh_token": refresh_token},
-            format="json",
-        )
-        response_json = response.json()
-        assert response.status_code == HTTP_401_UNAUTHORIZED
-        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+    response = api_client.post(
+        reverse("api:user:token_verify"),
+        {"refresh_token": refresh_token_str},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"

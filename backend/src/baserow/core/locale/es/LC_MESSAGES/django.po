@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-18 13:32+0000\n"
-"PO-Revision-Date: 2024-03-27 13:01+0000\n"
+"PO-Revision-Date: 2024-04-23 18:07+0000\n"
 "Last-Translator: gallegonovato <fran-carro@hotmail.es>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/baserow/"
 "backend-core/es/>\n"
@@ -422,7 +422,7 @@ msgid ""
 "Trash for application \"%(application_name)s\" (%(application_id)s) has been "
 "emptied"
 msgstr ""
-"La papelera para la aplicación \"%(application_name)s\" (%(application_id)s) "
+"La basura para la aplicación \"%(application_name)s\" (%(application_id)s) "
 "ha sido vaciada"
 
 #: src/baserow/core/trash/actions.py:79
@@ -436,7 +436,7 @@ msgstr ""
 
 #: src/baserow/core/trash/actions.py:90
 msgid "Restore from trash"
-msgstr "Restaurar desde la basura"
+msgstr "Restaurar desde la papelera"
 
 #: src/baserow/core/trash/actions.py:91
 #, python-format

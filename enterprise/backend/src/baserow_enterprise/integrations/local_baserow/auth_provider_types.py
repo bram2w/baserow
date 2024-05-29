@@ -172,6 +172,37 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
 
         return bool(auth_provider.password_field_id)
 
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ) -> Any:
+        """
+        Map password field id.
+        """
+
+        if (
+            prop_name == "password_field_id"
+            and value
+            and "database_fields" in id_mapping
+        ):
+            return id_mapping["database_fields"][value]
+
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
     def authenticate(
         self,
         auth_provider: AuthProviderModelSubClass,
@@ -189,7 +220,7 @@ class LocalBaserowPasswordAppAuthProviderType(AppAuthProviderType):
         password_field = auth_provider.password_field
         encoded_password = getattr(user.original_user, password_field.db_column)
 
-        if check_password(password, encoded_password):
+        if encoded_password and check_password(password, encoded_password):
             return user
         else:
             raise exceptions.AuthenticationFailed(

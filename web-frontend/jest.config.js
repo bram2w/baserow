@@ -6,6 +6,7 @@ module.exports = {
   testMatch: ['<rootDir>/test/unit/**/*.spec.js'],
   moduleFileExtensions: ['js', 'json', 'vue'],
   moduleNameMapper: {
+    '^@baserow/(.*).(scss|sass)$': '<rootDir>/test/helpers/scss.js',
     '^@baserow/(.*)$': '<rootDir>/$1',
     '^@baserow_test_cases/(.*)$': path.join(__dirname, '../tests/cases/$1'),
     '^@/(.*)$': '<rootDir>/$1',
@@ -15,7 +16,8 @@ module.exports = {
   transform: {
     '^.+\\.js$': 'babel-jest',
     '^.+\\.vue$': '@vue/vue2-jest',
-    '^.+\\.svg$': '<rootDir>/test/helpers/stubSvgTransformer.js',
+    '^.+\\.(gif|ico|jpg|jpeg|png|svg)$':
+      '<rootDir>/test/helpers/stubFileTransformer.js',
   },
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],

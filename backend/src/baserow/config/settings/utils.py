@@ -3,6 +3,7 @@ import traceback
 from typing import Any, Callable, List, NamedTuple, Optional, Union
 
 from celery.schedules import crontab
+from loguru import logger
 
 
 def setup_dev_e2e(*args, **kwargs):
@@ -32,6 +33,8 @@ def setup_dev_e2e_users_and_instance_id(User, args, kwargs):
 
     from baserow.core.models import Settings
 
+    password = "testpassword"  # nosec B105
+
     if Settings.objects.get().instance_id != "1":
         from baserow.core.user.handler import UserHandler
 
@@ -41,11 +44,14 @@ def setup_dev_e2e_users_and_instance_id(User, args, kwargs):
         for email in ["dev@baserow.io", "e2e@baserow.io"]:
             uname = email.split("@")[0]
             try:
-                user = user_handler.create_user(f"staff-{uname}", email, "testpassword")
+                user = user_handler.create_user(f"staff-{uname}", email, password)
             except UserAlreadyExist:
                 user = User.objects.get(email=email)
             user.is_staff = True
             user.save()
+            logger.info(
+                f"\033[93mCreated staff user: {user.email} with password: {password}\033[0m"
+            )
 
         Settings.objects.update(instance_id="1")
 

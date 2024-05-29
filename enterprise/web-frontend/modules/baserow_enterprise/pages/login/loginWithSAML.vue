@@ -43,14 +43,15 @@
         </FormElement>
       </form>
       <div class="auth__actions">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--full-width"
+        <Button
+          full-width
+          size="large"
           :disabled="loading"
+          :loading="loading"
           @click="login"
         >
-          {{ $t('loginWithSaml.continueWithSaml') }}
-        </button>
+          {{ $t('loginWithSaml.continueWithSaml') }}</Button
+        >
       </div>
       <div>
         <ul class="auth__action-links">

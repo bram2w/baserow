@@ -1,0 +1,67 @@
+.button-floating {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  padding: 12px;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid $palette-neutral-400;
+  background: $white;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+
+  @include rounded($rounded-3xl);
+  @include elevation($elevation-low);
+
+  &:hover:not(.button-floating--loading):not([disabled]) {
+    background: $palette-neutral-25;
+    color: $palette-blue-600;
+    text-decoration: none;
+  }
+
+  &:active:not(.button-floating--loading):not([disabled]) {
+    background: $palette-neutral-50;
+    color: $palette-blue-700;
+    box-shadow: none;
+  }
+
+  &[disabled]:not(.button-floating--loading) {
+    cursor: not-allowed;
+    background: $palette-neutral-100 !important;
+    color: $palette-neutral-700;
+
+    @include elevation($elevation-low);
+  }
+}
+
+.button-floating--small {
+  width: 32px;
+  height: 32px;
+}
+
+.button-floating--fixed {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.button-floating--loading {
+  position: relative;
+  cursor: wait;
+  user-select: none;
+  box-shadow: none;
+
+  @include loading-spinner($palette-neutral-700);
+}
+
+.button-floating__icon {
+  font-size: 16px;
+}
+
+.button-floating--secondary {
+  border: 1px solid $palette-neutral-200;
+
+  @include elevation($elevation-medium);
+}

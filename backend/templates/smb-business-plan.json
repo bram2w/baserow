@@ -13,9 +13,7 @@
         "strategy"
     ],
     "categories": [
-        "Local Business",
-        "Professional",
-        "Startup"
+        "Business Strategy"
     ],
     "export": [
         {
@@ -288,7 +286,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  count(field(\"Competitors\")) < 1, \n  \"\", \n  concat( \n    \"\ud83e\udd38 \", \n    count(field(\"Competitors\")) \n  ) \n)",
+                            "formula": "if( \n  count(field(\"Competitors\")) < 1, \n  \"\", \n  concat( \n    \"🤸 \", \n    count(field(\"Competitors\")) \n  ) \n)",
                             "formula_type": "text"
                         },
                         {
@@ -746,7 +744,7 @@
                                     "id": 126053,
                                     "field_id": 838103,
                                     "name": "",
-                                    "description": "Please enter the average number of days your business will be operating\u00a0each month.",
+                                    "description": "Please enter the average number of days your business will be operating each month.",
                                     "enabled": true,
                                     "required": true,
                                     "order": 4,
@@ -1045,7 +1043,7 @@
                             "updated_on": "2023-01-18T15:20:37.811826+00:00",
                             "field_837984": "BSRW Barbershop",
                             "field_837985": 383510,
-                            "field_837986": "At BSRW Barbershop, we believe in the timeless benefits of a well-executed haircut, a close and comfortable shave, and a relaxing massage. In the lounge, customers can relax while waiting for their turn; barbers look sharp in neat\u00a0shirts and denim aprons; and freshly brewed coffee is provided free of charge.\n\nThe salon's upscale d\u00e9cor is ideal for a gentleman's day at the spa. Customers are greeted with the comforting scent of freshly brewed coffee, and they can choose between cocktails and coffee at the bar.",
+                            "field_837986": "At BSRW Barbershop, we believe in the timeless benefits of a well-executed haircut, a close and comfortable shave, and a relaxing massage. In the lounge, customers can relax while waiting for their turn; barbers look sharp in neat shirts and denim aprons; and freshly brewed coffee is provided free of charge.\n\nThe salon's upscale décor is ideal for a gentleman's day at the spa. Customers are greeted with the comforting scent of freshly brewed coffee, and they can choose between cocktails and coffee at the bar.",
                             "field_838091": "true",
                             "field_838092": "CA79839",
                             "field_838093": "true",
@@ -6496,7 +6494,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "concat( \n  \"\ud83d\udece \", \n  floor( \n    divide( \n      multiply( \n        sum( \n          lookup(\"Market\", \"Population\") \n        ), \n        divide( \n          field(\"Estimated turnout (%)\"), \n          100 \n        ) \n      ), \n      lookup(\"Business\", \"Avg days per month\") \n    ) \n  ) \n)",
+                            "formula": "concat( \n  \"🛎 \", \n  floor( \n    divide( \n      multiply( \n        sum( \n          lookup(\"Market\", \"Population\") \n        ), \n        divide( \n          field(\"Estimated turnout (%)\"), \n          100 \n        ) \n      ), \n      lookup(\"Business\", \"Avg days per month\") \n    ) \n  ) \n)",
                             "formula_type": "array"
                         },
                         {
@@ -7393,7 +7391,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  or( \n    isblank(field(\"Capital cost\")), \n    isblank(field(\"Avg monthly profit\")) \n  ), \n  \"\", \n  concat( \n    \"\ud83d\udcb5 \", \n    ceil( \n      multiply( \n        divide( \n          tonumber(field(\"Avg monthly profit\")), \n          tonumber(field(\"Capital cost\")) \n        ), \n        100\n      ) \n    ), \n    \"%\"\n  ) \n)",
+                            "formula": "if( \n  or( \n    isblank(field(\"Capital cost\")), \n    isblank(field(\"Avg monthly profit\")) \n  ), \n  \"\", \n  concat( \n    \"💵 \", \n    ceil( \n      multiply( \n        divide( \n          tonumber(field(\"Avg monthly profit\")), \n          tonumber(field(\"Capital cost\")) \n        ), \n        100\n      ) \n    ), \n    \"%\"\n  ) \n)",
                             "formula_type": "text"
                         },
                         {
@@ -7503,7 +7501,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "if( \n  or( \n    isblank(field(\"Capital cost\")), \n    isblank(field(\"Avg monthly profit\")) \n  ), \n  \"\", \n  concat( \n    \"\ud83d\udcb0 \", \n    round( \n      divide( \n        tonumber(field(\"Capital cost\")), \n        multiply( \n          tonumber(field(\"Avg monthly profit\")), \n          12 \n        ) \n      ), \n      2 \n    ), \n    \" year(s)\"\n  ) \n)",
+                            "formula": "if( \n  or( \n    isblank(field(\"Capital cost\")), \n    isblank(field(\"Avg monthly profit\")) \n  ), \n  \"\", \n  concat( \n    \"💰 \", \n    round( \n      divide( \n        tonumber(field(\"Capital cost\")), \n        multiply( \n          tonumber(field(\"Avg monthly profit\")), \n          12 \n        ) \n      ), \n      2 \n    ), \n    \" year(s)\"\n  ) \n)",
                             "formula_type": "text"
                         }
                     ],

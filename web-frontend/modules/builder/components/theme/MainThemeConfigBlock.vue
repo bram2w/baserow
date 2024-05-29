@@ -5,17 +5,17 @@
       :value="builder.theme[colorPickerPropertyName] || '#000000ff'"
       @input="colorPickerColorChanged"
     ></ColorPickerContext>
-    <div class="theme_settings__section margin-bottom-3">
-      <div class="theme_settings__section-properties">
+    <div class="theme-settings__section margin-bottom-3">
+      <div class="theme-settings__section-properties">
         <a
-          class="theme_settings__section-title"
+          class="theme-settings__section-title"
           @click="toggleClosed('colors')"
         >
           {{ $t('mainThemeConfigBlock.colorsLabel') }}
           <i
-            class="iconoir-nav-arrow-down theme_settings__section-title-icon"
+            class="iconoir-nav-arrow-down theme-settings__section-title-icon"
             :class="{
-              'theme_settings__section-title-icon': true,
+              'theme-settings__section-title-icon': true,
               'iconoir-nav-arrow-down': !isClosed('colors'),
               'iconoir-nav-arrow-right': isClosed('colors'),
             }"
@@ -38,17 +38,17 @@
       </div>
     </div>
     <div>
-      <div class="theme_settings__section">
-        <div class="theme_settings__section-properties">
+      <div class="theme-settings__section">
+        <div class="theme-settings__section-properties">
           <a
-            class="theme_settings__section-title"
+            class="theme-settings__section-title"
             @click="toggleClosed('typography')"
           >
             {{ $t('mainThemeConfigBlock.typography') }}
             <i
-              class="iconoir-nav-arrow-down theme_settings__section-title-icon"
+              class="iconoir-nav-arrow-down theme-settings__section-title-icon"
               :class="{
-                'theme_settings__section-title-icon': true,
+                'theme-settings__section-title-icon': true,
                 'iconoir-nav-arrow-down': !isClosed('typography'),
                 'iconoir-nav-arrow-right': isClosed('typography'),
               }"
@@ -60,9 +60,9 @@
         v-for="i in headings"
         v-show="!isClosed('typography')"
         :key="i"
-        class="theme_settings__section"
+        class="theme-settings__section"
       >
-        <div class="theme_settings__section-properties">
+        <div class="theme-settings__section-properties">
           <div class="control">
             <div class="control__label">
               {{ $t('mainThemeConfigBlock.headingLabel', { i }) }}
@@ -72,7 +72,7 @@
                 :value="builder.theme[`heading_${i}_color`]"
                 @input="setPropertyInStore(`heading_${i}_color`, $event)"
               />
-              <div class="input__with-icon">
+              <div class="input__with-icon margin-left-2">
                 <input
                   type="number"
                   class="input remove-number-input-controls"
@@ -105,14 +105,14 @@
             </div>
           </div>
         </div>
-        <div class="theme_settings__section-preview">
+        <div class="theme-settings__section-preview">
           <component
             :is="`h${i}`"
-            class="margin-bottom-2 theme_settings__section-ellipsis"
+            class="margin-bottom-2 theme-settings__section-ellipsis"
             :class="`ab-heading--h${i}`"
             :style="{
-              [`--heading-h${i}--color`]: builder.theme[`heading_${i}_color`],
-              [`--heading-h${i}--font-size`]:
+              [`--heading-h${i}-color`]: builder.theme[`heading_${i}_color`],
+              [`--heading-h${i}-font-size`]:
                 builder.theme[`heading_${i}_font_size`] + 'px',
             }"
           >

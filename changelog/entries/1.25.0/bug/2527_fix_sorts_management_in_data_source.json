@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix sorts management in data source",
+    "issue_number": 2527,
+    "bullet_points": [],
+    "created_at": "2024-04-15"
+}

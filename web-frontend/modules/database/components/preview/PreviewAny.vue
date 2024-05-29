@@ -20,18 +20,15 @@
         {{ $t('previewAny.externalWarning') }}
       </div>
       <div class="preview__select-buttons">
-        <button
+        <Button
           v-for="(preview, index) in compatibleTypes"
           :key="preview.getType()"
-          class="button button--ghost"
+          type="secondary"
+          :icon="preview.isExternal() ? 'iconoir-lock-open' : ''"
           @click.prevent.stop="selectedPreview = index"
         >
-          <i
-            v-if="preview.isExternal()"
-            class="button__icon iconoir-lock-open"
-          ></i>
           {{ preview.getName() }}
-        </button>
+        </Button>
       </div>
     </div>
     <slot v-else name="fallback" />

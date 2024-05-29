@@ -43,6 +43,7 @@ def test_notification_creation_on_creating_row_comment_mention(
     message = premium_data_fixture.create_comment_message_with_mentions([user_2])
 
     with freeze_time("2020-01-01 12:00"):
+        token_1 = premium_data_fixture.generate_token(user_1)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -133,6 +134,7 @@ def test_notify_only_new_mentions_when_updating_a_comment(
     )
 
     with freeze_time("2020-01-01 12:00"):
+        token_1 = premium_data_fixture.generate_token(user_1)
         response = api_client.patch(
             reverse(
                 "api:premium:row_comments:item",
@@ -159,6 +161,7 @@ def test_notify_only_new_mentions_when_updating_a_comment(
     )
 
     # the user can see the notification in the list of notifications
+    token_1 = premium_data_fixture.generate_token(user_1)
     response = api_client.get(
         reverse("api:notifications:list", kwargs={"workspace_id": workspace.id}),
         HTTP_AUTHORIZATION=f"JWT {token_1}",
@@ -220,6 +223,7 @@ def test_email_notifications_are_created_correctly(
     message = premium_data_fixture.create_comment_message_with_mentions([user_2])
 
     with freeze_time("2020-01-01 12:00"):
+        token_1 = premium_data_fixture.generate_token(user_1)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -311,6 +315,7 @@ def test_user_receive_notification_if_subscribed_for_comments_on_a_row(
     )
 
     def post_comment():
+        token = premium_data_fixture.generate_token(commenter)
         response = api_client.post(
             reverse(
                 "api:premium:row_comments:list",
@@ -318,7 +323,7 @@ def test_user_receive_notification_if_subscribed_for_comments_on_a_row(
             ),
             {"message": message},
             format="json",
-            HTTP_AUTHORIZATION=f"JWT {commenter_token}",
+            HTTP_AUTHORIZATION=f"JWT {token}",
         )
         assert response.status_code == HTTP_200_OK
 

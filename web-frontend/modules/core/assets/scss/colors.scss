@@ -190,3 +190,62 @@ $color-cyan-100: $palette-cyan-100 !default;
 $color-cyan-200: $palette-cyan-200 !default;
 $color-cyan-300: $palette-cyan-300 !default;
 $color-cyan-400: $palette-cyan-400 !default;
+
+$colors: (
+  'light-blue': $color-primary-100,
+  'light-green': $color-success-100,
+  'light-cyan': $color-cyan-100,
+  'light-orange': $color-warning-100,
+  'light-yellow': $color-yellow-100,
+  'light-red': $color-error-100,
+  'light-brown': $color-brown-100,
+  'light-purple': $color-purple-100,
+  'light-pink': $color-pink-100,
+  'light-gray': $color-neutral-100,
+
+  'blue': $color-primary-200,
+  'green': $color-success-200,
+  'cyan': $color-cyan-200,
+  'orange': $color-warning-200,
+  'yellow': $color-yellow-200,
+  'red': $color-error-200,
+  'brown': $color-brown-200,
+  'purple': $color-purple-200,
+  'pink': $color-pink-200,
+  'gray': $color-neutral-200,
+
+  'dark-blue': $color-primary-300,
+  'dark-green': $color-success-300,
+  'dark-cyan': $color-cyan-300,
+  'dark-orange': $color-warning-300,
+  'dark-yellow': $color-yellow-300,
+  'dark-red': $color-error-300,
+  'dark-brown': $color-brown-300,
+  'dark-purple': $color-purple-300,
+  'dark-pink': $color-pink-300,
+  'dark-gray': $color-neutral-300,
+
+  'darker-blue': $color-primary-400,
+  'darker-green': $color-success-400,
+  'darker-cyan': $color-cyan-400,
+  'darker-orange': $color-warning-400,
+  'darker-yellow': $color-yellow-400,
+  'darker-red': $color-error-400,
+  'darker-brown': $color-brown-400,
+  'darker-purple': $color-purple-400,
+  'darker-pink': $color-pink-400,
+  'darker-gray': $color-neutral-400,
+
+  'deep-dark-green': $color-success-500,
+  'deep-dark-orange': $color-warning-500,
+);
+
+/* stylelint-disable */
+// Allows using the color values in Javascript modules, e.g:
+//    import styles from '~/modules/core/assets/scss/colors.scss'
+//    const color = styles["darker-gray"]
+:export {
+  @each $color, $value in $colors {
+    #{unquote($color)}: $value;
+  }
+}

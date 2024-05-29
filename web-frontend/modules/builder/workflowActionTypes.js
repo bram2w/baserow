@@ -2,8 +2,11 @@ import { WorkflowActionType } from '@baserow/modules/core/workflowActionTypes'
 import NotificationWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/NotificationWorkflowActionForm.vue'
 import OpenPageWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/OpenPageWorkflowActionForm'
 import CreateRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/CreateRowWorkflowAction.vue'
+import RefreshDataSourceWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/RefreshDataSourceWorkflowActionForm.vue'
 import UpdateRowWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/UpdateRowWorkflowAction.vue'
+
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export class NotificationWorkflowActionType extends WorkflowActionType {
@@ -45,24 +48,28 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
   }
 
   execute({
-    workflowAction: { url },
+    workflowAction,
     applicationContext: { builder, mode },
     resolveFormula,
   }) {
-    let urlParsed = ensureString(resolveFormula(url))
+    const url = resolveElementUrl(workflowAction, builder, resolveFormula, mode)
 
-    if (urlParsed.startsWith('/')) {
-      if (mode === 'preview') {
-        urlParsed = `/builder/${builder.id}/preview${urlParsed}`
+    if (mode === 'editing' || !url) {
+      return
+    }
+    if (workflowAction.target !== 'blank') {
+      if (!url.startsWith('/')) {
+        window.location.href = url
+      } else {
+        this.app.router.push(url)
       }
-      return this.app.router.push(urlParsed)
+    } else {
+      window.open(
+        url,
+        '_blank',
+        !url.startsWith('/') ? 'noopener,noreferrer' : ''
+      )
     }
-
-    if (!urlParsed.startsWith('http')) {
-      urlParsed = `https://${urlParsed}`
-    }
-
-    window.location.replace(urlParsed)
   }
 
   getDataSchema(applicationContext, workflowAction) {
@@ -83,8 +90,61 @@ export class LogoutWorkflowActionType extends WorkflowActionType {
     return this.app.i18n.t('workflowActionTypes.logoutLabel')
   }
 
-  execute() {
-    return this.app.store.dispatch('userSourceUser/logoff')
+  execute({ applicationContext }) {
+    return this.app.store.dispatch('userSourceUser/logoff', {
+      application: applicationContext.builder,
+    })
+  }
+
+  getDataSchema(applicationContext, workflowAction) {
+    return null
+  }
+}
+
+export class RefreshDataSourceWorkflowActionType extends WorkflowActionType {
+  static getType() {
+    return 'refresh_data_source'
+  }
+
+  get form() {
+    return RefreshDataSourceWorkflowActionForm
+  }
+
+  get label() {
+    return this.app.i18n.t('workflowActionTypes.refreshDataSourceLabel')
+  }
+
+  async execute({ workflowAction, applicationContext }) {
+    applicationContext.page.elements
+      .filter((element) => {
+        // Only refresh elements that use the data source
+        return element.data_source_id === workflowAction.data_source_id
+      })
+      .map(async (element) => {
+        await this.app.store.dispatch(
+          'elementContent/triggerElementContentReset',
+          { element }
+        )
+      })
+
+    const dispatchContext = DataProviderType.getAllDataSourceDispatchContext(
+      this.app.$registry.getAll('builderDataProvider'),
+      { ...applicationContext }
+    )
+
+    await this.app.store.dispatch(
+      'dataSourceContent/fetchPageDataSourceContentById',
+      {
+        page: applicationContext.page,
+        dataSourceId: workflowAction.data_source_id,
+        dispatchContext,
+        replace: true,
+      }
+    )
+  }
+
+  getDataSchema(workflowAction) {
+    return null
   }
 }
 

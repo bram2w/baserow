@@ -1,28 +1,21 @@
 import os
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
-from django.db import connections
+from django.db import connections, transaction
+from django.test import override_settings
 
 import pytest
+import responses
 from freezegun import freeze_time
 from itsdangerous.exc import BadSignature, SignatureExpired
+from responses import json_params_matcher
 
 from baserow.contrib.database.fields.models import SelectOption
-from baserow.contrib.database.models import (
-    BooleanField,
-    Database,
-    DateField,
-    GridView,
-    LongTextField,
-    Table,
-    TextField,
-)
-from baserow.contrib.database.views.models import GridViewFieldOptions
+from baserow.contrib.database.models import Database, Table
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     WorkspaceInvitationDoesNotExist,
@@ -33,7 +26,9 @@ from baserow.core.models import BlacklistedToken, UserLogEntry, Workspace, Works
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     DisabledSignupError,
+    EmailAlreadyVerified,
     InvalidPassword,
+    InvalidVerificationToken,
     PasswordDoesNotMatchValidation,
     RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
@@ -100,51 +95,11 @@ def test_create_user(data_fixture):
         assert user.email == "test@test.nl"
         assert user.username == "test@test.nl"
         assert user.profile.language == "en"
+        assert user.profile.completed_onboarding is False
 
-        assert Workspace.objects.all().count() == 1
-        workspace = Workspace.objects.all().first()
-        assert workspace.users.filter(id=user.id).count() == 1
-        assert workspace.name == "Test1's workspace"
+        assert Workspace.objects.all().count() == 0
 
-        assert Database.objects.all().count() == 1
-        assert Table.objects.all().count() == 2
-        assert GridView.objects.all().count() == 2
-        assert TextField.objects.all().count() == 3
-        assert LongTextField.objects.all().count() == 1
-        assert BooleanField.objects.all().count() == 2
-        assert DateField.objects.all().count() == 1
-        assert GridViewFieldOptions.objects.all().count() == 3
-
-        tables = Table.objects.all().order_by("id")
-
-        model_1 = tables[0].get_model()
-        model_1_results = model_1.objects.all()
-        assert len(model_1_results) == 5
-        assert model_1_results[0].order == Decimal("1.00000000000000000000")
-        assert model_1_results[1].order == Decimal("2.00000000000000000000")
-        assert model_1_results[2].order == Decimal("3.00000000000000000000")
-        assert model_1_results[3].order == Decimal("4.00000000000000000000")
-        assert model_1_results[4].order == Decimal("5.00000000000000000000")
-
-        model_2 = tables[1].get_model()
-        model_2_results = model_2.objects.all()
-        assert len(model_2_results) == 4
-        assert model_2_results[0].order == Decimal("1.00000000000000000000")
-        assert model_2_results[1].order == Decimal("2.00000000000000000000")
-        assert model_2_results[2].order == Decimal("3.00000000000000000000")
-        assert model_2_results[3].order == Decimal("4.00000000000000000000")
-
-        plugin_mock.user_created.assert_called_with(user, workspace, None, None)
-
-        # Test profile properties
-        user2 = user_handler.create_user(
-            "Test2", "test2@test.nl", "password", language="fr"
-        )
-        assert user2.profile.language == "fr"
-        assert (
-            Workspace.objects.filter(users__in=[user2.id])[0].name
-            == "Projet de « Test2 »"
-        )
+        plugin_mock.user_created.assert_called_with(user, None, None, None)
 
         with pytest.raises(UserAlreadyExist):
             user_handler.create_user("Test1", "test@test.nl", valid_password)
@@ -256,6 +211,8 @@ def test_create_user_with_invitation(data_fixture):
             workspace_invitation_token=signer.dumps(invitation.id),
         )
 
+        assert user.profile.completed_onboarding is True
+
         assert Workspace.objects.all().count() == 1
         assert Workspace.objects.all().first().id == invitation.workspace_id
         assert WorkspaceUser.objects.all().count() == 2
@@ -281,16 +238,42 @@ def test_create_user_with_template(data_fixture):
     template = data_fixture.create_template(slug="example-template")
     user_handler = UserHandler()
     valid_password = "thisIsAValidPassword"
-    user_handler.create_user(
+    user = user_handler.create_user(
         "Test1", "test0@test.nl", valid_password, template=template
     )
 
+    assert user.profile.completed_onboarding is True
     assert Workspace.objects.all().count() == 2
+    workspace = Workspace.objects.filter(users__in=[user.id]).first()
+    assert workspace.users.filter(id=user.id).count() == 1
+    assert workspace.name == "Test1's workspace"
+
     assert WorkspaceUser.objects.all().count() == 1
     # We expect the example template to be installed
     assert Database.objects.all().count() == 1
     assert Database.objects.all().first().name == "Event marketing"
     assert Table.objects.all().count() == 2
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+@pytest.mark.django_db
+def test_create_user_with_template_different_language(data_fixture):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR, "../../../tests/templates"
+    )
+    template = data_fixture.create_template(slug="example-template")
+    user_handler = UserHandler()
+    valid_password = "thisIsAValidPassword"
+    user = user_handler.create_user(
+        "Test1", "test0@test.nl", valid_password, template=template, language="fr"
+    )
+
+    assert Workspace.objects.all().count() == 2
+    workspace = Workspace.objects.filter(users__in=[user.id]).first()
+    assert workspace.users.filter(id=user.id).count() == 1
+    assert workspace.name == "Projet de « Test1 »"
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates
 
@@ -694,3 +677,164 @@ def test_user_handler_delete_user_log_entries_older_than(data_fixture):
     UserHandler().delete_user_log_entries_older_than(cutoff)
 
     assert UserLogEntry.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_create_email_verification_token(data_fixture):
+    user = data_fixture.create_user()
+    user2 = data_fixture.create_user()
+    user2.email = user.email
+
+    with freeze_time("2023-05-05"):
+        signer = UserHandler()._get_email_verification_signer()
+        token = UserHandler().create_email_verification_token(user)
+        token_data = signer.loads(token)
+        assert token_data["user_id"] == user.id
+        assert token_data["email"] == user.email
+        assert token_data["expires_at"] == "2023-05-06T00:00:00+00:00"
+
+        token2 = UserHandler().create_email_verification_token(user2)
+        token_data2 = signer.loads(token2)
+        assert token_data2["user_id"] == user2.id
+        assert token_data2["email"] == user2.email
+        assert token_data2["expires_at"] == "2023-05-06T00:00:00+00:00"
+
+        assert token != token2
+
+
+@pytest.mark.django_db
+def test_verify_email_address(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    assert user.profile.email_verified is False
+
+    UserHandler().verify_email_address(token)
+
+    user.refresh_from_db()
+    assert user.profile.email_verified is True
+
+
+@pytest.mark.django_db
+def test_verify_email_address_expired(data_fixture):
+    user = data_fixture.create_user()
+
+    with freeze_time("2023-05-05"):
+        token = UserHandler().create_email_verification_token(user)
+
+    with freeze_time("2023-05-07"), pytest.raises(InvalidVerificationToken):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db
+def test_verify_email_address_user_doesnt_exist(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    user.delete()
+
+    with pytest.raises(InvalidVerificationToken):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db
+def test_verify_email_address_user_different_email(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    user.email = "newemail@example.com"
+    user.save()
+
+    with pytest.raises(InvalidVerificationToken):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db
+def test_verify_email_address_already_verified(data_fixture):
+    user = data_fixture.create_user()
+    token = UserHandler().create_email_verification_token(user)
+    profile = user.profile
+    profile.email_verified = True
+    profile.save()
+
+    with pytest.raises(EmailAlreadyVerified):
+        UserHandler().verify_email_address(token)
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(BASEROW_EMBEDDED_SHARE_HOSTNAME="http://test/")
+def test_send_email_pending_verification(data_fixture, mailoutbox):
+    user = data_fixture.create_user()
+
+    with transaction.atomic():
+        UserHandler().send_email_pending_verification(user)
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+
+    assert email.subject == "Please confirm email"
+    assert user.email in email.to
+
+    html_body = email.alternatives[0][0]
+    f"http://test/auth/verify-email/" in html_body
+
+
+@pytest.mark.django_db
+def test_send_email_pending_verification_already_verified(data_fixture):
+    user = data_fixture.create_user()
+    profile = user.profile
+    profile.email_verified = True
+    profile.save()
+
+    with pytest.raises(EmailAlreadyVerified):
+        UserHandler().send_email_pending_verification(user)
+
+
+@pytest.mark.django_db
+@patch("baserow.core.user.handler.share_onboarding_details_with_baserow")
+def test_start_share_onboarding_details_with_baserow(mock_task, data_fixture):
+    user = data_fixture.create_user()
+
+    UserHandler().start_share_onboarding_details_with_baserow(
+        user, "Marketing", "CEO", "11 - 50", "The Netherlands"
+    )
+
+    mock_task.delay.assert_called_with(
+        email=user.email,
+        team="Marketing",
+        role="CEO",
+        size="11 - 50",
+        country="The Netherlands",
+    )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@responses.activate
+def test_share_onboarding_details_with_baserow_valid_response(data_fixture):
+    data_fixture.update_settings(instance_id="1")
+
+    response1 = responses.add(
+        responses.POST,
+        "http://baserow-saas-backend:8000/api/saas/onboarding/additional-details/",
+        status=204,
+        match=[
+            json_params_matcher(
+                {
+                    "email": "test@test.nl",
+                    "team": "Marketing",
+                    "role": "CEO",
+                    "size": "11 - 50",
+                    "country": "The Netherlands",
+                    "instance_id": "1",
+                }
+            )
+        ],
+    )
+
+    UserHandler().share_onboarding_details_with_baserow(
+        email="test@test.nl",
+        team="Marketing",
+        role="CEO",
+        size="11 - 50",
+        country="The Netherlands",
+    )
+
+    assert response1.call_count == 1

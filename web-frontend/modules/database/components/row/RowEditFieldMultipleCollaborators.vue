@@ -27,15 +27,12 @@
         </template>
       </li>
     </ul>
-    <a
-      v-if="!readOnly"
-      ref="dropdownLink"
-      class="add"
-      @click.prevent="toggleDropdown()"
+    <span v-if="!readOnly" ref="dropdownLink">
+      <ButtonText icon="iconoir-plus" @click.prevent="toggleDropdown()">
+        {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
+      </ButtonText></span
     >
-      <i class="iconoir-plus add__icon"></i>
-      {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
-    </a>
+
     <FieldCollaboratorDropdown
       v-if="!readOnly"
       ref="dropdown"

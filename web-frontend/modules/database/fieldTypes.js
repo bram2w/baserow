@@ -1,10 +1,11 @@
 import BigNumber from 'bignumber.js'
 import {
+  DURATION_FORMATS,
   formatDurationValue,
+  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
+  MIN_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
   parseDurationValue,
   roundDurationValueToFormat,
-  DURATION_FORMATS,
-  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
 } from '@baserow/modules/database/utils/duration'
 import {
   collatedStringCompare,
@@ -567,7 +568,7 @@ export class FieldType extends Registerable {
    * @returns a sample for this field.
    */
   getDocsFieldResponseExample(
-    { id, table_id: tableId, name, order, type, primary },
+    { id, table_id: tableId, name, order, type, primary, description },
     readOnly
   ) {
     return {
@@ -578,6 +579,7 @@ export class FieldType extends Registerable {
       type,
       primary,
       read_only: readOnly,
+      description: description || 'A sample description',
     }
   }
 
@@ -2411,9 +2413,12 @@ export class DurationFieldType extends FieldType {
 
     if (totalSecs === null) {
       return this.app.i18n.t('fieldErrors.invalidDuration', {
-        durationFormat: field.duration_format,
+        durationFormat: this.getDocsRequestExample(field),
       })
-    } else if (totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS) {
+    } else if (
+      totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS ||
+      totalSecs < MIN_BACKEND_DURATION_VALUE_NUMBER_OF_SECS
+    ) {
       return this.app.i18n.t('fieldErrors.overflowDuration')
     }
     return null
@@ -2550,6 +2555,10 @@ export class URLFieldType extends FieldType {
   getCanGroupByInView(field) {
     return true
   }
+
+  getCanImport() {
+    return true
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -2605,7 +2614,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getValidationError(field, value) {
-    if (value === null || value === '') {
+    if (value === null || value === '' || value === undefined) {
       return null
     }
     if (value.length > 254) {
@@ -3589,6 +3598,14 @@ export class FormulaFieldType extends FieldType {
 
   getFormComponent() {
     return FieldFormulaSubForm
+  }
+
+  /**
+   * Can optionally return additional components that are rendered directly below
+   * the field form formula input.
+   */
+  getAdditionalFormInputComponents() {
+    return []
   }
 
   getIsReadOnly() {

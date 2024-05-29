@@ -16,15 +16,10 @@ export class EnterprisePlugin extends BaserowPlugin {
   }
 
   getSidebarWorkspaceComponents(workspace) {
-    const supportEnabled = this.app.$hasFeature(
-      EnterpriseFeatures.SUPPORT,
-      workspace.id
-    )
-    const sidebarItems = []
-    if (supportEnabled) {
-      sidebarItems.push(ChatwootSupportSidebarWorkspace)
-    }
-    sidebarItems.push(AuditLogSidebarWorkspace)
+    const sidebarItems = [
+      ChatwootSupportSidebarWorkspace,
+      AuditLogSidebarWorkspace,
+    ]
     return sidebarItems
   }
 
@@ -84,5 +79,14 @@ export class EnterprisePlugin extends BaserowPlugin {
 
   getLogoComponentOrder() {
     return 100
+  }
+
+  /**
+   * This method can be used to hide certain features in `EnterpriseFeatures.vue`.
+   * If the array contains `[EnterpriseFeatures.RBAC]`, for example, then that entry
+   * will be hidden in the features.
+   */
+  getVisuallyHiddenFeatures() {
+    return []
   }
 }

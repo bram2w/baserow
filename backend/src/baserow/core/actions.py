@@ -538,7 +538,7 @@ class UpdateApplicationActionType(UndoableActionType):
         workspace_name: str
         application_type: str
         application_id: int
-        application_name: str
+        application_name: Optional[str]
         original_application_name: str
 
     @classmethod
@@ -572,7 +572,7 @@ class UpdateApplicationActionType(UndoableActionType):
                 workspace.name,
                 application_type.type,
                 application.id,
-                kwargs["name"],
+                kwargs.get("name", original_name),
                 original_name,
             )
             cls.register_action(
@@ -1102,6 +1102,35 @@ class LeaveWorkspaceActionType(ActionType):
             scope=cls.scope(),
             workspace=workspace,
         )
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class CreateInitialWorkspaceActionType(ActionType):
+    type = "create_initial_workspace"
+    description = ActionTypeDescription(
+        _("Create initial workspace"),
+        _("Initial workspace created"),
+    )
+    analytics_params = []
+
+    @dataclasses.dataclass
+    class Params:
+        pass
+
+    @classmethod
+    def do(cls, user: AbstractUser) -> WorkspaceUser:
+        workspace_user = CoreHandler().create_initial_workspace(user)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(),
+            scope=cls.scope(),
+            workspace=workspace_user.workspace,
+        )
+        return workspace_user
 
     @classmethod
     def scope(cls) -> ActionScopeStr:

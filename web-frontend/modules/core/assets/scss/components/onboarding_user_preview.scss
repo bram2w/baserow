@@ -1,0 +1,91 @@
+.onboarding-user-preview__container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @include absolute(0, 0, 0, 0);
+}
+
+.onboarding-user-preview__wrapper {
+  width: 302px;
+}
+
+.onboarding-user-preview {
+  position: relative;
+  padding-top: 28px;
+}
+
+.onboarding-user-preview__initials {
+  transform: translateX(-50%);
+  background-color: $palette-neutral-700;
+  border-radius: 50%;
+  color: $white;
+  font-weight: 600;
+  outline: solid 5px $palette-neutral-200;
+
+  @include center-text(56px, 18px);
+  @include absolute(0, auto, auto, 50%);
+
+  &--colored {
+    background-color: $palette-cyan-400;
+  }
+}
+
+.onboarding-user-preview__box {
+  background-color: $white;
+  overflow: hidden;
+
+  @include rounded($rounded-xl);
+  @include elevation($elevation-low);
+}
+
+.onboarding-user-preview__head {
+  padding: 48px 40px 28px;
+  background-color: $palette-neutral-25;
+}
+
+.onboarding-user-preview__name {
+  @extend %ellipsis;
+
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.onboarding-user-preview__role {
+  @extend %ellipsis;
+
+  position: relative;
+  text-align: center;
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.25;
+  height: 20px;
+  color: $palette-neutral-900;
+
+  &--empty::before {
+    @extend %empty;
+
+    left: 20px;
+    right: 20px;
+    border-radius: 20px;
+  }
+}
+
+.onboarding-user-preview__body {
+  padding: 24px 40px;
+}
+
+.onboarding-user-preview__team {
+  position: relative;
+  text-align: center;
+  height: 28px;
+
+  &--empty::before {
+    @extend %empty;
+
+    border-radius: 28px;
+  }
+}

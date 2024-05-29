@@ -5,7 +5,7 @@ ARG FROM_WEBFRONTEND_IMAGE=baserow_web-frontend
 FROM $FROM_BACKEND_IMAGE as backend_image_base
 # hadolint ignore=DL3006
 FROM $FROM_WEBFRONTEND_IMAGE as web_frontend_image_base
-FROM debian:bullseye-slim as base
+FROM debian:bookworm-slim as base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -19,7 +19,7 @@ ENV DOCKER_USER=${DOCKER_USER:-baserow_docker_user}
 ENV DATA_DIR=/baserow/data
 ENV BASEROW_PLUGIN_DIR=$DATA_DIR/plugins
 ENV POSTGRES_VERSION=15
-ENV NODE_MAJOR=18
+ENV NODE_MAJOR=21
 ENV POSTGRES_LOCATION=/etc/postgresql/15/main
 ENV BASEROW_IMAGE_TYPE="all-in-one"
 

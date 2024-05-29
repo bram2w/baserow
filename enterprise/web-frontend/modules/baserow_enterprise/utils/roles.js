@@ -11,7 +11,9 @@ export const filterRoles = (roles, { scopeType, subjectType }) => {
     ({
       allowed_scope_types: allowedScopeTypes,
       allowed_subject_types: allowedSubjectTypes,
+      isVisible,
     }) =>
+      isVisible &&
       (scopeType === undefined ||
         !Array.isArray(allowedScopeTypes) ||
         allowedScopeTypes.includes(scopeType)) &&

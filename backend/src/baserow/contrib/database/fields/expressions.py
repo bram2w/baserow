@@ -101,7 +101,7 @@ def json_extract_path(expr, path_to_value_in_jsonb_list, extract_as_text=True):
         expr,
         *path_to_value_in_jsonb_list,
         function="jsonb_extract_path_text" if extract_as_text else "jsonb_extract_path",
-        output_field=TextField()
+        output_field=TextField(),
     )
 
 

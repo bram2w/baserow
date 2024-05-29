@@ -349,7 +349,7 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters, rootGetters },
-    { kanban, field, values, readOnly = false }
+    { kanban, field, values, readOnly = false, undoRedoActionGroupId = null }
   ) {
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
@@ -366,6 +366,7 @@ export const actions = {
         await ViewService(this.$client).updateFieldOptions({
           viewId: kanbanId,
           values: updateValues,
+          undoRedoActionGroupId,
         })
       } catch (error) {
         commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {

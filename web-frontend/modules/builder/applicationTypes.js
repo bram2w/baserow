@@ -2,6 +2,8 @@ import { ApplicationType } from '@baserow/modules/core/applicationTypes'
 import BuilderForm from '@baserow/modules/builder/components/form/BuilderForm'
 import SidebarComponentBuilder from '@baserow/modules/builder/components/sidebar/SidebarComponentBuilder'
 import { populatePage } from '@baserow/modules/builder/store/page'
+import PageTemplate from '@baserow/modules/builder/components/page/PageTemplate'
+import PageTemplateSidebar from '@baserow/modules/builder/components/page/PageTemplateSidebar'
 
 export class BuilderApplicationType extends ApplicationType {
   static getType() {
@@ -32,6 +34,14 @@ export class BuilderApplicationType extends ApplicationType {
 
   getSidebarComponent() {
     return SidebarComponentBuilder
+  }
+
+  getTemplateSidebarComponent() {
+    return PageTemplateSidebar
+  }
+
+  getTemplatesPageComponent() {
+    return PageTemplate
   }
 
   populate(application) {
@@ -92,5 +102,9 @@ export class BuilderApplicationType extends ApplicationType {
       })
       return false
     }
+  }
+
+  prepareForStoreUpdate(application, data) {
+    return data
   }
 }

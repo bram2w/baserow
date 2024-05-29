@@ -1,0 +1,7 @@
+@mixin fill-radio($color) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16'  height='16' viewBox='001616' fill='none'%3E%3Crect width='16' height='16' rx='8' fill='#{hex-to-url($color)}' /%3E%3Ccircle cx='8' cy='8' r='3' fill='white'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  border: none;
+}

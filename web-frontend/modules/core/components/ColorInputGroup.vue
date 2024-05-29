@@ -1,10 +1,13 @@
 <template>
-  <FormGroup v-if="!labelAfter" :label="label">
+  <FormGroup v-if="!labelAfter" :label="label" :horizontal="horizontal">
     <ColorInput
       :value="value"
       :color-variables="colorVariables"
       @input="$emit('input', $event)"
     />
+    <template #after-input>
+      <slot name="after-input"></slot>
+    </template>
   </FormGroup>
   <div v-else class="control">
     <div class="control__elements">
@@ -12,6 +15,7 @@
         <ColorInput
           :value="value"
           :color-variables="colorVariables"
+          :horizontal="horizontal"
           @input="$emit('input', $event)"
         />
         <div class="color-input-group__label-after">
@@ -47,6 +51,11 @@ export default {
       type: Array,
       required: false,
       default: () => [],
+    },
+    horizontal: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

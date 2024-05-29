@@ -4,13 +4,13 @@ exports[`GalleryView component with decoration Default component with first_cell
 <div
   class="gallery-view"
 >
-  <a
-    class="gallery-view__add"
+  <button
+    class="button-floating button-floating--fixed button-floating--primary button-floating--regular"
   >
     <i
-      class="iconoir-plus"
+      class="button-floating__icon iconoir-plus"
     />
-  </a>
+  </button>
    
   <div
     class="gallery-view__scroll"
@@ -115,13 +115,13 @@ exports[`GalleryView component with decoration Default component with row wrappe
 <div
   class="gallery-view"
 >
-  <a
-    class="gallery-view__add"
+  <button
+    class="button-floating button-floating--fixed button-floating--primary button-floating--regular"
   >
     <i
-      class="iconoir-plus"
+      class="button-floating__icon iconoir-plus"
     />
-  </a>
+  </button>
    
   <div
     class="gallery-view__scroll"
@@ -149,13 +149,13 @@ exports[`GalleryView component with decoration Default component with unavailabl
 <div
   class="gallery-view"
 >
-  <a
-    class="gallery-view__add"
+  <button
+    class="button-floating button-floating--fixed button-floating--primary button-floating--regular"
   >
     <i
-      class="iconoir-plus"
+      class="button-floating__icon iconoir-plus"
     />
-  </a>
+  </button>
    
   <div
     class="gallery-view__scroll"

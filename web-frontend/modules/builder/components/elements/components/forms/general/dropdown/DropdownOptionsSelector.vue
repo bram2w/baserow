@@ -15,16 +15,15 @@
       @update="$emit('update', option, $event)"
       @delete="$emit('delete', option)"
     />
-    <Button
-      class="margin-top-1"
-      size="tiny"
-      type="link"
-      prepend-icon="baserow-icon-plus"
+    <ButtonText
+      type="secondary"
+      size="small"
+      icon="iconoir-plus"
       :loading="loading"
       @click="$emit('create')"
     >
       {{ $t('dropdownOptionSelector.addOption') }}
-    </Button>
+    </ButtonText>
   </FormGroup>
 </template>
 

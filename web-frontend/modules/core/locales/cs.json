@@ -1,6 +1,6 @@
 {
     "paginator": {
-        "page": "stránka",
+        "page": "Stránka",
         "of": "z {pages}"
     },
     "copied": {
@@ -9,39 +9,45 @@
     "sidebarApplication": {
         "renameApplication": "Přejmenovat {type}",
         "viewTrash": "Zobrazit koš",
-        "deleteApplication": "Smazat {type}"
+        "deleteApplication": "Smazat {type}",
+        "duplicate": "Duplikovat",
+        "delete": "Smazat",
+        "rename": "Přejmenovat",
+        "snapshots": "Snímky"
     },
     "sidebar": {
-        "createWorkspace": "Vytvořit skupinu",
+        "createWorkspace": "Vytvořit pracovní prostor",
         "inviteOthers": "Pozvat ostatní",
         "logoff": "Odhlásit",
-        "errorNoWorkspace": "Nemáte žádné skupiny.",
+        "errorNoWorkspace": "Nemáte žádné pracovní prostory.",
         "admin": "Administrace",
         "dashboard": "Nástěnka",
         "trash": "Koš",
-        "settings": "Nastavení"
+        "settings": "Nastavení",
+        "notifications": "Oznámení",
+        "members": "Členové"
     },
     "accountForm": {
         "nameLabel": "Vaše jméno",
         "languageLabel": "Jazyk prostředí"
     },
     "accountSettings": {
-        "title": "",
+        "title": "Účet",
         "changedTitle": "Změněno",
         "changedDescription": "Informace o vašem účtu byly změněny.",
-        "submitButton": "Změnit účet"
+        "submitButton": "Aktualizovat účet"
     },
     "settingsModal": {
         "title": "Nastavení"
     },
     "passwordSettings": {
-        "title": "Změna hesla",
+        "title": "Změnit heslo",
         "changedTitle": "Heslo změněno",
         "changedDescription": "Vaše heslo bylo změněno. Při příštím přihlášení použijte vaše nové heslo.",
         "oldPasswordLabel": "Staré heslo",
-        "oldPasswordRequiredError": "Staré heslo je povinné.",
+        "oldPasswordRequiredError": "Je vyžadováno staré heslo.",
         "newPasswordLabel": "Nové heslo",
-        "repeatNewPasswordLabel": "",
+        "repeatNewPasswordLabel": "Zopakujte nové heslo",
         "repeatNewPasswordMatchError": "Toto pole musí souhlasit s novým heslem.",
         "submitButton": "Změnit heslo",
         "errorInvalidOldPasswordTitle": "Neplatné heslo",
@@ -60,7 +66,7 @@
     },
     "field": {
         "language": "",
-        "emailAddress": "",
+        "emailAddress": "E-mailová adresa",
         "name": "",
         "password": "",
         "passwordRepeat": ""
@@ -316,5 +322,30 @@
                 }
             }
         }
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "Probíhá duplikace",
+        "duplicatedTitle": "Aplikace duplikována"
+    },
+    "InstallTemplateJobType": {
+        "installedTitle": "Šablona je nainstalována",
+        "installing": "Probíhá instalace"
+    },
+    "notificationPanel": {
+        "noNotificationTitle": "Nemáte žádná oznámení",
+        "markAllAsRead": "Označit vše jako přečtené",
+        "clearAll": "Vše vymazat",
+        "noNotification": "Budeme vás informovat o důležitých aktualizacích a vždy, když budete v Baserow zmíněn.",
+        "title": "Oznámení",
+        "newNotificationsAvailable": "Jsou k dispozici nová oznámení",
+        "refresh": "Obnovit"
+    },
+    "deleteAccountSettings": {
+        "description": "Odstranění účtu můžete naplánovat zadáním aktuálního hesla a kliknutím na tlačítko. Váš účet bude trvale odstraněn po {days} dnech. Pokud se mezitím znovu přihlásíte, bude proces odstranění vašeho účtu zrušen.",
+        "title": "Smazat účet"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Jste si jisti, že chcete vymazat všechna oznámení?",
+        "message": "Všechna oznámení budou nevratně smazána a nebude možné je znovu zobrazit."
     }
 }

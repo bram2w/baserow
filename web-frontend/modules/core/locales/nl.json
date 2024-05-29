@@ -295,7 +295,13 @@
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "Als deze instelling is ingeschakeld, wordt voor nieuwe gebruikers automatisch een werkruimte aangemaakt waarin ze een beheerder zijn, zodat ze voor de facturering als beheerder worden gerapporteerd. Om dit te voorkomen, schakelt u deze instelling uit en nieuw uitgenodigde gebruikers beginnen alleen met de rol waarmee ze zijn uitgenodigd.",
         "maintenance": "Onderhoud",
         "settingTrackWorkspaceUsage": "Werkruimte gebruik bijhouden",
-        "settingTrackWorkspaceUsageDescription": "Schakelt een nachtelijke taak in die het rij- en bestandsgebruik per werkruimte telt, weergegeven op de beheerpagina van de premium werkruimte."
+        "settingTrackWorkspaceUsageDescription": "Schakelt een nachtelijke taak in die het rij- en bestandsgebruik per werkruimte telt, weergegeven op de beheerpagina van de premium werkruimte.",
+        "userSettings": "Gebruiker",
+        "emailVerification": "E-mail verificatie",
+        "emailVerificationDescription": "Bepaalt of e-mailadressen moeten worden geverifieerd.",
+        "emailVerificationNoVerification": "Geen verificatie",
+        "emailVerificationRecommended": "Aanbevolen",
+        "emailVerificationEnforced": "Afgedwongen"
     },
     "copyingNotification": {
         "title": "Kopiëren...",
@@ -711,5 +717,72 @@
     },
     "workspaceSettingsModal": {
         "title": "Werkruimte-instellingen"
+    },
+    "selectAIModelForm": {
+        "AIModel": "AI-model",
+        "AIType": "AI-type"
+    },
+    "onboarding": {
+        "title": "Onboarding",
+        "creating": "Je eerste workspace maken",
+        "skip": "Voorlopig overslaan",
+        "failedSkip": "Onboarding overslaan",
+        "continue": "Ga verder",
+        "cancel": "Ik wil geen hulp bij het opzetten",
+        "failedTitle": "Er is iets misgegaan",
+        "failedDescription": "De onboarding is niet volledig voltooid, hoewel sommige onderdelen misschien wel zijn voltooid.",
+        "failedTryAgain": "Probeer het nog eens"
+    },
+    "inviteStep": {
+        "title": "Medewerkers uitnodigen",
+        "collaboratorsLabel": "Medewerkers",
+        "description": "Je kunt later altijd meer toevoegen."
+    },
+    "moreStep": {
+        "people": "Hoeveel mensen zitten er in je team?",
+        "share": "Ik wil dit graag delen met het Baserow team",
+        "title": "Vertel ons wat meer",
+        "roleOrJob": "Rol of functie...",
+        "country": "Land"
+    },
+    "dashboardVerifyEmail": {
+        "title": "Controleer je mailbox en klik op de link om je e-mail te verifiëren.",
+        "resendConfirmationEmail": "Bevestigingsmail opnieuw verzenden"
+    },
+    "verifyEmailAddress": {
+        "invalidToken": "Geen geldig bevestigingstoken.",
+        "emailMismatchWarning": "Houd er rekening mee dat het geverifieerde e-mailadres niet hoort bij de account die je momenteel gebruikt.",
+        "disabledPasswordProvider": "De wachtwoord authenticatie provider is uitgeschakeld.",
+        "confirmation": "Je e-mailadres is geverifieerd.",
+        "goToDashboard": "Ga naar het Dashboard"
+    },
+    "emailNotVerified": {
+        "title": "Verificatie per e-mail vereist",
+        "description": "Controleer je mailbox en klik op de link om te verifiëren. Na verificatie wordt je account geactiveerd.",
+        "resend": "Bevestigingsmail opnieuw verzenden"
+    },
+    "resendEmailVerification": {
+        "confirmationEmailSentTitle": "Bevestigings e-mail verzonden",
+        "confirmationEmailSentDescription": "De bevestigingsmail is verzonden."
+    },
+    "teamStep": {
+        "title": "Laten we samen je eerste workspace bouwen!",
+        "marketingTeam": "Marketing",
+        "salesAndAccountManagementTeam": "Verkoop & Account Management",
+        "description": "In welk team zit je?",
+        "engineeringTeam": "Engineering",
+        "productAndDesignTeam": "Product & Ontwerp",
+        "operationsTeam": "Activiteiten",
+        "hrAndLegalTeam": "HR & Juridisch",
+        "itAndSupportTeam": "IT & Ondersteuning",
+        "financeTeam": "Financiën",
+        "creativeProductionTeam": "Creatieve productie",
+        "otherPersonalTeam": "Anders / Persoonlijk",
+        "customerServiceTeam": "Klantenservice",
+        "manufacturingTeam": "Productie"
+    },
+    "workspaceStep": {
+        "title": "Creëer je workspace",
+        "workspaceLabel": "Workspace naam"
     }
 }

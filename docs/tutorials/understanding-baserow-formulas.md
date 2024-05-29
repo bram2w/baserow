@@ -142,8 +142,8 @@ important for you on our [community forum](https://community.baserow.io/).
 
 It is not currently possible to reference and use the following fields in a formula:
 
-* Link to table
-* File
-* Single select
-* Multiple select The ability to use these fields will be added in a future update.
-
+* Collaborators
+* Created by
+* Last modified by
+* Password
+* AI Prompt

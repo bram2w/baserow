@@ -32,24 +32,27 @@
                 @focussed="questionIndex = index"
               ></FormPageField>
               <div class="form-view__field-actions">
-                <a
+                <Button
                   v-if="
                     index < visibleFieldsWithoutHiddenViaQueryParam.length - 1
                   "
-                  class="button button--primary button--large"
+                  type="primary"
+                  size="large"
                   @click="validateAndNext(index)"
-                  >Next</a
+                  >Next</Button
                 >
-                <button
+
+                <Button
                   v-else-if="
                     index >= visibleFieldsWithoutHiddenViaQueryParam.length - 1
                   "
-                  class="button button--primary button--large"
-                  :class="{ 'button--loading': loading }"
+                  type="primary"
+                  size="large"
+                  :loading="loading"
                   :disabled="loading"
                 >
-                  {{ submitText }}
-                </button>
+                  {{ submitText }}</Button
+                >
               </div>
             </div>
           </div>

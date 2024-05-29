@@ -115,6 +115,7 @@ def test_list_rows(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=gallery.table.database.workspace)
+    gallery.table.database.workspace.has_template.cache_clear()
     url = reverse("api:database:views:gallery:list", kwargs={"view_id": gallery.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -815,6 +816,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
                 "text_default": "",
                 "type": "text",
                 "read_only": False,
+                "description": None,
             }
         ],
         "view": {

@@ -92,7 +92,7 @@
 }
 
 .element-preview__name {
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
   @include absolute(-26px, auto, auto, 5px);
   @include rounded($rounded);
 
@@ -117,6 +117,7 @@
   line-height: 20px;
   padding: 0 4px;
   white-space: nowrap;
+
   @include rounded($rounded);
 
   .element-preview--first-element & {
@@ -170,4 +171,8 @@
   position: absolute;
   top: 5px;
   right: 5px;
+}
+
+.repeat-element-preview {
+  opacity: 0.4;
 }

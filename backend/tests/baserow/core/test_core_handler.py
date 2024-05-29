@@ -1,17 +1,26 @@
 import os
+from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import OperationalError, transaction
+from django.test.utils import override_settings
 
 import pytest
 from itsdangerous.exc import BadSignature
 
 from baserow.contrib.database.application_types import DatabaseApplicationType
-from baserow.contrib.database.models import Database
+from baserow.contrib.database.fields.models import (
+    BooleanField,
+    DateField,
+    LongTextField,
+    TextField,
+)
+from baserow.contrib.database.models import Database, Table
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInWorkspace,
@@ -20,6 +29,7 @@ from baserow.core.exceptions import (
     DuplicateApplicationMaxLocksExceededException,
     IsNotAdminError,
     LastAdminOfWorkspace,
+    MaxNumberOfPendingWorkspaceInvitesReached,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserInvalidWorkspacePermissionsError,
@@ -43,7 +53,7 @@ from baserow.core.models import (
     WorkspaceUser,
 )
 from baserow.core.operations import ReadWorkspaceOperationType
-from baserow.core.registries import ImportExportConfig
+from baserow.core.registries import ImportExportConfig, plugin_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
@@ -692,6 +702,47 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
     assert invitation.permissions == "ADMIN"
     assert invitation.message == ""
     assert WorkspaceInvitation.objects.all().count() == 3
+
+
+@pytest.mark.django_db
+@patch("baserow.core.handler.CoreHandler.send_workspace_invitation_email")
+@override_settings(BASEROW_MAX_PENDING_WORKSPACE_INVITES=1)
+def test_create_workspace_invitation_max_pending(mock_send_email, data_fixture):
+    user_workspace = data_fixture.create_user_workspace()
+    user = user_workspace.user
+    workspace = user_workspace.workspace
+
+    handler = CoreHandler()
+
+    handler.create_workspace_invitation(
+        user=user,
+        workspace=workspace,
+        email="test@test.nl",
+        permissions="ADMIN",
+        message="Test",
+        base_url="http://localhost:3000/invite",
+    )
+
+    with pytest.raises(MaxNumberOfPendingWorkspaceInvitesReached):
+        handler.create_workspace_invitation(
+            user=user,
+            workspace=workspace,
+            email="test2@test.nl",
+            permissions="ADMIN",
+            message="Test",
+            base_url="http://localhost:3000/invite",
+        )
+
+    # This email address already exists, so it should just update the invite without
+    # failing.
+    handler.create_workspace_invitation(
+        user=user,
+        workspace=workspace,
+        email="test@test.nl",
+        permissions="MEMBER",
+        message="Test",
+        base_url="http://localhost:3000/invite",
+    )
 
 
 @pytest.mark.django_db
@@ -1437,3 +1488,47 @@ def test_get_user_email_mapping(data_fixture):
     assert mapping == {
         f"{user_in_workspace.email}": user_in_workspace,
     }
+
+
+@pytest.mark.django_db
+def test_create_initial_workspace(data_fixture):
+    plugin_mock = MagicMock()
+    with patch.dict(plugin_registry.registry, {"mock": plugin_mock}):
+        user = data_fixture.create_user(first_name="Test1")
+        workspace_user = CoreHandler().create_initial_workspace(user)
+
+        assert Workspace.objects.all().count() == 1
+        workspace = Workspace.objects.all().first()
+        assert workspace.users.filter(id=user.id).count() == 1
+        assert workspace.name == "Test1's workspace"
+        assert workspace.id == workspace_user.workspace_id
+
+        assert Database.objects.all().count() == 1
+        assert Table.objects.all().count() == 2
+        assert GridView.objects.all().count() == 2
+        assert TextField.objects.all().count() == 3
+        assert LongTextField.objects.all().count() == 1
+        assert BooleanField.objects.all().count() == 2
+        assert DateField.objects.all().count() == 1
+        assert GridViewFieldOptions.objects.all().count() == 3
+
+        tables = Table.objects.all().order_by("id")
+
+        model_1 = tables[0].get_model()
+        model_1_results = model_1.objects.all()
+        assert len(model_1_results) == 5
+        assert model_1_results[0].order == Decimal("1.00000000000000000000")
+        assert model_1_results[1].order == Decimal("2.00000000000000000000")
+        assert model_1_results[2].order == Decimal("3.00000000000000000000")
+        assert model_1_results[3].order == Decimal("4.00000000000000000000")
+        assert model_1_results[4].order == Decimal("5.00000000000000000000")
+
+        model_2 = tables[1].get_model()
+        model_2_results = model_2.objects.all()
+        assert len(model_2_results) == 4
+        assert model_2_results[0].order == Decimal("1.00000000000000000000")
+        assert model_2_results[1].order == Decimal("2.00000000000000000000")
+        assert model_2_results[2].order == Decimal("3.00000000000000000000")
+        assert model_2_results[3].order == Decimal("4.00000000000000000000")
+
+        plugin_mock.create_initial_workspace.assert_called_with(user, workspace)

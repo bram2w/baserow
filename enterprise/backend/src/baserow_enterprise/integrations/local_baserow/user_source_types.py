@@ -290,22 +290,33 @@ class LocalBaserowUserSourceType(UserSourceType):
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Dict[int, int]],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ) -> Any:
         """
         Map table, email_field and name_field ids.
         """
 
-        if prop_name == "table_id":
-            return id_mapping.get("database_tables", {}).get(value, value)
+        if prop_name == "table_id" and value and "database_tables" in id_mapping:
+            return id_mapping["database_tables"][value]
 
-        if prop_name == "email_field_id":
-            return id_mapping.get("database_fields", {}).get(value, value)
+        if prop_name == "email_field_id" and value and "database_fields" in id_mapping:
+            return id_mapping["database_fields"][value]
 
-        if prop_name == "name_field_id":
-            return id_mapping.get("database_fields", {}).get(value, value)
+        if prop_name == "name_field_id" and value and "database_fields" in id_mapping:
+            return id_mapping["database_fields"][value]
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def get_user_model(self, user_source):
         # Use table handler to exclude trashed table

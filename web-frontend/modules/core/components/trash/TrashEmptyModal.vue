@@ -22,14 +22,15 @@
           <a @click.prevent="hide()">{{ $t('action.cancel') }}</a>
         </li>
       </ul>
-      <a class="button button button--error" @click.prevent="emitEmptyAndClose">
+
+      <Button type="danger" @click.prevent="emitEmptyAndClose">
         <template v-if="selectedIsTrashed">{{
           $t('trashEmptyModal.buttonIsTrashed')
         }}</template>
         <template v-else>{{
           $t('trashEmptyModal.buttonIsNotTrashed')
-        }}</template>
-      </a>
+        }}</template></Button
+      >
     </div>
   </Modal>
 </template>

@@ -1,6 +1,6 @@
 .field-file__list {
   list-style: none;
-  margin: 0 0 20px 0;
+  margin: 0 0 20px;
   padding: 0;
 }
 
@@ -64,13 +64,13 @@
 }
 
 .field-file__actions {
-  flex: 0 0;
   display: flex;
   margin-left: 16px;
   text-align: right;
   padding-top: 6px;
   font-size: 13px;
   color: $color-success-500;
+  gap: 5px;
 }
 
 .field-file__action {

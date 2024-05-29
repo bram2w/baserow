@@ -40,7 +40,7 @@ class RoleType extends Registerable {
 }
 
 export class AdminRoleType extends RoleType {
-  getType() {
+  static getType() {
     return 'admin'
   }
 
@@ -60,7 +60,7 @@ export class AdminRoleType extends RoleType {
 }
 
 export class MemberRoleType extends RoleType {
-  getType() {
+  static getType() {
     return 'member'
   }
 

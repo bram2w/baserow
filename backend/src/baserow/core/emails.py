@@ -86,6 +86,22 @@ class BaseEmailMessage(EmailMultiAlternatives):
         transaction.on_commit(lambda: s.send(fail_silently))
 
 
+class EmailPendingVerificationEmail(BaseEmailMessage):
+    template_name = "baserow/core/user/email_pending_verification.html"
+
+    def __init__(self, confirm_url, *args, **kwargs):
+        self.confirm_url = confirm_url
+        super().__init__(*args, **kwargs)
+
+    def get_subject(self):
+        return _("Please confirm email")
+
+    def get_context(self):
+        context = super().get_context()
+        context.update(confirm_url=self.confirm_url)
+        return context
+
+
 class WorkspaceInvitationEmail(BaseEmailMessage):
     template_name = "baserow/core/workspace_invitation.html"
 

@@ -23,15 +23,20 @@
       </div>
       <div class="align-right">
         <Button
+          type="secondary"
           tag="a"
-          icon="iconoir-trash"
-          type="ghost"
+          icon="iconoir-bin"
           @click="remove(index)"
         ></Button>
       </div>
     </div>
     <div>
-      <Button tag="a" icon="iconoir-plus" type="ghost" @click="add"></Button>
+      <Button
+        type="secondary"
+        tag="a"
+        icon="iconoir-plus"
+        @click="add"
+      ></Button>
     </div>
     <div v-show="touched && !valid" class="error">
       {{ error }}

@@ -52,38 +52,31 @@
 @mixin absolute($top: null, $right: null, $bottom: null, $left: null) {
   position: absolute;
 
-  @if ($top != null and $right == null and $bottom == null and $left == null) {
-    top: $top;
-    right: $top;
-    bottom: $top;
-    left: $top;
+  @if $top != null and $right == null and $bottom == null and $left == null {
+    inset: $top $top $top $top;
   }
 
   /* stylelint-disable-next-line at-rule-no-unknown */
-  @else if
-    ($top != null and $right != null and $bottom == null and $left == null)
+  @else if $top != null and $right != null and $bottom == null and $left == null
   {
-    top: $top;
-    right: $right;
-    bottom: $top;
-    left: $right;
+    inset: $top $right $top $right;
   }
 
   /* stylelint-disable-next-line at-rule-no-unknown */
   @else {
-    @if $top != null {
+    @if $top {
       top: $top;
     }
 
-    @if $right != null {
+    @if $right {
       right: $right;
     }
 
-    @if $bottom != null {
+    @if $bottom {
       bottom: $bottom;
     }
 
-    @if $left != null {
+    @if $left {
       left: $left;
     }
   }

@@ -11,13 +11,13 @@
     >
       <template #default>
         <div class="col col-12 align-right">
-          <button
-            :class="{ 'button--loading': inviteLoading }"
-            class="button"
+          <Button
+            type="primary"
+            :loading="inviteLoading"
             :disabled="inviteLoading"
           >
             {{ $t('membersSettings.membersInviteModal.submit') }}
-          </button>
+          </Button>
         </div>
       </template>
       <template #roleSelectorLabel>
@@ -55,6 +55,7 @@ export default {
   methods: {
     async inviteSubmitted(values) {
       this.inviteLoading = true
+      this.hideError()
 
       try {
         // The public accept url is the page where the user can publicly navigate too,

@@ -780,7 +780,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
         {
-            f"field_{link_row_field.id}": {},
+            f"field_{link_row_field.id}": {"something": 42},
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -788,9 +788,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert (
-        response_json["detail"][f"field_{link_row_field.id}"][0]["code"] == "not_a_list"
-    )
+    assert response_json["detail"][f"field_{link_row_field.id}"][0]["code"] == "invalid"
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),
@@ -819,10 +817,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert (
-        response_json["detail"][f"field_{link_row_field.id}"]["0"][0]["code"]
-        == "invalid"
-    )
+    assert response_json["detail"][f"field_{link_row_field.id}"][0]["code"] == "invalid"
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": example_table.id}),

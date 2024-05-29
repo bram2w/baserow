@@ -12,7 +12,10 @@
       <div v-for="attribute in attributesValidated" :key="attribute">
         {{ item[attribute] }}
       </div>
-      <slot name="right-side" :item="item"></slot>
+
+      <div v-if="hasRightSlot" class="list__right-side">
+        <slot name="right-side" :item="item"></slot>
+      </div>
     </li>
   </ul>
 </template>
@@ -55,6 +58,9 @@ export default {
     },
     selectedItemsIds() {
       return this.selectedItems.map((item) => item.id)
+    },
+    hasRightSlot() {
+      return !!this.$scopedSlots['right-side']
     },
   },
   methods: {

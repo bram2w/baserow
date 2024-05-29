@@ -21,7 +21,7 @@ def log_action(
     action_command_type: ActionCommandType,
     action_uuid: str,
     workspace: Optional[Workspace] = None,
-    **kwargs
+    **kwargs,
 ):
     AuditLogHandler.log_action(
         user,
@@ -31,5 +31,5 @@ def log_action(
         action_command_type,
         action_uuid=action_uuid,
         workspace=workspace,
-        **kwargs
+        **kwargs,
     )

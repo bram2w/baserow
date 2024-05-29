@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.contrib.builder.elements.models import Element
+from baserow.contrib.builder.elements.models import Element, NavigationElementMixin
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import OrderableMixin
@@ -28,8 +28,7 @@ class BuilderWorkflowAction(
         on_delete=models.CASCADE,
     )
     event = models.CharField(
-        max_length=30,
-        choices=EventTypes.choices,
+        max_length=60,
         help_text="The event that triggers the execution",
     )
     page = models.ForeignKey(Page, on_delete=models.CASCADE)
@@ -64,12 +63,21 @@ class NotificationWorkflowAction(BuilderWorkflowAction):
     description = FormulaField(default="")
 
 
-class OpenPageWorkflowAction(BuilderWorkflowAction):
-    url = FormulaField(default="")
+class OpenPageWorkflowAction(BuilderWorkflowAction, NavigationElementMixin):
+    url = FormulaField(default="")  # TODO remove in the next release
 
 
 class LogoutWorkflowAction(BuilderWorkflowAction):
     pass
+
+
+class RefreshDataSourceWorkflowAction(BuilderWorkflowAction):
+    data_source = models.ForeignKey(
+        "builder.DataSource",
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="The data source we want to refresh for this action.",
+    )
 
 
 class BuilderWorkflowServiceAction(BuilderWorkflowAction):

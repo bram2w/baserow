@@ -20,7 +20,7 @@
   display: flex;
 }
 
-.grid-view-aggregation__generic__name {
+.grid-view-aggregation__generic-name {
   @extend %ellipsis;
 
   flex: 1;
@@ -28,11 +28,11 @@
   padding-right: 5px;
 }
 
-.grid-view-aggregation__generic__value {
+.grid-view-aggregation__generic-value {
   position: relative;
 }
 
-.grid-view-aggregation__generic__value--loading {
+.grid-view-aggregation__generic-value--loading {
   color: $color-neutral-200;
   min-width: 1em;
 

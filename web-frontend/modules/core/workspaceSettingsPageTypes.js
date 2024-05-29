@@ -40,6 +40,10 @@ export class WorkspaceSettingsPageType extends Registerable {
     return true
   }
 
+  getFeatureDeactivatedModal(workspace) {
+    return null
+  }
+
   getRoute() {
     throw new Error('The `getRoute` method must be set.')
   }

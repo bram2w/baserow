@@ -1,0 +1,36 @@
+.button-add {
+  cursor: pointer;
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  padding: 8px;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  gap: 8px;
+  flex-shrink: 0;
+  background: $palette-blue-100;
+  color: $palette-blue-500;
+  border: none;
+
+  @include rounded($rounded-md);
+
+  &:hover:not([disabled]) {
+    color: $palette-blue-700;
+    text-decoration: none;
+  }
+
+  &:active:not([disabled]) {
+    color: $palette-blue-900;
+  }
+
+  &[disabled] {
+    cursor: not-allowed;
+    background: $palette-neutral-100 !important;
+    color: $palette-neutral-700;
+  }
+}
+
+.button-add__icon {
+  font-size: 14px;
+}

@@ -12,7 +12,10 @@
     </label>
     <div
       class="control__elements"
-      :class="{ 'control__elements--small': small }"
+      :class="{
+        'control__elements--small': small,
+        'control__elements--flex': $slots['after-input'],
+      }"
     >
       <FormulaInputField
         :value="value"
@@ -21,8 +24,10 @@
         :data-providers="dataProviders"
         :data-explorer-loading="dataExplorerLoading"
         :application-context="applicationContext"
+        class="flex-grow-1"
         @input="$emit('input', $event)"
       />
+      <slot name="after-input"></slot>
       <p v-if="helpText">{{ helpText }}</p>
     </div>
   </FormElement>

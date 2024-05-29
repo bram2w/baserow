@@ -7,6 +7,15 @@
       ></a>
       <i class="control__label-icon" :class="field._.type.iconClass"></i>
       {{ field.name }}
+      <span v-if="field.description" class="margin-left-1">
+        <HelpIcon
+          :tooltip="descriptionText"
+          :tooltip-duration="3"
+          :tooltip-content-type="'html'"
+          :tooltip-content-classes="'tooltip__content--expandable'"
+          :icon="'info-empty'"
+        />
+      </span>
       <i
         v-if="!readOnly && canModifyFields"
         ref="contextLink"
@@ -110,6 +119,11 @@ export default {
       type: Boolean,
       required: false,
       default: () => true,
+    },
+  },
+  computed: {
+    descriptionText() {
+      return (this.field.description || '').replaceAll('\n', '<br/>')
     },
   },
   methods: {

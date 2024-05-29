@@ -60,6 +60,37 @@ export const ensureString = (value, { allowEmpty = true } = {}) => {
 }
 
 /**
+ * Ensure that the value is an array or try to convert it.
+ * Strings will be treated as comma separated values.
+ * Other data types will be transformed into a single element array.
+ *
+ * @param {*} value - The value to ensure as an array.
+ * @param {Boolean} allowEmpty - Whether we should throw an error if `value` is empty.
+ * @returns {any[]} The value as an array.
+ * @throws {Error} if !allowEmpty and `value` is empty.
+ */
+export const ensureArray = (value, { allowEmpty = true } = {}) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (Array.isArray(value) && !value.length)
+  ) {
+    if (!allowEmpty) {
+      throw new Error('A non empty value is required.')
+    }
+    return []
+  }
+  if (Array.isArray(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim())
+  }
+  return [value]
+}
+
+/**
  * Ensures that the value is a non-empty string or try to convert it.
  * @param {*} value - The value to ensure as a string, which can't be blank.
  * @returns {string} The value as a string

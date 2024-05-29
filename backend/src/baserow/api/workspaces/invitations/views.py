@@ -26,6 +26,7 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.workspaces.invitations.errors import (
     ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
     ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
+    ERROR_MAX_NUMBER_OF_PENDING_WORKSPACE_INVITES_REACHED,
 )
 from baserow.api.workspaces.serializers import WorkspaceUserWorkspaceSerializer
 from baserow.api.workspaces.users.errors import ERROR_GROUP_USER_ALREADY_EXISTS
@@ -39,6 +40,7 @@ from baserow.core.actions import (
 )
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
+    MaxNumberOfPendingWorkspaceInvitesReached,
     UserInvalidWorkspacePermissionsError,
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
@@ -155,6 +157,7 @@ class WorkspaceInvitationsView(APIView, SortableViewMixin, SearchableViewMixin):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_USER_INVALID_GROUP_PERMISSIONS",
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_MAX_NUMBER_OF_PENDING_WORKSPACE_INVITES_REACHED",
                 ]
             ),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
@@ -169,6 +172,7 @@ class WorkspaceInvitationsView(APIView, SortableViewMixin, SearchableViewMixin):
             UserInvalidWorkspacePermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS,
             WorkspaceUserAlreadyExists: ERROR_GROUP_USER_ALREADY_EXISTS,
             BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED,
+            MaxNumberOfPendingWorkspaceInvitesReached: ERROR_MAX_NUMBER_OF_PENDING_WORKSPACE_INVITES_REACHED,
         }
     )
     def post(self, request, data, workspace_id):

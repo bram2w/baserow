@@ -62,6 +62,7 @@
   z-index: 1;
   border-bottom: solid 2px $color-neutral-200;
   padding: 0 0 0 15px;
+
   @include flex-align-items(15px);
 }
 

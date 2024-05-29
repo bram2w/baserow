@@ -5,25 +5,23 @@
   margin-bottom: 2px;
 
   @include rounded($rounded);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 
   > div {
     @include rounded($rounded);
   }
 
   &:hover {
-    cursor: pointer;
-  }
-
-  &:not(.calendar-card--disabled):not(.calendar-card--dragging):hover {
-    cursor: pointer;
-    background-color: $color-neutral-100;
+    &:not(.calendar-card--disabled):not(.calendar-card--dragging) {
+      cursor: pointer;
+      background-color: $color-neutral-100;
+    }
   }
 }
 
 .calendar-card__content {
   display: flex;
-  margin: 0 8px 0 8px;
+  margin: 0 8px;
   gap: 6px;
   height: 24px;
 

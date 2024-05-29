@@ -58,7 +58,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 20px 20px 10px 20px;
+  padding: 20px 20px 10px;
 }
 
 .kanban-view__drag {
@@ -90,7 +90,6 @@
 
 .kanban-view__option {
   @extend %ellipsis;
-
   @include select-option-style(inline-block, false);
 }
 
@@ -159,27 +158,20 @@
 
   .kanban-view__stack--dragging & {
     // Must be kept in sync with the timeout of KanbanViewStack.vue::moved
-    transition-duration: 0.1s;
-    transition-timing-function: ease-out;
-    transition-property: transform;
-    transition-delay: 0s;
+    transition: transform 0.1s ease-out 0s;
   }
 
-  &:not(.kanban-view__stack-card--disabled):not(
-      .kanban-view__stack-card--dragging
-    ):hover {
-    cursor: pointer;
+  &:hover {
+    &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging) {
+      cursor: pointer;
 
-    @include add-elevation($elevation-medium);
+      @include elevation($elevation-medium);
+    }
   }
 }
 
 .kanban-view__stack-foot {
-  padding: 10px 20px 20px 20px;
-}
-
-.kanban-view__stack-new-button {
-  width: 100%;
+  padding: 10px 20px 20px;
 }
 
 .kanban-view__add-stack {
@@ -192,7 +184,7 @@
   height: 28px;
   justify-content: center;
 
-  @include flex-align-items();
+  @include flex-align-items;
 
   line-height: 26px;
 

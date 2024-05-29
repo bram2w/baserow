@@ -40,6 +40,7 @@ class CoreConfig(AppConfig):
         formula_runtime_function_registry.register(RuntimeAdd())
 
         from baserow.core.permission_manager import (
+            AllowIfTemplatePermissionManagerType,
             BasicPermissionManagerType,
             CorePermissionManagerType,
             StaffOnlyPermissionManagerType,
@@ -65,6 +66,9 @@ class CoreConfig(AppConfig):
         )
         permission_manager_type_registry.register(
             StaffOnlySettingOperationPermissionManagerType()
+        )
+        permission_manager_type_registry.register(
+            AllowIfTemplatePermissionManagerType()
         )
 
         from .object_scopes import (
@@ -173,6 +177,7 @@ class CoreConfig(AppConfig):
         from baserow.core.actions import (
             AcceptWorkspaceInvitationActionType,
             CreateApplicationActionType,
+            CreateInitialWorkspaceActionType,
             CreateWorkspaceActionType,
             CreateWorkspaceInvitationActionType,
             DeleteApplicationActionType,
@@ -205,6 +210,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(RejectWorkspaceInvitationActionType())
         action_type_registry.register(UpdateWorkspaceInvitationActionType())
         action_type_registry.register(LeaveWorkspaceActionType())
+        action_type_registry.register(CreateInitialWorkspaceActionType())
 
         from baserow.core.snapshots.actions import (
             CreateSnapshotActionType,
@@ -231,8 +237,10 @@ class CoreConfig(AppConfig):
             ResetUserPasswordActionType,
             ScheduleUserDeletionActionType,
             SendResetUserPasswordActionType,
+            SendVerifyEmailAddressActionType,
             SignInUserActionType,
             UpdateUserActionType,
+            VerifyEmailAddressActionType,
         )
 
         action_type_registry.register(CreateUserActionType())
@@ -243,6 +251,8 @@ class CoreConfig(AppConfig):
         action_type_registry.register(ChangeUserPasswordActionType())
         action_type_registry.register(SendResetUserPasswordActionType())
         action_type_registry.register(ResetUserPasswordActionType())
+        action_type_registry.register(SendVerifyEmailAddressActionType())
+        action_type_registry.register(VerifyEmailAddressActionType())
 
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,
@@ -385,6 +395,8 @@ class CoreConfig(AppConfig):
         if getattr(settings, "HEROKU_ENABLED", False):
             plugin_dir.register(HerokuExternalFileStorageConfiguredHealthCheck)
         plugin_dir.register(DefaultFileStorageHealthCheck)
+
+        import baserow.core.integrations.receivers  # noqa: F403, F401
 
 
 # noinspection PyPep8Naming

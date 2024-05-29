@@ -5,8 +5,7 @@
   border-right: 1px solid $color-neutral-200;
   position: relative;
   display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
+  flex-flow: column wrap;
   align-content: flex-start;
   padding: 8px;
 
@@ -61,7 +60,7 @@
   font-size: 16px;
 
   @include rounded($rounded);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 
   &:hover {
     text-decoration: none;

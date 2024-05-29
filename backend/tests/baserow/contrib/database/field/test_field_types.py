@@ -578,6 +578,8 @@ def test_human_readable_values(data_fixture):
         "formula_multipleselect": "",
         "lookup": "",
         "autonumber": "1",
+        "duration_rollup_sum": "0:00",
+        "duration_rollup_avg": "0:00",
     }
 
     for key, value in blank_expected.items():
@@ -605,7 +607,7 @@ def test_human_readable_values(data_fixture):
         "email": "test@example.com",
         "file": "a.txt, b.txt",
         "file_link_row": "name.txt, unnamed row 2",
-        "link_row": "linked_row_1, linked_row_2, unnamed row 3",
+        "link_row": "linked_row_1, linked_row_2, ",
         "long_text": "long_text",
         "negative_decimal": "-1.2",
         "negative_int": "-1",
@@ -633,6 +635,8 @@ def test_human_readable_values(data_fixture):
         "formula_multipleselect": "D, C, E",
         "lookup": "linked_row_1, linked_row_2, ",
         "autonumber": "2",
+        "duration_rollup_sum": "0:04",
+        "duration_rollup_avg": "0:02",
     }
 
     for key, value in expected.items():

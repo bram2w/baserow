@@ -32,28 +32,29 @@ export default {
   components: { PagePreview, PageHeader, PageSidePanels },
   provide() {
     return {
+      workspace: this.workspace,
       builder: this.builder,
       page: this.page,
       mode,
       formulaComponent: ApplicationBuilderFormulaInputGroup,
+      applicationContext: this.applicationContext,
     }
   },
   /**
-   * When the route isupdate we want to unselect the element
+   * When the route is updated we want to unselect the element
    */
   beforeRouteUpdate(to, from, next) {
     // Unselect previously selected element
-    this.$store.dispatch(
-      'element/select',
-      {
-        element: null,
-      },
-      { root: true }
-    )
+    this.$store.dispatch('element/select', {
+      element: null,
+    })
     if (from.params.builderId !== to.params?.builderId) {
       // When we switch from one application to another we want to logoff the current
       // user
-      this.$store.dispatch('userSourceUser/logoff')
+      const builder = this.$store.getters['application/get'](
+        from.params.builderId
+      )
+      this.$store.dispatch('userSourceUser/logoff', { application: builder })
     }
     next()
   },
@@ -64,14 +65,14 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch('page/unselect')
     // Unselect previously selected element
-    this.$store.dispatch(
-      'element/select',
-      {
-        element: null,
-      },
-      { root: true }
+    this.$store.dispatch('element/select', {
+      element: null,
+    })
+
+    const builder = this.$store.getters['application/get'](
+      from.params.builderId
     )
-    this.$store.dispatch('userSourceUser/logoff')
+    this.$store.dispatch('userSourceUser/logoff', { application: builder })
     next()
   },
   layout: 'app',
@@ -83,6 +84,14 @@ export default {
 
     try {
       const builder = await store.dispatch('application/selectById', builderId)
+      store.dispatch('userSourceUser/setCurrentApplication', {
+        application: builder,
+      })
+
+      const workspace = await store.dispatch(
+        'workspace/selectById',
+        builder.workspace.id
+      )
 
       const builderApplicationType = $registry.get(
         'application',
@@ -91,8 +100,6 @@ export default {
       await builderApplicationType.loadExtraData(builder)
 
       const page = store.getters['page/getById'](builder, pageId)
-
-      await store.dispatch('workspace/selectById', builder.workspace.id)
 
       await Promise.all([
         store.dispatch('dataSource/fetch', {
@@ -114,6 +121,7 @@ export default {
         pageId,
       })
 
+      data.workspace = workspace
       data.builder = builder
       data.page = page
     } catch (e) {

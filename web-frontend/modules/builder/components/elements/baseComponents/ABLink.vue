@@ -5,7 +5,11 @@
       'ab-button ab-button--medium': variant === 'button',
       'ab-button--full-width': variant === 'button' && fullWidth === true,
     }"
+    :target="`_${target}`"
+    :href="url"
+    :rel="isExternalLink ? 'noopener noreferrer' : null"
     v-on="$listeners"
+    @click="handleClick"
   >
     <slot></slot>
   </a>
@@ -18,6 +22,7 @@
 
 export default {
   name: 'ABLink',
+  inject: ['mode'],
   props: {
     /**
      * @type {string} - The variant of the link. Can be `link` (default) or `button`.
@@ -37,6 +42,41 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    /**
+     * @type {string} - The target of the link. Can be `self` (default) or `blank`.
+     */
+    target: {
+      type: String,
+      required: false,
+      default: 'self',
+      validator(value) {
+        return ['self', 'blank'].includes(value)
+      },
+    },
+    /**
+     * @type {string} - The URL of the link.
+     */
+    url: {
+      type: String,
+      required: true,
+    },
+  },
+  computed: {
+    isExternalLink() {
+      return !this.url.startsWith('/')
+    },
+  },
+  methods: {
+    handleClick(event) {
+      if (this.mode === 'editing' || !this.url) {
+        event.preventDefault()
+        return
+      }
+      if (this.target === 'self' && this.url.startsWith('/')) {
+        event.preventDefault()
+        this.$router.push(this.url)
+      }
     },
   },
 }

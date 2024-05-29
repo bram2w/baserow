@@ -33,7 +33,7 @@
     background-color: $white;
     transition: left 0.1s ease-in;
 
-    @include add-elevation($elevation-medium);
+    @include elevation($elevation-medium);
     @include absolute(2px, auto, auto, 2px);
   }
 

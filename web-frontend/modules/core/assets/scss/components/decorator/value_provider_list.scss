@@ -12,6 +12,7 @@
 .value-provider-list__item {
   position: relative;
   padding: 12px;
+
   @include rounded($rounded);
 
   &:not(:last-child) {

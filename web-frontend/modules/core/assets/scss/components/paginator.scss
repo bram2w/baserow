@@ -1,5 +1,5 @@
 .paginator {
-  @include flex-align-items();
+  @include flex-align-items;
 
   font-size: 12px;
   color: $palette-neutral-900;
@@ -16,8 +16,8 @@
   border: 1px solid $palette-neutral-400;
   font-size: 14px;
 
-  @include flex-align-items();
-  @include add-elevation($elevation-low);
+  @include flex-align-items;
+  @include elevation($elevation-low);
   @include rounded($rounded-md);
 
   &:hover:not(.paginator__button--disabled) {
@@ -64,5 +64,5 @@
   margin: 0 6px;
 
   @include rounded($rounded-md);
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
 }

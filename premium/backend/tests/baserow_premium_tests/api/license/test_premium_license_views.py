@@ -92,21 +92,18 @@ def test_admin_list_licenses(api_client, data_fixture, django_assert_num_queries
     LicenseUser.objects.create(license=license_2, user=user_2)
     LicenseUser.objects.create(license=license_2, user=user_3)
 
+    _, normal_token = data_fixture.create_user_and_token(is_staff=False)
+    admin_user = data_fixture.create_user(is_staff=True)
+
+    response = api_client.get(
+        reverse("api:premium:license:list"),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {normal_token}",
+    )
+    assert response.status_code == HTTP_403_FORBIDDEN
+
     with freeze_time("2021-09-01 00:00"):
-        normal_user, normal_token = data_fixture.create_user_and_token(
-            is_staff=False,
-        )
-        admin_user, admin_token = data_fixture.create_user_and_token(
-            is_staff=True,
-        )
-
-        response = api_client.get(
-            reverse("api:premium:license:list"),
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {normal_token}",
-        )
-        assert response.status_code == HTTP_403_FORBIDDEN
-
+        admin_token = data_fixture.generate_token(admin_user)
         # We expect one to count the total number of users, one query for the user
         # check, one for the fetching the licenses including the count of
         # seats that are taken.
@@ -143,11 +140,12 @@ def test_admin_list_licenses(api_client, data_fixture, django_assert_num_queries
 
             assert response_json[1]["product_code"] == "premium"
 
-    with freeze_time("2021-09-29 19:53"):
-        admin_user, admin_token = data_fixture.create_user_and_token(
-            is_staff=True,
-        )
+    admin_user, admin_token = data_fixture.create_user_and_token(
+        is_staff=True,
+    )
 
+    with freeze_time("2021-09-29 19:53"):
+        admin_token = data_fixture.generate_token(admin_user)
         response = api_client.get(
             reverse("api:premium:license:list"),
             format="json",
@@ -185,12 +183,8 @@ def test_admin_list_licenses(api_client, data_fixture, django_assert_num_queries
 @responses.activate
 def test_admin_register_license(api_client, data_fixture):
     data_fixture.update_settings(instance_id="1")
-    normal_user, normal_token = data_fixture.create_user_and_token(
-        is_staff=False,
-    )
-    admin_user, admin_token = data_fixture.create_user_and_token(
-        is_staff=True,
-    )
+    normal_user, normal_token = data_fixture.create_user_and_token(is_staff=False)
+    admin_user, admin_token = data_fixture.create_user_and_token(is_staff=True)
 
     response = api_client.post(
         reverse("api:premium:license:list"),
@@ -209,6 +203,7 @@ def test_admin_register_license(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_INVALID_LICENSE"
 
+    admin_token = data_fixture.generate_token(admin_user)
     with freeze_time("2021-10-01 00:00"):
         admin_token = data_fixture.generate_token(admin_user)
         response = api_client.post(
@@ -220,6 +215,7 @@ def test_admin_register_license(api_client, data_fixture):
         assert response.status_code == HTTP_400_BAD_REQUEST
         assert response.json()["error"] == "ERROR_LICENSE_HAS_EXPIRED"
 
+    admin_token = data_fixture.generate_token(admin_user)
     with freeze_time("2021-09-01 00:00"):
         admin_token = data_fixture.generate_token(admin_user)
         response = api_client.post(
@@ -265,6 +261,7 @@ def test_admin_register_license(api_client, data_fixture):
         assert response_json["issued_to_email"] == "bram@baserow.io"
         assert response_json["issued_to_name"] == "Bram"
 
+        admin_token = data_fixture.generate_token(admin_user)
         response = api_client.post(
             reverse("api:premium:license:list"),
             {"license": VALID_TWO_SEAT_LICENSE.decode()},
@@ -305,6 +302,7 @@ def test_admin_get_license(api_client, data_fixture, django_assert_num_queries):
     assert response.json()["error"] == "ERROR_LICENSE_DOES_NOT_EXIST"
 
     with freeze_time("2021-09-01 00:00"):
+        admin_token = data_fixture.generate_token(admin_user)
         with django_assert_num_queries(5):
             response = api_client.get(
                 reverse("api:premium:license:item", kwargs={"id": license.id}),
@@ -750,6 +748,7 @@ def test_admin_check_license(api_client, data_fixture):
             status=200,
         )
 
+        admin_token = data_fixture.generate_token(admin_user)
         response = api_client.get(
             reverse(
                 "api:premium:license:check",

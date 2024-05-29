@@ -12,6 +12,7 @@
   height: 70px;
   border: dashed 2px $color-neutral-400;
   cursor: pointer;
+
   @include rounded($rounded-md);
 
   &:hover {
@@ -20,6 +21,10 @@
 
     .add-element-zone__icon {
       border-color: $color-primary-500;
+    }
+
+    .add-element-zone__button--disabled {
+      cursor: not-allowed;
     }
   }
 }

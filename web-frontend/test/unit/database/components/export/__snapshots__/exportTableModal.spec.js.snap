@@ -51,6 +51,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                    
                   <span
                     class="dropdown__selected-text"
+                    title="exportTableDropdown.exportEntireTable"
                   >
                     exportTableDropdown.exportEntireTable
                   </span>
@@ -233,6 +234,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title=","
                     >
                       ,
                     </span>
@@ -488,6 +490,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title="Unicode (UTF-8)"
                     >
                       Unicode (UTF-8)
                     </span>
@@ -1648,11 +1651,19 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
         <!---->
          
         <button
-          class="button button--large button--primary modal-progress__export-button"
+          class="button modal-progress__export-button button--large button--full-width"
         >
-          
+          <!---->
+           
+          <span
+            class="button__label"
+          >
+            
     exportTableLoadingBar.export
   
+          </span>
+           
+          <!---->
         </button>
       </div>
     </form>
@@ -1726,6 +1737,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                    
                   <span
                     class="dropdown__selected-text"
+                    title="mock_view_1"
                   >
                     mock_view_1
                   </span>
@@ -1908,6 +1920,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title=","
                     >
                       ,
                     </span>
@@ -2163,6 +2176,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                      
                     <span
                       class="dropdown__selected-text"
+                      title="Unicode (UTF-8)"
                     >
                       Unicode (UTF-8)
                     </span>
@@ -3323,11 +3337,19 @@ exports[`Preview exportTableModal Modal with view 1`] = `
         <!---->
          
         <button
-          class="button button--large button--primary modal-progress__export-button"
+          class="button modal-progress__export-button button--large button--full-width"
         >
-          
+          <!---->
+           
+          <span
+            class="button__label"
+          >
+            
     exportTableLoadingBar.export
   
+          </span>
+           
+          <!---->
         </button>
       </div>
     </form>

@@ -75,6 +75,7 @@
         :all-fields-in-table="allFieldsInTable"
         :database="database"
         @field-created="$emit('field-created', $event)"
+        @field-created-callback-done="afterFieldCreatedUpdateFieldOptions"
         @shown="onShownCreateFieldContext"
       ></CreateFieldContext>
     </div>
@@ -86,6 +87,7 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import GridViewRowIdentifierDropdown from '@baserow/modules/database/components/view/grid/GridViewRowIdentifierDropdown'
 
 export default {
@@ -95,7 +97,7 @@ export default {
     GridViewFieldType,
     CreateFieldContext,
   },
-  mixins: [gridViewHelpers],
+  mixins: [gridViewHelpers, viewHelpers],
   props: {
     visibleFields: {
       type: Array,

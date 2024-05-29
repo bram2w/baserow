@@ -35,7 +35,7 @@ export class TablePage extends BaserowPage {
         this.firstFileCellLocator = this.page.locator('.grid-field-file__cell').first();
         this.addFileLocator = this.page.locator('.grid-field-file__item-add');
         this.fileZoneLocator = this.page.locator('.upload-files__dropzone');
-        this.uploadButtonLocator = this.page.locator('a').filter({ hasText: 'Upload' })
+        this.uploadButtonLocator = this.page.locator('button span').filter({ hasText: 'Upload' })
         this.fileCellImageLocator = this.page.locator('.grid-field-file__image');
         this.firstNonPrimaryCell = this.page.locator('.grid-view__right .grid-view__cell').first()
         this.nonPrimaryRows = this.page.locator('.grid-view__right .grid-view__rows .grid-view__row')

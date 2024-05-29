@@ -7,10 +7,13 @@
           <div class="row-comments__empty-text">
             {{ $t('rowCommentSidebar.onlyPremium') }}
           </div>
-          <a class="button button--primary" @click="$refs.premiumModal.show()">
+          <Button
+            type="primary"
+            icon="iconoir-no-lock"
+            @click="$refs.premiumModal.show()"
+          >
             {{ $t('rowCommentSidebar.more') }}
-            <i class="iconoir-no-lock"></i>
-          </a>
+          </Button>
         </div>
         <PremiumModal
           ref="premiumModal"

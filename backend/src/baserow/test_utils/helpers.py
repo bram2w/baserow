@@ -118,8 +118,11 @@ def setup_interesting_test_table(
     link_table = data_fixture.create_database_table(
         database=database, user=user, name="link_table"
     )
-    other_table_primary_text_field = data_fixture.create_text_field(
+    link_table_primary_text_field = data_fixture.create_text_field(
         table=link_table, name="text_field", primary=True
+    )
+    link_table_duration_field = data_fixture.create_duration_field(
+        table=link_table, name="duration_field"
     )
     decimal_link_table = data_fixture.create_database_table(
         database=database, user=user, name="decimal_link_table"
@@ -132,14 +135,14 @@ def setup_interesting_test_table(
     )
     name_to_field_id = {}
     i = 0
-    other_table_primary_decimal_field = data_fixture.create_number_field(
+    decimal_table_primary_decimal_field = data_fixture.create_number_field(
         table=decimal_link_table,
         name="decimal_field",
         primary=True,
         number_decimal_places=3,
         number_negative=True,
     )
-    other_table_primary_file_field = data_fixture.create_file_field(
+    file_link_table_primary_file_field = data_fixture.create_file_field(
         table=file_link_table,
         name="file_field",
         primary=True,
@@ -262,7 +265,15 @@ def setup_interesting_test_table(
         set(name_to_field_id.keys())
         - set(values.keys())
         - set([f["name"] for f in all_possible_kwargs_per_type["formula"]])
-        - {"lookup", "count", "rollup", "uuid", "autonumber"}
+        - {
+            "lookup",
+            "count",
+            "rollup",
+            "uuid",
+            "autonumber",
+            "duration_rollup_avg",
+            "duration_rollup_sum",
+        }
     )
     assert missing_fields == set(), (
         "Please update the dictionary above with interesting test values for your new "
@@ -287,42 +298,44 @@ def setup_interesting_test_table(
         user=user,
         table=link_table,
         values={
-            other_table_primary_text_field.id: "linked_row_1",
+            link_table_primary_text_field.id: "linked_row_1",
+            link_table_duration_field.id: timedelta(minutes=1),
         },
     )
     linked_row_2 = row_handler.create_row(
         user=user,
         table=link_table,
         values={
-            other_table_primary_text_field.id: "linked_row_2",
+            link_table_primary_text_field.id: "linked_row_2",
+            link_table_duration_field.id: timedelta(minutes=3),
         },
     )
     linked_row_3 = row_handler.create_row(
         user=user,
         table=link_table,
         values={
-            other_table_primary_text_field.id: None,
+            link_table_primary_text_field.id: "",
         },
     )
     linked_row_4 = row_handler.create_row(
         user=user,
         table=decimal_link_table,
         values={
-            other_table_primary_decimal_field.id: "1.234",
+            decimal_table_primary_decimal_field.id: "1.234",
         },
     )
     linked_row_5 = row_handler.create_row(
         user=user,
         table=decimal_link_table,
         values={
-            other_table_primary_decimal_field.id: "-123.456",
+            decimal_table_primary_decimal_field.id: "-123.456",
         },
     )
     linked_row_6 = row_handler.create_row(
         user=user,
         table=decimal_link_table,
         values={
-            other_table_primary_decimal_field.id: None,
+            decimal_table_primary_decimal_field.id: None,
         },
     )
     with freeze_time("2020-01-01 12:00"):
@@ -335,14 +348,14 @@ def setup_interesting_test_table(
         user=user,
         table=file_link_table,
         values={
-            other_table_primary_file_field.id: [{"name": user_file_1.name}],
+            file_link_table_primary_file_field.id: [{"name": user_file_1.name}],
         },
     )
     linked_row_8 = row_handler.create_row(
         user=user,
         table=file_link_table,
         values={
-            other_table_primary_file_field.id: None,
+            file_link_table_primary_file_field.id: None,
         },
     )
 

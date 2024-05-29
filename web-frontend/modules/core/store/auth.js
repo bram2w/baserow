@@ -14,6 +14,7 @@ export const state = () => ({
   refreshToken: null,
   tokenUpdatedAt: 0,
   tokenPayload: null,
+  refreshTokenPayload: null,
   permissions: [],
   user: null,
   authenticated: false,
@@ -45,6 +46,9 @@ export const mutations = {
     state.refreshToken = refresh_token
     state.tokenUpdatedAt = tokenUpdatedAt || new Date().getTime()
     state.tokenPayload = jwtDecode(state.token)
+    if (state.refreshToken) {
+      state.refreshTokenPayload = jwtDecode(state.refreshToken)
+    }
     // Global permissions annotated on the User.
     state.permissions = permissions
     /* eslint-enable camelcase */
@@ -72,6 +76,7 @@ export const mutations = {
     state.refreshToken = null
     state.tokenUpdatedAt = 0
     state.tokenPayload = null
+    state.refreshTokenPayload = null
     state.authenticated = false
     state.permissions = []
   },
@@ -80,6 +85,7 @@ export const mutations = {
     state.refreshToken = null
     state.tokenUpdatedAt = 0
     state.tokenPayload = null
+    state.refreshTokenPayload = null
     state.user = null
     state.authenticated = false
     state.permissions = []
@@ -157,8 +163,11 @@ export const actions = {
       workspaceInvitationToken,
       templateId
     )
-    setToken(this.app, data.refresh_token)
-    dispatch('setUserData', data)
+
+    if (data.refresh_token) {
+      setToken(this.app, data.refresh_token)
+      dispatch('setUserData', data)
+    }
   },
   /**
    * Logs off the user by removing the token as a cookie and clearing the user
@@ -316,6 +325,9 @@ export const getters = {
   },
   refreshToken(state) {
     return state.refreshToken
+  },
+  refreshTokenPayload(state) {
+    return state.refreshTokenPayload
   },
   webSocketId(state) {
     return state.webSocketId

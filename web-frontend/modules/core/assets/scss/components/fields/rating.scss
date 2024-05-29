@@ -13,12 +13,12 @@
   color: $color-neutral-900;
   font-size: 14px;
   display: block;
+
   @include rounded($rounded);
 }
 
 .field-rating {
   @extend %ellipsis;
-
   @include fixed-height(32px, 13px);
 
   padding-left: 5px;

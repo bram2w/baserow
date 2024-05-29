@@ -94,7 +94,9 @@
             :filename="preview.visible_name"
             :loading-class="'file-field-modal__action--loading'"
           >
-            <i class="iconoir-download" />
+            <template #default="{ loading }">
+              <i v-if="!loading" class="iconoir-download" />
+            </template>
           </DownloadLink>
           <a
             v-if="!readOnly"

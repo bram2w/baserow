@@ -1,9 +1,9 @@
-.image_element {
+.image-element {
   display: flex;
   overflow: hidden;
 }
 
-.image_element__img_wrapper {
+.image-element__img-wrapper {
   display: flex;
   overflow: hidden;
   width: var(--max-width, 100%);
@@ -23,33 +23,33 @@
   }
 }
 
-.image_element__img_wrapper--cover {
+.image-element__img-wrapper--cover {
   width: 100%;
 
-  & .image_element__img {
+  & .image-element__img {
     object-fit: cover;
     width: 100%;
     height: 100%;
   }
 }
 
-.image_element__img_wrapper--contain {
-  & .image_element__img {
+.image-element__img-wrapper--contain {
+  & .image-element__img {
     object-fit: contain;
     max-width: 100%;
   }
 }
 
-.image_element__img_wrapper--full-width {
-  & .image_element__img {
+.image-element__img-wrapper--full-width {
+  & .image-element__img {
     object-fit: fill;
     width: 100%;
     max-width: none;
   }
 }
 
-.image_element__img_wrapper--max-height {
-  & .image_element__img {
+.image-element__img-wrapper--max-height {
+  & .image-element__img {
     max-width: auto;
   }
 }

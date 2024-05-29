@@ -36,8 +36,6 @@ import {
 import {
   EqualViewFilterType,
   NotEqualViewFilterType,
-  DateEqualViewFilterType,
-  DateNotEqualViewFilterType,
   ContainsViewFilterType,
   FilenameContainsViewFilterType,
   FilesLowerThanViewFilterType,
@@ -56,6 +54,28 @@ import {
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
+  LinkRowHasFilterType,
+  LinkRowHasNotFilterType,
+  MultipleSelectHasFilterType,
+  MultipleSelectHasNotFilterType,
+  MultipleCollaboratorsHasFilterType,
+  MultipleCollaboratorsHasNotFilterType,
+  LinkRowContainsFilterType,
+  LinkRowNotContainsFilterType,
+  ContainsWordViewFilterType,
+  DoesntContainWordViewFilterType,
+  UserIsFilterType,
+  UserIsNotFilterType,
+  DateIsEqualMultiStepViewFilterType,
+  DateIsBeforeMultiStepViewFilterType,
+  DateIsOnOrBeforeMultiStepViewFilterType,
+  DateIsAfterMultiStepViewFilterType,
+  DateIsOnOrAfterMultiStepViewFilterType,
+  DateIsWithinMultiStepViewFilterType,
+  DateIsNotEqualMultiStepViewFilterType,
+  // Deprecated date filter types
+  DateEqualViewFilterType,
+  DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
   DateBeforeTodayViewFilterType,
   DateAfterTodayViewFilterType,
@@ -74,18 +94,6 @@ import {
   DateAfterViewFilterType,
   DateAfterOrEqualViewFilterType,
   DateEqualsDayOfMonthViewFilterType,
-  LinkRowHasFilterType,
-  LinkRowHasNotFilterType,
-  MultipleSelectHasFilterType,
-  MultipleSelectHasNotFilterType,
-  MultipleCollaboratorsHasFilterType,
-  MultipleCollaboratorsHasNotFilterType,
-  LinkRowContainsFilterType,
-  LinkRowNotContainsFilterType,
-  ContainsWordViewFilterType,
-  DoesntContainWordViewFilterType,
-  UserIsFilterType,
-  UserIsNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -141,6 +149,8 @@ import {
   BaserowIf,
   BaserowIsBlank,
   BaserowIsNull,
+  BaserowDurationToSeconds,
+  BaserowSecondsToDuration,
   BaserowLessThan,
   BaserowLessThanOrEqual,
   BaserowLower,
@@ -264,6 +274,12 @@ import {
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 import { FieldsDataProviderType } from '@baserow/modules/database/dataProviderTypes'
 
+import {
+  DatabaseOnboardingType,
+  DatabaseScratchTrackOnboardingType,
+  DatabaseImportOnboardingType,
+} from '@baserow/modules/database/onboardingTypes'
+
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
 import nl from '@baserow/modules/database/locales/nl.json'
@@ -312,6 +328,35 @@ export default (context) => {
   app.$registry.register('view', new FormViewType(context))
   app.$registry.register('viewFilter', new EqualViewFilterType(context))
   app.$registry.register('viewFilter', new NotEqualViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DateIsEqualMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsNotEqualMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsBeforeMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsOnOrBeforeMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsAfterMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsOnOrAfterMultiStepViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateIsWithinMultiStepViewFilterType(context)
+  )
+  // DEPRECATED
   app.$registry.register('viewFilter', new DateEqualViewFilterType(context))
   app.$registry.register('viewFilter', new DateNotEqualViewFilterType(context))
   app.$registry.register(
@@ -380,6 +425,7 @@ export default (context) => {
     'viewFilter',
     new DateAfterDaysAgoViewFilterType(context)
   )
+  // END
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))
@@ -562,7 +608,16 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowDateDiff(context))
   // Date interval functions
   app.$registry.register('formula_function', new BaserowDateInterval(context))
-  // Special functions
+  app.$registry.register(
+    'formula_function',
+    new BaserowDurationToSeconds(context)
+  )
+  app.$registry.register(
+    'formula_function',
+    new BaserowSecondsToDuration(context)
+  )
+  // Special functions. NOTE: rollup compatible functions are shown field sub-form in
+  // the same order as they are listed here.
   app.$registry.register('formula_function', new BaserowAdd(context))
   app.$registry.register('formula_function', new BaserowMinus(context))
   app.$registry.register('formula_function', new BaserowField(context))
@@ -581,16 +636,16 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowWhenEmpty(context))
   app.$registry.register('formula_function', new BaserowAny(context))
   app.$registry.register('formula_function', new BaserowEvery(context))
-  app.$registry.register('formula_function', new BaserowMax(context))
   app.$registry.register('formula_function', new BaserowMin(context))
+  app.$registry.register('formula_function', new BaserowMax(context))
   app.$registry.register('formula_function', new BaserowCount(context))
+  app.$registry.register('formula_function', new BaserowSum(context))
+  app.$registry.register('formula_function', new BaserowAvg(context))
   app.$registry.register('formula_function', new BaserowJoin(context))
   app.$registry.register('formula_function', new BaserowStddevPop(context))
   app.$registry.register('formula_function', new BaserowStddevSample(context))
   app.$registry.register('formula_function', new BaserowVarianceSample(context))
   app.$registry.register('formula_function', new BaserowVariancePop(context))
-  app.$registry.register('formula_function', new BaserowAvg(context))
-  app.$registry.register('formula_function', new BaserowSum(context))
   app.$registry.register('formula_function', new BaserowFilter(context))
   app.$registry.register('formula_function', new BaserowTrunc(context))
   app.$registry.register('formula_function', new BaserowIsNaN(context))
@@ -754,6 +809,16 @@ export default (context) => {
   app.$registry.register(
     'rowModalSidebar',
     new HistoryRowModalSidebarType(context)
+  )
+
+  app.$registry.register('onboarding', new DatabaseOnboardingType(context))
+  app.$registry.register(
+    'onboarding',
+    new DatabaseScratchTrackOnboardingType(context)
+  )
+  app.$registry.register(
+    'onboarding',
+    new DatabaseImportOnboardingType(context)
   )
 
   registerRealtimeEvents(app.$realtime)

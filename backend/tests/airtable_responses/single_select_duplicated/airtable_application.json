@@ -1,0 +1,1628 @@
+{
+  "msg": "SUCCESS",
+  "data": {
+    "appBlanket": {
+      "userInfoById": {
+        "usrM3D8WCLcbXu8Th": {
+          "id": "usrM3D8WCLcbXu8Th",
+          "firstName": "Przemek",
+          "lastName": "K",
+          "email": "przemyslaw@baserow.io",
+          "profilePicUrl": "https://static.airtable.com/images/userIcons/user_icon_2.png",
+          "permissionLevel": "owner",
+          "pageBundlePermissionLevelByPageBundleId": {},
+          "appBlanketUserState": "active"
+        },
+        "usrROSHARE0000000": {
+          "id": "usrROSHARE0000000",
+          "firstName": "Anonymous",
+          "lastName": null,
+          "email": "anonymous@noreply.airtable.com",
+          "profilePicUrl": "https://airtable.com/images/userIcons/public_form_submission_user.png",
+          "permissionLevel": "none",
+          "pageBundlePermissionLevelByPageBundleId": {},
+          "appBlanketUserState": "active"
+        }
+      },
+      "externalAccountInfoById": {},
+      "userGroupInfoById": {},
+      "workspaceSyncSources": [],
+      "activeUserIdByAcceptedInviteId": {},
+      "enterpriseAttachmentRestrictions": {
+        "restrictionType": "unrestricted",
+        "attachmentTypeAllowlist": []
+      },
+      "isWorkspaceLinkedToEnterpriseAccount": false,
+      "enterpriseBillingPlanInfo": null,
+      "adminCustomizedHelpMessage": null,
+      "isGridRootEnterpriseAccount": false,
+      "isAiAllowed": false,
+      "aiPermissionsState": "disabledBecauseNotOnBillingPlanWithAiCredits",
+      "allowedAiModelProviders": [
+        "openAi",
+        "anthropic",
+        "amazon",
+        "ibmWatsonx",
+        "selfHosted"
+      ],
+      "peopleTableMetadataForEnterpriseAssociatedWithApplication": null,
+      "packageConstructionInfo": null,
+      "sandboxInfo": null,
+      "topEnterpriseCustomerNameForErrorReporting": null
+    },
+    "name": null,
+    "color": null,
+    "icon": null,
+    "description": "guide",
+    "isRevisionHistoryEnabled": false,
+    "sortTiebreakerKey": "appHI27Un8BKJ9iKA",
+    "defaultViewMutability": null,
+    "maintenanceModeSettings": null,
+    "sharesById": {
+      "shra2B9gmVj6kxvNz": {
+        "id": "shra2B9gmVj6kxvNz",
+        "modelId": "appHI27Un8BKJ9iKA",
+        "createdByUserId": "usrM3D8WCLcbXu8Th",
+        "canBeCloned": true,
+        "canBeExported": true,
+        "includeHiddenColumns": false,
+        "includeBlocks": false,
+        "emailDomain": null,
+        "hasPassword": false,
+        "generationNumber": 0,
+        "metadata": null
+      }
+    },
+    "workflowSectionsById": {},
+    "workflowTriggerConnectionsById": {},
+    "applicationTransactionNumber": 167,
+    "tableSchemas": [
+      {
+        "id": "tblkv5PUbEMjSgR8u",
+        "name": "Sample",
+        "primaryColumnId": "fldlS8aYd7xnNabZp",
+        "columns": [
+          {
+            "id": "fldlS8aYd7xnNabZp",
+            "name": "Name",
+            "type": "text",
+            "initialCreatedTime": "2024-05-10T09:27:49.000Z",
+            "initialCreatedByUserId": "usrM3D8WCLcbXu8Th",
+            "lastModifiedTime": "2024-05-10T09:27:49.000Z",
+            "lastModifiedByUserId": "usrM3D8WCLcbXu8Th"
+          },
+          {
+            "id": "fldXKVLalQta9eqKJ",
+            "name": "SO",
+            "type": "select",
+            "typeOptions": {
+              "choiceOrder": [
+                "selPTyTGyRfP5Uqah",
+                "seldqa327OsD1QUqQ",
+                "seleT7uA5g9agL0GD"
+              ],
+              "choices": {
+                "selPTyTGyRfP5Uqah": {
+                  "id": "selPTyTGyRfP5Uqah",
+                  "color": "blue",
+                  "name": "o1"
+                },
+                "seldqa327OsD1QUqQ": {
+                  "id": "seldqa327OsD1QUqQ",
+                  "color": "cyan",
+                  "name": "o2"
+                },
+                "seleT7uA5g9agL0GD": {
+                  "id": "seleT7uA5g9agL0GD",
+                  "color": "teal",
+                  "name": "o4"
+                }
+              },
+              "disableColors": false
+            },
+            "initialCreatedTime": "2024-05-10T09:49:32.000Z",
+            "initialCreatedByUserId": "usrM3D8WCLcbXu8Th",
+            "lastModifiedTime": "2024-05-10T09:49:32.000Z",
+            "lastModifiedByUserId": "usrM3D8WCLcbXu8Th"
+          },
+          {
+            "id": "fldvUpM75LQtlP6b0",
+            "name": "SO copy",
+            "type": "select",
+            "typeOptions": {
+              "choiceOrder": [
+                "selPTyTGyRfP5Uqah",
+                "seldqa327OsD1QUqQ",
+                "seleT7uA5g9agL0GD"
+              ],
+              "choices": {
+                "selPTyTGyRfP5Uqah": {
+                  "id": "selPTyTGyRfP5Uqah",
+                  "color": "blue",
+                  "name": "o11"
+                },
+                "seldqa327OsD1QUqQ": {
+                  "id": "seldqa327OsD1QUqQ",
+                  "color": "cyan",
+                  "name": "o21"
+                },
+                "seleT7uA5g9agL0GD": {
+                  "id": "seleT7uA5g9agL0GD",
+                  "color": "teal",
+                  "name": "o31"
+                }
+              },
+              "disableColors": false
+            },
+            "initialCreatedTime": "2024-05-10T09:49:31.000Z",
+            "initialCreatedByUserId": "usrM3D8WCLcbXu8Th",
+            "lastModifiedTime": "2024-05-10T09:49:31.000Z",
+            "lastModifiedByUserId": "usrM3D8WCLcbXu8Th"
+          }
+        ],
+        "meaningfulColumnOrder": [
+          {
+            "columnId": "fldlS8aYd7xnNabZp",
+            "visibility": true
+          },
+          {
+            "columnId": "fldXKVLalQta9eqKJ",
+            "visibility": true
+          },
+          {
+            "columnId": "fldvUpM75LQtlP6b0",
+            "visibility": true
+          }
+        ],
+        "views": [
+          {
+            "id": "viwDxGnS9YCijiBzK",
+            "name": "Grid view",
+            "type": "grid",
+            "personalForUserId": null,
+            "description": null,
+            "createdByUserId": "usrM3D8WCLcbXu8Th"
+          }
+        ],
+        "viewOrder": [
+          "viwDxGnS9YCijiBzK"
+        ],
+        "viewsById": {
+          "viwDxGnS9YCijiBzK": {
+            "id": "viwDxGnS9YCijiBzK",
+            "name": "Grid view",
+            "type": "grid",
+            "personalForUserId": null,
+            "description": null,
+            "createdByUserId": "usrM3D8WCLcbXu8Th"
+          }
+        },
+        "viewSectionsById": {},
+        "rowTemplatesById": {},
+        "schemaChecksum": "e45cfa0abfe2e85bcb8c5d39901e14c708d6653963e361291df15d0a73f8354a",
+        "dateDependencySettings": null,
+        "rowUnit": "sample",
+        "isHiddenFromSwitcher": false
+      }
+    ],
+    "tableDatas": [
+      {
+        "id": "tblkv5PUbEMjSgR8u",
+        "rows": [
+          {
+            "id": "recl7VE2iH8pDiSQa",
+            "createdTime": "2024-05-10T09:27:49.000Z",
+            "cellValuesByColumnId": {
+              "fldXKVLalQta9eqKJ": "selPTyTGyRfP5Uqah",
+              "fldlS8aYd7xnNabZp": "rec 1",
+              "fldvUpM75LQtlP6b0": "selPTyTGyRfP5Uqah"
+            }
+          },
+          {
+            "id": "recf86GO0OTuNAgwR",
+            "createdTime": "2024-05-10T09:27:49.000Z",
+            "cellValuesByColumnId": {
+              "fldXKVLalQta9eqKJ": "seldqa327OsD1QUqQ",
+              "fldlS8aYd7xnNabZp": "rec 2",
+              "fldvUpM75LQtlP6b0": "seldqa327OsD1QUqQ"
+            }
+          },
+          {
+            "id": "receOMiwqgeHGM1rb",
+            "createdTime": "2024-05-10T09:27:49.000Z",
+            "cellValuesByColumnId": {
+              "fldlS8aYd7xnNabZp": "rec 3",
+              "fldvUpM75LQtlP6b0": "seleT7uA5g9agL0GD"
+            }
+          },
+          {
+            "id": "recyYT1BkGS5nandg",
+            "createdTime": "2024-05-10T09:29:23.000Z",
+            "cellValuesByColumnId": {
+              "fldXKVLalQta9eqKJ": "seleT7uA5g9agL0GD",
+              "fldlS8aYd7xnNabZp": "rec 4"
+            }
+          }
+        ],
+        "viewDatas": [
+          {
+            "id": "viwDxGnS9YCijiBzK",
+            "frozenColumnCount": 1,
+            "columnOrder": [
+              {
+                "columnId": "fldlS8aYd7xnNabZp",
+                "visibility": true
+              },
+              {
+                "columnId": "fldXKVLalQta9eqKJ",
+                "visibility": true
+              },
+              {
+                "columnId": "fldvUpM75LQtlP6b0",
+                "visibility": true
+              }
+            ],
+            "filters": null,
+            "lastSortsApplied": null,
+            "groupLevels": null,
+            "colorConfig": null,
+            "sharesById": {},
+            "description": null,
+            "createdByUserId": "usrM3D8WCLcbXu8Th",
+            "applicationTransactionNumber": 167,
+            "rowOrder": [
+              {
+                "rowId": "recl7VE2iH8pDiSQa",
+                "visibility": true
+              },
+              {
+                "rowId": "recf86GO0OTuNAgwR",
+                "visibility": true
+              },
+              {
+                "rowId": "receOMiwqgeHGM1rb",
+                "visibility": true
+              },
+              {
+                "rowId": "recyYT1BkGS5nandg",
+                "visibility": true
+              }
+            ],
+            "signedUserContentUrls": {}
+          }
+        ],
+        "signedUserContentUrls": {},
+        "hasOnlyIncludedRowAndCellDataForIncludedViews": false
+      }
+    ],
+    "hasBlockInstallations": false,
+    "packageInstallationsById": {},
+    "featureKitInstallationById": {},
+    "applicationAdminFlags": {
+      "UPDATE_PRIMITIVE_CELL_THROTTLE_MS": null,
+      "UPDATE_RICH_TEXT_CELL_THROTTLE_MS": null,
+      "MAX_WORKFLOWS_PER_APPLICATION": null,
+      "MAX_SYNC_SOURCES_PER_APPLICATION": null,
+      "MAX_SYNC_SOURCES_PER_TABLE": null,
+      "MAX_SYNCED_TABLES_PER_APPLICATION": null,
+      "CUSTOM_MAX_NUM_ROWS_PER_TABLE": null,
+      "DENYLISTED_PAGE_BUNDLES_FOR_PAGE_BUNDLE_COLLABORATORS": null,
+      "MAX_ROW_TEMPLATES_PER_APPLICATION": null,
+      "APPLICATION_AI_AUTOMATIC_GENERATION_RECORD_COUNT_LIMIT": null,
+      "APPLICATION_AI_BULK_GENERATION_RECORD_COUNT_LIMIT": null,
+      "APPLICATION_AI_SOLUTIONS_FEATURES_ENABLED": null,
+      "WORKFLOW_FIND_RECORDS_MAX_LIMIT": null,
+      "APPLICATION_AI_QA_IFRAME_URL": null
+    },
+    "pageLayoutSchemaVersion": 23,
+    "pageBundles": [],
+    "unparentedPageMetadata": [],
+    "canUserModifyAllUnparentedPages": false,
+    "uploadedUserContentCdnSetting": {
+      "applicationScopedAuthMode": "private"
+    },
+    "applicationV2TargetedFeatureFlagClientConfiguration": {
+      "dateSparklineDisplay": {
+        "trafficLevel": 0
+      },
+      "restrictForeignRowSelectionWithFiltersForApplication": {
+        "trafficLevel": 100
+      },
+      "blockModelBridgeLongWaitUntilReadyBeforeWriteTimeout": {
+        "trafficLevel": 0
+      },
+      "enterpriseApiRestriction": {
+        "trafficLevel": 0
+      },
+      "aiFieldMatching": {
+        "trafficLevel": 100
+      },
+      "aiFieldMatchingUsageConsumption": {
+        "trafficLevel": 100
+      },
+      "aiClaudeV3OnBedrockAvailability": {
+        "trafficLevel": 100
+      },
+      "aiFindByVectorSimilarityApplicationScoped": {
+        "trafficLevel": 0
+      },
+      "aiCommentSummaryModelScoped": {
+        "trafficLevel": 100
+      },
+      "workflowShowExecutionCount": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncReconcileDuplicateCells": {
+        "trafficLevel": 0
+      },
+      "multiSourceSyncNoop": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncRealTimeSyncDoNotFallbackOnMissingExternalFieldId": {
+        "trafficLevel": 100
+      },
+      "applicationChangeHookCreateSyncHooksWithSpecificationPayloadEnabled": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncSkipRealTimeSyncForSyncWithFieldTypeCustomizationToLinkedRecord": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncLinkedRecordFallbackToFTS": {
+        "trafficLevel": 100
+      },
+      "skipLinkedRecordProcessingForUnmappedColumns": {
+        "trafficLevel": 50
+      },
+      "externalTableSyncRealTimeSyncAllowSchemaUpdatesFromResolution": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncAutoCreateSharedViewsForSyncedLinkedRecords": {
+        "trafficLevel": 0
+      },
+      "autoSyncLinkedRecordsFE": {
+        "trafficLevel": 0
+      },
+      "syncLinkedRecordsAddLinkedTableForNewForeignKeyColumnIfNeeded": {
+        "trafficLevel": 0
+      },
+      "syncLinkedRecordsInSyncWithExternalDataActions": {
+        "trafficLevel": 100
+      },
+      "canCreateRelationFieldsSourcedByCollaboratorField": {
+        "trafficLevel": 0
+      },
+      "goldenDatasetsRelationshipMapBeta": {
+        "trafficLevel": 100
+      },
+      "twoWaySyncStopEnqueueFullTableSync": {
+        "trafficLevel": 100
+      },
+      "twoWaySyncDependentCrudActionsUndo": {
+        "trafficLevel": 100
+      },
+      "enableSyncConfigManagerForCalculatingAuthoritativeColumnsToDelete": {
+        "trafficLevel": 100
+      },
+      "enableExternalTableSyncInfoManagerForAuthoritativeSourceWrites": {
+        "trafficLevel": 0
+      },
+      "externalTableSyncForceAllowReconnects": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncWrapSyncWithExternalDataErrors": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncMultisourceErrorUseNewFormat": {
+        "trafficLevel": 100
+      },
+      "preventMappingNonExistantSourceColumnsDuringSyncAndUpdateAuthoritativeColumns": {
+        "precalculatedVariant": {
+          "variant": "control",
+          "reason": "disabled"
+        }
+      },
+      "fixAuthoritativeColumnBeingUnmappedInSource": {
+        "trafficLevel": 0
+      },
+      "externalTableSyncThreadedEnqueue": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncFixInvalidForeignColumnConfig": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncTargetConfigFixInvalidChoiceId": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncConfigUpdateRetainFTC": {
+        "trafficLevel": 100
+      },
+      "attachmentsAuthV3ShouldUseSignedAuthV5Urls": {
+        "trafficLevel": 0
+      },
+      "attachmentProcessingTaskQueueShadowMode": {
+        "trafficLevel": 0
+      },
+      "eudrAttachmentBoundaryCrossings": {
+        "trafficLevel": 0
+      },
+      "ekmAgnosticBoundaryCrossingTaskForReEncryption": {
+        "trafficLevel": 100
+      },
+      "downloadAttachmentsUsingIamRole": {
+        "trafficLevel": 100
+      },
+      "oldFilestackUrlReferencesMigratedInCrudActionData": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncPingSourceBasesFromTarget": {
+        "trafficLevel": 50
+      },
+      "changeHooksOnUelLogActions": {
+        "trafficLevel": 0
+      },
+      "performChangeHookProcessingOnUelPath": {
+        "trafficLevel": 100
+      },
+      "applicationSearchMultiTokenBooleanSearch": {
+        "trafficLevel": 100
+      },
+      "applicationSearchMultiTokenBooleanSearchAllowFuzziness": {
+        "trafficLevel": 0
+      },
+      "twoWaySyncServerSideTransparentEditingNonBlocking": {
+        "trafficLevel": 100
+      },
+      "twoWaySyncCreateDelete": {
+        "trafficLevel": 100
+      },
+      "twoWaySyncPricingGating": {
+        "trafficLevel": 100
+      },
+      "twoWaySyncEnabledInAutomations": {
+        "trafficLevel": 100
+      },
+      "enforceMaxSourceCellCountForEnablingTwoWaySync": {
+        "precalculatedVariant": {
+          "variant": "control",
+          "reason": "disabled"
+        }
+      },
+      "externalTableSyncLimitSyncableSharedViewsPerApplication": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncQuerySchemaInIncrementalSync": {
+        "trafficLevel": 100
+      },
+      "revisionHistoryErrorLogging": {
+        "trafficLevel": 0
+      },
+      "workflowsSlackShowPermalinkInExpressionBuilder": {
+        "trafficLevel": 0
+      },
+      "workflowsFindRecordsUserDefinedLimits": {
+        "trafficLevel": 0
+      },
+      "dateDependenciesRevisionHistory": {
+        "trafficLevel": 100
+      },
+      "shareWithClaimGroupAudience": {
+        "trafficLevel": 100
+      },
+      "publiclySharedPageBundlePages": {
+        "trafficLevel": 0
+      },
+      "columnBulkDelete": {
+        "trafficLevel": 100
+      },
+      "externalTableSyncSourceToTargetMap": {
+        "trafficLevel": 100
+      },
+      "disableUsageInsightsOneYearOption": {
+        "precalculatedVariant": {
+          "variant": "control",
+          "reason": "disabled"
+        }
+      },
+      "tableDeleteOrphanCascadeForApplication": {
+        "trafficLevel": 0
+      },
+      "disabledWorkflowOnSchemaChangeSuggestion": {
+        "trafficLevel": 100
+      },
+      "syncFailureSuggestion": {
+        "trafficLevel": 100
+      },
+      "unusedViewsSuggestion": {
+        "trafficLevel": 100
+      },
+      "unusedSelectChoicesSuggestion": {
+        "trafficLevel": 0
+      },
+      "unifiedEventLog": {
+        "trafficLevel": 100
+      },
+      "unifiedEventLogPublishingBlockDbCommits": {
+        "trafficLevel": 100
+      },
+      "projectReadDataForRowCards": {
+        "trafficLevel": 0
+      },
+      "mergeDiffsForVisibleRowsOnlyUseTreatment": {
+        "trafficLevel": 100
+      },
+      "mergeDiffsForVisibleRowsOnlyShadowLaunch": {
+        "precalculatedVariant": {
+          "variant": "control",
+          "reason": "disabled"
+        }
+      },
+      "mergeDiffsForVisibleRowsOnlyUseHeuristic": {
+        "trafficLevel": 100
+      },
+      "threadSafeStoreUseLargerMapSize": {
+        "trafficLevel": 0
+      },
+      "clientSideProfilingForApplication": {
+        "trafficLevel": 0
+      },
+      "useListTablesV0MetaShadowboxOp": {
+        "trafficLevel": 0
+      },
+      "runTakeSnapshotAutomaticallyInThread": {
+        "trafficLevel": 100
+      },
+      "takeSnapshotThreadWithoutMainThreadChunking": {
+        "trafficLevel": 0
+      },
+      "chunkArchivableCellHistoryInsertsBasedOnCellValues": {
+        "trafficLevel": 100
+      },
+      "coreDbShadowboxShadowReads": {
+        "precalculatedVariant": {
+          "variant": "control",
+          "reason": "disabled"
+        }
+      },
+      "useNativeFormulaEngineForDateTimeParse": {
+        "precalculatedVariant": {
+          "variant": "control",
+          "reason": "disabled"
+        }
+      },
+      "formulaSelectFormatting": {
+        "trafficLevel": 0
+      },
+      "modelNamePreserveWhitespace": {
+        "trafficLevel": 100
+      },
+      "managedSolutionSeparateLeftNav": {
+        "trafficLevel": 100
+      },
+      "managedSolutionTopNavEntrypoint": {
+        "trafficLevel": 0
+      }
+    },
+    "applicationV2FeatureFlagClientContext": {
+      "applicationId": "appHI27Un8BKJ9iKA",
+      "flagNameToPrecalculatedVariant": {
+        "dateSparklineDisplay": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "restrictForeignRowSelectionWithFiltersForApplication": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "blockModelBridgeLongWaitUntilReadyBeforeWriteTimeout": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "enterpriseApiRestriction": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "aiFieldMatching": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "aiFieldMatchingUsageConsumption": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "aiClaudeV3OnBedrockAvailability": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "aiFindByVectorSimilarityApplicationScoped": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "aiCommentSummaryModelScoped": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "workflowShowExecutionCount": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncReconcileDuplicateCells": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "multiSourceSyncNoop": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncRealTimeSyncDoNotFallbackOnMissingExternalFieldId": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "applicationChangeHookCreateSyncHooksWithSpecificationPayloadEnabled": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncSkipRealTimeSyncForSyncWithFieldTypeCustomizationToLinkedRecord": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncLinkedRecordFallbackToFTS": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "skipLinkedRecordProcessingForUnmappedColumns": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "externalTableSyncRealTimeSyncAllowSchemaUpdatesFromResolution": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncAutoCreateSharedViewsForSyncedLinkedRecords": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "autoSyncLinkedRecordsFE": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "syncLinkedRecordsAddLinkedTableForNewForeignKeyColumnIfNeeded": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "syncLinkedRecordsInSyncWithExternalDataActions": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "canCreateRelationFieldsSourcedByCollaboratorField": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "goldenDatasetsRelationshipMapBeta": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "twoWaySyncStopEnqueueFullTableSync": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "twoWaySyncDependentCrudActionsUndo": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "enableSyncConfigManagerForCalculatingAuthoritativeColumnsToDelete": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "enableExternalTableSyncInfoManagerForAuthoritativeSourceWrites": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "externalTableSyncForceAllowReconnects": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncWrapSyncWithExternalDataErrors": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncMultisourceErrorUseNewFormat": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "preventMappingNonExistantSourceColumnsDuringSyncAndUpdateAuthoritativeColumns": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "fixAuthoritativeColumnBeingUnmappedInSource": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "externalTableSyncThreadedEnqueue": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncFixInvalidForeignColumnConfig": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncTargetConfigFixInvalidChoiceId": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncConfigUpdateRetainFTC": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "attachmentsAuthV3ShouldUseSignedAuthV5Urls": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "attachmentProcessingTaskQueueShadowMode": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "eudrAttachmentBoundaryCrossings": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "ekmAgnosticBoundaryCrossingTaskForReEncryption": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "downloadAttachmentsUsingIamRole": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "oldFilestackUrlReferencesMigratedInCrudActionData": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncPingSourceBasesFromTarget": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "changeHooksOnUelLogActions": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "performChangeHookProcessingOnUelPath": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "applicationSearchMultiTokenBooleanSearch": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "applicationSearchMultiTokenBooleanSearchAllowFuzziness": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "twoWaySyncServerSideTransparentEditingNonBlocking": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "twoWaySyncCreateDelete": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "twoWaySyncPricingGating": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "twoWaySyncEnabledInAutomations": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "enforceMaxSourceCellCountForEnablingTwoWaySync": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "externalTableSyncLimitSyncableSharedViewsPerApplication": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncQuerySchemaInIncrementalSync": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "revisionHistoryErrorLogging": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "workflowsSlackShowPermalinkInExpressionBuilder": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "workflowsFindRecordsUserDefinedLimits": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "dateDependenciesRevisionHistory": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "shareWithClaimGroupAudience": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "publiclySharedPageBundlePages": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "columnBulkDelete": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "externalTableSyncSourceToTargetMap": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "disableUsageInsightsOneYearOption": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "tableDeleteOrphanCascadeForApplication": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "disabledWorkflowOnSchemaChangeSuggestion": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "syncFailureSuggestion": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "unusedViewsSuggestion": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "unusedSelectChoicesSuggestion": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "unifiedEventLog": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "unifiedEventLogPublishingBlockDbCommits": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "projectReadDataForRowCards": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "mergeDiffsForVisibleRowsOnlyUseTreatment": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "mergeDiffsForVisibleRowsOnlyShadowLaunch": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "mergeDiffsForVisibleRowsOnlyUseHeuristic": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "threadSafeStoreUseLargerMapSize": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "clientSideProfilingForApplication": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "useListTablesV0MetaShadowboxOp": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "runTakeSnapshotAutomaticallyInThread": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "takeSnapshotThreadWithoutMainThreadChunking": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "chunkArchivableCellHistoryInsertsBasedOnCellValues": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "coreDbShadowboxShadowReads": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "useNativeFormulaEngineForDateTimeParse": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "formulaSelectFormatting": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "modelNamePreserveWhitespace": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "managedSolutionSeparateLeftNav": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "managedSolutionTopNavEntrypoint": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationV2",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        }
+      }
+    },
+    "applicationUnifiedFeatureFlagClientContext": {
+      "applicationId": "appHI27Un8BKJ9iKA",
+      "flagNameToPrecalculatedVariant": {
+        "dynamicFiltersForAdditionalColumnTypes": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "sandboxEligibleApplications": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "sandboxQueryMetadata": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "regenerateAppBlanketOnApplicationUndestroy": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "atlassianJiraFieldMetadataShadowReads": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "aiEmbeddingConfigs": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "aiAliasModelAvailability": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "aiShowModelSelector": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "workflowActivelyCancelWorkflowActionExecutions": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "workflowUseNewNonContiguousConcurrency": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "workflowSortAction": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "enableIncrementalSyncForTimeDependentViewsAppUnified": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "syncLinkedRecordsAllowInPackageConstructionBase": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "externalTableSyncSyncLinkedRecordsColumnAsNativeLinkedRecordsColumn": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "azureDevOpsTwoWaySync": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "workflowsSlackEnableThreadedMessageSupport": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "workflowsUnsubscribeFromEmails": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "workflowsSlackChannelsDistributedCache": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "workflowsOutlookEventUseHtmlForDescriptionField": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "dateDependenciesSetReschedulingMode": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "dateDependenciesSetDependencyTypeForFixedReschedulingMode": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "timelineGroupHeaders": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "collaboratorIdsByRowIdThenColumnIdMapInShadowboxUpdateAppBlanket": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "validateCollaboratorIdsByRowIdThenColumnIdMapInShadowboxUpdateAppBlanket": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "interfaceDesignerIncreasedMaxNumPagesPerPageBundle": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "featureKitRunIntegrityCheckBeforeCreateOrUpdate": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        },
+        "alwaysUseMsgpackForTableReads": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "useForeignKeyFractionalIndexManager": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "ineligibleFromRule",
+            "ruleType": "applicationIds"
+          }
+        },
+        "preserveRichTextInLookupCellValues": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "disabled"
+          }
+        },
+        "twoWaySyncCollaboratorField": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "control",
+            "reason": "trafficLevel"
+          }
+        },
+        "managedSolutionPackageReleaseStepAllowList": {
+          "targetedEntityId": "appHI27Un8BKJ9iKA",
+          "targetedEntityType": "applicationUnified",
+          "precalculatedVariant": {
+            "variant": "treatment",
+            "reason": "random"
+          }
+        }
+      }
+    },
+    "applicationV2EnabledFeatureNames": [
+      "restrictForeignRowSelectionWithFiltersForApplication",
+      "aiFieldMatching",
+      "aiFieldMatchingUsageConsumption",
+      "aiClaudeV3OnBedrockAvailability",
+      "aiCommentSummaryModelScoped",
+      "workflowShowExecutionCount",
+      "multiSourceSyncNoop",
+      "externalTableSyncRealTimeSyncDoNotFallbackOnMissingExternalFieldId",
+      "applicationChangeHookCreateSyncHooksWithSpecificationPayloadEnabled",
+      "externalTableSyncSkipRealTimeSyncForSyncWithFieldTypeCustomizationToLinkedRecord",
+      "externalTableSyncLinkedRecordFallbackToFTS",
+      "externalTableSyncRealTimeSyncAllowSchemaUpdatesFromResolution",
+      "syncLinkedRecordsInSyncWithExternalDataActions",
+      "goldenDatasetsRelationshipMapBeta",
+      "twoWaySyncStopEnqueueFullTableSync",
+      "twoWaySyncDependentCrudActionsUndo",
+      "enableSyncConfigManagerForCalculatingAuthoritativeColumnsToDelete",
+      "externalTableSyncForceAllowReconnects",
+      "externalTableSyncWrapSyncWithExternalDataErrors",
+      "externalTableSyncMultisourceErrorUseNewFormat",
+      "externalTableSyncThreadedEnqueue",
+      "externalTableSyncFixInvalidForeignColumnConfig",
+      "externalTableSyncTargetConfigFixInvalidChoiceId",
+      "externalTableSyncConfigUpdateRetainFTC",
+      "ekmAgnosticBoundaryCrossingTaskForReEncryption",
+      "downloadAttachmentsUsingIamRole",
+      "oldFilestackUrlReferencesMigratedInCrudActionData",
+      "performChangeHookProcessingOnUelPath",
+      "applicationSearchMultiTokenBooleanSearch",
+      "twoWaySyncServerSideTransparentEditingNonBlocking",
+      "twoWaySyncCreateDelete",
+      "twoWaySyncPricingGating",
+      "twoWaySyncEnabledInAutomations",
+      "externalTableSyncLimitSyncableSharedViewsPerApplication",
+      "externalTableSyncQuerySchemaInIncrementalSync",
+      "dateDependenciesRevisionHistory",
+      "shareWithClaimGroupAudience",
+      "columnBulkDelete",
+      "externalTableSyncSourceToTargetMap",
+      "disabledWorkflowOnSchemaChangeSuggestion",
+      "syncFailureSuggestion",
+      "unusedViewsSuggestion",
+      "unifiedEventLog",
+      "unifiedEventLogPublishingBlockDbCommits",
+      "mergeDiffsForVisibleRowsOnlyUseTreatment",
+      "mergeDiffsForVisibleRowsOnlyUseHeuristic",
+      "runTakeSnapshotAutomaticallyInThread",
+      "chunkArchivableCellHistoryInsertsBasedOnCellValues",
+      "modelNamePreserveWhitespace",
+      "managedSolutionSeparateLeftNav"
+    ],
+    "hasApplicationEverInstalledSolutionsPackage": false,
+    "isUserLimitsHardEnforcementEnabledForParentWorkspace": false,
+    "ekmEnablementMetadata": {
+      "isEkmAttachmentUploadEnabled": false,
+      "isEkmEnabled": false,
+      "isFilestackFullyDisabled": true
+    },
+    "syncedViewLimitMetadata": {
+      "maxSyncableSharedViews": 100,
+      "currentSyncableSharedViews": 0
+    },
+    "isInExperimentalCoreDbPrimaryMode": false,
+    "aiConsumptionInfo": null,
+    "dataResidentRegion": null,
+    "isConstantPooledData": false
+  }
+}

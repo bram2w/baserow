@@ -3,6 +3,7 @@
   font-size: 14px;
   padding: 3px 6px;
   background-color: $color-neutral-100;
+
   @include rounded($rounded);
 
   &.api-docs__code--small {

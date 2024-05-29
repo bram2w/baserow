@@ -12,7 +12,6 @@
     </div>
     <ViewFieldConditionsForm
       v-if="view.filters.length > 0"
-      v-auto-overflow-scroll
       :filters="view.filters"
       :filter-groups="view.filter_groups"
       :disable-filter="disableFilter"
@@ -22,7 +21,8 @@
       :is-public-view="isPublicView"
       :read-only="readOnly"
       :add-condition-string="$t('viewFilterContext.addFilter')"
-      class="filters__items--with-padding filters__items--scrollable"
+      scrollable
+      class="filters__items--with-padding"
       @addFilter="addFilter($event)"
       @deleteFilter="deleteFilter($event)"
       @deleteFilterGroup="deleteFilterGroup($event)"
@@ -32,13 +32,12 @@
     />
     <div v-if="!disableFilter" class="filters__footer">
       <div class="filters__actions">
-        <a class="filters__add" @click.prevent="addFilter()">
-          <i class="filters__add-icon iconoir-plus"></i>
-          {{ $t('viewFilterContext.addFilter') }}</a
+        <ButtonText icon="iconoir-plus" @click.prevent="addFilter()">
+          {{ $t('viewFilterContext.addFilter') }}</ButtonText
         >
-        <a class="filters__add" @click.prevent="addFilter(uuid())">
-          <i class="filters__add-icon iconoir-plus"></i>
-          {{ $t('viewFilterContext.addFilterGroup') }}</a
+
+        <ButtonText icon="iconoir-plus" @click.prevent="addFilter(uuid())">
+          {{ $t('viewFilterContext.addFilterGroup') }}</ButtonText
         >
       </div>
       <div v-if="view.filters.length > 0">

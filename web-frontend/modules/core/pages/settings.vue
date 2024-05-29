@@ -1,16 +1,32 @@
 <template>
-  <Tabs :full-height="true" :navigation="true" :large="true">
-    <Tab
-      v-for="page in pages"
-      :key="page.type"
-      :title="page.name"
-      :disabled="!page.navigable"
-      :to="page.to"
-      :tooltip="!page.navigable ? $t('enterprise.deactivated') : null"
+  <div style="height: 100%; display: flex; flex-direction: column">
+    <Tabs
+      offset
+      full-height
+      :route="$route"
+      large-offset
+      @click-disabled="clickDisabled(pages[$event])"
     >
-      <NuxtChild :workspace="workspace" />
-    </Tab>
-  </Tabs>
+      <Tab
+        v-for="page in pages"
+        :key="page.type"
+        :title="page.name"
+        :disabled="!page.navigable"
+        :to="page.to"
+        :icon="!page.navigable ? 'iconoir-lock' : null"
+      >
+        <NuxtChild :workspace="workspace" />
+      </Tab>
+    </Tabs>
+    <component
+      :is="page.deactivatedModal"
+      v-for="page in deactivatedPagesWithModal"
+      :key="page.type"
+      :ref="'deactivatedModal' + page.type"
+      :workspace="workspace"
+      :name="page.name"
+    ></component>
+  </div>
 </template>
 
 <script>
@@ -43,7 +59,13 @@ export default {
           name: instance.getName(),
           to: instance.getRoute(this.workspace),
           navigable: instance.isFeatureActive(this.workspace),
+          deactivatedModal: instance.getFeatureDeactivatedModal(this.workspace),
         }
+      })
+    },
+    deactivatedPagesWithModal() {
+      return this.pages.filter((page) => {
+        return !page.navigable && page.deactivatedModal
       })
     },
   },
@@ -56,6 +78,12 @@ export default {
   methods: {
     workspaceDeleted() {
       this.$nuxt.$router.push({ name: 'dashboard' })
+    },
+    clickDisabled(page) {
+      const deactivatedModal = this.$refs['deactivatedModal' + page.type]
+      if (deactivatedModal) {
+        deactivatedModal[0].show()
+      }
     },
   },
 }

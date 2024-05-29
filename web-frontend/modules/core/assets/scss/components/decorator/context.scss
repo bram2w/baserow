@@ -12,7 +12,7 @@
 
 .decorator-context__decorator {
   border-bottom: 1px solid $color-neutral-200;
-  padding: 18px 0 18px 0;
+  padding: 18px 0;
 
   &:last-child {
     border: none;
@@ -42,11 +42,6 @@
 
 .decorator-context__decorator-header-trash {
   margin-left: 12px;
-  border-radius: 6px;
-  border: 1px solid #b5b5b7;
-
-  /* Interactive/Elevation/Low */
-  box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
 }
 
 .decorator-context__decorator-header-trash-link {

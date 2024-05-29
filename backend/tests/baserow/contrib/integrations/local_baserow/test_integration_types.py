@@ -79,7 +79,7 @@ def test_get_local_baserow_databases(data_fixture):
 
 @pytest.mark.django_db
 def test_get_local_baserow_databases_number_of_queries(
-    data_fixture, django_assert_num_queries
+    data_fixture, django_assert_num_queries, bypass_check_permissions
 ):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -156,7 +156,9 @@ def test_get_local_baserow_databases_performance(data_fixture, api_client, profi
 
 
 @pytest.mark.django_db
-def test_get_integrations_serializer(api_client, data_fixture):
+def test_get_integrations_serializer(
+    api_client, data_fixture, bypass_check_permissions
+):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)

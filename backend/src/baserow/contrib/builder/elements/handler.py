@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Optional, Union, cast
+from typing import Any, Dict, Iterable, List, Optional, Type, Union, cast
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -12,16 +12,21 @@ from baserow.contrib.builder.elements.exceptions import (
 from baserow.contrib.builder.elements.models import ContainerElement, Element
 from baserow.contrib.builder.elements.registries import (
     ElementType,
+    ElementTypeSubClass,
     element_type_registry,
 )
+from baserow.contrib.builder.elements.types import (
+    ElementForUpdate,
+    ElementsAndWorkflowActions,
+)
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
+from baserow.contrib.builder.workflow_actions.registries import (
+    builder_workflow_action_type_registry,
+)
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.utils import MirrorDict, extract_allowed
-
-from ..workflow_actions.models import BuilderWorkflowAction
-from ..workflow_actions.registries import builder_workflow_action_type_registry
-from .types import ElementForUpdate, ElementsAndWorkflowActions
 
 
 class ElementHandler:
@@ -94,6 +99,49 @@ class ElementHandler:
 
         return element
 
+    def get_ancestors(self, element_id: int, page: Page) -> List[Element]:
+        """
+        Returns a list of all the ancestors of the given element. The ancestry
+        results are cached in the dispatch context to avoid multiple queries in
+        the same HTTP request.
+
+        :param element_id: The ID of the element.
+        :param page: The page that holds the elements.
+        :return: A list of the ancestors of the given element.
+        """
+
+        elements = self.get_elements(page)
+        grouped_elements = {element.id: element for element in elements}
+        element = grouped_elements[element_id]
+
+        ancestry = []
+        while element.parent_element_id is not None:
+            element = grouped_elements[element.parent_element_id]
+            ancestry.append(element)
+
+        return ancestry
+
+    def get_first_ancestor_of_type(
+        self,
+        element_id: int,
+        target_type: Type[ElementTypeSubClass],
+    ) -> Optional[Element]:
+        """
+        Returns the first ancestor of the given type belonging to this element.
+
+        :param element_id: The ID of the element.
+        :param target_type: The type of the element to find.
+        :return: The first ancestor of the given type or None if not found.
+        """
+
+        element = ElementHandler().get_element(element_id)
+        if isinstance(element.get_type(), target_type):
+            return element
+
+        for ancestor in self.get_ancestors(element_id, element.page):
+            if isinstance(ancestor.get_type(), target_type):
+                return ancestor
+
     def get_element_for_update(
         self, element_id: int, base_queryset: Optional[QuerySet] = None
     ) -> ElementForUpdate:
@@ -120,6 +168,7 @@ class ElementHandler:
         page: Page,
         base_queryset: Optional[QuerySet] = None,
         specific: bool = True,
+        use_cache: bool = True,
     ) -> Union[QuerySet[Element], Iterable[Element]]:
         """
         Gets all the specific elements of a given page.
@@ -128,8 +177,23 @@ class ElementHandler:
         :param base_queryset: The base queryset to use to build the query.
         :param specific: Whether to return the generic elements or the specific
             instances.
+        :param use_cache: Whether to use the cached elements on the page or not.
         :return: The elements of that page.
         """
+
+        # Our cache key varies if we're using specific or generic elements.
+        cache_key = "_page_elements" if not specific else "_page_elements_specific"
+
+        # If a `base_queryset` is given, we can't use caching, clear
+        # both cache keys in case the specific argument has changed.
+        if base_queryset is not None:
+            use_cache = False
+            setattr(page, "_page_elements", None)
+            setattr(page, "_page_elements_specific", None)
+
+        elements_cache = getattr(page, cache_key, None)
+        if use_cache and elements_cache is not None:
+            return elements_cache
 
         queryset = base_queryset if base_queryset is not None else Element.objects.all()
 
@@ -137,16 +201,21 @@ class ElementHandler:
 
         if specific:
             queryset = queryset.select_related("content_type")
-            return specific_iterator(queryset)
+            elements = specific_iterator(queryset)
         else:
-            return queryset
+            elements = queryset
+
+        if use_cache:
+            setattr(page, cache_key, list(elements))
+
+        return elements
 
     def create_element(
         self,
         element_type: ElementType,
         page: Page,
         before: Optional[Element] = None,
-        **kwargs
+        **kwargs,
     ) -> Element:
         """
         Creates a new element for a page.
@@ -486,6 +555,7 @@ class ElementHandler:
         element: Element,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
     ):
         """
         Serializes the given element.
@@ -496,7 +566,9 @@ class ElementHandler:
         :return: The serialized version.
         """
 
-        return element.get_type().export_serialized(element)
+        return element.get_type().export_serialized(
+            element, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def import_element(
         self,
@@ -505,6 +577,7 @@ class ElementHandler:
         id_mapping: Dict[str, Dict[int, int]],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
     ) -> Element:
         """
         Creates an instance using the serialized version previously exported with
@@ -524,7 +597,12 @@ class ElementHandler:
 
         element_type = element_type_registry.get(serialized_element["type"])
         created_instance = element_type.import_serialized(
-            page, serialized_element, id_mapping
+            page,
+            serialized_element,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
         id_mapping["builder_page_elements"][

@@ -108,6 +108,29 @@
         @suggested-field-name="handleSuggestedFieldName($event)"
       />
     </template>
+
+    <FormElement
+      v-if="showDescription"
+      :error="fieldHasErrors('description')"
+      class="control"
+    >
+      <label class="control__label control__label--small">{{
+        $t('fieldForm.description')
+      }}</label>
+      <div class="control__elements">
+        <RichTextEditor
+          ref="description"
+          :value="editorValue"
+          class="field-form__editor rich-text-editor rich-text-editor--fixed-size"
+          :editable="true"
+          :enter-stop-edit="false"
+          :thin-scrollbar="true"
+          :enable-rich-text-formatting="false"
+          :placeholder="$t('fieldForm.description')"
+          @blur="onDescriptionBlur"
+        />
+      </div>
+    </FormElement>
     <slot v-if="!selectedFieldIsDeactivated"></slot>
   </form>
 </template>
@@ -117,6 +140,7 @@ import { mapGetters } from 'vuex'
 import { required, maxLength } from 'vuelidate/lib/validators'
 
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
+import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
 import form from '@baserow/modules/core/mixins/form'
 import {
   RESERVED_BASEROW_FIELD_NAMES,
@@ -126,6 +150,7 @@ import {
 // @TODO focus form on open
 export default {
   name: 'FieldForm',
+  components: { RichTextEditor },
   mixins: [form],
   props: {
     table: {
@@ -158,13 +183,15 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['name', 'type'],
+      allowedValues: ['name', 'type', 'description'],
       values: {
         name: '',
         type: this.forcedType || '',
+        description: null,
       },
       isPrefilledWithSuggestedFieldName: false,
       oldValueType: null,
+      showDescription: false,
     }
   },
   computed: {
@@ -189,6 +216,11 @@ export default {
       } catch {
         return false
       }
+    },
+    editorValue() {
+      // temp fix to have proper line breaks
+      // this will not be needed when RTE will be in minimal mode
+      return (this.values.description || '').replaceAll('\n', '<br/>')
     },
     ...mapGetters({
       fields: 'field/getAll',
@@ -276,6 +308,29 @@ export default {
       if (fieldType.isDeactivated(this.workspace.id)) {
         this.$refs[`deactivatedClickModal-${fieldType.type}`][0].show()
       }
+    },
+    /**
+     * This sets the showDescription flag to display description text editor, even
+     * if values.description is empty.
+     *
+     * Used by parent components.
+     */
+    showDescriptionField() {
+      this.showDescription = true
+    },
+    /**
+     * Helper method to get information if description is not empty.
+     * Used by parent components
+     */
+    isDescriptionFieldNotEmpty() {
+      this.showDescription = !!this.values.description
+      return this.showDescription
+    },
+    onDescriptionBlur() {
+      // Handle blur event on field description text editor.
+      // A bit hacky way to get current state of description editor once the
+      // edition finished.
+      this.values.description = this.$refs.description.editor.getText()
     },
   },
 }

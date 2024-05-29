@@ -9,13 +9,14 @@
     >
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="loading"
             :disabled="loading"
           >
             {{ $t('createWorkspaceModal.add') }}
-          </button>
+          </Button>
         </div>
       </div>
     </WorkspaceForm>

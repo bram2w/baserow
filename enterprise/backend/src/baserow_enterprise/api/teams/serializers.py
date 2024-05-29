@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow_enterprise.api.role.serializers import RoleField
+from baserow_enterprise.exceptions import RoleNotExist
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.teams.handler import SUPPORTED_SUBJECT_TYPES
 from baserow_enterprise.teams.models import Team, TeamSubject
@@ -57,6 +58,7 @@ class TeamSerializer(
 ):
     default_role = RoleField(
         model=Role,
+        custom_does_not_exist_exception_class=RoleNotExist,
         required=False,
         allow_null=True,
         help_text=(

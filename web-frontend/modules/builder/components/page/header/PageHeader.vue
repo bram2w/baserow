@@ -1,11 +1,11 @@
 <template>
   <header class="layout__col-2-1 header header--space-between">
-    <PageHeaderMenuItems :page="page" />
+    <PageHeaderMenuItems />
     <DeviceSelector
       :device-type-selected="deviceTypeSelected"
       @selected="actionSetDeviceTypeSelected"
     />
-    <PageActions :page="page" />
+    <PageActions />
   </header>
 </template>
 

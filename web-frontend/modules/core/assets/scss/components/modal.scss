@@ -1,9 +1,6 @@
 .modal__wrapper {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   overflow: auto;
   z-index: $z-index-modal;
   background-color: rgba($color-neutral-700, 0.16);
@@ -11,12 +8,13 @@
 }
 
 .modal__box {
-  @extend .box;
+  @extend %box;
 
   position: relative;
   margin: 40px auto;
   max-width: 660px;
   background-color: $white;
+
   @include rounded($rounded-md);
 
   &.modal__box--with-sidebar {
@@ -56,6 +54,7 @@
 
   &.modal__box--right {
     margin-right: 20px;
+
     @media (max-width: 720px) {
       max-width: calc(100% - 50px);
     }
@@ -118,7 +117,8 @@
   align-items: baseline;
 }
 
-.modal__close {
+.modal__close,
+%modal-close {
   font-size: 20px;
   color: $color-neutral-400;
 
@@ -128,7 +128,7 @@
 }
 
 .sidebar__collapse {
-  @extend .modal__close;
+  @extend %modal-close;
 
   margin-right: 4px;
 }

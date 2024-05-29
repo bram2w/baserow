@@ -1,10 +1,20 @@
+import json
+import uuid
+from collections import defaultdict
+
 import pytest
 from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.models import CollectionField, Element
+from baserow.contrib.builder.elements.models import (
+    CollectionField,
+    Element,
+    TableElement,
+)
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
+from baserow.contrib.builder.workflow_actions.models import NotificationWorkflowAction
+from baserow.core.utils import MirrorDict
 
 
 @pytest.mark.django_db
@@ -25,12 +35,6 @@ def test_create_table_element_without_fields(data_fixture):
     created_element = Element.objects.last().specific
 
     assert created_element.data_source.id == data_source1.id
-
-    fields = list(created_element.fields.all())
-
-    assert len(fields) == 3
-
-    fields[0].name == "Column 1"
 
 
 @pytest.mark.django_db
@@ -143,6 +147,7 @@ def test_update_table_element_with_fields(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table_element = data_fixture.create_builder_table_element(page=page)
+    uuids = [str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())]
 
     ElementService().update_element(
         user,
@@ -152,11 +157,13 @@ def test_update_table_element_with_fields(data_fixture):
                 "name": "New field 1",
                 "type": "text",
                 "config": {"value": "get('test1')"},
+                "uid": uuids[0],
             },
             {
                 "name": "New field 2",
                 "type": "text",
                 "config": {"value": "get('test2')"},
+                "uid": uuids[1],
             },
         ],
     )
@@ -178,11 +185,13 @@ def test_update_table_element_with_fields(data_fixture):
                 "name": "New field 3",
                 "type": "text",
                 "config": {"value": "get('test3')"},
+                "uid": uuids[0],
             },
             {
                 "name": "New field 4",
                 "type": "text",
                 "config": {"value": "get('test4')"},
+                "uid": uuids[1],
             },
         ],
     )
@@ -244,6 +253,7 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
                     "navigation_type": "custom",
                     "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
                     "link_name": f"get('current_record.field_{fields[0].id}')",
+                    "target": "self",
                 },
             },
         ],
@@ -259,6 +269,7 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
             "navigation_type": "custom",
             "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
             "link_name": f"get('current_record.field_{fields[0].id}')",
+            "target": "self",
         },
     ]
 
@@ -281,6 +292,7 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
     data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
         table=table, page=page
     )
+    uuids = [str(uuid.uuid4()), str(uuid.uuid4()), str(uuid.uuid4())]
 
     IMPORT_REF = {
         "id": 42,
@@ -297,6 +309,7 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
                 "name": "Field 1",
                 "config": {"value": f"get('current_record.field_42')"},
                 "type": "text",
+                "uid": uuids[0],
             },
             {
                 "name": "Field 2",
@@ -306,8 +319,10 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
                     "navigation_type": "custom",
                     "navigate_to_url": f"get('current_record.field_42')",
                     "link_name": f"get('current_record.field_42')",
+                    "target": "self",
                 },
                 "type": "link",
+                "uid": uuids[1],
             },
         ],
     }
@@ -331,5 +346,135 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
             "navigation_type": "custom",
             "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
             "link_name": f"get('current_record.field_{fields[0].id}')",
+            "target": "self",
         },
     ]
+
+
+@pytest.mark.django_db
+def test_delete_table_element_removes_associated_workflow_actions(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+    table_element = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source1,
+        fields=[
+            {
+                "name": "Field",
+                "type": "button",
+                "config": {"label": "Click me"},
+            },
+        ],
+    )
+    data_fixture.create_workflow_action(
+        NotificationWorkflowAction,
+        page=page,
+        element=table_element,
+        event=f"{table_element.fields.first().uid}_click",
+    )
+
+    assert NotificationWorkflowAction.objects.count() == 1
+    ElementService().delete_element(user, table_element)
+    assert NotificationWorkflowAction.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_delete_table_field_removes_associated_workflow_actions(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+    table_element = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source1,
+        fields=[
+            {
+                "name": "Field",
+                "type": "button",
+                "config": {"label": "Click me"},
+            },
+        ],
+    )
+    workflow_action = data_fixture.create_workflow_action(
+        NotificationWorkflowAction,
+        page=page,
+        element=table_element,
+        event=f"{table_element.fields.first().uid}_click",
+    )
+
+    assert NotificationWorkflowAction.objects.count() == 1
+    ElementService().update_element(user, table_element, fields=[])
+    assert NotificationWorkflowAction.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_table_element_import_export(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+    table_element = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source1,
+        fields=[
+            {
+                "name": "Field",
+                "type": "button",
+                "config": {"label": "Click me"},
+            },
+        ],
+    )
+    table_element_type = table_element.get_type()
+
+    # Export the table element and check there are no table elements after deleting it
+    exported = table_element_type.export_serialized(table_element)
+    ElementService().delete_element(user, table_element)
+    assert json.dumps(exported)
+    assert TableElement.objects.count() == 0
+
+    # After importing the table element the fields should be properly imported too
+    id_mapping = defaultdict(lambda: MirrorDict())
+    table_element_type.import_serialized(page, exported, id_mapping)
+    assert (
+        TableElement.objects.filter(
+            page=page,
+            data_source=data_source1,
+            fields__name="Field",
+            fields__type="button",
+        ).count()
+        == 1
+    )
+
+
+@pytest.mark.django_db
+def test_table_element_import_fields_with_no_uid(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+
+    exported = {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        "type": "table",
+        "fields": [
+            {
+                # NOTE: 'uid' property is missing here
+                "name": "Field",
+                "type": "button",
+                "config": {"label": "Click me"},
+            }
+        ],
+        "data_source_id": data_source.id,
+    }
+    table_element_type = data_fixture.create_builder_table_element().get_type()
+    id_mapping = defaultdict(lambda: MirrorDict())
+
+    table_element = table_element_type.import_serialized(page, exported, id_mapping)
+    assert table_element.fields.first().uid is not None

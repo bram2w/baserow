@@ -16,7 +16,7 @@
         </FormViewImageUpload>
         <a
           v-else
-          class="form_view__file-delete"
+          class="form-view__file-delete"
           @click="updateForm({ cover_image: null })"
         >
           <i class="iconoir-cancel"></i>
@@ -117,6 +117,7 @@
             @change="updateForm({ submit_text: $event.value })"
             @editing="editingSubmitText = $event"
           ></Editable>
+
           <a
             v-if="!readOnly"
             class="form-view__edit"

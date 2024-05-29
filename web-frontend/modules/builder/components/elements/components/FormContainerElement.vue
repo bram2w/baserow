@@ -4,12 +4,18 @@
       '--button-color': resolveColor(element.button_color, colorVariables),
     }"
   >
-    <div v-if="mode === 'editing' && children.length === 0">
+    <div
+      v-if="
+        mode === 'editing' &&
+        children.length === 0 &&
+        $hasPermission('builder.page.create_element', page, workspace.id)
+      "
+    >
       <AddElementZone @add-element="showAddElementModal"></AddElementZone>
       <AddElementModal
         ref="addElementModal"
         :page="page"
-        :element-types-allowed="elementType.childElementTypes"
+        :element-types-allowed="elementType.childElementTypes(page, element)"
       ></AddElementModal>
     </div>
     <div v-else>
@@ -154,7 +160,7 @@ export default {
     validateAndSubmitEvent() {
       this.setFormElementDescendantsTouched(true)
       if (!this.formElementChildrenAreInvalid) {
-        this.fireSubmitEvent()
+        this.fireEvent(this.elementType.getEventByName(this.element, 'submit'))
         this.resetFormContainerElements()
       }
     },

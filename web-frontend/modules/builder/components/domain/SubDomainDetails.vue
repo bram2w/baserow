@@ -4,13 +4,14 @@
       {{ $t('subDomainDetails.text') }}
     </p>
     <div class="actions actions--right">
-      <a
-        class="button button--error"
-        :class="{ 'button--loading': domain._.loading }"
+      <Button
+        type="danger"
+        :loading="domain._.loading"
+        :disabled="domain._.loading"
         @click="$emit('delete')"
       >
-        {{ $t('action.delete') }}
-      </a>
+        {{ $t('action.delete') }}</Button
+      >
     </div>
   </div>
 </template>

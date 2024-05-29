@@ -6,7 +6,7 @@
         @click="
           () => {
             if (deactivated) {
-              $refs.premiumModal.show()
+              $refs.enterpriseModal.show()
             } else {
               $refs.memberRolesModal.show()
             }
@@ -25,22 +25,22 @@
       :database="database"
       :table="table"
     />
-    <PremiumModal
-      ref="premiumModal"
+    <EnterpriseModal
+      ref="enterpriseModal"
       :name="$t('memberRolesTableContexItem.additionalRoles')"
       :workspace="database.workspace"
-    ></PremiumModal>
+    ></EnterpriseModal>
   </div>
 </template>
 
 <script>
 import MemberRolesModal from '@baserow_enterprise/components/member-roles/MemberRolesModal'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import PremiumModal from '@baserow_premium/components/PremiumModal'
+import EnterpriseModal from '@baserow_enterprise/components/EnterpriseModal'
 
 export default {
   name: 'MemberRolesTableContextItem',
-  components: { MemberRolesModal, PremiumModal },
+  components: { MemberRolesModal, EnterpriseModal },
   props: {
     table: {
       type: Object,

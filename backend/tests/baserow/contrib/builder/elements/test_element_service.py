@@ -144,7 +144,7 @@ def test_create_element_permission_denied(data_fixture, stub_check_permissions):
             user,
             element_type,
             page=page,
-            **element_type.get_pytest_params(data_fixture)
+            **element_type.get_pytest_params(data_fixture),
         )
 
 
@@ -195,7 +195,6 @@ def test_get_elements(data_fixture, stub_check_permissions):
         queryset,
         workspace=None,
         context=None,
-        allow_if_template=False,
     ):
         return queryset.exclude(id=element1.id)
 

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Prevent sending too many email verification emails",
+    "issue_number": 2552,
+    "bullet_points": [],
+    "created_at": "2024-05-13"
+}

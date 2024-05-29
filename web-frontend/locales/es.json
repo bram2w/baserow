@@ -68,10 +68,10 @@
         "url": "una URL"
     },
     "field": {
-        "emailAddress": "Dirección de E-mail"
+        "emailAddress": "Correo electrónico"
     },
     "error": {
-        "invalidEmail": "Por favor, introduce una dirección de correo electrónico válida.",
+        "invalidEmail": "Por favor, introduce un correo electrónico válido.",
         "notMatchingPassword": "Este campo debe coincidir con su campo de contraseña.",
         "minLength": "Se requiere un mínimo de {min} caracteres aquí.",
         "maxLength": "Aquí se permite un máximo de {max} caracteres.",
@@ -81,7 +81,8 @@
         "minValueField": "El campo debe ser mayor o igual que {mínimo}.",
         "maxValueField": "El campo debe ser menor o igual que {máximo}.",
         "minMaxValueField": "El valor del campo debe estar comprendido entre {min} y {max}.",
-        "invalidNumber": "El campo debe ser un número."
+        "invalidNumber": "El campo debe ser un número.",
+        "email": "El campo debe ser un correo electrónico."
     },
     "permission": {
         "admin": "Admin",
@@ -133,7 +134,7 @@
         "invalidEmail": "Email inválido",
         "invalidPhoneNumber": "Número de teléfono invalido",
         "invalidDuration": "Formato no válido ({duraciónFormato}).",
-        "overflowDuration": "El valor es demasiado grande.",
+        "overflowDuration": "El valor está fuera de los límites.",
         "maxChars": "Máximo {max} caracteres.",
         "minChars": "Mínimo {min} caracteres."
     },
@@ -141,7 +142,7 @@
         "readOnly": "Este es un campo de sólo lectura.",
         "text": "Acepta texto de una sola línea.",
         "longText": "Acepta el texto en varias líneas. Si el formato de texto enriquecido está activado, puede utilizar Markdown para dar formato al texto.",
-        "linkRow": "Acepta una matriz que contiene los identificadores o los valores de texto del campo principal de las filas relacionadas del id de tabla {table}. Deben proporcionarse todos los identificadores cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones. En caso de que se proporcione un valor de texto en lugar de un identificador, se buscará una fila con el valor coincidente para su campo principal. Si se encuentra más de una coincidencia, se seleccionará la primera en el orden de la tabla. Puedes enviar una cadena con nombres separados por coma, en cuyo caso la cadena se convierte en una matriz de nombres de fila.",
+        "linkRow": "Acepta una matriz que contiene los identificadores o los valores de texto del campo principal de las filas relacionadas del id de tabla {table}. Deben proporcionarse todos los identificadores cada vez que se actualicen las relaciones. Si se proporciona una matriz vacía, se eliminarán todas las relaciones. En caso de que se proporcione un valor de texto en lugar de un identificador, se buscará una fila con el valor coincidente para su campo principal. Si se encuentra más de una coincidencia, se seleccionará la primera en el orden de la tabla. Puedes enviar una cadena con nombres separados por coma, en cuyo caso la cadena se convierte en una matriz de nombres de fila. También se puede enviar sólo el ID de una fila.",
         "number": "Acepta un número.",
         "numberPositive": "Acepta un número positivo.",
         "decimal": "Acepta un decimal con {places} decimales después del punto.",
@@ -156,7 +157,7 @@
         "createdOnReadOnly": "El campo creado en un campo de sólo lectura.",
         "url": "Acepta una cadena que debe ser una URL.",
         "email": "Acepta una cadena que debe ser una dirección de correo electrónico.",
-        "file": "Acepta una matriz de objetos que contienen al menos el nombre del archivo de usuario.",
+        "file": "Acepta una matriz de objetos que contenga al menos el nombre del archivo de usuario. También puedes proporcionar una lista de nombres de archivo separados por comas o una matriz de nombres de archivo. Puedes utilizar los endpoints «Subida de archivos» para subir el archivo. La respuesta de esas llamadas puede proporcionarse directamente como objeto aquí. Los puntos finales se encuentran en la barra lateral izquierda.",
         "singleSelect": "Acepta un número entero o un valor de texto que representa el ID de la opción seleccionada o el valor de la opción. Un valor nulo significa que no se ha seleccionado ninguno. En el caso de un valor de texto, se selecciona la primera opción coincidente.",
         "multipleSelect": "Acepta una matriz de enteros mixtos o valores de texto, cada uno de los cuales representa el id o el valor de la opción de selección elegida. En el caso de un valor de texto, se selecciona la primera opción que coincida. Puedes enviar una cadena con nombres separados por comas como valor, en cuyo caso la cadena se convierte en una matriz de nombres de opciones.",
         "phoneNumber": "Acepta un número de teléfono que tenga una longitud máxima de 100 caracteres que consista únicamente en dígitos, espacios y los siguientes caracteres: Nx,._+*()#=;/- .",
@@ -213,7 +214,33 @@
         "higherThanOrEqual": "mayor o igual que",
         "lowerThanOrEqual": "menos o igual que",
         "isAnyOf": "es cualquiera de",
-        "isNoneOf": "es ninguno de"
+        "isNoneOf": "es ninguno de",
+        "tomorrow": "mañana",
+        "thisWeek": "esta semana",
+        "oneMonthAgo": "hace un mes",
+        "nextMonth": "el próximo mes",
+        "thisYear": "este año",
+        "nrDaysFromNow": "días desde hoy",
+        "isOnOrBefore": "es en o antes",
+        "isOnOrAfter": "es en o después",
+        "isWithin": "esta dentro",
+        "today": "hoy",
+        "yesterday": "ayer",
+        "oneWeekAgo": "hace una semana",
+        "nextWeek": "la próxima semana",
+        "thisMonth": "este mes",
+        "oneYearAgo": "hace un año",
+        "nextYear": "el próximo año",
+        "nrDaysAgo": "hace unos días",
+        "nrWeeksAgo": "hace unas semanas",
+        "nrMonthsAgo": "hace unos meses",
+        "nrYearsAgo": "hace unos años",
+        "nrWeeksFromNow": "semanas desde hoy",
+        "nrMonthsFromNow": "meses desde hoy",
+        "nrYearsFromNow": "años desde hoy",
+        "exactDate": "fecha exacta",
+        "isBefore": "es antes",
+        "isAfter": "es después"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -330,7 +357,13 @@
         "generativeAIDoesNotExistTitle": "La IA generativa no existe",
         "generativeAIDoesNotExistDescription": "El modelo de IA generativa no existe.",
         "modelDoesNotBelongToTypeTitle": "El modelo seleccionado no pertenece al tipo AI",
-        "modelDoesNotBelongToTypeDescription": "El modelo seleccionado no pertenece al tipo de IA seleccionado."
+        "modelDoesNotBelongToTypeDescription": "El modelo seleccionado no pertenece al tipo de IA seleccionado.",
+        "outputParserTitle": "Resultado incorrecto",
+        "outputParserDescription": "El modelo respondió con una salida incorrecta. Por favor, inténtalo de nuevo.",
+        "generateAIPromptTitle": "Error de pregunta",
+        "generateAIPromptDescription": "Algo iba mal con el indicador construido.",
+        "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Número máximo de invitaciones pendientes alcanzado",
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Has alcanzado el número máximo de invitaciones pendientes para este espacio de trabajo. Deja que los invitados acepten la invitación o cancela las existentes para continuar."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -478,7 +511,9 @@
         "encodeUriDescription": "Devuelve una cadena URL codificada a partir del argumento proporcionado.",
         "getIsImageDescription": "Devuelve si el archivo único devuelto por la función de índice es una imagen o no.",
         "getFileMimeTypeDescription": "Devuelve el tipo mime de un único archivo devuelto por la función index.",
-        "hasOptionDescription": "Devuelve verdadero si el primer argumento es un campo de selección múltiple o una búsqueda en un campo de selección simple y el segundo argumento es una de las opciones."
+        "hasOptionDescription": "Devuelve verdadero si el primer argumento es un campo de selección múltiple o una búsqueda en un campo de selección simple y el segundo argumento es una de las opciones.",
+        "secondsToDurationDescription": "Convierte el número de segundos proporcionado en una duración.",
+        "durationToSecondsDescription": "Convierte la duración proporcionada en el número de segundos correspondiente."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"

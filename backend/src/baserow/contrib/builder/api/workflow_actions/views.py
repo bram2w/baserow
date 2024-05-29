@@ -391,7 +391,9 @@ class DispatchBuilderWorkflowActionView(APIView):
             workflow_action_id
         )
 
-        dispatch_context = BuilderDispatchContext(request, workflow_action.page)
+        dispatch_context = BuilderDispatchContext(
+            request, workflow_action.page, workflow_action=workflow_action
+        )
 
         response = BuilderWorkflowActionService().dispatch_action(
             request.user, workflow_action, dispatch_context  # type: ignore

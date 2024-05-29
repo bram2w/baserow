@@ -284,6 +284,13 @@ class DatabaseConfig(AppConfig):
             DateEqualsTodayViewFilterType,
             DateEqualsYearsAgoViewFilterType,
             DateEqualViewFilterType,
+            DateIsAfterMultiStepFilterType,
+            DateIsBeforeMultiStepFilterType,
+            DateIsEqualMultiStepFilterType,
+            DateIsNotEqualMultiStepFilterType,
+            DateIsOnOrAfterMultiStepFilterType,
+            DateIsOnOrBeforeMultiStepFilterType,
+            DateIsWithinMultiStepFilterType,
             DateIsWithinXDaysViewFilterType,
             DateIsWithinXMonthsViewFilterType,
             DateIsWithinXWeeksViewFilterType,
@@ -353,6 +360,13 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsDayOfMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
+        view_filter_type_registry.register(DateIsEqualMultiStepFilterType())
+        view_filter_type_registry.register(DateIsNotEqualMultiStepFilterType())
+        view_filter_type_registry.register(DateIsBeforeMultiStepFilterType())
+        view_filter_type_registry.register(DateIsOnOrBeforeMultiStepFilterType())
+        view_filter_type_registry.register(DateIsAfterMultiStepFilterType())
+        view_filter_type_registry.register(DateIsOnOrAfterMultiStepFilterType())
+        view_filter_type_registry.register(DateIsWithinMultiStepFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectIsAnyOfViewFilterType())
@@ -724,9 +738,20 @@ class DatabaseConfig(AppConfig):
 
         from baserow.core.registries import permission_manager_type_registry
 
+        from .permission_manager import AllowIfTemplatePermissionManagerType
         from .tokens.permission_manager import TokenPermissionManagerType
 
         permission_manager_type_registry.register(TokenPermissionManagerType())
+
+        prev_manager = permission_manager_type_registry.get(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.unregister(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.register(
+            AllowIfTemplatePermissionManagerType(prev_manager)
+        )
 
         from baserow.core.registries import subject_type_registry
 

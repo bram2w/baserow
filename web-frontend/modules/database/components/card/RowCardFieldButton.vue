@@ -1,18 +1,21 @@
 <template functional>
-  <div class="card-button">
-    <a
+  <div>
+    <Button
       v-if="$options.methods.isValid(props.value)"
       :href="props.value && props.value.url"
+      tag="a"
       target="_blank"
       rel="nofollow noopener noreferrer"
-      class="button button--tiny button--ghost forced-pointer-events-auto"
+      size="tiny"
+      type="secondary"
+      class="forced-pointer-events-auto"
       @mousedown.stop
     >
       {{ $options.methods.getLabelOrURL(props.value) }}
-    </a>
-    <a v-else class="button button--tiny button--ghost disabled">
+    </Button>
+    <Button v-else tag="a" type="secondary" size="tiny" disabled>
       {{ $options.methods.getLabelOrURL(props.value) }}
-    </a>
+    </Button>
   </div>
 </template>
 

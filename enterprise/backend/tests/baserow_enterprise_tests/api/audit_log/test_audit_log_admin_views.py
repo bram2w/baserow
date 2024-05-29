@@ -551,7 +551,7 @@ def test_audit_log_can_export_to_csv_all_entries(
     django_capture_on_commit_callbacks,
     stubbed_storage,
 ):
-    _, admin_token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    admin_user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     csv_settings = {
         "csv_column_separator": ",",
@@ -562,6 +562,7 @@ def test_audit_log_can_export_to_csv_all_entries(
     with freeze_time("2023-01-01 12:00"), django_capture_on_commit_callbacks(
         execute=True
     ):
+        admin_token = enterprise_data_fixture.generate_token(admin_user)
         response = api_client.post(
             reverse("api:enterprise:audit_log:async_export"),
             data=csv_settings,
@@ -574,6 +575,7 @@ def test_audit_log_can_export_to_csv_all_entries(
     assert job["state"] == "pending"
     assert job["type"] == "audit_log_export"
 
+    admin_token = enterprise_data_fixture.generate_token(admin_user)
     response = api_client.get(
         reverse(
             "api:jobs:item",
@@ -640,6 +642,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
     with freeze_time("2023-01-02 12:00"), django_capture_on_commit_callbacks(
         execute=True
     ):
+        admin_token = enterprise_data_fixture.generate_token(admin_user)
         response = api_client.post(
             reverse("api:enterprise:audit_log:async_export"),
             data={**csv_settings, **filters},
@@ -652,6 +655,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
     assert job["state"] == "pending"
     assert job["type"] == "audit_log_export"
 
+    admin_token = enterprise_data_fixture.generate_token(admin_user)
     response = api_client.get(
         reverse(
             "api:jobs:item",

@@ -118,7 +118,7 @@ export const localizeMoment = (field, value, { format = undefined } = {}) => {
     : date
 }
 
-export const DATE_FILTER_TIMEZONE_VALUE_SEPARATOR = '?'
+export const DATE_FILTER_VALUE_SEPARATOR = '?'
 
 /**
  * Splits the timezone and the filter value from a filter value.
@@ -129,7 +129,7 @@ export const DATE_FILTER_TIMEZONE_VALUE_SEPARATOR = '?'
  */
 export const splitTimezoneAndFilterValue = (
   value,
-  separator = DATE_FILTER_TIMEZONE_VALUE_SEPARATOR
+  separator = DATE_FILTER_VALUE_SEPARATOR
 ) => {
   let timezone = null
   let filterValue
@@ -143,6 +143,27 @@ export const splitTimezoneAndFilterValue = (
   }
   timezone = moment.tz.zone(timezone) ? timezone : null
   return [timezone, filterValue]
+}
+
+/**
+ * Split the filter value for multi-step date filters.
+ * @param {String} value The filter value
+ * @param {String} separator The separator between the timezone, the filter value and the operator
+ * @returns {Array} An array with the timezone, the filter value and the operator
+ */
+export const splitMultiStepDateValue = (
+  value,
+  separator = DATE_FILTER_VALUE_SEPARATOR
+) => {
+  const splittedValue = value.split(separator)
+  if (splittedValue.length === 3) {
+    return splittedValue
+  } else if (splittedValue.length === 2) {
+    // let's assume the timezone has not been provided
+    return [null, splittedValue[0], splittedValue[1]]
+  } else {
+    return [null, '', '']
+  }
 }
 
 /**
@@ -180,4 +201,19 @@ export const formatDateSeparator = (timestamp) => {
     lastWeek: 'LL',
     sameElse: 'LL',
   })
+}
+
+/**
+ * Prepares a value for a multi-step date filter. It combines the timezone,
+ * the filter value and the operator into a single string. It puts the operator
+ * at the end to keep the compatibility with the old filter values.
+ *
+ * @param {String} filterValue The filter value
+ * @param {String} timezone The timezone
+ * @param {String} operator The date filter operator to use
+ * @returns {String} The combined value to send to the backend
+ */
+export const prepareMultiStepDateValue = (filterValue, timezone, operator) => {
+  const sep = DATE_FILTER_VALUE_SEPARATOR
+  return `${timezone}${sep}${filterValue}${sep}${operator}`
 }

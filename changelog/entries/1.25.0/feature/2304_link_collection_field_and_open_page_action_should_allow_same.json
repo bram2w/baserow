@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Links in table columns, and the \"Open Page\" action, will now support the same form configurations as the link element.",
+  "issue_number": 2304,
+  "bullet_points": [],
+  "created_at": "2024-04-02"
+}

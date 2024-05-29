@@ -99,7 +99,7 @@
         {{ errorReport.join(', ') }}
       </Alert>
 
-      <Tabs v-if="dataLoaded" :no-separation="true">
+      <Tabs v-if="dataLoaded" no-padding>
         <Tab
           v-if="!isTableCreation"
           :title="$t('importFileModal.importPreview')"
@@ -129,12 +129,10 @@
           :status="humanReadableState"
         />
         <div class="align-right">
-          <button
-            class="button button--large"
-            :class="{
-              'button--loading':
-                importInProgress || (jobHasSucceeded && !isTableCreated),
-            }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="importInProgress || (jobHasSucceeded && !isTableCreated)"
             :disabled="
               importInProgress ||
               !canBeSubmitted ||
@@ -147,13 +145,14 @@
                 ? $t('importFileModal.addButton')
                 : $t('importFileModal.importButton')
             }}
-          </button>
+          </Button>
         </div>
       </div>
       <div v-else class="align-right">
-        <button
-          class="button button--large button--success"
-          :class="{ 'button--loading': !isTableCreated }"
+        <Button
+          type="primary"
+          size="large"
+          :loading="!isTableCreated"
           @click="openTable()"
         >
           {{
@@ -161,7 +160,7 @@
               ? $t('importFileModal.openCreatedTable')
               : $t('importFileModal.showTable')
           }}
-        </button>
+        </Button>
       </div>
     </template>
     <template v-if="!isTableCreation" #sidebar>

@@ -3,6 +3,7 @@
   width: 40px;
   padding: 0 3px;
   border: 1px solid transparent;
+
   @include rounded($rounded);
 
   &--invalid {

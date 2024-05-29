@@ -299,7 +299,7 @@ export const UIHelpers = {
   },
   getDisabledSidebarItemNames(sidebarComponent) {
     return sidebarComponent
-      .findAll('.sidebar__nav .tree__action--disabled')
+      .findAll('.sidebar__nav .tree__action--deactivated')
       .wrappers.map((t) => t.text())
   },
   async selectSidebarItem(sidebarComponent, itemName) {

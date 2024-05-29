@@ -1,5 +1,6 @@
 import secrets
 from datetime import datetime, timezone
+from functools import lru_cache
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -27,6 +28,7 @@ from .mixins import (
     ParentWorkspaceTrashableModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from .notifications.models import Notification
 from .services.models import Service
@@ -80,6 +82,13 @@ class Settings(models.Model):
     change. This table can only contain a single row.
     """
 
+    # Keep these in sync with the web-frontend options in
+    # web-frontend/modules/core/enums.js
+    class EmailVerificationOptions(models.TextChoices):
+        NO_VERIFICATION = "no_verification", "no_verification"
+        RECOMMENDED = "recommended", "recommended"
+        ENFORCED = "enforced", "enforced"
+
     instance_id = models.SlugField(default=secrets.token_urlsafe)
     allow_new_signups = models.BooleanField(
         default=True,
@@ -130,6 +139,14 @@ class Settings(models.Model):
         on_delete=models.SET_NULL,
         related_name="+",
         help_text="Co-branding logo that's placed next to the Baserow logo (176x29).",
+    )
+    # TODO Remove null=True in a future release.
+    email_verification = models.TextField(
+        max_length=16,
+        null=True,
+        choices=EmailVerificationOptions.choices,
+        default=EmailVerificationOptions.NO_VERIFICATION,
+        help_text="Controls whether user email addresses have to be verified.",
     )
 
 
@@ -188,6 +205,10 @@ class UserProfile(models.Model):
         default=None,
         help_text="Timestamp when the user changed their password.",
     )
+    # TODO Remove null=True in a future release.
+    email_verified = models.BooleanField(null=True, default=False)
+    # TODO Remove null=True in a future release.
+    completed_onboarding = models.BooleanField(null=True, default=False)
 
     def iat_before_last_password_change(self, iat: int) -> bool:
         """
@@ -251,6 +272,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 
         return self.application_set(manager="objects_and_trash")
 
+    @lru_cache
     def has_template(self):
         return self.template_set.all().exists()
 
@@ -370,6 +392,7 @@ class Application(
     OrderableMixin,
     PolymorphicContentTypeMixin,
     GroupToWorkspaceCompatModelMixin,
+    WithRegistry,
     models.Model,
 ):
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=True)
@@ -390,6 +413,12 @@ class Application(
 
     class Meta:
         ordering = ("order",)
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import application_type_registry
+
+        return application_type_registry
 
     @classmethod
     def get_last_order(cls, workspace):

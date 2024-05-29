@@ -25,6 +25,12 @@ const mutations = {
   CLEAR_CONTENTS(state, { page }) {
     Vue.set(page, 'contents', {})
   },
+  // Clear only the contents for the specified data source.
+  CLEAR_CONTENT(state, { page, dataSourceId }) {
+    const contents = Object.assign({}, page.contents)
+    delete contents[dataSourceId]
+    Vue.set(page, 'contents', contents)
+  },
   SET_LOADING(state, { page, value }) {
     page._.dataSourceContentLoading = value
   },
@@ -55,6 +61,34 @@ const actions = {
       throw e
     }
     commit('SET_LOADING', { page, value: false })
+  },
+
+  async fetchPageDataSourceContentById(
+    { commit },
+    { page, dataSourceId, dispatchContext, replace = false }
+  ) {
+    commit('SET_LOADING', { page, value: true })
+
+    try {
+      const { data } = await DataSourceService(this.app.$client).dispatch(
+        dataSourceId,
+        dispatchContext,
+        { range: null }
+      )
+
+      if (replace) {
+        commit('CLEAR_CONTENT', { page, dataSourceId })
+      }
+
+      commit('SET_CONTENT', {
+        page,
+        dataSourceId,
+        value: data,
+      })
+    } catch (error) {
+      commit('CLEAR_CONTENT', { page, dataSourceId })
+      throw error
+    }
   },
 
   debouncedFetchPageDataSourceContent({ dispatch }, { page, data: queryData }) {

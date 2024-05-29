@@ -18,7 +18,10 @@ from baserow.contrib.database.fields.constants import (
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.utils.duration import prepare_duration_value_for_db
+from baserow.contrib.database.fields.utils.duration import (
+    postgres_interval_to_seconds,
+    prepare_duration_value_for_db,
+)
 from baserow.core.utils import split_comma_separated_string
 
 
@@ -31,10 +34,25 @@ class FieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("id", "table_id", "name", "order", "type", "primary", "read_only")
+        fields = (
+            "id",
+            "table_id",
+            "name",
+            "order",
+            "type",
+            "primary",
+            "read_only",
+            "description",
+        )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
+            "description": {
+                "required": False,
+                "default": None,
+                "allow_null": True,
+                "allow_blank": True,
+            },
         }
 
     @extend_schema_field(OpenApiTypes.STR)
@@ -81,7 +99,15 @@ class CreateFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("name", "type")
+        fields = ("name", "type", "description")
+        extra_kwargs = {
+            "description": {
+                "required": False,
+                "default": None,
+                "allow_null": True,
+                "allow_blank": True,
+            }
+        }
 
 
 class UpdateFieldSerializer(serializers.ModelSerializer):
@@ -91,9 +117,15 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ("name", "type")
+        fields = ("name", "type", "description")
         extra_kwargs = {
             "name": {"required": False},
+            "description": {
+                "required": False,
+                "default": None,
+                "allow_null": True,
+                "allow_blank": True,
+            },
         }
 
 
@@ -137,22 +169,50 @@ class LinkRowValueSerializer(serializers.Serializer):
     )
 
 
-class FileFieldRequestSerializer(serializers.Serializer):
-    visible_name = serializers.CharField(
-        required=False, help_text="A visually editable name for the field."
-    )
-    name = serializers.CharField(
-        required=True,
-        validators=[user_file_name_validator],
-        help_text="Accepts the name of the already uploaded user file.",
-    )
+class FileFieldRequestSerializer(serializers.ListField):
+    """
+    A serializer field that accept a List or a CSV string that will be converted to
+    an Array.
+    """
 
-    def validate(self, data):
-        if "name" not in data:
+    def to_internal_value(self, data):
+        if not isinstance(data, (str, list)):
             raise serializers.ValidationError(
-                {"name": "This field is required."}, code="required"
+                "This value must be a list or a string.",
+                code="not_a_list",
             )
-        return data
+
+        if not data:
+            return []
+
+        if isinstance(data, str):
+            data = split_comma_separated_string(data)
+
+        if any([not isinstance(i, type(data[0])) for i in data]):
+            raise serializers.ValidationError(
+                "All list values must be same type.", code="not_same_type"
+            )
+
+        if isinstance(data[0], str):
+            [user_file_name_validator(name) for name in data]  # noqa W0106
+            data = [{"name": name} for name in data]
+
+        elif isinstance(data[0], dict):
+            for val in data:
+                if "name" not in val:
+                    raise serializers.ValidationError(
+                        "A name property is required for all values of the list.",
+                        code="required",
+                    )
+                user_file_name_validator(val["name"])
+        else:
+            raise serializers.ValidationError(
+                "The provided value should be a list of valid string or objects "
+                "containing a value property.",
+                code="invalid",
+            )
+
+        return super().to_internal_value(data)
 
 
 class FileFieldResponseSerializer(
@@ -169,6 +229,41 @@ class FileFieldResponseSerializer(
 
     def get_instance_attr(self, instance, name):
         return instance[name]
+
+
+class LinkRowRequestSerializer(serializers.ListField):
+    """
+    A serializer field that accept a List or a CSV string that will be converted to
+    an Array.
+    """
+
+    def to_internal_value(self, data):
+        if not data:
+            return []
+
+        if isinstance(data, list):
+            if any([not isinstance(i, type(data[0])) for i in data]):
+                raise serializers.ValidationError(
+                    "All list values must be same type.", code="not_same_type"
+                )
+            if not isinstance(data[0], (str, int)):
+                raise serializers.ValidationError(
+                    "The provided value must be a list of valid integer or string",
+                    code="invalid",
+                )
+
+        elif isinstance(data, str):
+            data = split_comma_separated_string(data)
+
+        elif isinstance(data, int):
+            data = [data]
+        else:
+            raise serializers.ValidationError(
+                "This provided value must be a list, an integer or a string.",
+                code="invalid",
+            )
+
+        return super().to_internal_value(data)
 
 
 @extend_schema_field(OpenApiTypes.NONE)
@@ -300,12 +395,19 @@ class DurationFieldSerializer(serializers.Field):
         )
 
     def to_representation(self, value):
-        if isinstance(value, (int, float)):
-            # Durations are stored as the number of seconds for lookups/arrays in
-            # formula land, so just return the value in that case.
+        if isinstance(value, timedelta):
+            return value.total_seconds()
+        elif isinstance(value, str):
+            # Durations are stored as strings in the postgres format for lookups/arrays
+            # in formula land, so parse the string accordingly and return the value in
+            # seconds.
+            return postgres_interval_to_seconds(value)
+        elif isinstance(value, (int, float)):
+            # DEPRECATED: durations were stored as the number of seconds in formula
+            # land, so just return the value in that case.
             return value
         else:
-            return value.total_seconds()
+            raise ValueError("Invalid duration value.")
 
 
 class PasswordSerializer(serializers.CharField):

@@ -62,6 +62,7 @@ from baserow.contrib.database.api.fields.serializers import (
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
     IntegerOrStringField,
+    LinkRowRequestSerializer,
     LinkRowValueSerializer,
     ListOrStringField,
     MustBeEmptyField,
@@ -200,6 +201,7 @@ from .utils.duration import (
     get_duration_search_expression,
     is_duration_format_conversion_lossy,
     prepare_duration_value_for_db,
+    text_value_sql_to_duration,
 )
 
 User = get_user_model()
@@ -1734,10 +1736,10 @@ class DurationFieldType(FieldType):
     serializer_field_names = ["duration_format"]
     _can_group_by = True
 
-    def get_model_field(self, instance, **kwargs):
+    def get_model_field(self, instance: DurationField, **kwargs):
         return DurationModelField(instance.duration_format, null=True)
 
-    def get_serializer_field(self, instance, **kwargs):
+    def get_serializer_field(self, instance: DurationField, **kwargs):
         return DurationFieldSerializer(
             **{
                 "required": False,
@@ -1747,41 +1749,47 @@ class DurationFieldType(FieldType):
             },
         )
 
-    def get_serializer_help_text(self, instance):
+    def get_serializer_help_text(self, instance: DurationField):
         return (
             "The provided value can be a string in one of the available formats "
             "or a number representing the duration in seconds. In any case, the "
             "value will be rounded to match the field's duration format."
         )
 
-    def prepare_value_for_db(self, instance, value):
+    def prepare_value_for_db(self, instance: DurationField, value):
         return prepare_duration_value_for_db(value, instance.duration_format)
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         return get_duration_search_expression(field)
 
-    def random_value(self, instance, fake, cache):
+    def random_value(self, instance: DurationField, fake, cache):
         random_seconds = fake.random.random() * 60 * 60 * 24
         # if we have days in the format, ensure the random value is picked accordingly
         if "d" in instance.duration_format:
             random_seconds *= 30
         return duration_value_to_timedelta(random_seconds, instance.duration_format)
 
-    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_old_value(
+        self, connection, from_field: DurationField, to_field: Field
+    ):
         to_field_type = field_type_registry.get_by_model(to_field)
         if to_field_type.type in (TextFieldType.type, LongTextFieldType.type):
             return f"p_in = {duration_value_sql_to_text(from_field)};"
         elif to_field_type.type == NumberFieldType.type:
             return "p_in = EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::NUMERIC;"
 
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(
+        self, connection, from_field: Field, to_field: DurationField
+    ):
         from_field_type = field_type_registry.get_by_model(from_field)
 
         if from_field_type.type in (NumberFieldType.type, self.type):
             duration_format = to_field.duration_format
             sql_round_func = DURATION_FORMATS[duration_format]["sql_round_func"]
 
-            return f"p_in = {sql_round_func} * INTERVAL '1 second';"
+            return f"p_in = make_interval(secs=>{sql_round_func});"
+        elif from_field_type.type in (TextFieldType.type, LongTextFieldType.type):
+            return f"p_in = {text_value_sql_to_duration(to_field)}"
 
     def serialize_to_input_value(self, field: Field, value: any) -> any:
         return value.total_seconds()
@@ -2292,13 +2300,8 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         representing the related row ids.
         """
 
-        return ListOrStringField(
-            **{
-                "child": IntegerOrStringField(min_value=0),
-                "required": False,
-                **kwargs,
-            }
-        )
+        required = kwargs.pop("required", False)
+        return LinkRowRequestSerializer(required=required, **kwargs)
 
     def get_response_serializer_field(self, instance, **kwargs):
         """
@@ -2317,7 +2320,8 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             "This field accepts an `array` containing the ids or the names of the "
             "related rows. "
             "A name is the value of the primary key of the related row. "
-            "This field also accepts a string with names separated by a comma. "
+            "This field also accepts a string with names separated by a comma or an "
+            "array of row names. You can also provide a unique row Id."
             "The response contains a list of objects containing the `id` and "
             "the primary field's `value` as a string for display purposes."
         )
@@ -3120,14 +3124,9 @@ class FileFieldType(FieldType):
         return values_by_row
 
     def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
-        return serializers.ListSerializer(
-            **{
-                "child": FileFieldRequestSerializer(),
-                "required": required,
-                "allow_null": not required,
-                **kwargs,
-            }
+        required = kwargs.pop("required", False)
+        return FileFieldRequestSerializer(
+            required=required, allow_null=not required, **kwargs
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
@@ -3906,7 +3905,8 @@ class MultipleSelectFieldType(
             "when getting or listing the field. "
             "You can also send a list of option names in which case the option are "
             "searched by name. The first one that matches is used. "
-            "This field also accepts a string with names separated by a comma. "
+            "This field also accepts a string with names separated by a comma or an "
+            "array of file names. "
             "The response represents chosen field, but also the value and "
             "color is exposed."
         )

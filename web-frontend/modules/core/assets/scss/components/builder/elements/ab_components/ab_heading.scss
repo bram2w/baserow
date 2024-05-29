@@ -12,32 +12,32 @@
 }
 
 .ab-heading--h1 {
-  color: var(--heading-h1--color, $black);
-  font-size: var(--heading-h1--font-size, 30px);
+  color: var(--heading-h1-color, $black);
+  font-size: var(--heading-h1-font-size, 30px);
 }
 
 .ab-heading--h2 {
-  color: var(--heading-h2--color, $black);
-  font-size: var(--heading-h2--font-size, 26px);
+  color: var(--heading-h2-color, $black);
+  font-size: var(--heading-h2-font-size, 26px);
 }
 
 .ab-heading--h3 {
-  color: var(--heading-h3--color, $black);
-  font-size: var(--heading-h3--font-size, 22px);
+  color: var(--heading-h3-color, $black);
+  font-size: var(--heading-h3-font-size, 22px);
 }
 
 .ab-heading--h4 {
-  color: var(--heading-h4--color, $black);
-  font-size: var(--heading-h4--font-size, 18px);
+  color: var(--heading-h4-color, $black);
+  font-size: var(--heading-h4-font-size, 18px);
 }
 
 .ab-heading--h5 {
-  color: var(--heading-h5--color, $black);
-  font-size: var(--heading-h5--font-size, 14px);
+  color: var(--heading-h5-color, $black);
+  font-size: var(--heading-h5-font-size, 14px);
 }
 
 .ab-heading--h6 {
-  color: var(--heading-h6--color, $black);
-  font-size: var(--heading-h6--font-size, 14px);
+  color: var(--heading-h6-color, $black);
+  font-size: var(--heading-h6-font-size, 14px);
   font-style: italic;
 }

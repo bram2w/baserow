@@ -1,31 +1,31 @@
 <template>
   <Modal>
-    <component
-      :is="contentComponent"
-      v-if="contentComponent"
-      :name="name"
-      :workspace="workspace"
-      @hide="hide"
-    ></component>
-    <template v-else>
-      <h2 class="box__title">
-        {{ $t('premiumModal.title', { name }) }}
-      </h2>
+    <h2 class="box__title">
+      {{ $t('premiumModal.title', { name }) }}
+    </h2>
+    <div>
+      <p>
+        {{ $t('premiumModal.description', { name }) }}
+      </p>
+      <PremiumFeatures class="margin-bottom-3"></PremiumFeatures>
       <div>
-        <p>
-          {{ $t('premiumModal.description', { name }) }}
-        </p>
-        <PremiumFeatures class="margin-bottom-3"></PremiumFeatures>
-        <div>
-          <a
-            href="https://baserow.io/pricing"
-            target="_blank"
-            class="button button--primary button--large"
-            >{{ $t('premiumModal.viewPricing') }}</a
-          >
-        </div>
+        <Button
+          type="primary"
+          size="large"
+          href="https://baserow.io/pricing"
+          target="_blank"
+          tag="a"
+          >{{ $t('premiumModal.viewPricing') }}</Button
+        >
+        <component
+          :is="buttonsComponent"
+          v-if="workspace && buttonsComponent"
+          :name="name"
+          :workspace="workspace"
+          @hide="hide()"
+        ></component>
       </div>
-    </template>
+    </div>
   </Modal>
 </template>
 
@@ -43,15 +43,16 @@ export default {
       required: true,
     },
     workspace: {
-      type: Object,
-      required: true,
+      type: [Object, null],
+      required: false,
+      default: null,
     },
   },
   computed: {
-    contentComponent() {
+    buttonsComponent() {
       return this.$registry
         .get('plugin', 'premium')
-        .getPremiumModalContentComponent()
+        .getPremiumModalButtonsComponent()
     },
   },
 }

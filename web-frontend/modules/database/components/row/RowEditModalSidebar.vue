@@ -1,10 +1,9 @@
 <template>
   <Tabs
     :selected-index="selectedTabIndex"
-    :full-height="true"
-    :collapse-one-tab="true"
-    :large="true"
-    :full-width-header="true"
+    full-height
+    grow-items
+    no-padding
     class="row-edit-modal-sidebar"
   >
     <Tab

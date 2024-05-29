@@ -80,18 +80,19 @@
       </ul>
     </div>
     <div v-if="allowHidingFields" v-show="query === ''" class="hidings__footer">
-      <button
-        class="button button--ghost hidings__footer-button"
+      <Button
+        type="secondary"
+        class="hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
       >
         {{ $t('viewFieldsContext.hideAll') }}
-      </button>
-      <button
-        class="button button--ghost"
+      </Button>
+      <Button
+        type="secondary"
         @click="!allSelected && updateAllFieldOptions({ hidden: false })"
       >
         {{ $t('viewFieldsContext.showAll') }}
-      </button>
+      </Button>
     </div>
   </Context>
 </template>

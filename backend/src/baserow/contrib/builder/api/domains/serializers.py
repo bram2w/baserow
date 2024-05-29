@@ -11,6 +11,7 @@ from baserow.api.app_auth_providers.serializers import (
 )
 from baserow.api.polymorphic import PolymorphicSerializer
 from baserow.api.services.serializers import PublicServiceSerializer
+from baserow.api.user_files.serializers import UserFileSerializer
 from baserow.contrib.builder.api.pages.serializers import PathParamSerializer
 from baserow.contrib.builder.api.theme.serializers import (
     CombinedThemeConfigBlocksSerializer,
@@ -211,9 +212,22 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
 
     type = serializers.SerializerMethodField(help_text="The type of the object.")
 
+    favicon_file = serializers.SerializerMethodField(
+        help_text="This field is specific to the `builder` application and contains "
+        "the favicon settings."
+    )
+
     class Meta:
         model = Builder
-        fields = ("id", "name", "pages", "type", "theme", "user_sources")
+        fields = (
+            "id",
+            "name",
+            "pages",
+            "type",
+            "theme",
+            "user_sources",
+            "favicon_file",
+        )
 
     @extend_schema_field(PublicPageSerializer(many=True))
     def get_pages(self, instance: Builder) -> List:
@@ -248,6 +262,11 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
     @extend_schema_field(CombinedThemeConfigBlocksSerializer())
     def get_theme(self, instance):
         return serialize_builder_theme(instance)
+
+    def get_favicon_file(self, obj):
+        if favicon_file := obj.favicon_file:
+            return UserFileSerializer(favicon_file).data
+        return None
 
 
 class PublicDataSourceSerializer(PublicServiceSerializer):

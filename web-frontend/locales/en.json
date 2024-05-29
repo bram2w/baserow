@@ -79,7 +79,8 @@
     "integerField": "The field must be an integer.",
     "minValueField": "The field must be greater than or equal to {min}.",
     "maxValueField": "The field must be less than or equal to {max}.",
-    "minMaxValueField": "The field value must be between {min} and {max}."
+    "minMaxValueField": "The field value must be between {min} and {max}.",
+    "email": "The field must be an email."
   },
   "permission": {
     "admin": "Admin",
@@ -131,7 +132,7 @@
     "invalidEmail": "Invalid email",
     "invalidPhoneNumber": "Invalid Phone Number",
     "invalidDuration": "Invalid format ({durationFormat}).",
-    "overflowDuration": "Value is too large.",
+    "overflowDuration": "Value is out of bounds.",
     "maxChars": "Max {max} chars.",
     "minChars": "Min {min} chars."
   },
@@ -139,7 +140,7 @@
     "readOnly": "This is a read only field.",
     "text": "Accepts single line text.",
     "longText": "Accepts multi line text. If the rich text formatting is enabled, you can use markdown to format the text.",
-    "linkRow": "Accepts an array containing the identifiers or main field text values of the related rows from table id {table}. All identifiers must be provided every time the relations are updated. If an empty array is provided all relations will be deleted. In case of a text value instead of an identifier, a row with the matching value for its main field will be searched. If more than one match is found, the first one in the order of the table is selected. You can send a string with names separated by comma in which case the string is converted into an array of row names.",
+    "linkRow": "Accepts an array containing the identifiers or main field text values of the related rows from table id {table}. All identifiers must be provided every time the relations are updated. If an empty array is provided all relations will be deleted. In case of a text value instead of an identifier, a row with the matching value for its main field will be searched. If more than one match is found, the first one in the order of the table is selected. You can send a string with names separated by comma in which case the string is converted into an array of row names. You can also send only an ID of a row alone.",
     "number": "Accepts a number.",
     "numberPositive": "Accepts a positive number.",
     "decimal": "Accepts a decimal with {places} decimal places after the dot.",
@@ -157,7 +158,7 @@
     "duration": "Accepts a time-based duration as a string in the format {format} or as a number representing the total number of seconds.",
     "url": "Accepts a string that must be a URL.",
     "email": "Accepts a string that must be an email address.",
-    "file": "Accepts an array of objects containing at least the name of the user file. You can use the \"File uploads\" endpoints to upload the file. The response of those calls can be provided directly as object here. The endpoints can be found in the left sidebar.",
+    "file": "Accepts an array of objects containing at least the name of the user file. Alternatively, you can provide a comma-separated list of file names or an array of file names. You can use the \"File uploads\" endpoints to upload the file. The response of those calls can be provided directly as object here. The endpoints can be found in the left sidebar.",
     "singleSelect": "Accepts an integer or a text value representing the chosen select option id or option value. A null value means none is selected. In case of a text value, the first matching option is selected.",
     "multipleSelect": "Accepts an array of mixed integers or text values each representing the chosen select option id or value. In case of a text value, the first matching option is selected. You can send a string with names separated by comma as value in which case the string is converted into an array of option names.",
     "phoneNumber": "Accepts a phone number which has a maximum length of 100 characters consisting solely of digits, spaces and the following characters: Nx,._+*()#=;/- .",
@@ -211,7 +212,33 @@
     "hasFileType": "has file type",
     "filesLowerThan": "files lower than",
     "isAnyOf": "is any of",
-    "isNoneOf": "is none of"
+    "isNoneOf": "is none of",
+    "today": "today",
+    "yesterday": "yesterday",
+    "tomorrow": "tomorrow",
+    "thisWeek": "this week",
+    "oneWeekAgo": "one week ago",
+    "nextWeek": "next week",
+    "thisMonth": "this month",
+    "oneMonthAgo": "one month ago",
+    "nextMonth": "next month",
+    "thisYear": "this year",
+    "oneYearAgo": "one year ago",
+    "nextYear": "next year",
+    "nrDaysAgo": "days ago",
+    "nrWeeksAgo": "weeks ago",
+    "nrMonthsAgo": "months ago",
+    "nrYearsAgo": "years ago",
+    "nrDaysFromNow": "days from now",
+    "nrWeeksFromNow": "weeks from now",
+    "nrMonthsFromNow": "months from now",
+    "nrYearsFromNow": "years from now",
+    "exactDate": "exact date",
+    "isBefore": "is before",
+    "isAfter": "is after",
+    "isOnOrBefore": "is on or before",
+    "isOnOrAfter": "is on or after",
+    "isWithin": "is within"
   },
   "viewType": {
     "grid": "Grid",
@@ -325,7 +352,13 @@
     "generativeAIDoesNotExistTitle": "Generative AI does not exist",
     "generativeAIDoesNotExistDescription": "The generative AI model does not exist.",
     "modelDoesNotBelongToTypeTitle": "The selected model does not belong to the AI Type",
-    "modelDoesNotBelongToTypeDescription": "The selected model does not belong to the selected AI type."
+    "modelDoesNotBelongToTypeDescription": "The selected model does not belong to the selected AI type.",
+    "outputParserTitle": "Wrong output",
+    "outputParserDescription": "The model responded with an incorrect output. Please try again.",
+    "generateAIPromptTitle": "Prompt error",
+    "generateAIPromptDescription": "Something was wrong with the constructed prompt.",
+    "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Max pending invites reached",
+    "maxNumberOfPendingWorkspaceInvitesReachedDescription": "You've reached the maximum number of pending invites for this workspace. Please let invitees accept the invite or cancel existing ones to continue."
   },
   "importerType": {
     "csv": "Import a CSV file",
@@ -471,6 +504,8 @@
     "getImageHeightDescription": "Returns the image height from a single file returned from the index function.",
     "getIsImageDescription": "Returns if the single file returned from the index function is an image or not.",
     "indexDescription": "Returns the file from a file field at the position provided by the second argument.",
+    "secondsToDurationDescription": "Converts the number of seconds provided into a duration.",
+    "durationToSecondsDescription": "Converts the duration provided into the corresponding number of seconds.",
     "hasOptionDescription": "Returns true if the first argument is a multiple select field or a lookup to a single select field and the second argument is one of the options."
   },
   "functionnalGridViewFieldLinkRow": {

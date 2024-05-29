@@ -1,18 +1,12 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <FormGroup :label="$t('iframeElementForm.sourceTypeLabel')">
-      <RadioButton
+      <RadioGroup
         v-model="values.source_type"
-        :value="IFRAME_SOURCE_TYPES.URL"
+        :options="iframeSourceTypeOptions"
+        type="button"
       >
-        {{ $t('iframeElementForm.urlLabel') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.source_type"
-        :value="IFRAME_SOURCE_TYPES.EMBED"
-      >
-        {{ $t('iframeElementForm.embedLabel') }}
-      </RadioButton>
+      </RadioGroup>
     </FormGroup>
     <ApplicationBuilderFormulaInputGroup
       v-if="values.source_type === IFRAME_SOURCE_TYPES.URL"
@@ -75,6 +69,18 @@ export default {
   computed: {
     IFRAME_SOURCE_TYPES() {
       return IFRAME_SOURCE_TYPES
+    },
+    iframeSourceTypeOptions() {
+      return [
+        {
+          label: this.$t('iframeElementForm.urlLabel'),
+          value: IFRAME_SOURCE_TYPES.URL,
+        },
+        {
+          label: this.$t('iframeElementForm.embedLabel'),
+          value: IFRAME_SOURCE_TYPES.EMBED,
+        },
+      ]
     },
   },
   validations() {

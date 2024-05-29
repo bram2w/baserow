@@ -78,6 +78,7 @@ def test_exporting_json_writes_file_to_storage(
         run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
+            token = premium_data_fixture.generate_token(user)
             with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(
@@ -230,6 +231,7 @@ def test_exporting_xml_writes_file_to_storage(
     with patch("baserow.contrib.database.export.handler.default_storage", new=storage):
         run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         with freeze_time(run_time):
+            token = premium_data_fixture.generate_token(user)
             expected_created_at = DateTimeField().to_representation(run_time)
             with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(

@@ -6,7 +6,7 @@
 }
 
 .import-modal__header {
-  @extend .box__title;
+  @extend %box-title;
 
   display: flex;
   align-items: baseline;
@@ -37,7 +37,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  margin: 0 30px 0 30px;
+  margin: 0 30px;
   height: 100%;
   border-top-left-radius: 6px;
 }

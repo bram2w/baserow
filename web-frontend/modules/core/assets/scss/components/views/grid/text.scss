@@ -1,13 +1,14 @@
-.grid-field-text {
+.grid-field-text,
+%grid-field-text {
   @extend %ellipsis;
-
   @include fixed-height(32px, 13px);
 
   padding: 0 10px;
   user-select: none;
 }
 
-.grid-field-text__input {
+.grid-field-text__input,
+%grid-field-text-input {
   @include fixed-height(32px, 13px);
 
   width: 100%;

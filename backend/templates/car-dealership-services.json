@@ -15,8 +15,7 @@
         "fix"
     ],
     "categories": [
-        "Local Business",
-        "Professional"
+        "Business Operations"
     ],
     "export": [
         {
@@ -1010,7 +1009,7 @@
                                     "id": 106468,
                                     "field_id": 765386,
                                     "name": "",
-                                    "description": "Upload files\u00a0and/or receipts\u00a0related\u00a0to\u00a0this service.",
+                                    "description": "Upload files and/or receipts related to this service.",
                                     "enabled": true,
                                     "required": false,
                                     "order": 32767,
@@ -11106,7 +11105,7 @@
                             "order": "1.00000000000000000000",
                             "created_on": "2022-11-29T21:28:56.825287+00:00",
                             "updated_on": "2022-12-01T22:49:17.003965+00:00",
-                            "field_756678": "Baldov\u00edn Delgado",
+                            "field_756678": "Baldovín Delgado",
                             "field_756679": [
                                 {
                                     "name": "c5bo3rb3mL3Y8yYpis5M6SLgJxAuESzN_3e4ea491bc171831d98bd16209e167056256efec656b03792cc985f56c52d625.jpg",
@@ -11120,7 +11119,7 @@
                             ],
                             "field_756700": "x9772",
                             "field_756701": "(739) 257-7172",
-                            "field_756702": "baldov\u00edn.delgado@cardealzbr.biz",
+                            "field_756702": "baldovín.delgado@cardealzbr.biz",
                             "field_756703": "Great business background.",
                             "field_756704": null,
                             "field_756705": "true",

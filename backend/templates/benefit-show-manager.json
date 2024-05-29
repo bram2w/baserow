@@ -10,9 +10,7 @@
         "event manager"
     ],
     "categories": [
-        "Project Management",
-        "Professional",
-        "Events"
+        "Nonprofits"
     ],
     "export": [
         {
@@ -5020,43 +5018,43 @@
                             "select_options": [
                                 {
                                     "id": 89289,
-                                    "value": "\ud83c\udfad Talent",
+                                    "value": "🎭 Talent",
                                     "color": "orange",
                                     "order": 0
                                 },
                                 {
                                     "id": 89290,
-                                    "value": "\ud83d\ude9a Facility",
+                                    "value": "🚚 Facility",
                                     "color": "red",
                                     "order": 1
                                 },
                                 {
                                     "id": 89291,
-                                    "value": "\ud83d\udcfb Marketing",
+                                    "value": "📻 Marketing",
                                     "color": "green",
                                     "order": 2
                                 },
                                 {
                                     "id": 89292,
-                                    "value": "\ud83d\udda8\ufe0f Printing",
+                                    "value": "🖨️ Printing",
                                     "color": "light-gray",
                                     "order": 3
                                 },
                                 {
                                     "id": 89293,
-                                    "value": "\ud83c\udf88 Decoration",
+                                    "value": "🎈 Decoration",
                                     "color": "blue",
                                     "order": 4
                                 },
                                 {
                                     "id": 89294,
-                                    "value": "\ud83e\udd63 Food and beverage",
+                                    "value": "🥣 Food and beverage",
                                     "color": "light-red",
                                     "order": 5
                                 },
                                 {
                                     "id": 89295,
-                                    "value": "\ud83d\uded2 Miscellaneous",
+                                    "value": "🛒 Miscellaneous",
                                     "color": "light-orange",
                                     "order": 6
                                 }

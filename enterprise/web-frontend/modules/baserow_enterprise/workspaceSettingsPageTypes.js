@@ -1,5 +1,6 @@
 import { WorkspaceSettingsPageType } from '@baserow/modules/core/workspaceSettingsPageTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
+import EnterpriseModal from '@baserow_enterprise/components/EnterpriseModal'
 
 export class TeamsWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
   static getType() {
@@ -29,6 +30,10 @@ export class TeamsWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
    */
   isFeatureActive(workspace) {
     return this.app.$hasFeature(EnterpriseFeatures.TEAMS, workspace.id)
+  }
+
+  getFeatureDeactivatedModal(workspace) {
+    return EnterpriseModal
   }
 
   getRoute(workspace) {

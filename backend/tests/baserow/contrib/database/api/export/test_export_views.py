@@ -184,7 +184,7 @@ def test_getting_other_users_export_job_returns_error(data_fixture, api_client, 
 def test_exporting_csv_writes_file_to_storage(
     data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field", order=0)
     option_field = data_fixture.create_single_select_field(
@@ -237,6 +237,7 @@ def test_exporting_csv_writes_file_to_storage(
         # so the test doesn't break if we set a different default timezone format etc
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
+            token = data_fixture.generate_token(user)
             with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(
@@ -303,7 +304,7 @@ def test_exporting_csv_writes_file_to_storage(
 def test_exporting_csv_table_writes_file_to_storage(
     data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field", order=0)
     option_field = data_fixture.create_single_select_field(
@@ -356,6 +357,7 @@ def test_exporting_csv_table_writes_file_to_storage(
         # so the test doesn't break if we set a different default timezone format etc
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
+            token = data_fixture.generate_token(user)
             with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(

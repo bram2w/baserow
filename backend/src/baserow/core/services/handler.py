@@ -214,8 +214,19 @@ class ServiceHandler:
 
         return service.get_type().dispatch(service, dispatch_context)
 
-    def export_service(self, service):
-        return service.get_type().export_serialized(service)
+    def export_service(
+        self,
+        service,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
+    ):
+        return service.get_type().export_serialized(
+            service,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
 
     def import_service(
         self,
@@ -225,9 +236,16 @@ class ServiceHandler:
         import_formula: Optional[Callable[[str, Dict[str, Any]], str]] = None,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
     ):
         service_type = service_type_registry.get(serialized_service["type"])
 
         return service_type.import_serialized(
-            integration, serialized_service, id_mapping, import_formula=import_formula
+            integration,
+            serialized_service,
+            id_mapping,
+            cache=cache,
+            files_zip=files_zip,
+            storage=storage,
+            import_formula=import_formula,
         )

@@ -9,11 +9,11 @@
         <small v-if="category !== null">{{ category.name }}</small>
       </div>
       <div class="templates__install">
-        <a
-          class="button"
-          :class="{ 'button--loading': installing }"
+        <Button
+          :loading="installing"
+          :disabled="installing"
           @click="install(template)"
-          >{{ $t('templateHeader.use') }}</a
+          >{{ $t('templateHeader.use') }}</Button
         >
       </div>
     </template>

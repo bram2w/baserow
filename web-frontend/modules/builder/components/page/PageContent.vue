@@ -12,9 +12,12 @@
 <script>
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
 import ThemeProvider from '@baserow/modules/builder/components/theme/ThemeProvider'
+import { dimensionMixin } from '@baserow/modules/core/mixins/dimensions'
+import _ from 'lodash'
 
 export default {
   components: { ThemeProvider, PageElement },
+  mixins: [dimensionMixin],
   inject: ['builder', 'mode'],
   props: {
     page: {
@@ -33,6 +36,43 @@ export default {
       type: Array,
       required: true,
     },
+  },
+  watch: {
+    'dimensions.width': {
+      handler(newValue) {
+        this.debounceGuessDevice(newValue)
+      },
+    },
+  },
+  mounted() {
+    this.dimensions.targetElement = document.documentElement
+  },
+  methods: {
+    /**
+     * Returns the device type that is the closest to the given observer width.
+     * It does this by sorting the device types by order ASC (as we want to start
+     * with the smallest screen) and then checking if the observer width is smaller
+     * (or in the case of desktop, unlimited with `null`) than the max width of
+     * the device. If it is, the device is returned.
+     *
+     * @param {number} observerWidth The width of the observer.
+     * @returns {DeviceType|null}
+     */
+    closestDeviceType(observerWidth) {
+      const deviceTypes = Object.values(this.$registry.getAll('device'))
+        .sort((deviceA, deviceB) => deviceA.getOrder() - deviceB.getOrder())
+        .reverse()
+      for (const device of deviceTypes) {
+        if (device.maxWidth === null || observerWidth <= device.maxWidth) {
+          return device
+        }
+      }
+      return null
+    },
+    debounceGuessDevice: _.debounce(function (newWidth) {
+      const device = this.closestDeviceType(newWidth)
+      this.$store.dispatch('page/setDeviceTypeSelected', device.getType())
+    }, 300),
   },
 }
 </script>

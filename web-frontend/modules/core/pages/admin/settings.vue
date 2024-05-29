@@ -130,8 +130,25 @@
       </div>
       <div class="admin-settings__group">
         <h2 class="admin-settings__group-title">
-          {{ $t('settings.userDeletionGraceDelay') }}
+          {{ $t('settings.userSettings') }}
         </h2>
+        <div class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.emailVerification') }}
+            </div>
+            <div class="admin-settings__description">
+              {{ $t('settings.emailVerificationDescription') }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            <RadioGroup
+              :model-value="settings.email_verification"
+              :options="emailVerificationOptions"
+              @input="updateSettings({ email_verification: $event })"
+            ></RadioGroup>
+          </div>
+        </div>
         <div class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
@@ -201,6 +218,8 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsService from '@baserow/modules/core/services/settings'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
+import { EMAIL_VERIFICATION_OPTIONS } from '@baserow/modules/core/enums'
+
 export default {
   layout: 'app',
   middleware: 'staff',
@@ -209,7 +228,23 @@ export default {
     return { instanceId: data.instance_id }
   },
   data() {
-    return { account_deletion_grace_delay: null }
+    return {
+      account_deletion_grace_delay: null,
+      emailVerificationOptions: [
+        {
+          label: this.$t('settings.emailVerificationNoVerification'),
+          value: EMAIL_VERIFICATION_OPTIONS.NO_VERIFICATION,
+        },
+        {
+          label: this.$t('settings.emailVerificationRecommended'),
+          value: EMAIL_VERIFICATION_OPTIONS.RECOMMENDED,
+        },
+        {
+          label: this.$t('settings.emailVerificationEnforced'),
+          value: EMAIL_VERIFICATION_OPTIONS.ENFORCED,
+        },
+      ],
+    }
   },
   computed: {
     additionalSettingsComponents() {
@@ -224,10 +259,18 @@ export default {
     ...mapGetters({
       settings: 'settings/get',
     }),
+    EMAIL_VERIFICATION_OPTIONS() {
+      return EMAIL_VERIFICATION_OPTIONS
+    },
   },
   watch: {
     'settings.account_deletion_grace_delay'(value) {
       this.account_deletion_grace_delay = value
+    },
+    account_deletion_grace_delay(value) {
+      if (this.dataInitialized) {
+        this.updateSettings({ account_deletion_grace_delay: value })
+      }
     },
   },
   mounted() {

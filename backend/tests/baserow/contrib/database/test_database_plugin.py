@@ -31,18 +31,3 @@ def test_user_created_with_invitation_or_template_returns(data_fixture):
     template = data_fixture.create_template(workspace=workspace)
     assert plugin.user_created(user, workspace, template=template) is None
     assert Database.objects.count() == 0
-
-
-@pytest.mark.django_db
-def test_user_created_with_workspace_without_invitation_or_template_creates_dummy_data(
-    data_fixture,
-):
-    # If the user creates an account, without being invited, then we'll create
-    # two tables with dummy data in their initial workspace's application.
-    plugin = DatabasePlugin()
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    plugin.user_created(user, workspace)
-    assert Database.objects.count() == 1
-    database = Database.objects.get()
-    assert database.table_set.count() == 2

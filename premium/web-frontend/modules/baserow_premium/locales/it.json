@@ -381,5 +381,15 @@
     "premiumFieldType": {
         "ai": "Prompt IA",
         "aiDescription": "Un campo di sola lettura che contiene il testo generato dall'intelligenza artificiale in base al prompt inserito."
+    },
+    "aiFormulaModal": {
+        "title": "Genera una formula usando l'AI",
+        "label": "Prompt",
+        "labelDescription": "Descrivi la formula che vuoi generare",
+        "generate": "Genera"
+    },
+    "formulaFieldAI": {
+        "generateWithAI": "Genera usando l'AI",
+        "featureName": "Genera usando l'AI"
     }
 }

@@ -103,12 +103,9 @@ _main() {
       # If the upgrade script was run, and it was successful, remove the upgrade directory.
       if [ "$1" == "upgrade" ]; then
         if [ $EXIT_STATUS = 0 ]; then
-          echo
-          echo 'Upgrade was successful! Removing temporary upgrade directory...'
-          echo
           rm -rf "${PGAUTOUPGRADE_DIR}"
           echo
-          echo 'You can now run the official `baserow/baserow:1.24.2` image to start Baserow.'
+          echo 'You can now run the official `baserow/baserow:1.25.0` image to start Baserow.'
           echo
           # We want to stop the execution here, so return an error code even if the upgrade was successful.
           exit 1
@@ -183,7 +180,7 @@ _main() {
         if [ "$PGDATA_VERSION" != "$POSTGRES_VERSION" ]; then
           echo
           echo "Your PostgreSQL data directory was initialized with version $PGDATA_VERSION, but this image is running version $POSTGRES_VERSION."
-          echo "Please look into official Baserow documentation at https://baserow.io/docs/installation%2Finstall-with-docker#upgrading-postgresql-database-from-a-previous-version for more information on how to upgrade your database using a different Baserow image ('baserow/baserow-pgautoupgrade:1.24.2') or how to run Baserow using legacy PostgreSQL 11 image ('baserow/baserow-pg11:1.24.2')."
+          echo "Please look into official Baserow documentation at https://baserow.io/docs/installation%2Finstall-with-docker#upgrading-postgresql-database-from-a-previous-version for more information on how to upgrade your database using a different Baserow image ('baserow/baserow-pgautoupgrade:1.25.0') or how to run Baserow using legacy PostgreSQL 11 image ('baserow/baserow-pg11:1.25.0')."
           echo
           exit 1
         fi

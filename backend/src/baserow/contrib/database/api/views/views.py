@@ -283,7 +283,6 @@ class ViewsView(APIView):
             ListViewsOperationType.type,
             workspace=table.database.workspace,
             context=table,
-            allow_if_template=True,
         )
 
         views = ViewHandler().list_views(

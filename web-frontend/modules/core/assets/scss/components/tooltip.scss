@@ -8,7 +8,7 @@
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 0 6px 8px 6px;
+    border-width: 0 6px 8px;
     border-color: transparent transparent $color-neutral-800 transparent;
 
     @include absolute(0, auto, auto, 50%);
@@ -21,7 +21,7 @@
     &::after {
       top: auto;
       bottom: 0;
-      border-width: 8px 6px 0 6px;
+      border-width: 8px 6px 0;
       border-color: $color-neutral-800 transparent transparent transparent;
     }
   }
@@ -45,4 +45,35 @@
 
   @include fixed-height(26px, 12px);
   @include rounded($rounded);
+
+  &--expandable {
+    padding: 12px;
+    text-align: left;
+    white-space: nowrap;
+    max-height: 320px;
+    line-height: 20px;
+    font-size: 12px;
+    overflow: auto;
+    height: auto;
+    max-width: 320px;
+    text-wrap: wrap;
+
+    @include rounded($rounded);
+
+    &::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+      border-radius: 10px;
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background: $color-neutral-500;
+      background-clip: content-box;
+      border: 2px solid transparent;
+    }
+  }
 }

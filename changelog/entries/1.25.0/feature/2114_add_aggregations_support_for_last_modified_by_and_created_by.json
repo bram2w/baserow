@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add aggregations support for last modified by and created by fields",
+    "issue_number": 2114,
+    "bullet_points": [],
+    "created_at": "2024-05-09"
+}

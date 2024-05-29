@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix for duplicated select fields import from airtable",
+    "issue_number": 1235,
+    "bullet_points": [],
+    "created_at": "2024-05-10"
+}

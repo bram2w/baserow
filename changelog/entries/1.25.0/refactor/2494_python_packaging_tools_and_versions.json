@@ -1,0 +1,10 @@
+{
+  "type": "refactor",
+  "message": "Python packaging updated, consistent python versions, makefile for automation",
+  "issue_number": 2494,
+  "bullet_points": [
+    "each backend tree is installable python package",
+    "makefile targets available for better automation"
+  ],
+  "created_at": "2024-04-25"
+}

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug that prevented the possibility to add a link element to a column",
+    "issue_number": 2565,
+    "bullet_points": [],
+    "created_at": "2024-05-06"
+}

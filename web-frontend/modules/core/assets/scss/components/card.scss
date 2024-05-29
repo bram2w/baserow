@@ -18,7 +18,7 @@
   position: relative;
   background-color: $white;
 
-  @include add-elevation($elevation-low);
+  @include elevation($elevation-low);
   @include rounded($rounded);
 
   &--loading {

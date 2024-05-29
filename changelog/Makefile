@@ -4,7 +4,7 @@ install-dependencies:
 lint:
 	flake8 src tests && \
 	black . --extend-exclude='/generated/' --check && \
-	isort --check --skip generated src tests && \
+	isort --check --skip generated --profile black src tests && \
 	bandit -r src/ \
 	|| exit;
 
@@ -12,7 +12,7 @@ format:
 	black . || exit;
 
 sort:
-	isort --skip generated  src tests || exit;
+	isort --skip generated --profile black src tests || exit;
 
 test:
 	pytest tests || exit;

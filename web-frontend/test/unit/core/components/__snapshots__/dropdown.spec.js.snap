@@ -162,6 +162,7 @@ exports[`Dropdown component With items 2`] = `
      
     <span
       class="dropdown__selected-text"
+      title="A"
     >
       A
     </span>
@@ -611,6 +612,7 @@ exports[`Dropdown component change value prop 1`] = `
      
     <span
       class="dropdown__selected-text"
+      title="B"
     >
       B
     </span>
@@ -726,6 +728,7 @@ exports[`Dropdown component test focus 1`] = `
      
     <span
       class="dropdown__selected-text"
+      title="A"
     >
       A
     </span>
@@ -810,6 +813,7 @@ exports[`Dropdown component test focus 2`] = `
      
     <span
       class="dropdown__selected-text"
+      title="A"
     >
       A
     </span>
@@ -894,6 +898,7 @@ exports[`Dropdown component test interactions 1`] = `
      
     <span
       class="dropdown__selected-text"
+      title="A"
     >
       A
     </span>
@@ -1009,6 +1014,7 @@ exports[`Dropdown component test interactions 2`] = `
      
     <span
       class="dropdown__selected-text"
+      title="A"
     >
       A
     </span>

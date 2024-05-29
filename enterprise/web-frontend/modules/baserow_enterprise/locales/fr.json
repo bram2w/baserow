@@ -268,7 +268,8 @@
         "sso": "Authentification unique (SSO)",
         "rbac": "Contrôle d’accès basé sur les rôles",
         "coBranding": "Remplacement du logo de co-branding",
-        "auditLogs": "Journaux d'audit"
+        "auditLogs": "Journaux d'audit",
+        "support": "Assistance en ligne"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Assistance"
@@ -313,5 +314,12 @@
         "showBaserowHelpMessage": "Afficher le message d'aide",
         "coBrandingLogo": "Logo",
         "coBrandingLogoDescription": "Remplace le logo Baserow par une alternative co-brandée personnalisée (176x29)."
+    },
+    "enterpriseModal": {
+        "title": "Changer de plan pour utiliser : {name}",
+        "description": "Votre compte n'a pas accès aux fonctionnalités avancées/entreprise. Passez à la version avancée/entreprise pour commencer à utiliser {name}. Vous pouvez mettre à niveau votre compte en obtenant une licence. Cliquez sur le bouton ci-dessous pour voir les prix.",
+        "viewPricing": "Voir les prix",
+        "enterprise": "Enterprise",
+        "premium": "Premium"
     }
 }

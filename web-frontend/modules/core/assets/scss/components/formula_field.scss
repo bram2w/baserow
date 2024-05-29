@@ -1,5 +1,5 @@
 .formula-field {
-  @extend .context;
+  @extend %context;
 
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@
 .formula-field__item-group-title {
   font-size: 12px;
   color: $color-neutral-600;
-  padding: 0 12px 6px 12px;
+  padding: 0 12px 6px;
 }
 
 .formula-field__item {
@@ -94,6 +94,7 @@
   font-size: 13px;
   line-height: 24px;
   color: $color-neutral-900;
+
   @include rounded($rounded);
   @include flex-align-items(4px);
 
@@ -143,6 +144,7 @@
   font-family: monospace;
   background-color: $color-neutral-100;
   padding: 6px 10px;
+
   @include rounded($rounded);
 
   code {

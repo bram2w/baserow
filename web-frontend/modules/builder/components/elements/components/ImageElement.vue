@@ -1,7 +1,7 @@
 <template>
-  <div :class="classes" class="image_element">
+  <div :class="classes" class="image-element">
     <div
-      class="image_element__img_wrapper"
+      class="image-element__img-wrapper"
       :class="imageConstraintClass"
       :style="{
         '--max-width': styleMaxWidth,
@@ -9,7 +9,7 @@
       }"
     >
       <img
-        class="image_element__img"
+        class="image-element__img"
         :alt="resolvedAltText || $t('imageElement.emptyState')"
         :src="imageSource"
       />
@@ -55,13 +55,13 @@ export default {
     },
     imageConstraintClass() {
       return {
-        'image_element__img_wrapper--cover':
+        'image-element__img-wrapper--cover':
           this.element.style_image_constraint === 'cover',
-        'image_element__img_wrapper--contain':
+        'image-element__img-wrapper--contain':
           this.element.style_image_constraint === 'contain',
-        'image_element__img_wrapper--full-width':
+        'image-element__img-wrapper--full-width':
           this.element.style_image_constraint === 'full-width',
-        'image_element__img_wrapper--max-height': this.element.styleMaxHeight,
+        'image-element__img-wrapper--max-height': this.element.styleMaxHeight,
       }
     },
     imageSource() {

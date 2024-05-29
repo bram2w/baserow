@@ -3,7 +3,7 @@
     <ABCheckbox
       v-model="inputValue"
       :required="element.required"
-      :disabled="isEditMode"
+      :read-only="isEditMode"
       :error="displayFormDataError"
       class="checkbox-element"
     >

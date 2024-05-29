@@ -1,4 +1,5 @@
 import abc
+from datetime import timedelta
 from typing import List, Type
 
 from django.db.models import (
@@ -11,6 +12,7 @@ from django.db.models import (
     Subquery,
     Value,
 )
+from django.db.models.fields import DurationField
 from django.db.models.functions import Coalesce
 
 from baserow.contrib.database.formula.ast.tree import (
@@ -274,6 +276,8 @@ def aggregate_wrapper(
     # if the output field type is a number, return 0 instead of null
     if isinstance(output_field, DecimalField):
         expr = Coalesce(expr, Value(0), output_field=output_field)
+    elif isinstance(output_field, DurationField):
+        expr = Coalesce(expr, timedelta(hours=0), output_field=output_field)
 
     return WrappedExpressionWithMetadata(
         ExpressionWrapper(expr, output_field=output_field)

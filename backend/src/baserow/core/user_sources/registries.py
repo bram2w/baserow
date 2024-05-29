@@ -97,25 +97,39 @@ class UserSourceType(
             user_source.auth_providers.all().delete()
             self.after_create(user, user_source, values)
 
-    def serialize_property(self, instance: UserSource, prop_name: str):
+    def serialize_property(
+        self,
+        instance: UserSource,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         if prop_name == "order":
             return str(instance.order)
 
         if prop_name == "auth_providers":
             return [
-                ap.get_type().export_serialized(ap)
+                ap.get_type().export_serialized(
+                    ap, files_zip=files_zip, storage=storage, cache=cache
+                )
                 for ap in AppAuthProviderHandler.list_app_auth_providers_for_user_source(
                     instance
                 )
             ]
 
-        return super().serialize_property(instance, prop_name)
+        return super().serialize_property(
+            instance, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
 
     def deserialize_property(
         self,
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Dict[int, int]],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ) -> Any:
         if prop_name == "integration_id" and value:
@@ -129,13 +143,24 @@ class UserSourceType(
             else:
                 return value
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def import_serialized(
         self,
         parent: Any,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Dict[int, int]],
+        files_zip=None,
+        storage=None,
+        cache=None,
         **kwargs,
     ) -> UserSourceSubClass:
         """
@@ -153,7 +178,12 @@ class UserSourceType(
                 auth_provider["type"]
             )
             auth_provider_type.import_serialized(
-                created_user_source, auth_provider, id_mapping
+                created_user_source,
+                auth_provider,
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
 
         return created_user_source

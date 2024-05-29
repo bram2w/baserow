@@ -25,7 +25,7 @@
   @include rounded($rounded);
 
   :focus & {
-    @include add-elevation($elevation-low);
+    @include elevation($elevation-low);
   }
 
   .checkbox--error:not(.checkbox--disabled) & {

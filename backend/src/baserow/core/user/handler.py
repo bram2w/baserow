@@ -14,11 +14,15 @@ from django.db.utils import IntegrityError
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
-from itsdangerous import URLSafeTimedSerializer
+import requests
+from itsdangerous import URLSafeSerializer, URLSafeTimedSerializer
+from loguru import logger
 from opentelemetry import trace
+from requests.exceptions import RequestException
 
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
+from baserow.core.emails import EmailPendingVerificationEmail
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     WorkspaceInvitationEmailMismatch,
@@ -26,6 +30,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
     BlacklistedToken,
+    Settings,
     Template,
     UserLogEntry,
     UserProfile,
@@ -41,7 +46,8 @@ from baserow.core.signals import (
     user_updated,
 )
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import generate_hash
+from baserow.core.utils import generate_hash, get_baserow_saas_base_url
+from baserow.throttling import rate_limit
 
 from ..telemetry.utils import baserow_trace_methods
 from .emails import (
@@ -53,7 +59,9 @@ from .emails import (
 from .exceptions import (
     DeactivatedUserException,
     DisabledSignupError,
+    EmailAlreadyVerified,
     InvalidPassword,
+    InvalidVerificationToken,
     PasswordDoesNotMatchValidation,
     RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
@@ -62,6 +70,7 @@ from .exceptions import (
     UserNotFound,
 )
 from .signals import user_password_changed
+from .tasks import share_onboarding_details_with_baserow
 from .utils import normalize_email_address
 
 User = get_user_model()
@@ -238,11 +247,20 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             workspace_user = core_handler.accept_workspace_invitation(
                 user, workspace_invitation
             )
+            profile = user.profile
+            profile.email_verified = True
+            profile.save()
 
-        # If we still don't have a `WorkspaceUser`, which will be because we weren't
-        # invited to a workspace, and `allow_global_workspace_creation` is enabled,
-        # we'll create a workspace for this new user.
-        if not workspace_user and instance_settings.allow_global_workspace_creation:
+        if (
+            # If the user signs up and installs a template, then we must create a
+            # workspace because the template must be installed in one.
+            template
+            # If we still don't have a `WorkspaceUser`, which will be because we weren't
+            # invited to a workspace, and `allow_global_workspace_creation` is enabled,
+            # we'll create a workspace for this new user.
+            and not workspace_user
+            and instance_settings.allow_global_workspace_creation
+        ):
             with translation.override(language):
                 workspace_user = core_handler.create_workspace(
                     user=user, name=_("%(name)s's workspace") % {"name": name}
@@ -255,6 +273,21 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if not workspace_invitation_token and template and workspace:
             core_handler.install_template(user, workspace, template)
 
+        if (
+            # If the user accepted an invitation, then a workspace already exists
+            # making the onboarding redundant.
+            workspace_invitation
+            # If the user signups up with a template, then we must create a workspace
+            # because making the onboarding redundant.
+            or template
+            # If the user can't create a new workspace then the onboarding is
+            # redundant because it can't create a workspace anyway.
+            or not instance_settings.allow_global_workspace_creation
+        ):
+            profile = user.profile
+            profile.completed_onboarding = True
+            profile.save()
+
         # Call the user_created method for each plugin that is in the registry.
         for plugin in plugin_registry.registry.values():
             plugin.user_created(user, workspace, workspace_invitation, template)
@@ -264,6 +297,17 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             auth_provider = PasswordProviderHandler.get()
         auth_provider.user_signed_in(user)
 
+        settings = CoreHandler().get_settings()
+        email_verification_send_email_if = [
+            Settings.EmailVerificationOptions.RECOMMENDED,
+            Settings.EmailVerificationOptions.ENFORCED,
+        ]
+        if (
+            settings.email_verification in email_verification_send_email_if
+            and user.profile.email_verified is False
+        ):
+            UserHandler().send_email_pending_verification(user)
+
         return user
 
     def update_user(
@@ -272,6 +316,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         first_name: Optional[str] = None,
         language: Optional[str] = None,
         email_notification_frequency: Optional[str] = None,
+        completed_onboarding: Optional[bool] = None,
     ) -> AbstractUser:
         """
         Updates the user's account editable properties. Handles the scenario
@@ -282,6 +327,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         :param language: The language selected by the user.
         :param email_notification_frequency: The frequency chosen by the user to
             receive email notifications.
+        :param completed_onboarding: Whether the onboarding was completed.
         :return: The updated user object.
         """
 
@@ -298,6 +344,10 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if email_notification_frequency is not None:
             user.profile.email_notification_frequency = email_notification_frequency
             profile_fields_to_update.append("email_notification_frequency")
+
+        if completed_onboarding is not None:
+            user.profile.completed_onboarding = completed_onboarding
+            profile_fields_to_update.append("completed_onboarding")
 
         if profile_fields_to_update:
             user.profile.save(update_fields=profile_fields_to_update)
@@ -384,6 +434,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         # Update the last password change timestamp to invalidate old authentication
         # tokens.
         user.profile.last_password_change = timezone.now()
+        user.profile.email_verified = True
         user.profile.save()
 
         user_password_changed.send(
@@ -642,3 +693,156 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         hashed_token = generate_hash(refresh_token)
         return BlacklistedToken.objects.filter(hashed_token=hashed_token).exists()
+
+    def _get_email_verification_signer(self) -> URLSafeSerializer:
+        return URLSafeSerializer(settings.SECRET_KEY, "verify-email")
+
+    def create_email_verification_token(self, user: User) -> str:
+        """
+        Creates email verification token for the provided user
+        based on the current user's email address.
+
+        :param user: The user for which the token should be generated.
+        """
+
+        signer = self._get_email_verification_signer()
+        expires_at = datetime.datetime.now(datetime.timezone.utc) + timedelta(days=1)
+        return signer.dumps(
+            {
+                "user_id": user.id,
+                "email": user.email,
+                "expires_at": expires_at.isoformat(),
+            }
+        )
+
+    def verify_email_address(self, token: str) -> User:
+        """
+        Marks the user's email address as verified if the
+        provided token is a valid token that confirms the user's
+        email address.
+
+        :param token: The verification token.
+        :raises InvalidVerificationToken: Raised when the token is
+            expired, the user doesn't exist, or the user's email
+            address doesn't match the one the token was issued for.
+        :raises EmailAlreadyVerified: Raised when the user's
+            email is verified already.
+        """
+
+        signer = self._get_email_verification_signer()
+        token_data = signer.loads(token)
+
+        if datetime.datetime.fromisoformat(
+            token_data["expires_at"]
+        ) < datetime.datetime.now(tz=timezone.utc):
+            raise InvalidVerificationToken()
+
+        try:
+            user = self.get_active_user(user_id=token_data["user_id"])
+        except UserNotFound as ex:
+            raise InvalidVerificationToken() from ex
+
+        if user.profile.email_verified:
+            raise EmailAlreadyVerified()
+
+        if user.email != token_data["email"]:
+            raise InvalidVerificationToken()
+
+        user_profile = user.profile
+        user_profile.email_verified = True
+        user_profile.save()
+        return user
+
+    def send_email_pending_verification(self, user: User):
+        """
+        Sends out a pending verification email to the user.
+
+        :user: User that should receive the verification email.
+        :raises EmailAlreadyVerified: Raised when the user's
+            email is verified already.
+        """
+
+        if user.profile.email_verified:
+            raise EmailAlreadyVerified()
+
+        token = self.create_email_verification_token(user)
+
+        base_url = (
+            settings.BASEROW_EMBEDDED_SHARE_URL or settings.PUBLIC_WEB_FRONTEND_URL
+        )
+        if not base_url.endswith("/"):
+            base_url += "/"
+
+        confirm_url = urljoin(base_url, f"verify-email-address/{token}")
+
+        def send_email():
+            with translation.override(user.profile.language):
+                email = EmailPendingVerificationEmail(
+                    to=[user.email],
+                    confirm_url=confirm_url,
+                )
+                email.send(fail_silently=False)
+
+        rate_limit(
+            rate=settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
+            key=user.username,
+            raise_exception=False,
+        )(send_email)()
+
+    def start_share_onboarding_details_with_baserow(
+        self, user, team: str, role: str, size: str, country: str
+    ):
+        """
+        Starts a celery task that shares some user information with baserow.io. Note
+        that this is only triggered if the user given permission during the onboarding
+        in the web-frontend.
+
+        :param user: The user on whose behalf the information is shared.
+        :param team: The team type that the user shared.
+        :param role: The role that the user shared.
+        :param size: The company size that the user shared.
+        :param country: The country name that the user shared.
+        """
+
+        email = user.email
+
+        share_onboarding_details_with_baserow.delay(
+            email=email, team=team, role=role, size=size, country=country
+        )
+
+    def share_onboarding_details_with_baserow(self, email, team, role, size, country):
+        """
+        Makes an API request to baserow.io that shares the additional information. Note
+        that this is only triggered if the user given permission during the onboarding
+        in the web-frontend.
+
+        :param team: The team type that the user shared.
+        :param role: The role that the user shared.
+        :param size: The company size that the user shared.
+        :param country: The country name that the user shared.
+        """
+
+        settings_object = CoreHandler().get_settings()
+        base_url, headers = get_baserow_saas_base_url()
+        authority_url = f"{base_url}/api/saas/onboarding/additional-details/"
+
+        try:
+            response = requests.post(
+                authority_url,
+                json={
+                    "team": team,
+                    "role": role,
+                    "size": size,
+                    "country": country,
+                    "email": email,
+                    "instance_id": settings_object.instance_id,
+                },
+                timeout=settings.ADDITIONAL_INFORMATION_TIMEOUT_SECONDS,
+                headers=headers,
+            )
+            response.raise_for_status()
+        except RequestException:
+            logger.warning(
+                "The onboarding details could not be shared with the Baserow team "
+                "because the SaaS environment could not be reached."
+            )

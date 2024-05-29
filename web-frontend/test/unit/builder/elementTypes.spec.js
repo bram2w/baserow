@@ -1,10 +1,11 @@
 import {
-  ElementType,
   CheckboxElementType,
   DropdownElementType,
+  ElementType,
   InputTextElementType,
 } from '@baserow/modules/builder/elementTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
+import _ from 'lodash'
 
 describe('elementTypes tests', () => {
   const testApp = new TestApp()
@@ -344,6 +345,124 @@ describe('elementTypes tests', () => {
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
       expect(elementType.isValid(element, 'uk')).toBe(true)
+    })
+  })
+
+  describe('elementType childElementTypesForbidden tests', () => {
+    test('FormContainerElementType forbids non-form elements as children.', () => {
+      const formContainerElementType = testApp
+        .getRegistry()
+        .get('element', 'form_container')
+      const nonFormElementTypes = Object.values(
+        testApp.getRegistry().getAll('element')
+      )
+        .filter((elementType) => !elementType.isFormElement)
+        .map((elementType) => elementType.getType())
+
+      const forbiddenChildTypes =
+        formContainerElementType.childElementTypesForbidden.map((el) =>
+          el.getType()
+        )
+      expect(forbiddenChildTypes).toEqual(nonFormElementTypes)
+    })
+    test('ColumnElementType forbids container elements as children.', () => {
+      const columnElementType = testApp.getRegistry().get('element', 'column')
+      const containerElementTypes = Object.values(
+        testApp.getRegistry().getAll('element')
+      )
+        .filter((elementType) => elementType.isContainerElement)
+        .map((elementType) => elementType.getType())
+
+      const forbiddenChildTypes =
+        columnElementType.childElementTypesForbidden.map((el) => el.getType())
+      expect(forbiddenChildTypes).toEqual(containerElementTypes)
+    })
+    test('RepeatElementType forbids itself, form elements and the form container as children.', () => {
+      const repeatElementType = testApp.getRegistry().get('element', 'repeat')
+
+      const formContainerElementType = testApp
+        .getRegistry()
+        .get('element', 'form_container')
+
+      let expectedForbiddenChildTypes = [
+        repeatElementType.type,
+        formContainerElementType.type,
+      ]
+      const formElementTypes = Object.values(
+        testApp.getRegistry().getAll('element')
+      )
+        .filter((elementType) => elementType.isFormElement)
+        .map((elementType) => elementType.getType())
+
+      expectedForbiddenChildTypes =
+        expectedForbiddenChildTypes.concat(formElementTypes)
+
+      const forbiddenChildTypes =
+        repeatElementType.childElementTypesForbidden.map((el) => el.getType())
+      expect(forbiddenChildTypes.sort()).toEqual(
+        expectedForbiddenChildTypes.sort()
+      )
+    })
+  })
+
+  describe('elementType childElementTypes tests', () => {
+    test('childElementTypes called with element with no parent only restricts child types to its own requirements.', () => {
+      const page = { id: 1, name: 'Contact Us' }
+      const element = { id: 2, parent_element_id: null }
+      const formContainerElementType = testApp
+        .getRegistry()
+        .get('element', 'form_container')
+      const formElementTypes = Object.values(
+        testApp.getRegistry().getAll('element')
+      )
+        .filter((elementType) => elementType.isFormElement)
+        .map((elementType) => elementType.getType())
+
+      const childElementTypes = formContainerElementType
+        .childElementTypes(page, element)
+        .map((el) => el.getType())
+      expect(childElementTypes).toEqual(formElementTypes)
+    })
+    test('childElementTypes called with element with parent restricts child types using all ancestor childElementTypes requirements.', () => {
+      const page = { id: 1, name: 'Contact Us' }
+      const parentElement = {
+        id: 1,
+        page_id: page.id,
+        parent_element_id: null,
+        type: 'repeat',
+      }
+      const element = {
+        id: 2,
+        page_id: page.id,
+        parent_element_id: parentElement.id,
+        type: 'column',
+      }
+      page.elementMap = { 1: parentElement, 2: element }
+
+      const allElementTypes = Object.values(
+        testApp.getRegistry().getAll('element')
+      ).map((el) => el.getType())
+
+      const columnElementType = testApp.getRegistry().get('element', 'column')
+      const forbiddenColumnChildTypes =
+        columnElementType.childElementTypesForbidden.map((el) => el.getType())
+
+      const repeatElementType = testApp.getRegistry().get('element', 'repeat')
+      const forbiddenRepeatChildTypes =
+        repeatElementType.childElementTypesForbidden.map((el) => el.getType())
+
+      const allExpectedForbiddenChildTypes = forbiddenColumnChildTypes.concat(
+        forbiddenRepeatChildTypes
+      )
+      const expectedAllowedChildTypes = _.difference(
+        allElementTypes,
+        allExpectedForbiddenChildTypes
+      )
+
+      const childElementTypes = columnElementType
+        .childElementTypes(page, element)
+        .map((el) => el.getType())
+      expect(childElementTypes).toEqual(expectedAllowedChildTypes)
     })
   })
 })

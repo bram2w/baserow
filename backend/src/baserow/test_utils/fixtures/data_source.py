@@ -23,7 +23,7 @@ class DataSourceFixtures:
         service_model_class=None,
         order=None,
         name=None,
-        **kwargs
+        **kwargs,
     ):
         if not page:
             if user is None:
@@ -35,10 +35,10 @@ class DataSourceFixtures:
 
         service = kwargs.pop("service", None)
         if service is None and service_model_class:
+            integrations_args = kwargs.pop("integration_args", {})
+            integrations_args["application"] = page.builder
             service = self.create_service(
-                service_model_class,
-                integration_args={"application": page.builder},
-                **kwargs
+                service_model_class, integration_args=integrations_args, **kwargs
             )
 
         if order is None:

@@ -18,7 +18,7 @@
         }}
       </template>
       <template #header-right-side>
-        <div
+        <Button
           v-if="
             $hasPermission(
               'enterprise.teams.create_team',
@@ -26,11 +26,13 @@
               workspace.id
             )
           "
-          class="button margin-left-2 button--large"
+          type="primary"
+          size="large"
+          class="margin-left-2"
           @click="$refs.createModal.show()"
         >
           {{ $t('teamsTable.createNew') }}
-        </div>
+        </Button>
       </template>
       <template #menus="slotProps">
         <EditTeamContext

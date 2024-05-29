@@ -5,15 +5,13 @@
         <div class="conditional-color-value-provider-form__colors-header-title">
           {{ $t('conditionalColorValueProviderForm.title') }}
         </div>
-        <a
+        <ButtonText
+          icon="iconoir-plus"
           class="conditional-color-value-provider-form__color-add"
           @click.prevent="addColor()"
         >
-          <i
-            class="iconoir-plus conditional-color-value-provider-form__color-filter-action-icon"
-          ></i>
           {{ $t('conditionalColorValueProviderForm.addColor') }}
-        </a>
+        </ButtonText>
       </div>
       <div>
         <div
@@ -78,24 +76,20 @@
           <div
             class="conditional-color-value-provider-form__color-filter-actions"
           >
-            <a
+            <ButtonText
               class="conditional-color-value-provider-form__color-filter-add"
+              icon="iconoir-plus"
               @click.prevent="addFilter(color)"
             >
-              <i
-                class="iconoir-plus conditional-color-value-provider-form__color-filter-action-icon"
-              ></i>
               {{ $t('conditionalColorValueProviderForm.addCondition') }}
-            </a>
-            <a
+            </ButtonText>
+            <ButtonText
               class="conditional-color-value-provider-form__color-filter-add"
+              icon="iconoir-plus"
               @click.prevent="addFilterGroup(color)"
             >
-              <i
-                class="iconoir-plus conditional-color-value-provider-form__color-filter-action-icon"
-              ></i>
               {{ $t('conditionalColorValueProviderForm.addConditionGroup') }}
-            </a>
+            </ButtonText>
             <div :style="{ flex: '1 1 auto' }"></div>
             <a
               v-if="options.colors.length > 1"

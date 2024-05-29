@@ -1,67 +1,70 @@
 {
-    "integrationType": {
-        "localBaserow": "Local Baserow",
-        "localBaserowSummary": "Local Baserow - {name}, {username}",
-        "localBaserowWarning": "Authorizing your account gives everyone who has edit permissions to the application full access to the data you have access to. It’s possible to create a second user, give the right permissions and use that one."
-    },
-    "serviceType": {
-        "localBaserowGetRow": "Get a row",
-        "localBaserowListRows": "List rows"
-    },
-    "userSourceType": {
-        "localBaserow": "Baserow table authentication"
-    },
-    "localBaserowForm": {
-        "user": "User",
-        "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow workspace."
-    },
-    "localBaserowGetRowForm": {
-        "rowFieldLabel": "Row ID",
-        "invalidFormula": "The formula is invalid",
-        "rowFieldPlaceHolder": "Select a row ID",
-        "rowFieldHelpText": "Leave this value empty to return the first row.",
-        "searchFieldPlaceHolder": "Enter a search term...",
-        "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
-        "filterTabTitle": "Filters",
-        "searchTabTitle": "Search",
-        "noTableChosenForSorting": "Choose a table to begin using data source sorts."
-    },
-    "localBaserowListRowsForm": {
-        "filterTabTitle": "Filters",
-        "sortTabTitle": "Sorts",
-        "searchTabTitle": "Search",
-        "searchFieldPlaceHolder": "Enter a search term...",
-        "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
-        "noTableChosenForSorting": "Choose a table to begin using data source sorts."
-    },
-    "localBaserowTableServiceConditionalForm": {
-      "addFilter": "Add additional filter",
-      "noFilterTitle": "You have not yet created a data source filter",
-      "noFilterText": "Data source filters allow you to show Baserow table rows that apply to your conditions.",
-      "relatedFieldNotFound": "The related field is not found.",
-      "filterTypeNotFound": "The filter type is not compatible.",
-      "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
-      "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types",
-      "formulaFilterInputPlaceholder": "Enter text...",
-      "useFormulaForValue": "Use a formula for this filter",
-      "useDefaultForValue": "Use the default filter for this field"
-    },
-    "localBaserowTableServiceSortForm": {
-      "noSortTitle": "You have not yet created a data source sort",
-      "noSortText": "Sorts allow you to sort rows by a field.",
-      "sortBy": "Sort by",
-      "thenBy": "Then by",
-      "addSort": "Add additional sort",
-      "noTableChosenForSorting": "Choose a table to begin using data source sorts."
-    },
-    "dataProviderType": {
-        "dataSource": "Data source",
-        "pageParameter": "Parameter"
-    },
-    "localBaserowTableSelector": {
-        "viewFieldLabel": "View",
-        "tableFieldLabel": "Table",
-        "chooseNoView": "Not selected",
-        "databaseFieldLabel": "Database"
-    }
+  "integrationType": {
+    "localBaserow": "Local Baserow"
+  },
+  "localBaserowIntegrationType": {
+    "localBaserowSummary": "Local Baserow - {name}, {username}",
+    "localBaserowNoUser": "Local Baserow - Not configured",
+    "localBaserowWarning": "Authorizing your account gives everyone who has edit permissions to the application full access to the data you have access to. It’s possible to create a second user, give the right permissions and use that one."
+  },
+  "serviceType": {
+    "localBaserowGetRow": "Get a row",
+    "localBaserowListRows": "List rows"
+  },
+  "userSourceType": {
+    "localBaserow": "Baserow table authentication"
+  },
+  "localBaserowForm": {
+    "user": "User",
+    "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow workspace."
+  },
+  "localBaserowGetRowForm": {
+    "rowFieldLabel": "Row ID",
+    "invalidFormula": "The formula is invalid",
+    "rowFieldPlaceHolder": "Select a row ID",
+    "rowFieldHelpText": "Leave this value empty to return the first row.",
+    "searchFieldPlaceHolder": "Enter a search term...",
+    "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
+    "filterTabTitle": "Filters",
+    "searchTabTitle": "Search",
+    "noTableChosenForSorting": "Choose a table to begin using data source sorts."
+  },
+  "localBaserowListRowsForm": {
+    "filterTabTitle": "Filters",
+    "sortTabTitle": "Sorts",
+    "searchTabTitle": "Search",
+    "searchFieldPlaceHolder": "Enter a search term...",
+    "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
+    "noTableChosenForSorting": "Choose a table to begin using data source sorts."
+  },
+  "localBaserowTableServiceConditionalForm": {
+    "addFilter": "Add additional filter",
+    "noFilterTitle": "You have not yet created a data source filter",
+    "noFilterText": "Data source filters allow you to show Baserow table rows that apply to your conditions.",
+    "relatedFieldNotFound": "The related field is not found.",
+    "filterTypeNotFound": "The filter type is not compatible.",
+    "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
+    "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types",
+    "formulaFilterInputPlaceholder": "Enter text...",
+    "useFormulaForValue": "Use a formula for this filter",
+    "useDefaultForValue": "Use the default filter for this field"
+  },
+  "localBaserowTableServiceSortForm": {
+    "noSortTitle": "You have not yet created a data source sort",
+    "noSortText": "Sorts allow you to sort rows by a field.",
+    "sortBy": "Sort by",
+    "thenBy": "Then by",
+    "addSort": "Add additional sort",
+    "noTableChosenForSorting": "Choose a table to begin using data source sorts."
+  },
+  "dataProviderType": {
+    "dataSource": "Data source",
+    "pageParameter": "Parameter"
+  },
+  "localBaserowTableSelector": {
+    "viewFieldLabel": "View",
+    "tableFieldLabel": "Table",
+    "chooseNoView": "Not selected",
+    "databaseFieldLabel": "Database"
+  }
 }

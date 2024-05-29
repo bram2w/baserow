@@ -5,7 +5,6 @@ import staff from '@baserow/modules/core/middleware/staff'
 import workspacesAndApplications from '@baserow/modules/core/middleware/workspacesAndApplications'
 import pendingJobs from '@baserow/modules/core/middleware/pendingJobs'
 import urlCheck from '@baserow/modules/core/middleware/urlCheck'
-import userSourceAuthentication from '@baserow/modules/core/middleware/userSourceAuthentication'
 
 /* eslint-disable-next-line */
 import Middleware from './middleware'
@@ -17,4 +16,3 @@ Middleware.staff = staff
 Middleware.workspacesAndApplications = workspacesAndApplications
 Middleware.pendingJobs = pendingJobs
 Middleware.urlCheck = urlCheck
-Middleware.userSourceAuthentication = userSourceAuthentication

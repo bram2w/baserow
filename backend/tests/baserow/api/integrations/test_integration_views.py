@@ -20,13 +20,13 @@ def test_get_integrations(api_client, data_fixture):
     database = data_fixture.create_database_application(workspace=workspace)
     data_fixture.create_database_table(database=database)
     integration1 = data_fixture.create_local_baserow_integration(
-        application=application
+        application=application, authorized_user=user
     )
     integration2 = data_fixture.create_local_baserow_integration(
-        application=application
+        application=application, authorized_user=user
     )
     integration3 = data_fixture.create_local_baserow_integration(
-        application=application
+        application=application, authorized_user=user
     )
     data_fixture.create_local_baserow_integration()
 

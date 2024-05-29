@@ -63,30 +63,35 @@ def _get_views_where_field_visible_and_hidden_fields_in_view(
         and the second is the set of field ids which are hidden in said view.
     """
 
-    views_where_field_was_visible = []
     views_with_prefetched_fields = View.objects.filter(
         public=True, table_id=field.table_id
     ).prefetch_related("table__field_set")
-    for view in specific_iterator(
+
+    specific_views = specific_iterator(
         views_with_prefetched_fields,
         per_content_type_queryset_hook=(
             lambda model, queryset: view_type_registry.get_by_model(
                 model
             ).enhance_queryset(queryset)
         ),
-    ):
+    )
+    if len(specific_views) == 0:
+        return []
+
+    if hidden_fields_field_ids_filter is None:
+        table = specific_views[0].table
+        all_field_ids = table.field_set.values_list("id", flat=True)
+        restrict_hidden_check_to_field_ids = all_field_ids
+    else:
+        restrict_hidden_check_to_field_ids = [field.id, *hidden_fields_field_ids_filter]
+
+    views_where_field_was_visible = []
+    for view in specific_views:
         view = view.specific
         view_type = view_type_registry.get_by_model(view)
         if not view_type.when_shared_publicly_requires_realtime_events:
             continue
 
-        if hidden_fields_field_ids_filter is None:
-            restrict_hidden_check_to_field_ids = None
-        else:
-            restrict_hidden_check_to_field_ids = [
-                field.id,
-                *hidden_fields_field_ids_filter,
-            ]
         hidden_field_ids = view_type.get_hidden_fields(
             view, restrict_hidden_check_to_field_ids
         )

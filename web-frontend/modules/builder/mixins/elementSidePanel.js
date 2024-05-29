@@ -5,7 +5,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
-  inject: ['builder', 'page'],
+  inject: ['workspace', 'builder', 'page'],
   computed: {
     ...mapGetters({
       element: 'element/getSelected',
@@ -34,7 +34,14 @@ export default {
       actionDebouncedUpdateSelectedElement: 'element/debouncedUpdateSelected',
     }),
     async onChange(newValues) {
-      if (!this.$refs.panelForm.isFormValid()) {
+      if (
+        !this.$hasPermission(
+          'builder.page.element.update',
+          this.element,
+          this.workspace.id
+        ) ||
+        !this.$refs.panelForm.isFormValid()
+      ) {
         return
       }
 

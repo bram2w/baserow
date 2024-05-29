@@ -1,18 +1,20 @@
 <template>
   <div ref="cell" class="grid-view__cell">
     <div class="grid-field-button">
-      <a
+      <Button
         v-if="isValid(value)"
-        class="button button--tiny button--ghost"
+        tag="a"
+        size="tiny"
+        type="secondary"
+        rel="nofollow noopener noreferrer"
         :href="value && value.url"
         target="_blank"
-        rel="nofollow noopener noreferrer"
       >
         {{ getLabelOrURL(value) }}
-      </a>
-      <a v-else class="button button--tiny button--ghost disabled">
+      </Button>
+      <Button v-else type="secondary" tag="a" disabled>
         {{ getLabelOrURL(value) }}
-      </a>
+      </Button>
     </div>
   </div>
 </template>

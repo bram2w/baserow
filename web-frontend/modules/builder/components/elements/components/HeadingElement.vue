@@ -8,7 +8,7 @@
     <ABHeading
       :level="element.level"
       :style="{
-        [`--heading-h${element.level}--color`]: resolveColor(
+        [`--heading-h${element.level}-color`]: resolveColor(
           element.font_color,
           headingColorVariables
         ),

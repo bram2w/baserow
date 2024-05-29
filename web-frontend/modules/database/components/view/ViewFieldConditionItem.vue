@@ -33,6 +33,9 @@
           :key="fType.type"
           :name="fType.getName()"
           :value="fType.type"
+          :visible="
+            fType.isDeprecated() === false || fType.type === filter.type
+          "
         ></DropdownItem>
       </Dropdown>
     </div>
@@ -61,6 +64,7 @@
           :disabled="disableFilter"
           :read-only="readOnly"
           @input="$emit('updateFilter', { value: $event })"
+          @migrate="$emit('updateFilter', $event)"
         />
       </slot>
       <slot

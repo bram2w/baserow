@@ -2,6 +2,7 @@
   padding: 20px;
   border: 1px solid $color-neutral-200;
   background-color: $color-neutral-100;
+
   @include rounded($rounded-md);
 
   .expandable--expanded & {

@@ -11,7 +11,10 @@ from .trash.tasks import (
     setup_period_trash_tasks,
 )
 from .usage.tasks import run_calculate_storage
-from .user.tasks import check_pending_account_deletion
+from .user.tasks import (
+    check_pending_account_deletion,
+    share_onboarding_details_with_baserow,
+)
 
 
 @app.task(
@@ -36,4 +39,5 @@ __all__ = [
     "check_pending_account_deletion",
     "delete_expired_snapshots",
     "initialize_otel",
+    "share_onboarding_details_with_baserow",
 ]

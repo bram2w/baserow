@@ -14,9 +14,11 @@
       <template v-if="hasValue()">
         <slot name="value">
           <template v-if="multiple">
-            <span class="dropdown__selected-text">{{
-              selectedName.join(', ')
-            }}</span>
+            <span
+              class="dropdown__selected-text"
+              :title="selectedName.join(', ')"
+              >{{ selectedName.join(', ') }}</span
+            >
           </template>
           <template v-else>
             <i
@@ -29,7 +31,9 @@
               class="dropdown__selected-image"
               :src="selectedImage"
             />
-            <span class="dropdown__selected-text">{{ selectedName }}</span>
+            <span class="dropdown__selected-text" :title="selectedName">{{
+              selectedName
+            }}</span>
           </template>
         </slot>
       </template>

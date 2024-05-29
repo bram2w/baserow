@@ -45,7 +45,9 @@
         }"
       >
         <a
-          v-if="propFilterType.hasEditableValue"
+          v-if="
+            propFilterType.hasEditableValue && !propFilterType.isDeprecated()
+          "
           :title="
             !filter.value_is_formula
               ? $t('localBaserowTableServiceConditionalForm.useFormulaForValue')
@@ -53,8 +55,7 @@
           "
           class="filters__value--formula-toggle"
           :class="{
-            'filters__value--formula-toggle--disabled':
-              !filter.value_is_formula,
+            'filters__value-formula-toggle--disabled': !filter.value_is_formula,
           }"
           @click="handleFormulaToggleClick(filter, emitUpdate)"
         >
@@ -63,10 +64,16 @@
       </template>
     </ViewFieldConditionsForm>
     <div class="filters_footer">
-      <a v-if="!tableLoading" class="filters__add" @click.prevent="addFilter()">
-        <i class="filters__add-icon iconoir-plus"></i>
-        {{ $t('localBaserowTableServiceConditionalForm.addFilter') }}</a
+      <ButtonText
+        v-if="!tableLoading"
+        type="secondary"
+        size="small"
+        icon="iconoir-plus"
+        class="filters__add"
+        @click.prevent="addFilter()"
       >
+        {{ $t('localBaserowTableServiceConditionalForm.addFilter') }}
+      </ButtonText>
     </div>
   </div>
 </template>

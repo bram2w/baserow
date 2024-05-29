@@ -4,11 +4,13 @@
       type="checkbox"
       :checked="value"
       :required="required"
-      :disabled="disabled"
       class="ab-checkbox__input"
+      :disabled="disabled"
       :class="{
         'ab-checkbox--error': error,
+        'ab-checkbox--readonly': readOnly,
       }"
+      :aria-disabled="disabled"
     />
     <label v-if="hasSlot" class="ab-checkbox__label">
       <slot></slot>
@@ -52,6 +54,14 @@ export default {
       required: false,
       default: false,
     },
+    /**
+     * Whether the checkbox is readonly.
+     */
+    readOnly: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   computed: {
     hasSlot() {
@@ -60,7 +70,7 @@ export default {
   },
   methods: {
     toggle() {
-      if (this.disabled) return
+      if (this.disabled || this.readOnly) return
       this.$emit('input', !this.value)
     },
   },

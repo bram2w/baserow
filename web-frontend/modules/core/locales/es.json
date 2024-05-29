@@ -8,7 +8,7 @@
     },
     "sidebarApplication": {
         "renameApplication": "Renombrar {type}",
-        "viewTrash": "ver papelera",
+        "viewTrash": "Ver basura",
         "deleteApplication": "Borrar {type}",
         "duplicateApplication": "Duplicar {tipo}",
         "snapshots": "Imágenes",
@@ -48,7 +48,7 @@
         "oldPasswordLabel": "Contraseña anterior",
         "oldPasswordRequiredError": "Se requiere contraseña anterior.",
         "newPasswordLabel": "Nueva contraseña",
-        "repeatNewPasswordLabel": "repita la nueva contraseña",
+        "repeatNewPasswordLabel": "Repetir la nueva contraseña",
         "repeatNewPasswordMatchError": "Este campo debe coincidir con su nuevo campo de contraseña.",
         "submitButton": "Cambia la contraseña",
         "errorInvalidOldPasswordTitle": "Contraseña invalida",
@@ -58,7 +58,7 @@
         "alreadyExistsTitle": "El usuario ya existe",
         "alreadyExistsMessage": "Ya existe un usuario con la dirección de correo electrónico proporcionada.",
         "passwordRequired": "Se requiere una contraseña.",
-        "invalidEmail": "Por favor, introduce una dirección de correo electrónico válida.",
+        "invalidEmail": "Por favor, introduce un correo electrónico válido.",
         "disabledAccountTitle": "Cuenta deshabilitada",
         "disabledAccountMessage": "Esta cuenta de usuario ha sido deshabilitada.",
         "incorrectCredentialTitle": "credenciales incorrectas",
@@ -69,10 +69,10 @@
     },
     "field": {
         "language": "Idioma",
-        "emailAddress": "Dirección de E-mail",
+        "emailAddress": "Correo electrónico",
         "name": "Tu nombre",
         "password": "Contraseña",
-        "passwordRepeat": "Repita la contraseña"
+        "passwordRepeat": "Repite la contraseña"
     },
     "invitationTitle": "Invitación",
     "invitationMessage": "{invitadoPor} te ha invitado a unirte a {espacio de trabajo}.",
@@ -119,10 +119,10 @@
         "renameWorkspace": "Renombrar grupo",
         "members": "Miembros",
         "viewTrash": "Ver papelera",
-        "leaveWorkspace": "Dejar grupo",
-        "deleteWorkspace": "Eliminar grupo",
+        "leaveWorkspace": "Salir del área de trabajo",
+        "deleteWorkspace": "Eliminar espacio de trabajo",
         "auditLog": "Registro de auditoría",
-        "settings": "Configuración"
+        "settings": "Ajustes"
     },
     "createWorkspaceModal": {
         "createNew": "Crear grupo nuevo",
@@ -140,13 +140,13 @@
     },
     "trashSidebar": {
         "title": "Papelera",
-        "unnamedWorkspace": "Grupo sin nombre {id}"
+        "unnamedWorkspace": "Espacio de trabajo sin nombre {id}"
     },
     "trashContents": {
         "message": "Restaurar elementos eliminados del pasado {duration}",
         "empty": "No se ha eliminado nada en los últimos tres días.",
         "emptyButtonTrashed": "Eliminar {type} permanentemente",
-        "emptyButtonNotTrashed": "Vaciar la papelera de {type}",
+        "emptyButtonNotTrashed": "Vaciar la papelera del {type}",
         "unnamed": "{type} {id} sin nombre"
     },
     "trashEmptyModal": {
@@ -240,7 +240,7 @@
     "resetPassword": {
         "title": "Restablecer la contraseña",
         "newPassword": "Nueva contraseña",
-        "repeatNewPassword": "repita la nueva contraseña",
+        "repeatNewPassword": "Repite la contraseña nueva",
         "submit": "Cambia la contraseña",
         "changed": "Contraseña cambiada",
         "errorInvalidLinkTitle": "Link inválido",
@@ -287,7 +287,7 @@
         "settingAllowSignupsViaWorkspaceInvitationsName": "Permitir suscripciones a través de invitaciones grupales",
         "settingAllowSignupsViaWorkspaceInvitationDescription": "Incluso si la creación de nuevas cuentas está deshabilitada, esta opción permite que los usuarios invitados directamente sigan creando una cuenta.",
         "userDeletionGraceDelay": "Eliminación de usuarios",
-        "settingUserDeletionGraceDelay": "Retraso de gracia",
+        "settingUserDeletionGraceDelay": "Borrar el plazo de gracia",
         "settingUserDeletionGraceDelayDescription": "Este es el número de días sin iniciar sesión después de los cuales una cuenta programada para ser eliminada se borra permanentemente.",
         "invalidAccountDeletionGraceDelay": "Este valor es obligatorio y debe ser un entero positivo menor que 32000",
         "settingAllowNonStaffCreateWorkspaceOperation": "Permitir a todos crear nuevos grupos",
@@ -295,7 +295,13 @@
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "A los nuevos usuarios se les creará automáticamente un grupo en el que serán administradores.",
         "maintenance": "Mantenimiento",
         "settingTrackWorkspaceUsage": "Seguimiento del uso del grupo",
-        "settingTrackWorkspaceUsageDescription": "Activa un trabajo nocturno que cuenta el uso de filas y archivos por grupo, mostrado en la página de administración de grupos premium."
+        "settingTrackWorkspaceUsageDescription": "Activa un trabajo nocturno que cuenta el uso de filas y archivos por grupo, mostrado en la página de administración de grupos premium.",
+        "userSettings": "Usuario",
+        "emailVerificationDescription": "Controla si las direcciones de correo electrónico deben ser verificadas.",
+        "emailVerificationNoVerification": "Ninguna verificación",
+        "emailVerificationEnforced": "Forzado",
+        "emailVerificationRecommended": "Recomendado",
+        "emailVerification": "Verificación de correo electrónico"
     },
     "copyingNotification": {
         "title": "Copiando...",
@@ -418,7 +424,7 @@
         "knowledgeBase": "Base de conocimientos",
         "tutorials": "Tutoriales",
         "userSettings": "Configuración de usuario",
-        "logoff": "Cerrar sesión",
+        "logoff": "Desconectarse",
         "workspaces": "Grupos",
         "trash": "Basura"
     },
@@ -672,7 +678,7 @@
         "strikethrough": "Tachado",
         "link": "Enlace",
         "linkEditPlaceholder": "URL del enlace...",
-        "linkEditDone": "Listo"
+        "linkEditDone": "Hecho"
     },
     "richTextEditorFloatingMenu": {
         "hierarchy": "Jerarquía",
@@ -693,8 +699,8 @@
         "openaiModelsLabel": "Modelos activados",
         "openaiModelsDescription": "Proporciona una lista de [modelos OpenAI] separados por comas (https://platform.openai.com/docs/models/continuous-model-upgrades) que se pueden utilizar en Baserow. (por ejemplo, `gpt-3.5-turbo,gpt-4`)",
         "ollama": "Ollama",
-        "ollamaHostLabel": "Anfitrión",
-        "ollamaHostDescription": "Proporciona el nombre de host de tu servidor [Ollama](https://ollama.com/). Normalmente se ejecuta localmente en tu propio dispositivo.",
+        "ollamaHostLabel": "Host",
+        "ollamaHostDescription": "Proporciona el nombre del host a tu servidor [Ollama] (https://ollama.com/). Esto normalmente se ejecuta localmente en tu propio dispositivo.",
         "ollamaModelsLabel": "Modelos activados",
         "openaiApiKeyDescription": "Proporciona una clave de API de OpenAI si deseas activar la integración. [Instrucciones para obtener una clave de API](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
         "ollamaModelsDescription": "Proporciona una lista de [modelos instalados de Ollama] separados por comas (https://ollama.com/library). Ten en cuenta que el modelo debe ser descargado e instalado antes de que pueda ser utilizado. (por ejemplo, `llama2,mistral`)"
@@ -707,9 +713,76 @@
         "submitButton": "Actualizar ajustes"
     },
     "workspaceSettingsModal": {
-        "title": "Configuración del espacio de trabajo"
+        "title": "Ajustes del espacio de trabajo"
     },
     "workspaceSettingType": {
-        "generativeAI": "Inteligencia artificial generativa"
+        "generativeAI": "IA generativa"
+    },
+    "dashboardVerifyEmail": {
+        "title": "Revisa tu buzón y haz clic en el enlace para verificar tu correo electrónico.",
+        "resendConfirmationEmail": "Reenviar correo electrónico de confirmación"
+    },
+    "resendEmailVerification": {
+        "confirmationEmailSentDescription": "Se ha enviado el correo electrónico de confirmación.",
+        "confirmationEmailSentTitle": "Correo electrónico de confirmación enviado"
+    },
+    "verifyEmailAddress": {
+        "confirmation": "Tu correo electrónico ha sido verificado.",
+        "disabledPasswordProvider": "Se ha desactivado el proveedor de autenticación de contraseña.",
+        "emailMismatchWarning": "Ten en cuenta que el correo electrónico verificado no pertenece a la cuenta que estás utilizando actualmente.",
+        "goToDashboard": "Ir al panel",
+        "invalidToken": "No es un token de confirmación válido."
+    },
+    "emailNotVerified": {
+        "title": "Se requiere verificación de correo electrónico",
+        "description": "Por favor, revisa tu buzón y haz clic en el enlace para verificar. Una vez verificada, se activará su cuenta.",
+        "resend": "Reenviar correo electrónico de confirmación"
+    },
+    "onboarding": {
+        "creating": "Creación de tu primer espacio de trabajo",
+        "title": "Visita guiada",
+        "continue": "Continuar",
+        "skip": "Saltar por ahora",
+        "cancel": "No quiero ayuda para configurar",
+        "failedTitle": "Algo salió mal",
+        "failedDescription": "La visita guiada no se completó, aunque algunas partes podrían haberse completado.",
+        "failedTryAgain": "Inténtalo de nuevo",
+        "failedSkip": "Saltar la visita guiada"
+    },
+    "teamStep": {
+        "creativeProductionTeam": "Producción creativa",
+        "otherPersonalTeam": "Otros / personal",
+        "title": "Construyamos juntos tu primer espacio de trabajo",
+        "description": "¿En qué equipo estás?",
+        "marketingTeam": "Marketing",
+        "productAndDesignTeam": "Producto y diseño",
+        "engineeringTeam": "Ingeniería",
+        "operationsTeam": "Operaciones",
+        "itAndSupportTeam": "TI y asistencia",
+        "hrAndLegalTeam": "Recursos humanos y legal",
+        "financeTeam": "Finanzas",
+        "salesAndAccountManagementTeam": "Ventas y gestión de cuentas",
+        "customerServiceTeam": "Servicio al cliente",
+        "manufacturingTeam": "Fabricación"
+    },
+    "workspaceStep": {
+        "title": "Crear tu espacio de trabajo",
+        "workspaceLabel": "Nombre del espacio de trabajo"
+    },
+    "selectAIModelForm": {
+        "AIType": "Tipo de IA",
+        "AIModel": "Modelo de IA"
+    },
+    "inviteStep": {
+        "title": "Invitar a colaboradores",
+        "description": "Siempre puedes añadir más después.",
+        "collaboratorsLabel": "Colaboradores"
+    },
+    "moreStep": {
+        "title": "Cuéntanos un poco más",
+        "roleOrJob": "Función o puesto...",
+        "people": "¿Cuántas personas hay en tu equipo?",
+        "country": "País",
+        "share": "Estoy de acuerdo en compartir esto con el equipo de Baserow"
     }
 }

@@ -21,6 +21,14 @@ export default (client) => {
         config
       )
     },
+    createSync(databaseId, values, initialData = null, firstRowHeader = false) {
+      if (initialData !== null) {
+        values.data = initialData
+        values.first_row_header = firstRowHeader
+      }
+
+      return client.post(`/database/tables/database/${databaseId}/`, values)
+    },
     importData(tableId, data, config = null) {
       return client.post(
         `/database/tables/${tableId}/import/async/`,

@@ -19,15 +19,11 @@
         </a>
       </li>
     </ul>
-    <a
-      v-if="!readOnly"
-      ref="dropdownLink"
-      class="add"
-      @click.prevent="toggleDropdown()"
+    <span v-if="!readOnly" ref="dropdownLink">
+      <ButtonText icon="iconoir-plus" @click.prevent="toggleDropdown()">
+        {{ $t('rowEditFieldMultipleSelect.addOption') }}
+      </ButtonText></span
     >
-      <i class="iconoir-plus add__icon"></i>
-      {{ $t('rowEditFieldMultipleSelect.addOption') }}
-    </a>
     <FieldSelectOptionsDropdown
       ref="dropdown"
       :options="availableSelectOptions"

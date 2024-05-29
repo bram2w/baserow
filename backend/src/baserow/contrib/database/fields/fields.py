@@ -316,7 +316,9 @@ class DurationField(models.DurationField):
     Extend the default Django DurationField to allow for more flexible input values.
     """
 
-    def __init__(self, duration_format, *args, **kwargs):
+    duration_format: str
+
+    def __init__(self, duration_format: str, *args, **kwargs):
         self.duration_format = duration_format
         super().__init__(*args, **kwargs)
 

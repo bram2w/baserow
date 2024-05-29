@@ -1,0 +1,137 @@
+<template>
+  <div>
+    <h1>{{ $t('databaseScratchTrackStep.title') }}</h1>
+    <p>{{ $t('databaseScratchTrackStep.description') }}</p>
+    <div class="flex flex-wrap margin-bottom-3" style="--gap: 8px">
+      <Chips
+        v-for="whatItem in Object.keys(whatItems)"
+        :key="whatItem"
+        :active="what === whatItem"
+        @click="select(whatItem)"
+        >{{ whatItem }}</Chips
+      >
+      <Chips
+        :active="what === 'own'"
+        icon="iconoir-plus"
+        @click="select('own')"
+        >{{ $t('databaseScratchTrackStep.addYourOwn') }}</Chips
+      >
+    </div>
+    <FormInput
+      v-if="what === 'own'"
+      v-model="tableName"
+      :placeholder="$t('databaseScratchTrackStep.tableName') + '...'"
+      :label="$t('databaseScratchTrackStep.tableName')"
+      large
+      :error="
+        $v.tableName.$dirty && !$v.tableName.required
+          ? $t('error.requiredField')
+          : null
+      "
+      @input="updateValue"
+      @blur="$v.tableName.$touch()"
+    />
+    <template v-if="what !== ''">
+      <FormInput
+        v-for="(row, index) in [0, 1, 2]"
+        :key="index"
+        v-model="$data['row' + index]"
+        :placeholder="$t('databaseScratchTrackStep.rowName') + '...'"
+        :label="
+          index === 0 ? $t('databaseScratchTrackStep.thisIncludes') : null
+        "
+        large
+        :error="
+          $v['row' + index].$dirty && $v['row' + index].$invalid
+            ? $t('error.requiredField')
+            : null
+        "
+        @input="updateValue"
+        @blur="$v['row' + index].$touch()"
+      />
+    </template>
+  </div>
+</template>
+
+<script>
+import { required, requiredIf } from 'vuelidate/lib/validators'
+
+export default {
+  name: 'DatabaseScratchTrackStep',
+  data() {
+    return {
+      what: '',
+      tableName: '',
+      own: false,
+      row0: '',
+      row1: '',
+      row2: '',
+    }
+  },
+  computed: {
+    whatItems() {
+      const items = {
+        [this.$t('databaseScratchTrackStep.projects')]: [
+          this.$t('databaseScratchTrackStep.productsRow1'),
+          this.$t('databaseScratchTrackStep.productsRow2'),
+          this.$t('databaseScratchTrackStep.productsRow3'),
+        ],
+        [this.$t('databaseScratchTrackStep.teams')]: [
+          this.$t('databaseScratchTrackStep.teamsRow1'),
+          this.$t('databaseScratchTrackStep.teamsRow2'),
+          this.$t('databaseScratchTrackStep.teamsRow3'),
+        ],
+        [this.$t('databaseScratchTrackStep.tasks')]: [
+          this.$t('databaseScratchTrackStep.tasksRow1'),
+          this.$t('databaseScratchTrackStep.tasksRow2'),
+          this.$t('databaseScratchTrackStep.tasksRow3'),
+        ],
+        [this.$t('databaseScratchTrackStep.campaigns')]: [
+          this.$t('databaseScratchTrackStep.campaignsRow1'),
+          this.$t('databaseScratchTrackStep.campaignsRow2'),
+          this.$t('databaseScratchTrackStep.campaignsRow3'),
+        ],
+      }
+      return items
+    },
+  },
+  mounted() {
+    this.updateValue()
+  },
+  methods: {
+    isValid() {
+      return !this.$v.$invalid
+    },
+    select(value) {
+      if (
+        this.what !== value &&
+        Object.prototype.hasOwnProperty.call(this.whatItems, value)
+      ) {
+        this.row0 = this.whatItems[value][0]
+        this.row1 = this.whatItems[value][1]
+        this.row2 = this.whatItems[value][2]
+      }
+      this.what = value
+      this.updateValue()
+    },
+    updateValue() {
+      const tableName = this.what === 'own' ? this.tableName : this.what
+      const rows = [this.row0, this.row1, this.row2]
+      this.$emit('update-data', { tableName, rows })
+    },
+  },
+  validations() {
+    return {
+      what: { required },
+      tableName: {
+        required: requiredIf(() => {
+          return this.what === 'own'
+        }),
+      },
+      row0: { required },
+      row1: {},
+      row2: {},
+    }
+  },
+}
+</script>

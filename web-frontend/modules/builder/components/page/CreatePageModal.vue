@@ -10,13 +10,9 @@
       @submitted="addPage"
     >
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
-          type="submit"
-        >
+        <Button size="large" :loading="loading">
           {{ $t('createPageModal.submit') }}
-        </button>
+        </Button>
       </div>
     </PageSettingsForm>
   </Modal>
@@ -31,7 +27,18 @@ export default {
   name: 'CreatePageModal',
   components: { PageSettingsForm },
   mixins: [modal],
+  provide() {
+    return {
+      page: null,
+      builder: this.builder,
+      workspace: this.workspace,
+    }
+  },
   props: {
+    workspace: {
+      type: Object,
+      required: true,
+    },
     builder: {
       type: Object,
       required: true,

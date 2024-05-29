@@ -1,6 +1,31 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import moment from '@baserow/modules/core/moment'
 import {
+  MultipleSelectHasFilterType,
+  MultipleSelectHasNotFilterType,
+  HasFileTypeViewFilterType,
+  FilesLowerThanViewFilterType,
+  LengthIsLowerThanViewFilterType,
+  LinkRowContainsFilterType,
+  LinkRowNotContainsFilterType,
+  IsEvenAndWholeViewFilterType,
+  HigherThanViewFilterType,
+  HigherThanOrEqualViewFilterType,
+  LowerThanViewFilterType,
+  LowerThanOrEqualViewFilterType,
+  SingleSelectIsAnyOfViewFilterType,
+  SingleSelectIsNoneOfViewFilterType,
+  DateIsBeforeMultiStepViewFilterType,
+  DateIsAfterMultiStepViewFilterType,
+  DateIsOnOrAfterMultiStepViewFilterType,
+  DateIsOnOrBeforeMultiStepViewFilterType,
+  DateIsEqualMultiStepViewFilterType,
+  DateIsNotEqualMultiStepViewFilterType,
+  DateIsWithinMultiStepViewFilterType,
+  // DEPRECATED
+  DateEqualsCurrentWeekViewFilterType,
+  DateEqualsCurrentMonthViewFilterType,
+  DateEqualsCurrentYearViewFilterType,
   DateBeforeOrEqualViewFilterType,
   DateBeforeViewFilterType,
   DateBeforeTodayViewFilterType,
@@ -15,25 +40,7 @@ import {
   DateWithinWeeksViewFilterType,
   DateWithinMonthsViewFilterType,
   DateEqualsDaysAgoViewFilterType,
-  DateEqualsMonthsAgoViewFilterType,
   DateEqualsYearsAgoViewFilterType,
-  MultipleSelectHasFilterType,
-  MultipleSelectHasNotFilterType,
-  HasFileTypeViewFilterType,
-  FilesLowerThanViewFilterType,
-  LengthIsLowerThanViewFilterType,
-  LinkRowContainsFilterType,
-  LinkRowNotContainsFilterType,
-  DateEqualsCurrentWeekViewFilterType,
-  DateEqualsCurrentMonthViewFilterType,
-  DateEqualsCurrentYearViewFilterType,
-  IsEvenAndWholeViewFilterType,
-  HigherThanViewFilterType,
-  HigherThanOrEqualViewFilterType,
-  LowerThanViewFilterType,
-  LowerThanOrEqualViewFilterType,
-  SingleSelectIsAnyOfViewFilterType,
-  SingleSelectIsNoneOfViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   DurationFieldType,
@@ -536,7 +543,7 @@ const dateWithinDays = [
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: 'Mars/Noland?1',
+    filterValue: 'UTC?1',
     expected: true,
   },
   {
@@ -579,18 +586,18 @@ const dateWithinWeeks = [
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: 'Mars/Noland?1',
+    filterValue: 'UTC?1',
     expected: true,
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: '?',
+    filterValue: '?1',
     expected: true,
   },
   {
     rowValue: moment().utc().subtract(1, 'days').format(),
-    filterValue: '?',
-    expected: true,
+    filterValue: '?1',
+    expected: false,
   },
   {
     rowValue: moment().utc().subtract(1, 'days').format(),
@@ -622,7 +629,7 @@ const dateWithinMonths = [
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: 'Mars/Noland?1',
+    filterValue: 'UTC?1',
     expected: true,
   },
   {
@@ -644,7 +651,7 @@ const dateWithinMonths = [
 
 const dateDaysAgo = [
   {
-    rowValue: moment().tz('Europe/Berlin').subtract(1, 'days').format(),
+    rowValue: moment().utc().tz('Europe/Berlin').subtract(1, 'days').format(),
     filterValue: 'Europe/Berlin?1',
     expected: true,
   },
@@ -665,7 +672,7 @@ const dateDaysAgo = [
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: 'Mars/Noland?1',
+    filterValue: 'UTC?1',
     expected: false,
   },
   {
@@ -708,7 +715,7 @@ const dateMonthsAgo = [
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: 'Mars/Noland?1',
+    filterValue: 'UTC?1',
     expected: false,
   },
   {
@@ -718,7 +725,7 @@ const dateMonthsAgo = [
   },
   {
     rowValue: moment().utc().subtract(1, 'months').format(),
-    filterValue: '?',
+    filterValue: '?1',
     expected: true,
   },
   {
@@ -751,22 +758,22 @@ const dateYearsAgo = [
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: 'Mars/Noland?1',
+    filterValue: 'UTC?1',
     expected: false,
   },
   {
     rowValue: moment().utc().format(),
-    filterValue: '?',
+    filterValue: '?0',
     expected: true,
   },
   {
     rowValue: moment().utc().subtract(1, 'years').format(),
-    filterValue: '?',
+    filterValue: 'UTC?1',
     expected: true,
   },
   {
     rowValue: moment().utc().subtract(1, 'years').format(),
-    filterValue: '',
+    filterValue: '?1',
     expected: true,
   },
 ]
@@ -927,7 +934,7 @@ const singleSelectValuesInFilterCases = [
   },
 ]
 
-describe('Date in this week, month and year tests', () => {
+describe('(DEPRECATED) Date in this week, month and year tests', () => {
   let testApp = null
   let dateNowSpy
 
@@ -945,33 +952,69 @@ describe('Date in this week, month and year tests', () => {
     testApp.afterEach()
   })
 
+  test.each(dateInThisWeek)(
+    '(DEPRECATED) DateInThisWeek with timezone.',
+    (values) => {
+      const result = new DateEqualsCurrentWeekViewFilterType({
+        app: testApp,
+      }).matches(values.rowValue, values.filterValue, {
+        date_include_time: true,
+      })
+      expect(result).toBe(values.expected)
+    }
+  )
+
   test.each(dateInThisWeek)('DateInThisWeek with timezone.', (values) => {
-    const result = new DateEqualsCurrentWeekViewFilterType({
+    const result = new DateIsEqualMultiStepViewFilterType({
       app: testApp,
-    }).matches(values.rowValue, values.filterValue, {
+    }).matches(values.rowValue, `${values.filterValue}??this_week`, {
       date_include_time: true,
     })
     expect(result).toBe(values.expected)
   })
 
+  test.each(dateInThisWeek)(
+    '(DEPRECATED) DateInThisWeek without timezone.',
+    (values) => {
+      const result = new DateEqualsCurrentWeekViewFilterType({
+        app: testApp,
+      }).matches(values.rowValue, values.filterValue, {})
+      expect(result).toBe(values.expected)
+    }
+  )
+
   test.each(dateInThisWeek)('DateInThisWeek without timezone.', (values) => {
-    const result = new DateEqualsCurrentWeekViewFilterType({
+    const result = new DateIsEqualMultiStepViewFilterType({
       app: testApp,
-    }).matches(values.rowValue, values.filterValue, {})
+    }).matches(values.rowValue, `${values.filterValue}??this_week`, {})
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateInThisMonth)('DateInThisMonth', (values) => {
+  test.each(dateInThisMonth)('(DEPRECATED) DateInThisMonth', (values) => {
     const result = new DateEqualsCurrentMonthViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateInThisYear)('DateInThisYear', (values) => {
+  test.each(dateInThisMonth)('DateInThisMonth', (values) => {
+    const result = new DateIsEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?this_month`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateInThisYear)('(DEPRECATED) DateInThisYear', (values) => {
     const result = new DateEqualsCurrentYearViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateInThisYear)('DateInThisYear', (values) => {
+    const result = new DateIsEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?this_year`, {})
     expect(result).toBe(values.expected)
   })
 })
@@ -1055,7 +1098,7 @@ const dateDaysAfterValidCases = [
   },
   {
     rowValue: moment.utc().subtract(21, 'days').format(),
-    filterValue: '30',
+    filterValue: 'UTC?30',
     expected: true,
   },
   {
@@ -1088,16 +1131,11 @@ const dateDaysAfterInvalidCases = [
   },
   {
     rowValue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
-    filterValue: '?',
-    expected: false,
-  },
-  {
-    rowvalue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
     filterValue: 'UTC?abc',
     expected: false,
   },
   {
-    rowvalue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
+    rowValue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
     filterValue: 'UTC? ',
     expected: false,
   },
@@ -1332,7 +1370,7 @@ describe('All Tests', () => {
     testApp.afterEach()
   })
 
-  test.each(dateBeforeCases)('BeforeViewFilter', (values) => {
+  test.each(dateBeforeCases)('(DEPRECATED) BeforeViewFilter', (values) => {
     const result = new DateBeforeViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
@@ -1341,14 +1379,37 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateBeforeOrEqualCases)('BeforeOrEqualViewFilter', (values) => {
-    const result = new DateBeforeOrEqualViewFilterType({
+  test.each(dateBeforeCases)('BeforeViewFilter', (values) => {
+    const result = new DateIsBeforeMultiStepViewFilterType({
       app: testApp,
-    }).matches(values.rowValue, values.filterValue, { date_include_time: true })
+    }).matches(values.rowValue, `${values.filterValue}?exact_date`, {
+      date_include_time: true,
+    })
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateAfterCases)('AfterViewFilter', (values) => {
+  test.each(dateBeforeOrEqualCases)(
+    '(DEPRECATED) BeforeOrEqualViewFilter',
+    (values) => {
+      const result = new DateBeforeOrEqualViewFilterType({
+        app: testApp,
+      }).matches(values.rowValue, values.filterValue, {
+        date_include_time: true,
+      })
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(dateBeforeOrEqualCases)('BeforeOrEqualViewFilter', (values) => {
+    const result = new DateIsOnOrBeforeMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?exact_date`, {
+      date_include_time: true,
+    })
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateAfterCases)('(DEPRECATED) AfterViewFilter', (values) => {
     const result = new DateAfterViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
@@ -1357,8 +1418,38 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
+  test.each(dateAfterCases)('AfterViewFilter', (values) => {
+    const result = new DateIsAfterMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?exact_date`, {
+      date_include_time: true,
+    })
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateAfterOrEqualCases)(
+    '(DEPRECATED) AfterOrEqualViewFilter',
+    (values) => {
+      const result = new DateAfterOrEqualViewFilterType({
+        app: testApp,
+      }).matches(values.rowValue, values.filterValue, {
+        date_include_time: true,
+      })
+      expect(result).toBe(values.expected)
+    }
+  )
+
   test.each(dateAfterOrEqualCases)('AfterOrEqualViewFilter', (values) => {
-    const result = new DateAfterOrEqualViewFilterType({ app: testApp }).matches(
+    const result = new DateIsAfterMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?exact_date`, {
+      date_include_time: true,
+    })
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateEqualCases)('(DEPRECATED) DateEqual', (values) => {
+    const result = new DateEqualViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
       { date_include_time: true }
@@ -1367,14 +1458,15 @@ describe('All Tests', () => {
   })
 
   test.each(dateEqualCases)('DateEqual', (values) => {
-    const result = new DateEqualViewFilterType({ app: testApp }).matches(
-      values.rowValue,
-      values.filterValue,
-      { date_include_time: true }
-    )
+    const result = new DateIsEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?exact_date`, {
+      date_include_time: true,
+    })
     expect(result).toBe(values.expected)
   })
-  test.each(dateNotEqualCases)('DateNotEqual', (values) => {
+
+  test.each(dateNotEqualCases)('(DEPRECATED) DateNotEqual', (values) => {
     const result = new DateNotEqualViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
@@ -1383,7 +1475,17 @@ describe('All Tests', () => {
 
     expect(result).toBe(values.expected)
   })
-  test.each(dateToday)('DateToday', (values) => {
+
+  test.each(dateNotEqualCases)('DateNotEqual', (values) => {
+    const result = new DateIsNotEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?exact_date`, {
+      date_include_time: true,
+    })
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateToday)('(DEPRECATED) DateToday', (values) => {
     const result = new DateEqualsTodayViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
@@ -1392,7 +1494,14 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateBeforeToday)('DateBeforeToday', (values) => {
+  test.each(dateToday)('DateToday', (values) => {
+    const result = new DateIsEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}??today`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateBeforeToday)('(DEPRECATED) DateBeforeToday', (values) => {
     const result = new DateBeforeTodayViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
@@ -1401,7 +1510,14 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateAfterToday)('DateAfterToday', (values) => {
+  test.each(dateBeforeToday)('DateBeforeToday', (values) => {
+    const result = new DateIsBeforeMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}??today`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateAfterToday)('(DEPRECATED) DateAfterToday', (values) => {
     const result = new DateAfterTodayViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
@@ -1410,8 +1526,29 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateWithinDays)('DateWithinDays', (values) => {
+  test.each(dateAfterToday)('DateAfterToday', (values) => {
+    const result = new DateIsAfterMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}??today`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinDays)('(DEPRECATED) DateWithinDays', (values) => {
     const result = new DateWithinDaysViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinDays)('DateWithinDays', (values) => {
+    const result = new DateIsWithinMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?nr_days_from_now`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinWeeks)('(DEPRECATED) DateWithinWeeks', (values) => {
+    const result = new DateWithinWeeksViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
@@ -1420,6 +1557,13 @@ describe('All Tests', () => {
   test.each(dateWithinWeeks)('DateWithinWeeks', (values) => {
     const result = new DateWithinWeeksViewFilterType({
       app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?nr_weeks_from_now`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinMonths)('(DEPRECATED) DateWithinMonths', (values) => {
+    const result = new DateWithinMonthsViewFilterType({
+      app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
@@ -1427,28 +1571,42 @@ describe('All Tests', () => {
   test.each(dateWithinMonths)('DateWithinMonths', (values) => {
     const result = new DateWithinMonthsViewFilterType({
       app: testApp,
-    }).matches(values.rowValue, values.filterValue, {})
+    }).matches(values.rowValue, `${values.filterValue}?nr_months_from_now`, {})
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateDaysAgo)('DateDaysAgo', (values) => {
+  test.each(dateDaysAgo)('(DEPRECATED) DateDaysAgo', (values) => {
     const result = new DateEqualsDaysAgoViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
 
+  test.each(dateDaysAgo)('DateDaysAgo', (values) => {
+    const result = new DateIsEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?nr_days_ago`, {})
+    expect(result).toBe(values.expected)
+  })
+
   test.each(dateMonthsAgo)('DateMonthsAgo', (values) => {
-    const result = new DateEqualsMonthsAgoViewFilterType({
+    const result = new DateIsEqualMultiStepViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, `${values.filterValue}?nr_months_ago`, {})
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateYearsAgo)('(DEPRECATED) DateYearsAgo', (values) => {
+    const result = new DateEqualsYearsAgoViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
 
   test.each(dateYearsAgo)('DateYearsAgo', (values) => {
-    const result = new DateEqualsYearsAgoViewFilterType({
+    const result = new DateIsEqualMultiStepViewFilterType({
       app: testApp,
-    }).matches(values.rowValue, values.filterValue, {})
+    }).matches(values.rowValue, `${values.filterValue}?nr_years_ago`, {})
     expect(result).toBe(values.expected)
   })
 
@@ -1501,7 +1659,29 @@ describe('All Tests', () => {
   )
 
   test.each(dateDaysAfterValidCases)(
+    '(DEPRECATED) DateDaysAfterValidFilterType',
+    (values) => {
+      const result = new DateAfterDaysAgoViewFilterType().matches(
+        values.rowValue,
+        values.filterValue
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(dateDaysAfterValidCases)(
     'DateDaysAfterValidFilterType',
+    (values) => {
+      const result = new DateIsOnOrAfterMultiStepViewFilterType().matches(
+        values.rowValue,
+        `${values.filterValue}?nr_days_ago`
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(dateDaysAfterInvalidCases)(
+    '(DEPRECATED) DateDaysAfterInvalidFilterType',
     (values) => {
       const result = new DateAfterDaysAgoViewFilterType().matches(
         values.rowValue,
@@ -1514,9 +1694,9 @@ describe('All Tests', () => {
   test.each(dateDaysAfterInvalidCases)(
     'DateDaysAfterInvalidFilterType',
     (values) => {
-      const result = new DateAfterDaysAgoViewFilterType().matches(
+      const result = new DateIsOnOrAfterMultiStepViewFilterType().matches(
         values.rowValue,
-        values.filterValue
+        `${values.filterValue}?nr_days_ago`
       )
       expect(result).toBe(values.expected)
     }
@@ -1722,7 +1902,6 @@ describe('All Tests', () => {
       const result = new SingleSelectIsAnyOfViewFilterType({
         app: testApp._app,
       }).matches(values.rowValue, values.filterValue, field, fieldType)
-      console.log(values.rowValue, values.filterValue, result, values.is_any_of)
       expect(result).toBe(values.is_any_of)
     }
   )

@@ -3,22 +3,30 @@
     <template v-if="job !== null">
       <ProgressBar :value="job.progress_percentage" :status="job.state" />
     </template>
-    <button
+
+    <Button
       v-if="job === null || job.state !== 'finished'"
-      class="button button--large button--primary modal-progress__export-button"
-      :class="{ 'button--loading': loading }"
-      :disabled="disabled"
+      type="primary"
+      size="large"
+      :loading="loading"
+      :disabled="disabled || loading"
+      full-width
+      class="modal-progress__export-button"
     >
       {{ $t('exportTableLoadingBar.export') }}
-    </button>
+    </Button>
     <DownloadLink
       v-else
-      class="button button--large button--success modal-progress__export-button"
+      class="button button--large button--full-width modal-progress__export-button"
       :url="job.url"
       :filename="filename"
       :loading-class="'button--loading'"
     >
-      {{ $t('exportTableLoadingBar.download') }}
+      <template #default="{ loading: downloadLoading }">
+        <template v-if="!downloadLoading">{{
+          $t('exportTableLoadingBar.download')
+        }}</template>
+      </template>
     </DownloadLink>
   </div>
 </template>

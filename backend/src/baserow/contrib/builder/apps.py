@@ -154,9 +154,20 @@ class BuilderConfig(AppConfig):
 
         from .domains.permission_manager import AllowPublicBuilderManagerType
         from .elements.permission_manager import ElementVisibilityPermissionManager
+        from .permission_manager import AllowIfTemplatePermissionManagerType
 
         permission_manager_type_registry.register(AllowPublicBuilderManagerType())
         permission_manager_type_registry.register(ElementVisibilityPermissionManager())
+
+        prev_manager = permission_manager_type_registry.get(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.unregister(
+            AllowIfTemplatePermissionManagerType.type
+        )
+        permission_manager_type_registry.register(
+            AllowIfTemplatePermissionManagerType(prev_manager)
+        )
 
         from .elements.element_types import (
             ButtonElementType,
@@ -169,6 +180,7 @@ class BuilderConfig(AppConfig):
             ImageElementType,
             InputTextElementType,
             LinkElementType,
+            RepeatElementType,
             TableElementType,
             TextElementType,
         )
@@ -182,6 +194,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(ColumnElementType())
         element_type_registry.register(ButtonElementType())
         element_type_registry.register(TableElementType())
+        element_type_registry.register(RepeatElementType())
         element_type_registry.register(FormContainerElementType())
         element_type_registry.register(DropdownElementType())
         element_type_registry.register(CheckboxElementType())
@@ -232,6 +245,7 @@ class BuilderConfig(AppConfig):
             LogoutWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
+            RefreshDataSourceWorkflowAction,
             UpdateRowWorkflowActionType,
         )
 
@@ -240,15 +254,24 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
+        builder_workflow_action_type_registry.register(
+            RefreshDataSourceWorkflowAction()
+        )
 
         from .elements.collection_field_types import (
+            BooleanCollectionFieldType,
+            ButtonCollectionFieldType,
             LinkCollectionFieldType,
+            TagsCollectionFieldType,
             TextCollectionFieldType,
         )
         from .elements.registries import collection_field_type_registry
 
+        collection_field_type_registry.register(BooleanCollectionFieldType())
         collection_field_type_registry.register(TextCollectionFieldType())
         collection_field_type_registry.register(LinkCollectionFieldType())
+        collection_field_type_registry.register(TagsCollectionFieldType())
+        collection_field_type_registry.register(ButtonCollectionFieldType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

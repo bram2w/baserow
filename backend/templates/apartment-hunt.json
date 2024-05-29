@@ -13,7 +13,7 @@
         "apt"
     ],
     "categories": [
-        "Personal",
+        "Personal and Hobbies",
         "Real Estate"
     ],
     "export": [
@@ -114,55 +114,55 @@
                             "select_options": [
                                 {
                                     "id": 25051,
-                                    "value": "Gym \ud83c\udfcb\ufe0f\u200d\u2640\ufe0f",
+                                    "value": "Gym 🏋️‍♀️",
                                     "color": "green",
                                     "order": 0
                                 },
                                 {
                                     "id": 25052,
-                                    "value": "Lounge area \ud83d\udecb",
+                                    "value": "Lounge area 🛋",
                                     "color": "light-gray",
                                     "order": 1
                                 },
                                 {
                                     "id": 25053,
-                                    "value": "Free coffee \u2615\ufe0f",
+                                    "value": "Free coffee ☕️",
                                     "color": "light-blue",
                                     "order": 2
                                 },
                                 {
                                     "id": 25054,
-                                    "value": "Dog park \ud83d\udc3e",
+                                    "value": "Dog park 🐾",
                                     "color": "dark-red",
                                     "order": 3
                                 },
                                 {
                                     "id": 25055,
-                                    "value": "WiFi \ud83d\udcf6",
+                                    "value": "WiFi 📶",
                                     "color": "blue",
                                     "order": 4
                                 },
                                 {
                                     "id": 25056,
-                                    "value": "Concierge \ud83d\udece",
+                                    "value": "Concierge 🛎",
                                     "color": "orange",
                                     "order": 5
                                 },
                                 {
                                     "id": 25057,
-                                    "value": "Parking \ud83c\udd7f\ufe0f",
+                                    "value": "Parking 🅿️",
                                     "color": "dark-blue",
                                     "order": 6
                                 },
                                 {
                                     "id": 25058,
-                                    "value": "Game room \ud83e\udde9",
+                                    "value": "Game room 🧩",
                                     "color": "dark-gray",
                                     "order": 7
                                 },
                                 {
                                     "id": 28113,
-                                    "value": "In-unit washer/dryer \ud83e\uddfa",
+                                    "value": "In-unit washer/dryer 🧺",
                                     "color": "light-gray",
                                     "order": 8
                                 }
@@ -1528,7 +1528,7 @@
                         {
                             "id": 209620,
                             "type": "number",
-                            "name": "Size (m\u00b2)",
+                            "name": "Size (m²)",
                             "order": 14,
                             "primary": false,
                             "number_decimal_places": 0,
@@ -1537,7 +1537,7 @@
                         {
                             "id": 209621,
                             "type": "formula",
-                            "name": "Price per m\u00b2",
+                            "name": "Price per m²",
                             "order": 15,
                             "primary": false,
                             "error": null,
@@ -1546,7 +1546,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 2,
                             "array_formula_type": null,
-                            "formula": "field('Rent')/field('Size (m\u00b2)')",
+                            "formula": "field('Rent')/field('Size (m²)')",
                             "formula_type": "number"
                         }
                     ],
@@ -2947,7 +2947,7 @@
                             "created_on": "2021-08-23T02:32:28.110162+00:00",
                             "updated_on": "2022-03-04T13:37:06.724110+00:00",
                             "field_146073": "511",
-                            "field_146074": "Gets lots of great natural light! \ud83c\udf1e",
+                            "field_146074": "Gets lots of great natural light! 🌞",
                             "field_146081": [
                                 1
                             ],
@@ -3787,7 +3787,7 @@
                             "created_on": "2021-08-23T02:54:17.089966+00:00",
                             "updated_on": "2022-10-26T11:45:51.935541+00:00",
                             "field_146076": "Gold Coast",
-                            "field_146077": "Near the beach! \ud83c\udfd6\ufe0f",
+                            "field_146077": "Near the beach! 🏖️",
                             "field_146328": [
                                 5,
                                 4

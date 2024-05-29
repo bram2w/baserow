@@ -14,14 +14,15 @@
             }}</a>
           </li>
         </ul>
-        <a
-          class="button button--error"
-          :class="{ 'button--loading': loading }"
+
+        <Button
+          type="danger"
+          :loading="loading"
           :disabled="loading"
           @click.prevent="disableAndClose"
         >
           {{ $t('shareViewDisablePasswordModal.disable') }}
-        </a>
+        </Button>
       </div>
     </div>
   </Modal>

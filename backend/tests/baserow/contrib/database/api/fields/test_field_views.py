@@ -85,6 +85,7 @@ def test_list_fields(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=table_1.database.workspace)
+    table_1.database.workspace.has_template.cache_clear()
     url = reverse("api:database:fields:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -208,7 +209,31 @@ def test_create_field(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "Test 1", "type": "text", "text_default": "default!"},
+        {"name": "Test no description", "type": "text", "text_default": "default!"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == "text"
+
+    text = TextField.objects.filter()[0]
+    assert response_json["id"] == text.id
+    assert response_json["name"] == "Test no description"
+    assert response_json["order"] == text.order
+    assert response_json["text_default"] == "default!"
+    assert response_json["description"] is None
+    text.delete()
+
+    description_txt_a = "This is a description"
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Test 1",
+            "type": "text",
+            "text_default": "default!",
+            "description": description_txt_a,
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -221,6 +246,7 @@ def test_create_field(api_client, data_fixture):
     assert response_json["name"] == text.name
     assert response_json["order"] == text.order
     assert response_json["text_default"] == "default!"
+    assert response_json["description"] == description_txt_a
 
     # Test authentication with token
     response = api_client.post(
@@ -309,6 +335,7 @@ def test_get_field(api_client, data_fixture):
     assert response_json["name"] == text.name
     assert response_json["table_id"] == text.table_id
     assert not response_json["text_default"]
+    assert response_json["description"] is None
 
     response = api_client.delete(
         reverse(
@@ -379,7 +406,7 @@ def test_update_field(api_client, data_fixture):
     url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
     response = api_client.patch(
         url,
-        {"name": "Test 1", "text_default": "Something"},
+        {"name": "Test 1", "text_default": "Something", "description": "a description"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -388,6 +415,7 @@ def test_update_field(api_client, data_fixture):
     assert response_json["id"] == text.id
     assert response_json["name"] == "Test 1"
     assert response_json["text_default"] == "Something"
+    assert response_json["description"] == "a description"
 
     text.refresh_from_db()
     assert text.name == "Test 1"
@@ -396,7 +424,12 @@ def test_update_field(api_client, data_fixture):
     url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
     response = api_client.patch(
         url,
-        {"name": "Test 1", "type": "text", "text_default": "Something"},
+        {
+            "name": "Test 1",
+            "type": "text",
+            "text_default": "Something",
+            "description": None,
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -404,6 +437,7 @@ def test_update_field(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Test 1"
     assert response_json["type"] == "text"
+    assert response_json["description"] is None
 
     url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
     response = api_client.patch(

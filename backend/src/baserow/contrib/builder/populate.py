@@ -148,7 +148,7 @@ def load_test_data():
             variant="button",
             alignment="right",
             navigation_type="page",
-            navigate_to_page=homepage,
+            navigate_to_page_id=homepage.id,
         )
 
         # Button for homepage
@@ -159,7 +159,7 @@ def load_test_data():
             variant="button",
             alignment="right",
             navigation_type="page",
-            navigate_to_page=terms,
+            navigate_to_page_id=terms.id,
         )
 
         ElementHandler().create_element(
@@ -287,7 +287,7 @@ def load_test_data():
                 "config": {
                     "navigation_type": "page",
                     "navigate_to_page_id": product_detail.id,
-                    "navigate_to_url": None,
+                    "navigate_to_url": "",
                     "page_parameters": [
                         {"name": "id", "value": "get('current_record.id')"},
                         {
@@ -296,6 +296,7 @@ def load_test_data():
                         },
                     ],
                     "link_name": f"get('current_record.{field_name.db_column}')",
+                    "target": "self",
                 },
             },
         ]
@@ -315,7 +316,7 @@ def load_test_data():
             variant="button",
             alignment="right",
             navigation_type="page",
-            navigate_to_page=homepage,
+            navigate_to_page_id=homepage.id,
         )
 
         # Button back from detail page
@@ -326,7 +327,7 @@ def load_test_data():
             variant="button",
             alignment="left",
             navigation_type="page",
-            navigate_to_page=products,
+            navigate_to_page_id=products.id,
         )
 
         # Button back from detail page
@@ -337,5 +338,5 @@ def load_test_data():
             variant="button",
             alignment="left",
             navigation_type="page",
-            navigate_to_page=products,
+            navigate_to_page_id=products.id,
         )

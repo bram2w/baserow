@@ -8,53 +8,18 @@ Software versions are divided into the following groups:
   before the release.
 * `Recommended`: Recommended software for the best experience.  
 
-## Web browsers
-
-### Baserow 1.24.2
-
-Browser         | Supported versions | Recommended versions
-----------------|--------------------|--------------------
-Firefox         |                    | Latest
-Chrome          |                    | Latest
-Edge            |                    | Latest
-
-## Python
-
-Baserow version | Supported versions | Tested versions | Recommended versions
-----------------|--------------------|-----------------|---------------------
-1.11            | 3.9.2             | 3.9.2          | 3.9.2
-
-## Node.js
-
-Baserow version | Supported versions | Tested versions | Recommended versions
-----------------|--------------------|-----------------|---------------------
-1.11            | >= 18.15.0         | 18.15.0         | 18.15.0
-
-## Docker
-
-Baserow version | Supported versions | Recommended versions
-----------------|--------------------|---------------------
-1.11            | >= 19.03           | Latest
-
-## docker-compose
-
-Baserow version | Supported versions | Tested versions | Recommended versions
-----------------|--------------------|-----------------|---------------------
-1.11            | >= 1.19.0          |                 | Latest
-
-## PostgreSQL
-
-Baserow version | Supported versions | Tested versions | Recommended versions
-----------------|--------------------|-----------------|---------------------
-1.11            | >= 11.16           |  11.16          | Latest
-
-## Redis
-
-Baserow version | Supported versions | Tested versions | Recommended versions
-----------------|--------------------|-----------------|---------------------
-1.11            | >= 6.2.7           |  6.2.7          | Latest
+## Baserow 1.24
 
 
-
-
+| Dependency     | Supported versions | Tested versions | Recommended versions | 
+|----------------|--------------------|-----------------|----------------------|
+| Firefox        | Latest             | Latest          | Latest               |
+| Chrome         | Latest             | Latest          | Latest               |
+| Edge           | Latest             | Latest          | Latest               |
+| Python         | >=3.11.0           | 3.11.2          | latest 3.11.x        |
+| Node.js        | >= 21.7.0          | 21.7.3          | >= 21.7.0            |
+| Docker         | >= 19.03           | Latest          | Latest               |
+| docker-compose | >= 1.19.0          | Latest          | Latest               |
+| PostgreSQL     | >= 12              | 12.18           | 15+                  |
+| Redis          | >= 6.2.7           | 6.2.7           | Latest               |
 

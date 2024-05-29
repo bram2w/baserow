@@ -1,4 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import GeneralSettings from '@baserow/modules/builder/components/settings/GeneralSettings'
 import IntegrationSettings from '@baserow/modules/builder/components/settings/IntegrationSettings'
 import ThemeSettings from '@baserow/modules/builder/components/settings/ThemeSettings'
 import DomainsSettings from '@baserow/modules/builder/components/settings/DomainsSettings'
@@ -23,6 +24,28 @@ class BuilderSettingType extends Registerable {
 
   get componentPadding() {
     return true
+  }
+}
+
+export class GeneralBuilderSettingsType extends BuilderSettingType {
+  static getType() {
+    return 'general'
+  }
+
+  get name() {
+    return this.app.i18n.t('builderSettingTypes.generalName')
+  }
+
+  get icon() {
+    return 'iconoir-settings'
+  }
+
+  getOrder() {
+    return 1
+  }
+
+  get component() {
+    return GeneralSettings
   }
 }
 

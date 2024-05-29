@@ -4,14 +4,14 @@
     @submitted="$emit('submitted', $event)"
   >
     <div class="actions actions--right">
-      <button
-        class="button button--large"
-        :class="{ 'button--loading': loading }"
+      <Button
+        type="primary"
+        size="large"
+        :loading="loading"
         :disabled="loading"
-        type="submit"
       >
         {{ $t('builderForm.submit') }}
-      </button>
+      </Button>
     </div>
   </ApplicationForm>
 </template>

@@ -508,7 +508,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             views,
             table.database.workspace,
-            allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
 
@@ -637,7 +636,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ReadViewOperationType.type,
             workspace=view.table.database.workspace,
             context=view,
-            allow_if_template=True,
         )
         return view
 
@@ -1098,12 +1096,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         workspace = view.table.database.workspace
+
         CoreHandler().check_permissions(
             user,
             ReadViewFieldOptionsOperationType.type,
             workspace=workspace,
             context=view,
-            allow_if_template=True,
         )
         view_type = view_type_registry.get_by_model(view)
         return view_type
@@ -1202,7 +1200,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             if exists:
                 field_options_object = existing_field_options[int(field_id)]
             else:
-                field_options_object = model(field_id=field_id, **{field_name: view})
+                field_options_object = view_type.prepare_field_options(view, field_id)
 
             allowed_values = extract_allowed(
                 options, view_type.field_options_allowed_fields
@@ -2712,6 +2710,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         adhoc_filters: Optional[AdHocFilters] = None,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
+        skip_perm_check: bool = False,
     ) -> Dict[str, Any]:
         """
         Returns a dict of aggregation for all aggregation configured for the view in
@@ -2722,7 +2721,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         included in result if the with_total is specified.
 
         :param user: The user on whose behalf we are requesting the aggregations.
-        :param view: The view to get the field aggregation for.
+        :param view: The view to get the field aggregation for.aggregations
         :param model: The model for this view table to generate the aggregation
             query from, if not specified then the model will be generated
             automatically.
@@ -2733,31 +2732,42 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param search: the search string to considerate. If the search parameter is
             defined, we don't use the cache so we recompute aggregation on the fly.
         :param search_mode: the search mode that the search is using.
+        :param skip_perm_check: If permission checks should be skipped,
+            e.g. for public aggregations.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
         :return: A dict of aggregation value
         """
 
-        CoreHandler().check_permissions(
-            user,
-            ListAggregationsViewOperationType.type,
-            workspace=view.table.database.workspace,
-            context=view,
-            allow_if_template=True,
-        )
-
-        if not adhoc_filters:
-            adhoc_filters = AdHocFilters()
+        if not skip_perm_check:
+            CoreHandler().check_permissions(
+                user,
+                ListAggregationsViewOperationType.type,
+                workspace=view.table.database.workspace,
+                context=view,
+                raise_permission_exceptions=True,
+            )
 
         view_type = view_type_registry.get_by_model(view.specific_class)
-
         # Check if view supports field aggregation
         if not view_type.can_aggregate_field:
             raise FieldAggregationNotSupported(
                 f"Field aggregation is not supported for {view_type.type} views."
             )
 
+        # figure out which fields are visible
+        visible_field_options = view_type.get_visible_field_options_in_order(view)
+        visible_field_ids = {o.field_id for o in visible_field_options}
+
+        if not adhoc_filters:
+            adhoc_filters = AdHocFilters()
+
+        adhoc_filters.only_filter_by_field_ids = visible_field_ids
+
         aggregations = view_type.get_aggregations(view)
+
+        # filter out aggregations for hidden fields
+        aggregations = [agg for agg in aggregations if agg[0].id in visible_field_ids]
 
         (
             values,
@@ -2803,6 +2813,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 adhoc_filters=adhoc_filters,
                 search=search,
                 search_mode=search_mode,
+                skip_perm_check=skip_perm_check,
+                restrict_to_field_ids=visible_field_ids,
             )
 
             if not search and not adhoc_filters.has_any_filters:
@@ -2841,6 +2853,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         adhoc_filters: Optional[AdHocFilters] = None,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
+        skip_perm_check: bool = False,
+        restrict_to_field_ids: Optional[Set[int]] = None,
     ) -> Dict[str, Any]:
         """
         Returns a dict of aggregation for given (field, aggregation_type) couple list.
@@ -2859,6 +2873,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             instead of the view's own filters.
         :param search: the search string to consider.
         :param search: the mode that the search is in.
+        :param skip_perm_check: Skips the permission check if not necessary.
+        :param restrict_to_field_ids: Restrict the aggregations only to certain
+            fields, for example if the aggregation is requested for public views.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
         :raises FieldNotInTable: When one of the field doesn't belong to the specified
@@ -2866,13 +2883,13 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :return: A dict of aggregation values
         """
 
-        CoreHandler().check_permissions(
-            user,
-            ReadAggregationsViewOperationType.type,
-            workspace=view.table.database.workspace,
-            context=view,
-            allow_if_template=True,
-        )
+        if not skip_perm_check:
+            CoreHandler().check_permissions(
+                user,
+                ReadAggregationsViewOperationType.type,
+                workspace=view.table.database.workspace,
+                context=view,
+            )
 
         if model is None:
             model = view.table.get_model()
@@ -2899,7 +2916,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             )
 
         if search is not None:
-            queryset = queryset.search_all_fields(search, search_mode=search_mode)
+            queryset = queryset.search_all_fields(
+                search, restrict_to_field_ids, search_mode=search_mode
+            )
 
         aggregation_dict = {}
 
@@ -3287,12 +3306,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if adhoc_filters is None:
             adhoc_filters = AdHocFilters()
 
-        publicly_visible_field_options = view_type.get_visible_field_options_in_order(
-            view
-        )
-        publicly_visible_field_ids = {
-            o.field_id for o in publicly_visible_field_options
-        }
+        visible_field_options = view_type.get_visible_field_options_in_order(view)
+        visible_field_ids = {o.field_id for o in visible_field_options}
 
         field_ids = get_include_exclude_field_ids(
             view.table, include_fields, exclude_fields
@@ -3319,25 +3334,25 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         if order_by is not None and order_by != "":
             queryset = queryset.order_by_fields_string(
-                order_by, False, publicly_visible_field_ids
+                order_by, False, visible_field_ids
             )
 
         if adhoc_filters.has_any_filters:
-            adhoc_filters.only_filter_by_field_ids = publicly_visible_field_ids
+            adhoc_filters.only_filter_by_field_ids = visible_field_ids
             queryset = adhoc_filters.apply_to_queryset(table_model, queryset)
 
         if search:
             queryset = queryset.search_all_fields(
-                search, publicly_visible_field_ids, search_mode=search_mode
+                search, visible_field_ids, search_mode=search_mode
             )
 
         field_ids = (
-            list(set(field_ids) & set(publicly_visible_field_ids))
+            list(set(field_ids) & set(visible_field_ids))
             if field_ids
-            else publicly_visible_field_ids
+            else visible_field_ids
         )
 
-        return queryset, field_ids, publicly_visible_field_options
+        return queryset, field_ids, visible_field_options
 
     def get_group_by_metadata_in_rows(
         self,
@@ -3362,7 +3377,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         qs_per_level = defaultdict(lambda: Q())
         unique_value_per_level = defaultdict(set)
-        annotations = {}
+        all_annotations = {}
 
         for row in rows:
             all_values = tuple()
@@ -3391,7 +3406,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                     )
 
                     all_filters.update(**filters)
-                    annotations.update(**annotations)
+                    all_annotations.update(**annotations)
                     qs_per_level[level] |= Q(**all_filters)
                     unique_value_per_level[level].add(all_values)
 
@@ -3409,8 +3424,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 id__in=base_queryset.clear_multi_field_prefetch().values("id")
             ).values()
 
-            if len(annotations) > 0:
-                queryset = queryset.annotate(**annotations)
+            if len(all_annotations) > 0:
+                queryset = queryset.annotate(**all_annotations)
 
             queryset = (
                 queryset.filter(q)

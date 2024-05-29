@@ -14,14 +14,15 @@
       </i18n>
       <div class="actions">
         <div class="align-right">
-          <button
-            class="button button--large button--error"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="danger"
+            size="large"
             :disabled="loading"
+            :loading="loading"
             @click="disconnectLicense()"
           >
-            {{ $t('disconnectLicenseModal.disconnectLicense') }}
-          </button>
+            {{ $t('disconnectLicenseModal.disconnectLicense') }}</Button
+          >
         </div>
       </div>
     </div>

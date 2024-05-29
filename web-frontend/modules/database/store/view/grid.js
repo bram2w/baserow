@@ -234,17 +234,26 @@ export const mutations = {
     state.fieldOptions = _.merge({}, state.fieldOptions, fieldOptions)
   },
   /**
-   * Only adds the new field options and removes the deleted ones. The existing ones
-   * will be left untouched.
+   * Only adds the new field options and removes the deleted ones.
+   * Existing field options will be modified only if they are important
+   * for public view sharing.
    */
-  ADD_MISSING_FIELD_OPTIONS(state, fieldOptions) {
-    // Add the missing field options.
+  REPLACE_PUBLIC_FIELD_OPTIONS(state, fieldOptions) {
+    // Add the missing field options or modify existing ones
     Object.keys(fieldOptions).forEach((key) => {
       const exists = Object.prototype.hasOwnProperty.call(
         state.fieldOptions,
         key
       )
-      if (!exists) {
+      if (exists) {
+        const propsToUpdate = ['aggregation_raw_type', 'aggregation_type']
+        const singleFieldOptions = state.fieldOptions[key]
+        Object.keys(singleFieldOptions).forEach((optionKey) => {
+          if (propsToUpdate.includes(optionKey)) {
+            state.fieldOptions[key][optionKey] = fieldOptions[key][optionKey]
+          }
+        })
+      } else {
         Vue.set(state.fieldOptions, key, fieldOptions[key])
       }
     })
@@ -1031,10 +1040,7 @@ export const actions = {
         dispatch('updateSearch', { fields })
         if (includeFieldOptions) {
           if (rootGetters['page/view/public/getIsPublic']) {
-            // If the view is public, then we're in read only mode and we want to
-            // keep our existing field options state. So in that case, we only need
-            // to add the missing ones.
-            commit('ADD_MISSING_FIELD_OPTIONS', data.field_options)
+            commit('REPLACE_PUBLIC_FIELD_OPTIONS', data.field_options)
           } else {
             commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
           }
@@ -1064,7 +1070,7 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters, dispatch, rootGetters },
-    { field, values, oldValues, readOnly = false }
+    { field, values, oldValues, readOnly = false, undoRedoActionGroupId }
   ) {
     const previousOptions = getters.getAllFieldOptions[field.id]
     let needAggregationValueUpdate = false
@@ -1099,6 +1105,7 @@ export const actions = {
         await ViewService(this.$client).updateFieldOptions({
           viewId: gridId,
           values: updateValues,
+          undoRedoActionGroupId,
         })
       } catch (error) {
         commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
@@ -1176,13 +1183,7 @@ export const actions = {
   ) {
     const isPublic = rootGetters['page/view/public/getIsPublic']
     const search = getters.getActiveSearchTerm
-
-    if (isPublic) {
-      return
-    }
-
     const fieldOptions = getters.getAllFieldOptions
-
     let atLeastOneAggregation = false
 
     Object.entries(fieldOptions).forEach(([fieldId, options]) => {
@@ -1205,15 +1206,29 @@ export const actions = {
       }
 
       lastAggregationRequest.controller = new AbortController()
-      lastAggregationRequest.request = GridService(
-        this.$client
-      ).fetchFieldAggregations({
-        gridId: view.id,
-        filters: getFilters(view, getters.getAdhocFiltering),
-        search,
-        searchMode: getDefaultSearchModeFromEnv(this.$config),
-        signal: lastAggregationRequest.controller.signal,
-      })
+
+      if (!isPublic) {
+        lastAggregationRequest.request = GridService(
+          this.$client
+        ).fetchFieldAggregations({
+          gridId: view.id,
+          filters: getFilters(view, getters.getAdhocFiltering),
+          search,
+          searchMode: getDefaultSearchModeFromEnv(this.$config),
+          signal: lastAggregationRequest.controller.signal,
+        })
+      } else {
+        lastAggregationRequest.request = GridService(
+          this.$client
+        ).fetchPublicFieldAggregations({
+          slug: view.slug,
+          publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          filters: getFilters(view, getters.getAdhocFiltering),
+          search,
+          searchMode: getDefaultSearchModeFromEnv(this.$config),
+          signal: lastAggregationRequest.controller.signal,
+        })
+      }
 
       const { data } = await lastAggregationRequest.request
       lastAggregationRequest.request = null

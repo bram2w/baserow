@@ -244,10 +244,15 @@ const getters = {
       .sort((a, b) => a.order - b.order)
   },
   getElementPreviousWorkflowActions:
-    (state, getters) => (page, elementId, workflowActionId) => {
+    (state, getters) => (page, elementId, workflowAction) => {
       return _.takeWhile(
-        getters.getElementWorkflowActions(page, elementId),
-        (workflowAction) => workflowAction.id !== workflowActionId
+        getters
+          .getElementWorkflowActions(page, elementId)
+          .filter(
+            (workflowActionToFilter) =>
+              workflowActionToFilter.event === workflowAction.event
+          ),
+        (workflowActionAll) => workflowActionAll.id !== workflowAction.id
       )
     },
   getLoading: (state) => (workflowAction) => {

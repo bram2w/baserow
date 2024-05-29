@@ -32,6 +32,11 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/resetPassword.vue'),
   },
   {
+    name: 'verify-email-address',
+    path: '/verify-email-address/:token',
+    component: path.resolve(__dirname, 'pages/verifyEmailAddress.vue'),
+  },
+  {
     name: 'dashboard',
     path: '/dashboard',
     component: path.resolve(__dirname, 'pages/dashboard.vue'),
@@ -87,6 +92,11 @@ export const routes = [
     name: 'notification-redirect',
     path: '/notification/:workspaceId/:notificationId',
     component: path.resolve(__dirname, 'pages/notificationRedirect.vue'),
+  },
+  {
+    name: 'onboarding',
+    path: '/onboarding',
+    component: path.resolve(__dirname, 'pages/onboarding.vue'),
   },
 ]
 

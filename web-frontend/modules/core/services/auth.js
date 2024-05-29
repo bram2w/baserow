@@ -60,6 +60,16 @@ export default (client) => {
         new_password: newPassword,
       })
     },
+    sendVerifyEmail(email) {
+      return client.post(`/user/send-verify-email/`, {
+        email,
+      })
+    },
+    verifyEmail(token) {
+      return client.post(`/user/verify-email/`, {
+        token,
+      })
+    },
     dashboard() {
       return client.get('/user/dashboard/')
     },
@@ -68,6 +78,14 @@ export default (client) => {
     },
     deleteAccount() {
       return client.post('/user/schedule-account-deletion/')
+    },
+    shareOnboardingDetailsWithBaserow(team, role, size, country) {
+      return client.post('/user/share-onboarding-details-with-baserow/', {
+        team,
+        role,
+        size,
+        country,
+      })
     },
   }
 }

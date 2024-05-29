@@ -9,6 +9,7 @@ import Picker from '@baserow/modules/core/components/Picker'
 import ProgressBar from '@baserow/modules/core/components/ProgressBar'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import Radio from '@baserow/modules/core/components/Radio'
+import RadioGroup from '@baserow/modules/core/components/RadioGroup'
 import Scrollbars from '@baserow/modules/core/components/Scrollbars'
 import Error from '@baserow/modules/core/components/Error'
 import SwitchInput from '@baserow/modules/core/components/SwitchInput'
@@ -22,13 +23,20 @@ import Tab from '@baserow/modules/core/components/Tab'
 import List from '@baserow/modules/core/components/List'
 import HelpIcon from '@baserow/modules/core/components/HelpIcon'
 import Button from '@baserow/modules/core/components/Button'
+import ButtonText from '@baserow/modules/core/components/ButtonText'
+import ButtonAdd from '@baserow/modules/core/components/ButtonAdd'
+import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
+import ButtonFloating from '@baserow/modules/core/components/ButtonFloating'
 import Avatar from '@baserow/modules/core/components/Avatar'
+import Chips from '@baserow/modules/core/components/Chips'
 import Presentation from '@baserow/modules/core/components/Presentation'
 import FormInput from '@baserow/modules/core/components/FormInput'
+import ImageInput from '@baserow/modules/core/components/ImageInput'
 import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
 import FormRow from '@baserow/modules/core/components/FormRow'
 import Logo from '@baserow/modules/core/components/Logo'
+import ReadOnlyForm from '@baserow/modules/core/components/ReadOnlyForm'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -58,6 +66,7 @@ function setupVue(Vue) {
   Vue.component('DropdownItem', DropdownItem)
   Vue.component('Checkbox', Checkbox)
   Vue.component('Radio', Radio)
+  Vue.component('RadioGroup', RadioGroup)
   Vue.component('Scrollbars', Scrollbars)
   Vue.component('Alert', Alert)
   Vue.component('Error', Error)
@@ -75,6 +84,11 @@ function setupVue(Vue) {
   Vue.component('Badge', Badge)
   Vue.component('Expandable', Expandable)
   Vue.component('Button', Button)
+  Vue.component('ButtonText', ButtonText)
+  Vue.component('ButtonFloating', ButtonFloating)
+  Vue.component('ButtonAdd', ButtonAdd)
+  Vue.component('ButtonIcon', ButtonIcon)
+  Vue.component('Chips', Chips)
   Vue.component('RadioButton', RadioButton)
   Vue.component('Thumbnail', Thumbnail)
   Vue.component('Avatar', Avatar)
@@ -85,8 +99,10 @@ function setupVue(Vue) {
   Vue.component('FormRow', FormRow)
   Vue.component('ColorInput', ColorInput)
   Vue.component('ColorInputGroup', ColorInputGroup)
+  Vue.component('ImageInput', ImageInput)
   Vue.component('SelectSearch', SelectSearch)
   Vue.component('Logo', Logo)
+  Vue.component('ReadOnlyForm', ReadOnlyForm)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

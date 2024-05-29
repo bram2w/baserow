@@ -1,8 +1,10 @@
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
+from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
+from django.core.files.storage import Storage
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
@@ -45,7 +47,7 @@ class ServiceType(
 
     SerializedDict: Type[ServiceDictSubClass]
     parent_property_name = "integration"
-    id_mapping_name = "builder_services"
+    id_mapping_name = "services"
 
     # The maximum number of records this service is able to return.
     # By default, the maximum is `None`, which is unlimited.
@@ -229,6 +231,10 @@ class ServiceType(
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict] = None,
+        import_formula: Callable[[str, Dict[str, Any]], str] = None,
         **kwargs,
     ) -> Any:
         """
@@ -241,10 +247,18 @@ class ServiceType(
         :return: the deserialized version for this property.
         """
 
-        if "import_formula" not in kwargs:
+        if import_formula is None:
             raise ValueError("Missing import formula function.")
 
-        return value
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)

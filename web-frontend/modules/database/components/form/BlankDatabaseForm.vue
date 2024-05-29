@@ -22,14 +22,15 @@
     </FormElement>
     <div class="actions">
       <div class="align-right">
-        <button
-          class="button button--large"
-          :class="{ 'button--loading': loading }"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
           :disabled="loading"
         >
           {{ $t('action.add') }}
           {{ databaseApplicationType.getName() | lowercase }}
-        </button>
+        </Button>
       </div>
     </div>
   </form>

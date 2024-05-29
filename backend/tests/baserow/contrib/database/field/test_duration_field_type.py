@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import timedelta
 from io import BytesIO
 
@@ -8,6 +9,12 @@ from pytest_unordered import unordered
 from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DurationField
+from baserow.contrib.database.fields.utils.duration import (
+    DURATION_FORMAT_TOKENS,
+    DURATION_FORMATS,
+    format_duration_value,
+    text_value_sql_to_duration,
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.action.handler import ActionHandler
@@ -15,6 +22,9 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
+
+# sentinel
+THE_SAME = object()
 
 
 @pytest.mark.field_duration
@@ -196,13 +206,25 @@ def test_remove_duration_field(data_fixture):
     "user_input,duration_format,new_text_field_value",
     [
         (timedelta(seconds=3660), "h:mm", "1:01"),
+        (timedelta(seconds=-3660), "h:mm", "-1:01"),
         (timedelta(seconds=3665), "h:mm:ss", "1:01:05"),
         (timedelta(seconds=3665.5), "h:mm:ss.s", "1:01:05.5"),
         (timedelta(seconds=3665.55), "h:mm:ss.ss", "1:01:05.55"),
         (timedelta(seconds=3665.555), "h:mm:ss.sss", "1:01:05.555"),
+        (-1 * timedelta(seconds=3665.555), "h:mm:ss.sss", "-1:01:05.555"),
         (timedelta(days=1, hours=2), "d h", "1d 2h"),
         (timedelta(days=1, hours=1, minutes=2), "d h:mm", "1d 1:02"),
+        # note: this uses interval::text cast on database level, so the output format
+        # will be different from the one that should be
         (timedelta(days=1, hours=1, minutes=2, seconds=3), "d h:mm:ss", "1d 1:02:03"),
+        (timedelta(days=1, hours=3, minutes=10), "d h mm ss", "1d 3h 10m 00s"),
+        (-1 * timedelta(days=2, hours=3, minutes=10), "d h mm ss", "-2d 3h 10m 00s"),
+        (
+            timedelta(days=1, hours=3, minutes=10, seconds=12.345),
+            "d h mm ss",
+            "1d 3h 10m 12s",
+        ),
+        (timedelta(days=1, minutes=10, seconds=0.345), "d h mm ss", "1d 0h 10m 00s"),
         (None, "h:mm", None),
         (None, "d h", None),
         (None, "d h:mm", None),
@@ -225,7 +247,7 @@ def test_convert_duration_field_to_text_field(
     )
     row_handler = RowHandler()
 
-    row_handler.create_row(
+    r = row_handler.create_row(
         user=user,
         table=table,
         values={
@@ -243,7 +265,225 @@ def test_convert_duration_field_to_text_field(
 
     row_1 = model.objects.first()
     updated_value = getattr(row_1, f"field_{field.id}")
-    assert updated_value == new_text_field_value
+    assert updated_value == new_text_field_value, (
+        user_input,
+        duration_format,
+        updated_value,
+        new_text_field_value,
+    )
+
+
+@pytest.mark.parametrize(
+    "input_format,input_value,dest_format,dest_value",
+    [
+        (
+            "h:mm",
+            "1:01",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm",
+            "-1:01",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm:ss",
+            "1:01:05",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm:ss.s",
+            "1:01:05.5",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm:ss.ss",
+            "1:01:05.55",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm:ss.sss",
+            "1:01:05.555",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm:ss.sss",
+            "-1:01:05.555",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h",
+            "1d 2h",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h:mm",
+            "1d 1:02",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h:mm:ss",
+            "1d 1:02:03",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h mm ss",
+            "1d 3h 10m 00s",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h mm ss",
+            "-2d 3h 10m 00s",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h mm ss",
+            "1d 3h 10m 12s",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h mm ss",
+            "1d 0h 10m 00s",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "h:mm",
+            "0:00",
+            THE_SAME,
+            THE_SAME,
+        ),
+        (
+            "d h",
+            "0d 0h",
+            THE_SAME,
+            THE_SAME,
+        ),
+        # for input_format different than dest_format, we won't convert properly
+        (
+            "d h:mm",
+            "1d 1:01",
+            "h:mm",
+            None,
+        ),
+        (
+            "h:mm",
+            "-1:01",
+            "d h",
+            None,
+        ),
+        (
+            "h:mm",
+            "-1:01",
+            "invalid",
+            None,
+        ),
+    ],
+)
+@pytest.mark.django_db
+@pytest.mark.field_duration
+def test_convert_duration_field_to_text_to_duration_field(
+    data_fixture, input_format, input_value, dest_format, dest_value
+):
+    """
+    Checks for duration to text to duration column type change.
+
+    For consistent duration format, the input_value should be the same as dest_value.
+    :param data_fixture:
+    :param input_format:
+    :param input_value:
+    :param dest_format:
+    :param dest_value:
+    :return:
+    """
+
+    if dest_format is THE_SAME:
+        dest_format = input_format
+    if dest_value is THE_SAME:
+        dest_value = input_value
+
+    # mock invalid format
+    DURATION_FORMATS["invalid"] = {
+        "name": "foo:bar",
+        "sql_interval_to_text_format": "FMHH24:MI",
+        "ms_precision": None,
+        "format_func": lambda *args, **kwargs: "----",
+        "sql_text_to_interval_format": (
+            None,
+            None,
+            None,
+            None,
+        ),
+    }
+    DURATION_FORMAT_TOKENS["invalid"] = (
+        {
+            "search_expr": {
+                "default": lambda field_name: field_name,
+            },
+        },
+    )
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_duration_field(
+        user=user, table=table, duration_format=input_format
+    )
+    row_handler = RowHandler()
+
+    r = row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{field.id}": input_value,
+        },
+    )
+
+    FieldHandler().update_field(
+        user=user,
+        field=field,
+        new_type_name="text",
+    )
+
+    updated_field = FieldHandler().update_field(
+        user=user, field=field, new_type_name="duration", duration_format=dest_format
+    )
+
+    model = table.get_model()
+
+    row_1 = model.objects.first()
+    updated_value = getattr(row_1, f"field_{field.id}")
+    # compare timedelta values
+    # assert updated_value == dest_value, ( # inital_value, (
+    #     input_format, input_value, dest_format, dest_value, updated_value,
+    # )
+    if updated_value is not None:
+        formatted = format_duration_value(updated_value, dest_format)
+    else:
+        formatted = None
+    # compare formatted values
+    assert formatted == dest_value, (
+        input_value,
+        dest_format,
+        dest_value,
+        updated_value,
+        formatted,
+        text_value_sql_to_duration(updated_field),
+    )
 
 
 @pytest.mark.parametrize(
@@ -289,6 +529,36 @@ def test_convert_duration_field_to_text_field(
             "1d 1:02:03",
             timedelta(days=1, hours=1, minutes=2, seconds=3),
         ),
+        (
+            "d h mm",
+            "1d 1h 12m",
+            timedelta(days=1, hours=1, minutes=12),
+        ),
+        (
+            "d h mm ss",
+            "1d 1h 11m",
+            timedelta(days=1, hours=1, minutes=11),
+        ),
+        (
+            "d h mm ss",
+            "1d 1h 11m 12.13s",
+            timedelta(days=1, hours=1, minutes=11, seconds=12.13),
+        ),
+        (
+            "d h mm ss",
+            "-1d 1h 11m 12s",
+            -1 * timedelta(days=1, hours=1, minutes=11, seconds=12),
+        ),
+        (
+            "d h mm ss",
+            "-111.12s",
+            timedelta(seconds=-111.12),
+        ),
+        (
+            "d h mm ss",
+            "-111m",
+            timedelta(minutes=-111),
+        ),
     ],
 )
 @pytest.mark.django_db
@@ -313,7 +583,7 @@ def test_convert_text_field_to_duration_field(
         type_name="text",
     )
 
-    row_handler.create_row(
+    r = row_handler.create_row(
         user=user,
         table=table,
         values={
@@ -335,7 +605,14 @@ def test_convert_text_field_to_duration_field(
     row_1 = table_models.first()
     updated_value = getattr(row_1, f"field_{field.id}")
 
-    assert updated_value == new_duration_field_value
+    assert updated_value == new_duration_field_value, (
+        duration_format,
+        text_field_value,
+        updated_value,
+        new_duration_field_value,
+        updated_value.total_seconds(),
+        new_duration_field_value.total_seconds(),
+    )
 
 
 @pytest.mark.django_db
@@ -374,6 +651,14 @@ def test_convert_text_field_to_duration_field(
         (
             [1, 10, 51, 100, 122, 86461, 90002],
             {"duration_format": "d h:mm:ss"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "d h mm ss"},
+        ),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "d h mm"},
         ),
     ],
 )
@@ -439,6 +724,14 @@ def test_alter_duration_format(expected, field_kwargs, data_fixture):
         (
             [1, 10, 51, 100, 122, 86461, 90002],
             {"duration_format": "d h:mm:ss"},
+        ),
+        (
+            [1, 10, 51, 100, 122, 86461, 90002],
+            {"duration_format": "d h mm ss"},
+        ),
+        (
+            [0, 0, 60, 120, 120, 86460, 90000],
+            {"duration_format": "d h mm"},
         ),
     ],
 )
@@ -735,6 +1028,65 @@ def test_duration_field_can_be_used_in_formulas(data_fixture):
 
 @pytest.mark.field_duration
 @pytest.mark.django_db
+def test_toduration_formula_set_null_values_if_the_argument_is_invalid(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(table=table)
+    formula_field = data_fixture.create_formula_field(
+        table=table, formula=f"field('{number_field.name}') / 2"
+    )
+    toduration_field = data_fixture.create_formula_field(
+        table=table,
+        formula=f"toduration(field('{formula_field.name}'))",
+    )
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {number_field.db_column: 3600},
+            {number_field.db_column: 60},
+            {},
+        ],
+    )
+
+    model = table.get_model()
+    assert list(
+        model.objects.all().values(
+            formula_field.db_column,
+            toduration_field.db_column,
+        )
+    ) == [
+        {
+            formula_field.db_column: 1800,
+            toduration_field.db_column: timedelta(seconds=1800),
+        },
+        {
+            formula_field.db_column: 30,
+            toduration_field.db_column: timedelta(seconds=30),
+        },
+        {
+            formula_field.db_column: 0,
+            toduration_field.db_column: timedelta(seconds=0),
+        },
+    ]
+
+    FieldHandler().update_field(
+        user=user, field=formula_field, formula=f"field('{number_field.name}') / 0"
+    )
+
+    rows = model.objects.all().values(
+        formula_field.db_column,
+        toduration_field.db_column,
+    )
+
+    for r in rows:
+        assert math.isnan(r[formula_field.db_column])
+        assert r[toduration_field.db_column] is None
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
 def test_duration_field_can_be_looked_up(data_fixture):
     user = data_fixture.create_user()
     table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
@@ -760,14 +1112,14 @@ def test_duration_field_can_be_looked_up(data_fixture):
         user=user,
         table=table_b,
         rows_values=[
-            {duration_field.db_column: 3600},
+            {duration_field.db_column: 24 * 3600},
             {duration_field.db_column: 60},
         ],
         model=model_b,
     )
 
     assert list(model_b.objects.values_list(duration_formula.db_column, flat=True)) == [
-        timedelta(seconds=3600 + 60),
+        timedelta(seconds=24 * 3600 + 60),
         timedelta(seconds=60 + 60),
     ]
 
@@ -781,13 +1133,13 @@ def test_duration_field_can_be_looked_up(data_fixture):
         model=model_a,
     )
     assert getattr(row, f"field_{lookup_field.id}") == [
-        {"id": row_b_1.id, "value": 3600},
-        {"id": row_b_2.id, "value": 60},
+        {"id": row_b_1.id, "value": "1 day"},
+        {"id": row_b_2.id, "value": "00:01:00"},
     ]
 
     assert getattr(row, f"field_{lookup_formula.id}") == [
-        {"id": row_b_1.id, "value": 3600 + 60},
-        {"id": row_b_2.id, "value": 60 + 60},
+        {"id": row_b_1.id, "value": "1 day 00:01:00"},
+        {"id": row_b_2.id, "value": "00:02:00"},
     ]
 
 

@@ -32,7 +32,7 @@ def test_create_app_auth_provider(
         user,
         app_auth_provider_type,
         user_source,
-        **app_auth_provider_type.prepare_values({}, user)
+        **app_auth_provider_type.prepare_values({}, user),
     )
 
     assert app_auth_provider.user_source.id == user_source.id

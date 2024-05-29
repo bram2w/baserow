@@ -68,6 +68,7 @@
     background-color: $color-primary-100;
     padding: 4px;
     margin-top: 6px;
+
     @include rounded($rounded);
 
     &:not(:last-child) {

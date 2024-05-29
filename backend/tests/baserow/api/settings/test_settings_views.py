@@ -32,6 +32,15 @@ def test_get_settings(api_client):
     response_json = response.json()
     assert "instance_id" not in response_json
     assert response_json["allow_new_signups"] is False
+    assert response_json["email_verification"] == "no_verification"
+
+    # None is not returned as a value for email_verification
+    settings.email_verification = None
+    settings.save()
+    response = api_client.get(reverse("api:settings:get"))
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["email_verification"] == "no_verification"
 
 
 @pytest.mark.django_db
@@ -235,3 +244,34 @@ def test_register_settings_data_type(api_client, data_fixture):
         response_json = response.json()
         assert len(response_json.keys()) > 1
         assert response_json["test_tmp"] == "hello"
+
+
+@pytest.mark.parametrize("value", [None, "invalid"])
+@pytest.mark.django_db
+def test_update_email_verification_settings_invalid(api_client, data_fixture, value):
+    user, token = data_fixture.create_user_and_token(is_staff=True)
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"email_verification": value},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["email_verification"][0]["code"] == "invalid_choice"
+
+
+@pytest.mark.django_db
+def test_update_email_verification_settings(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(is_staff=True)
+
+    response = api_client.patch(
+        reverse("api:settings:update"),
+        {"email_verification": "recommended"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert CoreHandler().get_settings().email_verification == "recommended"

@@ -1,9 +1,11 @@
 <template>
   <div
+    v-auto-overflow-scroll="scrollable"
     class="filters__items"
     :class="{
       'filters__container--dark': variant === 'dark',
       'filters__items--full-width': fullWidth,
+      'filters__items--scrollable': scrollable,
     }"
   >
     <div
@@ -93,12 +95,11 @@
           </div>
         </div>
         <div v-if="!disableFilter" class="filters__group-item-actions">
-          <a
-            class="filters__add"
+          <ButtonText
+            icon="iconoir-plus"
             @click.prevent="$emit('addFilter', groupNode.group.id)"
           >
-            <i class="filters__add-icon iconoir-plus"></i>
-            {{ addConditionLabel }}</a
+            {{ addConditionLabel }}</ButtonText
           >
         </div>
       </div>
@@ -240,6 +241,11 @@ export default {
       default: (value, filter, field, filterType) => {
         return filterType.prepareValue(value, field, true)
       },
+    },
+    scrollable: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {

@@ -63,5 +63,9 @@
         "tableFieldLabel": "Tabella",
         "chooseNoView": "Non selezionato",
         "databaseFieldLabel": "Database"
+    },
+    "localBaserowIntegrationType": {
+        "localBaserowSummary": "Baserow Locale - {name}, {username}",
+        "localBaserowNoUser": "Baserow Locale - Non configurato"
     }
 }

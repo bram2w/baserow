@@ -1,47 +1,123 @@
 .button {
   cursor: pointer;
-  margin: 0;
+  margin-bottom: 0;
   white-space: nowrap;
   text-decoration: none;
   user-select: none;
-  border: 1px solid;
-  font-weight: 600;
+  color: #fff;
+  border: 1px solid transparent;
+  text-align: center;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  line-height: 20px;
+  font-size: 13px;
   transition: padding 0.05s ease-in-out;
-  justify-content: center;
-  box-sizing: border-box;
+  padding: 12px 20px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
+  gap: 10px;
+  position: relative;
   vertical-align: middle;
 
-  @include button-size(13px, 36px, 12px);
-  @include button-style(
-    $palette-blue-500,
-    $palette-blue-800,
-    $palette-blue-700,
-    $white,
-    $palette-blue-100
-  );
   @include rounded($rounded-md);
-  @include flex-align-items(8px, inline-flex);
-  @include add-elevation($elevation-low);
+  @include button-size; // regular size
+  @include button-style; // primary style
 
-  &.button--icon-only {
-    width: 36px;
-  }
-
-  &.button--large {
-    @include button-size(13px, 44px, 20px);
-  }
-
-  &:hover,
-  &:focus {
+  &:hover {
     text-decoration: none;
   }
 
-  &.disabled,
-  &[disabled] {
-    background: $palette-neutral-100;
-    cursor: not-allowed;
-    color: $palette-neutral-700;
+  &:active:not(.button--loading):not([disabled]) {
+    box-shadow: none !important;
   }
+
+  &[disabled]:not(.button--loading) {
+    cursor: not-allowed;
+    background: $palette-neutral-100 !important;
+    color: $palette-neutral-700;
+    border: none;
+  }
+}
+
+.button--loading {
+  cursor: wait;
+  user-select: none;
+  box-shadow: none;
+
+  @include loading-spinner($white, 14px);
+
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: calc(14px / 2 * -1);
+  }
+
+  &.button--upload,
+  &.button--secondary {
+    @include loading-spinner($palette-neutral-700);
+  }
+}
+
+.button--secondary {
+  border: 1px solid $palette-neutral-400;
+
+  @include button-style(
+    $white,
+    $palette-neutral-25,
+    $palette-neutral-50,
+    $palette-neutral-1300,
+    $palette-neutral-1100
+  );
+
+  &.button--active {
+    background: $palette-blue-50;
+  }
+}
+
+.button--ghost {
+  border: 1px solid rgba($white, 0.24);
+
+  @include button-style(transparent, rgba($white, 0.1), rgba($white, 0.15));
+}
+
+.button--danger {
+  @include button-style(
+    $palette-red-600,
+    $palette-red-700,
+    $palette-red-800,
+    $white,
+    $palette-red-200
+  );
+}
+
+.button--large {
+  @include button-size(
+    $button-large-height,
+    $button-large-top-bottom-padding,
+    $button-large-right-left-padding
+  );
+}
+
+.button--tiny {
+  font-size: 11px;
+
+  @include button-size(
+    $button-tiny-height,
+    $button-tiny-top-bottom-padding,
+    $button-tiny-right-left-padding
+  );
+}
+
+.button--small {
+  font-size: 11px;
+
+  @include button-size(
+    $button-small-height,
+    $button-small-top-bottom-padding,
+    $button-small-right-left-padding
+  );
 }
 
 .button__icon {
@@ -50,252 +126,30 @@
   .button.button--loading & {
     visibility: hidden;
   }
-
-  .button.button--link & {
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: $palette-neutral-600;
-  }
 }
 
-.button--loading {
-  position: relative;
-  cursor: wait;
-  user-select: none;
-
-  &:hover:not(.disabled),
-  &:focus:not(.disabled) {
-    box-shadow: none;
-  }
-
-  &::after {
-    content: ' ';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    margin: -7px;
-    display: block;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 0.25em solid;
-    border-color: #fff transparent #fff transparent;
-    animation: spin infinite 1800ms;
-    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
-  }
-
-  &.disabled,
-  &[disabled] {
-    color: $palette-neutral-100;
-
-    &::after {
-      border-color: $palette-neutral-700 transparent $palette-neutral-700
-        transparent;
-    }
-  }
-}
-
-.button--success {
-  @include button-style(
-    $palette-green-600,
-    $palette-green-800,
-    $palette-green-700,
-    $white,
-    $palette-green-100
-  );
-}
-
-.button--warning {
-  @include button-style(
-    $palette-yellow-500,
-    $palette-yellow-600,
-    $palette-yellow-700,
-    $white,
-    $palette-yellow-100
-  );
-}
-
-.button--error {
-  @include button-style(
-    $palette-red-600,
-    $palette-red-700,
-    $palette-red-800,
-    $white,
-    $palette-red-50
-  );
-}
-
-.button--ghost {
-  @include button-style(
-    $white,
-    $palette-neutral-25,
-    $palette-neutral-25,
-    $palette-neutral-1200,
-    $palette-neutral-900
-  );
-
-  border: 1px solid $palette-neutral-400;
-
-  &.button--loading::after {
-    border-color: $color-neutral-900 transparent $color-neutral-900 transparent;
-  }
-}
-
-.button--light {
-  @include button-style(
-    $white,
-    $palette-neutral-100,
-    $palette-neutral-1200,
-    $palette-neutral-1300,
-    $palette-neutral-1200
-  );
-
-  border: 1px solid $palette-neutral-400;
-
-  &:focus,
-  &:hover,
-  &:active,
-  &.button-loading {
-    box-shadow: none;
-    background-color: $palette-neutral-100;
-  }
-
-  &.button--loading::after {
-    border-color: $palette-neutral-1300 transparent $palette-neutral-1300
-      transparent;
-  }
-
-  &.active {
-    background-color: $color-primary-100;
-  }
-}
-
-.button--tiny {
-  @include button-size(12px, 26px, 12px);
-
-  &.button--icon-only {
-    width: 26px;
-  }
-
-  &.button-link {
-    font-size: 12px;
-  }
-}
-
-.button--large {
-  @include button-size(16px, 44px, 28px);
-
-  &.button--icon-only {
-    width: 44px;
-  }
-}
-
-.button--small {
-  @include button-size(13px, 32px, 12px);
-}
-
-.button--link {
-  color: $palette-neutral-1200;
-  font-weight: 500;
-  border: none;
-  background: none;
-  height: auto;
-  border-radius: 0;
-  transition: none;
-  box-shadow: none;
-  padding: 0;
-  padding-left: 24px;
-  position: relative;
-
-  @include button-style(
-    transparent,
-    transparent,
-    transparent,
-    $palette-neutral-1200,
-    $palette-neutral-1200,
-    transparent
-  );
-
-  &:hover,
-  &:focus,
-  &:active,
-  &.button--loading {
-    box-shadow: none;
-    background: transparent !important;
-  }
-
-  &:hover,
-  &:focus {
-    color: $color-neutral-900;
-  }
-
-  &.disabled,
-  &[disabled] {
-    cursor: not-allowed;
-    opacity: 0.65;
-    color: $palette-neutral-700;
-    background: transparent;
-
-    .button__icon {
-      color: $palette-neutral-500;
-    }
-  }
-
-  &.button--loading {
-    color: $palette-neutral-1200;
-
-    .button__icon {
-      display: none;
-    }
-
-    &::after {
-      border-color: $palette-blue-500 transparent $palette-blue-500 transparent;
-      left: 8px;
-    }
-  }
-
-  &.button--icon-only {
-    .button__icon {
-      color: $palette-blue-500;
-    }
-
-    &.button--loading {
-      .button__icon {
-        display: none;
-      }
-    }
-  }
-
-  &:active:not(.disabled) {
-    .button__icon {
-      color: $palette-neutral-700;
-    }
-  }
-
-  &:hover:not(.disabled) {
-    .button__icon {
-      color: $palette-neutral-1200;
-    }
-
-    &.button--icon-only {
-      .button__icon {
-        color: $palette-neutral-1200;
-      }
-    }
-  }
-}
-
-.button--overflow {
+.button__label {
   @extend %ellipsis;
 
-  display: block;
-  width: 100%;
-  text-align: center;
+  .button.button--loading & {
+    visibility: hidden;
+  }
 }
 
 .button--full-width {
-  @include button-size(15px, 44px, 28px);
-
   width: 100%;
+  justify-content: center;
+}
+
+.button--upload {
+  border: 1px dashed $palette-neutral-400;
+  box-shadow: none;
+
+  @include button-style(
+    $palette-neutral-25,
+    $white,
+    $palette-neutral-25,
+    $palette-neutral-900,
+    $palette-neutral-900
+  );
 }

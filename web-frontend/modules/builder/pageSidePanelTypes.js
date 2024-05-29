@@ -100,7 +100,7 @@ export class EventsPageSidePanelType extends pageSidePanelType {
 
   isDeactivated(element) {
     const elementType = this.app.$registry.get('element', element.type)
-    return elementType.getEvents().length === 0
+    return elementType.getEvents(element).length === 0
   }
 
   getOrder() {

@@ -35,7 +35,7 @@ def table_updated(
     table: Table,
     user: AbstractUser,
     force_table_refresh: bool = False,
-    **kwargs
+    **kwargs,
 ):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(

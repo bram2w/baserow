@@ -9,16 +9,19 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
+from django.utils.translation import gettext as _
 
 from itsdangerous import URLSafeSerializer
+from loguru import logger
 from opentelemetry import trace
 from tqdm import tqdm
 
+from baserow.core.registries import plugin_registry
 from baserow.core.user.utils import normalize_email_address
 
 from .emails import WorkspaceInvitationEmail
@@ -30,6 +33,7 @@ from .exceptions import (
     DuplicateApplicationMaxLocksExceededException,
     InvalidPermissionContext,
     LastAdminOfWorkspace,
+    MaxNumberOfPendingWorkspaceInvitesReached,
     PermissionDenied,
     PermissionException,
     TemplateDoesNotExist,
@@ -172,6 +176,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "track_workspace_usage",
                 "show_baserow_help_request",
                 "co_branding_logo",
+                "email_verification",
             ],
             settings_instance,
         )
@@ -292,7 +297,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         context: Optional[ContextObject] = None,
         include_trash: bool = False,
         raise_permission_exceptions: bool = True,
-        allow_if_template: bool = False,
     ) -> bool:
         """
         Checks whether a specific Actor has the Permission to execute an Operation
@@ -320,8 +324,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param raise_permission_exceptions: Raise an exception when the permission is
             disallowed when `True`. Return `False` instead when `False`.
             `True` by default.
-        :param allow_if_template: If true and if the workspace is related to a template,
-            then True is always returned and no exception will be raised.
         :raise PermissionException: If the operation is disallowed.
         :return: `True` if the operation is permitted or `False` if the operation is
             disallowed AND raise_permission_exceptions is `False`.
@@ -329,9 +331,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         if settings.DEBUG or settings.TESTS:
             self._ensure_context_matches_operation(context, operation_name)
-
-        if allow_if_template and workspace and workspace.has_template():
-            return True
 
         check = PermissionCheck(actor, operation_name, context)
 
@@ -437,7 +436,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional[Workspace] = None,
-        allow_if_template: Optional[bool] = False,
     ) -> QuerySet:
         """
         filters a given queryset accordingly to the actor permissions in the specified
@@ -453,13 +451,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             object that are in the same `ObjectScopeType` as the one described in the
             `OperationType` corresponding to the given `operation_name`.
         :param workspace: An optional workspace into which the operation occurs.
-        :param allow_if_template: If true and if the workspace is related to a template,
-            then we don't want to filter on the queryset.
         :return: The queryset, potentially filtered.
         """
 
-        if allow_if_template and workspace and workspace.has_template():
-            return queryset
+        if actor is None:
+            actor = AnonymousUser
 
         for permission_manager_name in settings.PERMISSION_MANAGERS:
             permission_manager_type = permission_manager_type_registry.get(
@@ -468,9 +464,23 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             if not permission_manager_type.actor_is_supported(actor):
                 continue
 
-            queryset = permission_manager_type.filter_queryset(
+            filtered_queryset = permission_manager_type.filter_queryset(
                 actor, operation_name, queryset, workspace=workspace
             )
+
+            if filtered_queryset is None:
+                continue
+
+            # a permission can return a tuple in which case the second value
+            # indicate whether it should be the last permission manager to be applied.
+            # If True, then no other permission manager are applied and the queryset
+            # is returned.
+            if isinstance(filtered_queryset, tuple):
+                queryset, stop = filtered_queryset
+                if stop:
+                    break
+            else:
+                queryset = filtered_queryset
 
         return queryset
 
@@ -1030,6 +1040,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :raises ValueError: If the provided permissions are not allowed.
         :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
             workspace or doesn't have right permissions in the workspace.
+        :raises MaxNumberOfPendingWorkspaceInvitesReached: When the maximum number of
+            pending invites have been reached.
         :return: The created workspace invitation.
         :rtype: WorkspaceInvitation
         """
@@ -1048,6 +1060,18 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).exists():
             raise WorkspaceUserAlreadyExists(
                 f"The user {email} is already part of the workspace."
+            )
+
+        max_invites = settings.BASEROW_MAX_PENDING_WORKSPACE_INVITES
+        if max_invites > 0 and (
+            WorkspaceInvitation.objects.filter(workspace=workspace)
+            .exclude(email=email)
+            .count()
+            >= max_invites
+        ):
+            raise MaxNumberOfPendingWorkspaceInvitesReached(
+                f"The maximum number of pending workspaces invites {max_invites} has "
+                f"been reached."
             )
 
         invitation, created = WorkspaceInvitation.objects.update_or_create(
@@ -1694,12 +1718,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         return template
 
-    @transaction.atomic
     # This single function generates a huge number of spans and events, we know it
     # is slow, and so we disable instrumenting it to save significant resources in
     # telemetry platforms receiving the instrumentation.
     @disable_instrumentation
-    def sync_templates(self, storage=None, template_search_glob="*.json"):
+    def sync_templates(self, storage=None, template_search_glob=None):
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
@@ -1712,12 +1735,18 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         don't have updating capability, we delete the old workspace and create a new one
         where we can import the export into.
 
-        :param storage:
-        :type storage:
+        :param storage: Storage to use to get the files.
         :param template_search_glob: A glob pattern used to select which template files
             to sync. Defaults to just syncing all templates but can be used to restrict
-            the syncing to specific templates only.
+            the syncing to specific templates only. In the last case it also deletes the
+            templates that don't exist anymore.
         """
+
+        clean_templates = False
+        if template_search_glob is None:
+            # We clean the template list only if we have the full list of templates
+            clean_templates = True
+            template_search_glob = "*.json"
 
         installed_templates = (
             Template.objects.all()
@@ -1743,112 +1772,151 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             desc="Syncing Baserow templates. Disable by setting "
             "BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=false.",
         ):
-            content = Path(template_file_path).read_text()
-            parsed_json = json.loads(content)
-
-            if "baserow_template_version" not in parsed_json:
-                continue
-
-            slug = ".".join(template_file_path.name.split(".")[:-1])
-            installed_template = next(
-                (t for t in installed_templates if t.slug == slug), None
-            )
-            hash_json = json.dumps(parsed_json["export"])
-            export_hash = hashlib.sha256(hash_json.encode("utf-8")).hexdigest()
-            keywords = (
-                ",".join(parsed_json["keywords"]) if "keywords" in parsed_json else ""
-            )
-
-            # If the installed template and workspace exist, and if there is a hash
-            # mismatch, we need to delete the old workspace and all the related
-            # applications in it. This is because a new workspace will be created.
-            if (
-                installed_template
-                and installed_template.workspace
-                and installed_template.export_hash != export_hash
-            ):
-                TrashHandler.permanently_delete(installed_template.workspace)
-
-            # If the installed template does not yet exist or if there is a export
-            # hash mismatch, which means the workspace has already been deleted, we can
-            # create a new workspace and import the exported applications into that
-            # workspace.
-            if not installed_template or installed_template.export_hash != export_hash:
-                # It is optionally possible for a template to have additional files.
-                # They are stored in a ZIP file and are generated when the template
-                # is exported. They for example contain file field files.
-                try:
-                    files_file_path = f"{os.path.splitext(template_file_path)[0]}.zip"
-                    files_buffer = open(files_file_path, "rb")
-                except FileNotFoundError:
-                    # If the file is not found, we provide a BytesIO buffer to
-                    # maintain backward compatibility and to not brake anything.
-                    files_buffer = BytesIO()
-
-                workspace = Workspace.objects.create(name=parsed_json["name"])
-                self.import_applications_to_workspace(
-                    workspace,
-                    parsed_json["export"],
-                    files_buffer=files_buffer,
-                    import_export_config=sync_templates_import_export_config,
-                    storage=storage,
+            with transaction.atomic():
+                self._sync_template(
+                    template_file_path,
+                    sync_templates_import_export_config,
+                    installed_templates,
+                    installed_categories,
+                    storage,
                 )
 
-                if files_buffer:
-                    files_buffer.close()
-            else:
-                workspace = installed_template.workspace
-                workspace.name = parsed_json["name"]
-                workspace.save()
+        if clean_templates:
+            # Delete all the installed templates that were installed, but don't exist in
+            # the template directory anymore.
+            logger.info(
+                "Deleting templates that were installed but no longer exist in the "
+                "templates dir..."
+            )
 
-            kwargs = {
-                "name": parsed_json["name"],
-                "icon": parsed_json["icon"],
-                "export_hash": export_hash,
-                "keywords": keywords,
-                "workspace": workspace,
-            }
+            slugs = [
+                ".".join(template_file_path.name.split(".")[:-1])
+                for template_file_path in templates
+            ]
 
-            if not installed_template:
-                installed_template = Template.objects.create(slug=slug, **kwargs)
-            else:
-                # If the installed template already exists, we only need to update the
-                # values to the latest version according to the JSON template.
-                for key, value in kwargs.items():
-                    setattr(installed_template, key, value)
-                installed_template.save()
+            for template in Template.objects.filter(~Q(slug__in=slugs)):
+                with transaction.atomic():
+                    TrashHandler.permanently_delete(template.workspace)
+                    template.delete()
 
-            # Loop over the categories related to the template and check which ones
-            # already exist and which need to be created. Based on that we can create
-            # a list of category ids that we can set for the template.
-            template_category_ids = []
-            for category_name in parsed_json["categories"]:
-                installed_category = next(
-                    (c for c in installed_categories if c.name == category_name), None
-                )
-                if not installed_category:
-                    installed_category = TemplateCategory.objects.create(
-                        name=category_name
-                    )
-                    installed_categories.append(installed_category)
-                template_category_ids.append(installed_category.id)
+            # Delete all the categories that don't have any templates anymore.
+            TemplateCategory.objects.annotate(num_templates=Count("templates")).filter(
+                num_templates=0
+            ).delete()
 
-            installed_template.categories.set(template_category_ids)
+    def _sync_template(
+        self,
+        template_file_path,
+        config,
+        installed_templates,
+        installed_categories,
+        storage,
+    ):
+        """
+        Sync a specific template to the database.
 
-        # Delete all the installed templates that were installed, but don't exist in
-        # the template directory anymore.
-        slugs = [
-            ".".join(template_file_path.name.split(".")[:-1])
-            for template_file_path in templates
-        ]
-        for template in Template.objects.filter(~Q(slug__in=slugs)):
-            TrashHandler.permanently_delete(template.workspace)
-            template.delete()
+        :param template_file_path: Path of the template that should be synced.
+        :type template_file_path: Path
+        :param config: Configuration to use when syncing the template.
+        :type config: ImportExportConfig
+        :param installed_templates: List of installed Templates.
+        :type installed_templates: List[Template]
+        :param installed_categories: List of installed Template Categories.
+        :type installed_categories: List[TemplateCategory]
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
+        :return: None
+        """
 
-        # Delete all the categories that don't have any templates anymore.
-        TemplateCategory.objects.annotate(num_templates=Count("templates")).filter(
-            num_templates=0
-        ).delete()
+        content = Path(template_file_path).read_text()
+        parsed_json = json.loads(content)
+
+        if "baserow_template_version" not in parsed_json:
+            return
+
+        slug = ".".join(template_file_path.name.split(".")[:-1])
+        installed_template = next(
+            (t for t in installed_templates if t.slug == slug), None
+        )
+        hash_json = json.dumps(parsed_json["export"])
+        export_hash = hashlib.sha256(hash_json.encode("utf-8")).hexdigest()
+        keywords = (
+            ",".join(parsed_json["keywords"]) if "keywords" in parsed_json else ""
+        )
+
+        # If the installed template and workspace exist, and if there is a hash
+        # mismatch, we need to delete the old workspace and all the related
+        # applications in it. This is because a new workspace will be created.
+        if (
+            installed_template
+            and installed_template.workspace
+            and installed_template.export_hash != export_hash
+        ):
+            TrashHandler.permanently_delete(installed_template.workspace)
+
+        # If the installed template does not yet exist or if there is a export
+        # hash mismatch, which means the workspace has already been deleted, we can
+        # create a new workspace and import the exported applications into that
+        # workspace.
+        if not installed_template or installed_template.export_hash != export_hash:
+            # It is optionally possible for a template to have additional files.
+            # They are stored in a ZIP file and are generated when the template
+            # is exported. They for example contain file field files.
+            try:
+                files_file_path = f"{os.path.splitext(template_file_path)[0]}.zip"
+                files_buffer = open(files_file_path, "rb")
+            except FileNotFoundError:
+                # If the file is not found, we provide a BytesIO buffer to
+                # maintain backward compatibility and to not brake anything.
+                files_buffer = BytesIO()
+
+            workspace = Workspace.objects.create(name=parsed_json["name"])
+            self.import_applications_to_workspace(
+                workspace,
+                parsed_json["export"],
+                files_buffer=files_buffer,
+                import_export_config=config,
+                storage=storage,
+            )
+
+            if files_buffer:
+                files_buffer.close()
+        else:
+            workspace = installed_template.workspace
+            workspace.name = parsed_json["name"]
+            workspace.save()
+
+        kwargs = {
+            "name": parsed_json["name"],
+            "icon": parsed_json["icon"],
+            "export_hash": export_hash,
+            "keywords": keywords,
+            "workspace": workspace,
+        }
+
+        if not installed_template:
+            installed_template = Template.objects.create(slug=slug, **kwargs)
+        else:
+            # If the installed template already exists, we only need to update the
+            # values to the latest version according to the JSON template.
+            for key, value in kwargs.items():
+                setattr(installed_template, key, value)
+            installed_template.save()
+
+        # Loop over the categories related to the template and check which ones
+        # already exist and which need to be created. Based on that we can create
+        # a list of category ids that we can set for the template.
+        template_category_ids = []
+        for category_name in parsed_json["categories"]:
+            installed_category = next(
+                (c for c in installed_categories if c.name == category_name), None
+            )
+            if not installed_category:
+                installed_category = TemplateCategory.objects.create(name=category_name)
+                installed_categories.append(installed_category)
+            template_category_ids.append(installed_category.id)
+
+        installed_template.categories.set(template_category_ids)
 
     def get_valid_template_path_or_raise(self, template):
         file_name = f"{template.slug}.json"
@@ -1956,6 +2024,24 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         if is_subject_last_admin:
             raise LastAdminOfWorkspace()
+
+    def create_initial_workspace(self, user: AbstractUser) -> Workspace:
+        """
+        Creates an initial workspace with example data.
+
+        :param user: The user for whom the workspace must be created.
+        :return: The newly created workspace.
+        """
+
+        with translation.override(user.profile.language):
+            workspace_user = self.create_workspace(
+                user=user, name=_("%(name)s's workspace") % {"name": user.first_name}
+            )
+
+        for plugin in plugin_registry.registry.values():
+            plugin.create_initial_workspace(user, workspace_user.workspace)
+
+        return workspace_user
 
     @staticmethod
     def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:

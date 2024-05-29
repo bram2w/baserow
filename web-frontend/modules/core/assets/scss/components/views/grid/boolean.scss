@@ -13,7 +13,7 @@
   justify-content: center;
 
   @include rounded($rounded);
-  @include flex-align-items();
+  @include flex-align-items;
 
   &.grid-field-boolean__checkbox--read-only {
     cursor: initial;

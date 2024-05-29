@@ -29,7 +29,6 @@
 
 .row-history-field-multiple-collaborators__name {
   @extend %ellipsis;
-
   @include collaborator-style(flex, true);
 
   max-width: 200px;

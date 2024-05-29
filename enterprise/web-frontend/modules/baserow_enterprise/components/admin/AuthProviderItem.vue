@@ -10,7 +10,9 @@
         ref="editMenuContextLink"
         @click="openContext()"
       >
-        <i class="baserow-icon-more-vertical"></i>
+        <i
+          class="baserow-icon-more-vertical auth-provider-admin__item-menu-options"
+        ></i>
       </a>
       <EditAuthProviderMenuContext
         v-if="hasContextMenu(authProvider.type)"

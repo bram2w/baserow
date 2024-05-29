@@ -12,7 +12,7 @@ from baserow.core.action.registries import (
 from baserow.core.action.scopes import RootActionScopeType
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
-from baserow.core.models import Template
+from baserow.core.models import Template, User
 from baserow.core.registries import auth_provider_type_registry
 from baserow.core.user.handler import UserHandler
 
@@ -136,7 +136,8 @@ class UpdateUserActionType(ActionType):
         first_name: Optional[str] = None,
         language: Optional[str] = None,
         email_notification_frequency: Optional[str] = None,
-        **kwargs: Any
+        completed_onboarding: Optional[bool] = None,
+        **kwargs: Any,
     ) -> AbstractUser:
         """
         Updates user's data.
@@ -146,6 +147,8 @@ class UpdateUserActionType(ActionType):
         :param language: The language of the user.
         :param email_notification_frequency: The frequency chosen by the user to
             receive email notifications.
+        :param completed_onboarding: Indicates whether the user has already completed
+            the onboarding.
         :return: The updated user.
         """
 
@@ -154,6 +157,7 @@ class UpdateUserActionType(ActionType):
             first_name=first_name,
             language=language,
             email_notification_frequency=email_notification_frequency,
+            completed_onboarding=completed_onboarding,
         )
 
         cls.register_action(
@@ -403,6 +407,78 @@ class ResetUserPasswordActionType(ActionType):
         cls.register_action(
             user=user, params=cls.Params(user.id, user.email), scope=cls.scope()
         )
+        return user
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class SendVerifyEmailAddressActionType(ActionType):
+    type = "send_verify_email"
+    description = ActionTypeDescription(
+        _("Send verify email"),
+        _('User "%(user_email)s" (%(user_id)s) requested to verify email'),
+    )
+    analytics_params = [
+        "user_id",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        user_id: int
+        user_email: str
+
+    @classmethod
+    def do(cls, user: User):
+        """
+        Sends an email verification email to the user.
+        """
+
+        UserHandler().send_email_pending_verification(user)
+
+        cls.register_action(
+            user=user, params=cls.Params(user.id, user.email), scope=cls.scope()
+        )
+
+        return user
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+
+class VerifyEmailAddressActionType(ActionType):
+    type = "verify_email"
+    description = ActionTypeDescription(
+        _("Verify email"),
+        _('User "%(user_email)s" (%(user_id)s) verify email'),
+    )
+    analytics_params = [
+        "user_id",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        user_id: int
+        user_email: str
+
+    @classmethod
+    def do(cls, verification_token: str):
+        """
+        Confirm that the associated email address
+        belongs to the user.
+
+        :param verification_token: The secret token to
+            verify that the email belongs to the user.
+        """
+
+        user = UserHandler().verify_email_address(verification_token)
+
+        cls.register_action(
+            user=user, params=cls.Params(user.id, user.email), scope=cls.scope()
+        )
+
         return user
 
     @classmethod

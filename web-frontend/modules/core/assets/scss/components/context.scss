@@ -1,11 +1,12 @@
-.context {
+.context,
+%context {
   position: absolute;
   z-index: $z-index-context;
   white-space: nowrap;
   background-color: $white;
   border: 1px solid $palette-neutral-400;
 
-  @include add-elevation($elevation-medium);
+  @include elevation($elevation-medium);
   @include rounded($rounded-md);
 
   &.context--loading-overlay {
@@ -31,7 +32,7 @@
   &.context--overflow-scroll {
     // This must be added for the v-auto-overflow-scroll to work. It will be overwritten
     // if the scrollable part has a lower height.
-    overflow-y: scroll;
+    overflow: hidden scroll;
   }
 }
 
@@ -48,7 +49,7 @@
 
 .context__menu-title {
   color: $palette-neutral-900;
-  padding: 12px 8px 2px 8px;
+  padding: 12px 8px 2px;
   line-height: 13px;
   margin-bottom: 10px;
   font-weight: 500;
@@ -174,6 +175,14 @@
   &--multiple-actions {
     justify-content: space-between;
   }
+
+  &--align-left {
+    justify-content: left;
+  }
+
+  &--align-right {
+    justify-content: right;
+  }
 }
 
 .context__menu-active-icon {
@@ -196,7 +205,7 @@
   height: 17px;
   justify-content: center;
 
-  @include flex-align-items();
+  @include flex-align-items;
   @include rounded($rounded);
 }
 

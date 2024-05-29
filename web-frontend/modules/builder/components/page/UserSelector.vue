@@ -29,16 +29,18 @@
 
 <script>
 import UserSourceUsersContext from '@baserow/modules/builder/components/page/UserSourceUsersContext'
-import { mapGetters } from 'vuex'
 
 export default {
   components: { UserSourceUsersContext },
+  inject: ['builder'],
   props: {},
   computed: {
-    ...mapGetters({
-      loggedUser: 'userSourceUser/getUser',
-      isAuthenticated: 'userSourceUser/isAuthenticated',
-    }),
+    isAuthenticated() {
+      return this.$store.getters['userSourceUser/isAuthenticated'](this.builder)
+    },
+    loggedUser() {
+      return this.$store.getters['userSourceUser/getUser'](this.builder)
+    },
   },
 }
 </script>

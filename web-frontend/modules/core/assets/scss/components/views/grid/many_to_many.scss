@@ -14,7 +14,7 @@
   list-style: none;
   margin: 0;
   padding: 0 4px;
-  -moz-user-select: none;
+  user-select: none;
 
   .grid-field-many-to-many__cell.active & {
     height: auto;
@@ -51,7 +51,8 @@
     width: 22px;
     height: 22px;
     justify-content: center;
-    @include flex-align-items();
+
+    @include flex-align-items;
 
     &:hover {
       background-color: $color-primary-200;
@@ -85,7 +86,7 @@
   padding: 0 2px;
   justify-content: center;
 
-  @include flex-align-items();
+  @include flex-align-items;
 
   &:hover {
     color: $color-neutral-500;

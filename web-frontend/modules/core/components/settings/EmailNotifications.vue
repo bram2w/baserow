@@ -13,40 +13,24 @@
           {{ $t('emailNotifications.description') }}
         </div>
         <div class="control__elements">
-          <Radio
+          <RadioGroup
             v-model="values.email_notification_frequency"
-            :value="EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.INSTANT"
+            :options="emailNotificationOptions"
+            vertical-layout
           >
-            {{ $t('emailNotifications.instant') }}
-          </Radio>
-          <Radio
-            v-model="values.email_notification_frequency"
-            :value="EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.DAILY"
-          >
-            {{ $t('emailNotifications.daily') }}
-          </Radio>
-          <Radio
-            v-model="values.email_notification_frequency"
-            :value="EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.WEEKLY"
-          >
-            {{ $t('emailNotifications.weekly') }}
-          </Radio>
-          <Radio
-            v-model="values.email_notification_frequency"
-            :value="EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.NEVER"
-          >
-            {{ $t('emailNotifications.never') }}
-          </Radio>
+          </RadioGroup>
         </div>
       </FormElement>
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading, disabled: submitDisabled }"
-          class="button button--large"
-          :disabled="submitDisabled"
+        <Button
+          type="primary"
+          size="large"
+          :loading="loading"
+          :disabled="submitDisabled || loading"
+          icon="iconoir-bin"
         >
           {{ $t('emailNotifications.submitButton') }}
-        </button>
+        </Button>
       </div>
     </form>
   </div>
@@ -83,6 +67,26 @@ export default {
     },
     EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS() {
       return EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS
+    },
+    emailNotificationOptions() {
+      return [
+        {
+          label: this.$t('emailNotifications.instant'),
+          value: EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.INSTANT,
+        },
+        {
+          label: this.$t('emailNotifications.daily'),
+          value: EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.DAILY,
+        },
+        {
+          label: this.$t('emailNotifications.weekly'),
+          value: EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.WEEKLY,
+        },
+        {
+          label: this.$t('emailNotifications.never'),
+          value: EMAIL_NOTIFICATIONS_FREQUENCY_OPTIONS.NEVER,
+        },
+      ]
     },
     ...mapGetters({
       user: 'auth/getUserObject',

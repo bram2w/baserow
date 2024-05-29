@@ -15,8 +15,7 @@
         "income"
     ],
     "categories": [
-        "Personal",
-        "Finance"
+        "Finance and Accounting"
     ],
     "export": [
         {
@@ -5366,7 +5365,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual income\")), \n    \"\", \n    if(minus(when_empty(field(\"Actual income\"), 0), when_empty(field(\"Estimated income\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Actual income\"), 0), when_empty(field(\"Estimated income\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Actual income\"), 0), when_empty(field(\"Estimated income\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual income\")), \n    \"\", \n    if(minus(when_empty(field(\"Actual income\"), 0), when_empty(field(\"Estimated income\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Actual income\"), 0), when_empty(field(\"Estimated income\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Actual income\"), 0), when_empty(field(\"Estimated income\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -5463,7 +5462,7 @@
                                                         "id": "a10af2c3-c45c-4345-a219-2edbb4e496b3",
                                                         "type": "contains",
                                                         "field": 391508,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -5476,7 +5475,7 @@
                                                         "id": "a1edd31d-fec9-46ea-9799-91650f98cabd",
                                                         "type": "contains",
                                                         "field": 391508,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -5790,7 +5789,7 @@
                                                         "id": "5a6b7c87-2e83-4628-9ff8-e4f7d8379335",
                                                         "type": "contains",
                                                         "field": 391508,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -5803,7 +5802,7 @@
                                                         "id": "6a6a2f1a-3ca0-44d5-83c5-48053b1221ee",
                                                         "type": "contains",
                                                         "field": 391508,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -6929,7 +6928,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -7026,7 +7025,7 @@
                                                         "id": "30fa03e1-f9f6-4a06-aefe-eece375cfec9",
                                                         "type": "contains",
                                                         "field": 391612,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -7039,7 +7038,7 @@
                                                         "id": "6954c015-55be-4e32-bff0-08902e6f3842",
                                                         "type": "contains",
                                                         "field": 391612,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -7353,7 +7352,7 @@
                                                         "id": "a5f4c9fa-0baa-4fcf-ac20-05cf9f99cf03",
                                                         "type": "contains",
                                                         "field": 391612,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -7366,7 +7365,7 @@
                                                         "id": "5dde2f24-24c8-42bb-9174-db5f2cabecf5",
                                                         "type": "contains",
                                                         "field": 391612,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -9722,7 +9721,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -9819,7 +9818,7 @@
                                                         "id": "5efd3e6d-97a8-4115-a498-13223a97ad3f",
                                                         "type": "contains",
                                                         "field": 391637,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -9832,7 +9831,7 @@
                                                         "id": "79624164-17f1-4cf6-9b4e-a0f41fbc1e88",
                                                         "type": "contains",
                                                         "field": 391637,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -10146,7 +10145,7 @@
                                                         "id": "94cec113-fd5d-44e7-8bea-c3ce9d4aeac5",
                                                         "type": "contains",
                                                         "field": 391637,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -10159,7 +10158,7 @@
                                                         "id": "ef0359ca-f35d-42f1-b021-8b80966fd66b",
                                                         "type": "contains",
                                                         "field": 391637,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -11339,7 +11338,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -11436,7 +11435,7 @@
                                                         "id": "f527e9ad-3b18-493c-a634-c3e8744943e4",
                                                         "type": "contains",
                                                         "field": 391650,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -11449,7 +11448,7 @@
                                                         "id": "859f1871-5110-4f6a-91e4-1b59ae988621",
                                                         "type": "contains",
                                                         "field": 391650,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -11763,7 +11762,7 @@
                                                         "id": "2d014e2d-d7b9-4b8d-86fe-dd2db3bafbf5",
                                                         "type": "contains",
                                                         "field": 391650,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -11776,7 +11775,7 @@
                                                         "id": "710445a3-9d76-4b5e-8d1c-8ffdf3396aaa",
                                                         "type": "contains",
                                                         "field": 391650,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -12620,7 +12619,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -12717,7 +12716,7 @@
                                                         "id": "80b62e15-d06f-4315-81a8-6d081340e1ee",
                                                         "type": "contains",
                                                         "field": 391662,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -12730,7 +12729,7 @@
                                                         "id": "fb1b5ac5-5df2-4175-a195-2eed6eb602e3",
                                                         "type": "contains",
                                                         "field": 391662,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -13044,7 +13043,7 @@
                                                         "id": "53262f97-5539-4d41-bbde-6c2850d177c1",
                                                         "type": "contains",
                                                         "field": 391662,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -13057,7 +13056,7 @@
                                                         "id": "8cd5d516-d4e0-4ff6-b48d-34b7a7e349df",
                                                         "type": "contains",
                                                         "field": 391662,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -14093,7 +14092,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -14190,7 +14189,7 @@
                                                         "id": "3dbd6da1-5612-4e36-9f42-559b99fab62e",
                                                         "type": "contains",
                                                         "field": 391679,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -14203,7 +14202,7 @@
                                                         "id": "8fc2cb71-26dd-4827-8147-a6d11a6b2114",
                                                         "type": "contains",
                                                         "field": 391679,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -14517,7 +14516,7 @@
                                                         "id": "d156b8ad-e48c-4397-9bdb-907a45232c26",
                                                         "type": "contains",
                                                         "field": 391679,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -14530,7 +14529,7 @@
                                                         "id": "f8e1ab30-d7f3-4a90-aad6-44c6c9f40ce7",
                                                         "type": "contains",
                                                         "field": 391679,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -15770,7 +15769,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -15867,7 +15866,7 @@
                                                         "id": "7690752e-f4da-459c-9bc3-d81e03eed320",
                                                         "type": "contains",
                                                         "field": 392915,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -15880,7 +15879,7 @@
                                                         "id": "b214a186-f019-4a91-b0a8-127f82d1f9e1",
                                                         "type": "contains",
                                                         "field": 392915,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -16194,7 +16193,7 @@
                                                         "id": "48cf125a-ba13-419d-bd1b-01786402e306",
                                                         "type": "contains",
                                                         "field": 392915,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -16207,7 +16206,7 @@
                                                         "id": "88662c83-24e3-4ea1-84e4-60f4132c8501",
                                                         "type": "contains",
                                                         "field": 392915,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -16655,7 +16654,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -16752,7 +16751,7 @@
                                                         "id": "04758a35-8450-427c-a6db-2eb048c3fed2",
                                                         "type": "contains",
                                                         "field": 392942,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -16765,7 +16764,7 @@
                                                         "id": "34d53374-9ebd-4020-a27f-da64b86b7bd0",
                                                         "type": "contains",
                                                         "field": 392942,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -17079,7 +17078,7 @@
                                                         "id": "a60627ef-e0df-48b6-a717-832f6b21c97b",
                                                         "type": "contains",
                                                         "field": 392942,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -17092,7 +17091,7 @@
                                                         "id": "e64045d4-01b4-4723-b095-25fc29a10326",
                                                         "type": "contains",
                                                         "field": 392942,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -17774,7 +17773,7 @@
                             "array_formula_type": null,
                             "nullable": true,
                             "date_show_tzinfo": null,
-                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"\ud83d\udfe2\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"\ud83c\udfaf\", \"\ud83d\udd3b\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
+                            "formula": "if(isblank(field(\"Actual cost\")), \n    \"\", \n    if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) > 0, \"🟢\", \n        if(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)) = 0, \"🎯\", \"🔻\"))\n        + \" \" \n        + totext(minus(when_empty(field(\"Estimated cost\"), 0), when_empty(field(\"Actual cost\"), 0)))\n)",
                             "formula_type": "text"
                         },
                         {
@@ -17871,7 +17870,7 @@
                                                         "id": "a2cc9902-9c89-4523-a76e-20b527b16d58",
                                                         "type": "contains",
                                                         "field": 392961,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -17884,7 +17883,7 @@
                                                         "id": "8111fdf1-a84d-402e-8753-5931848e0aff",
                                                         "type": "contains",
                                                         "field": 392961,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -18198,7 +18197,7 @@
                                                         "id": "e7266709-724a-450d-8317-9cbfca8c23c3",
                                                         "type": "contains",
                                                         "field": 392961,
-                                                        "value": "\ud83d\udfe2"
+                                                        "value": "🟢"
                                                     }
                                                 ],
                                                 "operator": "AND"
@@ -18211,7 +18210,7 @@
                                                         "id": "9563175f-de4c-4dd9-83c3-e35794ef45be",
                                                         "type": "contains",
                                                         "field": 392961,
-                                                        "value": "\ud83d\udd3b"
+                                                        "value": "🔻"
                                                     }
                                                 ],
                                                 "operator": "AND"

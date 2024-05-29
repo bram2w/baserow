@@ -16,6 +16,7 @@
         $refs.advancedFormulaEditContext.openContext($event)
       "
       @refresh-formula-type="refreshFormulaType"
+      @update-formula="values.formula = $event"
     >
     </FieldFormulaInitialSubForm>
     <FormulaAdvancedEditContext

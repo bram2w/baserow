@@ -226,7 +226,7 @@ exports[`GridViewRows component with decoration View with decoration configured 
             class="decorator-context__decorator-header-select"
           >
             <div
-              class="dropdown"
+              class="dropdown dropdown--small"
             >
               <a
                 class="dropdown__selected"
@@ -252,13 +252,13 @@ exports[`GridViewRows component with decoration View with decoration configured 
           <div
             class="decorator-context__decorator-header-trash"
           >
-            <a
-              class="decorator-context__decorator-header-trash-link"
+            <button
+              class="button-icon"
             >
               <i
-                class="iconoir-bin"
+                class="button-icon__icon iconoir-bin"
               />
-            </a>
+            </button>
           </div>
         </div>
          
@@ -316,13 +316,13 @@ exports[`GridViewRows component with decoration View with decoration configured 
           <div
             class="decorator-context__decorator-header-trash"
           >
-            <a
-              class="decorator-context__decorator-header-trash-link"
+            <button
+              class="button-icon"
             >
               <i
-                class="iconoir-bin"
+                class="button-icon__icon iconoir-bin"
               />
-            </a>
+            </button>
           </div>
         </div>
          
@@ -367,16 +367,25 @@ exports[`GridViewRows component with decoration View with decoration configured 
     <div
       class="decorator-context__footer"
     >
-      <a
-        class="decorator-context__add"
-      >
-        <i
-          class="decorator-context__add-icon iconoir-plus"
-        />
+      <span>
+        <button
+          class="button-text choose-select-field__link margin-right-auto"
+        >
+          <i
+            class="button-text__icon iconoir-plus"
+          />
+           
+          <!---->
+           
+          <span
+            class="button-text__label"
+          >
+            
+          viewDecoratorContext.addDecorator
         
-        viewDecoratorContext.addDecorator
-      
-      </a>
+          </span>
+        </button>
+      </span>
        
     </div>
   </div>

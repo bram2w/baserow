@@ -21,13 +21,9 @@
         </div>
       </div>
       <div class="actions actions--right">
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
-          :disabled="loading"
-        >
+        <Button type="primary" size="large" :loading="loading">
           {{ $t('action.upload') }}
-        </button>
+        </Button>
       </div>
     </form>
   </div>

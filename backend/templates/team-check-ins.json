@@ -17,8 +17,8 @@
         "scrum"
     ],
     "categories": [
-        "Professional",
-        "Project Management"
+        "Business Operations",
+        "Business Continuity"
     ],
     "export": [
         {
@@ -70,7 +70,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": null,
-                            "formula": "concat( \n  \"\ud83c\udf31 Week \", \n  field(\"Week number in the year\"), \n  \" of \", \n  totext(year(field(\"Date and time reported\"))) \n)",
+                            "formula": "concat( \n  \"🌱 Week \", \n  field(\"Week number in the year\"), \n  \" of \", \n  totext(year(field(\"Date and time reported\"))) \n)",
                             "formula_type": "text"
                         },
                         {
@@ -92,31 +92,31 @@
                             "select_options": [
                                 {
                                     "id": 60202,
-                                    "value": "\ud83e\udd74 Stuck",
+                                    "value": "🥴 Stuck",
                                     "color": "gray",
                                     "order": 0
                                 },
                                 {
                                     "id": 60203,
-                                    "value": "\ud83d\ude10 Still trying",
+                                    "value": "😐 Still trying",
                                     "color": "red",
                                     "order": 1
                                 },
                                 {
                                     "id": 60204,
-                                    "value": "\ud83d\ude05 I'm on it",
+                                    "value": "😅 I'm on it",
                                     "color": "orange",
                                     "order": 2
                                 },
                                 {
                                     "id": 60205,
-                                    "value": "\ud83d\ude07 Hopeful",
+                                    "value": "😇 Hopeful",
                                     "color": "green",
                                     "order": 3
                                 },
                                 {
                                     "id": 60206,
-                                    "value": "\ud83e\udd29 Very confident",
+                                    "value": "🤩 Very confident",
                                     "color": "blue",
                                     "order": 4
                                 }
@@ -573,8 +573,8 @@
                                 {
                                     "id": 20115,
                                     "field_id": 314160,
-                                    "type": "date_equals_today",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??today"
                                 }
                             ],
                             "sortings": [],
@@ -667,8 +667,8 @@
                                 {
                                     "id": 20113,
                                     "field_id": 314160,
-                                    "type": "date_equals_month",
-                                    "value": "Asia/Singapore"
+                                    "type": "date_is",
+                                    "value": "Asia/Singapore??this_month"
                                 }
                             ],
                             "sortings": [],

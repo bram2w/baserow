@@ -124,6 +124,9 @@ class CreateElementSerializer(serializers.ModelSerializer):
             "style_background_color",
             "style_width",
         )
+        extra_kwargs = {
+            "visibility": {"default": Element.VISIBILITY_TYPES.ALL},
+        }
 
 
 class UpdateElementSerializer(serializers.ModelSerializer):
@@ -209,7 +212,7 @@ class CollectionFieldSerializer(serializers.ModelSerializer):
     object.
     """
 
-    default_allowed_fields = ["name", "type", "id"]
+    default_allowed_fields = ["name", "type", "id", "uid"]
 
     config = serializers.DictField(
         required=False,

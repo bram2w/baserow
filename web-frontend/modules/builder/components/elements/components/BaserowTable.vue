@@ -12,9 +12,18 @@
       </tr>
     </thead>
     <tbody v-if="rows.length">
-      <tr v-for="row in rows" :key="row.__id__" class="baserow-table__row">
+      <tr
+        v-for="(row, index) in rows"
+        :key="row.__id__"
+        class="baserow-table__row"
+      >
         <td v-for="field in fields" :key="field.id" class="baserow-table__cell">
-          <slot name="cell-content" :value="row[field.name]" :field="field">
+          <slot
+            name="cell-content"
+            :value="row[field.name]"
+            :field="field"
+            :row-index="index"
+          >
             {{ value }}
           </slot>
         </td>

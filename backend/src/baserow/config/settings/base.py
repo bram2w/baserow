@@ -26,6 +26,7 @@ from baserow.config.settings.utils import (
     str_to_bool,
 )
 from baserow.core.telemetry.utils import otel_is_enabled
+from baserow.throttling_types import RateLimit
 from baserow.version import VERSION
 
 # A comma separated list of feature flags used to enable in-progress or not ready
@@ -484,7 +485,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.24.2",
+    "VERSION": "1.25.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -616,7 +617,7 @@ class AttrDict(dict):
 
 DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
-AWS_STORAGE_ENABLED = os.getenv("AWS_ACCESS_KEY_ID", "") != ""
+AWS_STORAGE_ENABLED = os.getenv("AWS_STORAGE_BUCKET_NAME", "") != ""
 GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
 AZURE_STORAGE_ENABLED = os.getenv("AZURE_ACCOUNT_NAME", "") != ""
 
@@ -920,6 +921,10 @@ CELERY_EMAIL_TASK_CONFIG = {
     "rate_limit": f"{int(MAX_EMAILS_PER_MINUTE / CELERY_EMAIL_CHUNK_SIZE)}/m",
 }
 
+BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT = RateLimit.from_string(
+    os.getenv("BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT", "5/h")
+)
+
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
 USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 160]}
@@ -1058,6 +1063,11 @@ BASEROW_USER_LOG_ENTRY_CLEANUP_INTERVAL_MINUTES = int(
 BASEROW_USER_LOG_ENTRY_RETENTION_DAYS = int(
     os.getenv("BASEROW_USER_LOG_ENTRY_RETENTION_DAYS", 61)
 )
+# The maximum number of pending invites that a workspace can have. If `0` then
+# unlimited invites are allowed, which is the default value.
+BASEROW_MAX_PENDING_WORKSPACE_INVITES = int(
+    os.getenv("BASEROW_MAX_PENDING_WORKSPACE_INVITES", 0)
+)
 
 
 PERMISSION_MANAGERS = [
@@ -1065,6 +1075,7 @@ PERMISSION_MANAGERS = [
     "core",
     "setting_operation",
     "staff",
+    "allow_if_template",
     "allow_public_builder",
     "element_visibility",
     "member",
@@ -1148,6 +1159,7 @@ BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED = (
 )
 
 LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
+ADDITIONAL_INFORMATION_TIMEOUT_SECONDS = 10
 
 MAX_NUMBER_CALENDAR_DAYS = 45
 

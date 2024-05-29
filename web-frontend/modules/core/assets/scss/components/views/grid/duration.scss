@@ -1,6 +1,6 @@
-.grid-field-duration {
+.grid-field-duration,
+%grid-field-duration {
   @extend %ellipsis;
-
   @include fixed-height(32px, 13px);
 
   padding: 0 10px;
@@ -9,7 +9,7 @@
 }
 
 .grid-field-duration-placeholder {
-  @extend .grid-field-duration;
+  @extend %grid-field-duration;
 
   color: $palette-neutral-700;
 }

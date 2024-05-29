@@ -1,7 +1,11 @@
 import uuid
+from io import BytesIO
 from unittest.mock import patch
 
+from django.core.files.storage import FileSystemStorage
+
 import pytest
+from PIL import Image
 
 from baserow.contrib.builder.application_types import BuilderApplicationType
 from baserow.contrib.builder.builder_beta_init_application import (
@@ -25,6 +29,7 @@ from baserow.core.actions import CreateApplicationActionType
 from baserow.core.db import specific_iterator
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.user_files.handler import UserFileHandler
 
 
 @pytest.mark.django_db
@@ -175,6 +180,7 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource1.service.id,
                             "integration_id": integration.id,
+                            "filter_type": "AND",
                             "filters": [],
                             "row_id": "",
                             "view_id": None,
@@ -307,6 +313,7 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource2.service.id,
                             "integration_id": integration.id,
+                            "filter_type": "AND",
                             "filters": [],
                             "row_id": "",
                             "view_id": None,
@@ -327,6 +334,7 @@ def test_builder_application_export(data_fixture):
                             "view_id": None,
                             "table_id": None,
                             "search_query": "",
+                            "filter_type": "AND",
                             "type": "local_baserow_list_rows",
                         },
                     },
@@ -385,7 +393,12 @@ def test_builder_application_export(data_fixture):
                         "items_per_page": 42,
                         "data_source_id": element4.data_source.id,
                         "fields": [
-                            {"name": f.name, "type": f.type, "config": f.config}
+                            {
+                                "name": f.name,
+                                "type": f.type,
+                                "config": f.config,
+                                "uid": str(f.uid),
+                            }
                             for f in element4.fields.all()
                         ],
                     },
@@ -438,6 +451,7 @@ def test_builder_application_export(data_fixture):
         "name": builder.name,
         "order": builder.order,
         "type": "builder",
+        "favicon_file": None,
     }
 
     assert serialized == reference
@@ -514,16 +528,19 @@ IMPORT_REFERENCE = {
                             "name": "F 1",
                             "type": "text",
                             "config": {"value": "get('current_record.field_25')"},
+                            "uid": str(uuid.uuid4()),
                         },
                         {
                             "name": "F 2",
                             "type": "link",
+                            "uid": str(uuid.uuid4()),
                             "config": {
                                 "page_parameters": [],
                                 "navigation_type": "custom",
                                 "navigate_to_page_id": None,
                                 "navigate_to_url": "get('current_record.field_25')",
                                 "link_name": "'Test'",
+                                "target": "self",
                             },
                         },
                     ],
@@ -599,6 +616,7 @@ IMPORT_REFERENCE = {
                         "view_id": None,
                         "table_id": None,
                         "search_query": "",
+                        "filter_type": "AND",
                         "type": "local_baserow_list_rows",
                     },
                 },
@@ -641,6 +659,7 @@ IMPORT_REFERENCE = {
                         "view_id": None,
                         "table_id": None,
                         "search_query": "",
+                        "filter_type": "AND",
                         "type": "local_baserow_get_row",
                     },
                 },
@@ -654,6 +673,7 @@ IMPORT_REFERENCE = {
                         "view_id": None,
                         "table_id": None,
                         "search_query": "",
+                        "filter_type": "AND",
                         "type": "local_baserow_list_rows",
                     },
                 },
@@ -706,11 +726,12 @@ def test_builder_application_import(data_fixture):
     workspace = data_fixture.create_workspace(user=user)
 
     config = ImportExportConfig(include_permission_data=True)
+    serialized_values = IMPORT_REFERENCE.copy()
     builder = BuilderApplicationType().import_serialized(
-        workspace, IMPORT_REFERENCE, config, {}
+        workspace, serialized_values, config, {}
     )
 
-    assert builder.id != IMPORT_REFERENCE["id"]
+    assert builder.id != serialized_values["id"]
     assert builder.page_set.count() == 2
 
     assert builder.integrations.count() == 1
@@ -769,6 +790,60 @@ def test_builder_application_import(data_fixture):
     assert workflow_action.element_id == element1.id
     assert workflow_action.description == "'hello'"
     assert workflow_action.title == "'there'"
+
+
+@pytest.mark.django_db
+def test_builder_application_doesnt_import_favicon_file(data_fixture):
+    """
+    Ensure the importer doesn't attempt to import the favicon_file if it
+    doesn't exist in the serialized values.
+    """
+
+    user = data_fixture.create_user(email="test@baserow.io")
+    workspace = data_fixture.create_workspace(user=user)
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized_values = IMPORT_REFERENCE.copy()
+    serialized_values.pop("favicon_file", None)
+
+    with patch(
+        "baserow.contrib.builder.application_types.UserFileHandler"
+    ) as mocked_handler:
+        builder = BuilderApplicationType().import_serialized(
+            workspace, serialized_values, config, {}
+        )
+
+    mocked_handler.import_user_file.assert_not_called()
+    assert builder.favicon_file is None
+
+
+@pytest.mark.django_db
+def test_builder_application_imports_favicon_file(data_fixture, tmpdir):
+    """Ensure the favicon_file is imported and saved to the builder."""
+
+    user = data_fixture.create_user(email="test@baserow.io")
+    workspace = data_fixture.create_workspace(user=user)
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    image = Image.new("RGB", (100, 140), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+
+    original_name = "mock_image.png"
+    handler = UserFileHandler()
+    user_file = handler.upload_user_file(
+        user, original_name, image_bytes, storage=storage
+    )
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized_values = IMPORT_REFERENCE.copy()
+    serialized_values["favicon_file"] = user_file.serialize()
+
+    builder = BuilderApplicationType().import_serialized(
+        workspace, serialized_values, config, {}
+    )
+
+    assert builder.favicon_file == user_file
 
 
 @pytest.mark.django_db

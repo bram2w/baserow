@@ -1,5 +1,14 @@
 <template>
-  <Button type="light" v-bind="restProps" @click.prevent="select(value)">
+  <Button
+    type="secondary"
+    v-bind="restProps"
+    :loading="loading"
+    :disabled="disabled"
+    :icon="icon"
+    :title="title"
+    :active="selected"
+    @click.prevent="select(value)"
+  >
     <slot></slot>
   </Button>
 </template>
@@ -19,6 +28,26 @@ export default {
     },
     modelValue: {
       type: [String, Number, Boolean, Object],
+      required: false,
+      default: '',
+    },
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    icon: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    title: {
+      type: String,
       required: false,
       default: '',
     },

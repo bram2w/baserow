@@ -1,8 +1,9 @@
-.box {
+.box,
+%box {
   background-color: $white;
   padding: 32px 40px;
 
-  @include add-elevation($elevation-medium);
+  @include elevation($elevation-medium);
   @include rounded($rounded-md);
 }
 
@@ -25,14 +26,16 @@
   }
 }
 
-.box__head-title {
+.box__head-title,
+%box-head-title {
   word-break: break-word;
   margin: 0;
   padding: 0;
 }
 
-.box__title {
-  @extend .box__head-title;
+.box__title,
+%box-title {
+  @extend %box-head-title;
 
   padding-bottom: 20px;
   margin-bottom: 20px;

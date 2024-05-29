@@ -218,6 +218,14 @@ def test_serialize_group_by_metadata_on_all_fields_in_interesting_table(data_fix
             {"count": 1, "field_rollup": "-122.222"},
             {"count": 1, "field_rollup": "0.000"},
         ],
+        "duration_rollup_sum": [
+            {"count": 1, "field_duration_rollup_sum": 240.0},
+            {"count": 1, "field_duration_rollup_sum": 0.0},
+        ],
+        "duration_rollup_avg": [
+            {"count": 1, "field_duration_rollup_avg": 120.0},
+            {"count": 1, "field_duration_rollup_avg": 0.0},
+        ],
         "duration_hm": [
             {"count": 1, "field_duration_hm": 3660.0},
             {"count": 1, "field_duration_hm": None},

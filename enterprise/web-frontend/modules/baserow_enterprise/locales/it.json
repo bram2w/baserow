@@ -272,7 +272,8 @@
         "sso": "Single Sign On",
         "rbac": "Role-based access control",
         "coBranding": "Sostituzione logo co-branding",
-        "auditLogs": "Registro attività"
+        "auditLogs": "Registro attività",
+        "support": "Supporto diretto"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Supporto diretto"
@@ -313,5 +314,11 @@
         "branding": "Branding",
         "uploadFileButton": "Carica immagine",
         "showBaserowHelpMessageDescription": "Indica se il messaggio di richiesta di aiuto deve essere mostrato sulla dashboard."
+    },
+    "enterpriseModal": {
+        "title": "Effettua l'upgrade per usare {name}",
+        "viewPricing": "Vedi prezzi",
+        "enterprise": "Enterprise",
+        "premium": "Premium"
     }
 }

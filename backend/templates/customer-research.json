@@ -15,8 +15,7 @@
         "transcripts"
     ],
     "categories": [
-        "Professional",
-        "Startup"
+        "Marketing"
     ],
     "export": [
         {
@@ -141,7 +140,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "if(search(field('Previous product used'),field('Winning product'))<1,\"\u2705\",\"\u274c\")",
+                            "formula": "if(search(field('Previous product used'),field('Winning product'))<1,\"✅\",\"❌\")",
                             "formula_type": "array"
                         },
                         {
@@ -195,19 +194,19 @@
                             "select_options": [
                                 {
                                     "id": 368111,
-                                    "value": "\ud83d\udcde Phone call",
+                                    "value": "📞 Phone call",
                                     "color": "light-green",
                                     "order": 0
                                 },
                                 {
                                     "id": 368112,
-                                    "value": "\ud83d\udce7 Email",
+                                    "value": "📧 Email",
                                     "color": "light-orange",
                                     "order": 1
                                 },
                                 {
                                     "id": 368113,
-                                    "value": "\ud83e\udd1d In person",
+                                    "value": "🤝 In person",
                                     "color": "light-blue",
                                     "order": 2
                                 }
@@ -1288,7 +1287,7 @@
                             "date_time_format": null,
                             "number_decimal_places": null,
                             "array_formula_type": "text",
-                            "formula": "if(contains(totext(lookup('Related product','Owned by')),'Our company')= true,\"\u2705\",\"\u274c\")",
+                            "formula": "if(contains(totext(lookup('Related product','Owned by')),'Our company')= true,\"✅\",\"❌\")",
                             "formula_type": "array"
                         },
                         {
@@ -1303,7 +1302,7 @@
                             "date_time_format": null,
                             "number_decimal_places": 0,
                             "array_formula_type": null,
-                            "formula": "sum(tonumber(totext(if(field('Our product')=\"\u2705\",1,0))))",
+                            "formula": "sum(tonumber(totext(if(field('Our product')=\"✅\",1,0))))",
                             "formula_type": "number"
                         },
                         {

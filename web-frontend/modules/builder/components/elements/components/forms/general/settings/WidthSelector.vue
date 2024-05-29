@@ -3,7 +3,7 @@
     <label class="control__label">
       {{ $t('widthSelector.width') }}
     </label>
-    <div class="control__elements">
+    <div class="control__elements control__elements--flex">
       <RadioButton
         v-for="width in widths"
         :key="width.value"

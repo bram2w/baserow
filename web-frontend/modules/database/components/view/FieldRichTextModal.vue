@@ -9,13 +9,13 @@
   >
     <template #content>
       <div class="box__title">
-        <h2 class="row_modal__title">
+        <h2 class="row-modal__title">
           {{ field.name }}
         </h2>
       </div>
       <RichTextEditor
         ref="editor"
-        class="rich_text_modal__editor"
+        class="rich-text-modal__editor"
         :enable-rich-text-formatting="true"
         :mentionable-users="mentionableUsers"
         :value="value"

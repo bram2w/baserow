@@ -45,7 +45,13 @@ export default () => {
      */
     async updateFieldOptionsOfField(
       { commit, getters, rootGetters },
-      { field, values, oldValues, readOnly = false }
+      {
+        field,
+        values,
+        oldValues,
+        readOnly = false,
+        undoRedoActionGroupId = null,
+      }
     ) {
       commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
@@ -61,6 +67,7 @@ export default () => {
           await ViewService(this.$client).updateFieldOptions({
             viewId,
             values: updateValues,
+            undoRedoActionGroupId,
           })
         } catch (error) {
           commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {

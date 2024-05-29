@@ -1,14 +1,16 @@
-from typing import List, NewType, TypedDict, TypeVar
+from typing import List, NewType, TypedDict, TypeVar, Union
 
 from baserow.contrib.builder.types import ElementDict
 
 from ..workflow_actions.models import BuilderWorkflowAction
-from .models import Element
+from .models import Element, RepeatElement, TableElement
 
 ElementDictSubClass = TypeVar("ElementDictSubClass", bound=ElementDict)
 ElementSubClass = TypeVar("ElementSubClass", bound=Element)
 
 ElementForUpdate = NewType("ElementForUpdate", Element)
+
+CollectionElementSubClass = Union[TableElement, RepeatElement]
 
 
 class ElementsAndWorkflowActions(TypedDict):

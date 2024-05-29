@@ -8,7 +8,7 @@ import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstant
 import PermissionsService from '@baserow/modules/core/services/permissions'
 import RolesService from '@baserow/modules/core/services/roles'
 
-function populateWorkspace(workspace) {
+export function populateWorkspace(workspace) {
   workspace._ = {
     loading: false,
     selected: false,
@@ -511,9 +511,6 @@ export const getters = {
    */
   getSelected(state) {
     return state.selected
-  },
-  hasSelected(state) {
-    return Object.prototype.hasOwnProperty.call(state.selected, 'id')
   },
   selectedId(state) {
     if (!Object.prototype.hasOwnProperty.call(state.selected, 'id')) {

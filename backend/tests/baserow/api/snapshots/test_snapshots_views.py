@@ -83,10 +83,9 @@ def test_create_snapshot_body_validation(api_client, data_fixture):
     )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
 
-    with freeze_time("2021-01-02 12:00"):
-        response = api_client.post(
-            url, {}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
-        )
+    response = api_client.post(
+        url, {}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
@@ -102,13 +101,12 @@ def test_create_snapshot(api_client, data_fixture):
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
     snapshot_name = "Test snapshot name"
 
-    with freeze_time("2021-01-02 12:00"):
-        response = api_client.post(
-            url,
-            {"name": snapshot_name},
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
+    response = api_client.post(
+        url,
+        {"name": snapshot_name},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
 
     assert response.status_code == HTTP_202_ACCEPTED
     assert is_dict_subset(

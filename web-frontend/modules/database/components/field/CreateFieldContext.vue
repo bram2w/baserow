@@ -4,7 +4,10 @@
     class="field-form-context"
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
-    @shown="$emit('shown', $event)"
+    @shown="
+      onShow()
+      $emit('shown', $event)
+    "
   >
     <FieldForm
       ref="form"
@@ -16,15 +19,28 @@
       @submitted="submit"
       @keydown-enter="$refs.submitButton.focus()"
     >
-      <div class="context__form-actions">
-        <button
+      <div
+        class="context__form-actions context__form-actions--multiple-actions"
+      >
+        <span class="context__form-actions--alight-left">
+          <ButtonText
+            v-if="!showDescription"
+            ref="showDescription"
+            icon="iconoir iconoir-plus"
+            type="secondary"
+            @click="showDescriptionField"
+          >
+            {{ $t('fieldForm.addDescription') }}
+          </ButtonText>
+        </span>
+        <Button
           ref="submitButton"
-          class="button"
-          :class="{ 'button--loading': loading }"
+          type="primary"
+          :loading="loading"
           :disabled="loading"
         >
           {{ $t('action.create') }}
-        </button>
+        </Button>
       </div>
     </FieldForm>
   </Context>
@@ -54,11 +70,6 @@ export default {
       required: false,
       default: null,
     },
-    useActionGroupId: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     allFieldsInTable: {
       type: Array,
       required: true,
@@ -71,6 +82,7 @@ export default {
   data() {
     return {
       loading: false,
+      showDescription: false,
     }
   },
   methods: {
@@ -79,9 +91,7 @@ export default {
 
       const type = values.type
       delete values.type
-      const actionGroupId = this.useActionGroupId
-        ? createNewUndoRedoActionGroupId()
-        : null
+      const actionGroupId = createNewUndoRedoActionGroupId()
       try {
         const {
           forceCreateCallback,
@@ -117,6 +127,18 @@ export default {
     },
     showFieldTypesDropdown(target) {
       this.$refs.form.showFieldTypesDropdown(target)
+    },
+    showDescriptionField(evt) {
+      this.hideDescriptionLink()
+      this.$refs.form.showDescriptionField()
+      evt.stopPropagation()
+      evt.preventDefault()
+    },
+    hideDescriptionLink() {
+      this.showDescription = true
+    },
+    onShow() {
+      this.showDescription = this.$refs.form.isDescriptionFieldNotEmpty()
     },
   },
 }

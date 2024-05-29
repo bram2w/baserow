@@ -2,7 +2,7 @@
   display: flex;
   flex-wrap: wrap;
   list-style: none;
-  margin: 0 0 -18px 0;
+  margin: 0 0 -18px;
   padding: 0;
   width: 100%;
 
@@ -48,11 +48,11 @@
 
   &:hover {
     text-decoration: none;
-  }
 
-  &:not(.disabled):not(.active):hover {
-    background-color: $color-neutral-100;
-    color: $color-neutral-900;
+    &:not(.disabled):not(.active) {
+      background-color: $color-neutral-100;
+      color: $color-neutral-900;
+    }
   }
 
   &.disabled {

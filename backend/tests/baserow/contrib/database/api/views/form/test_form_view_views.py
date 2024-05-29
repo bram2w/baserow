@@ -25,7 +25,7 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptionsConditionGroup,
 )
 from baserow.core.user_files.models import UserFile
-from baserow.test_utils.helpers import setup_interesting_test_table
+from baserow.test_utils.helpers import AnyInt, setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -324,7 +324,12 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "conditions": [],
         "condition_groups": [],
         "show_when_matching_conditions": False,
-        "field": {"id": text_field.id, "type": "text", "text_default": ""},
+        "field": {
+            "id": text_field.id,
+            "name": text_field.name,
+            "type": "text",
+            "text_default": "",
+        },
         "field_component": "default",
     }
     assert response_json["fields"][1] == {
@@ -338,11 +343,58 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "show_when_matching_conditions": False,
         "field": {
             "id": number_field.id,
+            "name": number_field.name,
             "type": "number",
             "number_decimal_places": 0,
             "number_negative": False,
         },
         "field_component": "default",
+    }
+
+
+@pytest.mark.django_db
+def test_submit_form_with_link_row_field(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    primary_t2 = data_fixture.create_text_field(table=table_2, primary=True)
+
+    t2_model = table_2.get_model()
+    r1 = t2_model.objects.create(**{f"field_{primary_t2.id}": "a"})
+
+    form = data_fixture.create_form_view(
+        table=table,
+        public=True,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=table_2
+    )
+
+    data_fixture.create_form_view_field_option(
+        form, link_row_field, required=True, enabled=True, order=1
+    )
+
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form.slug})
+    response = api_client.post(url, {}, format="json")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST, response_json
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert len(response_json["detail"]) == 1
+    assert (
+        response_json["detail"][f"field_{link_row_field.id}"][0]["code"] == "required"
+    )
+
+    response = api_client.post(url, {link_row_field.db_column: [r1.id]}, format="json")
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "row_id": AnyInt(),
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
     }
 
 
@@ -1746,7 +1798,7 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_conditions_update_num_queries(
-    api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_num_queries, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1905,7 +1957,7 @@ def test_patch_form_view_field_options_conditions_update_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_conditions_delete_num_queries(
-    api_client, data_fixture, django_assert_max_num_queries
+    api_client, data_fixture, django_assert_max_num_queries, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1984,7 +2036,7 @@ def test_patch_form_view_field_options_conditions_delete_num_queries(
 
 @pytest.mark.django_db
 def test_patch_form_view_field_options_condition_groups_delete_num_queries(
-    api_client, data_fixture, django_assert_max_num_queries
+    api_client, data_fixture, django_assert_max_num_queries, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -2320,6 +2372,7 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     with patch("baserow.core.user_files.handler.default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
+            token = data_fixture.generate_token(user)
             response = api_client.post(
                 reverse(
                     "api:database:views:form:upload_file",
@@ -2349,6 +2402,7 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     assert file_path.isfile()
 
     with patch("baserow.core.user_files.handler.default_storage", new=storage):
+        token = data_fixture.generate_token(user)
         file = SimpleUploadedFile("test.txt", b"Hello World")
         response_2 = api_client.post(
             reverse(
@@ -2361,6 +2415,7 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
         )
 
     # The old file should be provided.
+    assert response_2.status_code == HTTP_200_OK
     assert response_2.json()["name"] == response_json["name"]
     assert response_json["original_name"] == "test.txt"
 
@@ -2687,7 +2742,7 @@ def test_user_can_update_form_to_receive_notification(api_client, data_fixture):
 
 @pytest.mark.django_db()
 def test_loading_form_views_does_not_increase_the_number_of_queries(
-    api_client, data_fixture
+    api_client, data_fixture, bypass_check_permissions
 ):
     user, token = data_fixture.create_user_and_token()
 

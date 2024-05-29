@@ -1,5 +1,7 @@
 import string
 from io import BytesIO
+from unittest.mock import MagicMock
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -231,6 +233,31 @@ def test_upload_user_file(data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
+def test_upload_user_file_with_truncated_image(data_fixture, tmpdir):
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    image = Image.new("RGB", (100, 140), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+
+    truncated_bytes = BytesIO(image_bytes.getvalue()[:-100])
+
+    user_file = handler.upload_user_file(
+        user, "truncated_image.png", truncated_bytes, storage=storage
+    )
+    assert user_file.mime_type == "image/png"
+    assert user_file.is_image is True
+    assert user_file.image_width == 100
+    assert user_file.image_height == 140
+
+    file_path = tmpdir.join("thumbnails", "tiny", user_file.name)
+    assert not file_path.isfile()
+
+
+@pytest.mark.django_db
 @httpretty.activate(verbose=True, allow_net_connect=False)
 def test_upload_user_file_by_url(data_fixture, tmpdir):
     user = data_fixture.create_user()
@@ -340,3 +367,367 @@ def test_upload_user_file_by_url_with_querystring(data_fixture, tmpdir) -> None:
     assert user_file.is_image is False
     assert user_file.image_width is None
     assert user_file.image_height is None
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_image_without_extension_with_wrong_content_type(
+    data_fixture, tmpdir
+) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io/image-without-url"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=bytes(
+            [
+                0x42,
+                0x4D,
+                0x3A,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x36,
+                0x00,
+                0x00,
+                0x00,
+                0x28,
+                0x00,
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x01,
+                0x00,
+                0x18,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x04,
+                0x00,
+                0x00,
+                0x00,
+                0x13,
+                0x0B,
+                0x00,
+                0x00,
+                0x13,
+                0x0B,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xFF,  # Red pixel data in BGR format
+            ]
+        ),
+        status=200,
+        content_type="image/jpeg",
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert user_file.original_name == "image-without-url"
+    assert user_file.original_extension == ""
+    assert user_file.mime_type == "image/bmp"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is True
+    assert user_file.image_width == 1
+    assert user_file.image_height == 1
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_slash(data_fixture, tmpdir) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io/test.txt/"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=b"Hello World",
+        status=200,
+        content_type="text/plain",
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert user_file.original_name == "test.txt"
+    assert user_file.original_extension == "txt"
+    assert len(user_file.unique) == 32
+    assert user_file.mime_type == "text/plain"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is False
+    assert user_file.image_width is None
+    assert user_file.image_height is None
+
+
+@pytest.mark.parametrize(
+    "user_file,storage,expected",
+    [
+        (None, None, None),
+        (None, True, None),
+        (True, None, None),
+    ],
+)
+def test_export_user_file_returns_none_if_user_file_or_storage_are_empty(
+    stubbed_storage,
+    user_file,
+    storage,
+    expected,
+):
+    """Ensure that None is returned if either user_file or storage are empty."""
+
+    handler = UserFileHandler()
+    handler.user_file_path = MagicMock()
+    result = handler.export_user_file(user_file, storage=storage)
+
+    assert result is expected
+
+    handler.user_file_path.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_export_user_file_doesnt_add_if_file_exists_in_files_zip(
+    data_fixture,
+    tmpdir,
+):
+    """Ensure the file isn't added to files_zip if it already exists."""
+
+    user = data_fixture.create_user()
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    # Create an image user file
+    image = Image.new("RGB", (100, 140), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+
+    original_name = "mock_image.png"
+    handler = UserFileHandler()
+    user_file = handler.upload_user_file(
+        user, original_name, image_bytes, storage=storage
+    )
+
+    files_buffer = BytesIO()
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        files_zip.namelist = MagicMock(return_value=[user_file.name])
+        files_zip.writestr = MagicMock()
+        result = handler.export_user_file(
+            user_file, files_zip=files_zip, storage=storage
+        )
+
+    assert result == {"name": user_file.name, "original_name": original_name}
+    files_zip.writestr.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_export_user_file_doesnt_add_if_file_in_cache(
+    data_fixture,
+    tmpdir,
+):
+    """Ensure the file isn't added to files_zip if it is in the cache."""
+
+    user = data_fixture.create_user()
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    # Create an image user file
+    image = Image.new("RGB", (100, 140), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+
+    original_name = "mock_image.png"
+    handler = UserFileHandler()
+    user_file = handler.upload_user_file(
+        user, original_name, image_bytes, storage=storage
+    )
+
+    cache = {f"user_file_{user_file.name}": True}
+    files_buffer = BytesIO()
+    storage.open = MagicMock()
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        result = handler.export_user_file(
+            user_file, files_zip=files_zip, storage=storage, cache=cache
+        )
+
+    assert result == {"name": user_file.name, "original_name": original_name}
+    storage.open.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_export_user_file_adds_if_files_zip_is_empty_and_not_in_cache(
+    data_fixture,
+    tmpdir,
+):
+    """Ensure the file is added to files_zip."""
+
+    user = data_fixture.create_user()
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    # Create an image user file
+    image = Image.new("RGB", (100, 140), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+
+    original_name = "mock_image.png"
+    handler = UserFileHandler()
+    user_file = handler.upload_user_file(
+        user, original_name, image_bytes, storage=storage
+    )
+
+    files_buffer = BytesIO()
+    cache = {}
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        result = handler.export_user_file(
+            user_file, files_zip=files_zip, storage=storage, cache=cache
+        )
+
+    assert result == {"name": user_file.name, "original_name": original_name}
+    assert user_file.name in files_zip.namelist()
+    assert cache[f"user_file_{user_file.name}"] is True
+
+
+def test_import_user_file_returns_none_if_user_file_is_empty():
+    """
+    Ensure that None is returned if the serialized_user_file argument is an
+    empty dict.
+    """
+
+    handler = UserFileHandler()
+
+    result = handler.import_user_file({})
+
+    assert result is None
+
+
+def test_import_user_file_returns_user_file_from_handler_if_files_zip_is_none():
+    """
+    Ensure that if either files_zip or storage are None, the user_file is
+    returned via UserFileHandler.
+    """
+
+    handler = UserFileHandler()
+    mock_user_file = MagicMock()
+    handler.get_user_file_by_name = MagicMock(return_value=mock_user_file)
+    serialized_user_file = {"name": "foo", "original_name": "bar"}
+
+    result = handler.import_user_file(
+        serialized_user_file,
+        files_zip=None,
+        storage=None,
+    )
+
+    assert result is mock_user_file
+    handler.get_user_file_by_name.assert_called_once_with(serialized_user_file["name"])
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "name,original_name",
+    [
+        (None, None),
+        (None, "bar"),
+        ("foo", None),
+    ],
+)
+def test_import_user_file_returns_none_if_name_or_original_name_are_empty(
+    tmpdir,
+    name,
+    original_name,
+):
+    """
+    Ensure that if either name or original_name are falsey, None is returned.
+    """
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+    mock_user_file = MagicMock()
+    handler.get_user_file_by_name = MagicMock(return_value=mock_user_file)
+    handler.upload_user_file = MagicMock()
+    serialized_user_file = {"name": name, "original_name": original_name}
+
+    files_buffer = BytesIO()
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        result = handler.import_user_file(
+            serialized_user_file,
+            files_zip=files_zip,
+            storage=storage,
+        )
+
+    assert result is None
+    handler.get_user_file_by_name.assert_not_called()
+    handler.upload_user_file.assert_not_called()
+
+
+def test_import_user_file_returns_user_file_from_files_zip(tmpdir):
+    """Ensure UserFile is returned via the files_zip."""
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+    mock_user_file = MagicMock()
+    handler.get_user_file_by_name = MagicMock()
+    handler.upload_user_file = MagicMock(return_value=mock_user_file)
+    name = "foo"
+    original_name = "bar"
+    serialized_user_file = {"name": name, "original_name": original_name}
+
+    files_buffer = BytesIO()
+    mock_handle = MagicMock()
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        # Populate the files_zip with a file, which we expect import_user_file()
+        # to later extract.
+        files_zip.writestr(name, "")
+
+        # Mock the "as stream:" in import_user_file()
+        files_zip.open = MagicMock()
+        files_zip.open.return_value.__enter__.return_value = mock_handle
+
+        result = handler.import_user_file(
+            serialized_user_file,
+            files_zip=files_zip,
+            storage=storage,
+        )
+
+    assert result is mock_user_file
+    handler.get_user_file_by_name.assert_not_called()
+    handler.upload_user_file.assert_called_once_with(
+        None,
+        original_name,
+        mock_handle,
+        storage=storage,
+    )

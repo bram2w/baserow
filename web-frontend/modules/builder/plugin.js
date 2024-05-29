@@ -6,6 +6,7 @@ import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
 import {
+  GeneralBuilderSettingsType,
   DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
@@ -38,6 +39,7 @@ import {
   DropdownElementType,
   CheckboxElementType,
   IFrameElementType,
+  RepeatElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -89,11 +91,15 @@ import {
   OpenPageWorkflowActionType,
   UpdateRowWorkflowActionType,
   LogoutWorkflowActionType,
+  RefreshDataSourceWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
+  BooleanCollectionFieldType,
   TextCollectionFieldType,
   LinkCollectionFieldType,
+  ButtonCollectionFieldType,
+  TagsCollectionFieldType,
 } from '@baserow/modules/builder/collectionFieldTypes'
 
 export default (context) => {
@@ -140,6 +146,10 @@ export default (context) => {
 
   app.$registry.register(
     'builderSettings',
+    new GeneralBuilderSettingsType(context)
+  )
+  app.$registry.register(
+    'builderSettings',
     new IntegrationsBuilderSettingsType(context)
   )
   app.$registry.register(
@@ -170,6 +180,7 @@ export default (context) => {
   app.$registry.register('element', new InputTextElementType(context))
   app.$registry.register('element', new DropdownElementType(context))
   app.$registry.register('element', new CheckboxElementType(context))
+  app.$registry.register('element', new RepeatElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
@@ -246,6 +257,10 @@ export default (context) => {
   )
   app.$registry.register(
     'workflowAction',
+    new RefreshDataSourceWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
     new CreateRowWorkflowActionType(context)
   )
   app.$registry.register(
@@ -255,10 +270,22 @@ export default (context) => {
 
   app.$registry.register(
     'collectionField',
+    new BooleanCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
     new TextCollectionFieldType(context)
   )
   app.$registry.register(
     'collectionField',
     new LinkCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
+    new TagsCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
+    new ButtonCollectionFieldType(context)
   )
 }

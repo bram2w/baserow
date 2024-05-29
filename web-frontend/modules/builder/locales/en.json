@@ -21,6 +21,7 @@
     "title": "Application"
   },
   "builderSettingTypes": {
+    "generalName": "General",
     "integrationsName": "Integrations",
     "themeName": "Theme",
     "domainsName": "Domains",
@@ -93,7 +94,9 @@
     "iframe": "IFrame",
     "iframeDescription": "Inline frame",
     "authForm": "Login form",
-    "authFormDescription": "A user login form"
+    "authFormDescription": "A user login form",
+    "repeat": "Repeat",
+    "repeatDescription": "A repeatable set of elements"
   },
   "addElementButton": {
     "label": "Element"
@@ -154,6 +157,10 @@
   },
   "imageElement": {
     "emptyState": "No alt text defined..."
+  },
+  "imageInput": {
+    "labelDescription": "Default description",
+    "labelButton": "Upload"
   },
   "generalForm": {
     "labelTitle": "Label",
@@ -230,6 +237,16 @@
     "titleOverview": "User sources",
     "addUserSource": "Add user source"
   },
+  "generalSettings": {
+    "titleOverview": "General",
+    "labelForm": "Favicon",
+    "labelDescription": "Pick a 128x128px ICO, PNG, GIF, or JPEG.",
+    "labelButton": "Upload favicon",
+    "cantUploadFaviconTitle": "Couldn't Upload Favicon File",
+    "cantUploadFaviconDescription": "Sorry, could not upload favicon image. Please ensure the image file is unique and is a supported image format.",
+    "cantUpdateApplicationTitle": "Couldn't Update Application",
+    "cantUpdateApplicationDescription": "Sorry, could not update the Application."
+  },
   "dnsStatus": {
     "description": "Visit your domains' DNS settings and make the following changes",
     "typeHeader": "Type",
@@ -268,7 +285,10 @@
     "urlPlaceholder": "Enter an URL...",
     "url": "Destination URL",
     "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
-    "paramsInErrorButton": "Update parameters"
+    "paramsInErrorButton": "Update parameters",
+    "target": "Open in...",
+    "targetSelf": "Same tab",
+    "targetNewTab": "New tab"
   },
   "linkElementForm": {
     "text": "Text",
@@ -276,9 +296,6 @@
     "variant": "Variant",
     "variantLink": "Link",
     "variantButton": "Button",
-    "target": "Open in...",
-    "targetSelf": "Same tab",
-    "targetNewTab": "New tab",
     "buttonColor": "Button color"
   },
   "widthSelector": {
@@ -336,7 +353,7 @@
   },
   "integrationSettings": {
     "title": "Integrations",
-    "noIntegrationMessage": "You have not yet created any connection. They can be created by adding data source, action or user authentication.",
+    "noIntegrationMessage": "You have not yet created any integrations. They can be created by adding data source, action or user authentication.",
     "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
   },
   "dataSourceForm": {
@@ -401,11 +418,27 @@
     "fieldType": "Type",
     "itemsPerPagePlaceholder": "Enter value...",
     "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
-    "buttonColor": "Button color"
+    "buttonColor": "Button color",
+    "refreshFieldsFromDataSource": "refresh fields from data source"
   },
   "tableElement": {
     "empty": "No items have been found.",
     "showMore": "Show more"
+  },
+  "repeatElement": {
+    "empty": "No items have been found.",
+    "showMore": "Show more",
+    "missingDataSourceTooltip": "Choose a data source to begin adding elements."
+  },
+  "repeatElementForm": {
+    "dataSource": "Data source",
+    "itemsPerPage": "Items per page",
+    "itemsPerPagePlaceholder": "Enter value...",
+    "itemsPerRowLabel": "Items per row",
+    "itemsPerRowDescription": "Choose, per device type, what the number of repetitions per row should be.",
+    "orientationLabel": "Orientation",
+    "orientationVertical": "Vertical",
+    "orientationHorizontal": "Horizontal"
   },
   "currentRecordDataProviderType": {
     "index": "Index",
@@ -416,7 +449,8 @@
     "openPageLabel": "Open Page",
     "createRowLabel": "Create Row",
     "updateRowLabel": "Update Row",
-    "logoutLabel": "Logout"
+    "logoutLabel": "Logout",
+    "refreshDataSourceLabel": "Refresh data source"
   },
   "notificationWorkflowActionForm": {
     "titleLabel": "Title",
@@ -424,16 +458,14 @@
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Enter text..."
   },
-  "openPageWorkflowActionForm": {
-    "urlLabel": "URL",
-    "urlPlaceholder": "Enter text..."
-  },
   "event": {
     "addAction": "add action"
   },
   "collectionFieldType": {
+    "boolean": "Boolean",
     "text": "Text",
-    "link": "Link"
+    "link": "Link",
+    "tags": "Tags"
   },
   "textFieldForm": {
     "fieldValueLabel": "Value",
@@ -445,6 +477,12 @@
     "fieldLinkNameLabel": "Link text",
     "fieldLinkNamePlaceholder": "Enter value...",
     "buttonColor": "Button color"
+  },
+  "tagsFieldForm": {
+    "fieldValuesLabel": "Values",
+    "fieldValuesPlaceholder": "Enter values...",
+    "fieldColorsLabel": "Colors",
+    "fieldColorsPlaceholder": "Enter colors..."
   },
   "linkField": {
     "details": "Details"
@@ -521,6 +559,21 @@
   "visibilityForm": {
     "allVisitors": "All visitors",
     "loggedInVisitors": "Logged-in visitors",
-    "notLoggedInVisitors": "Logged-out visitors"
+    "notLoggedInVisitors": "Logged-out visitors",
+    "warningTitle": "We’re constantly enhancing the security",
+    "warningMessage": "At the moment the visibility is only applied in the UI, the underlying data is still accessible from the API. Please check the <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentation</a> for more information on data security."
+  },
+  "userDataProviderType": {
+    "isAuthenticated": "Is authenticated",
+    "id": "Id",
+    "email": "Email",
+    "username": "Username"
+  },
+  "buttonField": {
+    "noLabel": "Unnamed..."
+  },
+  "buttonFieldForm": {
+    "infoMessage": "To configure actions for this button, open the \"Events\" tab of the current element.",
+    "labelPlaceholder": "Enter a label..."
   }
 }

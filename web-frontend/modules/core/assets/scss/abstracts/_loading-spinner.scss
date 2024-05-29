@@ -2,11 +2,11 @@
   $spinner-color: $palette-blue-500,
   $spinner-size: 14px,
   $spiner-border-width: 0.2em,
-  $position: after
+  $insert-position: after
 ) {
-  &::#{$position} {
+  &::#{$insert-position} {
     content: ' ';
-    display: block;
+    display: inline-block;
     width: $spinner-size;
     height: $spinner-size;
     border-radius: 50%;

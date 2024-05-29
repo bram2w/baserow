@@ -8,6 +8,7 @@ from baserow.contrib.builder.api.workflow_actions.serializers import (
     PolymorphicServiceRequestSerializer,
     PolymorphicServiceSerializer,
 )
+from baserow.contrib.builder.elements.element_types import NavigationElementManager
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import (
     LocalBaserowCreateRowWorkflowAction,
@@ -15,6 +16,7 @@ from baserow.contrib.builder.workflow_actions.models import (
     LogoutWorkflowAction,
     NotificationWorkflowAction,
     OpenPageWorkflowAction,
+    RefreshDataSourceWorkflowAction,
 )
 from baserow.contrib.builder.workflow_actions.registries import (
     BuilderWorkflowActionType,
@@ -58,7 +60,16 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"title": "'hello'", "description": "'there'"}
 
-    def deserialize_property(self, prop_name, value, id_mapping: Dict) -> Any:
+    def deserialize_property(
+        self,
+        prop_name,
+        value,
+        id_mapping: Dict,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ) -> Any:
         """
         Migrate the formulas.
         """
@@ -69,44 +80,90 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
         if prop_name == "description":
             return import_formula(value, id_mapping)
 
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
 
 class OpenPageWorkflowActionType(BuilderWorkflowActionType):
     type = "open_page"
     model_class = OpenPageWorkflowAction
-    serializer_field_names = ["url"]
-    serializer_field_overrides = {
-        "url": FormulaSerializerField(
-            help_text="The url to open. Must be an formula.",
-            required=False,
-            allow_blank=True,
-            default="",
-        ),
-    }
 
-    class SerializedDict(BuilderWorkflowActionDict):
-        url: BaserowFormula
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + NavigationElementManager.serializer_field_names
+            + ["url"]  # TODO remove in the next release
+        )
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["url"]
+        return (
+            super().allowed_fields + NavigationElementManager.allowed_fields + ["url"]
+        )  # TODO remove in the next release
 
-    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
-        return {"url": "'hello'"}
+    @property
+    def serializer_field_overrides(self):
+        return (
+            super().serializer_field_overrides
+            | NavigationElementManager().get_serializer_field_overrides()
+            | {
+                "url": serializers.CharField(
+                    help_text="The url of the page to open.",
+                    required=False,
+                    allow_blank=True,
+                    default="",
+                )
+            }  # TODO remove in the next release
+        )
 
-    def deserialize_property(self, prop_name, value, id_mapping: Dict) -> Any:
+    class SerializedDict(
+        BuilderWorkflowActionDict,
+        NavigationElementManager.SerializedDict,
+    ):
+        url: str  # TODO remove in the next release, replace with "..."
+
+    def get_pytest_params(self, pytest_data_fixture):
+        return NavigationElementManager().get_pytest_params(pytest_data_fixture)
+
+    def deserialize_property(
+        self,
+        prop_name,
+        value,
+        id_mapping: Dict,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ) -> Any:
         """
         Migrate the formulas.
         """
 
-        if prop_name == "url":
+        if prop_name == "url":  # TODO remove in the next release
             return import_formula(value, id_mapping)
 
         if prop_name == "description":
             return import_formula(value, id_mapping)
 
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            NavigationElementManager().deserialize_property(
+                prop_name, value, id_mapping
+            ),
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
 
 class LogoutWorkflowActionType(BuilderWorkflowActionType):
@@ -118,6 +175,52 @@ class LogoutWorkflowActionType(BuilderWorkflowActionType):
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {}
+
+
+class RefreshDataSourceWorkflowAction(BuilderWorkflowActionType):
+    type = "refresh_data_source"
+    model_class = RefreshDataSourceWorkflowAction
+    serializer_field_names = ["data_source_id"]
+    serializer_field_overrides = {
+        "data_source_id": serializers.IntegerField(
+            allow_null=True,
+            default=None,
+            required=False,
+            help_text="The ID of the Data Source to be refreshed.",
+        ),
+    }
+
+    class SerializedDict(BuilderWorkflowActionDict):
+        data_source_id: int
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {}
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + ["data_source_id"]
+
+    def deserialize_property(
+        self,
+        prop_name,
+        value,
+        id_mapping: Dict,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ) -> Any:
+        data_sources = id_mapping.get("builder_data_sources", {})
+        if prop_name == "data_source_id" and value in data_sources:
+            return data_sources[value]
+
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
 
 
 class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
@@ -146,7 +249,14 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
         service_type = service_type_registry.get_by_model(pytest_params["service"])
         return {"service": service_type.export_serialized(pytest_params["service"])}
 
-    def serialize_property(self, workflow_action: WorkflowAction, prop_name: str):
+    def serialize_property(
+        self,
+        workflow_action: WorkflowAction,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
         """
         You can customize the behavior of the serialization of a property with this
         hook.
@@ -154,11 +264,27 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
 
         if prop_name == "service":
             service = workflow_action.service.specific
-            return service.get_type().export_serialized(service)
-        return super().serialize_property(workflow_action, prop_name)
+            return service.get_type().export_serialized(
+                service, files_zip=files_zip, storage=storage, cache=cache
+            )
+
+        return super().serialize_property(
+            workflow_action,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
     ) -> Any:
         """
         If the workflow action has a relation to a service, this method will
@@ -187,7 +313,15 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
                 id_mapping,
                 import_formula=import_formula,
             )
-        return super().deserialize_property(prop_name, value, id_mapping)
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
 
 class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):

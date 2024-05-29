@@ -1,8 +1,9 @@
 .delete-section {
   position: relative;
   border: solid 1px $color-neutral-200;
-  padding: 31px 16px 16px 16px;
+  padding: 31px 16px 16px;
   margin-bottom: 30px;
+
   @include rounded($rounded);
 }
 

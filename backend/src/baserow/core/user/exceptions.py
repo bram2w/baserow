@@ -6,6 +6,14 @@ class UserAlreadyExist(Exception):
     """Raised when a user could not be created because the email already exists."""
 
 
+class InvalidVerificationToken(Exception):
+    """Raised when the provided token is invalid."""
+
+
+class EmailAlreadyVerified(Exception):
+    """Raised when the user's email is verified already."""
+
+
 class PasswordDoesNotMatchValidation(Exception):
     """Raised when the provided password does not match validation."""
 

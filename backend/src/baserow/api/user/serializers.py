@@ -23,11 +23,16 @@ from baserow.api.workspaces.invitations.serializers import (
     UserWorkspaceInvitationSerializer,
 )
 from baserow.core.action.registries import action_type_registry
-from baserow.core.auth_provider.exceptions import AuthProviderDisabled
+from baserow.core.auth_provider.exceptions import (
+    AuthProviderDisabled,
+    EmailVerificationRequired,
+)
 from baserow.core.auth_provider.handler import PasswordProviderHandler
-from baserow.core.models import Template, UserProfile
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Settings, Template, UserProfile
 from baserow.core.user.actions import SignInUserActionType
 from baserow.core.user.exceptions import DeactivatedUserException
+from baserow.core.user.handler import UserHandler
 from baserow.core.user.utils import (
     generate_session_tokens_for_user,
     normalize_email_address,
@@ -72,6 +77,14 @@ class UserSerializer(serializers.ModelSerializer):
         help_text="The maximum frequency at which the user wants to "
         "receive email notifications.",
     )
+    email_verified = serializers.BooleanField(
+        source="profile.email_verified",
+        help_text="Shows whether the user's email has been verified.",
+    )
+    completed_onboarding = serializers.BooleanField(
+        source="profile.completed_onboarding",
+        help_text="Indicates whether the onboarding has been completed.",
+    )
 
     class Meta:
         model = User
@@ -83,11 +96,15 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "language",
             "email_notification_frequency",
+            "email_verified",
+            "completed_onboarding",
         )
         extra_kwargs = {
             "password": {"write_only": True},
             "is_staff": {"read_only": True},
             "id": {"read_only": True},
+            "email_verified": {"read_only": True},
+            "completed_onboarding": {"read_only": True},
         }
 
 
@@ -170,9 +187,18 @@ class AccountSerializer(serializers.Serializer):
         help_text="The maximum frequency at which the user wants to "
         "receive email notifications.",
     )
+    completed_onboarding = serializers.BooleanField(
+        source="profile.completed_onboarding",
+        required=False,
+        help_text="Indicates whether the user has completed the onboarding.",
+    )
 
     def validate(self, data):
-        profile_fields = ["language", "email_notification_frequency"]
+        profile_fields = [
+            "language",
+            "email_notification_frequency",
+            "completed_onboarding",
+        ]
         profile_data = data.get("profile", {})
         if "first_name" not in data and not any(
             f in profile_data for f in profile_fields
@@ -205,6 +231,14 @@ class ChangePasswordBodyValidationSerializer(serializers.Serializer):
     new_password = serializers.CharField(validators=[password_validation])
 
 
+class VerifyEmailAddressSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+
+class SendVerifyEmailAddressSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
 class NormalizedEmailField(serializers.EmailField):
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
@@ -228,6 +262,34 @@ def get_all_user_data_serialized(
         "user": UserSerializer(user, context={"request": request}).data,
         **user_data_registry.get_all_user_data(user, request),
     }
+
+
+def log_in_user(request, user):
+    password_provider = PasswordProviderHandler.get()
+    if not password_provider.enabled and user.is_staff is False:
+        raise AuthProviderDisabled()
+    if not user.is_active:
+        raise DeactivatedUserException()
+
+    settings = CoreHandler().get_settings()
+    if (
+        settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+        and not user.profile.email_verified
+    ):
+        UserHandler().send_email_pending_verification(user)
+        if not user.is_staff:
+            raise EmailVerificationRequired()
+
+    data = generate_session_tokens_for_user(
+        user,
+        include_refresh_token=True,
+        verified_email_claim=Settings.EmailVerificationOptions.ENFORCED,
+    )
+    data.update(**get_all_user_data_serialized(user, request))
+
+    set_user_session_data_from_request(user, request)
+    action_type_registry.get(SignInUserActionType.type).do(user, password_provider)
+    return data
 
 
 @extend_schema_serializer(deprecate_fields=["username"])
@@ -259,21 +321,7 @@ class TokenObtainPairWithUserSerializer(TokenObtainPairSerializer):
             attrs[self.username_field] = email
 
         super().validate(attrs)
-
-        user = self.user
-        password_provider = PasswordProviderHandler.get()
-        if not password_provider.enabled and user.is_staff is False:
-            raise AuthProviderDisabled()
-        if not user.is_active:
-            raise DeactivatedUserException()
-
-        data = generate_session_tokens_for_user(user, include_refresh_token=True)
-        data.update(**get_all_user_data_serialized(user, self.context["request"]))
-
-        set_user_session_data_from_request(user, self.context["request"])
-        action_type_registry.get(SignInUserActionType.type).do(user, password_provider)
-
-        return data
+        return log_in_user(self.context["request"], self.user)
 
 
 @extend_schema_serializer(exclude_fields=["refresh"], deprecate_fields=["token"])
@@ -294,6 +342,18 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
         user = get_user_from_token(
             attrs["refresh"], RefreshToken, check_if_refresh_token_is_blacklisted=True
         )
+
+        token = RefreshToken(attrs["refresh"])
+        settings = CoreHandler().get_settings()
+        if (
+            settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+            and not user.profile.email_verified
+            and not user.is_staff
+            and token.get("verified_email_claim")
+            == Settings.EmailVerificationOptions.ENFORCED
+        ):
+            raise EmailVerificationRequired()
+
         data = generate_session_tokens_for_user(user)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
         token_refreshes_counter.add(1)
@@ -319,6 +379,18 @@ class TokenVerifyWithUserSerializer(TokenVerifySerializer):
             token_class=RefreshToken,
             check_if_refresh_token_is_blacklisted=True,
         )
+
+        token = RefreshToken(refresh_token)
+        settings = CoreHandler().get_settings()
+        if (
+            settings.email_verification == Settings.EmailVerificationOptions.ENFORCED
+            and not user.profile.email_verified
+            and not user.is_staff
+            and token.get("verified_email_claim")
+            == Settings.EmailVerificationOptions.ENFORCED
+        ):
+            raise EmailVerificationRequired()
+
         return get_all_user_data_serialized(user, self.context["request"])
 
 
@@ -334,3 +406,22 @@ class DashboardSerializer(serializers.Serializer):
         many=True, source="workspace_invitations"
     )
     workspace_invitations = UserWorkspaceInvitationSerializer(many=True)
+
+
+class ShareOnboardingDetailsWithBaserowSerializer(serializers.Serializer):
+    team = serializers.CharField(
+        help_text="The team that the user has chosen during the onboarding.",
+        required=True,
+    )
+    role = serializers.CharField(
+        help_text="The role that the user has chosen during the onboarding",
+        required=True,
+    )
+    size = serializers.CharField(
+        help_text="The company size that the user has chosen during the onboarding.",
+        required=True,
+    )
+    country = serializers.CharField(
+        help_text="The country that the user has chosen during the onboarding.",
+        required=True,
+    )

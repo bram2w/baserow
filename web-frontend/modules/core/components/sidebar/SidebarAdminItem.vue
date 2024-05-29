@@ -1,6 +1,5 @@
 <template>
   <li
-    v-tooltip="deactivated ? deactivatedText : null"
     class="tree__item"
     :class="{
       active: $route.matched.some(({ name }) => name === adminType.routeName),
@@ -9,11 +8,22 @@
     <div
       class="tree__action sidebar__action"
       :class="{
-        'tree__action--disabled': deactivated,
         'tree__action--deactivated': deactivated,
       }"
     >
+      <a
+        v-if="deactivated"
+        href="#"
+        class="tree__link"
+        @click="deactivatedModal ? $refs.deactivatedModal.show() : null"
+      >
+        <i class="tree__icon iconoir-lock"></i>
+        <span class="tree__link-text">
+          <span class="sidebar__item-name">{{ adminType.getName() }}</span>
+        </span>
+      </a>
       <nuxt-link
+        v-else
         :event="deactivated ? '' : 'click'"
         :to="{ name: adminType.routeName }"
         class="tree__link"
@@ -24,6 +34,12 @@
         </span>
       </nuxt-link>
     </div>
+    <component
+      :is="deactivatedModal"
+      v-if="deactivatedModal"
+      ref="deactivatedModal"
+      :name="adminType.getName()"
+    ></component>
   </li>
 </template>
 
@@ -37,13 +53,14 @@ export default {
     },
   },
   computed: {
-    deactivatedText() {
-      return this.$registry
-        .get('admin', this.adminType.type)
-        .getDeactivatedText()
+    adminTypeObject() {
+      return this.$registry.get('admin', this.adminType.type)
     },
     deactivated() {
-      return this.$registry.get('admin', this.adminType.type).isDeactivated()
+      return this.adminTypeObject.isDeactivated()
+    },
+    deactivatedModal() {
+      return this.adminTypeObject.getDeactivatedModal()
     },
   },
 }

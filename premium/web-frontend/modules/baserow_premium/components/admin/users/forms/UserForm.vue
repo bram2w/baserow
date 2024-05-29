@@ -58,13 +58,14 @@
     <div class="actions">
       <slot></slot>
       <div class="align-right">
-        <button
-          class="button button--large button--primary"
-          :class="{ 'button--loading': loading }"
+        <Button
+          type="primary"
+          size="large"
           :disabled="loading"
+          :loading="loading"
         >
-          {{ $t('action.save') }}
-        </button>
+          {{ $t('action.save') }}</Button
+        >
       </div>
     </div>
   </form>

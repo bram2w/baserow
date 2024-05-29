@@ -20,7 +20,12 @@ const VALID_DURATION_VALUES = {
     ['10', 10 * SECS_IN_HOUR],
     ['3600.0', 1 * SECS_IN_HOUR],
     ['60:0.0', 1 * SECS_IN_HOUR],
+    ['1d 2h 3m', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 2h 58m', 26 * SECS_IN_HOUR + 58 * SECS_IN_MIN],
+    ['1d 3m', 24 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
     ['0', 0],
+    ['-1 3:05', -((24 + 3) * SECS_IN_HOUR + 5 * SECS_IN_MIN)],
+    ['-1h 3m05s', -(3600 + 3 * SECS_IN_MIN + 5)],
   ],
   'd h:mm': [
     ['1d 2:30', 26 * SECS_IN_HOUR + 30 * 60],
@@ -32,8 +37,14 @@ const VALID_DURATION_VALUES = {
     ['1d1:30', 25 * SECS_IN_HOUR + 30 * 60],
     ['5:30', 5 * SECS_IN_HOUR + 30 * 60],
     ['10:30', 10 * SECS_IN_HOUR + 30 * 60],
+    ['1d 2h 3m', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 2h 3m 4s', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 4],
+    ['1d 3m', 24 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 32s', 24 * SECS_IN_HOUR + 32], // rounded up to 1m
     ['0:30', 30 * 60],
     ['0:0', 0],
+    ['-1 3:05', -((24 + 3) * SECS_IN_HOUR + 5 * SECS_IN_MIN)],
+    ['-1h 3m05s', -(3600 + 3 * SECS_IN_MIN + 5)],
   ],
   'd h:mm:ss': [
     ['1d 2:30:45', 26 * SECS_IN_HOUR + 30 * 60 + 45],
@@ -44,9 +55,15 @@ const VALID_DURATION_VALUES = {
     ['1d2:30:61', 26 * SECS_IN_HOUR + 31 * 60 + 1],
     ['5:30:45', 5 * SECS_IN_HOUR + 30 * 60 + 45],
     ['10:30:45', 10 * SECS_IN_HOUR + 30 * 60 + 45],
+    ['1d 2h 3m 4s', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 4],
+    ['1d 2h 3m', 26 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
+    ['1d 3m', 24 * SECS_IN_HOUR + 3 * SECS_IN_MIN],
     ['0:30:45', 30 * 60 + 45],
     ['0:0:45', 45],
     ['0:0:0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
+    ['-1h 3m05s', -(3600 + 3 * SECS_IN_MIN + 5)],
+    ['-1d 3:05:01', -((24 + 3) * SECS_IN_HOUR + 5 * SECS_IN_MIN + 1)],
   ],
   'h:mm': [
     ['2:30', 2 * SECS_IN_HOUR + 30 * 60],
@@ -55,8 +72,12 @@ const VALID_DURATION_VALUES = {
     ['8:30', 8 * SECS_IN_HOUR + 30 * 60],
     ['0:30', 30 * 60],
     ['0:61', 61 * 60],
+    ['1d 4h 50m 37s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37], // rounded up to +1 min
     ['0:0', 0],
     ['0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)], // lower denominator
+    ['-1h 3m05s', -(3600 + 3 * SECS_IN_MIN + 5)],
+    ['-1d 1h 3m05s', -(25 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
   ],
   'h:mm:ss': [
     ['2:30:45', 2 * SECS_IN_HOUR + 30 * 60 + 45],
@@ -64,47 +85,62 @@ const VALID_DURATION_VALUES = {
     ['2:30:45', 2 * SECS_IN_HOUR + 30 * 60 + 45],
     ['8:30:45', 8 * SECS_IN_HOUR + 30 * 60 + 45],
     ['0:30:45', 30 * 60 + 45],
+    ['1d 4h 50m 37.7s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.7], // rouded up to +1min
     ['0:0:45', 45],
     ['0:0:61', 61],
     ['0:0:0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
   ],
   'h:mm:ss.s': [
     ['2:30:45.1', 2 * SECS_IN_HOUR + 30 * 60 + 45.1],
     ['1:30:45.2', 1 * SECS_IN_HOUR + 30 * 60 + 45.2],
     ['2:30:45.3', 2 * SECS_IN_HOUR + 30 * 60 + 45.3],
     ['8:30:45.9', 8 * SECS_IN_HOUR + 30 * 60 + 45.9],
+    ['1d 4h 50m 37.28s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.28],
     ['0:30:45.5', 30 * 60 + 45.5],
     ['0:0:45.0', 45],
     ['0:0:59.9', 59.9],
     ['0:0:0.0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
   ],
   'h:mm:ss.ss': [
     ['2:30:45.11', 2 * SECS_IN_HOUR + 30 * 60 + 45.11],
     ['1:30:45.22', 1 * SECS_IN_HOUR + 30 * 60 + 45.22],
     ['2:30:45.33', 2 * SECS_IN_HOUR + 30 * 60 + 45.33],
     ['8:30:45.46', 8 * SECS_IN_HOUR + 30 * 60 + 45.46],
+    ['1d 4h 50m 37.28s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.28],
     ['0:30:45.50', 30 * 60 + 45.5],
     ['0:0:45.00', 45],
     ['0:0:59.99', 59.99],
     ['0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
   ],
   'h:mm:ss.sss': [
     ['2:30:45.111', 2 * SECS_IN_HOUR + 30 * 60 + 45.111],
     ['1:30:45.222', 1 * SECS_IN_HOUR + 30 * 60 + 45.222],
     ['2:30:45.333', 2 * SECS_IN_HOUR + 30 * 60 + 45.333],
     ['8:30:45.456', 8 * SECS_IN_HOUR + 30 * 60 + 45.456],
+    ['1d 4h 50m 37.283s', (24 + 4) * SECS_IN_HOUR + 50 * SECS_IN_MIN + 37.283],
     ['0:30:45.500', 30 * 60 + 45.5],
     ['0:0:45.000', 45],
     ['0:0:59.999', 59.999],
     ['0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
+  ],
+  'd h mm ss': [
+    ['2d 4h 3m 4s', (2 * 24 + 4) * SECS_IN_HOUR + 30 * SECS_IN_MIN + 4],
+    ['4m 12.3s', 4 * SECS_IN_MIN + 12.3],
+    ['8:30:45.589', 8 * SECS_IN_HOUR + 30 * 60 + 46],
+    ['0:0:45.000', 45],
+    ['0:0:59.999', 59.999],
+    ['0', 0],
+    ['-1 3:05', -(24 * SECS_IN_HOUR + 3 * SECS_IN_MIN + 5)],
   ],
 }
 
 const INVALID_DURATION_VALUES = [
   'd',
   'h',
-  '1d 2h 3m',
-  '1d 2h 3s',
   '1day',
   '2 days',
   '1 hour',
@@ -113,7 +149,8 @@ const INVALID_DURATION_VALUES = [
   'aaaaa',
   '1dd',
   '2hh',
-  '1h2m',
+  '-1d -3h',
+  '-1d -3:04',
 ]
 
 const DURATION_FORMATTED_VALUES = {
@@ -126,6 +163,7 @@ const DURATION_FORMATTED_VALUES = {
     [50 * SECS_IN_HOUR, '2d 2h'],
     [32 * SECS_IN_HOUR, '1d 8h'],
     [5 * SECS_IN_HOUR, '0d 5h'],
+    [-(25 * SECS_IN_HOUR), '-1d 1h'],
   ],
   'd h:mm': [
     [0, '0d 0:00'],
@@ -137,6 +175,7 @@ const DURATION_FORMATTED_VALUES = {
     [32 * SECS_IN_HOUR, '1d 8:00'],
     [5 * SECS_IN_HOUR, '0d 5:00'],
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '0d 5:30'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN), '-1d 1:25'],
   ],
   'd h:mm:ss': [
     [0, '0d 0:00:00'],
@@ -149,6 +188,7 @@ const DURATION_FORMATTED_VALUES = {
     [5 * SECS_IN_HOUR, '0d 5:00:00'],
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '0d 5:30:00'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5, '0d 5:05:05'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN + 6), '-1d 1:25:06'],
   ],
   'h:mm': [
     [0, '0:00'],
@@ -161,6 +201,7 @@ const DURATION_FORMATTED_VALUES = {
     [32 * SECS_IN_HOUR, '32:00'],
     [5 * SECS_IN_HOUR, '5:00'],
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '5:30'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN + 6), '-25:25'],
   ],
   'h:mm:ss': [
     [0, '0:00:00'],
@@ -176,6 +217,7 @@ const DURATION_FORMATTED_VALUES = {
     [5 * SECS_IN_HOUR, '5:00:00'],
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '5:30:00'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5, '5:05:05'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN + 6), '-25:25:06'],
   ],
   'h:mm:ss.s': [
     [0, '0:00:00.0'],
@@ -192,6 +234,7 @@ const DURATION_FORMATTED_VALUES = {
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '5:30:00.0'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5, '5:05:05.0'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5.1, '5:05:05.1'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN + 6), '-25:25:06.0'],
   ],
   'h:mm:ss.ss': [
     [0, '0:00:00.00'],
@@ -208,6 +251,7 @@ const DURATION_FORMATTED_VALUES = {
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '5:30:00.00'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5, '5:05:05.00'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5.1, '5:05:05.10'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN + 6), '-25:25:06.00'],
   ],
   'h:mm:ss.sss': [
     [0, '0:00:00.000'],
@@ -224,6 +268,7 @@ const DURATION_FORMATTED_VALUES = {
     [5 * SECS_IN_HOUR + 30 * SECS_IN_MIN, '5:30:00.000'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5, '5:05:05.000'],
     [5 * SECS_IN_HOUR + 5 * SECS_IN_MIN + 5.1, '5:05:05.100'],
+    [-(25 * SECS_IN_HOUR + 25 * SECS_IN_MIN + 6.001), '-25:25:06.001'],
   ],
 }
 
@@ -239,6 +284,7 @@ const DURATION_ROUNDING_VALUES = {
     [59 * SECS_IN_MIN, 1 * SECS_IN_HOUR],
     [1 * SECS_IN_HOUR + 29 * SECS_IN_MIN, 1 * SECS_IN_HOUR],
     [1 * SECS_IN_HOUR + 30 * SECS_IN_MIN, 2 * SECS_IN_HOUR],
+    [-(25 * SECS_IN_HOUR + 45 * SECS_IN_MIN + 6.001), -26 * SECS_IN_HOUR],
   ],
   'd h:mm': [
     [null, null],
@@ -249,6 +295,10 @@ const DURATION_ROUNDING_VALUES = {
     [59, 1 * SECS_IN_MIN],
     [29 * SECS_IN_MIN + 29.9, 29 * SECS_IN_MIN],
     [29 * SECS_IN_MIN + 30, 30 * SECS_IN_MIN],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.001),
+      -(25 * SECS_IN_HOUR + 36 * SECS_IN_MIN),
+    ],
   ],
   'd h:mm:ss': [
     [null, null],
@@ -258,6 +308,10 @@ const DURATION_ROUNDING_VALUES = {
     [0.9, 1],
     [1, 1],
     [1.5, 2],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.001),
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46),
+    ],
   ],
   'h:mm': [
     [null, null],
@@ -268,6 +322,10 @@ const DURATION_ROUNDING_VALUES = {
     [59, 1 * SECS_IN_MIN],
     [29 * SECS_IN_MIN + 29.9, 29 * SECS_IN_MIN],
     [29 * SECS_IN_MIN + 30, 30 * SECS_IN_MIN],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.001),
+      -(25 * SECS_IN_HOUR + 36 * SECS_IN_MIN),
+    ],
   ],
   'h:mm:ss': [
     [null, null],
@@ -277,6 +335,10 @@ const DURATION_ROUNDING_VALUES = {
     [0.9, 1],
     [1, 1],
     [1.5, 2],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.001),
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46),
+    ],
   ],
   'h:mm:ss.s': [
     [null, null],
@@ -287,6 +349,14 @@ const DURATION_ROUNDING_VALUES = {
     [1.12, 1.1],
     [1.9, 1.9],
     [1.99, 2],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.001),
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.0),
+    ],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.068),
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.1),
+    ],
   ],
   'h:mm:ss.ss': [
     [null, null],
@@ -298,6 +368,10 @@ const DURATION_ROUNDING_VALUES = {
     [1.123, 1.12],
     [1.99, 1.99],
     [1.999999, 2],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.068),
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.07),
+    ],
   ],
   'h:mm:ss.sss': [
     [null, null],
@@ -309,6 +383,10 @@ const DURATION_ROUNDING_VALUES = {
     [1.123, 1.123],
     [1.999, 1.999],
     [1.999999, 2],
+    [
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.068),
+      -(25 * SECS_IN_HOUR + 35 * SECS_IN_MIN + 46.068),
+    ],
   ],
 }
 

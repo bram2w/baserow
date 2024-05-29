@@ -24,13 +24,14 @@
           </div>
         </FormElement>
         <div class="public-view-auth__actions">
-          <button
-            class="button button--large button--primary"
-            :class="{ 'button--loading': loading }"
+          <Button
+            type="primary"
+            size="large"
+            :loading="loading"
             :disabled="loading || $v.$invalid"
           >
             {{ $t('publicViewAuthLogin.enter') }}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

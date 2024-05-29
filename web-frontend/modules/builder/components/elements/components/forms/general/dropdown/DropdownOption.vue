@@ -11,12 +11,7 @@
       @input="$emit('update', { name: $event })"
     />
     <div class="dropdown-option__delete">
-      <Button
-        class="control"
-        icon="iconoir-trash"
-        type="ghost"
-        @click="$emit('delete')"
-      ></Button>
+      <ButtonIcon icon="iconoir-bin" @click="$emit('delete')"></ButtonIcon>
     </div>
   </div>
 </template>

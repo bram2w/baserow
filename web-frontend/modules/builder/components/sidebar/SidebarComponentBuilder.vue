@@ -70,6 +70,7 @@
         <CreatePageModal
           ref="createPageModal"
           :builder="application"
+          :workspace="application.workspace"
         ></CreatePageModal>
       </template>
     </SidebarApplication>

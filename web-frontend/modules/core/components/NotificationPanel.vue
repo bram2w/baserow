@@ -36,12 +36,9 @@
           <span class="notification-panel__refresh-hint-icon"></span>
           {{ $t('notificationPanel.newNotificationsAvailable') }}
         </div>
-        <a
-          class="notification-panel__refresh-hint-action button button--ghost"
-          @click.prevent="initialLoad"
-        >
+        <Button type="secondary" @click.prevent="initialLoad">
           {{ $t('notificationPanel.refresh') }}
-        </a>
+        </Button>
       </div>
       <InfiniteScroll
         ref="infiniteScroll"

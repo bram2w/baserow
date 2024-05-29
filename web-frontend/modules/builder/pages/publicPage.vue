@@ -19,18 +19,25 @@ import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import _ from 'lodash'
 
+import {
+  getTokenIfEnoughTimeLeft,
+  setToken,
+  userSourceCookieTokenName,
+} from '@baserow/modules/core/utils/auth'
+
 export default {
   components: { PageContent, Toasts },
   provide() {
     return {
+      workspace: this.workspace,
       builder: this.builder,
       page: this.page,
       mode: this.mode,
       formulaComponent: ApplicationBuilderFormulaInputGroup,
+      applicationContext: this.applicationContext,
     }
   },
-  middleware: ['userSourceAuthentication'],
-  async asyncData({ store, params, error, $registry, app, req }) {
+  async asyncData({ store, params, error, $registry, app, req, route }) {
     let mode = 'public'
     const builderId = parseInt(params.builderId, 10)
 
@@ -72,6 +79,40 @@ export default {
           statusCode: 404,
           message: app.i18n.t('publicPage.siteNotFound'),
         })
+      }
+    }
+    store.dispatch('userSourceUser/setCurrentApplication', {
+      application: builder,
+    })
+    if (
+      (!process.server || req) &&
+      !store.getters['userSourceUser/isAuthenticated'](builder)
+    ) {
+      // token can be in the query string (SSO) or in the cookies (previous session)
+      let refreshToken = route.query.token
+      if (refreshToken) {
+        setToken(app, refreshToken, userSourceCookieTokenName, {
+          sameSite: 'Lax',
+        })
+      } else {
+        refreshToken = getTokenIfEnoughTimeLeft(app, userSourceCookieTokenName)
+      }
+
+      if (refreshToken) {
+        try {
+          await store.dispatch('userSourceUser/refreshAuth', {
+            application: builder,
+            token: refreshToken,
+          })
+        } catch (error) {
+          if (error.response?.status === 401) {
+            // We logoff as the token has probably expired
+            await store.dispatch('userSourceUser/logoff', {
+              application: builder,
+            })
+          }
+          throw error
+        }
       }
     }
 
@@ -125,6 +166,7 @@ export default {
       bodyAttrs: {
         class: 'public-page',
       },
+      link: this.faviconLink,
     }
   },
   computed: {
@@ -146,7 +188,22 @@ export default {
       )
     },
     isAuthenticated() {
-      return this.$store.getters['userSourceUser/isAuthenticated']
+      return this.$store.getters['userSourceUser/isAuthenticated'](this.builder)
+    },
+    faviconLink() {
+      if (this.builder.favicon_file?.url) {
+        return [
+          {
+            rel: 'icon',
+            type: this.builder.favicon_file.mime_type,
+            href: this.builder.favicon_file.url,
+            sizes: '128x128',
+            hid: true,
+          },
+        ]
+      } else {
+        return []
+      }
     },
   },
   watch: {

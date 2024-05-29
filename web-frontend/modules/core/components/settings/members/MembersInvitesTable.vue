@@ -18,12 +18,14 @@
         }}
       </template>
       <template #header-right-side>
-        <div
-          class="button button--large margin-left-2"
+        <Button
+          type="primary"
+          size="large"
+          class="margin-left-2"
           @click="$refs.inviteModal.show()"
         >
           {{ $t('membersSettings.membersTable.inviteMember') }}
-        </div>
+        </Button>
       </template>
       <template #menus>
         <EditInviteContext

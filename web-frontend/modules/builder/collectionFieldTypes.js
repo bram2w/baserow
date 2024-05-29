@@ -1,11 +1,22 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import BooleanField from '@baserow/modules/builder/components/elements/components/collectionField/BooleanField'
 import TextField from '@baserow/modules/builder/components/elements/components/collectionField/TextField'
 import LinkField from '@baserow/modules/builder/components/elements/components/collectionField/LinkField'
+import ButtonField from '@baserow/modules/builder/components/elements/components/collectionField/ButtonField.vue'
+import ButtonFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/ButtonFieldForm.vue'
+import BooleanFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/BooleanFieldForm'
+import TagsField from '@baserow/modules/builder/components/elements/components/collectionField/TagsField.vue'
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
+import TagsFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TagsFieldForm.vue'
 import LinkFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/LinkFieldForm'
-import { ensureString } from '@baserow/modules/core/utils/validator'
+import {
+  ensureArray,
+  ensureBoolean,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
+import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -18,6 +29,10 @@ export class CollectionFieldType extends Registerable {
 
   get formComponent() {
     return null
+  }
+
+  get events() {
+    return []
   }
 
   getProps(field, { resolveFormula, applicationContext }) {
@@ -35,6 +50,36 @@ export class CollectionFieldType extends Registerable {
    */
   isInError({ field, builder }) {
     return false
+  }
+}
+
+export class BooleanCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'boolean'
+  }
+
+  get name() {
+    return this.app.i18n.t('collectionFieldType.boolean')
+  }
+
+  get component() {
+    return BooleanField
+  }
+
+  get formComponent() {
+    return BooleanFieldForm
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    try {
+      return { value: ensureBoolean(resolveFormula(field.value)) }
+    } catch (error) {
+      return { value: false }
+    }
+  }
+
+  getOrder() {
+    return 5
   }
 }
 
@@ -84,18 +129,15 @@ export class LinkCollectionFieldType extends CollectionFieldType {
   getProps(field, { resolveFormula, applicationContext: { mode, builder } }) {
     const defaultProps = {
       url: '',
-      isExternalLink: false,
       navigationType: field.navigation_type || '',
       linkName: ensureString(resolveFormula(field.link_name)),
+      target: field.target || 'self',
     }
     try {
-      const resolvedUrlContext = resolveElementUrl(
-        field,
-        builder,
-        resolveFormula,
-        mode
-      )
-      return { ...defaultProps, ...resolvedUrlContext }
+      return {
+        ...defaultProps,
+        url: resolveElementUrl(field, builder, resolveFormula, mode),
+      }
     } catch (error) {
       return defaultProps
     }
@@ -112,5 +154,65 @@ export class LinkCollectionFieldType extends CollectionFieldType {
    */
   isInError({ field, builder }) {
     return pathParametersInError(field, builder)
+  }
+}
+
+export class TagsCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'tags'
+  }
+
+  get name() {
+    return this.app.i18n.t('collectionFieldType.tags')
+  }
+
+  get component() {
+    return TagsField
+  }
+
+  get formComponent() {
+    return TagsFieldForm
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    const values = ensureArray(resolveFormula(field.values))
+    const colors = field.colors_is_formula
+      ? ensureArray(resolveFormula(field.colors))
+      : [field.colors]
+    const tags = values.map((value, index) => ({
+      value,
+      color: colors[index % colors.length],
+    }))
+    return { tags }
+  }
+
+  getOrder() {
+    return 10
+  }
+}
+
+export class ButtonCollectionFieldType extends CollectionFieldType {
+  static getType() {
+    return 'button'
+  }
+
+  get name() {
+    return 'Button'
+  }
+
+  get component() {
+    return ButtonField
+  }
+
+  get formComponent() {
+    return ButtonFieldForm
+  }
+
+  get events() {
+    return [ClickEvent]
+  }
+
+  getProps(field, { resolveFormula, applicationContext }) {
+    return { label: ensureString(resolveFormula(field.label)) }
   }
 }

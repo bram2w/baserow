@@ -10,7 +10,7 @@
         <div
           v-for="integration in integrations"
           :key="integration.id"
-          class="integration_settings__integration"
+          class="integration-settings__integration"
         >
           <Presentation
             :image="getIntegrationType(integration).image"
@@ -20,17 +20,15 @@
             avatar-color="transparent"
             style="flex: 1"
           />
-          <div class="integration_settings__integration-actions">
-            <Button
+          <div class="integration-settings__integration-actions">
+            <ButtonIcon
               icon="iconoir-edit"
-              type="light"
               @click="
                 $refs[`IntegrationCreateEditModal_${integration.id}`][0].show()
               "
             />
-            <Button
-              icon="iconoir-trash"
-              type="light"
+            <ButtonIcon
+              icon="iconoir-bin"
               @click="deleteIntegration(integration)"
             />
           </div>
