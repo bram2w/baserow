@@ -377,17 +377,25 @@ describe('elementTypes tests', () => {
         columnElementType.childElementTypesForbidden.map((el) => el.getType())
       expect(forbiddenChildTypes).toEqual(containerElementTypes)
     })
-    test('RepeatElementType forbids itself, form elements and the form container as children.', () => {
+    test('RepeatElementType forbids collection elements, form elements and the form container as children.', () => {
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
+
+      const collectionElementTypes = Object.values(
+        testApp.getRegistry().getAll('element')
+      )
+        .filter((type) => type.isCollectionElement)
+        .map((elementType) => elementType.getType())
 
       const formContainerElementType = testApp
         .getRegistry()
         .get('element', 'form_container')
 
-      let expectedForbiddenChildTypes = [
-        repeatElementType.type,
-        formContainerElementType.type,
-      ]
+      let expectedForbiddenChildTypes = [formContainerElementType.type]
+
+      expectedForbiddenChildTypes = expectedForbiddenChildTypes.concat(
+        collectionElementTypes
+      )
+
       const formElementTypes = Object.values(
         testApp.getRegistry().getAll('element')
       )
