@@ -342,8 +342,6 @@ export default {
       const groupBySets = groupBys.map((groupBy, groupByIndex) => {
         const groupSpans = []
         let lastGroup = null
-        const field = this.allFieldsInTable.find((f) => f.id === groupBy.field)
-        const fieldType = this.$registry.get('field', field.type)
 
         rows.forEach((row, index) => {
           const previousRow = rows[index - 1]
@@ -359,15 +357,18 @@ export default {
               return false
             }
             return groupBys.slice(0, groupByIndex + 1).every((groupBy) => {
-              const row1Value = fieldType.getRowValueFromGroupValue(
-                field,
-                row1[`field_${groupBy.field}`]
+              const groupByField = this.allFieldsInTable.find(
+                (f) => f.id === groupBy.field
               )
-              const row2Value = fieldType.getRowValueFromGroupValue(
-                field,
+              const groupByFieldType = this.$registry.get(
+                'field',
+                groupByField.type
+              )
+              return groupByFieldType.isEqual(
+                groupByField,
+                row1[`field_${groupBy.field}`],
                 row2[`field_${groupBy.field}`]
               )
-              return fieldType.isEqual(field, row1Value, row2Value)
             })
           }
 
