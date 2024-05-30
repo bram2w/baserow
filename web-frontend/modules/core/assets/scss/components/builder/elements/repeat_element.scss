@@ -1,8 +1,3 @@
-.repeat-element--orientation-vertical {
-  display: flex;
-  flex-direction: column;
-}
-
 .repeat-element__device-selector {
   gap: 10px;
 
@@ -14,4 +9,10 @@
   .header__filter-icon {
     margin: 0 auto;
   }
+}
+
+.repeat-element__preview {
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
 }

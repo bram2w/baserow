@@ -789,16 +789,15 @@ export class RepeatElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * The repeat elements will disallow itself, all form elements, and the
-   * form container, from being added as children.
+   * The repeat elements will disallow collection elements (including itself),
+   * all form elements, and the form container, from being added as children.
    * @returns {Array} An array of disallowed child element types.
    */
   get childElementTypesForbidden() {
-    const repeatElement = this.app.$registry.get('element', 'repeat')
     const formContainer = this.app.$registry.get('element', 'form_container')
     return this.elementTypesAll.filter(
       (type) =>
-        type.isFormElement || type === formContainer || type === repeatElement
+        type.isFormElement || type === formContainer || type.isCollectionElement
     )
   }
 

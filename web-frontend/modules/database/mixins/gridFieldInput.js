@@ -38,9 +38,11 @@ export default {
       }
     }
     this.$el.addEventListener('mousedown', leftMouseDownListener)
-    this.$once('hook:beforeDestroy', () =>
+    this.$el.addEventListener('click', leftMouseDownListener)
+    this.$once('hook:beforeDestroy', () => {
       this.$el.removeEventListener('mousedown', leftMouseDownListener)
-    )
+      this.$el.removeEventListener('click', leftMouseDownListener)
+    })
   },
   methods: {
     /**

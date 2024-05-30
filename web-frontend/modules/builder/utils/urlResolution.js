@@ -1,5 +1,8 @@
 import { compile } from 'path-to-regexp'
-import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
+import {
+  ALLOWED_LINK_PROTOCOLS,
+  PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS,
+} from '@baserow/modules/builder/enums'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 
 /**
@@ -56,10 +59,20 @@ export default function resolveElementUrl(
     element.navigation_type,
     editorMode
   )
-  const protocolRegex = /^[a-zA-Z]+:\/\//
-  if (!resolvedUrl.startsWith('/') && !protocolRegex.test(resolvedUrl)) {
-    resolvedUrl = `https://${resolvedUrl}`
+
+  // If the protocol is a supported one, return early.
+  const protocolRegex = /^[A-Za-z]+:/
+  if (protocolRegex.test(resolvedUrl)) {
+    for (const protocol of ALLOWED_LINK_PROTOCOLS) {
+      if (resolvedUrl.toLowerCase().startsWith(protocol)) {
+        return resolvedUrl
+      }
+    }
+
+    // Disallow unsupported protocols, e.g. `javascript:`
+    return ''
   }
+
   return resolvedUrl
 }
 

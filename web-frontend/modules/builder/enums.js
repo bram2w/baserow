@@ -22,6 +22,18 @@ export const PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS = {
   text: ensureNonEmptyString,
 }
 
+export const ALLOWED_LINK_PROTOCOLS = [
+  'ftp:',
+  'ftps:',
+  'ftpes:',
+  'http:',
+  'https:',
+  'mailto:',
+  'sftp:',
+  'sms:',
+  'tel:',
+]
+
 export const TEXT_FORMAT_TYPES = {
   PLAIN: 'plain',
   MARKDOWN: 'markdown',

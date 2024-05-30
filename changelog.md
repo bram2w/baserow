@@ -1,5 +1,18 @@
 # Changelog
 
+## Released 1.25.1
+
+### Bug fixes
+* Fix a bug causing the long/rich text field to close the text area when pressing shift+click. [#2612](https://gitlab.com/baserow/baserow/-/issues/2612)
+* Fix issue when grouping by a single select field. [#2624](https://gitlab.com/baserow/baserow/-/issues/2624)
+* Ensure Link elements work with Custom URL protocols like mailto, sms, or tel. [#2642](https://gitlab.com/baserow/baserow/-/issues/2642)
+* Resolved an issue where links would not work properly in repeat elements within a published application. [#2653](https://gitlab.com/baserow/baserow/-/issues/2653)
+* Fix empty user object when checking for onboarding.
+
+### Breaking API changes
+* In the Application Builder, when using a Custom URL in a Link element the Destination URL is no longer automatically prefixed with https://. Additionally, only these protocols are allowed in the Destination URL: ftp, ftps, ftpes, http, https, mailto, sftp, sms, and tel. [#2642](https://gitlab.com/baserow/baserow/-/issues/2642)
+
+
 ## Released 1.25.0
 
 ### New features

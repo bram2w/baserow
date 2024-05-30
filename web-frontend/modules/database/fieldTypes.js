@@ -3346,7 +3346,7 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   getGroupValueFromRowValue(field, value) {
-    return value.map((o) => o.id)
+    return value && value.map((o) => o.id)
   }
 
   isEqual(field, value1, value2) {
