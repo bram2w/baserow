@@ -27,17 +27,17 @@
                 @move="moveElement(child, $event)"
               />
               <!-- Other iterations are not editable -->
-              <!-- Override the mode so that any children are in preview mode -->
+              <!-- Override the mode so that any children are in public mode -->
               <PageElement
                 v-else
                 :key="child.id"
                 :element="child"
-                :force-mode="'preview'"
+                :force-mode="isEditMode ? 'public' : mode"
                 :application-context-additions="{
                   recordIndex: index,
                 }"
                 :class="{
-                  'repeat-element-preview': index > 0 && isEditMode,
+                  'repeat-element__preview': index > 0 && isEditMode,
                 }"
               />
             </template>
