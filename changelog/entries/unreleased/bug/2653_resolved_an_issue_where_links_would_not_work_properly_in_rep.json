@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Resolved an issue where links would not work properly in repeat elements within a published application.",
+    "issue_number": 2653,
+    "bullet_points": [],
+    "created_at": "2024-05-30"
+}

@@ -10,3 +10,9 @@
     margin: 0 auto;
   }
 }
+
+.repeat-element__preview {
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+}
