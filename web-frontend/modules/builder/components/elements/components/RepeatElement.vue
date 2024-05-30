@@ -140,7 +140,6 @@ export default {
       // `grid-template-columns` rule's `repeat`, it will cause a repaint
       // following page load when the orientation is horizontal. Initially the
       // page visitor will see repetitions vertically, then suddenly horizontally.
-      const itemsPerRow = this.element.items_per_row[this.deviceTypeSelected]
       if (this.element.orientation === 'vertical') {
         return {
           display: 'flex',
@@ -149,7 +148,9 @@ export default {
       } else {
         return {
           display: 'grid',
-          'grid-template-columns': `repeat(${itemsPerRow}, 1fr)`,
+          'grid-template-columns': `repeat(${
+            this.element.items_per_row[this.deviceTypeSelected]
+          }, 1fr)`,
         }
       }
     },
