@@ -39,14 +39,14 @@ export default async function WorkspacesAndApplications({
     if (!store.getters['application/isLoaded']) {
       await store.dispatch('application/fetchAll')
     }
-  }
 
-  // If the user hasn't completed the onboarding, and the doesn't have any workspaces,
-  // then redirect to the on-boarding page so that the user can create their first
-  // one.
-  const user = store.getters['auth/getUserObject']
-  const workspaces = store.getters['workspace/getAll']
-  if (!user.completed_onboarding && workspaces.length === 0) {
-    return redirect({ name: 'onboarding' })
+    // If the user hasn't completed the onboarding, and the doesn't have any workspaces,
+    // then redirect to the on-boarding page so that the user can create their first
+    // one.
+    const user = store.getters['auth/getUserObject']
+    const workspaces = store.getters['workspace/getAll']
+    if (!user.completed_onboarding && workspaces.length === 0) {
+      return redirect({ name: 'onboarding' })
+    }
   }
 }
