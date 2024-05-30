@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug causing the long/rich text field to close the text area when pressing shift+click.",
+    "issue_number": 2612,
+    "bullet_points": [],
+    "created_at": "2024-05-29"
+}
