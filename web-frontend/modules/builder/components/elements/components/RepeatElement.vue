@@ -19,7 +19,7 @@
               <!-- The first iteration is editable if we're in editing mode -->
               <ElementPreview
                 v-if="index === 0 && isEditMode"
-                :key="child.id"
+                :key="`${child.id}-${index}`"
                 :element="child"
                 :application-context-additions="{
                   recordIndex: index,

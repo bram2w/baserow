@@ -140,6 +140,16 @@ export class ElementType extends Registerable {
     return values
   }
 
+  /**
+   * When a data source is modified or destroyed, `element/emitElementEvent`
+   * can be dispatched to notify all elements of the event. Element types
+   * can implement this function to handle the cases.
+   *
+   * @param event - `ELEMENT_EVENTS.DATA_SOURCE_REMOVED` if a data source
+   *  has been destroyed, or `ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE` if
+   *  it's been updated.
+   * @param params - Context data which the element type can use.
+   */
   onElementEvent(event, params) {}
 
   resolveFormula(formula, applicationContext) {
@@ -674,6 +684,47 @@ const CollectionElementTypeMixin = (Base) =>
 
       return `${this.name}${suffix}`
     }
+
+    /**
+     * When a data source is modified or destroyed, we need to ensure that
+     * our collection elements respond accordingly.
+     *
+     * If the data source has been removed, we want to remove it from the
+     * collection element, and then clear its contents from the store.
+     *
+     * If the data source has been updated, we want to trigger a content reset.
+     *
+     * @param event - `ELEMENT_EVENTS.DATA_SOURCE_REMOVED` if a data source
+     *  has been destroyed, or `ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE` if
+     *  it's been updated.
+     * @param params - Context data which the element type can use.
+     */
+    async onElementEvent(event, { page, element, dataSourceId }) {
+      if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
+        if (element.data_source_id === dataSourceId) {
+          // Remove the data_source_id
+          await this.app.store.dispatch('element/forceUpdate', {
+            page,
+            element,
+            values: { data_source_id: null },
+          })
+          // Empty the element content
+          await this.app.store.dispatch('elementContent/clearElementContent', {
+            element,
+          })
+        }
+      }
+      if (event === ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE) {
+        if (element.data_source_id === dataSourceId) {
+          await this.app.store.dispatch(
+            'elementContent/triggerElementContentReset',
+            {
+              element,
+            }
+          )
+        }
+      }
+    }
   }
 
 export class TableElementType extends CollectionElementTypeMixin(ElementType) {
@@ -717,33 +768,6 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
         })
       })
       .flat()
-  }
-
-  async onElementEvent(event, { page, element, dataSourceId }) {
-    if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
-      if (element.data_source_id === dataSourceId) {
-        // Remove the data_source_id
-        await this.app.store.dispatch('element/forceUpdate', {
-          page,
-          element,
-          values: { data_source_id: null },
-        })
-        // Empty the element content
-        await this.app.store.dispatch('elementContent/clearElementContent', {
-          element,
-        })
-      }
-    }
-    if (event === ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE) {
-      if (element.data_source_id === dataSourceId) {
-        await this.app.store.dispatch(
-          'elementContent/triggerElementContentReset',
-          {
-            element,
-          }
-        )
-      }
-    }
   }
 
   isInError({ element, builder }) {
