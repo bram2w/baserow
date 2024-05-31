@@ -30,7 +30,7 @@
               <!-- Override the mode so that any children are in public mode -->
               <PageElement
                 v-else
-                :key="child.id"
+                :key="`${child.id}_${index}`"
                 :element="child"
                 :force-mode="isEditMode ? 'public' : mode"
                 :application-context-additions="{
