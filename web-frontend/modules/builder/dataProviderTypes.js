@@ -389,7 +389,7 @@ export class FormDataProviderType extends DataProviderType {
       )
       const payload = {
         value: initialValue,
-        type: elementType.formDataType,
+        type: elementType.formDataType(element),
         isValid: elementType.isValid(element, initialValue),
       }
       return this.app.store.dispatch('formData/setFormData', {
@@ -406,12 +406,18 @@ export class FormDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return getValueAtPath(content, path.join('')).value
+    return getValueAtPath(content, path.join('.'))
   }
 
   getDataContent(applicationContext) {
-    return this.app.store.getters['formData/getFormData'](
+    const storeObj = this.app.store.getters['formData/getFormData'](
       applicationContext.page
+    )
+    return Object.fromEntries(
+      Object.entries(storeObj).map(([elementId, { value }]) => [
+        elementId,
+        value,
+      ])
     )
   }
 
@@ -435,8 +441,8 @@ export class FormDataProviderType extends DataProviderType {
             elementId,
             {
               title: name,
-              type,
               order,
+              ...elementType.getDataSchema(element),
             },
           ]
         })

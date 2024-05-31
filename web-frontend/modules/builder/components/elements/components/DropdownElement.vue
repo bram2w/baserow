@@ -8,7 +8,7 @@
         >*</span
       >
     </label>
-    <Dropdown
+    <ABDropdown
       v-model="inputValue"
       class="dropdown-element"
       :class="{
@@ -16,6 +16,7 @@
       }"
       :placeholder="placeholderResolved"
       :show-search="false"
+      :multiple="element.multiple"
       @hide="onFormElementTouch"
     >
       <DropdownItem
@@ -24,7 +25,7 @@
         :name="option.name || option.value"
         :value="option.value"
       ></DropdownItem>
-    </Dropdown>
+    </ABDropdown>
     <div v-if="displayFormDataError" class="error">
       <i class="iconoir-warning-triangle"></i>
       {{ $t('error.requiredField') }}
@@ -34,7 +35,10 @@
 
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
-import { ensureString } from '@baserow/modules/core/utils/validator'
+import {
+  ensureString,
+  ensureArray,
+} from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'DropdownElement',
@@ -46,6 +50,7 @@ export default {
      * @property {string} default_value - The default value selected
      * @property {string} placeholder - The placeholder value of the dropdown
      * @property {boolean} required - If the element is required for form submission
+     * @property {boolean} multiple - If the dropdown allows multiple selections
      * @property {Array} options - The options of the dropdown
      */
     element: {
@@ -61,11 +66,27 @@ export default {
       return ensureString(this.resolveFormula(this.element.placeholder))
     },
     defaultValueResolved() {
-      // We need to make sure this is always a string since the options aren't formulas
-      // and therefore can only be strings. In order to match the default value to
-      // an option the default value therefore must be a string as well.
-      // true has to match "true" essentially.
-      return ensureString(this.resolveFormula(this.element.default_value))
+      if (this.element.multiple) {
+        return ensureArray(
+          this.resolveFormula(this.element.default_value)
+        ).reduce((acc, value) => {
+          if (
+            !acc.includes(value) &&
+            this.element.options.some((o) => o.value === value)
+          ) {
+            acc.push(value)
+          }
+          return acc
+        }, [])
+      } else {
+        // Always return a string if we have a default value, otherwise
+        // set the value to null as single select fields will only skip
+        // field preparation if the value is null.
+        const resolvedSingleValue = ensureString(
+          this.resolveFormula(this.element.default_value)
+        )
+        return resolvedSingleValue.length ? resolvedSingleValue : null
+      }
     },
   },
   watch: {
@@ -74,6 +95,9 @@ export default {
         this.inputValue = newValue
       },
       immediate: true,
+    },
+    'element.multiple'() {
+      this.setFormData(this.defaultValueResolved)
     },
   },
 }

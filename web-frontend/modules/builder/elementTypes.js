@@ -860,7 +860,7 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 export class FormElementType extends ElementType {
   isFormElement = true
 
-  get formDataType() {
+  formDataType(element) {
     return null
   }
 
@@ -906,7 +906,7 @@ export class FormElementType extends ElementType {
     const initialValue = this.getInitialFormDataValue(element, { page })
     const payload = {
       value: initialValue,
-      type: this.formDataType,
+      type: this.formDataType(element),
       isValid: this.isValid(element, initialValue),
     }
 
@@ -926,6 +926,12 @@ export class FormElementType extends ElementType {
 
   getNextHorizontalElementToSelect(page, element, placement) {
     return null
+  }
+
+  getDataSchema(element) {
+    return {
+      type: this.formDataType(element),
+    }
   }
 }
 
@@ -969,7 +975,7 @@ export class InputTextElementType extends FormElementType {
     return InputTextElementForm
   }
 
-  get formDataType() {
+  formDataType(element) {
     return 'string'
   }
 
@@ -1229,8 +1235,8 @@ export class DropdownElementType extends FormElementType {
     return DropdownElementForm
   }
 
-  get formDataType() {
-    return 'string'
+  formDataType(element) {
+    return element.multiple ? 'array' : 'string'
   }
 
   getInitialFormDataValue(element, applicationContext) {
@@ -1264,8 +1270,26 @@ export class DropdownElementType extends FormElementType {
    * @returns {boolean}
    */
   isValid(element, value) {
-    const validOption = element.options.find((option) => option.value === value)
+    const validOption = element.multiple
+      ? element.options.find((option) => value.includes(option.value))
+      : element.options.find((option) => option.value === value)
     return !(element.required && !validOption)
+  }
+
+  getDataSchema(element) {
+    const type = this.formDataType(element)
+    if (type === 'string') {
+      return {
+        type: 'string',
+      }
+    } else if (type === 'array') {
+      return {
+        type: 'array',
+        items: {
+          type: 'string',
+        },
+      }
+    }
   }
 }
 
@@ -1294,7 +1318,7 @@ export class CheckboxElementType extends FormElementType {
     return CheckboxElementForm
   }
 
-  get formDataType() {
+  formDataType(element) {
     return 'boolean'
   }
 

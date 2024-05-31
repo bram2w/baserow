@@ -340,6 +340,11 @@ def get_value_at_path(obj: Any, path: Union[str | List[str]]) -> Any:
         if isinstance(obj, list) and first.isdigit() and (key := int(first)) < len(obj):
             return _get_value_at_path(obj[key], keys[1:])
         if isinstance(obj, list) and keys[0] == "*":
+            # If we're trying to extract all keys from a list, but
+            # the obj is empty, then return a list. If however an
+            # index is request (rest is not empty), then return None.
+            if len(obj) == 0 and not rest:
+                return []
             # Call recursively this function transforming the `*` in the path in a list
             # of indexes present in the object, e.g:
             # get(obj, "a.*.b") <=> [get(obj, "a.0.b"), get(obj, "a.1.b"), ...]

@@ -139,7 +139,7 @@ export default {
           const payload = {
             touched: false,
             value: initialValue,
-            type: elementType.formDataType,
+            type: elementType.formDataType(element),
             isValid: elementType.isValid(element, initialValue),
           }
           this.$store.dispatch('formData/setFormData', {

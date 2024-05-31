@@ -21,6 +21,9 @@
     <FormGroup :label="$t('generalForm.requiredTitle')">
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
+    <FormGroup :label="$t('dropdownElementForm.multiple')">
+      <Checkbox v-model="values.multiple"></Checkbox>
+    </FormGroup>
     <DropdownOptionsSelector
       :options="values.options"
       @update="optionUpdated"
@@ -50,6 +53,7 @@ export default {
         'required',
         'placeholder',
         'options',
+        'multiple',
       ],
       values: {
         label: '',
@@ -57,6 +61,7 @@ export default {
         required: false,
         placeholder: '',
         options: [],
+        multiple: false,
       },
     }
   },

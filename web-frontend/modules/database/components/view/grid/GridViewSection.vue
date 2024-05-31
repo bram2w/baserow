@@ -117,20 +117,18 @@
         <div v-if="includeRowDetails" class="grid-view__foot-info">
           {{ $tc('gridView.rowCount', count, { count }) }}
         </div>
-        <template>
-          <div
-            v-for="field in visibleFields"
-            :key="field.id"
-            :style="{ width: getFieldWidth(field.id) + 'px' }"
-          >
-            <GridViewFieldFooter
-              :database="database"
-              :field="field"
-              :view="view"
-              :store-prefix="storePrefix"
-            />
-          </div>
-        </template>
+        <div
+          v-for="field in visibleFields"
+          :key="field.id"
+          :style="{ width: getFieldWidth(field.id) + 'px' }"
+        >
+          <GridViewFieldFooter
+            :database="database"
+            :field="field"
+            :view="view"
+            :store-prefix="storePrefix"
+          />
+        </div>
       </div>
     </div>
     <GridViewFieldDragging

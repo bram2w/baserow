@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
@@ -8,6 +9,9 @@ from django.core.files.storage import FileSystemStorage
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.elements.element_types import (
     CheckboxElementType,
     DropdownElementType,
@@ -22,6 +26,7 @@ from baserow.contrib.builder.elements.mixins import (
 )
 from baserow.contrib.builder.elements.models import (
     CheckboxElement,
+    DropdownElement,
     DropdownElementOption,
     HeadingElement,
     IFrameElement,
@@ -159,28 +164,43 @@ def test_input_text_element_import_export_formula(data_fixture):
 def test_input_text_element_is_valid(data_fixture):
     validity_tests = [
         {"required": True, "type": "integer", "value": "", "result": False},
-        {"required": True, "type": "integer", "value": 42, "result": True},
+        {"required": True, "type": "integer", "value": 42, "result": 42},
+        {"required": True, "type": "integer", "value": "42", "result": 42},
         {"required": True, "type": "integer", "value": "horse", "result": False},
-        {"required": False, "type": "integer", "value": "", "result": True},
-        {"required": True, "type": "email", "value": "foo@bar.com", "result": True},
+        {"required": False, "type": "integer", "value": "", "result": ""},
+        {
+            "required": True,
+            "type": "email",
+            "value": "foo@bar.com",
+            "result": "foo@bar.com",
+        },
         {"required": True, "type": "email", "value": "foobar.com", "result": False},
-        {"required": False, "type": "email", "value": "", "result": True},
+        {"required": False, "type": "email", "value": "", "result": ""},
         {"required": True, "type": "any", "value": "", "result": False},
-        {"required": True, "type": "any", "value": 42, "result": True},
-        {"required": True, "type": "any", "value": "horse", "result": True},
-        {"required": False, "type": "any", "value": "", "result": True},
+        {"required": True, "type": "any", "value": 42, "result": 42},
+        {"required": True, "type": "any", "value": "42", "result": "42"},
+        {"required": True, "type": "any", "value": "horse", "result": "horse"},
+        {"required": False, "type": "any", "value": "", "result": ""},
     ]
     for test in validity_tests:
-        assert (
-            InputTextElementType().is_valid(
-                InputTextElement(
-                    validation_type=test["type"], required=test["required"]
-                ),
-                test["value"],
-            )
-        ) is test[
-            "result"
-        ], f"Failed InputTextElementType for validation_type={test['type']}, required={test['required']}, value={test['value']}"
+        if test["result"] is not False:
+            assert (
+                InputTextElementType().is_valid(
+                    InputTextElement(
+                        validation_type=test["type"], required=test["required"]
+                    ),
+                    test["value"],
+                )
+                == test["result"]
+            ), repr(test["value"])
+        else:
+            with pytest.raises(FormDataProviderChunkInvalidException):
+                InputTextElementType().is_valid(
+                    InputTextElement(
+                        validation_type=test["type"], required=test["required"]
+                    ),
+                    test["value"],
+                )
 
 
 @pytest.mark.django_db
@@ -221,20 +241,100 @@ def test_dropdown_element_is_valid(data_fixture):
         page=page,
     )
     dropdown.dropdownelementoption_set.create(value="uk", name="United Kingdom")
+    dropdown.dropdownelementoption_set.create(value="it", name="Italy")
 
     dropdown.required = True
-    assert DropdownElementType().is_valid(dropdown, "") is False
-    assert DropdownElementType().is_valid(dropdown, "uk") is True
 
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, "")
+
+    assert DropdownElementType().is_valid(dropdown, "uk") == "uk"
+
+    dropdown.multiple = True
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, [])
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, [""])
+
+    assert DropdownElementType().is_valid(dropdown, ["uk"]) == ["uk"]
+    assert DropdownElementType().is_valid(dropdown, "uk") == ["uk"]
+    assert DropdownElementType().is_valid(dropdown, ["uk", "it"]) == ["uk", "it"]
+    assert DropdownElementType().is_valid(dropdown, "uk,it") == ["uk", "it"]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, ["uk", "it", "pt"])
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, "uk,it,pt")
+
+    dropdown.multiple = False
     dropdown.required = False
-    assert DropdownElementType().is_valid(dropdown, "") is True
-    assert DropdownElementType().is_valid(dropdown, "uk") is True
+
+    assert DropdownElementType().is_valid(dropdown, "") == ""
+    assert DropdownElementType().is_valid(dropdown, "uk") == "uk"
+
+    dropdown.multiple = True
+
+    assert DropdownElementType().is_valid(dropdown, []) == []
+    assert DropdownElementType().is_valid(dropdown, "") == []
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, [""])
+
+    assert DropdownElementType().is_valid(dropdown, ["uk"]) == ["uk"]
+    assert DropdownElementType().is_valid(dropdown, ["uk", "it"]) == ["uk", "it"]
+    assert DropdownElementType().is_valid(dropdown, "uk,it") == ["uk", "it"]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, ["uk", "it", "pt"])
 
     dropdown.dropdownelementoption_set.create(value="", name="Blank")
+    dropdown.multiple = False
     dropdown.required = True
-    assert DropdownElementType().is_valid(dropdown, "") is True
+
+    assert DropdownElementType().is_valid(dropdown, "") == ""
+
+    dropdown.multiple = True
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, [])
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, "")
+
+    assert DropdownElementType().is_valid(dropdown, [""]) == [""]
+    assert DropdownElementType().is_valid(dropdown, ["uk"]) == ["uk"]
+    assert DropdownElementType().is_valid(dropdown, "uk") == ["uk"]
+    assert DropdownElementType().is_valid(dropdown, ["uk", "it"]) == ["uk", "it"]
+    assert DropdownElementType().is_valid(dropdown, "uk,it") == ["uk", "it"]
+    assert DropdownElementType().is_valid(dropdown, ["uk", "it", ""]) == [
+        "uk",
+        "it",
+        "",
+    ]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, ["uk", "it", "", "pt"])
+
+    dropdown.multiple = False
     dropdown.required = False
-    assert DropdownElementType().is_valid(dropdown, "uk") is True
+
+    assert DropdownElementType().is_valid(dropdown, "uk") == "uk"
+
+    dropdown.multiple = True
+
+    assert DropdownElementType().is_valid(dropdown, []) == []
+    assert DropdownElementType().is_valid(dropdown, [""]) == [""]
+    assert DropdownElementType().is_valid(dropdown, ["uk"]) == ["uk"]
+    assert DropdownElementType().is_valid(dropdown, ["uk", "it"]) == ["uk", "it"]
+    assert DropdownElementType().is_valid(dropdown, ["uk", "it", ""]) == [
+        "uk",
+        "it",
+        "",
+    ]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        DropdownElementType().is_valid(dropdown, ["uk", "it", "", "pt"])
 
 
 def test_element_type_import_element_priority():
@@ -312,13 +412,26 @@ def test_checkbox_element_import_export_formula(data_fixture):
 
 @pytest.mark.django_db
 def test_checkbox_text_element_is_valid(data_fixture):
-    assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=True), False) is False
-    )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        CheckboxElementType().is_valid(CheckboxElement(required=True), False)
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        CheckboxElementType().is_valid(CheckboxElement(required=True), 0)
+
     assert CheckboxElementType().is_valid(CheckboxElement(required=True), True) is True
+
+    assert CheckboxElementType().is_valid(CheckboxElement(required=True), 1) is True
     assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=False), False) is True
+        CheckboxElementType().is_valid(CheckboxElement(required=True), "true") is True
     )
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), False) is False
+    )
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), "false")
+        is False
+    )
+    assert CheckboxElementType().is_valid(CheckboxElement(required=False), 0) is False
     assert CheckboxElementType().is_valid(CheckboxElement(required=False), True) is True
 
 
@@ -393,3 +506,75 @@ def test_image_element_import_export(data_fixture, fake, storage):
         imported_element.image_file_id is not None
         and imported_element.image_file_id != element_to_export.image_file_id
     )
+
+
+@pytest.mark.django_db
+def test_dropdown_element_import_export(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = DropdownElementType()
+
+    exported_element = data_fixture.create_builder_element(
+        DropdownElement,
+        label=f"get('data_source.42.field_1')",
+        default_value=f"get('data_source.42.field_1')",
+        placeholder=f"get('data_source.42.field_1')",
+        multiple=True,
+    )
+    serialized = element_type.export_serialized(exported_element)
+
+    # Just check that the serialization works properly
+    json.dumps(serialized)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {42: data_source_2.id}}
+
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.label == expected_formula
+    assert imported_element.default_value == expected_formula
+    assert imported_element.placeholder == expected_formula
+
+    assert imported_element.multiple is True
+
+
+@pytest.mark.django_db
+def test_dropdown_element_import_old_format(data_fixture):
+    page = data_fixture.create_builder_page()
+    element_type = DropdownElementType()
+
+    serialized = {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        "type": "dropdown",
+        "parent_element_id": None,
+        "place_in_container": None,
+        "visibility": "all",
+        "style_border_top_color": "border",
+        "style_border_top_size": 0,
+        "style_padding_top": 10,
+        "style_border_bottom_color": "border",
+        "style_border_bottom_size": 0,
+        "style_padding_bottom": 10,
+        "style_border_left_color": "border",
+        "style_border_left_size": 0,
+        "style_padding_left": 20,
+        "style_border_right_color": "border",
+        "style_border_right_size": 0,
+        "style_padding_right": 20,
+        "style_background": "none",
+        "style_background_color": "#ffffffff",
+        "style_width": "normal",
+        "label": "'label'",
+        "required": False,
+        "placeholder": "'test'",
+        "default_value": "'default'",
+        "options": [],
+        # multiple property is missing
+    }
+
+    imported_element = element_type.import_serialized(page, serialized, {})
+
+    assert imported_element.multiple is False

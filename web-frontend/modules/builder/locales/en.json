@@ -407,6 +407,9 @@
   "fontSidePanelForm": {
     "label": "Font color"
   },
+  "dropdownElementForm": {
+    "multiple": "Allow multiple values"
+  },
   "tableElementForm": {
     "dataSource": "Data source",
     "fields": "Fields",
