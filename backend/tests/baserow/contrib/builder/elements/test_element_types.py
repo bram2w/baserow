@@ -347,7 +347,11 @@ def test_iframe_element_import_export_formula(data_fixture):
 
 
 @pytest.mark.django_db
-def test_image_element_import_export(data_fixture, fake):
+@pytest.mark.parametrize(
+    "storage",
+    [None, FileSystemStorage(location=str(tempdir), base_url="http://localhost")],
+)
+def test_image_element_import_export(data_fixture, fake, storage):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page()
     data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
@@ -355,8 +359,6 @@ def test_image_element_import_export(data_fixture, fake):
     element_type = ImageElementType()
 
     zip_buffer = BytesIO()
-    storage = FileSystemStorage(location=str(tempdir), base_url="http://localhost")
-
     image_file = UserFileHandler().upload_user_file(
         user, "test.jpg", BytesIO(fake.image()), storage=storage
     )
@@ -387,4 +389,7 @@ def test_image_element_import_export(data_fixture, fake):
 
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.image_url == expected_formula
-    assert imported_element.image_file_id != element_to_export.image_file_id
+    assert (
+        imported_element.image_file_id is not None
+        and imported_element.image_file_id != element_to_export.image_file_id
+    )
