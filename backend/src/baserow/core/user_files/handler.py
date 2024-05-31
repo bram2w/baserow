@@ -336,7 +336,7 @@ class UserFileHandler:
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Dict[str, Any] = None,
-    ) -> Dict[str, str]:
+    ) -> Optional[Dict[str, str]]:
         """
         Given a UserFile object, write it to files_zip so it can be exported
         and subsequently imported later.
@@ -345,7 +345,9 @@ class UserFileHandler:
         if cache is None:
             cache = {}
 
-        if not user_file or not storage:
+        storage = storage or default_storage
+
+        if not user_file:
             return None
 
         name = user_file.name
