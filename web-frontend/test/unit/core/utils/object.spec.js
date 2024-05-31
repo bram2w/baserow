@@ -84,6 +84,7 @@ describe('test utils object', () => {
         a: { b: { c: 123 } },
         list: [{ d: 456 }, { d: 789, e: 111 }],
         nested: [{ nested: [{ a: 1 }, { a: 2 }] }, { nested: [{ a: 3 }] }],
+        b: ['1', '2', '3'],
       },
     ],
     ['a.b', { c: 123 }],
@@ -97,11 +98,15 @@ describe('test utils object', () => {
     ['nested[*].nested[*].a', [[1, 2], [3]]],
     ['nested.*.nested.0.a', [1, 3]],
     ['nested.*.nested.1.a', [2]],
+    ['b', ['1', '2', '3']],
+    ['b.*', ['1', '2', '3']],
+    ['b.0', '1'],
   ])('test getValueAtPath', (path, result) => {
     const obj = {
       a: { b: { c: 123 } },
       list: [{ d: 456 }, { d: 789, e: 111 }],
       nested: [{ nested: [{ a: 1 }, { a: 2 }] }, { nested: [{ a: 3 }] }],
+      b: ['1', '2', '3'],
     }
     expect(getValueAtPath(obj, path)).toStrictEqual(result)
   })

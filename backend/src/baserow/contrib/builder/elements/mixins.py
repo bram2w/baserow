@@ -8,6 +8,9 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.api.elements.serializers import CollectionFieldSerializer
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
@@ -415,4 +418,9 @@ class FormElementTypeMixin:
         :return: Whether the value is valid or not for this element.
         """
 
-        return not (element.required and not value)
+        if element.required and not value:
+            raise FormDataProviderChunkInvalidException(
+                "The value is required for this element."
+            )
+
+        return value

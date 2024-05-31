@@ -1,0 +1,110 @@
+.ab-dropdown {
+  position: relative;
+  background-color: $white;
+
+  @include elevation($elevation-low);
+  @include rounded($rounded);
+}
+
+.ab-dropdown__selected {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 1px solid $palette-neutral-400;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  color: $palette-neutral-1200;
+
+  @include fixed-height(44px, 13px);
+  @include rounded($rounded);
+  @include flex-align-items(4px);
+
+  &:hover {
+    text-decoration: none;
+    border-color: $palette-neutral-500;
+  }
+
+  .ab-dropdown--error & {
+    border-color: $palette-red-600;
+  }
+
+  .ab-dropdown--tiny & {
+    height: 32px;
+    line-height: 32px;
+  }
+
+  .ab-dropdown--disabled & {
+    background-color: $palette-neutral-100;
+    color: $palette-neutral-900;
+    cursor: not-allowed;
+    border-color: $palette-neutral-600;
+  }
+
+  .ab-dropdown.ab-dropdown--small & {
+    padding: 8px 12px;
+
+    @include fixed-height(36px, 13px);
+  }
+}
+
+.ab-dropdown__selected-text {
+  @extend %ellipsis;
+
+  min-width: 0;
+}
+
+.ab-dropdown__selected-icon {
+  margin-right: 4px;
+  color: $color-neutral-600;
+  font-size: 14px;
+}
+
+.ab-dropdown__selected-image {
+  margin-right: 4px;
+  max-width: 15px;
+  max-height: 15px;
+}
+
+.ab-dropdown__toggle-icon {
+  margin-left: auto;
+  color: $palette-neutral-600;
+}
+
+.ab-dropdown__items {
+  border: 1px solid $palette-neutral-400;
+  background-color: $white;
+  z-index: 1;
+
+  @include absolute(0, 0, auto, 0);
+  @include rounded($rounded);
+  @include elevation($elevation-medium);
+
+  &.ab-dropdown__items--fixed {
+    flex-direction: column;
+    position: fixed;
+    right: auto;
+
+    &:not(.hidden) {
+      display: flex;
+    }
+  }
+
+  .ab-dropdown--floating & {
+    right: auto;
+  }
+
+  .ab-dropdown--floating-left & {
+    left: auto;
+    right: 0;
+  }
+}
+
+.ab-dropdown__selected-placeholder {
+  @extend %ellipsis;
+
+  color: $palette-neutral-700;
+}
+
+.ab-dropdown__items--max-width {
+  max-width: 500px;
+}

@@ -1,8 +1,8 @@
 import abc
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional, TypedDict, Union
 
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_email, validate_integer
+from django.core.validators import validate_email
 from django.db.models import IntegerField, QuerySet
 from django.db.models.functions import Cast
 
@@ -10,6 +10,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.elements.mixins import (
     CollectionElementTypeMixin,
     CollectionElementWithFieldsTypeMixin,
@@ -47,6 +50,7 @@ from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.formula.types import BaserowFormula
+from baserow.core.formula.validator import ensure_array, ensure_boolean, ensure_integer
 from baserow.core.registry import T
 from baserow.core.user_files.handler import UserFileHandler
 
@@ -996,19 +1000,25 @@ class InputTextElementType(InputElementType):
         """
 
         if not value:
-            return element.required is False
+            if element.required:
+                raise FormDataProviderChunkInvalidException(f"The value is required.")
 
-        if element.validation_type == "integer":
+        elif element.validation_type == "integer":
             try:
-                validate_integer(value)
-            except ValidationError:
-                return False
+                value = ensure_integer(value)
+            except ValidationError as exc:
+                raise FormDataProviderChunkInvalidException(
+                    f"{value} must be a valid integer."
+                ) from exc
+
         elif element.validation_type == "email":
             try:
                 validate_email(value)
-            except ValidationError:
-                return False
-        return True
+            except ValidationError as exc:
+                raise FormDataProviderChunkInvalidException(
+                    f"{value} must be a valid email."
+                ) from exc
+        return value
 
 
 class ButtonElementType(ElementType):
@@ -1147,6 +1157,19 @@ class CheckboxElementType(InputElementType):
             cache=cache,
         )
 
+    def is_valid(self, element: CheckboxElement, value: Any) -> bool:
+        if element.required and not value:
+            raise FormDataProviderChunkInvalidException(
+                "The value is required for this element."
+            )
+
+        try:
+            return ensure_boolean(value)
+        except ValidationError as exc:
+            raise FormDataProviderChunkInvalidException(
+                "The value must be a boolean or convertible to a boolean."
+            ) from exc
+
     def get_pytest_params(self, pytest_data_fixture):
         return {
             "label": "",
@@ -1158,13 +1181,14 @@ class CheckboxElementType(InputElementType):
 class DropdownElementType(FormElementTypeMixin, ElementType):
     type = "dropdown"
     model_class = DropdownElement
-    allowed_fields = ["label", "default_value", "required", "placeholder"]
+    allowed_fields = ["label", "default_value", "required", "placeholder", "multiple"]
     serializer_field_names = [
         "label",
         "default_value",
         "required",
         "placeholder",
         "options",
+        "multiple",
     ]
     request_serializer_field_names = [
         "label",
@@ -1172,6 +1196,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         "required",
         "placeholder",
         "options",
+        "multiple",
     ]
 
     class SerializedDict(ElementDict):
@@ -1180,6 +1205,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         placeholder: BaserowFormula
         default_value: BaserowFormula
         options: List
+        multiple: bool
 
     @property
     def serializer_field_overrides(self):
@@ -1211,6 +1237,11 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
             ),
             "options": DropdownOptionSerializer(
                 source="dropdownelementoption_set", many=True, required=False
+            ),
+            "multiple": serializers.BooleanField(
+                help_text=DropdownElement._meta.get_field("multiple").help_text,
+                default=False,
+                required=False,
             ),
         }
 
@@ -1251,6 +1282,9 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         cache=None,
         **kwargs,
     ) -> Any:
+        if prop_name == "label":
+            return import_formula(value, id_mapping)
+
         if prop_name == "default_value":
             return import_formula(value, id_mapping)
 
@@ -1329,6 +1363,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
             "default_value": "'option 1'",
             "required": False,
             "placeholder": "'some placeholder'",
+            "multiple": False,
         }
 
     def after_create(self, instance: DropdownElement, values: Dict):
@@ -1350,7 +1385,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
                 ]
             )
 
-    def is_valid(self, element: DropdownElement, value: Any) -> bool:
+    def is_valid(self, element: DropdownElement, value: Union[List, str]) -> bool:
         """
         Responsible for validating `DropdownElement` form data. We handle
         this validation a little differently to ensure that if someone creates
@@ -1361,8 +1396,39 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         :return: Whether the value is valid or not for this element.
         """
 
-        validOption = element.dropdownelementoption_set.filter(value=value).exists()
-        return not (element.required and not validOption)
+        options = set(element.dropdownelementoption_set.values_list("value", flat=True))
+
+        if element.multiple:
+            try:
+                value = ensure_array(value)
+            except ValidationError as exc:
+                raise FormDataProviderChunkInvalidException(
+                    "The value must be an array or convertible to an array."
+                ) from exc
+
+            if not value:
+                if element.required:
+                    raise FormDataProviderChunkInvalidException(
+                        "The value is required."
+                    )
+            else:
+                for v in value:
+                    if v not in options:
+                        raise FormDataProviderChunkInvalidException(
+                            f"{value} is not a valid option."
+                        )
+        else:
+            if not value:
+                if element.required and value not in options:
+                    raise FormDataProviderChunkInvalidException(
+                        "The value is required."
+                    )
+            elif value not in options:
+                raise FormDataProviderChunkInvalidException(
+                    f"{value} is not a valid option."
+                )
+
+        return value
 
 
 class IFrameElementType(ElementType):

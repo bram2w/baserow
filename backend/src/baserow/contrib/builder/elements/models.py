@@ -617,7 +617,7 @@ class InputTextElement(FormElement):
         choices=INPUT_TEXT_TYPES.choices,
         default=INPUT_TEXT_TYPES.TEXT,
         help_text="The type of the input, not applicable for multiline inputs.",
-        null=True,  # TODO remove me in next release
+        null=True,  # TODO zdm remove me in next release
     )
 
 
@@ -632,6 +632,11 @@ class DropdownElement(FormElement):
     placeholder = FormulaField(
         default="",
         help_text="The placeholder text which should be applied to the element.",
+    )
+    multiple = models.BooleanField(
+        default=False,
+        help_text="Whether this dropdown allows users to choose multiple values.",
+        null=True,  # TODO zdm remove me in next release
     )
 
 
