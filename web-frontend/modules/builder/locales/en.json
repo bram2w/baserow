@@ -103,7 +103,8 @@
   },
   "addElementModal": {
     "title": "Add new element",
-    "searchPlaceholder": "Search elements"
+    "searchPlaceholder": "Search elements",
+    "disabledElementTooltip": "Unavailable inside this element"
   },
   "elementMenu": {
     "moveUp": "Move up",
