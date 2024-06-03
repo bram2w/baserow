@@ -16,7 +16,6 @@ export default function ({ app: { router, $config, store } }, inject) {
     autocapture: {
       css_selector_allowlist: ['[ph-autocapture]'],
     },
-    disable_session_recording: true,
   })
 
   inject('posthog', posthog)
