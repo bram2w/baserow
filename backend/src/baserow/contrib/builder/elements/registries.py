@@ -200,6 +200,9 @@ class ElementType(
         :param prop_name: the name of the property being transformed.
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
+        :param files_zip: the zip file containing the files.
+        :param storage: the storage where the files should be stored.
+        :param cache: a cache dict that can be used to store temporary data.
         :return: the deserialized version for this property.
         """
 
@@ -275,7 +278,12 @@ class CollectionFieldType(
         return serialized
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         """
         This hooks allow to customize the deserialization of a property.
@@ -283,6 +291,8 @@ class CollectionFieldType(
         :param prop_name: the name of the property being transformed.
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
+        :param serialized_values: the serialized values, which can be accessed
+            during deserialization to perform extra checks.
         :return: the deserialized version for this property.
         """
 
@@ -314,9 +324,10 @@ class CollectionFieldType(
 
         An id_mapping for this class is populated during the process.
 
-        :param parent: The parent object of the to be imported values.
-        :serialized_values: The dict containing the serialized values.
-        :id_mapping: Used to mapped object ids from export to newly created instances.
+        :param serialized_values: The dict containing the serialized values.
+        :param id_mapping: Used to mapped object ids from export to newly
+            created instances.
+        :param data_source_id: The data source id.
         :return: The created instance.
         """
 
@@ -326,6 +337,7 @@ class CollectionFieldType(
                 name,
                 serialized_values["config"][name],
                 id_mapping,
+                serialized_values,
                 data_source_id=data_source_id,
             )
 

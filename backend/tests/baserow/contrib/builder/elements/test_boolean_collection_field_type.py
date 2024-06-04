@@ -66,10 +66,7 @@ def test_deserialize_property_returns_value_from_import_formula(
     data_source_id = 1
 
     result = BooleanCollectionFieldType().deserialize_property(
-        prop_name,
-        value,
-        id_mapping,
-        data_source_id=data_source_id,
+        prop_name, value, id_mapping, {}, data_source_id=data_source_id
     )
 
     assert result == mock_value
@@ -118,6 +115,7 @@ def test_deserialize_property_returns_value_from_super_method(
         prop_name,
         value,
         id_mapping,
+        {},
         data_source_id=data_source_id,
     )
 
@@ -127,5 +125,6 @@ def test_deserialize_property_returns_value_from_super_method(
         prop_name,
         value,
         id_mapping,
+        {},
         data_source_id=data_source_id,
     )
