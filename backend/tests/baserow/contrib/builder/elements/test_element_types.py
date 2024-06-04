@@ -75,7 +75,12 @@ def test_import_element(data_fixture, element_type: ElementType):
     page = data_fixture.create_builder_page()
     pytest_params = element_type.get_pytest_params(data_fixture)
 
-    serialized = {"id": 9999, "order": 42, "type": element_type.type}
+    serialized = {
+        "id": 9999,
+        "order": 42,
+        "type": element_type.type,
+        "parent_element_id": None,
+    }
     serialized.update(element_type.get_pytest_params(data_fixture))
 
     id_mapping = defaultdict(lambda: MirrorDict())

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix formula migration for elements inside a repeat element",
+    "issue_number": 2648,
+    "bullet_points": [],
+    "created_at": "2024-05-31"
+}

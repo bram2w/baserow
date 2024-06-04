@@ -56,17 +56,21 @@ def test_import_workflow_action(data_fixture, workflow_action_type: WorkflowActi
     pytest_params = workflow_action_type.get_pytest_params(data_fixture)
 
     page_after_import = data_fixture.create_builder_page()
+    element = data_fixture.create_builder_button_element(page=page_after_import)
 
     serialized = {
         "id": 9999,
         "type": workflow_action_type.type,
-        "page_id": page.id,
+        "page_id": 41,
+        "element_id": 42,
         "order": 0,
     }
     serialized.update(workflow_action_type.get_pytest_params_serialized(pytest_params))
 
-    id_mapping = defaultdict(lambda: MirrorDict())
-    id_mapping["builder_pages"] = {page.id: page_after_import.id}
+    id_mapping = defaultdict(MirrorDict)
+    id_mapping["builder_pages"] = {41: page_after_import.id}
+    id_mapping["builder_page_elements"] = {42: element.id}
+
     workflow_action = workflow_action_type.import_serialized(
         page, serialized, id_mapping
     )

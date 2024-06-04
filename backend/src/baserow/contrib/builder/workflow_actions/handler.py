@@ -69,6 +69,7 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict[str, any]] = None,
+        **kwargs,
     ):
         """
         Creates an instance using the serialized version previously exported with
@@ -93,6 +94,7 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
             files_zip=files_zip,
             storage=storage,
             cache=cache,
+            **kwargs,
         )
 
     def order_workflow_actions(

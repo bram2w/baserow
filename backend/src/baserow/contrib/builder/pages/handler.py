@@ -432,6 +432,9 @@ class PageHandler:
         :return: the newly created instances.
         """
 
+        if cache is None:
+            cache = {}
+
         child_total = sum(self._ops_count_for_import_page(p) for p in serialized_pages)
         progress = ChildProgressBuilder.build(progress, child_total=child_total)
 
@@ -604,9 +607,6 @@ class PageHandler:
         # That why we are iterating until all elements are created.
         imported_elements = []
 
-        # True if we have imported at least one element on last iteration
-        was_imported = True
-
         # Sort the serialized elements so that we import:
         # Containers first
         # Form elements second
@@ -620,6 +620,8 @@ class PageHandler:
             serialized_elements, key=element_priority_sort, reverse=True
         )
 
+        # True if we have imported at least one element on last iteration
+        was_imported = True
         while was_imported:
             was_imported = False
 
@@ -633,16 +635,17 @@ class PageHandler:
                     parent_element_id is None
                     or parent_element_id in id_mapping.get("builder_page_elements", {})
                 ):
-                    imported_elements.append(
-                        ElementHandler().import_element(
-                            page,
-                            serialized_element,
-                            id_mapping,
-                            files_zip=files_zip,
-                            storage=storage,
-                            cache=cache,
-                        )
+                    imported_element = ElementHandler().import_element(
+                        page,
+                        serialized_element,
+                        id_mapping,
+                        files_zip=files_zip,
+                        storage=storage,
+                        cache=cache,
                     )
+
+                    imported_elements.append(imported_element)
+
                     was_imported = True
                     if progress:
                         progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
@@ -658,6 +661,7 @@ class PageHandler:
         storage: Optional[Storage] = None,
         progress: Optional[ChildProgressBuilder] = None,
         cache: Optional[Dict[str, any]] = None,
+        **kwargs,
     ):
         """
         Import all page workflow_actions.
@@ -682,5 +686,6 @@ class PageHandler:
                 files_zip=files_zip,
                 storage=storage,
                 cache=cache,
+                **kwargs,
             )
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)

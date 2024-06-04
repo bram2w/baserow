@@ -75,10 +75,10 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
         """
 
         if prop_name == "title":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "description":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
             prop_name,
@@ -148,15 +148,15 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
         """
 
         if prop_name == "url":  # TODO remove in the next release
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "description":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
-                prop_name, value, id_mapping
+                prop_name, value, id_mapping, **kwargs
             ),
             id_mapping,
             files_zip=files_zip,
@@ -208,6 +208,7 @@ class RefreshDataSourceWorkflowAction(BuilderWorkflowActionType):
         files_zip=None,
         storage=None,
         cache=None,
+        **kwargs,
     ) -> Any:
         data_sources = id_mapping.get("builder_data_sources", {})
         if prop_name == "data_source_id" and value in data_sources:
@@ -220,6 +221,7 @@ class RefreshDataSourceWorkflowAction(BuilderWorkflowActionType):
             files_zip=files_zip,
             storage=storage,
             cache=cache,
+            **kwargs,
         )
 
 

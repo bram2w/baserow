@@ -425,7 +425,7 @@ def test_table_element_import_export(data_fixture):
             {
                 "name": "Field",
                 "type": "button",
-                "config": {"label": "Click me"},
+                "config": {"label": "'Click me'"},
             },
         ],
     )
@@ -463,12 +463,13 @@ def test_table_element_import_fields_with_no_uid(data_fixture):
         "id": 1,
         "order": "1.00000000000000000000",
         "type": "table",
+        "parent_element_id": None,
         "fields": [
             {
                 # NOTE: 'uid' property is missing here
                 "name": "Field",
                 "type": "button",
-                "config": {"label": "Click me"},
+                "config": {"label": "'Click me'"},
             }
         ],
         "data_source_id": data_source.id,
@@ -478,3 +479,50 @@ def test_table_element_import_fields_with_no_uid(data_fixture):
 
     table_element = table_element_type.import_serialized(page, exported, id_mapping)
     assert table_element.fields.first().uid is not None
+
+
+@pytest.mark.django_db
+def test_table_element_import_field_with_formula_with_current_record(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+        ],
+    )
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page, table=table
+    )
+
+    exported = {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        "type": "table",
+        "parent_element_id": None,
+        "fields": [
+            {
+                "uid": "7778cf93-77e5-4064-ab32-3342e2b1656a",
+                "name": "Field",
+                "type": "button",
+                "config": {"label": "get('current_record.field_424')"},
+            }
+        ],
+        "data_source_id": 42,
+    }
+    table_element_type = data_fixture.create_builder_table_element().get_type()
+
+    id_mapping = defaultdict(MirrorDict)
+    id_mapping["builder_data_sources"] = {42: data_source.id}
+    id_mapping["database_fields"] = {424: fields[0].id}
+
+    table_element = table_element_type.import_serialized(page, exported, id_mapping)
+    assert (
+        table_element.fields.first().config["label"]
+        == f"get('current_record.field_{fields[0].id}')"
+    )

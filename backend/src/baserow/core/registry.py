@@ -464,6 +464,7 @@ class EasyImportExportMixin(Generic[T], ABC):
     def create_instance_from_serialized(
         self,
         serialized_values: Dict[str, Any],
+        id_mapping,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict[str, any]] = None,
@@ -532,6 +533,7 @@ class EasyImportExportMixin(Generic[T], ABC):
 
         created_instance = self.create_instance_from_serialized(
             deserialized_properties,
+            id_mapping=id_mapping,
             files_zip=files_zip,
             storage=storage,
             cache=cache,
