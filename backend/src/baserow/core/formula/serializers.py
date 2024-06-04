@@ -35,8 +35,12 @@ class OptionalFormulaSerializerField(FormulaSerializerField):
     will be treated as plain text.
     """
 
+    def __init__(self, *args, is_formula_field_name=None, **kwargs):
+        self.is_formula_field_name = is_formula_field_name
+        super().__init__(*args, **kwargs)
+
     def to_internal_value(self, data):
-        is_formula = self.parent.data.get("value_is_formula", False)
+        is_formula = self.parent.data.get(self.is_formula_field_name, False)
         if not is_formula:
             return data
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, TypedDict
+from typing import Any, Dict, TypedDict, Union
 
 from rest_framework import serializers
 
@@ -7,7 +7,11 @@ from baserow.contrib.builder.elements.models import CollectionField
 from baserow.contrib.builder.elements.registries import CollectionFieldType
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
-from baserow.core.formula.serializers import FormulaSerializerField
+from baserow.core.formula.serializers import (
+    FormulaSerializerField,
+    OptionalFormulaSerializerField,
+)
+from baserow.core.formula.types import BaserowFormula
 
 
 class BooleanCollectionFieldType(CollectionFieldType):
@@ -30,12 +34,19 @@ class BooleanCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         if prop_name == "value":
             return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name, value, id_mapping, serialized_values, **kwargs
+        )
 
 
 class TextCollectionFieldType(CollectionFieldType):
@@ -58,12 +69,19 @@ class TextCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         if prop_name == "value":
             return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name, value, id_mapping, serialized_values, **kwargs
+        )
 
 
 class LinkCollectionFieldType(CollectionFieldType):
@@ -108,7 +126,12 @@ class LinkCollectionFieldType(CollectionFieldType):
         )
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         if prop_name == "link_name":
             return import_formula(value, id_mapping, **kwargs)
@@ -119,6 +142,7 @@ class LinkCollectionFieldType(CollectionFieldType):
                 prop_name, value, id_mapping, **kwargs
             ),
             id_mapping,
+            serialized_values,
             **kwargs,
         )
 
@@ -130,8 +154,8 @@ class TagsCollectionFieldType(CollectionFieldType):
 
     class SerializedDict(TypedDict):
         values: str
-        colors: str
         colors_is_formula: bool
+        colors: Union[BaserowFormula, str]
 
     @property
     def serializer_field_overrides(self):
@@ -142,11 +166,12 @@ class TagsCollectionFieldType(CollectionFieldType):
                 allow_blank=True,
                 default="",
             ),
-            "colors": serializers.CharField(
+            "colors": OptionalFormulaSerializerField(
                 help_text="The formula or value for the tags colors",
                 required=False,
                 allow_blank=True,
                 default="",
+                is_formula_field_name="colors_is_formula",
             ),
             "colors_is_formula": serializers.BooleanField(
                 required=False,
@@ -156,12 +181,26 @@ class TagsCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
-        if prop_name in ["values", "colors"]:
+        if prop_name == "values":
             return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        if prop_name == "colors":
+            return (
+                import_formula(value, id_mapping, **kwargs)
+                if serialized_values["config"]["colors_is_formula"]
+                else value
+            )
+
+        return super().deserialize_property(
+            prop_name, value, id_mapping, serialized_values, **kwargs
+        )
 
 
 class ButtonCollectionFieldType(CollectionFieldType):
@@ -184,12 +223,19 @@ class ButtonCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         if prop_name == "label":
             return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+        return super().deserialize_property(
+            prop_name, value, id_mapping, serialized_values, **kwargs
+        )
 
     def before_delete(self, instance: CollectionField):
         # We delete the related workflow actions
