@@ -102,6 +102,68 @@ class ElementType(
         :param instance: The to be deleted element instance.
         """
 
+    def import_context_addition(
+        self, instance: ElementSubClass, id_mapping
+    ) -> Dict[str, Any]:
+        """
+        This hook allow to specify extra context data when importing objects related
+        to this one like child elements, collection fields or workflow actions.
+        This extra context is then used as import context for these objects.
+
+        :param instance: The instance we want the context for.
+        :param id_mapping: The import ID mapping object.
+        :return: An object containing the extra context for the import process.
+        """
+
+        return {}
+
+    def import_serialized(
+        self,
+        page: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict[str, Any] | None = None,
+        **kwargs,
+    ) -> ElementSubClass:
+        if cache is None:
+            cache = {}
+
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        import_context = {}
+
+        parent_element_id = serialized_values["parent_element_id"]
+
+        # If we have a parent elementthen we want to add used its import context
+        if parent_element_id:
+            imported_parent_element_id = id_mapping["builder_page_elements"][
+                parent_element_id
+            ]
+            import_context = ElementHandler().get_import_context_addition(
+                imported_parent_element_id,
+                id_mapping,
+                element_map=cache.get("imported_element_map", None),
+            )
+
+        created_instance = super().import_serialized(
+            page,
+            serialized_values,
+            id_mapping,
+            files_zip,
+            storage,
+            cache,
+            **(kwargs | import_context),
+        )
+
+        # Add created instance to an element cache
+        cache.setdefault("imported_element_map", {})[
+            created_instance.id
+        ] = created_instance
+
+        return created_instance
+
     def serialize_property(
         self,
         element: Element,
@@ -213,11 +275,7 @@ class CollectionFieldType(
         return serialized
 
     def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
     ) -> Any:
         """
         This hooks allow to customize the deserialization of a property.

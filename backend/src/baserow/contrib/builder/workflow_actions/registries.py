@@ -68,6 +68,38 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
             **kwargs,
         )
 
+    def import_serialized(
+        self,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip=None,
+        storage=None,
+        cache: Dict[str, Any] | None = None,
+        **kwargs,
+    ) -> Any:
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        if cache is None:
+            cache = {}
+
+        element_id = serialized_values["element_id"]
+        if element_id:
+            imported_element_id = id_mapping["builder_page_elements"][element_id]
+            import_context = ElementHandler().get_import_context_addition(
+                imported_element_id, id_mapping, cache.get("imported_element_map", None)
+            )
+
+        return super().import_serialized(
+            parent,
+            serialized_values,
+            id_mapping,
+            files_zip,
+            storage,
+            cache,
+            **(kwargs | import_context),
+        )
+
 
 class BuilderWorkflowActionTypeRegistry(
     Registry, ModelRegistryMixin, CustomFieldsRegistryMixin

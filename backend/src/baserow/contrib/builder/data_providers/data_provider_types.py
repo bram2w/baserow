@@ -240,7 +240,7 @@ class CurrentRecordDataProviderType(DataProviderType):
         if len(path) == 1 and path[0] == "__idx__":
             return path
 
-        if data_source_id is None:
+        if not data_source_id:
             return path
 
         data_source = DataSourceHandler().get_data_source(data_source_id)

@@ -570,6 +570,43 @@ class ElementHandler:
             element, files_zip=files_zip, storage=storage, cache=cache
         )
 
+    def get_import_context_addition(
+        self,
+        element_id: int,
+        id_mapping: Dict[str, Dict[int, int]],
+        element_map: Dict[int, Element] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generates and return the import context for the given element and all its
+        ancestors. This import context needs to be injected into all imported objects
+        related to this element such as child elements, collection fields or workflow
+        actions.
+
+        :param element_id: The element_id to compute the context for.
+        :param id_mapping: The ID mapping dict used by import process.
+        :param element_map: An optional map of already loaded elements to improve
+          performances.
+        :return: An object that can be used as import context.
+        """
+
+        if not element_id:
+            return {}
+
+        if not element_map:
+            element_map = {}
+
+        if element_id in element_map:
+            current_element = element_map[element_id]
+        else:
+            # Fetch the element if we have no cache
+            current_element = self.get_element(element_id)
+
+        return current_element.get_type().import_context_addition(
+            current_element, id_mapping
+        ) | self.get_import_context_addition(
+            current_element.parent_element_id, id_mapping, element_map
+        )
+
     def import_element(
         self,
         page: Page,
@@ -578,6 +615,7 @@ class ElementHandler:
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict] = None,
+        **kwargs,
     ) -> Element:
         """
         Creates an instance using the serialized version previously exported with
@@ -603,6 +641,7 @@ class ElementHandler:
             files_zip=files_zip,
             storage=storage,
             cache=cache,
+            **kwargs,
         )
 
         id_mapping["builder_page_elements"][

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, TypedDict
+from typing import Any, Dict, TypedDict
 
 from rest_framework import serializers
 
@@ -30,18 +30,12 @@ class BooleanCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
     ) -> Any:
-        if prop_name == "value" and data_source_id:
-            return import_formula(value, id_mapping, data_source_id=data_source_id)
+        if prop_name == "value":
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(
-            prop_name, value, id_mapping, data_source_id
-        )
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
 
 
 class TextCollectionFieldType(CollectionFieldType):
@@ -64,18 +58,12 @@ class TextCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
     ) -> Any:
-        if prop_name == "value" and data_source_id:
-            return import_formula(value, id_mapping, data_source_id=data_source_id)
+        if prop_name == "value":
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(
-            prop_name, value, id_mapping, data_source_id
-        )
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
 
 
 class LinkCollectionFieldType(CollectionFieldType):
@@ -120,25 +108,18 @@ class LinkCollectionFieldType(CollectionFieldType):
         )
 
     def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
     ) -> Any:
-        if prop_name == "link_name" and data_source_id:
-            return import_formula(value, id_mapping, data_source_id=data_source_id)
+        if prop_name == "link_name":
+            return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
-                prop_name,
-                value,
-                id_mapping,
-                data_source_id=data_source_id,
+                prop_name, value, id_mapping, **kwargs
             ),
             id_mapping,
-            data_source_id=data_source_id,
+            **kwargs,
         )
 
 
@@ -175,18 +156,12 @@ class TagsCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
     ) -> Any:
-        if prop_name in ["values", "colors"] and data_source_id:
-            return import_formula(value, id_mapping, data_source_id=data_source_id)
+        if prop_name in ["values", "colors"]:
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(
-            prop_name, value, id_mapping, data_source_id
-        )
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
 
 
 class ButtonCollectionFieldType(CollectionFieldType):
@@ -209,18 +184,12 @@ class ButtonCollectionFieldType(CollectionFieldType):
         }
 
     def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
     ) -> Any:
-        if prop_name == "label" and data_source_id:
-            return import_formula(value, id_mapping, data_source_id=data_source_id)
+        if prop_name == "label":
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().deserialize_property(
-            prop_name, value, id_mapping, data_source_id
-        )
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
 
     def before_delete(self, instance: CollectionField):
         # We delete the related workflow actions
