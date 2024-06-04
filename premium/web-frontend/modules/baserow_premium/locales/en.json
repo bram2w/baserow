@@ -361,7 +361,7 @@
     },
     "gridViewFieldAI": {
       "generate": "Generate",
-      "regenerate": "Re-Generate"
+      "regenerate": "Regenerate"
     },
     "fieldAISubForm": {
       "prompt": "Prompt",
