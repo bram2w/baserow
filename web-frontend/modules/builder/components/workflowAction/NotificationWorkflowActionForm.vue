@@ -1,33 +1,30 @@
 <template>
   <form @submit.prevent="submit">
-    <ApplicationBuilderFormulaInputGroup
+    <InjectedFormulaInputGroup
       v-model="values.title"
       small
       small-label
       :placeholder="$t('notificationWorkflowActionForm.titlePlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
       :label="$t('notificationWorkflowActionForm.titleLabel')"
     />
-    <ApplicationBuilderFormulaInputGroup
+    <InjectedFormulaInputGroup
       v-model="values.description"
       small
       small-label
       :placeholder="$t('notificationWorkflowActionForm.descriptionPlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
       :label="$t('notificationWorkflowActionForm.descriptionLabel')"
     />
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import form from '@baserow/modules/core/mixins/form'
+import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
 
 export default {
   name: 'NotificationWorkflowActionForm',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { InjectedFormulaInputGroup },
   mixins: [form],
-  inject: ['dataProvidersAllowed'],
   data() {
     return {
       values: {
