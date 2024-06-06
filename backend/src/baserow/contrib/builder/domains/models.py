@@ -30,7 +30,7 @@ def validate_domain(value: str):
     :raises ValidationError: If the domain name is invalid
     """
 
-    if isinstance(validators.domain(value), validators.ValidationFailure):
+    if isinstance(validators.domain(value), validators.utils.ValidationError):
         raise ValidationError("Invalid domain syntax")
 
 

@@ -3,7 +3,6 @@ import dataclasses
 from collections import defaultdict
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, TypeVar, Union
-from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -547,8 +546,8 @@ class PermissionManagerType(abc.ABC, Instance):
         operation_name: str,
         workspace: Optional["Workspace"] = None,
         context: Optional[Any] = None,
-        include_trash: Boolean = False,
-    ) -> Optional[Boolean]:
+        include_trash: bool = False,
+    ) -> Optional[bool]:
         """
         This method is a helper to check permission with this permission manager when
         you need to do only one check. It calls `.check_multiple_permissions` behind
@@ -946,7 +945,7 @@ class ObjectScopeTypeRegistry(
         scope: ScopeObject,
         context: ContextObject,
         scope_type: Optional[ObjectScopeType] = None,
-    ) -> Boolean:
+    ) -> bool:
         """
         Checks whether a scope object includes the given context.
 
@@ -975,7 +974,7 @@ class ObjectScopeTypeRegistry(
         self,
         parent_scope_type: ObjectScopeType,
         child_scope_type: ObjectScopeType,
-    ) -> Boolean:
+    ) -> bool:
         """
         Checks whether the parent_scope includes the child_scope.
 

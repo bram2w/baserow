@@ -454,7 +454,7 @@ class FieldType(
         Returns True if the provided instances have compatible model fields.
         """
 
-        return type(instance) == type(instance2)
+        return type(instance) is type(instance2)
 
     def after_model_generation(self, instance, model, field_name):
         """
