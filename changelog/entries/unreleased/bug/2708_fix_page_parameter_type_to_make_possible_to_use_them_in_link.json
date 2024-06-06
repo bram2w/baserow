@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix page parameter type to make possible to use them in linked row field of update row actions",
+    "issue_number": 2708,
+    "bullet_points": [],
+    "created_at": "2024-06-05"
+}
