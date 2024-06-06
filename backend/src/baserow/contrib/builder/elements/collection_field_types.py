@@ -87,6 +87,35 @@ class TextCollectionFieldType(CollectionFieldType):
 class LinkCollectionFieldType(CollectionFieldType):
     type = "link"
 
+    def after_register(self):
+        """
+        After the `LinkCollectionFieldType` is registered, we connect the
+        `page_deleted` signal to the `page_deleted_update_link_collection_fields`
+        receiver. This is so that if the `LinkCollectionFieldType` isn't used, we
+        don't execute its handler.
+        """
+
+        super(LinkCollectionFieldType, self).after_register()
+        from baserow.contrib.builder.elements.receivers import (
+            connect_link_collection_field_type_to_page_delete_signal,
+        )
+
+        connect_link_collection_field_type_to_page_delete_signal()
+
+    def before_unregister(self):
+        """
+        Before the `LinkCollectionFieldType` is unregistered, we disconnect the
+        `page_deleted` signal from the `page_deleted_update_link_collection_fields`
+        receiver.
+        """
+
+        super(LinkCollectionFieldType, self).before_unregister()
+        from baserow.contrib.builder.elements.receivers import (
+            disconnect_link_collection_field_type_from_page_delete_signal,
+        )
+
+        disconnect_link_collection_field_type_from_page_delete_signal()
+
     @property
     def serializer_field_names(self):
         return (
