@@ -41,7 +41,7 @@ def test_serializer_field_overrides_returns_expected_value():
     result = BooleanCollectionFieldType().serializer_field_overrides
     field = result["value"]
 
-    assert type(field) == FormulaSerializerField
+    assert type(field) is FormulaSerializerField
     assert field.allow_blank is True
     assert field.default is False
     assert field.required is False

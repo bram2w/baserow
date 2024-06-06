@@ -1719,7 +1719,7 @@ def test_multiple_select_with_single_select_present(data_fixture):
     single_options = multiple_select_field.select_options.all()
     first_select_option = single_options[0]
 
-    assert type(first_select_option) == SelectOption
+    assert type(first_select_option) is SelectOption
 
     row = row_handler.create_row(
         user=user,
