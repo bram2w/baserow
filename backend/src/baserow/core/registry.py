@@ -55,6 +55,16 @@ class Instance(object):
         if not self.type:
             raise ImproperlyConfigured("The type of an instance must be set.")
 
+    def after_register(self):
+        """
+        Hook that is called after an instance is registered in a registry.
+        """
+
+    def before_unregister(self):
+        """
+        Hook that is called before an instance is unregistered from a registry.
+        """
+
 
 DjangoModel = TypeVar("DjangoModel", bound=models.Model)
 
@@ -655,7 +665,9 @@ class Registry(Generic[InstanceSubClass]):
 
         self.registry[instance.type] = instance
 
-    def unregister(self, value: InstanceSubClass):
+        instance.after_register()
+
+    def unregister(self, value: Union[str, InstanceSubClass]):
         """
         Removes a registered instance from the registry. An instance or type name can be
         provided as value.
@@ -672,10 +684,12 @@ class Registry(Generic[InstanceSubClass]):
                     value = type_name
 
         if isinstance(value, str):
+            instance = self.registry[value]
+            instance.before_unregister()
             del self.registry[value]
         else:
             raise ValueError(
-                f"The value must either be an {self.name} instance or " f"type name"
+                f"The value must either be an {self.name} instance or type name"
             )
 
 
