@@ -3,6 +3,7 @@ import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import { getValueAtPath } from '@baserow/modules/core/utils/object'
 
 import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
+import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 
 export class DataSourceDataProviderType extends DataProviderType {
   constructor(...args) {
@@ -148,13 +149,15 @@ export class PageParameterDataProviderType extends DataProviderType {
         )
       )
     } else {
-      // Read parameters from the application context
+      // Read parameters value from the application context
       await Promise.all(
-        Object.entries(pageParamsValue).map(([name, value]) =>
+        page.path_params.map(({ name, type }) =>
           this.app.store.dispatch('pageParameter/setParameter', {
             page,
             name,
-            value,
+            value: PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[type](
+              pageParamsValue[name]
+            ),
           })
         )
       )
