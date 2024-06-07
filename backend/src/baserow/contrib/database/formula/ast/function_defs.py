@@ -64,7 +64,7 @@ from baserow.contrib.database.formula.ast.function import (
     ThreeArgumentBaserowFunction,
     TwoArgumentBaserowFunction,
     ZeroArgumentBaserowFunction,
-    aggregate_filters_on_expression,
+    aggregate_expr_with_metadata_filters,
     aggregate_wrapper,
     construct_aggregate_wrapper_queryset,
     construct_not_null_filters_for_inner_join,
@@ -2052,7 +2052,7 @@ def string_agg_array_of_multiple_select_field(
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
         pre_annotations
     )
-    aggregate_filters_on_expression(expr_with_metadata)
+    aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
     # There is only one tuple of (field, database_table) in this case in the join_ids,
     # the one needed to join the linked table.
@@ -2073,6 +2073,7 @@ def string_agg_array_of_multiple_select_field(
                 output_field=fields.CharField(),
             )
         )
+        .filter(aggregated_filters)
     )
 
     join_field_id = f"{join_field}__id"
@@ -2137,7 +2138,7 @@ def aggregate_multiple_selects_options(
         pre_annotations
     )
 
-    aggregate_filters_on_expression(expr_with_metadata)
+    aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
     # There is only one tuple of (field, database_table) in this case in the join_ids,
     # the one needed to join the linked table.
@@ -2151,6 +2152,7 @@ def aggregate_multiple_selects_options(
             **not_null_filters_for_inner_join,
         )
         .values(result=expr_with_metadata.expression)
+        .filter(aggregated_filters)
     )
 
     join_field_id = f"{join_field}__id"

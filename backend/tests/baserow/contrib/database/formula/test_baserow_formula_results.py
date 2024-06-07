@@ -1699,3 +1699,107 @@ def test_nullable_formulas(data_fixture, fields, formula, nullable):
     )
     assert formula_field.error is None
     assert formula_field.nullable == nullable
+
+
+@pytest.mark.django_db
+def test_can_filter_in_aggregated_formulas(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    boolean_field = data_fixture.create_boolean_field(table=table_b, name="check")
+    data_fixture.create_autonumber_field(
+        table=table_b,
+        name="autonr",
+    )
+
+    rows_b = RowHandler().create_rows(
+        user,
+        table_b,
+        [
+            {boolean_field.db_column: True},
+            {},
+            {boolean_field.db_column: True},
+            {},
+            {},
+            {boolean_field.db_column: True},
+            {},
+        ],
+    )
+
+    formula_field = data_fixture.create_formula_field(
+        user=user,
+        table=table_a,
+        formula=f"max(filter(lookup('link', 'autonr'), lookup('link', 'check')))",
+    )
+
+    row_a1, row_a2, row_a3 = RowHandler().create_rows(
+        user,
+        table_a,
+        [
+            {link_field.db_column: [rows_b[0].id, rows_b[1].id]},
+            {link_field.db_column: [rows_b[2].id, rows_b[3].id, rows_b[4].id]},
+            {link_field.db_column: [rows_b[4].id, rows_b[5].id, rows_b[6].id]},
+        ],
+    )
+
+    # autonr of row_b[0], because it's the only one with check=True
+    assert getattr(row_a1, formula_field.db_column) == 1
+    assert getattr(row_a2, formula_field.db_column) == 3  # autonr of row_b[2]
+    assert getattr(row_a3, formula_field.db_column) == 6  # autonr of row_b[5]
+
+
+@pytest.mark.django_db
+def test_can_filter_in_aggregated_formulas_with_multipleselects(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    boolean_field = data_fixture.create_boolean_field(table=table_b, name="check")
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table_b, name="mm"
+    )
+    option_a = data_fixture.create_select_option(field=multiple_select_field, value="a")
+    option_b = data_fixture.create_select_option(field=multiple_select_field, value="b")
+    option_c = data_fixture.create_select_option(field=multiple_select_field, value="c")
+    option_d = data_fixture.create_select_option(field=multiple_select_field, value="d")
+
+    rows_b = RowHandler().create_rows(
+        user,
+        table_b,
+        [
+            {
+                boolean_field.db_column: True,
+                multiple_select_field.db_column: [option_a.id, option_b.id],
+            },
+            {multiple_select_field.db_column: [option_c.id]},
+            {
+                boolean_field.db_column: True,
+                multiple_select_field.db_column: [option_d.id],
+            },
+            {multiple_select_field.db_column: [option_a.id, option_b.id]},
+            {multiple_select_field.db_column: [option_c.id, option_d.id]},
+            {
+                boolean_field.db_column: True,
+                multiple_select_field.db_column: [option_b.id],
+            },
+            {},
+        ],
+    )
+
+    formula_field = data_fixture.create_formula_field(
+        user=user,
+        table=table_a,
+        formula=f"count(filter(lookup('link', 'mm'), lookup('link', 'check')))",
+    )
+
+    row_a1, row_a2, row_a3 = RowHandler().create_rows(
+        user,
+        table_a,
+        [
+            {link_field.db_column: [rows_b[0].id, rows_b[1].id]},
+            {link_field.db_column: [rows_b[2].id, rows_b[3].id, rows_b[4].id]},
+            {link_field.db_column: [rows_b[4].id, rows_b[5].id, rows_b[6].id]},
+        ],
+    )
+
+    # autonr of row_b[0], because it's the only one with check=True
+    assert getattr(row_a1, formula_field.db_column) == 2  # a and b
+    assert getattr(row_a2, formula_field.db_column) == 1  # autonr of row_b[2], d
+    assert getattr(row_a3, formula_field.db_column) == 1  # autonr of row_b[5], b

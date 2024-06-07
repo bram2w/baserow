@@ -284,7 +284,9 @@ def aggregate_wrapper(
     )
 
 
-def aggregate_filters_on_expression(expr_with_metadata: WrappedExpressionWithMetadata):
+def aggregate_expr_with_metadata_filters(
+    expr_with_metadata: WrappedExpressionWithMetadata,
+) -> Expression:
     """
     Combines all the aggregate filters on the expression into a single filter.
     This function is called before aggregating the expression.
@@ -294,11 +296,11 @@ def aggregate_filters_on_expression(expr_with_metadata: WrappedExpressionWithMet
     """
 
     aggregate_filters = expr_with_metadata.aggregate_filters
+    combined_filter: Expression = Value(True)
     if len(aggregate_filters) > 0:
-        combined_filter: Expression = Value(True)
         for f in aggregate_filters:
             combined_filter = AndExpr(combined_filter, f)
-        expr_with_metadata.expression.filter = combined_filter
+    return combined_filter
 
 
 def construct_not_null_filters_for_inner_join(pre_annotations):
@@ -330,13 +332,14 @@ def construct_aggregate_wrapper_queryset(
         pre_annotations
     )
 
-    aggregate_filters_on_expression(expr_with_metadata)
+    aggregate_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
     return (
         model.objects_and_trash.annotate(**pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .values("id")
         .annotate(**{result_key: expr_with_metadata.expression})
+        .filter(aggregate_filters)
         .order_by()
         .values(result_key)
     )
