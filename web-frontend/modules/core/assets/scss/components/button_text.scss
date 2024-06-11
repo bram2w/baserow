@@ -78,3 +78,9 @@
     color: $palette-neutral-700;
   }
 }
+
+.button-text--no-underline {
+  &:hover {
+    text-decoration: none;
+  }
+}

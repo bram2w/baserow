@@ -24,6 +24,8 @@
           <ButtonText
             v-if="!showDescription"
             ref="showDescription"
+            tag="a"
+            class="button-text--no-underline"
             icon="iconoir iconoir-plus"
             type="secondary"
             @click="showDescriptionField"

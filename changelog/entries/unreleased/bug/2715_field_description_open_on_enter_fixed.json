@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Restored prior field form behavior: pressing enter when in field form elements won't spuriously open field description input anymore.",
+    "issue_number": 2715,
+    "bullet_points": [],
+    "created_at": "2024-06-10"
+}
