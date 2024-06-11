@@ -8,12 +8,13 @@ SHELL=/bin/bash
 WORKDIR:=$(shell $(REALPATH) $(shell pwd))
 
 SUBDIRS:=backend web-frontend
-DOCKERC:=docker compose
+DOCKERCLI:=docker
+DOCKERC:=$(DOCKERCLI) compose
 
 DOCKER_SPLIT_CONF:=-f docker-compose.yml -f docker-compose.dev.yml
 
 .PHONY: install build .callsubcmd $(SUBDIRS) help package-build test tests\
-		lint lint-fix \
+		lint lint-fix docker-lint\
 		docker-status docker-build docker-start docker-clean docker-stop docker-kill \
 		deps deps-upgrade \
 		clean clean-all
@@ -65,7 +66,7 @@ package-build: SUBCMD=package-build
 package-build: .subcmd
 
 lint: SUBCMD=lint
-lint: .subcmd
+lint: .subcmd docker-lint
 
 lint-fix: SUBCMD=lint-fix
 lint-fix: .subcmd
@@ -104,6 +105,17 @@ docker-kill: .docker-kill
 
 docker-clean: DOCKER_CONFIG_FILES=$(DOCKER_SPLIT_CONF)
 docker-clean: docker-stop .docker-clean
+
+docker-lint:
+	$(DOCKERCLI) run --rm -i -v "$(shell pwd)":/opt/hadolint/. -w /opt/hadolint \
+        hadolint/hadolint:2.9.3-debian \
+        hadolint -f tty \
+        --ignore DL3008 \
+        backend/Dockerfile \
+        web-frontend/Dockerfile \
+        heroku.Dockerfile \
+        e2e-tests/Dockerfile \
+        deploy/*/Dockerfile
 
 clean: SUBCMD=clean
 clean: .subcmd docker-clean
