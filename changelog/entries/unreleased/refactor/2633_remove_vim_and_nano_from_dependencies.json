@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Remove vim and nano from dependencies",
+    "issue_number": 2633,
+    "bullet_points": [],
+    "created_at": "2024-06-11"
+}
