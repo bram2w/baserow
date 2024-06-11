@@ -56,8 +56,6 @@ RUN apt-get update && \
     tini \
     psmisc \
     gosu \
-    nano \
-    vim \
     gawk \
     git \
     xmlsec1 \

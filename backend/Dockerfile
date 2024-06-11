@@ -41,8 +41,6 @@ RUN apt-get update &&  \
     python3-pip \
     python3-dev \
     python3-venv\
-    nano \
-    vim \
     git \
     gosu \
     xmlsec1 \
