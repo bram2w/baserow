@@ -427,7 +427,10 @@
     "itemsPerPagePlaceholder": "Enter value...",
     "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
     "buttonColor": "Button color",
-    "refreshFieldsFromDataSource": "refresh fields from data source"
+    "refreshFieldsFromDataSource": "refresh fields from data source",
+    "orientation": "Orientation",
+    "orientationHorizontal": "Horizontal",
+    "orientationVertical": "Vertical"
   },
   "tableElement": {
     "empty": "No items have been found.",
@@ -443,7 +446,7 @@
     "itemsPerPage": "Items per page",
     "itemsPerPagePlaceholder": "Enter value...",
     "itemsPerRowLabel": "Items per row",
-    "itemsPerRowDescription": "Choose, per device type, what the number of repetitions per row should be.",
+    "itemsPerRowDescription": "Number of columns per row and device type.",
     "orientationLabel": "Orientation",
     "orientationVertical": "Vertical",
     "orientationHorizontal": "Horizontal"

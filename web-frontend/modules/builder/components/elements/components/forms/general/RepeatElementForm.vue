@@ -30,10 +30,18 @@
       @blur="$v.values.items_per_page.$touch()"
     ></FormInput>
     <FormGroup :label="$t('repeatElementForm.orientationLabel')">
-      <RadioButton v-model="values.orientation" value="vertical">
+      <RadioButton
+        v-model="values.orientation"
+        value="vertical"
+        icon="iconoir-table-rows"
+      >
         {{ $t('repeatElementForm.orientationVertical') }}
       </RadioButton>
-      <RadioButton v-model="values.orientation" value="horizontal">
+      <RadioButton
+        v-model="values.orientation"
+        value="horizontal"
+        icon="iconoir-view-columns-3"
+      >
         {{ $t('repeatElementForm.orientationHorizontal') }}
       </RadioButton>
     </FormGroup>

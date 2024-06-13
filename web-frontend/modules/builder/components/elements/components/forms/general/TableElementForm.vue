@@ -145,6 +145,30 @@
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
     </FormGroup>
+    <FormGroup :label="$t('tableElementForm.orientation')">
+      <DeviceSelector
+        :device-type-selected="deviceTypeSelected"
+        direction="row"
+        @selected="actionSetDeviceTypeSelected"
+      >
+        <template #deviceTypeControl="{ deviceType }">
+          <RadioButton
+            v-model="values.orientation[deviceType.getType()]"
+            icon="iconoir-view-columns-3"
+            :value="TABLE_ORIENTATION.HORIZONTAL"
+          >
+            {{ $t('tableElementForm.orientationHorizontal') }}
+          </RadioButton>
+          <RadioButton
+            v-model="values.orientation[deviceType.getType()]"
+            icon="iconoir-table-rows"
+            :value="TABLE_ORIENTATION.VERTICAL"
+          >
+            {{ $t('tableElementForm.orientationVertical') }}
+          </RadioButton>
+        </template>
+      </DeviceSelector>
+    </FormGroup>
     <ColorInputGroup
       v-model="values.button_color"
       :label="$t('tableElementForm.buttonColor')"
@@ -168,23 +192,38 @@ import {
 } from 'vuelidate/lib/validators'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
+import { TABLE_ORIENTATION } from '@baserow/modules/builder/enums'
+import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'TableElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { DeviceSelector, ApplicationBuilderFormulaInputGroup },
   mixins: [elementForm, collectionElementForm],
   data() {
     return {
-      allowedValues: ['data_source_id', 'fields', 'items_per_page'],
+      allowedValues: [
+        'data_source_id',
+        'fields',
+        'items_per_page',
+        'button_color',
+        'orientation',
+      ],
       values: {
         fields: [],
         data_source_id: null,
         items_per_page: 1,
+        button_color: '',
+        orientation: {},
       },
       userHasChangedDataSource: false,
     }
   },
   computed: {
+    ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),
+    TABLE_ORIENTATION() {
+      return TABLE_ORIENTATION
+    },
     orderedCollectionTypes() {
       return this.$registry.getOrderedList('collectionField')
     },
@@ -203,6 +242,9 @@ export default {
     },
   },
   methods: {
+    ...mapActions({
+      actionSetDeviceTypeSelected: 'page/setDeviceTypeSelected',
+    }),
     addField() {
       this.values.fields.push({
         name: getNextAvailableNameInSequence(
