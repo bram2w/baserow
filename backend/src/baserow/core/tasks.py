@@ -25,7 +25,7 @@ from .user.tasks import (
 def sync_templates_task(self):
     from baserow.core.handler import CoreHandler
 
-    CoreHandler().sync_templates()
+    CoreHandler().sync_templates(pattern=settings.BASEROW_SYNC_TEMPLATES_PATTERN)
 
 
 __all__ = [

@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 from io import BytesIO
 from pathlib import Path
 from typing import IO, Any, Dict, List, NewType, Optional, Tuple, Union, cast
@@ -1722,7 +1723,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
     # is slow, and so we disable instrumenting it to save significant resources in
     # telemetry platforms receiving the instrumentation.
     @disable_instrumentation
-    def sync_templates(self, storage=None, template_search_glob=None):
+    def sync_templates(self, storage=None, pattern: str | None = None):
         """
         Synchronizes the JSON template files with the templates stored in the database.
         We need to have a copy in the database so that the user can live preview a
@@ -1736,17 +1737,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         where we can import the export into.
 
         :param storage: Storage to use to get the files.
-        :param template_search_glob: A glob pattern used to select which template files
-            to sync. Defaults to just syncing all templates but can be used to restrict
-            the syncing to specific templates only. In the last case it also deletes the
-            templates that don't exist anymore.
+        :param pattern: A regular expression to match names to sync. If None then
+            all found templates will be synced.
         """
 
         clean_templates = False
-        if template_search_glob is None:
+        if pattern is None:
             # We clean the template list only if we have the full list of templates
             clean_templates = True
-            template_search_glob = "*.json"
 
         installed_templates = (
             Template.objects.all()
@@ -1764,11 +1762,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
-        templates = list(
-            Path(settings.APPLICATION_TEMPLATES_DIR).glob(template_search_glob)
-        )
+        template_files_paths = [
+            p
+            for p in Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json")
+            if pattern is None or re.search(pattern, p.stem)
+        ]
+
         for template_file_path in tqdm(
-            templates,
+            template_files_paths,
             desc="Syncing Baserow templates. Disable by setting "
             "BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION=false.",
         ):
@@ -1791,7 +1792,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
             slugs = [
                 ".".join(template_file_path.name.split(".")[:-1])
-                for template_file_path in templates
+                for template_file_path in template_files_paths
             ]
 
             for template in Template.objects.filter(~Q(slug__in=slugs)):
