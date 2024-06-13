@@ -36,7 +36,7 @@ import {
   ButtonElementType,
   TableElementType,
   FormContainerElementType,
-  DropdownElementType,
+  ChoiceElementType,
   CheckboxElementType,
   IFrameElementType,
   RepeatElementType,
@@ -178,7 +178,7 @@ export default (context) => {
   app.$registry.register('element', new ColumnElementType(context))
   app.$registry.register('element', new FormContainerElementType(context))
   app.$registry.register('element', new InputTextElementType(context))
-  app.$registry.register('element', new DropdownElementType(context))
+  app.$registry.register('element', new ChoiceElementType(context))
   app.$registry.register('element', new CheckboxElementType(context))
   app.$registry.register('element', new RepeatElementType(context))
 

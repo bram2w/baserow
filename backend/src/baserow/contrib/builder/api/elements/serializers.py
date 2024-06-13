@@ -11,8 +11,8 @@ from baserow.contrib.builder.api.workflow_actions.serializers import (
     BuilderWorkflowActionSerializer,
 )
 from baserow.contrib.builder.elements.models import (
+    ChoiceElementOption,
     CollectionField,
-    DropdownElementOption,
     Element,
 )
 from baserow.contrib.builder.elements.registries import (
@@ -303,7 +303,7 @@ class UpdateCollectionFieldSerializer(serializers.ModelSerializer):
     value = FormulaSerializerField(allow_blank=True)
 
 
-class DropdownOptionSerializer(serializers.ModelSerializer):
+class ChoiceOptionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DropdownElementOption
+        model = ChoiceElementOption
         fields = ["id", "value", "name"]

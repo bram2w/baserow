@@ -15,7 +15,7 @@
       @mousemove="hover(value, disabled)"
     >
       <div class="ab-dropdownitem__item-name">
-        <div v-if="multiple">
+        <div v-if="multiple.value">
           <Checkbox :disabled="disabled" :checked="isActive(value)"></Checkbox>
         </div>
         <slot>
@@ -39,7 +39,7 @@
       </div>
     </a>
     <i
-      v-if="!multiple"
+      v-if="!multiple.value"
       class="ab-dropdownitem__item-active-icon iconoir-check"
     ></i>
   </li>

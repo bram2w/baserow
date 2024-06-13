@@ -621,13 +621,14 @@ class InputTextElement(FormElement):
     )
 
 
-class DropdownElement(FormElement):
+class ChoiceElement(FormElement):
     label = FormulaField(
         default="",
-        help_text="The text label for this dropdown",
+        help_text="The text label for this choice",
     )
     default_value = FormulaField(
-        default="", help_text="This dropdowns input's default value."
+        default="",
+        help_text="This choice's input default value.",
     )
     placeholder = FormulaField(
         default="",
@@ -635,19 +636,31 @@ class DropdownElement(FormElement):
     )
     multiple = models.BooleanField(
         default=False,
-        help_text="Whether this dropdown allows users to choose multiple values.",
+        help_text="Whether this choice allows users to choose multiple values.",
+        null=True,  # TODO zdm remove me in next release
+    )
+    show_as_dropdown = models.BooleanField(
+        default=True,
+        help_text="Whether to show the choices as a dropdown.",
         null=True,  # TODO zdm remove me in next release
     )
 
 
-class DropdownElementOption(models.Model):
+class ChoiceElementOption(models.Model):
     value = models.TextField(
-        blank=True, default="", help_text="The value of the option"
+        blank=True,
+        default="",
+        help_text="The value of the option",
     )
     name = models.TextField(
-        blank=True, default="", help_text="The display name of the option"
+        blank=True,
+        default="",
+        help_text="The display name of the option",
     )
-    dropdown = models.ForeignKey(DropdownElement, on_delete=models.CASCADE)
+    choice = models.ForeignKey(
+        ChoiceElement,
+        on_delete=models.CASCADE,
+    )
 
 
 class CheckboxElement(FormElement):

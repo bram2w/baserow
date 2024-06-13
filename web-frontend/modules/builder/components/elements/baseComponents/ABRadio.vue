@@ -1,18 +1,18 @@
 <template>
-  <div class="ab-checkbox" @click="toggle">
+  <div class="ab-radio" @click="toggle">
     <input
-      type="checkbox"
+      type="radio"
       :checked="value"
       :required="required"
-      class="ab-checkbox__input"
+      class="ab-radio__input"
       :disabled="disabled"
       :class="{
-        'ab-checkbox--error': error,
-        'ab-checkbox--readonly': readOnly,
+        'ab-radio--error': error,
+        'ab-radio--readonly': readOnly,
       }"
       :aria-disabled="disabled"
     />
-    <label v-if="hasSlot" class="ab-checkbox__label">
+    <label v-if="hasSlot" class="ab-radio__label">
       <slot></slot>
     </label>
   </div>
@@ -20,10 +20,10 @@
 
 <script>
 export default {
-  name: 'ABCheckbox',
+  name: 'ABRadio',
   props: {
     /**
-     * The state of the checkbox.
+     * The state of the radio.
      */
     value: {
       type: Boolean,
@@ -31,7 +31,7 @@ export default {
       default: false,
     },
     /**
-     * Whether the checkbox is disabled.
+     * Whether the radio is disabled.
      */
     disabled: {
       type: Boolean,
@@ -39,7 +39,7 @@ export default {
       default: false,
     },
     /**
-     * Whether the checkbox is required.
+     * Whether the radio is required.
      */
     required: {
       type: Boolean,
@@ -47,7 +47,7 @@ export default {
       default: false,
     },
     /**
-     * Whether the checkbox is in error state.
+     * Whether the radio is in error state.
      */
     error: {
       type: Boolean,
@@ -55,7 +55,7 @@ export default {
       default: false,
     },
     /**
-     * Whether the checkbox is readonly.
+     * Whether the radio is readonly.
      */
     readOnly: {
       type: Boolean,

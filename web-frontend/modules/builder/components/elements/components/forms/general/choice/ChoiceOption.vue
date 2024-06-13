@@ -18,7 +18,7 @@
 
 <script>
 export default {
-  name: 'DropdownOption',
+  name: 'ChoiceOption',
   props: {
     option: {
       type: Object,

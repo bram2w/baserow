@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from django.core.exceptions import ValidationError
 
@@ -9,12 +9,12 @@ from baserow.contrib.database.fields.constants import (
 from baserow.core.utils import flatten
 
 
-def ensure_boolean(value):
+def ensure_boolean(value: Any) -> bool:
     """
     Ensures that the value is a boolean or converts it.
 
-    @param value: The value to ensure as a boolean.
-    @returns: The value as a boolean.
+    :param value: The value to ensure as a boolean.
+    :return: The value as a boolean.
     """
 
     if value in BASEROW_BOOLEAN_FIELD_TRUE_VALUES:
@@ -45,7 +45,7 @@ def ensure_integer(value: Any) -> int:
         ) from exc
 
 
-def ensure_string(value, allow_empty=True):
+def ensure_string(value: Any, allow_empty: bool = True) -> str:
     """
     Ensures that the value is a string or try to convert it.
 
@@ -64,7 +64,7 @@ def ensure_string(value, allow_empty=True):
     return str(value)
 
 
-def ensure_array(value, allow_empty=True):
+def ensure_array(value: Any, allow_empty: bool = True) -> List[Any]:
     """
     Ensure that the value is an array or try to convert it.
     Strings will be treated as comma separated values.
@@ -73,7 +73,6 @@ def ensure_array(value, allow_empty=True):
     :param value: The value to ensure as an array.
     :param allow_empty: Whether we should raise an error if `value` is empty.
     :return: The value as an array.
-    :rtype: list
     :raises ValueError: if not allow_empty and `value` is empty.
     """
 

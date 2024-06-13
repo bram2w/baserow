@@ -4,8 +4,8 @@ from rest_framework.exceptions import ValidationError
 from baserow.contrib.builder.elements.element_types import (
     ButtonElementType,
     CheckboxElementType,
+    ChoiceElementType,
     ColumnElementType,
-    DropdownElementType,
     HeadingElementType,
     IFrameElementType,
     ImageElementType,
@@ -144,7 +144,7 @@ def test_column_element_type_can_have_children(data_fixture):
         place_in_container="1",
     )
     element_inside_container_nine = ElementHandler().create_element(
-        DropdownElementType(),
+        ChoiceElementType(),
         page=page,
         parent_element_id=container.id,
         place_in_container="1",

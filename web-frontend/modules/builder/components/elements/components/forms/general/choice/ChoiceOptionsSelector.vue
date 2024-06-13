@@ -1,14 +1,14 @@
 <template>
-  <FormGroup :label="$t('dropdownOptionSelector.label')" small-label>
+  <FormGroup :label="$t('choiceOptionSelector.label')" small-label>
     <div class="dropdown-option-selector__heading margin-bottom-1">
       <div>
-        {{ $t('dropdownOptionSelector.value') }}
+        {{ $t('choiceOptionSelector.value') }}
       </div>
       <div class="dropdown-option-selector__name-heading">
-        {{ $t('dropdownOptionSelector.name') }}
+        {{ $t('choiceOptionSelector.name') }}
       </div>
     </div>
-    <DropdownOption
+    <ChoiceOption
       v-for="option in options"
       :key="option.id"
       :option="option"
@@ -22,16 +22,16 @@
       :loading="loading"
       @click="$emit('create')"
     >
-      {{ $t('dropdownOptionSelector.addOption') }}
+      {{ $t('choiceOptionSelector.addOption') }}
     </ButtonText>
   </FormGroup>
 </template>
 
 <script>
-import DropdownOption from '@baserow/modules/builder/components/elements/components/forms/general/dropdown/DropdownOption.vue'
+import ChoiceOption from '@baserow/modules/builder/components/elements/components/forms/general/choice/ChoiceOption.vue'
 export default {
-  name: 'DropdownOptionsSelector',
-  components: { DropdownOption },
+  name: 'ChoiceOptionsSelector',
+  components: { ChoiceOption },
   props: {
     options: {
       type: Array,
