@@ -7,6 +7,8 @@ import ABLink from '@baserow/modules/builder/components/elements/baseComponents/
 import ABHeading from '@baserow/modules/builder/components/elements/baseComponents/ABHeading'
 import ABDropdown from '@baserow/modules/builder/components/elements/baseComponents/ABDropdown'
 import ABDropdownItem from '@baserow/modules/builder/components/elements/baseComponents/ABDropdownItem'
+import ABCheckbox from '@baserow/modules/builder/components/elements/baseComponents/ABCheckbox.vue'
+import ABRadio from '@baserow/modules/builder/components/elements/baseComponents/ABRadio.vue'
 
 function setupVueForAB(Vue) {
   Vue.component('ABButton', ABButton)
@@ -16,6 +18,8 @@ function setupVueForAB(Vue) {
   Vue.component('ABHeading', ABHeading)
   Vue.component('ABDropdown', ABDropdown)
   Vue.component('ABDropdownItem', ABDropdownItem)
+  Vue.component('ABCheckbox', ABCheckbox)
+  Vue.component('ABRadio', ABRadio)
 }
 
 setupVueForAB(Vue)

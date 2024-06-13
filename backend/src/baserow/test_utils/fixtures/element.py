@@ -2,9 +2,9 @@ from copy import deepcopy
 
 from baserow.contrib.builder.elements.models import (
     ButtonElement,
+    ChoiceElement,
     CollectionField,
     ColumnElement,
-    DropdownElement,
     FormContainerElement,
     HeadingElement,
     ImageElement,
@@ -93,8 +93,8 @@ class ElementFixtures:
         )
         return element
 
-    def create_builder_dropdown_element(self, user=None, page=None, **kwargs):
-        element = self.create_builder_element(DropdownElement, user, page, **kwargs)
+    def create_builder_choice_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(ChoiceElement, user, page, **kwargs)
         return element
 
     def create_builder_repeat_element(self, user=None, page=None, **kwargs):

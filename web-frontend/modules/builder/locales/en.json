@@ -87,8 +87,8 @@
     "tableDescription": "A table element",
     "formContainer": "Form",
     "formContainerDescription": "A form element",
-    "dropdown": "Dropdown",
-    "dropdownDescription": "Dropdown element",
+    "choice": "Choice",
+    "choiceDescription": "For single/multiple value selection",
     "checkbox": "Checkbox",
     "checkboxDescription": "Checkbox element",
     "iframe": "IFrame",
@@ -408,8 +408,12 @@
   "fontSidePanelForm": {
     "label": "Font color"
   },
-  "dropdownElementForm": {
-    "multiple": "Allow multiple values"
+  "choiceElementForm": {
+    "multiple": "Allow multiple values",
+    "display": "Display",
+    "dropdown": "Dropdown",
+    "checkbox": "Checkbox",
+    "radio": "Radio"
   },
   "tableElementForm": {
     "dataSource": "Data source",
@@ -512,7 +516,7 @@
     "resetToInitialValuesTitle": "Reset to default values after submission",
     "resetToInitialValuesDescription": "If checked, the form's default values will be used to reset the form after successful submission. If unchecked, the user's values will remain."
   },
-  "dropdownOptionSelector": {
+  "choiceOptionSelector": {
     "label": "Options",
     "value": "Value",
     "name": "Name",
@@ -549,6 +553,9 @@
     "emailPlaceholder": "Enter your email...",
     "passwordPlaceholder": "Enter your password...",
     "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
+  },
+  "choiceElement": {
+    "addOptions": "Add options to begin using this element..."
   },
   "userSourceUsersContext": {
     "searchPlaceholder": "Search user",

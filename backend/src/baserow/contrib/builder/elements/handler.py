@@ -28,6 +28,8 @@ from baserow.core.db import specific_iterator
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.utils import MirrorDict, extract_allowed
 
+old_element_type_map = {"dropdown": "choice"}
+
 
 class ElementHandler:
     allowed_fields_create = [
@@ -634,6 +636,11 @@ class ElementHandler:
             id_mapping["builder_page_elements"] = {}
 
         element_type = element_type_registry.get(serialized_element["type"])
+
+        if element_type in old_element_type_map:
+            # We met an old element type name. Let's migrate it.
+            element_type = old_element_type_map[element_type]
+
         created_instance = element_type.import_serialized(
             page,
             serialized_element,

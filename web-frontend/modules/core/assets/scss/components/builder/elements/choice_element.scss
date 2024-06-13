@@ -1,4 +1,4 @@
-.dropdown-element {
+.choice-element {
   border: 1px solid $black;
   border-radius: 0;
 
@@ -30,6 +30,6 @@
   }
 }
 
-.dropdown-element--error {
+.choice-element--error {
   border-color: $color-error-300;
 }

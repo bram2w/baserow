@@ -27,8 +27,8 @@ import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
-import DropdownElement from '@baserow/modules/builder/components/elements/components/DropdownElement.vue'
-import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
+import ChoiceElement from '@baserow/modules/builder/components/elements/components/ChoiceElement.vue'
+import ChoiceElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ChoiceElementForm.vue'
 import CheckboxElement from '@baserow/modules/builder/components/elements/components/CheckboxElement.vue'
 import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
 import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
@@ -1210,17 +1210,17 @@ export class ButtonElementType extends ElementType {
   }
 }
 
-export class DropdownElementType extends FormElementType {
+export class ChoiceElementType extends FormElementType {
   static getType() {
-    return 'dropdown'
+    return 'choice'
   }
 
   get name() {
-    return this.app.i18n.t('elementType.dropdown')
+    return this.app.i18n.t('elementType.choice')
   }
 
   get description() {
-    return this.app.i18n.t('elementType.dropdownDescription')
+    return this.app.i18n.t('elementType.choiceDescription')
   }
 
   get iconClass() {
@@ -1228,11 +1228,11 @@ export class DropdownElementType extends FormElementType {
   }
 
   get component() {
-    return DropdownElement
+    return ChoiceElement
   }
 
   get generalFormComponent() {
-    return DropdownElementForm
+    return ChoiceElementForm
   }
 
   formDataType(element) {
@@ -1262,10 +1262,10 @@ export class DropdownElementType extends FormElementType {
   }
 
   /**
-   * Responsible for validating the dropdown form element. It behaves slightly
-   * differently so that dropdown options with blank values are valid. We simply
-   * test if the value is one of the dropdown's own values.
-   * @param element - The dropdown form element
+   * Responsible for validating the choice form element. It behaves slightly
+   * differently so that choice options with blank values are valid. We simply
+   * test if the value is one of the choice's own values.
+   * @param element - The choice form element
    * @param value - The value we are validating.
    * @returns {boolean}
    */
@@ -1274,6 +1274,10 @@ export class DropdownElementType extends FormElementType {
       ? element.options.find((option) => value.includes(option.value))
       : element.options.find((option) => option.value === value)
     return !(element.required && !validOption)
+  }
+
+  isInError({ element, builder }) {
+    return element.options.length === 0
   }
 
   getDataSchema(element) {

@@ -1,6 +1,6 @@
 import {
   CheckboxElementType,
-  DropdownElementType,
+  ChoiceElementType,
   ElementType,
   InputTextElementType,
 } from '@baserow/modules/builder/elementTypes'
@@ -47,8 +47,8 @@ describe('elementTypes tests', () => {
       ).toBe(elementType.name)
       expect(elementType.getDisplayName({}, {})).toBe(elementType.name)
     })
-    test('DropdownElementType label, default_value & placeholder variations', () => {
-      const elementType = testApp.getRegistry().get('element', 'dropdown')
+    test('ChoiceElementType label, default_value & placeholder variations', () => {
+      const elementType = testApp.getRegistry().get('element', 'choice')
       expect(elementType.getDisplayName({ label: "'Animals'" }, {})).toBe(
         'Animals'
       )
@@ -303,16 +303,16 @@ describe('elementTypes tests', () => {
       const elementType = new CheckboxElementType()
       expect(elementType.isValid({ required: false }, true)).toBe(true)
     })
-    test('DropdownElementType | required | no value.', () => {
-      const elementType = new DropdownElementType()
+    test('ChoiceElementType | required | no value.', () => {
+      const elementType = new ChoiceElementType()
       const element = {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
       expect(elementType.isValid(element, '')).toBe(false)
     })
-    test('DropdownElementType | required | blank option.', () => {
-      const elementType = new DropdownElementType()
+    test('ChoiceElementType | required | blank option.', () => {
+      const elementType = new ChoiceElementType()
       const element = {
         required: true,
         options: [
@@ -322,24 +322,24 @@ describe('elementTypes tests', () => {
       }
       expect(elementType.isValid(element, '')).toBe(true)
     })
-    test('DropdownElementType | required | valid value.', () => {
-      const elementType = new DropdownElementType()
+    test('ChoiceElementType | required | valid value.', () => {
+      const elementType = new ChoiceElementType()
       const element = {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
       expect(elementType.isValid(element, 'uk')).toBe(true)
     })
-    test('DropdownElementType | not required | no value.', () => {
-      const elementType = new DropdownElementType()
+    test('ChoiceElementType | not required | no value.', () => {
+      const elementType = new ChoiceElementType()
       const element = {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
       expect(elementType.isValid(element, '')).toBe(true)
     })
-    test('DropdownElementType | not required | valid value.', () => {
-      const elementType = new DropdownElementType()
+    test('ChoiceElementType | not required | valid value.', () => {
+      const elementType = new ChoiceElementType()
       const element = {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],

@@ -1,4 +1,4 @@
-.ab-checkbox {
+.ab-radio {
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -8,7 +8,7 @@
   }
 }
 
-.ab-checkbox__input {
+.ab-radio__input {
   cursor: pointer;
   margin: 0;
   height: 16px;
@@ -19,16 +19,16 @@
   align-items: center;
 }
 
-.ab-checkbox--error {
+.ab-radio--error {
   border-color: $color-error-300;
 }
 
-.ab-checkbox--readonly {
+.ab-radio--readonly {
   accent-color: $palette-blue-500;
   pointer-events: none;
 }
 
-.ab-checkbox__label {
+.ab-radio__label {
   cursor: pointer;
   color: $black;
   user-select: none;

@@ -14,7 +14,9 @@ export default {
     return {
       // This is needed to tell all the child components that the dropdown is going
       // to be in multiple state.
-      multiple: this.multiple,
+      // The reactiveMultiple is an object to deal with the reactivity issue when you
+      // use provide inject pattern. Don't change it.
+      multiple: this.reactiveMultiple,
     }
   },
   props: {
@@ -99,6 +101,7 @@ export default {
       hasDropdownItem: true,
       hover: null,
       fixedItemsImmutable: this.fixedItems,
+      reactiveMultiple: { value: this.multiple }, // Used for provide
     }
   },
   computed: {
@@ -127,6 +130,9 @@ export default {
         // selectedIcon a little bit later because the children might have changed.
         this.forceRefreshSelectedValue()
       })
+    },
+    multiple(newValue) {
+      this.reactiveMultiple.value = newValue
     },
   },
   mounted() {

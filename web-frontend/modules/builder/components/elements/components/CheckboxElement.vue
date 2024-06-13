@@ -1,11 +1,10 @@
 <template>
-  <div class="checkbox-element-wrapper">
+  <div>
     <ABCheckbox
       v-model="inputValue"
       :required="element.required"
       :read-only="isEditMode"
       :error="displayFormDataError"
-      class="checkbox-element"
     >
       {{ resolvedLabel }}
       <span
@@ -27,11 +26,9 @@ import {
   ensureBoolean,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
-import ABCheckbox from '@baserow/modules/builder/components/elements/baseComponents/ABCheckbox'
 
 export default {
   name: 'CheckboxElement',
-  components: { ABCheckbox },
   mixins: [formElement],
   computed: {
     defaultValueResolved() {

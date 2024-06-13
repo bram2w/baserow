@@ -11,7 +11,7 @@ from django.db.models.functions import Cast
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
+from baserow.contrib.builder.api.elements.serializers import ChoiceOptionSerializer
 from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
 )
@@ -26,9 +26,9 @@ from baserow.contrib.builder.elements.models import (
     WIDTHS,
     ButtonElement,
     CheckboxElement,
+    ChoiceElement,
+    ChoiceElementOption,
     ColumnElement,
-    DropdownElement,
-    DropdownElementOption,
     Element,
     FormContainerElement,
     HeadingElement,
@@ -1127,10 +1127,17 @@ class CheckboxElementType(InputElementType):
         }
 
 
-class DropdownElementType(FormElementTypeMixin, ElementType):
-    type = "dropdown"
-    model_class = DropdownElement
-    allowed_fields = ["label", "default_value", "required", "placeholder", "multiple"]
+class ChoiceElementType(FormElementTypeMixin, ElementType):
+    type = "choice"
+    model_class = ChoiceElement
+    allowed_fields = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "multiple",
+        "show_as_dropdown",
+    ]
     serializer_field_names = [
         "label",
         "default_value",
@@ -1138,6 +1145,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         "placeholder",
         "options",
         "multiple",
+        "show_as_dropdown",
     ]
     request_serializer_field_names = [
         "label",
@@ -1146,6 +1154,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         "placeholder",
         "options",
         "multiple",
+        "show_as_dropdown",
     ]
 
     class SerializedDict(ElementDict):
@@ -1155,6 +1164,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         default_value: BaserowFormula
         options: List
         multiple: bool
+        show_as_dropdown: bool
 
     @property
     def serializer_field_overrides(self):
@@ -1162,34 +1172,39 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
 
         overrides = {
             "label": FormulaSerializerField(
-                help_text=DropdownElement._meta.get_field("label").help_text,
+                help_text=ChoiceElement._meta.get_field("label").help_text,
                 required=False,
                 allow_blank=True,
                 default="",
             ),
             "default_value": FormulaSerializerField(
-                help_text=DropdownElement._meta.get_field("default_value").help_text,
+                help_text=ChoiceElement._meta.get_field("default_value").help_text,
                 required=False,
                 allow_blank=True,
                 default="",
             ),
             "required": serializers.BooleanField(
-                help_text=DropdownElement._meta.get_field("required").help_text,
+                help_text=ChoiceElement._meta.get_field("required").help_text,
                 default=False,
                 required=False,
             ),
             "placeholder": serializers.CharField(
-                help_text=DropdownElement._meta.get_field("placeholder").help_text,
+                help_text=ChoiceElement._meta.get_field("placeholder").help_text,
                 required=False,
                 allow_blank=True,
                 default="",
             ),
-            "options": DropdownOptionSerializer(
-                source="dropdownelementoption_set", many=True, required=False
+            "options": ChoiceOptionSerializer(
+                source="choiceelementoption_set", many=True, required=False
             ),
             "multiple": serializers.BooleanField(
-                help_text=DropdownElement._meta.get_field("multiple").help_text,
+                help_text=ChoiceElement._meta.get_field("multiple").help_text,
                 default=False,
+                required=False,
+            ),
+            "show_as_dropdown": serializers.BooleanField(
+                help_text=ChoiceElement._meta.get_field("show_as_dropdown").help_text,
+                default=True,
                 required=False,
             ),
         }
@@ -1200,12 +1215,12 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
     def request_serializer_field_overrides(self):
         return {
             **self.serializer_field_overrides,
-            "options": DropdownOptionSerializer(many=True, required=False),
+            "options": ChoiceOptionSerializer(many=True, required=False),
         }
 
     def serialize_property(
         self,
-        element: DropdownElement,
+        element: ChoiceElement,
         prop_name: str,
         files_zip=None,
         storage=None,
@@ -1214,7 +1229,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         if prop_name == "options":
             return [
                 self.serialize_option(option)
-                for option in element.dropdownelementoption_set.all()
+                for option in element.choiceelementoption_set.all()
             ]
 
         return super().serialize_property(
@@ -1260,7 +1275,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         cache=None,
         **kwargs,
     ) -> T:
-        dropdown_element = super().import_serialized(
+        choice_element = super().import_serialized(
             parent,
             serialized_values,
             id_mapping,
@@ -1272,13 +1287,13 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
 
         options = []
         for option in serialized_values.get("options", []):
-            option["dropdown_id"] = dropdown_element.id
+            option["choice_id"] = choice_element.id
             option_deserialized = self.deserialize_option(option)
             options.append(option_deserialized)
 
-        DropdownElementOption.objects.bulk_create(options)
+        ChoiceElementOption.objects.bulk_create(options)
 
-        return dropdown_element
+        return choice_element
 
     def create_instance_from_serialized(
         self,
@@ -1299,15 +1314,15 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
             **kwargs,
         )
 
-    def serialize_option(self, option: DropdownElementOption) -> Dict:
+    def serialize_option(self, option: ChoiceElementOption) -> Dict:
         return {
             "value": option.value,
             "name": option.name,
-            "dropdown_id": option.dropdown_id,
+            "choice_id": option.choice_id,
         }
 
     def deserialize_option(self, value: Dict):
-        return DropdownElementOption(**value)
+        return ChoiceElementOption(**value)
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
@@ -1316,39 +1331,37 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
             "required": False,
             "placeholder": "'some placeholder'",
             "multiple": False,
+            "show_as_dropdown": True,
         }
 
-    def after_create(self, instance: DropdownElement, values: Dict):
+    def after_create(self, instance: ChoiceElement, values: Dict):
         options = values.get("options", [])
 
-        DropdownElementOption.objects.bulk_create(
-            [DropdownElementOption(dropdown=instance, **option) for option in options]
+        ChoiceElementOption.objects.bulk_create(
+            [ChoiceElementOption(choice=instance, **option) for option in options]
         )
 
-    def after_update(self, instance: DropdownElement, values: Dict):
+    def after_update(self, instance: ChoiceElement, values: Dict):
         options = values.get("options", None)
 
         if options is not None:
-            DropdownElementOption.objects.filter(dropdown=instance).delete()
-            DropdownElementOption.objects.bulk_create(
-                [
-                    DropdownElementOption(dropdown=instance, **option)
-                    for option in options
-                ]
+            ChoiceElementOption.objects.filter(choice=instance).delete()
+            ChoiceElementOption.objects.bulk_create(
+                [ChoiceElementOption(choice=instance, **option) for option in options]
             )
 
-    def is_valid(self, element: DropdownElement, value: Union[List, str]) -> bool:
+    def is_valid(self, element: ChoiceElement, value: Union[List, str]) -> bool:
         """
-        Responsible for validating `DropdownElement` form data. We handle
+        Responsible for validating `ChoiceElement` form data. We handle
         this validation a little differently to ensure that if someone creates
         an option with a blank value, it's considered valid.
 
-        :param element: The dropdown element.
-        :param value: The dropdown value we want to validate.
+        :param element: The choice element.
+        :param value: The choice value we want to validate.
         :return: Whether the value is valid or not for this element.
         """
 
-        options = set(element.dropdownelementoption_set.values_list("value", flat=True))
+        options = set(element.choiceelementoption_set.values_list("value", flat=True))
 
         if element.multiple:
             try:

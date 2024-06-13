@@ -13,7 +13,7 @@
       @click="select(value, disabled)"
       @mousemove="hover(value, disabled)"
     >
-      <div v-if="multiple">
+      <div v-if="multiple.value">
         <Checkbox :disabled="disabled" :checked="isActive(value)"></Checkbox>
       </div>
       <div

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "[Builder] Rename dropdown element to choice element and allow to display element as dropdown/checkbox/radio",
+    "issue_number": 2517,
+    "bullet_points": [],
+    "created_at": "2024-04-17"
+}

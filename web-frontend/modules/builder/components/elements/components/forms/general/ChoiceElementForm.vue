@@ -18,13 +18,39 @@
       :placeholder="$t('generalForm.placeholderPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
+
     <FormGroup :label="$t('generalForm.requiredTitle')">
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
-    <FormGroup :label="$t('dropdownElementForm.multiple')">
+
+    <FormGroup :label="$t('choiceElementForm.multiple')">
       <Checkbox v-model="values.multiple"></Checkbox>
     </FormGroup>
-    <DropdownOptionsSelector
+
+    <FormGroup :label="$t('choiceElementForm.display')">
+      <RadioButton
+        v-model="values.show_as_dropdown"
+        icon="iconoir-list"
+        :value="true"
+      >
+        {{ $t('choiceElementForm.dropdown') }}
+      </RadioButton>
+      <RadioButton
+        v-model="values.show_as_dropdown"
+        :icon="
+          values.multiple ? 'baserow-icon-check-square' : 'iconoir-check-circle'
+        "
+        :value="false"
+      >
+        {{
+          values.multiple
+            ? $t('choiceElementForm.checkbox')
+            : $t('choiceElementForm.radio')
+        }}
+      </RadioButton>
+    </FormGroup>
+
+    <ChoiceOptionsSelector
       :options="values.options"
       @update="optionUpdated"
       @create="createOption"
@@ -37,12 +63,12 @@
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import { DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS } from '@baserow/modules/builder/enums'
 import form from '@baserow/modules/core/mixins/form'
-import DropdownOptionsSelector from '@baserow/modules/builder/components/elements/components/forms/general/dropdown/DropdownOptionsSelector.vue'
+import ChoiceOptionsSelector from '@baserow/modules/builder/components/elements/components/forms/general/choice/ChoiceOptionsSelector.vue'
 import { uuid } from '@baserow/modules/core/utils/string'
 
 export default {
-  name: 'DropdownElementForm',
-  components: { DropdownOptionsSelector, ApplicationBuilderFormulaInputGroup },
+  name: 'ChoiceElementForm',
+  components: { ChoiceOptionsSelector, ApplicationBuilderFormulaInputGroup },
   mixins: [form],
   inject: ['page'],
   data() {
@@ -54,6 +80,7 @@ export default {
         'placeholder',
         'options',
         'multiple',
+        'show_as_dropdown',
       ],
       values: {
         label: '',
@@ -62,6 +89,7 @@ export default {
         placeholder: '',
         options: [],
         multiple: false,
+        show_as_dropdown: true,
       },
     }
   },
