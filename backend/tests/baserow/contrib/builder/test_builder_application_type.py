@@ -372,6 +372,11 @@ def test_builder_application_export(data_fixture):
                         "type": "table",
                         "order": str(element4.order),
                         "button_color": "primary",
+                        "orientation": {
+                            "smartphone": "horizontal",
+                            "tablet": "horizontal",
+                            "desktop": "horizontal",
+                        },
                         "parent_element_id": None,
                         "place_in_container": None,
                         "visibility": "all",

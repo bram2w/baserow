@@ -1,13 +1,13 @@
+.baserow-table-wrapper {
+  overflow-x: auto;
+}
+
 .baserow-table {
   width: 100%;
   border: 1px solid $black;
   border-spacing: 0;
   text-align: left;
   font-size: 12px;
-}
-
-.baserow-table__header-row {
-  background-color: $palette-neutral-200;
 }
 
 .baserow-table__header-cell,
@@ -17,13 +17,28 @@
 
 .baserow-table__header-cell {
   font-weight: 600;
-  border-bottom: 1px solid $black;
+  background-color: $palette-neutral-200;
 }
 
-.baserow-table__cell {
-  border-bottom: 1px solid $black;
+.baserow-table__separator {
+  .baserow-table__row:not(:last-child) & {
+    border-bottom: 1px solid $black;
+  }
+}
 
-  .baserow-table__row:last-child & {
+.baserow-table--horizontal {
+  .baserow-table__header-cell,
+  .baserow-table__cell {
+    border-bottom: 1px solid $black;
+  }
+
+  .baserow-table__row:last-child .baserow-table__cell {
     border-bottom: none;
+  }
+}
+
+.baserow-table--vertical {
+  .baserow-table__header-cell {
+    border-right: 1px solid $black;
   }
 }

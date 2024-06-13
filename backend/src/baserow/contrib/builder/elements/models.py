@@ -59,6 +59,14 @@ def get_default_element_content_type():
     return ContentType.objects.get_for_model(Element)
 
 
+def get_default_table_orientation():
+    return {
+        "smartphone": "horizontal",
+        "tablet": "horizontal",
+        "desktop": "horizontal",
+    }
+
+
 class Element(
     HierarchicalModelMixin,
     TrashableModelMixin,
@@ -765,7 +773,12 @@ class TableElement(CollectionElement):
         blank=True,
         help_text="The color of the button",
     )
-
+    orientation = models.JSONField(
+        blank=True,
+        null=True,
+        default=get_default_table_orientation,
+        help_text="The table orientation (horizontal or vertical) for each device type",
+    )
     fields = models.ManyToManyField(CollectionField)
 
 

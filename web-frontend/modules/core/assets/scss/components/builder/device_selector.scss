@@ -1,0 +1,31 @@
+.device-selector {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.device-selector__item {
+  display: flex;
+  gap: 5px;
+}
+
+.device-selector__item--column {
+  flex: 1;
+  flex-flow: column nowrap;
+}
+
+.device-selector__item--row {
+  flex-direction: row;
+  flex-grow: 1;
+  align-items: center;
+}
+
+.device-selector__button {
+  border: none;
+  box-shadow: none;
+
+  .button__icon {
+    margin: 0 auto;
+  }
+}

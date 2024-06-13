@@ -5,7 +5,11 @@
     }"
     class="table-element"
   >
-    <BaserowTable :fields="element.fields" :rows="rows">
+    <BaserowTable
+      :fields="element.fields"
+      :rows="rows"
+      :orientation="orientation"
+    >
       <template #cell-content="{ rowIndex, field, value }">
         <component
           :is="collectionFieldTypes[field.type].component"
@@ -55,6 +59,8 @@ export default {
      *   display.
      * @property {Object} fields - The fields of the data source.
      * @property {int} items_per_page - The number of items per page.
+     * @property {string} button_color - The color of the button.
+     * @property {string} orientation - The orientation for eaceh device.
      */
     element: {
       type: Object,
@@ -93,6 +99,10 @@ export default {
     },
     collectionFieldTypes() {
       return this.$registry.getAll('collectionField')
+    },
+    orientation() {
+      const device = this.$store.getters['page/getDeviceTypeSelected']
+      return this.element.orientation[device]
     },
   },
 

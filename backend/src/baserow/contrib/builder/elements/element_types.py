@@ -42,6 +42,7 @@ from baserow.contrib.builder.elements.models import (
     TableElement,
     TextElement,
     VerticalAlignments,
+    get_default_table_orientation,
 )
 from baserow.contrib.builder.elements.registries import (
     ElementType,
@@ -219,14 +220,15 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
 
     class SerializedDict(CollectionElementWithFieldsTypeMixin.SerializedDict):
         button_color: str
+        orientation: dict
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["button_color"]
+        return super().allowed_fields + ["button_color", "orientation"]
 
     @property
     def serializer_field_names(self):
-        return super().serializer_field_names + ["button_color"]
+        return super().serializer_field_names + ["button_color", "orientation"]
 
     @property
     def serializer_field_overrides(self):
@@ -238,10 +240,18 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
                 default="primary",
                 help_text="Button color.",
             ),
+            "orientation": serializers.JSONField(
+                allow_null=False,
+                default=get_default_table_orientation,
+                help_text=TableElement._meta.get_field("orientation").help_text,
+            ),
         }
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
-        return {"data_source_id": None}
+        return {
+            "data_source_id": None,
+            "orientation": get_default_table_orientation(),
+        }
 
 
 class RepeatElementType(
