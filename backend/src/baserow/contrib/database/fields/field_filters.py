@@ -137,12 +137,15 @@ class FilterBuilder:
             raise ValueError(f"Unknown filter type {self._filter_type}.")
 
 
-def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
+def contains_filter(
+    field_name, value, model_field, _, validate=True
+) -> OptionallyAnnotatedQ:
     value = value.strip()
     # If an empty value has been provided we do not want to filter at all.
     if value == "":
         return Q()
-    model_field.get_prep_value(value)
+    if validate:
+        model_field.get_prep_value(value)
     return Q(**{f"{field_name}__icontains": value})
 
 
