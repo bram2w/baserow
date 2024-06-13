@@ -5627,7 +5627,7 @@ class UUIDFieldType(ReadOnlyFieldType):
         return "" if value is None else str(value)
 
     def contains_query(self, *args):
-        return contains_filter(*args)
+        return contains_filter(*args, validate=False)
 
     def to_baserow_formula_expression(self, field):
         # Cast the uuid to text, to make it compatible with all the text related

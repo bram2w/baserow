@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix for UUIDFieldType that fails hard if filtered by ContainsViewFilterType and a non-UUID string",
+    "issue_number": 2713,
+    "bullet_points": [],
+    "created_at": "2024-06-10"
+}

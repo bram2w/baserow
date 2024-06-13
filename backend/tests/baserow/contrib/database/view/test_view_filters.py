@@ -5405,6 +5405,109 @@ def test_link_row_contains_filter_type_single_select_field(data_fixture):
 
 
 @pytest.mark.django_db
+def test_link_row_contains_filter_type_uuid_field(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    related_table = data_fixture.create_database_table(database=database)
+    primary_field = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Test",
+        link_row_table=related_table,
+    )
+
+    row_handler = RowHandler()
+
+    related_primary_uuid_field = data_fixture.create_uuid_field(
+        primary=True, table=related_table
+    )
+
+    model = table.get_model()
+    related_model = related_table.get_model()
+
+    related_uuid_row_1 = row_handler.create_row(
+        user=user,
+        table=related_table,
+        model=related_model,
+        values={},
+    )
+
+    related_uuid_row_2 = row_handler.create_row(
+        user=user,
+        table=related_table,
+        model=related_model,
+        values={},
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 0",
+        },
+    )
+
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 1",
+            f"field_{link_row_field.id}": [related_uuid_row_1.id],
+        },
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{primary_field.id}": "Row 2",
+            f"field_{link_row_field.id}": [related_uuid_row_2.id],
+        },
+    )
+
+    view_handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_contains",
+        value=f"",
+    )
+
+    ids = [
+        r.id for r in view_handler.apply_filters(grid_view, model.objects.all()).all()
+    ]
+    assert len(ids) == 3
+
+    uuid_value = str(
+        getattr(related_uuid_row_1, f"field_{related_primary_uuid_field.id}")
+    )
+
+    view_filter.value = uuid_value[:-2]
+    view_filter.save()
+    ids = [
+        r.id for r in view_handler.apply_filters(grid_view, model.objects.all()).all()
+    ]
+    assert len(ids) == 1
+    assert ids == [row_1.id]
+
+    view_filter.value = uuid_value
+    view_filter.save()
+    ids = [
+        r.id for r in view_handler.apply_filters(grid_view, model.objects.all()).all()
+    ]
+    assert len(ids) == 1
+    assert ids == [row_1.id]
+
+
+@pytest.mark.django_db
 def test_link_row_contains_filter_type_multiple_select_field(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
