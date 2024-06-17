@@ -1007,13 +1007,13 @@ class ViewFilterGroupsView(APIView):
         },
     )
     @transaction.atomic
-    @validate_body(CreateViewFilterGroupSerializer)
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
+    @validate_body(CreateViewFilterGroupSerializer)
     def post(self, request, data, view_id):
         """Creates a new filter group for the provided view."""
 
@@ -1793,13 +1793,11 @@ class ViewFieldOptionsView(APIView):
         view = handler.get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
         serializer_class = view_type.get_field_options_serializer_class()
-        data = validate_data(serializer_class, request.data)
+        data = validate_data(serializer_class, request.data, return_validated=True)
 
         with view_type.map_api_exceptions():
             action_type_registry.get_by_type(UpdateViewFieldOptionsActionType).do(
-                request.user,
-                view,
-                field_options=data["field_options"],
+                request.user, view, field_options=data
             )
 
         serializer = serializer_class(view)

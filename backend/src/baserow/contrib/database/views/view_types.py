@@ -618,10 +618,21 @@ class FormViewType(ViewType):
 
         return field_options
 
-    def _prepare_new_condition_group(self, updated_field_option_instance, group):
+    def _prepare_new_condition_group(
+        self, updated_field_option_instance, group, existing_condition_group_ids
+    ):
+        parent_group_id = group.get("parent_group", None)
+        if (
+            parent_group_id is not None
+            and parent_group_id not in existing_condition_group_ids
+        ):
+            raise FormViewFieldOptionsConditionGroupDoesNotExist(
+                "Invalid parent filter group id."
+            )
         return FormViewFieldOptionsConditionGroup(
             field_option=updated_field_option_instance,
             filter_type=group["filter_type"],
+            parent_group_id=group.get("parent_group", None),
         )
 
     def _group_exists_and_matches_field(self, existing_group, numeric_field_id):
@@ -649,7 +660,8 @@ class FormViewType(ViewType):
         groups_to_create_temp_ids = []
         groups_to_create = []
         groups_to_update = []
-        group_ids_to_delete = set(existing_condition_groups.keys())
+        existing_condition_group_ids = set(existing_condition_groups.keys())
+        group_ids_to_delete = existing_condition_group_ids.copy()
 
         for field_id, options in field_options.items():
             if "condition_groups" not in options:
@@ -662,15 +674,26 @@ class FormViewType(ViewType):
 
             for group in options["condition_groups"]:
                 existing_group = existing_condition_groups.get(group["id"], None)
+
+                parent_group_id = group.get("parent_group", None)
+                if (
+                    parent_group_id is not None
+                    and parent_group_id in group_ids_to_delete
+                ):
+                    group_ids_to_delete.remove(parent_group_id)
+
                 if self._group_exists_and_matches_field(
                     existing_group, numeric_field_id
                 ):
                     existing_group.filter_type = group["filter_type"]
                     groups_to_update.append(existing_group)
                     group_ids_to_delete.remove(existing_group.id)
+
                 else:
                     new_condition_group = self._prepare_new_condition_group(
-                        updated_field_option_instance, group
+                        updated_field_option_instance,
+                        group,
+                        existing_condition_group_ids,
                     )
                     groups_to_create_temp_ids.append(group["id"])
                     groups_to_create.append(new_condition_group)
@@ -932,7 +955,11 @@ class FormViewType(ViewType):
         # Delete all groups that have no conditions anymore.
         FormViewFieldOptionsConditionGroup.objects.filter(
             field_option__in=updated_field_options
-        ).annotate(count=Count("conditions")).filter(count=0).delete()
+        ).annotate(
+            count=Count("conditions") + Count("formviewfieldoptionsconditiongroup")
+        ).filter(
+            count=0
+        ).delete()
 
     def export_serialized(
         self,

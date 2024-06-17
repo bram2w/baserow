@@ -450,7 +450,8 @@
     "choose": "Choose row"
   },
   "viewFieldConditionsForm": {
-    "addCondition": "Add condition"
+    "addCondition": "Add condition",
+    "addConditionGroup": "Add condition group"
   },
   "viewFilterContext": {
     "addFilter": "Add filter",

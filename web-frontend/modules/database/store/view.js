@@ -2,6 +2,7 @@ import { v1 as uuidv1 } from 'uuid'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { uuid } from '@baserow/modules/core/utils/string'
 import {
+  createFiltersTree,
   readDefaultViewIdFromCookie,
   saveDefaultViewIdInCookie,
 } from '@baserow/modules/database/utils/view'
@@ -175,6 +176,7 @@ export const mutations = {
     state.selected = {}
   },
   ADD_FILTER(state, { view, filter }) {
+    filter.view = view.id
     view.filters.push(filter)
   },
   FINALIZE_FILTER(state, { view, oldId, id }) {
@@ -194,6 +196,7 @@ export const mutations = {
     }
   },
   ADD_FILTER_GROUP(state, { view, filterGroup }) {
+    filterGroup.view = view.id
     view.filter_groups.push(filterGroup)
   },
   FINALIZE_FILTER_GROUP(state, { view, oldId, id }) {
@@ -605,6 +608,7 @@ export const actions = {
       emitEvent = true,
       readOnly = false,
       filterGroupId = null,
+      parentGroupId = null,
     }
   ) {
     // If the type is not provided we are going to choose the first available type.
@@ -652,6 +656,7 @@ export const actions = {
       filterGroup.id = filterGroupId
       filterGroup._.loading = !readOnly
       filterGroup.filter_type = 'AND'
+      filterGroup.parent_group = parentGroupId
       commit('ADD_FILTER_GROUP', { view, filterGroup })
     }
 
@@ -676,6 +681,7 @@ export const actions = {
         try {
           const { data } = await FilterService(this.$client).createGroup(
             view.id,
+            parentGroupId,
             undoRedoActionGroupId
           )
           commit('FINALIZE_FILTER_GROUP', {
@@ -748,7 +754,7 @@ export const actions = {
    * Forcefully create a new view filter without making a request to the backend.
    */
   forceCreateFilter({ commit }, { view, values }) {
-    const filter = Object.assign({}, values)
+    const filter = Object.assign({}, values) // clone the object
     populateFilter(filter)
     commit('ADD_FILTER', { view, filter })
   },
@@ -885,14 +891,31 @@ export const actions = {
     }
   },
   /**
-   * Forcefully delete an existing filter without making a request to the backend.
+   * Forcefully delete an existing filter group without making a request to the backend.
+   * This function will also delete all the filters that are part of the group and all
+   * the child groups and filters.
    */
   forceDeleteFilterGroup({ commit }, { view, filterGroup }) {
-    const filters = view.filters.filter((f) => f.group === filterGroup.id)
-    filters.forEach((filter) => {
-      commit('DELETE_FILTER', { view, id: filter.id })
-    })
-    commit('DELETE_FILTER_GROUP', { view, id: filterGroup.id })
+    const filtersTree = createFiltersTree(
+      view.filter_type,
+      view.filters,
+      view.filter_groups
+    )
+    const groupNode = filtersTree.findNodeByGroupId(filterGroup.id)
+    if (groupNode === null) {
+      return
+    }
+    const deleteFromNode = (node) => {
+      for (const child in node.children) {
+        deleteFromNode(node.children[child])
+      }
+      for (const filter of node.filters) {
+        commit('DELETE_FILTER', { view, id: filter.id })
+      }
+      commit('DELETE_FILTER_GROUP', { view, id: node.groupId })
+    }
+
+    deleteFromNode(groupNode)
   },
   /**
    * When a field is deleted the related filters are also automatically deleted in the

@@ -542,7 +542,7 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
 }
 
 export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
-  getType() {
+  static getType() {
     return 'column'
   }
 
@@ -728,7 +728,7 @@ const CollectionElementTypeMixin = (Base) =>
   }
 
 export class TableElementType extends CollectionElementTypeMixin(ElementType) {
-  getType() {
+  static getType() {
     return 'table'
   }
 
@@ -936,7 +936,7 @@ export class FormElementType extends ElementType {
 }
 
 export class InputTextElementType extends FormElementType {
-  getType() {
+  static getType() {
     return 'input_text'
   }
 
@@ -1135,7 +1135,7 @@ export class LinkElementType extends ElementType {
 }
 
 export class ImageElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'image'
   }
 
@@ -1171,7 +1171,7 @@ export class ImageElementType extends ElementType {
 }
 
 export class ButtonElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'button'
   }
 
@@ -1298,7 +1298,7 @@ export class ChoiceElementType extends FormElementType {
 }
 
 export class CheckboxElementType extends FormElementType {
-  getType() {
+  static getType() {
     return 'checkbox'
   }
 
@@ -1341,7 +1341,7 @@ export class CheckboxElementType extends FormElementType {
 }
 
 export class IFrameElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'iframe'
   }
 
