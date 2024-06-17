@@ -401,6 +401,7 @@ class CreateViewFilterGroupActionType(UndoableActionType):
         "database_id",
         "view_filter_group_id",
         "filter_type",
+        "parent_group_id",
     ]
 
     @dataclasses.dataclass
@@ -413,6 +414,7 @@ class CreateViewFilterGroupActionType(UndoableActionType):
         database_name: str
         view_filter_group_id: int
         filter_type: str
+        parent_group_id: Optional[int] = None
 
     @classmethod
     def do(
@@ -420,6 +422,7 @@ class CreateViewFilterGroupActionType(UndoableActionType):
         user: AbstractUser,
         view: View,
         filter_type: Optional[str] = None,
+        parent_group: Optional[int] = None,
     ) -> ViewFilterGroup:
         """
         Creates a new filter group for the provided view. See
@@ -434,7 +437,9 @@ class CreateViewFilterGroupActionType(UndoableActionType):
             filters (AND) or to any filter (OR) in the group to be shown.
         """
 
-        view_filter_group = ViewHandler().create_filter_group(user, view, filter_type)
+        view_filter_group = ViewHandler().create_filter_group(
+            user, view, filter_type, parent_group
+        )
 
         workspace = view.table.database.workspace
         params = cls.Params(
@@ -446,6 +451,7 @@ class CreateViewFilterGroupActionType(UndoableActionType):
             view.table.database.name,
             view_filter_group.id,
             filter_type,
+            parent_group,
         )
         cls.register_action(user, params, cls.scope(view.id), workspace)
         return view_filter_group
@@ -468,7 +474,11 @@ class CreateViewFilterGroupActionType(UndoableActionType):
         view = view_handler.get_view(params.view_id)
 
         view_handler.create_filter_group(
-            user, view, params.filter_type, params.view_filter_group_id
+            user,
+            view,
+            params.filter_type,
+            params.parent_group_id,
+            params.view_filter_group_id,
         )
 
 
@@ -599,6 +609,8 @@ class DeleteViewFilterGroupActionType(UndoableActionType):
         view_filter_group_id: int
         filter_type: str
         filters: List[Dict[str, Any]]
+        parent_group_id: Optional[int] = None
+        groups: Optional[List[Dict[str, Any]]] = None
 
     @classmethod
     def do(
@@ -623,16 +635,33 @@ class DeleteViewFilterGroupActionType(UndoableActionType):
         view_filter_type = view_filter_group.filter_type
 
         filters = []
-        for view_filter in view_filter_group.filters.all():
-            filters.append(
-                {
-                    "id": view_filter.id,
-                    "field_id": view_filter.field_id,
-                    "filter_type": view_filter.type,
-                    "filter_value": view_filter.value,
-                    "group_id": view_filter.group_id,
-                }
-            )
+        groups = []
+
+        def append_filters(filter_group):
+            for view_filter in filter_group.filters.all():
+                filters.append(
+                    {
+                        "id": view_filter.id,
+                        "field_id": view_filter.field_id,
+                        "filter_type": view_filter.type,
+                        "filter_value": view_filter.value,
+                        "group_id": view_filter.group_id,
+                    }
+                )
+
+        def append_filter_groups(filter_group):
+            append_filters(filter_group)
+            for child_filter_group in filter_group.viewfiltergroup_set.all():
+                groups.append(
+                    {
+                        "id": child_filter_group.id,
+                        "filter_type": child_filter_group.filter_type,
+                        "parent_group_id": child_filter_group.parent_group_id,
+                    }
+                )
+                append_filter_groups(child_filter_group)
+
+        append_filter_groups(view_filter_group)
 
         ViewHandler().delete_filter_group(user, view_filter_group)
 
@@ -646,6 +675,8 @@ class DeleteViewFilterGroupActionType(UndoableActionType):
             view_filter_group_id,
             view_filter_type,
             filters,
+            view_filter_group.parent_group_id,
+            groups,
         )
         workspace = view_filter_group.view.table.database.workspace
         cls.register_action(
@@ -665,8 +696,22 @@ class DeleteViewFilterGroupActionType(UndoableActionType):
         view = view_handler.get_view(params.view_id)
 
         view_handler.create_filter_group(
-            user, view, params.filter_type, params.view_filter_group_id
+            user,
+            view,
+            params.filter_type,
+            params.parent_group_id,
+            params.view_filter_group_id,
         )
+
+        inner_groups = params.groups or []
+        for filter_group in inner_groups:
+            view_handler.create_filter_group(
+                user,
+                view,
+                filter_group["filter_type"],
+                filter_group["parent_group_id"],
+                filter_group["id"],
+            )
 
         # recreate all the filters belonging to the group
         for view_filter in params.filters:

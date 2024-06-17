@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Enable single level nesting of filter groups within existing groups",
+    "issue_number": 2646,
+    "bullet_points": [],
+    "created_at": "2024-05-28"
+}

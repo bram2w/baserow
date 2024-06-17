@@ -18,7 +18,7 @@
           :index="index"
           :filter-type="filterType"
           :disable-filter="disableFilter"
-          @select-boolean-operator="$emit('selectOperator', $event)"
+          @updateFilterType="$emit('updateFilterType', { value: $event })"
         />
         <ViewFieldConditionItem
           :ref="`condition-${filter.id}`"
@@ -28,8 +28,8 @@
           :fields="fields"
           :disable-filter="disableFilter"
           :read-only="readOnly"
-          @updateFilter="updateFilter(filter, $event)"
-          @deleteFilter="deleteFilter(filter, $event)"
+          @updateFilter="updateFilter({ filter, values: $event })"
+          @deleteFilter="deleteFilter({ filter, event: $event })"
         >
           <template #filterInputComponent="{ slotProps }">
             <slot name="filterInputComponent" :slot-props="slotProps"></slot>
@@ -49,60 +49,25 @@
         :index="filtersTree.filters.length + groupIndex"
         :filter-type="filterType"
         :disable-filter="disableFilter"
-        @select-boolean-operator="$emit('selectOperator', $event)"
+        @updateFilterType="$emit('updateFilterType', { value: $event })"
       />
-      <div class="filters__group-item">
-        <div class="filters__group-item-filters">
-          <div
-            v-for="(filter, index) in groupNode.filtersOrdered()"
-            :key="`${groupIndex}-${index}`"
-            class="filters__item-wrapper"
-          >
-            <div class="filters__item filters__item--level-2">
-              <ViewFilterFormOperator
-                :index="index"
-                :filter-type="groupNode.group.filter_type"
-                :disable-filter="disableFilter"
-                @select-boolean-operator="
-                  $emit('selectFilterGroupOperator', {
-                    value: $event,
-                    filterGroup: groupNode.group,
-                  })
-                "
-              />
-              <ViewFieldConditionItem
-                :ref="`condition-${filter.id}`"
-                :filter="filter"
-                :view="view"
-                :is-public-view="isPublicView"
-                :fields="fields"
-                :disable-filter="disableFilter"
-                :read-only="readOnly"
-                @updateFilter="updateFilter(filter, $event)"
-                @deleteFilter="deleteFilter(filter, $event)"
-              >
-                <template #filterInputComponent="{ slotProps }">
-                  <slot
-                    name="filterInputComponent"
-                    :slot-props="slotProps"
-                  ></slot>
-                </template>
-                <template #afterValueInput="{ slotProps }">
-                  <slot name="afterValueInput" :slot-props="slotProps"></slot>
-                </template>
-              </ViewFieldConditionItem>
-            </div>
-          </div>
-        </div>
-        <div v-if="!disableFilter" class="filters__group-item-actions">
-          <ButtonText
-            icon="iconoir-plus"
-            @click.prevent="$emit('addFilter', groupNode.group.id)"
-          >
-            {{ addConditionLabel }}</ButtonText
-          >
-        </div>
-      </div>
+      <ViewFieldConditionGroup
+        :group-node="groupNode"
+        :disable-filter="disableFilter"
+        :is-public-view="isPublicView"
+        :read-only="readOnly"
+        :fields="fields"
+        :view="view"
+        :can-add-filter-groups="canAddFilterGroups"
+        :add-condition-string="addConditionString"
+        :add-condition-group-string="addConditionGroupString"
+        @addFilter="$emit('addFilter', $event)"
+        @addFilterGroup="$emit('addFilterGroup', $event)"
+        @updateFilter="updateFilter($event)"
+        @deleteFilter="deleteFilter($event)"
+        @updateFilterType="$emit('updateFilterType', $event)"
+      >
+      </ViewFieldConditionGroup>
     </div>
   </div>
 </template>
@@ -110,6 +75,7 @@
 <script>
 import ViewFilterFormOperator from '@baserow/modules/database/components/view/ViewFilterFormOperator'
 import ViewFieldConditionItem from '@baserow/modules/database/components/view/ViewFieldConditionItem'
+import ViewFieldConditionGroup from '@baserow/modules/database/components/view/ViewFieldConditionGroup'
 import { sortNumbersAndUuid1Asc } from '@baserow/modules/core/utils/sort'
 
 const GroupNode = class {
@@ -171,6 +137,7 @@ export default {
   components: {
     ViewFilterFormOperator,
     ViewFieldConditionItem,
+    ViewFieldConditionGroup,
   },
   props: {
     filters: {
@@ -215,6 +182,11 @@ export default {
       required: false,
       default: null,
     },
+    addConditionGroupString: {
+      type: String,
+      required: false,
+      default: null,
+    },
     variant: {
       type: String,
       required: false,
@@ -247,6 +219,11 @@ export default {
       required: false,
       default: false,
     },
+    canAddFilterGroups: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   data() {
     return {
@@ -254,12 +231,6 @@ export default {
     }
   },
   computed: {
-    addConditionLabel() {
-      return (
-        this.addConditionString ||
-        this.$t('viewFieldConditionsForm.addCondition')
-      )
-    },
     filterTypes() {
       return this.$registry.getAll('viewFilter')
     },
@@ -267,7 +238,7 @@ export default {
       const root = new GroupNode(null, null, this.sorted)
       const groups = { '': root }
       for (const filterGroup of this.filterGroups) {
-        const parentId = filterGroup.parent || ''
+        const parentId = filterGroup.parent_group || ''
         const parent = groups[parentId]
         const node = new GroupNode(filterGroup, parent, this.sorted)
         groups[filterGroup.id] = node
@@ -313,12 +284,20 @@ export default {
         return field !== undefined && filterType.fieldIsCompatible(field)
       })
     },
-    deleteFilter(filter, event) {
+    deleteFilter({ filter, event }) {
       event.deletedFilterEvent = true
-      const groupNode = this.filtersTree.findGroup(filter.group)
-      const lastInGroup = groupNode && groupNode.filters.length === 1
-      if (lastInGroup) {
-        this.$emit('deleteFilterGroup', groupNode)
+      let groupNode = this.filtersTree.findGroup(filter.group)
+      // Pick the outermost group that is going to be empty after the deletion, if any.
+      let emptyGroup = null
+      while (
+        groupNode?.group?.id &&
+        groupNode.filters.length + groupNode.children.length === 1
+      ) {
+        emptyGroup = groupNode
+        groupNode = groupNode.parent
+      }
+      if (emptyGroup !== null) {
+        this.$emit('deleteFilterGroup', emptyGroup)
       } else {
         this.$emit('deleteFilter', filter)
       }
@@ -327,7 +306,7 @@ export default {
      * Updates a filter with the given values. Some data manipulation will also be done
      * because some filter types are not compatible with certain field types.
      */
-    updateFilter(filter, values) {
+    updateFilter({ filter, values }) {
       const fieldId = Object.prototype.hasOwnProperty.call(values, 'field')
         ? values.field
         : filter.field

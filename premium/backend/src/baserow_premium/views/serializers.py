@@ -52,6 +52,11 @@ class ConditionalColorValueProviderConfColorFilterGroupSerializer(
         default="AND",
         help_text="The boolean operator used to group all conditions.",
     )
+    parent_group = serializers.CharField(
+        help_text="The id of the parent filter group.",
+        required=False,
+        allow_null=True,
+    )
 
 
 class ConditionalColorValueProviderConfColorSerializer(serializers.Serializer):
@@ -85,7 +90,13 @@ class ConditionalColorValueProviderConfColorSerializer(serializers.Serializer):
         Ensure every filter has a valid reference to a group.
         """
 
-        group_ids = set(group["id"] for group in data.get("filter_groups", []))
+        group_ids = set([None])
+        for group in data.get("filter_groups", []):
+            group_ids.add(group["id"])
+            if group.get("parent_group", None) not in group_ids:
+                raise serializers.ValidationError(
+                    "Filter group references a non-existent parent group."
+                )
 
         for filter in data["filters"]:
             group_id = filter.get("group", None)

@@ -80,10 +80,11 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     }
   }
 
-  static getDefaultFilterGroupConf() {
+  static getDefaultFilterGroupConf(groupId = null, parentGroupId = null) {
     return {
       filter_type: 'AND',
-      id: uuid(),
+      id: groupId || uuid(),
+      parent_group: parentGroupId,
     }
   }
 

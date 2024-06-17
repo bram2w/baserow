@@ -197,16 +197,17 @@ class UpdateViewFilterSerializer(serializers.ModelSerializer):
 class ViewFilterGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewFilterGroup
-        fields = ("id", "filter_type", "view")
+        fields = ("id", "filter_type", "view", "parent_group")
         extra_kwargs = {"id": {"read_only": True}}
 
 
 class CreateViewFilterGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewFilterGroup
-        fields = ("filter_type",)
+        fields = ("filter_type", "parent_group")
         extra_kwargs = {
             "filter_type": {"required": False},
+            "parent_group": {"required": False},
         }
 
 

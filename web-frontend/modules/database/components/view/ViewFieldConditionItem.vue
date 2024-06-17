@@ -42,7 +42,7 @@
     <div
       class="filters__value"
       :class="{
-        'filters__value--with-after-input': hasAfterValueInputContent,
+        'filters__value--with-input-field': hasAfterValueInputContent,
       }"
     >
       <slot

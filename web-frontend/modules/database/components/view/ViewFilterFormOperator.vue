@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="filters__operator">
     <span v-if="index === 0" class="filters__operator-where">{{
       $t('viewFilterContext.where')
     }}</span>
@@ -9,7 +9,7 @@
       :show-search="false"
       :fixed-items="true"
       small
-      @input="$emit('select-boolean-operator', $event)"
+      @input="$emit('updateFilterType', $event)"
     >
       <DropdownItem
         :name="$t('viewFilterContext.and')"

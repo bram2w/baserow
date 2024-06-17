@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal :wide="true">
     <h2 class="box__title">{{ $t('apiDocsFiltersBuilderModal.title') }}</h2>
     <div class="control">
       <div class="control__elements">
@@ -66,12 +66,13 @@
         :full-width="true"
         :sorted="true"
         :add-condition-string="$t('viewFilterContext.addFilter')"
+        :add-condition-group-string="$t('viewFilterContext.addFilterGroup')"
         @addFilter="addFilter"
+        @addFilterGroup="addFilter"
         @deleteFilter="deleteFilter"
         @updateFilter="updateFilter"
-        @selectOperator="updateOperator"
+        @updateFilterType="updateFilterType"
         @deleteFilterGroup="deleteFilterGroup"
-        @selectFilterGroupOperator="updateFilterGroupOperator"
       />
     </div>
     <div class="flex">
@@ -79,7 +80,10 @@
         <i class="filters__add-icon iconoir-plus"></i>
         {{ $t('viewFilterContext.addFilter') }}</a
       >
-      <a class="filters__add" @click.prevent="addFilter(uuid())">
+      <a
+        class="filters__add"
+        @click.prevent="addFilter({ filterGroupId: uuid() })"
+      >
         <i class="filters__add-icon iconoir-plus"></i>
         {{ $t('viewFilterContext.addFilterGroup') }}</a
       >
@@ -169,7 +173,7 @@ export default {
   methods: {
     uuid,
     copyToClipboard,
-    getNewFilterObject(filterGroupId) {
+    getNewFilterObject(filterGroupId, parentGroupId = null) {
       const createNewFilterGroup =
         filterGroupId &&
         this.view.filter_groups.findIndex(
@@ -181,6 +185,7 @@ export default {
           populateFilterGroup({
             id: filterGroupId,
             filter_type: 'AND',
+            parent_group: parentGroupId,
           })
         )
       }
@@ -203,25 +208,28 @@ export default {
         value: '',
       })
     },
-    addFilter(filterGroupId = null) {
-      this.view.filters.push(this.getNewFilterObject(filterGroupId))
+    addFilter({ filterGroupId = null, parentGroupId = null } = {}) {
+      this.view.filters.push(
+        this.getNewFilterObject(filterGroupId, parentGroupId)
+      )
     },
     updateFilter({ filter, values }) {
       values.preload_values = {}
       Object.assign(filter, filter, values)
     },
     deleteFilter(filter) {
-      const index = this.view.filters.find((f) => f.id === filter.id)
+      const index = this.view.filters.findIndex((f) => f.id === filter.id)
       this.view.filters.splice(index, 1)
     },
-    updateOperator(operator) {
-      this.view.filter_type = operator
-    },
-    updateFilterGroupOperator({ value, filterGroup }) {
-      filterGroup.filter_type = value
+    updateFilterType({ filterGroup, value }) {
+      if (filterGroup === undefined) {
+        this.view.filter_type = value
+      } else {
+        filterGroup.filter_type = value
+      }
     },
     deleteFilterGroup({ group }) {
-      const index = this.view.filter_groups.find((g) => g.id === group.id)
+      const index = this.view.filter_groups.findIndex((g) => g.id === group.id)
       this.view.filters = this.view.filters.filter(
         (filter) => filter.group !== group.id
       )

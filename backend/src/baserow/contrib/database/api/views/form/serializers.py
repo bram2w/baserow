@@ -15,9 +15,13 @@ from baserow.contrib.database.views.models import (
 
 
 class FormViewFieldOptionsConditionGroupSerializer(serializers.ModelSerializer):
+    parent_group = serializers.IntegerField(
+        required=False, allow_null=True, source="parent_group_id"
+    )
+
     class Meta:
         model = FormViewFieldOptionsConditionGroup
-        fields = ("id", "filter_type")
+        fields = ("id", "filter_type", "parent_group")
         extra_kwargs = {"id": {"read_only": False}}
 
 
@@ -51,6 +55,21 @@ class FormViewFieldOptionsSerializer(serializers.ModelSerializer):
             "condition_groups",
             "field_component",
         )
+
+    def validate(self, data):
+        """
+        Group IDs are validated to ensure that they reference existing groups.
+        Please note that the groups must be sent in order of parent to child.
+        """
+
+        group_ids = set([None])
+        for group in data.get("condition_groups", []):
+            group_ids.add(group["id"])
+            if group.get("parent_group_id", None) not in group_ids:
+                raise serializers.ValidationError(
+                    "Filter group references a non-existent parent group."
+                )
+        return data
 
 
 class PublicFormViewFieldSerializer(FieldSerializer):

@@ -102,15 +102,36 @@ export const TreeGroupNode = class {
    *
    * @param {string} filterType - The type of filter (e.g., 'AND' or 'OR').
    * @param {TreeGroupNode} [parent=null] - The parent node of this node. Null for the root node.
+   * @param {number} [groupId=null] - The ID of the group this node represents. Null for the root node.
    */
-  constructor(filterType, parent = null) {
+  constructor(filterType, parent = null, groupId = null) {
     this.filterType = filterType
+    this.groupId = groupId
     this.parent = parent
     this.filters = []
     this.children = []
     if (parent) {
       parent.children.push(this)
     }
+  }
+
+  /**
+   * Finds the group node with the provided ID in the tree rooted at this node.
+   *
+   * @param {number} groupId - The ID of the group to find.
+   * @returns {TreeGroupNode|null} - The group node with the provided ID or null if it is not found.
+   */
+  findNodeByGroupId(groupId) {
+    if (this.groupId === groupId) {
+      return this
+    }
+    for (const groupNode of this.children) {
+      const found = groupNode.findNodeByGroupId(groupId)
+      if (found) {
+        return found
+      }
+    }
+    return null
   }
 
   /**
@@ -203,6 +224,7 @@ export const TreeGroupNode = class {
         return true
       }
     }
+    const filterType = this.filterType
     for (const filter of this.filters) {
       const filterValue = filter.value
       const field = fields.find((f) => f.id === filter.field)
@@ -215,21 +237,21 @@ export const TreeGroupNode = class {
         field,
         fieldType
       )
-      if (this.filterType === 'AND' && !matches) {
+      if (filterType === 'AND' && !matches) {
         // With an `AND` filter type, the row must match all the filters, so if
         // one of the filters doesn't match we can mark it as invalid.
         return false
-      } else if (this.filterType === 'OR' && matches) {
+      } else if (filterType === 'OR' && matches) {
         // With an 'OR' filter type, the row only has to match one of the filters,
         // that is the case here so we can mark it as valid.
         return true
       }
     }
-    if (this.filterType === 'AND') {
+    if (filterType === 'AND') {
       // At this point with an `AND` condition the filter type matched all the
       // filters and therefore we can mark it as valid.
       return true
-    } else if (this.filterType === 'OR') {
+    } else if (filterType === 'OR') {
       // At this point with an `OR` condition none of the filters matched and
       // therefore we can mark it as invalid.
       return false
@@ -258,10 +280,11 @@ export const createFiltersTree = (filterType, filters, filterGroups) => {
     : []
 
   for (const filterGroup of filterGroupsOrderedById) {
-    const parent = filterGroupsById[filterGroup.parent || '']
+    const parent = filterGroupsById[filterGroup.parent_group || '']
     filterGroupsById[filterGroup.id] = new TreeGroupNode(
       filterGroup.filter_type,
-      parent
+      parent,
+      filterGroup.id
     )
   }
 

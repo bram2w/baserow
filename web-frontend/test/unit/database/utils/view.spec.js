@@ -65,9 +65,9 @@ describe('createFiltersTree', () => {
   it('should correctly nest groups into the tree', () => {
     const filterGroups = [
       { id: 1, filter_type: 'AND' },
-      { id: 2, filter_type: 'OR', parent: 1 },
-      { id: 3, filter_type: 'AND', parent: 1 },
-      { id: 4, filter_type: 'OR', parent: 3 },
+      { id: 2, filter_type: 'OR', parent_group: 1 },
+      { id: 3, filter_type: 'AND', parent_group: 1 },
+      { id: 4, filter_type: 'OR', parent_group: 3 },
     ]
     const rootNode = createFiltersTree('AND', [], filterGroups)
     expect(rootNode.hasFilters()).toBe(false)
@@ -85,8 +85,8 @@ describe('createFiltersTree', () => {
   it('should correctly add filters to nested groups', () => {
     const filterGroups = [
       { id: 1, filter_type: 'AND' },
-      { id: 2, filter_type: 'OR', parent: 1 },
-      { id: 3, filter_type: 'OR', parent: 2 },
+      { id: 2, filter_type: 'OR', parent_group: 1 },
+      { id: 3, filter_type: 'OR', parent_group: 2 },
     ]
     const rootNode = createFiltersTree('AND', [], filterGroups)
     expect(rootNode.hasFilters()).toBe(false)
