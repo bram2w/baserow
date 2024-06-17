@@ -266,7 +266,7 @@ services:
       local:
 
   db:
-    image: postgres:11
+    image: postgres:15
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${DATABASE_USER:-baserow}

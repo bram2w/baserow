@@ -533,7 +533,7 @@ class NumberFieldType(FieldType):
         kwargs["decimal_places"] = instance.number_decimal_places
 
         if not instance.number_negative:
-            kwargs["min_value"] = 0
+            kwargs["min_value"] = Decimal("0")
 
         return serializers.DecimalField(
             **{

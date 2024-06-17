@@ -333,13 +333,20 @@ class FieldType(
 
         empty_is_empty_list_or_object_model_field_types = (JSONField, PostgresJSONField)
         if isinstance(model_field, empty_is_empty_list_or_object_model_field_types):
-            q = q | Q(**{f"{field_name}": []}) | Q(**{f"{field_name}": {}})
+            q = (
+                q
+                | Q(**{f"{field_name}": Value([], JSONField())})
+                | Q(**{f"{field_name}": Value({}, JSONField())})
+            )
 
         # If the model field accepts an empty string as value we are going to add
         # that to the or statement.
         try:
             model_field.get_prep_value("")
-            q = q | Q(**{f"{field_name}": ""})
+            if isinstance(model_field, empty_is_empty_list_or_object_model_field_types):
+                q = q | Q(**{f"{field_name}": Value("", JSONField())})
+            else:
+                q = q | Q(**{f"{field_name}": ""})
             return q
         except Exception:
             return q

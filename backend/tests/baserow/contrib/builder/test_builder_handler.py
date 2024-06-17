@@ -25,5 +25,7 @@ def test_get_builder_select_related_theme_config(
 
     builder = BuilderHandler().get_builder(builder.id)
 
-    with django_assert_num_queries(0):
+    # We expect 0 queries here but as Django logs transaction
+    # operations we have 2 of them here
+    with django_assert_num_queries(2):
         builder.mainthemeconfigblock.id

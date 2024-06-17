@@ -19,7 +19,7 @@ class PostgresqlLenientDatabaseSchemaEditor:
     """
 
     sql_alter_column_type = (
-        "ALTER COLUMN %(column)s TYPE %(type)s "
+        "ALTER COLUMN %(column)s TYPE %(type)s%(collation)s "
         "USING pg_temp.try_cast(%(column)s::text)"
     )
 
@@ -90,7 +90,9 @@ class PostgresqlLenientDatabaseSchemaEditor:
             strict,
         )
 
-    def _alter_column_type_sql(self, model, old_field, new_field, new_type):
+    def _alter_column_type_sql(
+        self, model, old_field, new_field, new_type, old_collation, new_collation
+    ):
         # Cast when data type changed.
         # Make ALTER TYPE with SERIAL make sense.
         table = strip_quotes(model._meta.db_table)
@@ -99,6 +101,12 @@ class PostgresqlLenientDatabaseSchemaEditor:
             "serial": "integer",
             "smallserial": "smallint",
         }
+        if collate_sql := self._collate_sql(
+            new_collation, old_collation, model._meta.db_table
+        ):
+            collate_sql = f" {collate_sql}"
+        else:
+            collate_sql = ""
         if new_type.lower() in serial_fields_map:
             column = strip_quotes(new_field.column)
             sequence_name = "%s_%s_seq" % (table, column)
@@ -108,6 +116,7 @@ class PostgresqlLenientDatabaseSchemaEditor:
                     % {
                         "column": self.quote_name(column),
                         "type": serial_fields_map[new_type.lower()],
+                        "collation": collate_sql,
                     },
                     [],
                 ),
@@ -167,7 +176,13 @@ class PostgresqlLenientDatabaseSchemaEditor:
             column = strip_quotes(new_field.column)
             sequence_name = "%s_%s_seq" % (table, column)
             fragment, _ = BaseDatabaseSchemaEditor._alter_column_type_sql(
-                self, model, old_field, new_field, new_type
+                self,
+                model,
+                old_field,
+                new_field,
+                new_type,
+                old_collation,
+                new_collation,
             )
             return fragment, [
                 (
@@ -180,7 +195,13 @@ class PostgresqlLenientDatabaseSchemaEditor:
             ]
         else:
             return BaseDatabaseSchemaEditor._alter_column_type_sql(
-                self, model, old_field, new_field, new_type
+                self,
+                model,
+                old_field,
+                new_field,
+                new_type,
+                old_collation,
+                new_collation,
             )
 
     def _field_should_be_altered(self, old_field, new_field):
