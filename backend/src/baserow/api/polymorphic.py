@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from typing import Any, Dict
 
 from rest_framework import serializers
@@ -94,7 +93,7 @@ class PolymorphicSerializer(serializers.Serializer):
         if not self.required and not instance:
             return None
 
-        if isinstance(instance, OrderedDict):
+        if isinstance(instance, dict):
             instance_type = self.get_type_from_mapping(instance)
         else:
             instance = instance.specific

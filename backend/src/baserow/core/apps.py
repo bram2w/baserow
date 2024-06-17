@@ -12,6 +12,14 @@ class CoreConfig(AppConfig):
     name = "baserow.core"
 
     def ready(self):
+        # Patch Django's DecimalField to have lenient conversion
+        # regarding NaN values
+        from django.db.models import DecimalField
+
+        from baserow.core.fields import LenientDecimalField
+
+        DecimalField.to_python = LenientDecimalField.to_python
+
         from baserow.core.action.registries import (
             action_scope_registry,
             action_type_registry,

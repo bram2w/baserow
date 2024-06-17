@@ -7,8 +7,9 @@ from enum import Enum
 from math import ceil, floor
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
-from django.db.models import DateField, DateTimeField, IntegerField, Q
+from django.db.models import DateField, DateTimeField, IntegerField, Q, Value
 from django.db.models.expressions import F, Func
+from django.db.models.fields.json import JSONField
 from django.db.models.functions import Extract, Length, Mod, TruncDate
 
 from dateutil import parser
@@ -169,7 +170,13 @@ class HasFileTypeViewFilterType(ViewFilterType):
         is_document = value == "document"
 
         if is_document or is_image:
-            return Q(**{f"{field_name}__contains": [{"is_image": is_image}]})
+            return Q(
+                **{
+                    f"{field_name}__contains": Value(
+                        [{"is_image": is_image}], JSONField()
+                    )
+                }
+            )
         else:
             return Q()
 

@@ -996,7 +996,7 @@ def exception_capturer(e):
 
 
 def transaction_on_commit_if_not_already(func):
-    funcs = set(func for _, func in get_connection().run_on_commit or [])
+    funcs = set(func for _, func, _ in get_connection().run_on_commit or [])
     if func not in funcs:
         transaction.on_commit(func)
 

@@ -36,7 +36,7 @@ build==1.2.1
     # via
     #   -r dev.in
     #   pip-tools
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   -c base.txt
     #   requests
@@ -61,16 +61,16 @@ decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-django==4.1.13
+django==4.2.13
     # via
     #   -c base.txt
     #   django-extensions
     #   django-silk
     #   django-stubs
     #   django-stubs-ext
-django-extensions==3.2.1
+django-extensions==3.2.3
     # via -r dev.in
-django-silk==5.0.3
+django-silk==5.1.0
     # via -r dev.in
 django-stubs==1.16.0
     # via -r dev.in
@@ -180,7 +180,7 @@ pluggy==1.5.0
     # via pytest
 pprintpp==0.4.0
     # via pytest-icdiff
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.46
     # via
     #   -c base.txt
     #   ipython
