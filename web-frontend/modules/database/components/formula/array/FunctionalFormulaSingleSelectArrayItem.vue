@@ -1,12 +1,10 @@
 <template functional>
   <div
     v-if="props.value"
-    class="array-field__single-select-option"
+    class="array-field__single-option"
     :class="'background-color--' + props.value.color"
   >
-    <div v-if="props.value.value" class="array-field__name">
-      {{ props.value.value }}
-    </div>
+    <div class="array-field__ellipsis">{{ props.value.value }}</div>
   </div>
 </template>
 

@@ -12,6 +12,7 @@
             'grid-field-link-row__unnamed':
               item.value === null || item.value === '',
           }"
+          :title="item.value"
         >
           {{
             item.value ||

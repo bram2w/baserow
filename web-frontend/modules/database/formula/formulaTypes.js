@@ -109,7 +109,7 @@ export class BaserowFormulaTypeDefinition extends Registerable {
       .getCardComponent()
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaArrayItem
   }
 
@@ -302,7 +302,7 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
     return 3
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaBooleanArrayItem
   }
 
@@ -336,7 +336,7 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
     return 4
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaDateArrayItem
   }
 
@@ -382,7 +382,7 @@ export class BaserowFormulaDurationType extends BaserowFormulaTypeDefinition {
     return true
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaArrayDurationItem
   }
 
@@ -696,7 +696,7 @@ export class BaserowFormulaFileType extends BaserowFormulaTypeDefinition {
     return GridViewSingleFile
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaFileArrayItem
   }
 
@@ -783,7 +783,7 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
     return RowEditFieldSingleSelectReadOnly
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaSingleSelectArrayItem
   }
 
@@ -825,7 +825,7 @@ export class BaserowFormulaMultipleSelectType extends BaserowFormulaTypeDefiniti
     return RowEditFieldMultipleSelectReadOnly
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaMultipleSelectArrayItem
   }
 
@@ -879,7 +879,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
     return 10
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaLinkArrayItem
   }
 
@@ -929,7 +929,7 @@ export class BaserowFormulaButtonType extends BaserowFormulaLinkType {
     return RowCardFieldButton
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaButtonArrayItem
   }
 }
