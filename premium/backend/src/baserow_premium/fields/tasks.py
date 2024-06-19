@@ -1,3 +1,5 @@
+from baserow_premium.generative_ai.managers import AIFileManager
+
 from baserow.config.celery import app
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.operations import ListFieldsOperationType
@@ -10,7 +12,10 @@ from baserow.contrib.database.rows.signals import rows_ai_values_generation_erro
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.generative_ai.exceptions import ModelDoesNotBelongToType
-from baserow.core.generative_ai.registries import generative_ai_model_type_registry
+from baserow.core.generative_ai.registries import (
+    GenerativeAIWithFilesModelType,
+    generative_ai_model_type_registry,
+)
 from baserow.core.handler import CoreHandler
 from baserow.core.user.handler import User
 
@@ -61,9 +66,27 @@ def generate_ai_values_for_rows(self, user_id: int, field_id: int, row_ids: list
         )
 
         try:
-            value = generative_ai_model_type.prompt(
-                ai_field.ai_generative_ai_model, message, workspace=workspace
-            )
+            if ai_field.ai_file_field_id is not None and isinstance(
+                generative_ai_model_type, GenerativeAIWithFilesModelType
+            ):
+                file_ids = AIFileManager.upload_files_from_file_field(
+                    ai_field, row, generative_ai_model_type, workspace=workspace
+                )
+                try:
+                    value = generative_ai_model_type.prompt_with_files(
+                        ai_field.ai_generative_ai_model,
+                        message,
+                        file_ids=file_ids,
+                        workspace=workspace,
+                    )
+                except Exception as exc:
+                    raise exc
+                finally:
+                    generative_ai_model_type.delete_files(file_ids, workspace=workspace)
+            else:
+                value = generative_ai_model_type.prompt(
+                    ai_field.ai_generative_ai_model, message, workspace=workspace
+                )
         except Exception as exc:
             # If the prompt fails once, we should not continue with the other rows.
             rows_ai_values_generation_error.send(

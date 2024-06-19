@@ -383,6 +383,7 @@ def test_workspace_settings_override_global_generative_ai_settings(
     assert response.json()[0]["generative_ai_models_enabled"] == {
         "test_generative_ai": ["test_1"],
         "test_generative_ai_prompt_error": ["test_1"],
+        "test_generative_ai_with_files": ["test_1"],
     }
 
     response = api_client.patch(
@@ -414,6 +415,7 @@ def test_workspace_settings_override_global_generative_ai_settings(
         "generative_ai_models_enabled": {
             "test_generative_ai": ["wp_model_setting"],  # it was "test_1"
             "test_generative_ai_prompt_error": ["test_1"],
+            "test_generative_ai_with_files": ["test_1"],
         },
     }
 

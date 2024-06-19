@@ -365,7 +365,9 @@
     },
     "fieldAISubForm": {
       "prompt": "Prompt",
-      "premiumFeature": "The AI field is a premium feature"
+      "premiumFeature": "The AI field is a premium feature",
+      "emptyFileField": "None",
+      "fileFieldHelp": "The first compatible file in the field will be used as the knowledge base for the prompt. The file has to be a text file with the supported file extension like .txt, .md, .pdf, .docx."
     },
     "rowEditFieldAI": {
       "generate": "Generate",

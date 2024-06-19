@@ -663,7 +663,8 @@
     },
     "selectAIModelForm": {
         "AIType": "AI Type",
-        "AIModel": "AI Model"
+        "AIModel": "AI Model",
+        "fileField": "File field"
     },
     "onboarding": {
       "title": "Onboarding",

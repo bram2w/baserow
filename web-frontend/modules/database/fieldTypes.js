@@ -391,6 +391,14 @@ export class FieldType extends Registerable {
     return false
   }
 
+  /**
+   * When true, indicates a field type can be used
+   * to supply a list of files.
+   */
+  canRepresentFiles(field) {
+    return false
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -2851,6 +2859,10 @@ export class FileFieldType extends FieldType {
   canBeReferencedByFormulaField() {
     return true
   }
+
+  canRepresentFiles(field) {
+    return true
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -3640,6 +3652,11 @@ export class FormulaFieldType extends FieldType {
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
     return underlyingFieldType.parseInputValue(field, value)
+  }
+
+  canRepresentFiles(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.canRepresentFiles(field)
   }
 }
 
