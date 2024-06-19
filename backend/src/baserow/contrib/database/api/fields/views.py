@@ -242,7 +242,8 @@ class FieldsView(APIView):
     )
     @transaction.atomic
     @validate_body_custom_fields(
-        field_type_registry, base_serializer_class=CreateFieldSerializer
+        field_type_registry,
+        base_serializer_class=CreateFieldSerializer,
     )
     @map_exceptions(
         {

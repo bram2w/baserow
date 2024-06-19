@@ -173,6 +173,10 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   canGroupByInView() {
     return false
   }
+
+  canRepresentFiles(field) {
+    return false
+  }
 }
 
 export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
@@ -569,6 +573,14 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     return subType.canBeSortedWhenInArray(field)
   }
 
+  canRepresentFiles(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.canRepresentFiles(field)
+  }
+
   getSort(name, order, field) {
     const subType = this.app.$registry.get(
       'formula_type',
@@ -748,7 +760,12 @@ export class BaserowFormulaFileType extends BaserowFormulaTypeDefinition {
   toHumanReadableString(field, value) {
     return value?.visible_name || ''
   }
+
+  canRepresentFiles(field) {
+    return true
+  }
 }
+
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
   static getType() {
     return 'single_select'
