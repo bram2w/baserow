@@ -11,6 +11,7 @@
   margin-bottom: 5px;
   background-color: $color-primary-100;
   display: flex;
+  max-width: 100%;
 
   @include fixed-height(22px, 13px);
   @include rounded($rounded);
@@ -23,7 +24,7 @@
 .field-link-row__name {
   @extend %ellipsis;
 
-  max-width: 200px;
+  max-width: 100%;
   color: $color-neutral-900;
 
   &:hover {

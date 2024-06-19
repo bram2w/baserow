@@ -1,12 +1,15 @@
 <template>
-  <div class="grid-view__cell active">
-    <FunctionalGridViewFieldArray
-      :field="field"
-      :value="value"
-      :selected="selected"
-      v-on="$listeners"
-      @show="showModal"
-    ></FunctionalGridViewFieldArray>
+  <FunctionalGridViewFieldArray
+    :field="field"
+    :value="value"
+    :selected="selected"
+    v-on="$listeners"
+    @show="showModal"
+  >
+    <!--
+    This modal has to be added as slot because the component must have the
+    `FunctionalGridViewFieldArray` component as root element.
+    -->
     <component
       :is="modalComponent"
       v-if="needsModal"
@@ -14,7 +17,7 @@
       :read-only="true"
       :value="value"
     ></component>
-  </div>
+  </FunctionalGridViewFieldArray>
 </template>
 
 <script>

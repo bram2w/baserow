@@ -1,69 +1,59 @@
 .array-field__item {
-  white-space: nowrap;
-  margin: 5px 0;
+  margin: 5px 4px;
   padding: 0 5px;
   background-color: $color-neutral-100;
   display: flex;
+  flex-wrap: nowrap;
+  max-width: calc(100% - 8px);
 
   @include rounded($rounded);
 
-  &:not(:last-child) {
-    margin-right: 8px;
+  &:last-child {
+    margin-right: 0;
   }
 
   @include fixed-height(22px, 13px);
 }
 
-.array-field__item--button {
-  background-color: inherit;
-  margin: 3px 0;
-}
-
-.array-field__name {
+.array-field__ellipsis {
   @extend %ellipsis;
 
-  max-width: 140px;
-}
-
-.array-field__date {
-  white-space: nowrap;
-  margin: 5px 0;
-  padding: 0 5px;
-  background-color: $color-neutral-100;
-  display: flex;
-
-  @include rounded($rounded);
-
-  &:not(:last-child) {
-    margin-right: 8px;
-  }
-
-  @include fixed-height(22px, 13px);
+  max-width: 100%;
 }
 
 .array-field__time {
   padding-left: 5px;
 }
 
-.array-field__single-select-option {
+.array-field__button {
+  margin: 3px 4px;
+  max-width: calc(100% - 8px);
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+.array-field__multiple-select-container {
+  display: contents;
+}
+
+.array-field__single-option {
   white-space: nowrap;
   margin: 6px 4px 4px;
   overflow: unset;
-
-  @include select-option-style(flex, true);
-}
-
-.array-field__multiple-select-item {
   display: flex;
-}
+  flex-wrap: nowrap;
 
-.array-field__multiple-select-option {
-  white-space: nowrap;
-  margin: auto 0;
-  margin-right: 5px;
-  overflow: unset;
+  // must use !import because the `select-option-style` overwrites the `max-width`, and
+  // we don't want to use that one.
+  max-width: calc(100% - 8px) !important;
 
   @include select-option-style(flex, true);
+
+  &:last-child {
+    margin-right: 0;
+  }
 }
 
 .array-field__file {
@@ -71,6 +61,10 @@
   margin: 5px 3px;
   display: flex;
   height: 22px;
+
+  &:last-child {
+    margin-right: 0;
+  }
 }
 
 .array-field__file-link {

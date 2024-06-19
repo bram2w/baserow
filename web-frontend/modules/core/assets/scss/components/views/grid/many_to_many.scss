@@ -1,6 +1,5 @@
 .grid-field-many-to-many__cell.active {
   bottom: auto;
-  right: auto;
   height: auto;
   min-width: calc(100% + 4px);
   min-height: calc(100% + 4px);
@@ -29,6 +28,7 @@
   background-color: $color-neutral-100;
   display: flex;
   color: $color-neutral-900;
+  max-width: calc(100% - 5px);
 
   @include rounded($rounded);
   @include fixed-height(22px, 13px);
@@ -71,7 +71,7 @@
 .grid-field-many-to-many__name {
   @extend %ellipsis;
 
-  max-width: 140px;
+  max-width: 100%;
 }
 
 .grid-field-many-to-many__loading {

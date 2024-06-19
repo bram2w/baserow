@@ -3,12 +3,14 @@
   <component
     :is="$options.components.FunctionalFormulaArrayItems"
     class="grid-view__cell grid-view-array-field"
-    :class="data.staticClass || ''"
+    :class="[data.staticClass, data.class]"
     :field="props.field"
     :value="props.value"
     :selected="props.selected"
     v-on="listeners"
-  ></component>
+  >
+    <slot></slot>
+  </component>
 </template>
 
 <script>

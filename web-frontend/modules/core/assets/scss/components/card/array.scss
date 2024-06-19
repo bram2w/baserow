@@ -12,35 +12,19 @@
   padding: 0 16px 15px;
   overflow-x: scroll;
 
+  .array-field__item,
   .array-field__boolean,
-  .array-field__date,
-  .array-field__single-select-option,
-  .array-field__file {
-    margin: 0;
-
-    &:not(:last-child) {
-      margin-right: 5px;
-    }
+  .array-field__single-option,
+  .array-field__file,
+  .array-field__button {
+    margin-top: 0;
+    margin-left: 0;
+    margin-bottom: 0;
 
     @include fixed-height(22px, 13px);
   }
 
   .array-field__item {
-    white-space: nowrap;
-    display: flex;
     background-color: $color-primary-100;
-    margin: 0;
-
-    span {
-      @extend %ellipsis;
-
-      max-width: 140px;
-    }
-
-    &:not(:last-child) {
-      margin-right: 5px;
-    }
-
-    @include fixed-height(22px, 13px);
   }
 }

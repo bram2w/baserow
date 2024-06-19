@@ -1,8 +1,8 @@
 <template functional>
   <div v-if="props.value" class="array-field__item">
-    <span>
+    <div class="array-field__ellipsis" :title="props.value">
       {{ props.value }}
-    </span>
+    </div>
   </div>
 </template>
 
