@@ -1,6 +1,6 @@
 import traceback
+from collections import defaultdict
 from datetime import timedelta
-from itertools import groupby
 from typing import Optional
 
 from django.conf import settings
@@ -103,8 +103,10 @@ def _run_periodic_field_type_update_per_workspace(
     # After a successful periodic update of all fields, we would need to update the
     # search index for all of them in one function per table to avoid ending up in a
     # deadlock because rows are updated simultaneously.
-    for table_id, fields in groupby(all_updated_fields, lambda x: x.table_id):
-        fields = list(fields)
+    fields_per_table = defaultdict(list)
+    for field in all_updated_fields:
+        fields_per_table[field.table_id].append(field)
+    for table_id, fields in fields_per_table.items():
         SearchHandler().entire_field_values_changed_or_created(fields[0].table, fields)
 
 
