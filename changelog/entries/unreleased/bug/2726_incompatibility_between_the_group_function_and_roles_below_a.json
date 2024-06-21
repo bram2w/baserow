@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed bug with incorrect row ordering for editors and lower in views with group bys.",
+    "issue_number": 2726,
+    "bullet_points": [],
+    "created_at": "2024-06-18"
+}

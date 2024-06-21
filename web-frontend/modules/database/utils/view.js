@@ -479,11 +479,14 @@ export function isAdhocSorting(app, workspace, view, publicView) {
 
 export function getOrderBy(view, adhocSorting) {
   if (adhocSorting) {
-    return view.sortings
-      .map((sort) => {
-        return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
-      })
-      .join(',')
+    const serializeSort = (sort) => {
+      return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
+    }
+    // Group bys first, then sorts to ensure that the order is correct.
+    const groupBys = view.group_bys ? view.group_bys.map(serializeSort) : []
+    const sorts = view.sortings.map(serializeSort)
+
+    return [...groupBys, ...sorts].join(',')
   } else {
     return null
   }
