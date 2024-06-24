@@ -615,7 +615,7 @@ class AttrDict(dict):
         globals()[key] = value
 
 
-DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+BASE_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 AWS_STORAGE_ENABLED = os.getenv("AWS_STORAGE_BUCKET_NAME", "") != ""
 GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
@@ -633,7 +633,7 @@ if sum(ALL_STORAGE_ENABLED_VARS) > 1:
     )
 
 if AWS_STORAGE_ENABLED:
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    BASE_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_S3_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
@@ -682,7 +682,7 @@ if GOOGLE_STORAGE_ENABLED:
     # See https://django-storages.readthedocs.io/en/latest/backends/gcloud.html for
     # details on what these env variables do
 
-    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    BASE_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
     GS_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
@@ -708,7 +708,7 @@ if GOOGLE_STORAGE_ENABLED:
     )
 
 if AZURE_STORAGE_ENABLED:
-    DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+    BASE_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
     AZURE_OVERWRITE_FILES = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
@@ -736,6 +736,14 @@ if AZURE_STORAGE_ENABLED:
         ],
     )
 
+STORAGES = {
+    "default": {
+        "BACKEND": BASE_FILE_STORAGE,
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
 if BASEROW_PUBLIC_URL:

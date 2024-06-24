@@ -237,9 +237,6 @@ class UserProfile(models.Model):
 
 class BlacklistedToken(CreatedAndUpdatedOnMixin, models.Model):
     hashed_token = models.CharField(max_length=64, db_index=True, unique=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=True
-    )  # TODO delete this field in next release
     expires_at = models.DateTimeField()
 
 

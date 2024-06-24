@@ -63,7 +63,8 @@ class HealthCheckHandler:
         """
 
         s3_enabled = (
-            settings.DEFAULT_FILE_STORAGE == "storages.backends.s3boto3.S3Boto3Storage"
+            settings.STORAGES["default"]["BACKEND"]
+            == "storages.backends.s3boto3.S3Boto3Storage"
         )
         if s3_enabled:
             return isinstance(plugin, DefaultFileStorageHealthCheck)
