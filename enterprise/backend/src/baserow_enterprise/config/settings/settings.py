@@ -1,5 +1,8 @@
 import os
 
+from baserow.config.settings.utils import enum_member_by_value
+from baserow_enterprise.secure_file_serve.constants import SecureFileServePermission
+
 
 def setup(settings):
     """
@@ -13,11 +16,12 @@ def setup(settings):
     """
 
     settings.BASEROW_ENTERPRISE_AUDIT_LOG_CLEANUP_INTERVAL_MINUTES = int(
-        os.getenv("BASEROW_ENTERPRISE_AUDIT_LOG_CLEANUP_INTERVAL_MINUTES", 24 * 60)
+        os.getenv("BASEROW_ENTERPRISE_AUDIT_LOG_CLEANUP_INTERVAL_MINUTES", "")
+        or 24 * 60
     )
 
     settings.BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS = int(
-        os.getenv("BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS", 365)
+        os.getenv("BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS", "") or 365
     )
 
     # Set this to True to enable users to login with auth providers different than
@@ -25,3 +29,29 @@ def setup(settings):
     settings.BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT = bool(
         os.getenv("BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT", False)
     )
+
+    serve_files_through_backend_permission = (
+        os.getenv("BASEROW_SERVE_FILES_THROUGH_BACKEND_PERMISSION", "")
+        or SecureFileServePermission.DISABLED.value
+    )
+
+    settings.BASEROW_SERVE_FILES_THROUGH_BACKEND_PERMISSION = enum_member_by_value(
+        SecureFileServePermission, serve_files_through_backend_permission
+    )
+
+    # If the expire seconds is not set to a number greater than zero, the signature will
+    # never expire.
+    settings.BASEROW_SERVE_FILES_THROUGH_BACKEND_EXPIRE_SECONDS = (
+        int(os.getenv("BASEROW_SERVE_FILES_THROUGH_BACKEND_EXPIRE_SECONDS", "") or 0)
+        or None
+    )
+
+    serve_files_through_backend = bool(
+        os.getenv("BASEROW_SERVE_FILES_THROUGH_BACKEND", False)
+    )
+    if serve_files_through_backend:
+        settings.STORAGES["default"][
+            "BACKEND"
+        ] = "baserow_enterprise.secure_file_serve.storage.EnterpriseFileStorage"
+
+    settings.BASEROW_SERVE_FILES_THROUGH_BACKEND = serve_files_through_backend

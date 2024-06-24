@@ -21,10 +21,7 @@ class HerokuExternalFileStorageConfiguredHealthCheck(BaseHealthCheckBackend):
     critical_service = False
 
     def check_status(self):
-        if (
-            settings.DEFAULT_FILE_STORAGE
-            == "django.core.files.storage.FileSystemStorage"
-        ):
+        if settings.BASE_FILE_STORAGE == "django.core.files.storage.FileSystemStorage":
             raise ServiceWarning(
                 "Any uploaded files will be lost on dyno restart because you have "
                 "not configured an external file storage service. Please set "

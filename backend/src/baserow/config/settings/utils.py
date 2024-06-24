@@ -1,6 +1,7 @@
 import os
 import traceback
-from typing import Any, Callable, List, NamedTuple, Optional, Union
+from enum import Enum
+from typing import Any, Callable, List, NamedTuple, Optional, Type, Union
 
 from celery.schedules import crontab
 from loguru import logger
@@ -128,3 +129,18 @@ def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
         env_var_name, default_crontab
     ).split(" ")
     return crontab(minute, hour, day_of_week, day_of_month, month_of_year)
+
+
+def enum_member_by_value(enum: Type[Enum], value: Any) -> Enum:
+    """
+    Given an enum and a value, returns the enum member that has that value.
+
+    :param enum: The enum to search.
+    :param value: The value to search for.
+    :return: The enum member that has the value.
+    """
+
+    for e in enum:
+        if e.value == value:
+            return e
+    raise ValueError(f"No enum member with value {value}")

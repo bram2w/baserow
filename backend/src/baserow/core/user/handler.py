@@ -683,16 +683,26 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         except IntegrityError:
             raise RefreshTokenAlreadyBlacklisted
 
+    def refresh_token_hash_is_blacklisted(self, hashed_token: str) -> bool:
+        """
+        Checks if the provided refresh token hash is blacklisted.
+
+        :param hashed_token: The refresh token hash that must be checked.
+        :return: Whether the token is blacklisted.
+        """
+
+        return BlacklistedToken.objects.filter(hashed_token=hashed_token).exists()
+
     def refresh_token_is_blacklisted(self, refresh_token: str) -> bool:
         """
-        Checks if the provided refresh token is blacklisted.
+        Hash the provided refresh token and check if it is blacklisted.
 
-        :param refresh_token: The refresh token that must be checked.
+        :param refresh_token: The refresh token that must be hashed and checked.
         :return: Whether the token is blacklisted.
         """
 
         hashed_token = generate_hash(refresh_token)
-        return BlacklistedToken.objects.filter(hashed_token=hashed_token).exists()
+        return self.refresh_token_hash_is_blacklisted(hashed_token)
 
     def _get_email_verification_signer(self) -> URLSafeSerializer:
         return URLSafeSerializer(settings.SECRET_KEY, "verify-email")

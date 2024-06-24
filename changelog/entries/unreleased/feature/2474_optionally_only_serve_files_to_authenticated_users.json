@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Serve files from the backend to authorized users and/or with temporary links.",
+    "issue_number": 2474,
+    "bullet_points": [],
+    "created_at": "2024-06-22"
+}
