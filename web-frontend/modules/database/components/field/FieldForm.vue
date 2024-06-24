@@ -34,13 +34,13 @@
           "
           class="error"
         >
-          {{ $t('error.nameNotAllowed') }}
+          {{ $t('fieldForm.nameNotAllowed') }}
         </div>
         <div
           v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength"
           class="error"
         >
-          {{ $t('error.nameTooLong') }}
+          {{ $t('fieldForm.nameTooLong') }}
         </div>
       </div>
     </FormElement>
