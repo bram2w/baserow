@@ -30,11 +30,19 @@ class Command(BaseCommand):
             help="Add a column for every field type other than link row to the table "
             "before populating it.",
         )
+        parser.add_argument(
+            "--shuffle",
+            action="store_true",
+            help="Shuffle the field types before creating them to add randomness. "
+            "This might fail if a formula field depends on another field that has not "
+            "been created yet.",
+        )
 
     def handle(self, *args, **options):
         table_id = options["table_id"]
         limit = options["limit"]
         add_all_fields = "add_all_fields" in options and options["add_all_fields"]
+        shuffle_fields = "shuffle" in options and options["shuffle"]
 
         try:
             table = Table.objects.get(pk=table_id)
@@ -44,7 +52,7 @@ class Command(BaseCommand):
             )
             sys.exit(1)
 
-        fill_table_fields(limit, table)
+        fill_table_fields(limit, table, shuffle_fields)
 
         if add_all_fields:
             limit += create_field_for_every_type(table)
@@ -52,7 +60,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"{limit} fields have been created."))
 
 
-def fill_table_fields(limit, table):
+def fill_table_fields(limit, table, shuffle_fields=False):
     field_handler = FieldHandler()
     all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None, None)
     first_user = table.database.workspace.users.first()
@@ -62,9 +70,10 @@ def fill_table_fields(limit, table):
         for f in all_kwargs_per_type.items()
         if f[0] not in ["link_row", "count", "rollup", "lookup"]
     ]
-    # This is a helper cli command, randomness is not being used for any security
-    # or crypto related reasons.
-    random.shuffle(allowed_field_list)  # nosec
+    if shuffle_fields:
+        # This is a helper cli command, randomness is not being used for any security
+        # or crypto related reasons.
+        random.shuffle(allowed_field_list)  # nosec
     for i in range(limit):
         field_type_name, all_kwargs = allowed_field_list[i % len(allowed_field_list)]
         # These two kwarg types depend on another field existing, which it might
