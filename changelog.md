@@ -1,5 +1,42 @@
 # Changelog
 
+## Released 1.25.2
+
+### New features
+* Show full name of relationships [#1751](https://gitlab.com/baserow/baserow/-/issues/1751)
+* Add ability to delete row in kanban view [#2179](https://gitlab.com/baserow/baserow/-/issues/2179)
+* Add Celery Flower [#2255](https://gitlab.com/baserow/baserow/-/issues/2255)
+* Serve files from the backend to authorized users and/or with temporary links. [#2474](https://gitlab.com/baserow/baserow/-/issues/2474)
+* improve dropdown element to allow multi selection [#2515](https://gitlab.com/baserow/baserow/-/issues/2515)
+* [Builder] Rename dropdown element to choice element and allow to display element as dropdown/checkbox/radio [#2517](https://gitlab.com/baserow/baserow/-/issues/2517)
+* [Builder] Add responsive behavior configuration for table element [#2523](https://gitlab.com/baserow/baserow/-/issues/2523)
+* Allow syncing only a specific subset of templates [#2611](https://gitlab.com/baserow/baserow/-/issues/2611)
+* Enable single level nesting of filter groups within existing groups [#2646](https://gitlab.com/baserow/baserow/-/issues/2646)
+* Support file field as knowledge base for AI prompt [#2649](https://gitlab.com/baserow/baserow/-/issues/2649)
+
+### Bug fixes
+* Resolved an issue where moving elements stopped working from the element menu. [#2619](https://gitlab.com/baserow/baserow/-/issues/2619)
+* Fix formula migration for elements inside a repeat element [#2648](https://gitlab.com/baserow/baserow/-/issues/2648)
+* Resolved an issue where a refresh data source action being executed would cause duplicate entries to appear in a repeat element. [#2652](https://gitlab.com/baserow/baserow/-/issues/2652)
+* [Builder] Resolved an issue where deleting a page when a table element in a different page relied on it would trigger an error during application duplication. [#2656](https://gitlab.com/baserow/baserow/-/issues/2656)
+* Resolved an issue with duplicating a page containing a table with one or more columns of 'tags' type. [#2664](https://gitlab.com/baserow/baserow/-/issues/2664)
+* Fix a bug in the formula language causing the filter condition to be ignored when aggregating values. [#2666](https://gitlab.com/baserow/baserow/-/issues/2666)
+* [Builder] Resolved an issue which prevented the Open Page action from accessing the 'Previous action' provider. [#2707](https://gitlab.com/baserow/baserow/-/issues/2707)
+* [Builder] Fix page parameter type to make possible to use them in linked row field of update row actions [#2708](https://gitlab.com/baserow/baserow/-/issues/2708)
+* fix for UUIDFieldType that fails hard if filtered by ContainsViewFilterType and a non-UUID string [#2713](https://gitlab.com/baserow/baserow/-/issues/2713)
+* Restored prior field form behavior: pressing enter when in field form elements won't spuriously open field description input anymore. [#2715](https://gitlab.com/baserow/baserow/-/issues/2715)
+* Fixed bug with incorrect row ordering for editors and lower in views with group bys. [#2726](https://gitlab.com/baserow/baserow/-/issues/2726)
+* Fix missing field validation error messages
+* Fix periodic field update deadlock problem with tsv column update.
+* Markdown content is generated on the server and can be indexed by search engine
+* Resolved an issue where duplicating an image element pointing to a file would not work correctly.
+
+### Refactors
+* Display all elements in the 'add element' modal, and instead disable those which are unavailable. [#2607](https://gitlab.com/baserow/baserow/-/issues/2607)
+* Remove vim and nano from dependencies [#2633](https://gitlab.com/baserow/baserow/-/issues/2633)
+* Update posthog-js library to 1.136.2.
+
+
 ## Released 1.25.1
 
 ### Bug fixes
