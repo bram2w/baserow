@@ -1,7 +1,8 @@
 <template functional>
-  <div class="array-field__item array-field__item--button">
+  <div class="array-field__button">
     <Button
       v-if="$options.methods.isValid(props.value)"
+      tag="a"
       size="tiny"
       type="secondary"
       class="forced-pointer-events-auto"
@@ -12,7 +13,7 @@
     >
       {{ $options.methods.getLabelOrURL(props.value) }}
     </Button>
-    <Button v-else size="tiny" type="secondary" disabled>
+    <Button v-else size="tiny" type="secondary" tag="a" disabled>
       {{ $options.methods.getLabelOrURL(props.value) }}
     </Button>
   </div>

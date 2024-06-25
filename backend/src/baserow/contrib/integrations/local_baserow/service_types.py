@@ -298,7 +298,13 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         )
 
     def create_instance_from_serialized(
-        self, serialized_values, files_zip=None, storage=None, cache=None, **kwargs
+        self,
+        serialized_values,
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
     ):
         """
         Responsible for creating the `filters` and `sortings`.
@@ -314,6 +320,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         service = super().create_instance_from_serialized(
             serialized_values,
+            id_mapping,
             files_zip=files_zip,
             storage=storage,
             cache=cache,
@@ -704,14 +711,14 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         if prop_name == "search_query":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "filters":
             return [
                 {
                     **f,
                     "value": (
-                        import_formula(f["value"], id_mapping)
+                        import_formula(f["value"], id_mapping, **kwargs)
                         if f["value_is_formula"]
                         else f["value"]
                     ),
@@ -935,14 +942,14 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         if prop_name == "row_id":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "filters":
             return [
                 {
                     **f,
                     "value": (
-                        import_formula(f["value"], id_mapping)
+                        import_formula(f["value"], id_mapping, **kwargs)
                         if f["value_is_formula"]
                         else f["value"]
                     ),
@@ -956,7 +963,7 @@ class LocalBaserowGetRowUserServiceType(
             ]
 
         if prop_name == "search_query":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
             prop_name,
@@ -1221,12 +1228,12 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
         # Migrate the row id formula
         if prop_name == "row_id":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "field_mappings":
             return [
                 {
-                    "value": import_formula(item["value"], id_mapping),
+                    "value": import_formula(item["value"], id_mapping, **kwargs),
                     "field_id": (
                         id_mapping["database_fields"][item["field_id"]]
                         if "database_fields" in id_mapping
@@ -1248,7 +1255,13 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         )
 
     def create_instance_from_serialized(
-        self, serialized_values, files_zip=None, storage=None, cache=None, **kwargs
+        self,
+        serialized_values,
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
     ):
         """
         Responsible for creating the service, and then if `field_mappings`
@@ -1262,6 +1275,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
         service = super().create_instance_from_serialized(
             serialized_values,
+            id_mapping,
             files_zip=files_zip,
             storage=storage,
             cache=cache,

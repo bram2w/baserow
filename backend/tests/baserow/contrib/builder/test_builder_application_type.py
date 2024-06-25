@@ -372,6 +372,11 @@ def test_builder_application_export(data_fixture):
                         "type": "table",
                         "order": str(element4.order),
                         "button_color": "primary",
+                        "orientation": {
+                            "smartphone": "horizontal",
+                            "tablet": "horizontal",
+                            "desktop": "horizontal",
+                        },
                         "parent_element_id": None,
                         "place_in_container": None,
                         "visibility": "all",
@@ -790,6 +795,118 @@ def test_builder_application_import(data_fixture):
     assert workflow_action.element_id == element1.id
     assert workflow_action.description == "'hello'"
     assert workflow_action.title == "'there'"
+
+
+IMPORT_REFERENCE_COMPLEX = {
+    "pages": [
+        {
+            "id": 998,
+            "name": "Megan Clark",
+            "order": 2,
+            "path": "/test2",
+            "path_params": {},
+            "workflow_actions": [],
+            "elements": [
+                {
+                    "id": 997,
+                    "type": "heading",
+                    "parent_element_id": None,
+                    "place_in_container": None,
+                    "style_background": "none",
+                    "style_background_color": "#ffffffff",
+                    "style_border_bottom_color": "border",
+                    "style_border_bottom_size": 0,
+                    "style_border_top_color": "border",
+                    "style_border_top_size": 0,
+                    "style_width": "normal",
+                    "order": 1,
+                    "value": "",
+                    "level": 1,
+                }
+            ],
+            "data_sources": [
+                {
+                    "id": 1,
+                    "name": "source 2",
+                    "order": "1.00000000000000000000",
+                    "service": {
+                        "id": 1,
+                        "integration_id": 42,
+                        "row_id": "",
+                        "view_id": None,
+                        "table_id": None,
+                        "search_query": "",
+                        "filter_type": "AND",
+                        "type": "local_baserow_get_row",
+                    },
+                },
+                {
+                    "id": 3,
+                    "name": "source 3",
+                    "order": "2.00000000000000000000",
+                    "service": {
+                        "id": 2,
+                        "integration_id": 42,
+                        "view_id": None,
+                        "table_id": None,
+                        "search_query": "",
+                        "filter_type": "AND",
+                        "type": "local_baserow_list_rows",
+                    },
+                },
+            ],
+        },
+    ],
+    "integrations": [
+        {
+            "authorized_user": "test@baserow.io",
+            "id": 42,
+            "name": "test",
+            "order": "1.00000000000000000000",
+            "type": "local_baserow",
+        },
+    ],
+    "user_sources": [
+        {
+            "auth_providers": [],
+            "email_field_id": None,
+            "id": 42,
+            "integration_id": 42,
+            "name": "My user source",
+            "name_field_id": None,
+            "order": "1.00000000000000000000",
+            "table_id": None,
+            "type": "local_baserow",
+        },
+    ],
+    "theme": {
+        "primary_color": "#ccccccff",
+        "secondary_color": "#ccccccff",
+        "border_color": "#ccccccff",
+        "heading_1_font_size": 25,
+        "heading_1_color": "#ccccccff",
+        "heading_2_font_size": 21,
+        "heading_2_color": "#ccccccff",
+        "heading_3_font_size": 17,
+        "heading_3_color": "#ccccccff",
+    },
+    "id": 999,
+    "name": "Holly Sherman",
+    "order": 0,
+    "type": "builder",
+}
+
+
+@pytest.mark.django_db
+def test_builder_application_import_with_complex_elements(data_fixture):
+    user = data_fixture.create_user(email="test@baserow.io")
+    workspace = data_fixture.create_workspace(user=user)
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized_values = IMPORT_REFERENCE_COMPLEX.copy()
+    builder = BuilderApplicationType().import_serialized(
+        workspace, serialized_values, config, {}
+    )
 
 
 @pytest.mark.django_db

@@ -6,7 +6,7 @@ set -euo pipefail
 # ENVIRONMENT VARIABLES USED DIRECTLY BY THIS ENTRYPOINT
 # ======================================================
 
-export BASEROW_VERSION="1.25.1"
+export BASEROW_VERSION="1.25.2"
 
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
@@ -393,6 +393,9 @@ case "$1" in
       sleep "$BASEROW_CELERY_BEAT_STARTUP_DELAY"
       export OTEL_SERVICE_NAME="celery-beat"
       exec celery -A baserow beat -l "${BASEROW_CELERY_BEAT_DEBUG_LEVEL}" -S redbeat.RedBeatScheduler "${@:2}"
+    ;;
+    celery-flower)
+      exec celery -A baserow flower "$@"
     ;;
     watch-py)
         # Ensure we watch all possible python source code locations for changes.

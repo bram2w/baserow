@@ -619,6 +619,57 @@ def test_filtering_file_field_type(data_fixture, api_client, django_assert_num_q
 
     row_handler = RowHandler()
 
+    file_field = FieldHandler().create_field(
+        user, table, "file", name="file", primary=True
+    )
+
+    assert FileField.objects.all().count() == 1
+    model = table.get_model(attribute_names=True)
+
+    row = row_handler.create_row(
+        user=user,
+        table=table,
+        values={"file": [{"name": user_file_1.name}, {"name": user_file_2.name}]},
+        model=model,
+    )
+    assert row.file[0]["visible_name"] == user_file_1.original_name
+    del row.file[0]["visible_name"]
+    assert row.file[0] == user_file_1.serialize()
+
+    data_fixture.create_view_filter(
+        user,
+        view=grid_view,
+        field=file_field,
+        type="has_file_type",
+        value="image",
+    )
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert (
+        response_json["results"][0][file_field.db_column][0]["visible_name"]
+        == user_file_1.original_name
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+def test_filtering_file_formula_field_type(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    with freeze_time("2023-01-01 12:00:00"):
+        user_file_1 = data_fixture.create_user_file(mime_type="text/plain", size=100)
+        user_file_2 = data_fixture.create_user_file(
+            is_image=True, image_width=200, image_height=300
+        )
+        user_file_3 = data_fixture.create_user_file()
+    grid_view = data_fixture.create_grid_view(user=user, table=table)
+
+    row_handler = RowHandler()
+
     file = FieldHandler().create_field(user, table, "file", name="file", primary=True)
 
     assert FileField.objects.all().count() == 1

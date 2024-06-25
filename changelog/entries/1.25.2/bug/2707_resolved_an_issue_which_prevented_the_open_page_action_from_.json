@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Resolved an issue which prevented the Open Page action from accessing the 'Previous action' provider.",
+    "issue_number": 2707,
+    "bullet_points": [],
+    "created_at": "2024-06-05"
+}

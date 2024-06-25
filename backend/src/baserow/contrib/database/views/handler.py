@@ -1649,6 +1649,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         user: AbstractUser,
         view: View,
         filter_type: Optional[str] = None,
+        parent_group_id: Optional[int] = None,
         primary_key: Optional[int] = None,
     ) -> ViewFilterGroup:
         """
@@ -1675,6 +1676,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         attrs = {}
         if filter_type is not None:
             attrs["filter_type"] = filter_type
+        if parent_group_id is not None:
+            attrs["parent_group_id"] = parent_group_id
 
         filter_group = ViewFilterGroup.objects.create(
             pk=primary_key, view=view, **attrs

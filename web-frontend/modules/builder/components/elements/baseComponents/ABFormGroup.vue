@@ -5,6 +5,7 @@
     :class="{
       'ab-form-group--horizontal': horizontal,
       'ab-form-group--horizontal-variable': horizontalVariable,
+      'ab-form-group--with-label': label,
     }"
   >
     <label

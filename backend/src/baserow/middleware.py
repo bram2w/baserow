@@ -6,6 +6,7 @@ from django.urls import is_valid_path
 
 from rest_framework import status
 
+from baserow.core.handler import CoreHandler
 from baserow.throttling import ConcurrentUserRequestsThrottle
 
 
@@ -78,4 +79,23 @@ class ConcurrentUserRequestsMiddleware:
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
         ConcurrentUserRequestsThrottle.on_request_processed(request)
+        return response
+
+
+class ClearContextMiddleware:
+    """
+    This middleware is used to clear the context after the response has been returned.
+    Such context can be used i.e. to store the current workspace id
+    """
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        try:
+            response = self.get_response(request)
+        finally:
+            # Make sure that the context is cleared after the response has been
+            # returned regardless of any exceptions that might have been raised.
+            CoreHandler().clear_context()
         return response

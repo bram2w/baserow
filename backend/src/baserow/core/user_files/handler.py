@@ -31,12 +31,12 @@ from .exceptions import (
 
 class UserFileHandler:
     def get_user_file_by_name(
-        self, user_file_name: int, base_queryset: Optional[QuerySet] = None
+        self, user_file_name: str, base_queryset: Optional[QuerySet] = None
     ) -> UserFile:
         """
         Returns the user file with the provided id.
 
-        :param user_file_id: The id of the user file.
+        :param user_file_name: The name of the user file.
         :param base_queryset: The base queryset that will be used to get the user file.
         :raises UserFile.DoesNotExist: If the user file does not exist.
         :return: The user file.
@@ -127,10 +127,10 @@ class UserFileHandler:
         overwritten.
 
         :param image: The original Pillow image that serves as base when generating the
-            the image.
+            image.
         :type image: Image
-        :param user_file: The user file for which the thumbnails must be generated
-            and saved.
+        :param user_file: The user file for which the thumbnails must be generated and
+            saved.
         :type user_file: UserFile
         :param storage: The storage where the thumbnails must be saved to.
         :type storage: Storage or None
@@ -207,11 +207,11 @@ class UserFileHandler:
             )
 
         storage = storage or default_storage
-        hash = sha256_hash(stream)
+        stream_hash = sha256_hash(stream)
         file_name = truncate_middle(file_name, 64)
 
         existing_user_file = UserFile.objects.filter(
-            original_name=file_name, sha256_hash=hash
+            original_name=file_name, sha256_hash=stream_hash
         ).first()
 
         if existing_user_file:
@@ -219,7 +219,7 @@ class UserFileHandler:
 
         extension = pathlib.Path(file_name).suffix[1:].lower()
         mime_type = mimetypes.guess_type(file_name)[0] or ""
-        unique = self.generate_unique(hash, extension)
+        unique = self.generate_unique(stream_hash, extension)
 
         # By default the provided file is not an image.
         image = None
@@ -245,7 +245,7 @@ class UserFileHandler:
             mime_type=mime_type,
             unique=unique,
             uploaded_by=user,
-            sha256_hash=hash,
+            sha256_hash=stream_hash,
             is_image=is_image,
             image_width=image_width,
             image_height=image_height,
@@ -336,7 +336,7 @@ class UserFileHandler:
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Dict[str, Any] = None,
-    ) -> Dict[str, str]:
+    ) -> Optional[Dict[str, str]]:
         """
         Given a UserFile object, write it to files_zip so it can be exported
         and subsequently imported later.
@@ -345,7 +345,9 @@ class UserFileHandler:
         if cache is None:
             cache = {}
 
-        if not user_file or not storage:
+        storage = storage or default_storage
+
+        if not user_file:
             return None
 
         name = user_file.name

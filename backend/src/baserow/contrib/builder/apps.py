@@ -172,8 +172,8 @@ class BuilderConfig(AppConfig):
         from .elements.element_types import (
             ButtonElementType,
             CheckboxElementType,
+            ChoiceElementType,
             ColumnElementType,
-            DropdownElementType,
             FormContainerElementType,
             HeadingElementType,
             IFrameElementType,
@@ -196,7 +196,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(TableElementType())
         element_type_registry.register(RepeatElementType())
         element_type_registry.register(FormContainerElementType())
-        element_type_registry.register(DropdownElementType())
+        element_type_registry.register(ChoiceElementType())
         element_type_registry.register(CheckboxElementType())
         element_type_registry.register(IFrameElementType())
 

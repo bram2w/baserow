@@ -21,14 +21,15 @@
       :is-public-view="isPublicView"
       :read-only="readOnly"
       :add-condition-string="$t('viewFilterContext.addFilter')"
+      :add-condition-group-string="$t('viewFilterContext.addFilterGroup')"
       scrollable
       class="filters__items--with-padding"
       @addFilter="addFilter($event)"
+      @addFilterGroup="addFilter($event)"
       @deleteFilter="deleteFilter($event)"
       @deleteFilterGroup="deleteFilterGroup($event)"
       @updateFilter="updateFilter($event)"
-      @selectOperator="updateView(view, { filter_type: $event })"
-      @selectFilterGroupOperator="updateFilterGroupOperator(view, $event)"
+      @updateFilterType="updateFilterType(view, $event)"
     />
     <div v-if="!disableFilter" class="filters__footer">
       <div class="filters__actions">
@@ -36,7 +37,10 @@
           {{ $t('viewFilterContext.addFilter') }}</ButtonText
         >
 
-        <ButtonText icon="iconoir-plus" @click.prevent="addFilter(uuid())">
+        <ButtonText
+          icon="iconoir-plus"
+          @click.prevent="addFilter({ filterGroupId: uuidv1() })"
+        >
           {{ $t('viewFilterContext.addFilterGroup') }}</ButtonText
         >
       </div>
@@ -54,7 +58,7 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import { uuid } from '@baserow/modules/core/utils/string'
+import { v1 as uuidv1 } from 'uuid'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 import viewFilterTypes from '@baserow/modules/database/mixins/viewFilterTypes'
@@ -89,8 +93,8 @@ export default {
     },
   },
   methods: {
-    uuid,
-    async addFilter(filterGroupId = null) {
+    uuidv1,
+    async addFilter({ filterGroupId = null, parentGroupId = null } = {}) {
       try {
         const field = this.getFirstCompatibleField(this.fields)
         if (field === undefined) {
@@ -112,6 +116,7 @@ export default {
             emitEvent: false,
             readOnly: this.readOnly,
             filterGroupId,
+            parentGroupId,
           })
           this.$emit('changed')
         }
@@ -185,7 +190,11 @@ export default {
 
       this.$store.dispatch('view/setItemLoading', { view, value: false })
     },
-    async updateFilterGroupOperator(view, { filterGroup, value }) {
+    async updateFilterType(view, { filterGroup, value }) {
+      if (filterGroup === undefined) {
+        return await this.updateView(view, { filter_type: value })
+      }
+
       this.$store.dispatch('view/setItemLoading', { view, value: true })
       try {
         await this.$store.dispatch('view/updateFilterGroup', {

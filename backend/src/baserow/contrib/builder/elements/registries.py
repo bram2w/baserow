@@ -102,6 +102,68 @@ class ElementType(
         :param instance: The to be deleted element instance.
         """
 
+    def import_context_addition(
+        self, instance: ElementSubClass, id_mapping
+    ) -> Dict[str, Any]:
+        """
+        This hook allow to specify extra context data when importing objects related
+        to this one like child elements, collection fields or workflow actions.
+        This extra context is then used as import context for these objects.
+
+        :param instance: The instance we want the context for.
+        :param id_mapping: The import ID mapping object.
+        :return: An object containing the extra context for the import process.
+        """
+
+        return {}
+
+    def import_serialized(
+        self,
+        page: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict[str, Any] | None = None,
+        **kwargs,
+    ) -> ElementSubClass:
+        if cache is None:
+            cache = {}
+
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        import_context = {}
+
+        parent_element_id = serialized_values["parent_element_id"]
+
+        # If we have a parent elementthen we want to add used its import context
+        if parent_element_id:
+            imported_parent_element_id = id_mapping["builder_page_elements"][
+                parent_element_id
+            ]
+            import_context = ElementHandler().get_import_context_addition(
+                imported_parent_element_id,
+                id_mapping,
+                element_map=cache.get("imported_element_map", None),
+            )
+
+        created_instance = super().import_serialized(
+            page,
+            serialized_values,
+            id_mapping,
+            files_zip,
+            storage,
+            cache,
+            **(kwargs | import_context),
+        )
+
+        # Add created instance to an element cache
+        cache.setdefault("imported_element_map", {})[
+            created_instance.id
+        ] = created_instance
+
+        return created_instance
+
     def serialize_property(
         self,
         element: Element,
@@ -138,6 +200,9 @@ class ElementType(
         :param prop_name: the name of the property being transformed.
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
+        :param files_zip: the zip file containing the files.
+        :param storage: the storage where the files should be stored.
+        :param cache: a cache dict that can be used to store temporary data.
         :return: the deserialized version for this property.
         """
 
@@ -217,7 +282,8 @@ class CollectionFieldType(
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
-        data_source_id: Optional[int] = None,
+        serialized_values: Dict[str, Any],
+        **kwargs,
     ) -> Any:
         """
         This hooks allow to customize the deserialization of a property.
@@ -225,6 +291,8 @@ class CollectionFieldType(
         :param prop_name: the name of the property being transformed.
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
+        :param serialized_values: the serialized values, which can be accessed
+            during deserialization to perform extra checks.
         :return: the deserialized version for this property.
         """
 
@@ -256,9 +324,10 @@ class CollectionFieldType(
 
         An id_mapping for this class is populated during the process.
 
-        :param parent: The parent object of the to be imported values.
-        :serialized_values: The dict containing the serialized values.
-        :id_mapping: Used to mapped object ids from export to newly created instances.
+        :param serialized_values: The dict containing the serialized values.
+        :param id_mapping: Used to mapped object ids from export to newly
+            created instances.
+        :param data_source_id: The data source id.
         :return: The created instance.
         """
 
@@ -268,6 +337,7 @@ class CollectionFieldType(
                 name,
                 serialized_values["config"][name],
                 id_mapping,
+                serialized_values,
                 data_source_id=data_source_id,
             )
 

@@ -2,6 +2,7 @@
   <form @submit.prevent="submit">
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
+      :data-providers-allowed="dataProvidersAllowed"
       @values-changed="emitChange($event)"
     />
   </form>

@@ -1,3 +1,7 @@
+<!--
+This component is used to render the formula array items, independently of the place.
+It's used in the grid view cell, row edit modal, gallery card, etc.
+-->
 <template functional>
   <div :class="[data.staticClass, data.class]">
     <component
@@ -10,6 +14,7 @@
       :index="index"
       v-on="listeners"
     ></component>
+    <slot></slot>
   </div>
 </template>
 
@@ -22,7 +27,7 @@ export default {
         'formula_type',
         field.array_formula_type
       )
-      return formulaType.getFunctionalGridViewFieldArrayComponent()
+      return formulaType.getFunctionalFieldArrayComponent()
     },
     getValue(field, $registry, item) {
       const formulaType = $registry.get(

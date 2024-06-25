@@ -13,27 +13,12 @@
     flex-wrap: wrap;
     overflow: auto;
     bottom: auto;
-    right: auto;
     min-width: calc(100% + 4px);
     min-height: calc(100% + 4px);
 
     .array-field__item {
       height: auto;
-      white-space: normal;
     }
-  }
-
-  &:not(.active) {
-    .array-field__item span {
-      @extend %ellipsis;
-
-      max-width: 140px;
-    }
-  }
-
-  .array-field__multiple-select-option {
-    margin-left: 4px;
-    margin-right: 4px;
   }
 
   .grid-view__column--matches-search & {

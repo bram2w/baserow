@@ -16,6 +16,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
     view_type_registry,
 )
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -674,6 +675,67 @@ def test_get_view_filter_group(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_VIEW_FILTER_GROUP_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_view_filter_group_can_be_nested(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(table=table)
+    parent_group = data_fixture.create_view_filter_group(user=user, view=view)
+
+    response = api_client.post(
+        reverse("api:database:views:list_filter_groups", kwargs={"view_id": view.id}),
+        {"filter_type": "OR", "parent_group": parent_group.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert ViewFilterGroup.objects.all().count() == 2
+    assert response_json == {
+        "id": AnyInt(),
+        "view": view.id,
+        "filter_type": "OR",
+        "parent_group": parent_group.id,
+    }
+
+
+@pytest.mark.django_db
+def test_view_filter_group_delete_all_nested_children(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(table=table)
+    parent_group = data_fixture.create_view_filter_group(user=user)
+    child_group_1 = data_fixture.create_view_filter_group(
+        user=user, view=view, parent_group=parent_group
+    )
+    filter_in_group_1 = data_fixture.create_view_filter(
+        user=user, view=view, group=child_group_1
+    )
+    child_group_2 = data_fixture.create_view_filter_group(
+        user=user, view=view, parent_group=parent_group
+    )
+    filter_in_group_2 = data_fixture.create_view_filter(
+        user=user, view=view, group=child_group_1
+    )
+
+    assert ViewFilterGroup.objects.all().count() == 3
+    assert ViewFilter.objects.all().count() == 2
+
+    response = api_client.delete(
+        reverse(
+            "api:database:views:filter_group_item",
+            kwargs={"filter_group_id": parent_group.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT, response.json()
+
+    assert ViewFilterGroup.objects.all().count() == 0
+    assert ViewFilter.objects.all().count() == 0
 
 
 @pytest.mark.django_db

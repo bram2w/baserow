@@ -28,7 +28,7 @@ export default {
   },
   methods: {
     isGenerating(parent, props) {
-      return parent.row._.pendingFieldOps?.find(
+      return !!parent.row._.pendingFieldOps?.find(
         (fieldName) => fieldName === `field_${props.field.id}`
       )
     },

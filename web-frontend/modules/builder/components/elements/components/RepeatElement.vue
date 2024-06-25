@@ -19,7 +19,7 @@
               <!-- The first iteration is editable if we're in editing mode -->
               <ElementPreview
                 v-if="index === 0 && isEditMode"
-                :key="child.id"
+                :key="`${child.id}-${index}`"
                 :element="child"
                 :application-context-additions="{
                   recordIndex: index,
@@ -30,7 +30,7 @@
               <!-- Override the mode so that any children are in public mode -->
               <PageElement
                 v-else
-                :key="child.id"
+                :key="`${child.id}_${index}`"
                 :element="child"
                 :force-mode="isEditMode ? 'public' : mode"
                 :application-context-additions="{

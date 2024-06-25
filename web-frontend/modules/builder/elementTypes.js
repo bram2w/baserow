@@ -27,8 +27,8 @@ import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
-import DropdownElement from '@baserow/modules/builder/components/elements/components/DropdownElement.vue'
-import DropdownElementForm from '@baserow/modules/builder/components/elements/components/forms/general/DropdownElementForm.vue'
+import ChoiceElement from '@baserow/modules/builder/components/elements/components/ChoiceElement.vue'
+import ChoiceElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ChoiceElementForm.vue'
 import CheckboxElement from '@baserow/modules/builder/components/elements/components/CheckboxElement.vue'
 import CheckboxElementForm from '@baserow/modules/builder/components/elements/components/forms/general/CheckboxElementForm.vue'
 import IFrameElement from '@baserow/modules/builder/components/elements/components/IFrameElement.vue'
@@ -140,6 +140,16 @@ export class ElementType extends Registerable {
     return values
   }
 
+  /**
+   * When a data source is modified or destroyed, `element/emitElementEvent`
+   * can be dispatched to notify all elements of the event. Element types
+   * can implement this function to handle the cases.
+   *
+   * @param event - `ELEMENT_EVENTS.DATA_SOURCE_REMOVED` if a data source
+   *  has been destroyed, or `ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE` if
+   *  it's been updated.
+   * @param params - Context data which the element type can use.
+   */
   onElementEvent(event, params) {}
 
   resolveFormula(formula, applicationContext) {
@@ -532,7 +542,7 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
 }
 
 export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
-  getType() {
+  static getType() {
     return 'column'
   }
 
@@ -674,10 +684,51 @@ const CollectionElementTypeMixin = (Base) =>
 
       return `${this.name}${suffix}`
     }
+
+    /**
+     * When a data source is modified or destroyed, we need to ensure that
+     * our collection elements respond accordingly.
+     *
+     * If the data source has been removed, we want to remove it from the
+     * collection element, and then clear its contents from the store.
+     *
+     * If the data source has been updated, we want to trigger a content reset.
+     *
+     * @param event - `ELEMENT_EVENTS.DATA_SOURCE_REMOVED` if a data source
+     *  has been destroyed, or `ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE` if
+     *  it's been updated.
+     * @param params - Context data which the element type can use.
+     */
+    async onElementEvent(event, { page, element, dataSourceId }) {
+      if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
+        if (element.data_source_id === dataSourceId) {
+          // Remove the data_source_id
+          await this.app.store.dispatch('element/forceUpdate', {
+            page,
+            element,
+            values: { data_source_id: null },
+          })
+          // Empty the element content
+          await this.app.store.dispatch('elementContent/clearElementContent', {
+            element,
+          })
+        }
+      }
+      if (event === ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE) {
+        if (element.data_source_id === dataSourceId) {
+          await this.app.store.dispatch(
+            'elementContent/triggerElementContentReset',
+            {
+              element,
+            }
+          )
+        }
+      }
+    }
   }
 
 export class TableElementType extends CollectionElementTypeMixin(ElementType) {
-  getType() {
+  static getType() {
     return 'table'
   }
 
@@ -717,33 +768,6 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
         })
       })
       .flat()
-  }
-
-  async onElementEvent(event, { page, element, dataSourceId }) {
-    if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
-      if (element.data_source_id === dataSourceId) {
-        // Remove the data_source_id
-        await this.app.store.dispatch('element/forceUpdate', {
-          page,
-          element,
-          values: { data_source_id: null },
-        })
-        // Empty the element content
-        await this.app.store.dispatch('elementContent/clearElementContent', {
-          element,
-        })
-      }
-    }
-    if (event === ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE) {
-      if (element.data_source_id === dataSourceId) {
-        await this.app.store.dispatch(
-          'elementContent/triggerElementContentReset',
-          {
-            element,
-          }
-        )
-      }
-    }
   }
 
   isInError({ element, builder }) {
@@ -836,7 +860,7 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 export class FormElementType extends ElementType {
   isFormElement = true
 
-  get formDataType() {
+  formDataType(element) {
     return null
   }
 
@@ -882,7 +906,7 @@ export class FormElementType extends ElementType {
     const initialValue = this.getInitialFormDataValue(element, { page })
     const payload = {
       value: initialValue,
-      type: this.formDataType,
+      type: this.formDataType(element),
       isValid: this.isValid(element, initialValue),
     }
 
@@ -903,10 +927,16 @@ export class FormElementType extends ElementType {
   getNextHorizontalElementToSelect(page, element, placement) {
     return null
   }
+
+  getDataSchema(element) {
+    return {
+      type: this.formDataType(element),
+    }
+  }
 }
 
 export class InputTextElementType extends FormElementType {
-  getType() {
+  static getType() {
     return 'input_text'
   }
 
@@ -945,7 +975,7 @@ export class InputTextElementType extends FormElementType {
     return InputTextElementForm
   }
 
-  get formDataType() {
+  formDataType(element) {
     return 'string'
   }
 
@@ -1105,7 +1135,7 @@ export class LinkElementType extends ElementType {
 }
 
 export class ImageElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'image'
   }
 
@@ -1141,7 +1171,7 @@ export class ImageElementType extends ElementType {
 }
 
 export class ButtonElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'button'
   }
 
@@ -1180,17 +1210,17 @@ export class ButtonElementType extends ElementType {
   }
 }
 
-export class DropdownElementType extends FormElementType {
+export class ChoiceElementType extends FormElementType {
   static getType() {
-    return 'dropdown'
+    return 'choice'
   }
 
   get name() {
-    return this.app.i18n.t('elementType.dropdown')
+    return this.app.i18n.t('elementType.choice')
   }
 
   get description() {
-    return this.app.i18n.t('elementType.dropdownDescription')
+    return this.app.i18n.t('elementType.choiceDescription')
   }
 
   get iconClass() {
@@ -1198,15 +1228,15 @@ export class DropdownElementType extends FormElementType {
   }
 
   get component() {
-    return DropdownElement
+    return ChoiceElement
   }
 
   get generalFormComponent() {
-    return DropdownElementForm
+    return ChoiceElementForm
   }
 
-  get formDataType() {
-    return 'string'
+  formDataType(element) {
+    return element.multiple ? 'array' : 'string'
   }
 
   getInitialFormDataValue(element, applicationContext) {
@@ -1232,21 +1262,43 @@ export class DropdownElementType extends FormElementType {
   }
 
   /**
-   * Responsible for validating the dropdown form element. It behaves slightly
-   * differently so that dropdown options with blank values are valid. We simply
-   * test if the value is one of the dropdown's own values.
-   * @param element - The dropdown form element
+   * Responsible for validating the choice form element. It behaves slightly
+   * differently so that choice options with blank values are valid. We simply
+   * test if the value is one of the choice's own values.
+   * @param element - The choice form element
    * @param value - The value we are validating.
    * @returns {boolean}
    */
   isValid(element, value) {
-    const validOption = element.options.find((option) => option.value === value)
+    const validOption = element.multiple
+      ? element.options.find((option) => value.includes(option.value))
+      : element.options.find((option) => option.value === value)
     return !(element.required && !validOption)
+  }
+
+  isInError({ element, builder }) {
+    return element.options.length === 0
+  }
+
+  getDataSchema(element) {
+    const type = this.formDataType(element)
+    if (type === 'string') {
+      return {
+        type: 'string',
+      }
+    } else if (type === 'array') {
+      return {
+        type: 'array',
+        items: {
+          type: 'string',
+        },
+      }
+    }
   }
 }
 
 export class CheckboxElementType extends FormElementType {
-  getType() {
+  static getType() {
     return 'checkbox'
   }
 
@@ -1270,7 +1322,7 @@ export class CheckboxElementType extends FormElementType {
     return CheckboxElementForm
   }
 
-  get formDataType() {
+  formDataType(element) {
     return 'boolean'
   }
 
@@ -1289,7 +1341,7 @@ export class CheckboxElementType extends FormElementType {
 }
 
 export class IFrameElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'iframe'
   }
 

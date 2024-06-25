@@ -134,7 +134,7 @@ export class RuntimeFormulaFunction extends Registerable {
 }
 
 export class RuntimeConcat extends RuntimeFormulaFunction {
-  getType() {
+  static getType() {
     return 'concat'
   }
 
@@ -158,7 +158,7 @@ export class RuntimeConcat extends RuntimeFormulaFunction {
 }
 
 export class RuntimeGet extends RuntimeFormulaFunction {
-  getType() {
+  static getType() {
     return 'get'
   }
 
@@ -226,7 +226,7 @@ export class RuntimeGet extends RuntimeFormulaFunction {
 }
 
 export class RuntimeAdd extends RuntimeFormulaFunction {
-  getType() {
+  static getType() {
     return 'add'
   }
 

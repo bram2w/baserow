@@ -72,14 +72,23 @@ def test_form_data_provider_get_data_chunk(mock_validate):
     form_data_provider = FormDataProviderType()
 
     fake_request = MagicMock()
-    fake_request.data = {"form_data": {"1": {"value": "hello"}}}
+    fake_request.data = {"form_data": {"1": "hello", "2": ["a", "b"]}}
 
     dispatch_context = BuilderDispatchContext(fake_request, None)
+    mock_validate.side_effect = lambda x, y: y
 
+    # A single valued form data
     assert form_data_provider.get_data_chunk(dispatch_context, ["1"]) == "hello"
+    # A multiple valued form data
+    assert form_data_provider.get_data_chunk(dispatch_context, ["2", "*"]) == ["a", "b"]
+    # A multiple valued form data at a specific index
+    assert form_data_provider.get_data_chunk(dispatch_context, ["2", "0"]) == "a"
+    # Paths longer than 2 are unsupported.
+    assert form_data_provider.get_data_chunk(dispatch_context, ["2", "*", "z"]) is None
+    # Unknown form data fields are None
+    assert form_data_provider.get_data_chunk(dispatch_context, ["3"]) is None
+    # Empty paths are None
     assert form_data_provider.get_data_chunk(dispatch_context, []) is None
-    assert form_data_provider.get_data_chunk(dispatch_context, ["1", "test"]) is None
-    assert form_data_provider.get_data_chunk(dispatch_context, ["test"]) is None
 
 
 @patch("baserow.contrib.builder.data_providers.data_provider_types.ElementHandler")
@@ -92,14 +101,17 @@ def test_form_data_provider_validate_data_chunk(mock_handler):
 
     form_data_provider = FormDataProviderType()
 
-    mock_element_type.is_valid.return_value = True
-    assert form_data_provider.validate_data_chunk("1", "horse") is None
+    mock_element_type.is_valid.return_value = "something"
+    assert form_data_provider.validate_data_chunk("1", "horse") == "something"
 
-    mock_element_type.is_valid.return_value = False
+    def raise_exc(x, y):
+        raise FormDataProviderChunkInvalidException()
+
+    mock_element_type.is_valid.side_effect = raise_exc
     with pytest.raises(FormDataProviderChunkInvalidException) as exc:
         assert form_data_provider.validate_data_chunk("1", 42)
 
-    assert exc.value.args[0] == "Form data 42 is invalid for its element."
+    assert exc.value.args[0].startswith("Provided value for form element with ID")
 
 
 @pytest.mark.django_db

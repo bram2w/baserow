@@ -533,7 +533,7 @@ class NumberFieldType(FieldType):
         kwargs["decimal_places"] = instance.number_decimal_places
 
         if not instance.number_negative:
-            kwargs["min_value"] = 0
+            kwargs["min_value"] = Decimal("0")
 
         return serializers.DecimalField(
             **{
@@ -5627,7 +5627,7 @@ class UUIDFieldType(ReadOnlyFieldType):
         return "" if value is None else str(value)
 
     def contains_query(self, *args):
-        return contains_filter(*args)
+        return contains_filter(*args, validate=False)
 
     def to_baserow_formula_expression(self, field):
         # Cast the uuid to text, to make it compatible with all the text related

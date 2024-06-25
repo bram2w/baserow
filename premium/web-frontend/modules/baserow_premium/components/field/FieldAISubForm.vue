@@ -3,7 +3,42 @@
     <SelectAIModelForm
       :default-values="defaultValues"
       :database="database"
+      @ai-type-changed="setFileFieldSupported"
     ></SelectAIModelForm>
+    <div v-if="fileFieldSupported" class="control">
+      <label class="control__label control__label--small">
+        {{ $t('selectAIModelForm.fileField') }}
+        <HelpIcon
+          class="margin-left-1"
+          :tooltip="$t('fieldAISubForm.fileFieldHelp')"
+          :tooltip-content-classes="'tooltip__content--expandable'"
+        />
+      </label>
+      <div class="control__elements">
+        <Dropdown
+          v-model="values.ai_file_field_id"
+          class="dropdown--floating"
+          :class="{
+            'dropdown--error': $v.values.ai_file_field_id.$error,
+          }"
+          :fixed-items="true"
+          :show-search="false"
+          small
+          @hide="$v.values.ai_file_field_id.$touch()"
+        >
+          <DropdownItem
+            :name="$t('fieldAISubForm.emptyFileField')"
+            :value="null"
+          />
+          <DropdownItem
+            v-for="field in fileFields"
+            :key="field.id"
+            :name="field.name"
+            :value="field.id"
+          />
+        </Dropdown>
+      </div>
+    </div>
     <div class="control">
       <label class="control__label control__label--small">
         {{ $t('fieldAISubForm.prompt') }}
@@ -47,10 +82,12 @@ export default {
   mixins: [form, fieldSubForm],
   data() {
     return {
-      allowedValues: ['ai_prompt'],
+      allowedValues: ['ai_prompt', 'ai_file_field_id'],
       values: {
         ai_prompt: '',
+        ai_file_field_id: null,
       },
+      fileFieldSupported: false,
     }
   },
   computed: {
@@ -78,10 +115,34 @@ export default {
         .get('field', this.fieldType)
         .isDeactivated(this.workspace.id)
     },
+    fileFields() {
+      return this.allFieldsInTable.filter((field) => {
+        const t = this.$registry.get('field', field.type)
+        return t.canRepresentFiles(field)
+      })
+    },
+  },
+  methods: {
+    setFileFieldSupported(generativeAIType) {
+      if (generativeAIType) {
+        const modelType = this.$registry.get(
+          'generativeAIModel',
+          generativeAIType
+        )
+        this.fileFieldSupported = modelType.canPromptWithFiles()
+      } else {
+        this.fileFieldSupported = false
+      }
+
+      if (!this.fileFieldSupported) {
+        this.values.ai_file_field_id = null
+      }
+    },
   },
   validations: {
     values: {
       ai_prompt: { required },
+      ai_file_field_id: {},
     },
   },
 }

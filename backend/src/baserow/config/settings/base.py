@@ -122,6 +122,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "baserow.middleware.BaserowCustomHttp404Middleware",
+    "baserow.middleware.ClearContextMiddleware",
 ]
 
 if otel_is_enabled():
@@ -485,7 +486,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.25.1",
+    "VERSION": "1.25.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -615,7 +616,7 @@ class AttrDict(dict):
         globals()[key] = value
 
 
-DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+BASE_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 AWS_STORAGE_ENABLED = os.getenv("AWS_STORAGE_BUCKET_NAME", "") != ""
 GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
@@ -633,7 +634,7 @@ if sum(ALL_STORAGE_ENABLED_VARS) > 1:
     )
 
 if AWS_STORAGE_ENABLED:
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    BASE_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_S3_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
@@ -682,7 +683,7 @@ if GOOGLE_STORAGE_ENABLED:
     # See https://django-storages.readthedocs.io/en/latest/backends/gcloud.html for
     # details on what these env variables do
 
-    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    BASE_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
     GS_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
@@ -708,7 +709,7 @@ if GOOGLE_STORAGE_ENABLED:
     )
 
 if AZURE_STORAGE_ENABLED:
-    DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+    BASE_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
     AZURE_OVERWRITE_FILES = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
@@ -736,6 +737,14 @@ if AZURE_STORAGE_ENABLED:
         ],
     )
 
+STORAGES = {
+    "default": {
+        "BACKEND": BASE_FILE_STORAGE,
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
 if BASEROW_PUBLIC_URL:
@@ -822,6 +831,10 @@ USER_THUMBNAILS_DIRECTORY = "thumbnails"
 BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
     Decimal(os.getenv("BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB", 1024 * 1024)) * 1024 * 1024
 )  # ~1TB by default
+
+BASEROW_OPENAI_UPLOADED_FILE_SIZE_LIMIT_MB = int(
+    os.getenv("BASEROW_OPENAI_UPLOADED_FILE_SIZE_LIMIT_MB", 512)
+)
 
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
@@ -937,6 +950,7 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # modal.
 # IF CHANGING KEEP IN SYNC WITH e2e-tests/wait-for-services.sh
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
+BASEROW_SYNC_TEMPLATES_PATTERN = os.getenv("BASEROW_SYNC_TEMPLATES_PATTERN", None)
 
 MAX_FIELD_LIMIT = int(os.getenv("BASEROW_MAX_FIELD_LIMIT", 600))
 

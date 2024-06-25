@@ -5,6 +5,14 @@ export class GenerativeAIModelType extends Registerable {
     throw new Error('Must be set on the type.')
   }
 
+  /**
+   * Indicates whether files can be used as a knowledge base
+   * for the prompt.
+   */
+  canPromptWithFiles() {
+    return false
+  }
+
   getOrder() {
     return 50
   }
@@ -52,6 +60,10 @@ export class OpenAIModelType extends GenerativeAIModelType {
         i18n.t('generativeAIModelType.openaiModelsDescription')
       ),
     ]
+  }
+
+  canPromptWithFiles() {
+    return true
   }
 
   getOrder() {

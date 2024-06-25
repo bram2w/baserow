@@ -66,23 +66,31 @@ class FormDataProviderType(DataProviderType):
 
         element: Type[FormElement] = ElementHandler().get_element(element_id)  # type: ignore
         element_type: FormElementTypeMixin = element.get_type()  # type: ignore
-        if not element_type.is_valid(element, data_chunk):
+
+        try:
+            return element_type.is_valid(element, data_chunk)
+        except FormDataProviderChunkInvalidException as exc:
             raise FormDataProviderChunkInvalidException(
-                f"Form data {data_chunk} is invalid for its element."
+                f"Provided value for form element with ID {element.id} of "
+                f"type {element_type.type} is invalid. {str(exc)}"
             )
 
     def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
-        if len(path) != 1:
+        # The path can come in two lengths:
+        # - 1: The field id alone, if it's single-valued.
+        # - 2a: The field id and '*', if it's multivalued.
+        # - 2b: The field id and an index, if it's multivalued,
+        #   but we're picking a single item.
+        # Any other length is not supported and results in a None return.
+        if not path or len(path) > 2:
             return None
 
-        first_part = path[0]
-        data_chunk = (
-            dispatch_context.request.data.get("form_data", {})
-            .get(first_part, {})
-            .get("value", None)
+        element_id = path[0]
+        data_chunk = get_value_at_path(
+            dispatch_context.request.data.get("form_data", {}), path
         )
-        self.validate_data_chunk(first_part, data_chunk)
-        return data_chunk
+
+        return self.validate_data_chunk(int(element_id), data_chunk)
 
     def import_path(self, path, id_mapping, **kwargs):
         """
@@ -232,7 +240,7 @@ class CurrentRecordDataProviderType(DataProviderType):
         if len(path) == 1 and path[0] == "__idx__":
             return path
 
-        if data_source_id is None:
+        if not data_source_id:
             return path
 
         data_source = DataSourceHandler().get_data_source(data_source_id)

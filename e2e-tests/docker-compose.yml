@@ -65,7 +65,7 @@ services:
     tty: true
 
   db:
-    image: postgres:11
+    image: postgres:${POSTGRES_IMAGE_VERSION:-12}
     environment:
       - POSTGRES_USER=baserow
       - POSTGRES_PASSWORD=baserow

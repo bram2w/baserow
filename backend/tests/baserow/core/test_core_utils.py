@@ -511,6 +511,8 @@ def obj():
             {"nested": [{"a": 1}, {"a": 2}]},
             {"nested": [{"a": 3}]},
         ],
+        "b": ["1", "2", "3"],
+        "empty_list": [],
     }
 
 
@@ -534,6 +536,8 @@ def obj():
                     {"nested": [{"a": 1}, {"a": 2}]},
                     {"nested": [{"a": 3}]},
                 ],
+                "b": ["1", "2", "3"],
+                "empty_list": [],
             },
         ),
         ("a.b", {"c": 123}),
@@ -547,6 +551,12 @@ def obj():
         ("nested[*].nested[*].a", [[1, 2], [3]]),
         ("nested.*.nested.0.a", [1, 3]),
         ("nested.*.nested.1.a", [2]),
+        ["b", ["1", "2", "3"]],
+        ["b.*", ["1", "2", "3"]],
+        ["b.0", "1"],
+        ["empty_list", []],
+        ["empty_list.*", []],
+        ["empty_list.*.0", None],
     ],
 )
 def test_get_value_at_path(obj, path, expected_result):

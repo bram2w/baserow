@@ -68,7 +68,7 @@ export default {
         payload: {
           value,
           touched: this.formElementTouched,
-          type: this.elementType.formDataType,
+          type: this.elementType.formDataType(this.element),
           isValid: this.elementType.isValid(this.element, value),
         },
       })

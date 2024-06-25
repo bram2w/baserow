@@ -8,6 +8,7 @@ import { createFields } from '@baserow/test/fixtures/fields'
 import {
   createPublicGridViewRows,
   createGridRows,
+  deleteGridRow,
 } from '@baserow/test/fixtures/grid'
 import {
   createGalleryRows,
@@ -38,6 +39,7 @@ export class MockServer {
       workspaceId: workspace.id,
       tables: [table],
     })
+    table.database_id = application.id
     await this.store.dispatch('workspace/fetchAll')
     await this.store.dispatch('application/fetchAll')
     return { application, workspace }
@@ -56,7 +58,7 @@ export class MockServer {
   }
 
   createTable(id = 1, name = 'Test Table 1') {
-    return { id, name }
+    return { id, name, _: { disabled: false, selected: true } }
   }
 
   createGridView(
@@ -100,6 +102,10 @@ export class MockServer {
 
   createGridRows(gridView, fields, rows) {
     return createGridRows(this.mock, gridView, fields, rows)
+  }
+
+  deleteGridRow(tableId, rowId, responseCode) {
+    return deleteGridRow(this.mock, tableId, rowId, responseCode)
   }
 
   createGalleryRows(gridView, fields, rows) {

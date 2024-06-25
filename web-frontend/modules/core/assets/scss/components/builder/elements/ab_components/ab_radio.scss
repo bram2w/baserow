@@ -1,0 +1,37 @@
+.ab-radio {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+
+  &:nth-child(n + 2) {
+    margin-top: 10px;
+  }
+}
+
+.ab-radio__input {
+  cursor: pointer;
+  margin: 0;
+  height: 16px;
+  width: 16px;
+  border: 1px solid $black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ab-radio--error {
+  border-color: $color-error-300;
+}
+
+.ab-radio--readonly {
+  accent-color: $palette-blue-500;
+  pointer-events: none;
+}
+
+.ab-radio__label {
+  cursor: pointer;
+  color: $black;
+  user-select: none;
+  padding-bottom: 2px;
+  margin-left: 10px;
+}

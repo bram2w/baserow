@@ -23,7 +23,7 @@ export class EnterpriseMemberRoleType extends MemberRoleType {
 }
 
 export class EnterpriseBuilderRoleType extends MemberRoleType {
-  getType() {
+  static getType() {
     return 'builder'
   }
 
@@ -63,7 +63,7 @@ export class EnterpriseBuilderRoleType extends MemberRoleType {
 }
 
 export class EnterpriseEditorRoleType extends MemberRoleType {
-  getType() {
+  static getType() {
     return 'editor'
   }
 
@@ -99,7 +99,7 @@ export class EnterpriseEditorRoleType extends MemberRoleType {
 }
 
 export class EnterpriseCommenterRoleType extends MemberRoleType {
-  getType() {
+  static getType() {
     return 'commenter'
   }
 
@@ -135,7 +135,7 @@ export class EnterpriseCommenterRoleType extends MemberRoleType {
 }
 
 export class EnterpriseViewerRoleType extends MemberRoleType {
-  getType() {
+  static getType() {
     return 'viewer'
   }
 
@@ -171,7 +171,7 @@ export class EnterpriseViewerRoleType extends MemberRoleType {
 }
 
 export class NoAccessRoleType extends MemberRoleType {
-  getType() {
+  static getType() {
     return 'noAccess'
   }
 
@@ -207,7 +207,7 @@ export class NoAccessRoleType extends MemberRoleType {
 }
 
 export class NoRoleLowPriorityRoleType extends MemberRoleType {
-  getType() {
+  static getType() {
     return 'noRoleLowPriority'
   }
 

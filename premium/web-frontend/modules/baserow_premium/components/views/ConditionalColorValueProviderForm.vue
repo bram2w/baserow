@@ -65,13 +65,11 @@
             :variant="'dark'"
             :sorted="true"
             @addFilter="addFilter(color, $event)"
+            @addFilterGroup="addFilterGroup(color, $event)"
             @deleteFilter="deleteFilter(color, $event)"
             @updateFilter="updateFilter(color, $event)"
-            @selectOperator="updateColor(color, { operator: $event })"
+            @updateFilterType="updateFilterType(color, $event)"
             @deleteFilterGroup="deleteFilterGroup(color, $event)"
-            @selectFilterGroupOperator="
-              updateFilterGroupOperator(color, $event)
-            "
           />
           <div
             class="conditional-color-value-provider-form__color-filter-actions"
@@ -84,7 +82,7 @@
               {{ $t('conditionalColorValueProviderForm.addCondition') }}
             </ButtonText>
             <ButtonText
-              class="conditional-color-value-provider-form__color-filter-add"
+              class="conditional-color-value-provider-form__color-filter-group-add"
               icon="iconoir-plus"
               @click.prevent="addFilterGroup(color)"
             >
@@ -116,6 +114,7 @@
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
 import ColorSelectContext from '@baserow/modules/core/components/ColorSelectContext'
 import { ConditionalColorValueProviderType } from '@baserow_premium/decoratorValueProviders'
+import { createFiltersTree } from '@baserow/modules/database/utils/view'
 
 export default {
   name: 'ConditionalColorValueProvider',
@@ -194,9 +193,12 @@ export default {
         colors: newColors,
       })
     },
-    addFilterGroup(color) {
+    addFilterGroup(color, { filterGroupId = null, parentGroupId = null } = {}) {
       const newFilterGroup =
-        ConditionalColorValueProviderType.getDefaultFilterGroupConf()
+        ConditionalColorValueProviderType.getDefaultFilterGroupConf(
+          filterGroupId,
+          parentGroupId
+        )
       const newFilter = ConditionalColorValueProviderType.getDefaultFilterConf(
         this.$registry,
         {
@@ -224,7 +226,11 @@ export default {
         filterId: newFilter.id,
       })
     },
-    updateFilterGroupOperator(color, { value, filterGroup }) {
+    updateFilterType(color, { value, filterGroup }) {
+      if (filterGroup === undefined) {
+        return this.updateColor(color, { operator: value })
+      }
+
       const newColors = this.options.colors.map((colorConf) => {
         if (colorConf.id === color.id) {
           const newFilterGroups = colorConf.filter_groups.map((group) => {
@@ -245,7 +251,7 @@ export default {
         colors: newColors,
       })
     },
-    addFilter(color, filterGroupId = null) {
+    addFilter(color, { filterGroupId = null } = {}) {
       const newFilter = ConditionalColorValueProviderType.getDefaultFilterConf(
         this.$registry,
         {
@@ -312,21 +318,43 @@ export default {
       })
     },
     deleteFilterGroup(color, { group }) {
+      const colorConf = this.options.colors.find(({ id }) => id === color.id)
+      const filtersTree = createFiltersTree(
+        colorConf.filter_type,
+        colorConf.filters,
+        colorConf.filter_groups
+      )
+      const groupNode = filtersTree.findNodeByGroupId(group.id)
+      if (groupNode === null) {
+        return
+      }
+      // given a group, find all the filters/groups that are children
+      const groupsToRemove = [group.id]
+      const removeChildGroup = (treeNode) => {
+        for (const child of treeNode.children) {
+          groupsToRemove.push(child.groupId)
+          removeChildGroup(child)
+        }
+      }
+      removeChildGroup(groupNode)
+
+      // remove all filters and groups that are children of the group
       const newColors = this.options.colors.map((colorConf) => {
         if (colorConf.id === color.id) {
           const newFilters = colorConf.filters.filter((filter) => {
-            return filter.group !== group.id
+            return !groupsToRemove.includes(filter.group)
           })
-          const newFilterGroups = colorConf.filter_groups.filter((g) => {
-            return group.id !== g.id
+          const newFilterGroups = colorConf.filter_groups.filter((group) => {
+            return !groupsToRemove.includes(group.id)
           })
           return {
             ...colorConf,
             filters: newFilters,
             filter_groups: newFilterGroups,
           }
+        } else {
+          return colorConf
         }
-        return colorConf
       })
 
       this.$emit('update', {

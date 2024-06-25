@@ -12,11 +12,11 @@ def sync_single_default_template_only_for_e2e(sender, **kwargs):
     want to sync one template instead of all of them.
     """
 
+    from django.conf import settings
+
     from baserow.core.handler import CoreHandler
 
-    CoreHandler().sync_templates(
-        template_search_glob=DEFAULT_APPLICATION_TEMPLATE + ".json"  # noqa: F405
-    )
+    CoreHandler().sync_templates(pattern=f"^{settings.DEFAULT_APPLICATION_TEMPLATE}$")
 
 
 # Disable normal template syncing in CI as we will sync a single template ourselves

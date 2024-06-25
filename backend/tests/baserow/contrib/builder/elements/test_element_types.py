@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
@@ -8,9 +9,12 @@ from django.core.files.storage import FileSystemStorage
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.elements.element_types import (
     CheckboxElementType,
-    DropdownElementType,
+    ChoiceElementType,
     IFrameElementType,
     ImageElementType,
     InputTextElementType,
@@ -22,7 +26,8 @@ from baserow.contrib.builder.elements.mixins import (
 )
 from baserow.contrib.builder.elements.models import (
     CheckboxElement,
-    DropdownElementOption,
+    ChoiceElement,
+    ChoiceElementOption,
     HeadingElement,
     IFrameElement,
     ImageElement,
@@ -70,7 +75,12 @@ def test_import_element(data_fixture, element_type: ElementType):
     page = data_fixture.create_builder_page()
     pytest_params = element_type.get_pytest_params(data_fixture)
 
-    serialized = {"id": 9999, "order": 42, "type": element_type.type}
+    serialized = {
+        "id": 9999,
+        "order": 42,
+        "type": element_type.type,
+        "parent_element_id": None,
+    }
     serialized.update(element_type.get_pytest_params(data_fixture))
 
     id_mapping = defaultdict(lambda: MirrorDict())
@@ -159,82 +169,177 @@ def test_input_text_element_import_export_formula(data_fixture):
 def test_input_text_element_is_valid(data_fixture):
     validity_tests = [
         {"required": True, "type": "integer", "value": "", "result": False},
-        {"required": True, "type": "integer", "value": 42, "result": True},
+        {"required": True, "type": "integer", "value": 42, "result": 42},
+        {"required": True, "type": "integer", "value": "42", "result": 42},
         {"required": True, "type": "integer", "value": "horse", "result": False},
-        {"required": False, "type": "integer", "value": "", "result": True},
-        {"required": True, "type": "email", "value": "foo@bar.com", "result": True},
+        {"required": False, "type": "integer", "value": "", "result": ""},
+        {
+            "required": True,
+            "type": "email",
+            "value": "foo@bar.com",
+            "result": "foo@bar.com",
+        },
         {"required": True, "type": "email", "value": "foobar.com", "result": False},
-        {"required": False, "type": "email", "value": "", "result": True},
+        {"required": False, "type": "email", "value": "", "result": ""},
         {"required": True, "type": "any", "value": "", "result": False},
-        {"required": True, "type": "any", "value": 42, "result": True},
-        {"required": True, "type": "any", "value": "horse", "result": True},
-        {"required": False, "type": "any", "value": "", "result": True},
+        {"required": True, "type": "any", "value": 42, "result": 42},
+        {"required": True, "type": "any", "value": "42", "result": "42"},
+        {"required": True, "type": "any", "value": "horse", "result": "horse"},
+        {"required": False, "type": "any", "value": "", "result": ""},
     ]
     for test in validity_tests:
-        assert (
-            InputTextElementType().is_valid(
-                InputTextElement(
-                    validation_type=test["type"], required=test["required"]
-                ),
-                test["value"],
-            )
-        ) is test[
-            "result"
-        ], f"Failed InputTextElementType for validation_type={test['type']}, required={test['required']}, value={test['value']}"
+        if test["result"] is not False:
+            assert (
+                InputTextElementType().is_valid(
+                    InputTextElement(
+                        validation_type=test["type"], required=test["required"]
+                    ),
+                    test["value"],
+                )
+                == test["result"]
+            ), repr(test["value"])
+        else:
+            with pytest.raises(FormDataProviderChunkInvalidException):
+                InputTextElementType().is_valid(
+                    InputTextElement(
+                        validation_type=test["type"], required=test["required"]
+                    ),
+                    test["value"],
+                )
 
 
 @pytest.mark.django_db
-def test_dropdown_element_import_serialized(data_fixture):
+def test_choice_element_import_serialized(data_fixture):
     parent = data_fixture.create_builder_page()
-    dropdown_element = data_fixture.create_builder_dropdown_element(
+    choice_element = data_fixture.create_builder_choice_element(
         page=parent, label="'test'"
     )
-    DropdownElementOption.objects.create(
-        dropdown=dropdown_element, value="hello", name="there"
+    ChoiceElementOption.objects.create(
+        choice=choice_element, value="hello", name="there"
     )
-    serialized_values = DropdownElementType().export_serialized(dropdown_element)
+    serialized_values = ChoiceElementType().export_serialized(choice_element)
     id_mapping = {}
 
-    dropdown_element_imported = DropdownElementType().import_serialized(
+    choice_element_imported = ChoiceElementType().import_serialized(
         parent, serialized_values, id_mapping
     )
 
-    assert dropdown_element.id != dropdown_element_imported.id
-    assert dropdown_element.label == dropdown_element_imported.label
+    assert choice_element.id != choice_element_imported.id
+    assert choice_element.label == choice_element_imported.label
 
-    options = dropdown_element_imported.dropdownelementoption_set.all()
+    options = choice_element_imported.choiceelementoption_set.all()
 
-    assert DropdownElementOption.objects.count() == 2
+    assert ChoiceElementOption.objects.count() == 2
     assert len(options) == 1
     assert options[0].value == "hello"
     assert options[0].name == "there"
-    assert options[0].dropdown_id == dropdown_element_imported.id
+    assert options[0].choice_id == choice_element_imported.id
 
 
 @pytest.mark.django_db
-def test_dropdown_element_is_valid(data_fixture):
+def test_choice_element_is_valid(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
-    dropdown = ElementService().create_element(
+    choice = ElementService().create_element(
         user=user,
-        element_type=element_type_registry.get("dropdown"),
+        element_type=element_type_registry.get("choice"),
         page=page,
     )
-    dropdown.dropdownelementoption_set.create(value="uk", name="United Kingdom")
+    choice.choiceelementoption_set.create(value="uk", name="United Kingdom")
+    choice.choiceelementoption_set.create(value="it", name="Italy")
 
-    dropdown.required = True
-    assert DropdownElementType().is_valid(dropdown, "") is False
-    assert DropdownElementType().is_valid(dropdown, "uk") is True
+    choice.required = True
 
-    dropdown.required = False
-    assert DropdownElementType().is_valid(dropdown, "") is True
-    assert DropdownElementType().is_valid(dropdown, "uk") is True
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, "")
 
-    dropdown.dropdownelementoption_set.create(value="", name="Blank")
-    dropdown.required = True
-    assert DropdownElementType().is_valid(dropdown, "") is True
-    dropdown.required = False
-    assert DropdownElementType().is_valid(dropdown, "uk") is True
+    assert ChoiceElementType().is_valid(choice, "uk") == "uk"
+
+    choice.multiple = True
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, [])
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, [""])
+
+    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, "uk") == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, "uk,it") == ["uk", "it"]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, ["uk", "it", "pt"])
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, "uk,it,pt")
+
+    choice.multiple = False
+    choice.required = False
+
+    assert ChoiceElementType().is_valid(choice, "") == ""
+    assert ChoiceElementType().is_valid(choice, "uk") == "uk"
+
+    choice.multiple = True
+
+    assert ChoiceElementType().is_valid(choice, []) == []
+    assert ChoiceElementType().is_valid(choice, "") == []
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, [""])
+
+    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, "uk,it") == ["uk", "it"]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, ["uk", "it", "pt"])
+
+    choice.choiceelementoption_set.create(value="", name="Blank")
+    choice.multiple = False
+    choice.required = True
+
+    assert ChoiceElementType().is_valid(choice, "") == ""
+
+    choice.multiple = True
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, [])
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, "")
+
+    assert ChoiceElementType().is_valid(choice, [""]) == [""]
+    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, "uk") == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, "uk,it") == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it", ""]) == [
+        "uk",
+        "it",
+        "",
+    ]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, ["uk", "it", "", "pt"])
+
+    choice.multiple = False
+    choice.required = False
+
+    assert ChoiceElementType().is_valid(choice, "uk") == "uk"
+
+    choice.multiple = True
+
+    assert ChoiceElementType().is_valid(choice, []) == []
+    assert ChoiceElementType().is_valid(choice, [""]) == [""]
+    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it", ""]) == [
+        "uk",
+        "it",
+        "",
+    ]
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, ["uk", "it", "", "pt"])
 
 
 def test_element_type_import_element_priority():
@@ -312,13 +417,26 @@ def test_checkbox_element_import_export_formula(data_fixture):
 
 @pytest.mark.django_db
 def test_checkbox_text_element_is_valid(data_fixture):
-    assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=True), False) is False
-    )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        CheckboxElementType().is_valid(CheckboxElement(required=True), False)
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        CheckboxElementType().is_valid(CheckboxElement(required=True), 0)
+
     assert CheckboxElementType().is_valid(CheckboxElement(required=True), True) is True
+
+    assert CheckboxElementType().is_valid(CheckboxElement(required=True), 1) is True
     assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=False), False) is True
+        CheckboxElementType().is_valid(CheckboxElement(required=True), "true") is True
     )
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), False) is False
+    )
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), "false")
+        is False
+    )
+    assert CheckboxElementType().is_valid(CheckboxElement(required=False), 0) is False
     assert CheckboxElementType().is_valid(CheckboxElement(required=False), True) is True
 
 
@@ -347,7 +465,11 @@ def test_iframe_element_import_export_formula(data_fixture):
 
 
 @pytest.mark.django_db
-def test_image_element_import_export(data_fixture, fake):
+@pytest.mark.parametrize(
+    "storage",
+    [None, FileSystemStorage(location=str(tempdir), base_url="http://localhost")],
+)
+def test_image_element_import_export(data_fixture, fake, storage):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page()
     data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
@@ -355,8 +477,6 @@ def test_image_element_import_export(data_fixture, fake):
     element_type = ImageElementType()
 
     zip_buffer = BytesIO()
-    storage = FileSystemStorage(location=str(tempdir), base_url="http://localhost")
-
     image_file = UserFileHandler().upload_user_file(
         user, "test.jpg", BytesIO(fake.image()), storage=storage
     )
@@ -387,4 +507,86 @@ def test_image_element_import_export(data_fixture, fake):
 
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.image_url == expected_formula
-    assert imported_element.image_file_id != element_to_export.image_file_id
+    assert (
+        imported_element.image_file_id is not None
+        and imported_element.image_file_id != element_to_export.image_file_id
+    )
+
+
+@pytest.mark.django_db
+def test_choice_element_import_export(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = ChoiceElementType()
+
+    exported_element = data_fixture.create_builder_element(
+        ChoiceElement,
+        label=f"get('data_source.42.field_1')",
+        default_value=f"get('data_source.42.field_1')",
+        placeholder=f"get('data_source.42.field_1')",
+        multiple=True,
+    )
+    serialized = element_type.export_serialized(exported_element)
+
+    # Just check that the serialization works properly
+    json.dumps(serialized)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {42: data_source_2.id}}
+
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.label == expected_formula
+    assert imported_element.default_value == expected_formula
+    assert imported_element.placeholder == expected_formula
+
+    assert imported_element.multiple is True
+
+
+@pytest.mark.django_db
+def test_choice_element_import_old_format(data_fixture):
+    page = data_fixture.create_builder_page()
+    element_type = ChoiceElementType()
+
+    serialized = {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        "type": "dropdown",  # Element type is the old one
+        "parent_element_id": None,
+        "place_in_container": None,
+        "visibility": "all",
+        "style_border_top_color": "border",
+        "style_border_top_size": 0,
+        "style_padding_top": 10,
+        "style_border_bottom_color": "border",
+        "style_border_bottom_size": 0,
+        "style_padding_bottom": 10,
+        "style_border_left_color": "border",
+        "style_border_left_size": 0,
+        "style_padding_left": 20,
+        "style_border_right_color": "border",
+        "style_border_right_size": 0,
+        "style_padding_right": 20,
+        "style_background": "none",
+        "style_background_color": "#ffffffff",
+        "style_width": "normal",
+        "label": "'label'",
+        "required": False,
+        "placeholder": "'test'",
+        "default_value": "'default'",
+        "options": [
+            {"value": "Option 1", "name": "option1"},
+            {"value": "Option 2", "name": "option2"},
+        ],
+        # multiple property is missing
+        # show_as_dropdown property is  missing
+    }
+
+    imported_element = element_type.import_serialized(page, serialized, {})
+
+    assert isinstance(imported_element.specific, ChoiceElement)
+    assert imported_element.multiple is False
+    assert imported_element.show_as_dropdown is True
+    assert len(imported_element.choiceelementoption_set.all()) == 2

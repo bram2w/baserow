@@ -12,6 +12,8 @@
         v-for="elementType in elementTypes"
         :key="elementType.getType()"
         :element-type="elementType"
+        :parent-type="parentElementType"
+        :disallowed-type-for-ancestry="isDisallowedByParent(elementType)"
         :loading="addingElementType === elementType.getType()"
         :disabled="isCardDisabled(elementType)"
         @click="addElement(elementType)"
@@ -53,9 +55,7 @@ export default {
   },
   computed: {
     elementTypes() {
-      const elementTypesAll =
-        this.elementTypesAllowed ||
-        Object.values(this.$registry.getAll('element'))
+      const elementTypesAll = Object.values(this.$registry.getAll('element'))
       return elementTypesAll.filter((elementType) =>
         isSubstringOfStrings(
           [elementType.name, elementType.description],
@@ -63,13 +63,28 @@ export default {
         )
       )
     },
+    parentElementType() {
+      const parentElement = this.$store.getters['element/getElementById'](
+        this.page,
+        this.parentElementId
+      )
+      return parentElement
+        ? this.$registry.get('element', parentElement.type)
+        : null
+    },
   },
   methods: {
-    isCardDisabled(elementType) {
+    isDisallowedByParent(elementType) {
       return (
-        this.addingElementType !== null &&
-        elementType.getType() !== this.addingElementType
+        this.elementTypesAllowed !== null &&
+        !this.elementTypesAllowed.includes(elementType)
       )
+    },
+    isCardDisabled(elementType) {
+      const isAddingElementType =
+        this.addingElementType !== null &&
+        elementType.getType() === this.addingElementType
+      return isAddingElementType || this.isDisallowedByParent(elementType)
     },
     ...mapActions({
       actionCreateElement: 'element/create',
@@ -82,6 +97,9 @@ export default {
       modal.methods.show.bind(this)(...args)
     },
     async addElement(elementType) {
+      if (this.isCardDisabled(elementType)) {
+        return false
+      }
       this.addingElementType = elementType.getType()
       const configuration = this.parentElementId
         ? {

@@ -41,8 +41,6 @@ RUN apt-get update &&  \
     python3-pip \
     python3-dev \
     python3-venv\
-    nano \
-    vim \
     git \
     gosu \
     xmlsec1 \
@@ -87,11 +85,14 @@ WORKDIR /baserow/backend
 # Ensure that Python outputs everything that's printed inside
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src:/baserow/enterprise/backend/src
 
 COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
+
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \
-    chmod a+x /baserow/backend/docker/docker-entrypoint.sh
+    chmod a+x /baserow/backend/docker/docker-entrypoint.sh && \
+    /baserow/venv/bin/pip install --no-cache-dir -e /baserow/backend/ && \
+    /baserow/venv/bin/pip install --no-cache-dir -e /baserow/premium/backend/ && \
+    /baserow/venv/bin/pip install --no-cache-dir -e /baserow/enterprise/backend/
 
 HEALTHCHECK --interval=60s CMD ["/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]

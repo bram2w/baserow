@@ -109,7 +109,7 @@ export class BaserowFormulaTypeDefinition extends Registerable {
       .getCardComponent()
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaArrayItem
   }
 
@@ -171,6 +171,10 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   }
 
   canGroupByInView() {
+    return false
+  }
+
+  canRepresentFiles(field) {
     return false
   }
 }
@@ -298,7 +302,7 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
     return 3
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaBooleanArrayItem
   }
 
@@ -332,7 +336,7 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
     return 4
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaDateArrayItem
   }
 
@@ -378,7 +382,7 @@ export class BaserowFormulaDurationType extends BaserowFormulaTypeDefinition {
     return true
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaArrayDurationItem
   }
 
@@ -569,6 +573,14 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     return subType.canBeSortedWhenInArray(field)
   }
 
+  canRepresentFiles(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.canRepresentFiles(field)
+  }
+
   getSort(name, order, field) {
     const subType = this.app.$registry.get(
       'formula_type',
@@ -684,7 +696,7 @@ export class BaserowFormulaFileType extends BaserowFormulaTypeDefinition {
     return GridViewSingleFile
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaFileArrayItem
   }
 
@@ -748,7 +760,12 @@ export class BaserowFormulaFileType extends BaserowFormulaTypeDefinition {
   toHumanReadableString(field, value) {
     return value?.visible_name || ''
   }
+
+  canRepresentFiles(field) {
+    return true
+  }
 }
+
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
   static getType() {
     return 'single_select'
@@ -766,7 +783,7 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
     return RowEditFieldSingleSelectReadOnly
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaSingleSelectArrayItem
   }
 
@@ -808,7 +825,7 @@ export class BaserowFormulaMultipleSelectType extends BaserowFormulaTypeDefiniti
     return RowEditFieldMultipleSelectReadOnly
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaMultipleSelectArrayItem
   }
 
@@ -862,7 +879,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
     return 10
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaLinkArrayItem
   }
 
@@ -912,7 +929,7 @@ export class BaserowFormulaButtonType extends BaserowFormulaLinkType {
     return RowCardFieldButton
   }
 
-  getFunctionalGridViewFieldArrayComponent() {
+  getFunctionalFieldArrayComponent() {
     return FunctionalFormulaButtonArrayItem
   }
 }

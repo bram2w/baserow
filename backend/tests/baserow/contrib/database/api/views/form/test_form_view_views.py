@@ -914,6 +914,7 @@ def test_get_form_view_field_options(
                     {
                         "id": condition_group_1.id,
                         "filter_type": "AND",
+                        "parent_group": None,
                     },
                 ],
                 "conditions": [
@@ -1117,10 +1118,12 @@ def test_patch_form_view_field_options_condition_groups_create(
                     {
                         "id": conditions[0]["group_id"],
                         "filter_type": "OR",
+                        "parent_group": None,
                     },
                     {
                         "id": conditions[1]["group_id"],
                         "filter_type": "OR",
+                        "parent_group": None,
                     },
                 ],
                 "conditions": [
@@ -1344,6 +1347,7 @@ def test_patch_form_view_field_options_condition_groups_update(
                     {
                         "id": condition_group_1.id,
                         "filter_type": "OR",
+                        "parent_group": None,
                     }
                 ],
                 "conditions": [
@@ -1689,6 +1693,131 @@ def test_patch_form_view_field_options_conditions_create_invalid_field(
     assert response.status_code == HTTP_400_BAD_REQUEST
     response_json = response.json()
     assert response_json["error"] == "ERROR_FIELD_NOT_IN_TABLE"
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_conditions_can_be_nested(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    form_view = data_fixture.create_form_view(table=table)
+    data_fixture.warm_cache_before_counting_queries()
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+
+    # Nested groups cannot be created in a single request.
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "condition_groups": [
+                        {
+                            "id": 0,
+                            "filter_type": "AND",
+                        },
+                        {
+                            "id": -1,
+                            "filter_type": "AND",
+                            "parent_group": 0,
+                        },
+                    ],
+                    "conditions": [
+                        {
+                            "id": 0,
+                            "field": text_field_2.id,
+                            "type": "equal",
+                            "value": "test",
+                            "group": -1,
+                        }
+                    ],
+                },
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+
+    # Create the root group first.
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "condition_groups": [
+                        {
+                            "id": 0,
+                            "filter_type": "AND",
+                        }
+                    ],
+                    "conditions": [
+                        {
+                            "id": 0,
+                            "field": text_field_2.id,
+                            "type": "equal",
+                            "value": "test",
+                            "group": 0,
+                        }
+                    ],
+                },
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    root_group = response_json["field_options"][str(text_field.id)]["condition_groups"][
+        0
+    ]
+
+    # And then create the nested group with filters.
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "condition_groups": [
+                        root_group,
+                        {
+                            "id": 0,
+                            "filter_type": "AND",
+                            "parent_group": root_group["id"],
+                        },
+                    ],
+                    "conditions": [
+                        {
+                            "id": 0,
+                            "field": text_field_2.id,
+                            "type": "equal",
+                            "value": "test",
+                            "group": 0,
+                        }
+                    ],
+                },
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    parent_group, child_group_1 = response_json["field_options"][str(text_field.id)][
+        "condition_groups"
+    ]
+    assert child_group_1["parent_group"] == parent_group["id"]
+    assert len(response_json["field_options"][str(text_field.id)]["conditions"]) == 1
+    condition = response_json["field_options"][str(text_field.id)]["conditions"][0]
+    assert condition["group"] == child_group_1["id"]
 
 
 @pytest.mark.django_db

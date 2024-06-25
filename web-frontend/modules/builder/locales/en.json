@@ -87,8 +87,8 @@
     "tableDescription": "A table element",
     "formContainer": "Form",
     "formContainerDescription": "A form element",
-    "dropdown": "Dropdown",
-    "dropdownDescription": "Dropdown element",
+    "choice": "Choice",
+    "choiceDescription": "For single/multiple value selection",
     "checkbox": "Checkbox",
     "checkboxDescription": "Checkbox element",
     "iframe": "IFrame",
@@ -103,7 +103,8 @@
   },
   "addElementModal": {
     "title": "Add new element",
-    "searchPlaceholder": "Search elements"
+    "searchPlaceholder": "Search elements",
+    "disabledElementTooltip": "Unavailable inside this element"
   },
   "elementMenu": {
     "moveUp": "Move up",
@@ -407,6 +408,13 @@
   "fontSidePanelForm": {
     "label": "Font color"
   },
+  "choiceElementForm": {
+    "multiple": "Allow multiple values",
+    "display": "Display",
+    "dropdown": "Dropdown",
+    "checkbox": "Checkbox",
+    "radio": "Radio"
+  },
   "tableElementForm": {
     "dataSource": "Data source",
     "fields": "Fields",
@@ -419,7 +427,10 @@
     "itemsPerPagePlaceholder": "Enter value...",
     "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
     "buttonColor": "Button color",
-    "refreshFieldsFromDataSource": "refresh fields from data source"
+    "refreshFieldsFromDataSource": "refresh fields from data source",
+    "orientation": "Orientation",
+    "orientationHorizontal": "Horizontal",
+    "orientationVertical": "Vertical"
   },
   "tableElement": {
     "empty": "No items have been found.",
@@ -435,7 +446,7 @@
     "itemsPerPage": "Items per page",
     "itemsPerPagePlaceholder": "Enter value...",
     "itemsPerRowLabel": "Items per row",
-    "itemsPerRowDescription": "Choose, per device type, what the number of repetitions per row should be.",
+    "itemsPerRowDescription": "Number of columns per row and device type.",
     "orientationLabel": "Orientation",
     "orientationVertical": "Vertical",
     "orientationHorizontal": "Horizontal"
@@ -508,7 +519,7 @@
     "resetToInitialValuesTitle": "Reset to default values after submission",
     "resetToInitialValuesDescription": "If checked, the form's default values will be used to reset the form after successful submission. If unchecked, the user's values will remain."
   },
-  "dropdownOptionSelector": {
+  "choiceOptionSelector": {
     "label": "Options",
     "value": "Value",
     "name": "Name",
@@ -545,6 +556,9 @@
     "emailPlaceholder": "Enter your email...",
     "passwordPlaceholder": "Enter your password...",
     "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
+  },
+  "choiceElement": {
+    "addOptions": "Add options to begin using this element..."
   },
   "userSourceUsersContext": {
     "searchPlaceholder": "Search user",

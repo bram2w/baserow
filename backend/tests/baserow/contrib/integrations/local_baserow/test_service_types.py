@@ -2019,6 +2019,22 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
     row.refresh_from_db()
     assert getattr(row, cost.db_column) == fake_request.data["page_parameter"]["id"]
 
+    # Same test but the page parameter is a string instead.
+    fake_request.data = {"page_parameter": {"id": "10"}}
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+
+    assert getattr(dispatch_data["data"], cost.db_column) == int(
+        fake_request.data["page_parameter"]["id"]
+    )
+
+    row.refresh_from_db()
+    assert getattr(row, cost.db_column) == int(
+        fake_request.data["page_parameter"]["id"]
+    )
+
 
 @pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(

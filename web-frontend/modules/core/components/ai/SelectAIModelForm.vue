@@ -98,6 +98,11 @@ export default {
       )
     },
   },
+  watch: {
+    'values.ai_generative_ai_type': function (newValue, oldValue) {
+      this.$emit('ai-type-changed', newValue)
+    },
+  },
   validations: {
     values: {
       ai_generative_ai_type: { required },

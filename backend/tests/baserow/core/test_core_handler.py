@@ -1239,9 +1239,7 @@ def test_sync_and_install_single_template(data_fixture, tmpdir):
     handler = CoreHandler()
 
     with transaction.atomic():
-        handler.sync_templates(
-            storage=storage, template_search_glob="new-hire-onboarding.json"
-        )
+        handler.sync_templates(storage=storage, pattern="new-hire-onboarding")
 
     workspace_user = data_fixture.create_user_workspace()
     template = Template.objects.get()

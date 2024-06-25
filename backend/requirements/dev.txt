@@ -4,9 +4,9 @@
 #
 #    pip-compile --output-file=dev.txt dev.in
 #
-argh==0.28.1
+argh==0.31.2
     # via -r dev.in
-asgiref==3.6.0
+asgiref==3.8.1
     # via
     #   -c base.txt
     #   django
@@ -22,20 +22,21 @@ attrs==23.2.0
     # via
     #   -c base.txt
     #   jsonschema
-    #   pytest
-autopep8==2.0.2
+autopep8==2.1.0
     # via
     #   -r dev.in
     #   django-silk
 backports-cached-property==1.0.2
     # via -r dev.in
-bandit==1.7.5
+bandit==1.7.8
     # via -r dev.in
 black==23.3.0
     # via -r dev.in
 build==1.2.1
-    # via pip-tools
-certifi==2024.2.2
+    # via
+    #   -r dev.in
+    #   pip-tools
+certifi==2024.6.2
     # via
     #   -c base.txt
     #   requests
@@ -50,33 +51,26 @@ click==8.1.7
     #   -c base.txt
     #   black
     #   pip-tools
-coverage[toml]==7.2.2
+coverage[toml]==7.5.1
     # via
     #   -r dev.in
     #   pytest-cov
-debugpy==1.6.6
+debugpy==1.8.1
     # via -r dev.in
 decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-django==4.1.13
+django==4.2.13
     # via
     #   -c base.txt
     #   django-extensions
-    #   django-redis
     #   django-silk
     #   django-stubs
     #   django-stubs-ext
-django-extensions==3.2.1
+django-extensions==3.2.3
     # via -r dev.in
-django-fakeredis==0.1.2
-    # via -r dev.in
-django-redis==5.2.0
-    # via
-    #   -c base.txt
-    #   django-fakeredis
-django-silk==5.0.3
+django-silk==5.1.0
     # via -r dev.in
 django-stubs==1.16.0
     # via -r dev.in
@@ -90,21 +84,15 @@ executing==2.0.1
     # via
     #   snoop
     #   stack-data
-fakeredis[lua]==2.10.2
-    # via
-    #   -r dev.in
-    #   django-fakeredis
-flake8==6.0.0
+fakeredis[lua]==2.23.2
     # via -r dev.in
-freezegun==1.2.2
+flake8==7.0.0
     # via -r dev.in
-gitdb==4.0.11
-    # via gitpython
-gitpython==3.1.43
-    # via bandit
+freezegun==1.5.0
+    # via -r dev.in
 gprof2dot==2022.7.29
     # via django-silk
-graphviz==0.20.1
+graphviz==0.20.3
     # via -r dev.in
 httpretty==1.1.4
     # via -r dev.in
@@ -118,14 +106,16 @@ iniconfig==2.0.0
     # via pytest
 ipdb==0.13.13
     # via -r dev.in
-ipython==8.24.0
+ipython==8.25.0
     # via
     #   -r dev.in
     #   ipdb
-isort==5.12.0
+isort==5.13.2
     # via -r dev.in
 jedi==0.19.1
     # via ipython
+jinja2==3.1.4
+    # via pytest-html
 jsonschema==4.17.3
     # via
     #   -c base.txt
@@ -136,12 +126,14 @@ jsonschema-spec==0.1.6
     # via openapi-spec-validator
 lazy-object-proxy==1.10.0
     # via openapi-spec-validator
-lupa==1.14.1
+lupa==2.2
     # via fakeredis
 markdown-it-py==3.0.0
     # via
     #   -c base.txt
     #   rich
+markupsafe==2.1.5
+    # via jinja2
 matplotlib-inline==0.1.7
     # via ipython
 mccabe==0.7.0
@@ -150,7 +142,7 @@ mdurl==0.1.2
     # via
     #   -c base.txt
     #   markdown-it-py
-mypy==1.1.1
+mypy==1.10.0
     # via
     #   -r dev.in
     #   django-stubs
@@ -180,15 +172,15 @@ pbr==6.0.0
     # via stevedore
 pexpect==4.9.0
     # via ipython
-pip-tools==6.13.0
+pip-tools==7.4.1
     # via -r dev.in
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via black
 pluggy==1.5.0
     # via pytest
 pprintpp==0.4.0
     # via pytest-icdiff
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.46
     # via
     #   -c base.txt
     #   ipython
@@ -196,15 +188,13 @@ ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-py==1.11.0
-    # via pytest-html
-pycodestyle==2.10.0
+pycodestyle==2.11.1
     # via
     #   autopep8
     #   flake8
-pyfakefs==5.1.0
+pyfakefs==5.4.1
     # via -r dev.in
-pyflakes==3.0.1
+pyflakes==3.2.0
     # via flake8
 pygments==2.18.0
     # via
@@ -212,15 +202,17 @@ pygments==2.18.0
     #   ipython
     #   rich
     #   snoop
-pyinstrument==4.4.0
+pyinstrument==4.6.2
     # via -r dev.in
 pyproject-hooks==1.1.0
-    # via build
+    # via
+    #   build
+    #   pip-tools
 pyrsistent==0.20.0
     # via
     #   -c base.txt
     #   jsonschema
-pytest==7.2.2
+pytest==8.2.0
     # via
     #   -r dev.in
     #   pytest-asyncio
@@ -235,29 +227,29 @@ pytest==7.2.2
     #   pytest-split
     #   pytest-unordered
     #   pytest-xdist
-pytest-asyncio==0.21.0
+pytest-asyncio==0.23.6
     # via -r dev.in
-pytest-cov==4.0.0
+pytest-cov==5.0.0
     # via -r dev.in
-pytest-django==4.7.0
+pytest-django==4.8.0
     # via -r dev.in
-pytest-env==0.8.1
+pytest-env==1.1.3
     # via -r dev.in
-pytest-html==3.2.0
+pytest-html==4.1.1
     # via -r dev.in
-pytest-icdiff==0.6
+pytest-icdiff==0.9
     # via -r dev.in
 pytest-metadata==3.1.1
     # via pytest-html
-pytest-mock==3.10.0
+pytest-mock==3.14.0
     # via -r dev.in
 pytest-ordering==0.6
     # via -r dev.in
-pytest-split==0.8.0
+pytest-split==0.8.2
     # via -r dev.in
-pytest-unordered==0.5.2
+pytest-unordered==0.6.0
     # via -r dev.in
-pytest-xdist==3.2.1
+pytest-xdist==3.6.1
     # via -r dev.in
 python-dateutil==2.9.0.post0
     # via
@@ -269,22 +261,20 @@ pyyaml==6.0.1
     #   bandit
     #   jsonschema-spec
     #   responses
-redis==4.5.4
+redis==5.0.4
     # via
     #   -c base.txt
-    #   django-fakeredis
-    #   django-redis
     #   fakeredis
 requests==2.31.0
     # via
     #   -c base.txt
     #   jsonschema-spec
     #   responses
-responses==0.23.1
+responses==0.25.0
     # via -r dev.in
 rfc3339-validator==0.1.4
     # via openapi-schema-validator
-rich==13.7.0
+rich==13.7.1
     # via
     #   -c base.txt
     #   bandit
@@ -295,8 +285,6 @@ six==1.16.0
     #   python-dateutil
     #   rfc3339-validator
     #   snoop
-smmap==5.0.1
-    # via gitdb
 snoop==0.4.3
     # via -r dev.in
 sortedcontainers==2.4.0
@@ -319,10 +307,8 @@ traitlets==5.14.3
 types-pytz==2024.1.0.20240417
     # via django-stubs
 types-pyyaml==6.0.12.20240311
-    # via
-    #   django-stubs
-    #   responses
-typing-extensions==4.7.1
+    # via django-stubs
+typing-extensions==4.11.0
     # via
     #   -c base.txt
     #   django-stubs
@@ -334,7 +320,7 @@ urllib3==1.26.18
     #   -c base.txt
     #   requests
     #   responses
-watchdog==3.0.0
+watchdog==4.0.0
     # via -r dev.in
 wcwidth==0.2.13
     # via

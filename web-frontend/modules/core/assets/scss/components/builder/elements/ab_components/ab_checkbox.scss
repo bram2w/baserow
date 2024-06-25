@@ -1,3 +1,13 @@
+.ab-checkbox {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+
+  &:nth-child(n + 2) {
+    margin-top: 10px;
+  }
+}
+
 .ab-checkbox__input {
   cursor: pointer;
   margin: 0;
@@ -23,4 +33,5 @@
   color: $black;
   user-select: none;
   padding-bottom: 2px;
+  margin-left: 10px;
 }

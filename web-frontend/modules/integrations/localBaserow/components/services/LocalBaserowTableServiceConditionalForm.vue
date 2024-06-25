@@ -20,7 +20,7 @@
       :prepare-value="prepareValue"
       @deleteFilter="deleteFilter($event)"
       @updateFilter="updateFilter($event)"
-      @selectOperator="$emit('update:filterType', $event)"
+      @updateFilterType="$emit('update:filterType', $event.value)"
     >
       <template
         #filterInputComponent="{

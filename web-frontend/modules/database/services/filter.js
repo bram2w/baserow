@@ -9,9 +9,13 @@ export default (client) => {
       const config = getUndoRedoActionRequestConfig({ undoRedoActionGroupId })
       return client.post(`/database/views/${viewId}/filters/`, values, config)
     },
-    createGroup(viewId, undoRedoActionGroupId = null) {
+    createGroup(viewId, parentGroupId = null, undoRedoActionGroupId = null) {
       const config = getUndoRedoActionRequestConfig({ undoRedoActionGroupId })
-      return client.post(`/database/views/${viewId}/filter-groups/`, {}, config)
+      return client.post(
+        `/database/views/${viewId}/filter-groups/`,
+        { parent_group: parentGroupId },
+        config
+      )
     },
     get(viewFilterId) {
       return client.get(`/database/views/filter/${viewFilterId}/`)

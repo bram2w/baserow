@@ -1,8 +1,8 @@
 <template functional>
   <div v-if="props.value !== null" class="array-field__item">
-    <span>
+    <div class="array-field__ellipsis">
       {{ $options.methods.formatValue(props.field, props.value) }}
-    </span>
+    </div>
   </div>
 </template>
 

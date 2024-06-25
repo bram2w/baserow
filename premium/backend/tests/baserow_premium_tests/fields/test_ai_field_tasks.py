@@ -1,10 +1,14 @@
+from io import BytesIO
 from unittest.mock import patch
+
+from django.core.files.storage import default_storage
 
 import pytest
 from baserow_premium.fields.tasks import generate_ai_values_for_rows
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.generative_ai.exceptions import GenerativeAIPromptError
+from baserow.core.user_files.handler import UserFileHandler
 
 
 @pytest.mark.django_db
@@ -153,3 +157,48 @@ def test_generate_ai_field_value_view_generative_ai_invalid_prompt(
         patched_rows_ai_values_generation_error.call_args[1]["error_message"]
         == "Test error"
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_ai
+@patch("baserow.contrib.database.rows.signals.rows_updated.send")
+def test_generate_ai_field_value_view_generative_ai_with_files(
+    patched_rows_updated, premium_data_fixture
+):
+    premium_data_fixture.register_fake_generate_ai_type()
+    user = premium_data_fixture.create_user(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database = premium_data_fixture.create_database_application(
+        user=user, name="database"
+    )
+    table = premium_data_fixture.create_database_table(name="table", database=database)
+    file_field = premium_data_fixture.create_file_field(
+        table=table, order=0, name="File"
+    )
+    field = premium_data_fixture.create_ai_field(
+        table=table,
+        name="ai",
+        ai_generative_ai_type="test_generative_ai_with_files",
+        ai_prompt="'Test prompt'",
+        ai_file_field=file_field,
+    )
+    table_model = table.get_model()
+    user_file_1 = UserFileHandler().upload_user_file(
+        user, "aifile.txt", BytesIO(b"Text in file"), storage=default_storage
+    )
+    values = {f"field_{file_field.id}": [{"name": user_file_1.name}]}
+    row = RowHandler().force_create_row(
+        user,
+        table,
+        values,
+        table_model,
+    )
+
+    assert patched_rows_updated.call_count == 0
+    generate_ai_values_for_rows(user.id, field.id, [row.id])
+    assert patched_rows_updated.call_count == 1
+    updated_row = patched_rows_updated.call_args[1]["rows"][0]
+    assert "Generated with files" in getattr(updated_row, field.db_column)
+    assert "Test prompt" in getattr(updated_row, field.db_column)
+    assert patched_rows_updated.call_args[1]["updated_field_ids"] == set([field.id])

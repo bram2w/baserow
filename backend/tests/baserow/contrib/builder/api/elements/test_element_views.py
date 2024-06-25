@@ -10,7 +10,7 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.builder.elements.models import (
-    DropdownElementOption,
+    ChoiceElementOption,
     Element,
     LinkElement,
 )
@@ -466,7 +466,7 @@ def test_child_type_not_allowed_validation(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_dropdown_options_created(api_client, data_fixture):
+def test_choice_options_created(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
 
@@ -475,7 +475,7 @@ def test_dropdown_options_created(api_client, data_fixture):
     url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
     response = api_client.post(
         url,
-        {"type": "dropdown", "options": options},
+        {"type": "choice", "options": options},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -483,23 +483,21 @@ def test_dropdown_options_created(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["options"][0]["value"] == "'hello'"
-    assert DropdownElementOption.objects.count() == len(options)
+    assert ChoiceElementOption.objects.count() == len(options)
 
 
 @pytest.mark.django_db
-def test_dropdown_options_updated(api_client, data_fixture):
+def test_choice_options_updated(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
-    dropdown_element = data_fixture.create_builder_dropdown_element(page=page)
+    choice_element = data_fixture.create_builder_choice_element(page=page)
 
     # Add an existing option
-    DropdownElementOption.objects.create(dropdown=dropdown_element)
+    ChoiceElementOption.objects.create(choice=choice_element)
 
     options = [{"value": "'hello'", "name": "'there'"}]
 
-    url = reverse(
-        "api:builder:element:item", kwargs={"element_id": dropdown_element.id}
-    )
+    url = reverse("api:builder:element:item", kwargs={"element_id": choice_element.id})
     response = api_client.patch(
         url,
         {"options": options},
@@ -510,21 +508,19 @@ def test_dropdown_options_updated(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["options"][0]["value"] == "'hello'"
-    assert DropdownElementOption.objects.count() == len(options)
+    assert ChoiceElementOption.objects.count() == len(options)
 
 
 @pytest.mark.django_db
-def test_dropdown_options_deleted(api_client, data_fixture):
+def test_choice_options_deleted(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
-    dropdown_element = data_fixture.create_builder_dropdown_element(page=page)
+    choice_element = data_fixture.create_builder_choice_element(page=page)
 
     # Add an existing option
-    DropdownElementOption.objects.create(dropdown=dropdown_element)
+    ChoiceElementOption.objects.create(choice=choice_element)
 
-    url = reverse(
-        "api:builder:element:item", kwargs={"element_id": dropdown_element.id}
-    )
+    url = reverse("api:builder:element:item", kwargs={"element_id": choice_element.id})
     response = api_client.delete(
         url,
         format="json",
@@ -532,7 +528,7 @@ def test_dropdown_options_deleted(api_client, data_fixture):
     )
 
     assert response.status_code == HTTP_204_NO_CONTENT
-    assert DropdownElementOption.objects.count() == 0
+    assert ChoiceElementOption.objects.count() == 0
 
 
 @pytest.mark.django_db

@@ -80,6 +80,7 @@ export default {
     modelTypes() {
       return this.$registry
         .getOrderedList('generativeAIModel')
+        .filter((modelType) => modelType.getSettings() !== null)
         .map((modelType) => [modelType.getType(), modelType])
     },
   },
@@ -160,10 +161,8 @@ export default {
     },
   },
   validations() {
-    const settings = Object.entries(
-      this.$registry.getAll('generativeAIModel')
-    ).reduce((acc, [type, model]) => {
-      acc[type] = model.getSettings().reduce((acc, setting) => {
+    const settings = this.modelTypes.reduce((acc, [type, modelType]) => {
+      acc[type] = modelType.getSettings().reduce((acc, setting) => {
         acc[setting.key] = {}
         return acc
       }, {})

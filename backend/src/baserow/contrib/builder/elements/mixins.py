@@ -8,6 +8,9 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.api.elements.serializers import CollectionFieldSerializer
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
@@ -223,10 +226,10 @@ class CollectionElementTypeMixin:
             parent,
             serialized_values,
             id_mapping,
-            data_source_id=actual_data_source_id,
             files_zip=files_zip,
             storage=storage,
             cache=cache,
+            data_source_id=actual_data_source_id,
             **kwargs,
         )
 
@@ -343,6 +346,7 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
     def create_instance_from_serialized(
         self,
         serialized_values: Dict[str, Any],
+        id_mapping,
         files_zip=None,
         storage=None,
         cache=None,
@@ -354,11 +358,23 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
         instance = super().create_instance_from_serialized(
             serialized_values,
+            id_mapping,
             files_zip=files_zip,
             storage=storage,
             cache=cache,
             **kwargs,
         )
+
+        import_field_context = ElementHandler().get_import_context_addition(
+            instance.id, id_mapping, cache.get("imported_element_map")
+        )
+
+        fields = [
+            collection_field_type_registry.get(f["type"]).import_serialized(
+                f, id_mapping, **(kwargs | import_field_context)
+            )
+            for f in fields
+        ]
 
         # Add the field order
         for i, f in enumerate(fields):
@@ -370,35 +386,6 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         instance.fields.add(*created_fields)
 
         return instance
-
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        files_zip=None,
-        storage=None,
-        cache=None,
-        **kwargs,
-    ) -> Any:
-        if prop_name == "fields":
-            return [
-                # We need to add the data_source_id for the current row provider.
-                collection_field_type_registry.get(f["type"]).import_serialized(
-                    f, id_mapping, data_source_id=kwargs["data_source_id"]
-                )
-                for f in value
-            ]
-
-        return super().deserialize_property(
-            prop_name,
-            value,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            **kwargs,
-        )
 
 
 class FormElementTypeMixin:
@@ -415,4 +402,9 @@ class FormElementTypeMixin:
         :return: Whether the value is valid or not for this element.
         """
 
-        return not (element.required and not value)
+        if element.required and not value:
+            raise FormDataProviderChunkInvalidException(
+                "The value is required for this element."
+            )
+
+        return value

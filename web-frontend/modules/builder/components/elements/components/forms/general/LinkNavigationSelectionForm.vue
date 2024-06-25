@@ -45,7 +45,7 @@
         :page="page"
         :label="$t('linkNavigationSelection.url')"
         :placeholder="$t('linkNavigationSelection.urlPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+        :data-providers-allowed="dataProvidersAllowed"
         small
       />
     </FormElement>
@@ -73,7 +73,7 @@
             :label="param.name"
             horizontal
             :placeholder="$t('linkNavigationSelection.paramPlaceholder')"
-            :data-providers-allowed="DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS"
+            :data-providers-allowed="dataProvidersAllowed"
             small
           />
         </div>
@@ -85,8 +85,9 @@
       </label>
       <div class="control__elements control__elements--flex">
         <RadioButton v-model="values.target" value="self">
-          {{ $t('linkNavigationSelection.targetSelf') }} </RadioButton
-        ><RadioButton v-model="values.target" value="blank">
+          {{ $t('linkNavigationSelection.targetSelf') }}
+        </RadioButton>
+        <RadioButton v-model="values.target" value="blank">
           {{ $t('linkNavigationSelection.targetNewTab') }}
         </RadioButton>
       </div>
@@ -95,10 +96,10 @@
 </template>
 
 <script>
-import { PageParameterDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
+import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'LinkNavigationSelectionForm',
@@ -106,6 +107,13 @@ export default {
     ApplicationBuilderFormulaInputGroup,
   },
   mixins: [elementForm],
+  props: {
+    dataProvidersAllowed: {
+      type: Array,
+      required: false,
+      default: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
+    },
+  },
   data() {
     return {
       parametersInError: false,
@@ -127,14 +135,6 @@ export default {
     }
   },
   computed: {
-    DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS() {
-      const PROVIDERS_TO_REMOVE = [
-        new PageParameterDataProviderType().getType(),
-      ]
-      return this.DATA_PROVIDERS_ALLOWED_ELEMENTS.filter(
-        (dataProvider) => !PROVIDERS_TO_REMOVE.includes(dataProvider)
-      )
-    },
     pages() {
       return this.builder.pages
     },

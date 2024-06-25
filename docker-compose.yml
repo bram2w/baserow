@@ -75,6 +75,7 @@ x-backend-variables: &backend-variables
   BATCH_ROWS_SIZE_LIMIT:
   INITIAL_TABLE_DATA_LIMIT:
   BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+  BASEROW_OPENAI_UPLOADED_FILE_SIZE_LIMIT_MB:
   BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
 
   BASEROW_EXTRA_ALLOWED_HOSTS:
@@ -85,6 +86,7 @@ x-backend-variables: &backend-variables
   BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:
   MIGRATE_ON_STARTUP: ${MIGRATE_ON_STARTUP:-true}
   SYNC_TEMPLATES_ON_STARTUP: ${SYNC_TEMPLATES_ON_STARTUP:-true}
+  BASEROW_SYNC_TEMPLATES_PATTERN:
   DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
   BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION:
   BASEROW_SYNC_TEMPLATES_TIME_LIMIT:
@@ -170,6 +172,10 @@ x-backend-variables: &backend-variables
   BASEROW_OPENAI_MODELS:
   BASEROW_OLLAMA_HOST:
   BASEROW_OLLAMA_MODELS:
+  BASEROW_SERVE_FILES_THROUGH_BACKEND:
+  BASEROW_SERVE_FILES_THROUGH_BACKEND_PERMISSION:
+  BASEROW_SERVE_FILES_THROUGH_BACKEND_EXPIRE_SECONDS:
+
 
 
 services:
@@ -197,7 +203,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.25.1
+    image: baserow/backend:1.25.2
     restart: unless-stopped
 
     environment:
@@ -211,7 +217,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.25.1
+    image: baserow/web-frontend:1.25.2
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -246,7 +252,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.25.1
+    image: baserow/backend:1.25.2
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -263,7 +269,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.25.1
+    image: baserow/backend:1.25.2
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -280,7 +286,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.25.1
+    image: baserow/backend:1.25.2
     restart: unless-stopped
     command: celery-beat
     environment:

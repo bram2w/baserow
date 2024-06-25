@@ -1,5 +1,5 @@
 <template>
-  <div @click="toggle">
+  <div class="ab-checkbox" @click="toggle">
     <input
       type="checkbox"
       :checked="value"

@@ -52,10 +52,10 @@ def test_valid_sampler_strings():
 
 def test_valid_sampler_with_args():
     for_trace_id = get_sampler_overrides_from_str("my.module=traceidratio@0.4")
-    assert type(for_trace_id["my.module"]) == TraceIdRatioBased
+    assert type(for_trace_id["my.module"]) is TraceIdRatioBased
     assert for_trace_id["my.module"].rate == 0.4
     for_parent_trace_id = get_sampler_overrides_from_str(
         "my.module=parentbased_traceidratio@0.4"
     )
-    assert type(for_parent_trace_id["my.module"]) == ParentBasedTraceIdRatio
+    assert type(for_parent_trace_id["my.module"]) is ParentBasedTraceIdRatio
     assert for_parent_trace_id["my.module"]._root.rate == 0.4

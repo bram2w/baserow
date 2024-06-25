@@ -32,7 +32,7 @@
           :is-first-element="index === 0"
           :is-last-element="index === elements.length - 1"
           :is-copying="copyingElementIndex === index"
-          @move="moveElement(element, $event)"
+          @move="moveElement($event)"
         />
       </div>
     </div>

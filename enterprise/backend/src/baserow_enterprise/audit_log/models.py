@@ -152,3 +152,10 @@ class AuditLogExportJob(Job):
         null=True,
         help_text="A comma separated list of column names to exclude from the export.",
     )
+
+    @property
+    def workspace_id(self):
+        # FIXME: Temporarily setting the current workspace ID for URL generation in
+        # storage backends, enabling permission checks at download time.
+        if not self.user.is_staff:
+            return self.filter_workspace_id

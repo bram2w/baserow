@@ -498,27 +498,12 @@ def test_upload_user_file_by_url_with_slash(data_fixture, tmpdir) -> None:
     assert user_file.image_height is None
 
 
-@pytest.mark.parametrize(
-    "user_file,storage,expected",
-    [
-        (None, None, None),
-        (None, True, None),
-        (True, None, None),
-    ],
-)
-def test_export_user_file_returns_none_if_user_file_or_storage_are_empty(
-    stubbed_storage,
-    user_file,
-    storage,
-    expected,
-):
-    """Ensure that None is returned if either user_file or storage are empty."""
+def test_export_user_file_returns_none_if_user_file_is_empty():
+    """Ensure that None is returned if user_file is empty."""
 
     handler = UserFileHandler()
     handler.user_file_path = MagicMock()
-    result = handler.export_user_file(user_file, storage=storage)
-
-    assert result is expected
+    assert handler.export_user_file(None) is None
 
     handler.user_file_path.assert_not_called()
 

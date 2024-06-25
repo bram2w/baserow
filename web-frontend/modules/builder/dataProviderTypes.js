@@ -3,6 +3,7 @@ import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import { getValueAtPath } from '@baserow/modules/core/utils/object'
 
 import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
+import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 
 export class DataSourceDataProviderType extends DataProviderType {
   constructor(...args) {
@@ -148,13 +149,15 @@ export class PageParameterDataProviderType extends DataProviderType {
         )
       )
     } else {
-      // Read parameters from the application context
+      // Read parameters value from the application context
       await Promise.all(
-        Object.entries(pageParamsValue).map(([name, value]) =>
+        page.path_params.map(({ name, type }) =>
           this.app.store.dispatch('pageParameter/setParameter', {
             page,
             name,
-            value,
+            value: PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[type](
+              pageParamsValue[name]
+            ),
           })
         )
       )
@@ -389,7 +392,7 @@ export class FormDataProviderType extends DataProviderType {
       )
       const payload = {
         value: initialValue,
-        type: elementType.formDataType,
+        type: elementType.formDataType(element),
         isValid: elementType.isValid(element, initialValue),
       }
       return this.app.store.dispatch('formData/setFormData', {
@@ -406,12 +409,18 @@ export class FormDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return getValueAtPath(content, path.join('')).value
+    return getValueAtPath(content, path.join('.'))
   }
 
   getDataContent(applicationContext) {
-    return this.app.store.getters['formData/getFormData'](
+    const storeObj = this.app.store.getters['formData/getFormData'](
       applicationContext.page
+    )
+    return Object.fromEntries(
+      Object.entries(storeObj).map(([elementId, { value }]) => [
+        elementId,
+        value,
+      ])
     )
   }
 
@@ -435,8 +444,8 @@ export class FormDataProviderType extends DataProviderType {
             elementId,
             {
               title: name,
-              type,
               order,
+              ...elementType.getDataSchema(element),
             },
           ]
         })

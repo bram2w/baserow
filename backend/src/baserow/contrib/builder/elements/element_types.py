@@ -1,15 +1,20 @@
 import abc
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional, TypedDict, Union
+from zipfile import ZipFile
 
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_email, validate_integer
+from django.core.files.storage import Storage
+from django.core.validators import validate_email
 from django.db.models import IntegerField, QuerySet
 from django.db.models.functions import Cast
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from baserow.contrib.builder.api.elements.serializers import DropdownOptionSerializer
+from baserow.contrib.builder.api.elements.serializers import ChoiceOptionSerializer
+from baserow.contrib.builder.data_providers.exceptions import (
+    FormDataProviderChunkInvalidException,
+)
 from baserow.contrib.builder.elements.mixins import (
     CollectionElementTypeMixin,
     CollectionElementWithFieldsTypeMixin,
@@ -21,9 +26,9 @@ from baserow.contrib.builder.elements.models import (
     WIDTHS,
     ButtonElement,
     CheckboxElement,
+    ChoiceElement,
+    ChoiceElementOption,
     ColumnElement,
-    DropdownElement,
-    DropdownElementOption,
     Element,
     FormContainerElement,
     HeadingElement,
@@ -37,6 +42,7 @@ from baserow.contrib.builder.elements.models import (
     TableElement,
     TextElement,
     VerticalAlignments,
+    get_default_table_orientation,
 )
 from baserow.contrib.builder.elements.registries import (
     ElementType,
@@ -47,6 +53,7 @@ from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.formula.types import BaserowFormula
+from baserow.core.formula.validator import ensure_array, ensure_boolean, ensure_integer
 from baserow.core.registry import T
 from baserow.core.user_files.handler import UserFileHandler
 
@@ -189,28 +196,21 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
 
         return child_types_allowed
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["submit_button_label"]:
-            serialized_copy["submit_button_label"] = import_formula(
-                serialized_copy["submit_button_label"], id_mapping
-            )
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name in ["submit_button_label"]:
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
 
@@ -220,14 +220,15 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
 
     class SerializedDict(CollectionElementWithFieldsTypeMixin.SerializedDict):
         button_color: str
+        orientation: dict
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["button_color"]
+        return super().allowed_fields + ["button_color", "orientation"]
 
     @property
     def serializer_field_names(self):
-        return super().serializer_field_names + ["button_color"]
+        return super().serializer_field_names + ["button_color", "orientation"]
 
     @property
     def serializer_field_overrides(self):
@@ -239,10 +240,18 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
                 default="primary",
                 help_text="Button color.",
             ),
+            "orientation": serializers.JSONField(
+                allow_null=False,
+                default=get_default_table_orientation,
+                help_text=TableElement._meta.get_field("orientation").help_text,
+            ),
         }
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
-        return {"data_source_id": None}
+        return {
+            "data_source_id": None,
+            "orientation": get_default_table_orientation(),
+        }
 
 
 class RepeatElementType(
@@ -265,6 +274,9 @@ class RepeatElementType(
     ):
         orientation: str
         items_per_row: dict
+
+    def import_context_addition(self, instance, id_mapping):
+        return {"data_source_id": instance.data_source_id}
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
@@ -319,28 +331,21 @@ class HeadingElementType(ElementType):
     def get_pytest_params(self, pytest_data_fixture):
         return {"value": "'Corporis perspiciatis'", "level": 2, "alignment": "left"}
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["value"]:
-            serialized_copy["value"] = import_formula(
-                serialized_copy["value"], id_mapping
-            )
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name in ["value"]:
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
 
@@ -388,28 +393,21 @@ class TextElementType(ElementType):
             ),
         }
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["value"]:
-            serialized_copy["value"] = import_formula(
-                serialized_copy["value"], id_mapping
-            )
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name in ["value"]:
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
 
@@ -620,14 +618,12 @@ class LinkElementType(ElementType):
         **kwargs,
     ) -> Any:
         if prop_name == "value":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
-                prop_name,
-                value,
-                id_mapping,
+                prop_name, value, id_mapping, **kwargs
             ),
             id_mapping,
             files_zip=files_zip,
@@ -833,10 +829,10 @@ class ImageElementType(ElementType):
         **kwargs,
     ) -> Any:
         if prop_name == "image_url":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "alt_text":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         if prop_name == "image_file_id":
             user_file = UserFileHandler().import_user_file(
@@ -945,36 +941,21 @@ class InputTextElementType(InputElementType):
 
         return overrides
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["label"]:
-            serialized_copy["label"] = import_formula(
-                serialized_copy["label"], id_mapping
-            )
-        if serialized_copy["default_value"]:
-            serialized_copy["default_value"] = import_formula(
-                serialized_copy["default_value"], id_mapping
-            )
-        if serialized_copy["placeholder"]:
-            serialized_copy["placeholder"] = import_formula(
-                serialized_copy["placeholder"], id_mapping
-            )
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name in ["label", "default_value", "placeholder"]:
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
     def get_pytest_params(self, pytest_data_fixture):
@@ -996,19 +977,25 @@ class InputTextElementType(InputElementType):
         """
 
         if not value:
-            return element.required is False
+            if element.required:
+                raise FormDataProviderChunkInvalidException(f"The value is required.")
 
-        if element.validation_type == "integer":
+        elif element.validation_type == "integer":
             try:
-                validate_integer(value)
-            except ValidationError:
-                return False
+                value = ensure_integer(value)
+            except ValidationError as exc:
+                raise FormDataProviderChunkInvalidException(
+                    f"{value} must be a valid integer."
+                ) from exc
+
         elif element.validation_type == "email":
             try:
                 validate_email(value)
-            except ValidationError:
-                return False
-        return True
+            except ValidationError as exc:
+                raise FormDataProviderChunkInvalidException(
+                    f"{value} must be a valid email."
+                ) from exc
+        return value
 
 
 class ButtonElementType(ElementType):
@@ -1057,28 +1044,21 @@ class ButtonElementType(ElementType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"value": "'Some value'"}
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["value"]:
-            serialized_copy["value"] = import_formula(
-                serialized_copy["value"], id_mapping
-            )
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name == "value":
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
 
@@ -1119,33 +1099,35 @@ class CheckboxElementType(InputElementType):
 
         return overrides
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["label"]:
-            serialized_copy["label"] = import_formula(
-                serialized_copy["label"], id_mapping
-            )
-        if serialized_copy["default_value"]:
-            serialized_copy["default_value"] = import_formula(
-                serialized_copy["default_value"], id_mapping
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name in ["label", "default_value"]:
+            return import_formula(value, id_mapping, **kwargs)
+
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
+        )
+
+    def is_valid(self, element: CheckboxElement, value: Any) -> bool:
+        if element.required and not value:
+            raise FormDataProviderChunkInvalidException(
+                "The value is required for this element."
             )
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-        )
+        try:
+            return ensure_boolean(value)
+        except ValidationError as exc:
+            raise FormDataProviderChunkInvalidException(
+                "The value must be a boolean or convertible to a boolean."
+            ) from exc
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -1155,16 +1137,25 @@ class CheckboxElementType(InputElementType):
         }
 
 
-class DropdownElementType(FormElementTypeMixin, ElementType):
-    type = "dropdown"
-    model_class = DropdownElement
-    allowed_fields = ["label", "default_value", "required", "placeholder"]
+class ChoiceElementType(FormElementTypeMixin, ElementType):
+    type = "choice"
+    model_class = ChoiceElement
+    allowed_fields = [
+        "label",
+        "default_value",
+        "required",
+        "placeholder",
+        "multiple",
+        "show_as_dropdown",
+    ]
     serializer_field_names = [
         "label",
         "default_value",
         "required",
         "placeholder",
         "options",
+        "multiple",
+        "show_as_dropdown",
     ]
     request_serializer_field_names = [
         "label",
@@ -1172,6 +1163,8 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         "required",
         "placeholder",
         "options",
+        "multiple",
+        "show_as_dropdown",
     ]
 
     class SerializedDict(ElementDict):
@@ -1180,6 +1173,8 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         placeholder: BaserowFormula
         default_value: BaserowFormula
         options: List
+        multiple: bool
+        show_as_dropdown: bool
 
     @property
     def serializer_field_overrides(self):
@@ -1187,30 +1182,40 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
 
         overrides = {
             "label": FormulaSerializerField(
-                help_text=DropdownElement._meta.get_field("label").help_text,
+                help_text=ChoiceElement._meta.get_field("label").help_text,
                 required=False,
                 allow_blank=True,
                 default="",
             ),
             "default_value": FormulaSerializerField(
-                help_text=DropdownElement._meta.get_field("default_value").help_text,
+                help_text=ChoiceElement._meta.get_field("default_value").help_text,
                 required=False,
                 allow_blank=True,
                 default="",
             ),
             "required": serializers.BooleanField(
-                help_text=DropdownElement._meta.get_field("required").help_text,
+                help_text=ChoiceElement._meta.get_field("required").help_text,
                 default=False,
                 required=False,
             ),
             "placeholder": serializers.CharField(
-                help_text=DropdownElement._meta.get_field("placeholder").help_text,
+                help_text=ChoiceElement._meta.get_field("placeholder").help_text,
                 required=False,
                 allow_blank=True,
                 default="",
             ),
-            "options": DropdownOptionSerializer(
-                source="dropdownelementoption_set", many=True, required=False
+            "options": ChoiceOptionSerializer(
+                source="choiceelementoption_set", many=True, required=False
+            ),
+            "multiple": serializers.BooleanField(
+                help_text=ChoiceElement._meta.get_field("multiple").help_text,
+                default=False,
+                required=False,
+            ),
+            "show_as_dropdown": serializers.BooleanField(
+                help_text=ChoiceElement._meta.get_field("show_as_dropdown").help_text,
+                default=True,
+                required=False,
             ),
         }
 
@@ -1220,12 +1225,12 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
     def request_serializer_field_overrides(self):
         return {
             **self.serializer_field_overrides,
-            "options": DropdownOptionSerializer(many=True, required=False),
+            "options": ChoiceOptionSerializer(many=True, required=False),
         }
 
     def serialize_property(
         self,
-        element: DropdownElement,
+        element: ChoiceElement,
         prop_name: str,
         files_zip=None,
         storage=None,
@@ -1234,7 +1239,7 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         if prop_name == "options":
             return [
                 self.serialize_option(option)
-                for option in element.dropdownelementoption_set.all()
+                for option in element.choiceelementoption_set.all()
             ]
 
         return super().serialize_property(
@@ -1251,11 +1256,14 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         cache=None,
         **kwargs,
     ) -> Any:
-        if prop_name == "default_value":
+        if prop_name == "label":
             return import_formula(value, id_mapping)
 
+        if prop_name == "default_value":
+            return import_formula(value, id_mapping, **kwargs)
+
         if prop_name == "placeholder":
-            return import_formula(value, id_mapping)
+            return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
             prop_name,
@@ -1277,28 +1285,30 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         cache=None,
         **kwargs,
     ) -> T:
-        dropdown_element = super().import_serialized(
+        choice_element = super().import_serialized(
             parent,
             serialized_values,
             id_mapping,
             files_zip=files_zip,
             storage=storage,
             cache=cache,
+            **kwargs,
         )
 
         options = []
         for option in serialized_values.get("options", []):
-            option["dropdown_id"] = dropdown_element.id
+            option["choice_id"] = choice_element.id
             option_deserialized = self.deserialize_option(option)
             options.append(option_deserialized)
 
-        DropdownElementOption.objects.bulk_create(options)
+        ChoiceElementOption.objects.bulk_create(options)
 
-        return dropdown_element
+        return choice_element
 
     def create_instance_from_serialized(
         self,
         serialized_values: Dict[str, Any],
+        id_mapping,
         files_zip=None,
         storage=None,
         cache=None,
@@ -1307,21 +1317,22 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
         serialized_values.pop("options", None)
         return super().create_instance_from_serialized(
             serialized_values,
+            id_mapping,
             files_zip=files_zip,
             storage=storage,
             cache=cache,
             **kwargs,
         )
 
-    def serialize_option(self, option: DropdownElementOption) -> Dict:
+    def serialize_option(self, option: ChoiceElementOption) -> Dict:
         return {
             "value": option.value,
             "name": option.name,
-            "dropdown_id": option.dropdown_id,
+            "choice_id": option.choice_id,
         }
 
     def deserialize_option(self, value: Dict):
-        return DropdownElementOption(**value)
+        return ChoiceElementOption(**value)
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
@@ -1329,40 +1340,70 @@ class DropdownElementType(FormElementTypeMixin, ElementType):
             "default_value": "'option 1'",
             "required": False,
             "placeholder": "'some placeholder'",
+            "multiple": False,
+            "show_as_dropdown": True,
         }
 
-    def after_create(self, instance: DropdownElement, values: Dict):
+    def after_create(self, instance: ChoiceElement, values: Dict):
         options = values.get("options", [])
 
-        DropdownElementOption.objects.bulk_create(
-            [DropdownElementOption(dropdown=instance, **option) for option in options]
+        ChoiceElementOption.objects.bulk_create(
+            [ChoiceElementOption(choice=instance, **option) for option in options]
         )
 
-    def after_update(self, instance: DropdownElement, values: Dict):
+    def after_update(self, instance: ChoiceElement, values: Dict):
         options = values.get("options", None)
 
         if options is not None:
-            DropdownElementOption.objects.filter(dropdown=instance).delete()
-            DropdownElementOption.objects.bulk_create(
-                [
-                    DropdownElementOption(dropdown=instance, **option)
-                    for option in options
-                ]
+            ChoiceElementOption.objects.filter(choice=instance).delete()
+            ChoiceElementOption.objects.bulk_create(
+                [ChoiceElementOption(choice=instance, **option) for option in options]
             )
 
-    def is_valid(self, element: DropdownElement, value: Any) -> bool:
+    def is_valid(self, element: ChoiceElement, value: Union[List, str]) -> bool:
         """
-        Responsible for validating `DropdownElement` form data. We handle
+        Responsible for validating `ChoiceElement` form data. We handle
         this validation a little differently to ensure that if someone creates
         an option with a blank value, it's considered valid.
 
-        :param element: The dropdown element.
-        :param value: The dropdown value we want to validate.
+        :param element: The choice element.
+        :param value: The choice value we want to validate.
         :return: Whether the value is valid or not for this element.
         """
 
-        validOption = element.dropdownelementoption_set.filter(value=value).exists()
-        return not (element.required and not validOption)
+        options = set(element.choiceelementoption_set.values_list("value", flat=True))
+
+        if element.multiple:
+            try:
+                value = ensure_array(value)
+            except ValidationError as exc:
+                raise FormDataProviderChunkInvalidException(
+                    "The value must be an array or convertible to an array."
+                ) from exc
+
+            if not value:
+                if element.required:
+                    raise FormDataProviderChunkInvalidException(
+                        "The value is required."
+                    )
+            else:
+                for v in value:
+                    if v not in options:
+                        raise FormDataProviderChunkInvalidException(
+                            f"{value} is not a valid option."
+                        )
+        else:
+            if not value:
+                if element.required and value not in options:
+                    raise FormDataProviderChunkInvalidException(
+                        "The value is required."
+                    )
+            elif value not in options:
+                raise FormDataProviderChunkInvalidException(
+                    f"{value} is not a valid option."
+                )
+
+        return value
 
 
 class IFrameElementType(ElementType):
@@ -1411,30 +1452,21 @@ class IFrameElementType(ElementType):
 
         return overrides
 
-    def import_serialized(
+    def deserialize_property(
         self,
-        page,
-        serialized_values,
-        id_mapping,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["url"]:
-            serialized_copy["url"] = import_formula(serialized_copy["url"], id_mapping)
-        if serialized_copy["embed"]:
-            serialized_copy["embed"] = import_formula(
-                serialized_copy["embed"], id_mapping
-            )
+        prop_name: BaserowFormula,
+        value: Any,
+        id_mapping: Dict[BaserowFormula, Any],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict | None = None,
+        **kwargs,
+    ) -> Any:
+        if prop_name in ["url", "embed"]:
+            return import_formula(value, id_mapping, **kwargs)
 
-        return super().import_serialized(
-            page,
-            serialized_copy,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
+        return super().deserialize_property(
+            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
     def get_pytest_params(self, pytest_data_fixture):

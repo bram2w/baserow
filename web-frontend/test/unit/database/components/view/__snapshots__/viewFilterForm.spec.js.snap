@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ViewFilterForm component Default view filter component 1`] = `
+exports[`ViewFilterForm match snapshots Default view filter component 1`] = `
 <div
   class="filters__content"
 >
@@ -74,7 +74,7 @@ exports[`ViewFilterForm component Default view filter component 1`] = `
 </div>
 `;
 
-exports[`ViewFilterForm component Full view filter component 1`] = `
+exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
 <div
   class="filters__content"
 >
@@ -89,7 +89,9 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       <div
         class="filters__item filters__item--level-1"
       >
-        <div>
+        <div
+          class="filters__operator"
+        >
           <span
             class="filters__operator-where"
           >
@@ -579,7 +581,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </div>
            
           <div
-            class="filters__value filters__value--with-after-input"
+            class="filters__value filters__value--with-input-field"
           >
             <input
               class="input filters__value-input input--small"
@@ -607,7 +609,9 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       <div
         class="filters__item filters__item--level-1"
       >
-        <div>
+        <div
+          class="filters__operator"
+        >
           <!---->
            
           <div
@@ -1102,7 +1106,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </div>
            
           <div
-            class="filters__value filters__value--with-after-input"
+            class="filters__value filters__value--with-input-field"
           >
             <div
               class="filters__value-rating"
@@ -1202,7 +1206,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
 </div>
 `;
 
-exports[`ViewFilterForm component Test rating filter 1`] = `
+exports[`ViewFilterForm match snapshots Test rating filter 1`] = `
 <div
   class="filters__content"
 >
@@ -1217,7 +1221,9 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
       <div
         class="filters__item filters__item--level-1"
       >
-        <div>
+        <div
+          class="filters__operator"
+        >
           <span
             class="filters__operator-where"
           >
@@ -1618,7 +1624,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
           </div>
            
           <div
-            class="filters__value filters__value--with-after-input"
+            class="filters__value filters__value--with-input-field"
           >
             <div
               class="filters__value-rating"
@@ -1718,7 +1724,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
 </div>
 `;
 
-exports[`ViewFilterForm component Test rating filter 2`] = `
+exports[`ViewFilterForm match snapshots Test rating filter 2`] = `
 <div
   class="filters__content"
 >
@@ -1733,7 +1739,9 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
       <div
         class="filters__item filters__item--level-1"
       >
-        <div>
+        <div
+          class="filters__operator"
+        >
           <span
             class="filters__operator-where"
           >
@@ -2134,7 +2142,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
           </div>
            
           <div
-            class="filters__value filters__value--with-after-input"
+            class="filters__value filters__value--with-input-field"
           >
             <div
               class="filters__value-rating"

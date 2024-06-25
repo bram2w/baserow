@@ -62,3 +62,12 @@ You can use django-extensions commands inside backend docker containers:
 The interface can be accessed at http://localhost:8000/silk/ after Baserow is started in the debug mode. Every request is logged and can be analyzed, including the list of performed database queries.
 
 django-silk can be also configured and used for profiling using the Python's built-in profiler, see the official documentation for details.
+
+## flower
+
+[Flower](https://flower.readthedocs.io/en/latest/) is an open source web application for
+monitoring and managing Celery clusters. It provides real-time information about the
+status of Celery workers and tasks.
+
+The interface can be accessed at http://localhost:5555/ after the Baserow development
+environment has started.

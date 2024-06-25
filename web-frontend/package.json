@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "1.25.1",
+  "version": "1.25.2",
   "private": true,
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
@@ -89,11 +89,12 @@
     "nuxt": "2.17.2",
     "papaparse": "5.4.1",
     "path-to-regexp": "^1.8.0",
-    "posthog-js": "^1.105.8",
+    "posthog-js": "^1.136.2",
     "resize-observer-polyfill": "^1.5.1",
     "sass-loader": "10.4.1",
     "thenby": "^1.3.4",
     "tiptap-markdown": "^0.8.9",
+    "tldjs": "^2.3.1",
     "uuid": "9.0.0",
     "vue-chartjs": "4.1.2",
     "vue2-smooth-scroll": "^1.6.0",
@@ -139,7 +140,7 @@
     "storybook-addon-designs": "^6.3.1",
     "storybook-addon-pseudo-states": "1.15.5",
     "stylelint": "^16.3.1",
-    "stylelint-selector-bem-pattern": "^4.0.0",
-    "stylelint-config-standard-scss": "^13.1.0"
+    "stylelint-config-standard-scss": "^13.1.0",
+    "stylelint-selector-bem-pattern": "^4.0.0"
   }
 }

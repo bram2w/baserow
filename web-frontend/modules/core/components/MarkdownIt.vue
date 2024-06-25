@@ -27,6 +27,12 @@ export default {
       htmlContent: '',
     }
   },
+  async fetch() {
+    const Markdown = (await import('markdown-it')).default
+    this.md = new Markdown()
+    this.md.renderer.rules = { ...this.md.renderer.rules, ...this.rules }
+    this.htmlContent = this.md.render(this.content)
+  },
   computed: {
     // Makes content watchable
     localContent() {
@@ -39,12 +45,6 @@ export default {
         this.htmlContent = this.md.render(newValue)
       }
     },
-  },
-  async created() {
-    const Markdown = (await import('markdown-it')).default
-    this.md = new Markdown()
-    this.md.renderer.rules = { ...this.md.renderer.rules, ...this.rules }
-    this.htmlContent = this.md.render(this.content)
   },
 }
 </script>

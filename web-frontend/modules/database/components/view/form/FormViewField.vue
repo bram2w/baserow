@@ -135,16 +135,13 @@
               :full-width="true"
               :variant="'dark'"
               :sorted="true"
+              :can-add-filter-groups="false"
               @addFilter="addCondition(fieldOptions, $event)"
+              @addFilterGroup="addConditionGroup(fieldOptions, $event)"
               @deleteFilter="deleteCondition(fieldOptions, $event)"
               @updateFilter="updateCondition(fieldOptions, $event)"
-              @selectOperator="
-                $emit('updated-field-options', { condition_type: $event })
-              "
+              @updateFilterType="updateFilterType(fieldOptions, $event)"
               @deleteFilterGroup="deleteConditionGroup(fieldOptions, $event)"
-              @selectFilterGroupOperator="
-                updateConditionGroupOperator(fieldOptions, $event)
-              "
               @filterFocused="
                 $store.dispatch('view/setFocusFilter', { view, filterId: null })
               "
@@ -178,6 +175,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database/constants'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
+import { createFiltersTree } from '@baserow/modules/database/utils/view'
 
 export default {
   name: 'FormViewField',
@@ -289,10 +287,11 @@ export default {
     resetValue() {
       this.value = this.getFieldType().getEmptyValue(this.field)
     },
-    createConditionGroup() {
+    createConditionGroup(parentGroupId) {
       return {
         id: 0,
         filter_type: 'AND',
+        parent_group: parentGroupId,
       }
     },
     generateCompatibleCondition(conditionGroupId = null) {
@@ -324,10 +323,10 @@ export default {
     },
     addCondition(
       { conditions, condition_groups: conditionGroups },
-      conditionGroupId = null
+      { filterGroupId = null } = {}
     ) {
       const newConditions = conditions.slice()
-      const newCondition = this.generateCompatibleCondition(conditionGroupId)
+      const newCondition = this.generateCompatibleCondition(filterGroupId)
       newConditions.push(newCondition)
       this.$emit('updated-field-options', {
         conditions: newConditions,
@@ -338,8 +337,11 @@ export default {
         filterId: newCondition.id,
       })
     },
-    addConditionGroup({ conditions, condition_groups: filterGroups }) {
-      const newConditionGroup = this.createConditionGroup()
+    addConditionGroup(
+      { conditions, condition_groups: filterGroups },
+      { parentGroupId = null } = {}
+    ) {
+      const newConditionGroup = this.createConditionGroup(parentGroupId)
       const newConditionGroups = filterGroups.slice()
       newConditionGroups.push(newConditionGroup)
 
@@ -357,20 +359,24 @@ export default {
         filterId: newCondition.id,
       })
     },
-    updateConditionGroupOperator(
-      { conditions, condition_groups: conditioGroups },
+    updateFilterType(
+      { conditions, condition_groups: conditionGroups },
       { value, filterGroup }
     ) {
-      conditioGroups = clone(conditioGroups.slice())
-      conditioGroups.forEach((g, index) => {
-        if (g.id === filterGroup.id) {
-          Object.assign(conditioGroups[index], { filter_type: value })
-        }
-      })
-      this.$emit('updated-field-options', {
-        conditions,
-        condition_groups: conditioGroups,
-      })
+      const newFieldOptions = {}
+      if (filterGroup === undefined) {
+        newFieldOptions.condition_type = value
+      } else {
+        conditionGroups = clone(conditionGroups.slice())
+        conditionGroups.forEach((group, index) => {
+          if (group.id === filterGroup.id) {
+            Object.assign(conditionGroups[index], { filter_type: value })
+          }
+        })
+        newFieldOptions.condition_groups = conditionGroups
+        newFieldOptions.conditions = conditions
+      }
+      this.$emit('updated-field-options', newFieldOptions)
     },
     updateCondition(
       { conditions, condition_groups: conditionGroups },
@@ -402,19 +408,45 @@ export default {
       })
     },
     deleteConditionGroup(
-      { conditions, condition_groups: conditionGroups },
+      {
+        conditions,
+        condition_groups: conditionGroups,
+        filter_type: filterType,
+      },
       { group }
     ) {
+      const filtersTree = createFiltersTree(
+        filterType,
+        conditions,
+        conditionGroups
+      )
+      const groupNode = filtersTree.findNodeByGroupId(group.id)
+      if (groupNode === null) {
+        return
+      }
+      // given a group, find all the filters/groups that are children
+      const groupsToRemove = [group.id]
+      const removeChildGroup = (treeNode) => {
+        for (const child of treeNode.children) {
+          groupsToRemove.push(child.groupId)
+          removeChildGroup(child)
+        }
+      }
+      removeChildGroup(groupNode)
+
+      const conditionIdsToRemove = conditions
+        .filter((c) => groupsToRemove.includes(c.group))
+        .map((c) => c.id)
+      conditions = conditions.filter(
+        (c) => !conditionIdsToRemove.includes(c.id)
+      )
+      conditionGroups = conditionGroups.filter(
+        (g) => !groupsToRemove.includes(g.id)
+      )
+
       // We need to wait for the next tick, otherwise the condition is already deleted
       // before the event completes, resulting in a click outside of the field.
       this.$nextTick(() => {
-        const conditionIdsToRemove = conditions
-          .filter((c) => c.group === group.id)
-          .map((c) => c.id)
-        conditions = conditions.filter(
-          (c) => !conditionIdsToRemove.includes(c.id)
-        )
-        conditionGroups = conditionGroups.filter((g) => g.id !== group.id)
         this.$emit('updated-field-options', {
           conditions,
           condition_groups: conditionGroups,

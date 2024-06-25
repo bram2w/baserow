@@ -1,14 +1,14 @@
-.dropdown-element {
+.choice-element {
   border: 1px solid $black;
   border-radius: 0;
 
-  .dropdown__selected {
+  .ab-dropdown__selected {
     border: none;
     height: auto;
     line-height: 1;
   }
 
-  .dropdown__items {
+  .ab-dropdown__items {
     border-radius: 0;
   }
 
@@ -20,7 +20,7 @@
     border: 1px solid $palette-neutral-800;
   }
 
-  .dropdown__toggle-icon {
+  .ab-dropdown__toggle-icon {
     color: $black;
   }
 
@@ -30,6 +30,6 @@
   }
 }
 
-.dropdown-element--error {
+.choice-element--error {
   border-color: $color-error-300;
 }
