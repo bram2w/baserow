@@ -394,6 +394,9 @@ case "$1" in
       export OTEL_SERVICE_NAME="celery-beat"
       exec celery -A baserow beat -l "${BASEROW_CELERY_BEAT_DEBUG_LEVEL}" -S redbeat.RedBeatScheduler "${@:2}"
     ;;
+    celery-flower)
+      exec celery -A baserow flower "$@"
+    ;;
     watch-py)
         # Ensure we watch all possible python source code locations for changes.
         directory_args=''

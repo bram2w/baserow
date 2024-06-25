@@ -148,6 +148,39 @@ services:
     stdin_open: true
     tty: true
 
+  celery-flower:
+    image: baserow_backend_dev:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+      target: dev
+      args:
+        # We allow configuring the UID/GID here so you can run as the dev's actual user
+        # reducing the chance the containers screw up the bind mounted folders.
+        UID: $UID
+        GID: $GID
+    restart: unless-stopped
+    stop_signal: SIGQUIT
+    environment:
+      REDIS_HOST:
+      REDIS_PORT:
+      REDIS_PROTOCOL:
+      REDIS_URL:
+      REDIS_USER:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+    depends_on:
+      - backend
+    volumes:
+      - media:/baserow/media
+    ports:
+      - "5555:5555" # web ui
+    command: "celery-flower"
+    networks:
+      local:
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
   mjml-email-compiler:
     build:
       target: dev
@@ -175,9 +208,9 @@ services:
     networks:
       local:
 
-        # When switching between dev and local the media files in the media volume will be
-        # owned by different users. Ensure that we chown them to the user appropriate for the
-        # environment here.
+  # When switching between dev and local the media files in the media volume will be
+  # owned by different users. Ensure that we chown them to the user appropriate for the
+  # environment here.
   volume-permissions-fixer:
     image: bash:4.4
     command: chown ${UID:-1000}:${GID:-1000} -R /baserow/media
