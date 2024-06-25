@@ -56,6 +56,12 @@ class ExportJob(models.Model):
             state__in=EXPORT_JOB_RUNNING_STATUSES
         )
 
+    @property
+    def workspace_id(self):
+        # FIXME: Temporarily setting the current workspace ID for URL generation in
+        # storage backends, enabling permission checks at download time.
+        return self.table.database.workspace_id
+
     @staticmethod
     def jobs_requiring_cleanup(current_time):
         """

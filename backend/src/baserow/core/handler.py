@@ -25,6 +25,7 @@ from tqdm import tqdm
 from baserow.core.registries import plugin_registry
 from baserow.core.user.utils import normalize_email_address
 
+from .context import clear_current_workspace_id, set_current_workspace_id
 from .emails import WorkspaceInvitationEmail
 from .exceptions import (
     ApplicationDoesNotExist,
@@ -130,6 +131,15 @@ tracer = trace.get_tracer(__name__)
 class CoreHandler(metaclass=baserow_trace_methods(tracer)):
     default_create_allowed_fields = ["name", "init_with_data"]
     default_update_allowed_fields = ["name"]
+
+    def clear_context(self):
+        """
+        Clears the context of the current request. This is useful when the CoreHandler
+        needs to set a context for a specific request, but it should be cleared after
+        the request is done.
+        """
+
+        clear_current_workspace_id()
 
     def get_settings(self):
         """
@@ -343,6 +353,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).get(check, None)
 
         if allowed is True:
+            # FIXME: Temporarily setting the current workspace ID for URL generation in
+            # storage backends, enabling permission checks at download time.
+            if workspace:
+                set_current_workspace_id(workspace.id)
             return True
 
         if isinstance(allowed, PermissionException):
