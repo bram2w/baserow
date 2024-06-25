@@ -34,6 +34,7 @@
         @create-row="openCreateRowModal"
         @edit-row="openRowEditModal($event)"
         @refresh="$emit('refresh', $event)"
+        @row-context="showRowContext($event.event, $event.row)"
       ></KanbanViewStack>
       <KanbanViewStack
         v-for="option in existingSelectOption"
@@ -49,6 +50,7 @@
         @create-row="openCreateRowModal"
         @edit-row="openRowEditModal($event)"
         @refresh="$emit('refresh', $event)"
+        @row-context="showRowContext($event.event, $event.row)"
       ></KanbanViewStack>
       <a
         v-if="
@@ -128,6 +130,33 @@
       @navigate-next="$emit('navigate-next', $event)"
       @refresh-row="refreshRow"
     ></RowEditModal>
+    <Context
+      ref="cardContext"
+      :overflow-scroll="true"
+      :max-height-if-outside-viewport="true"
+    >
+      <ul class="context__menu">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.delete_row',
+              table,
+              database.workspace.id
+            )
+          "
+          class="context__menu-item"
+        >
+          <a
+            class="context__menu-item-link js-ctx-delete-row"
+            @click="deleteRow(selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-bin"></i>
+            {{ $t('gridView.deleteRow') }}
+          </a>
+        </li>
+      </ul>
+    </Context>
   </div>
 </template>
 
@@ -184,6 +213,7 @@ export default {
   data() {
     return {
       showHiddenFieldsInRowModal: false,
+      selectedRow: null,
     }
   },
   computed: {
@@ -266,7 +296,7 @@ export default {
   },
   methods: {
     /**
-     * When the row edit modal is opened we notifiy
+     * When the row edit modal is opened we notify
      * the Table component that a new row has been selected,
      * such that we can update the path to include the row id.
      */
@@ -341,6 +371,33 @@ export default {
     populateAndEditRow(row) {
       const rowClone = populateRow(clone(row))
       this.$refs.rowEditModal.show(row.id, rowClone)
+    },
+
+    showRowContext(event, row) {
+      this.selectedRow = row
+      this.$refs.cardContext.toggleNextToMouse(event)
+    },
+
+    async deleteRow(row) {
+      try {
+        this.$refs.cardContext.hide()
+        await this.$store.dispatch(
+          this.storePrefix + 'view/kanban/deleteExistingRow',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            row,
+          }
+        )
+        await this.$store.dispatch('toast/restore', {
+          trash_item_type: 'row',
+          parent_trash_item_id: this.table.id,
+          trash_item_id: row.id,
+        })
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
     },
   },
 }

@@ -6,14 +6,38 @@ import {
   expectUserUpdatedRespondsWithError,
 } from './user'
 import { thereAreComments } from './comments'
+import { createKanbanView, thereAreRowsInKanbanView } from './kanban'
+import { MockServer } from '@baserow/test/fixtures/mockServer'
 
-export default class MockPremiumServer {
-  constructor(mock) {
-    this.mock = mock
+export default class MockPremiumServer extends MockServer {
+  createKanbanView(
+    application,
+    table,
+    {
+      filters = [],
+      sortings = [],
+      groupBys = [],
+      decorations = [],
+      singleSelectFieldId = -1,
+      ...rest
+    }
+  ) {
+    return createKanbanView(this.mock, application, table, {
+      filters,
+      sortings,
+      groupBys,
+      decorations,
+      singleSelectFieldId,
+      ...rest,
+    })
   }
 
   thereAreUsers(users, page, options = {}) {
     createUsersForAdmin(this.mock, users, page, options)
+  }
+
+  thereAreRowsInKanbanView(fieldOptions, rows) {
+    thereAreRowsInKanbanView(this.mock, fieldOptions, rows)
   }
 
   thereAreComments(comments, tableId, rowId) {

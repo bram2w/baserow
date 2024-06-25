@@ -3,6 +3,7 @@ import setupPremium from '@baserow_premium/plugin'
 import _ from 'lodash'
 import setupLicensePlugin from '@baserow_premium/plugins/license'
 import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
+import MockPremiumServer from '@baserow_premium_test/fixtures/mockPremiumServer'
 
 export class PremiumTestApp extends TestApp {
   constructor(...args) {
@@ -16,6 +17,10 @@ export class PremiumTestApp extends TestApp {
       app[`$${name}`] = dep
     })
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
+  }
+
+  setupMockServer() {
+    return new MockPremiumServer(this.mock, this.store)
   }
 
   createTestUserInAuthStore() {

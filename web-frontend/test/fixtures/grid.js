@@ -29,3 +29,7 @@ export function createPublicGridViewRows(mock, viewSlug, fields, rows = []) {
     field_options: fieldOptions,
   })
 }
+
+export function deleteGridRow(mock, tableId, rowId, responseCode = 204) {
+  mock.onDelete(`/database/rows/table/${tableId}/${rowId}/`).reply(responseCode)
+}

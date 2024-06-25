@@ -66,6 +66,9 @@ export const mutations = {
   SET_SINGLE_SELECT_FIELD_ID(state, singleSelectFieldId) {
     state.singleSelectFieldId = singleSelectFieldId
   },
+  SET_ROW_LOADING(state, { row, value }) {
+    Vue.set(row._, 'loading', value)
+  },
   REPLACE_ALL_STACKS(state, stacks) {
     state.stacks = stacks
   },
@@ -446,6 +449,33 @@ export const actions = {
     // or not because the count is for all the rows and not just the ones in the store.
     commit('INCREASE_COUNT', { stackId })
   },
+  /**
+   * Called when the user wants to delete an existing row in the table.
+   */
+  async deleteExistingRow(
+    { commit, dispatch, getters },
+    { table, view, row, fields }
+  ) {
+    commit('SET_ROW_LOADING', { row, value: true })
+
+    try {
+      await dispatch('deletedExistingRow', {
+        view,
+        fields,
+        row,
+      })
+      await RowService(this.$client).delete(table.id, row.id)
+    } catch (error) {
+      await dispatch('createdNewRow', {
+        view,
+        values: row,
+        fields,
+      })
+      commit('SET_ROW_LOADING', { row, value: false })
+      throw error
+    }
+  },
+
   /**
    * Can be called when a row in the table has been deleted. This action will make
    * sure that the state is updated accordingly.
