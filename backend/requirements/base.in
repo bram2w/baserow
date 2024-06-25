@@ -23,6 +23,7 @@ zipp==3.18.1
 unicodecsv==0.14.1
 django-celery-beat==2.6.0
 celery-redbeat==2.2.0
+flower==2.0.1
 service-identity==24.1.0
 regex==2024.4.28
 antlr4-python3-runtime==4.9.3
@@ -66,7 +67,6 @@ https://github.com/fellowapp/prosemirror-py/archive/refs/tags/v0.3.5.zip
 rich==13.7.1
 tzdata==2024.1
 sentry-sdk==2.0.1
-openai==1.9.0
 typing_extensions==4.11.0
 ollama==0.1.9
 langchain==0.1.17

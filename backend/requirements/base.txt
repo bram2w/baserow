@@ -72,6 +72,7 @@ celery[redis]==5.4.0
     #   celery-singleton
     #   django-celery-beat
     #   django-celery-email
+    #   flower
 celery-redbeat==2.2.0
     # via -r base.in
 celery-singleton==0.3.1
@@ -180,6 +181,8 @@ elementpath==4.4.0
     # via xmlschema
 faker==25.0.1
     # via -r base.in
+flower==2.0.1
+    # via -r base.in
 frozenlist==1.4.1
     # via
     #   aiohttp
@@ -223,6 +226,8 @@ httpx==0.27.0
     # via
     #   ollama
     #   openai
+humanize==4.9.0
+    # via flower
 hyperlink==21.0.0
     # via
     #   autobahn
@@ -420,6 +425,8 @@ pillow==10.3.0
     # via -r base.in
 posthog==3.5.0
     # via -r base.in
+prometheus-client==0.20.0
+    # via flower
 prompt-toolkit==3.0.46
     # via click-repl
 prosemirror @ https://github.com/fellowapp/prosemirror-py/archive/refs/tags/v0.3.5.zip
@@ -485,7 +492,9 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
     # via uvicorn
 pytz==2024.1
-    # via pysaml2
+    # via
+    #   flower
+    #   pysaml2
 pyyaml==6.0.1
     # via
     #   drf-spectacular
@@ -556,6 +565,8 @@ tenacity==8.3.0
     #   langchain
     #   langchain-community
     #   langchain-core
+tornado==6.4.1
+    # via flower
 tqdm==4.66.4
     # via
     #   -r base.in
