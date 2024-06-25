@@ -122,6 +122,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "baserow.middleware.BaserowCustomHttp404Middleware",
+    "baserow.middleware.ClearContextMiddleware",
 ]
 
 if otel_is_enabled():

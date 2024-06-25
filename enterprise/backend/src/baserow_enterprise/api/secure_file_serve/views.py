@@ -89,7 +89,7 @@ class SecureFileServeAuthentication(authentication.BaseAuthentication):
         ):
             raise exceptions.AuthenticationFailed(err_msg)
 
-        return (user, request)
+        return user, request
 
 
 class DownloadView(APIView):

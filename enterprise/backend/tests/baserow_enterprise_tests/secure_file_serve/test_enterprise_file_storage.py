@@ -3,10 +3,10 @@ from django.core.signing import BadSignature
 
 import pytest
 
+from baserow.core.context import clear_current_workspace_id, set_current_workspace_id
 from baserow_enterprise.secure_file_serve.storage import (
     EnterpriseFileStorage,
     SecureFileServeSignerPayload,
-    workspace_id_context,
 )
 
 
@@ -26,13 +26,14 @@ def test_enterprise_storage_sign_data_with_workspace_id():
     storage = EnterpriseFileStorage()
     name = "path/to/file.txt"
 
-    with workspace_id_context(workspace_id=1):
-        signed_data = storage.sign_data(name=name)
-        assert isinstance(signed_data, str)
-        payload = storage.unsign_data(signed_data=signed_data)
-        assert isinstance(payload, SecureFileServeSignerPayload)
-        assert payload.name == name
-        assert payload.workspace_id == 1
+    set_current_workspace_id(1)
+    signed_data = storage.sign_data(name=name)
+    assert isinstance(signed_data, str)
+    payload = storage.unsign_data(signed_data=signed_data)
+    assert isinstance(payload, SecureFileServeSignerPayload)
+    assert payload.name == name
+    assert payload.workspace_id == 1
+    clear_current_workspace_id()
 
 
 def test_enterprise_storage_unsign_data_with_invalid_payload():

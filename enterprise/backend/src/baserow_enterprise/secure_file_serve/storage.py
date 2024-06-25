@@ -1,5 +1,3 @@
-import threading
-from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from typing import Optional
 from urllib.parse import urljoin
@@ -9,18 +7,9 @@ from django.core.signing import BadSignature, TimestampSigner
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
+from baserow.core.context import get_current_workspace_id
+
 from .constants import SECURE_FILE_SERVE_SIGNER_SALT
-
-_thread_locals = threading.local()
-
-
-@contextmanager
-def workspace_id_context(workspace_id):
-    _thread_locals.workspace_id = workspace_id
-    try:
-        yield
-    finally:
-        _thread_locals.workspace_id = None
 
 
 class EnterpriseFileStorageMeta(type):
@@ -63,7 +52,7 @@ class EnterpriseFileStorage(metaclass=EnterpriseFileStorageMeta):
 
         signer = _get_signer()
 
-        workspace_id = getattr(_thread_locals, "workspace_id", None)
+        workspace_id = get_current_workspace_id()
         return signer.sign_object(
             asdict(SecureFileServeSignerPayload(name, workspace_id))
         )
