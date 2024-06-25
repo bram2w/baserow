@@ -100,6 +100,9 @@ export default {
           infiniteScroll.scrollHeight > infiniteScroll.clientHeight
       })
     },
+    clientHeight() {
+      return this.$el.clientHeight
+    },
     /**
      * Action listener called when the scroll wrapper scrolls, triggers a load next
      * page event if the user has scrolled to the end of the wrapper.

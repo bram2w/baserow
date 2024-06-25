@@ -5,6 +5,7 @@
     @mousedown="$emit('mousedown', $event)"
     @mousemove="$emit('mousemove', $event)"
     @mouseenter="$emit('mouseenter', $event)"
+    @contextmenu.prevent="$emit('row-context', { row, event: $event })"
   >
     <RecursiveWrapper
       :components="
