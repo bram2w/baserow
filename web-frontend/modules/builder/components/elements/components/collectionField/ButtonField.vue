@@ -32,13 +32,21 @@ export default {
       return `${this.field.uid}_click`
     },
     workflowActionsInProgress() {
+      const { recordIndexPath } = this.applicationContext
+      const dispatchedById = this.elementType.uniqueElementId(
+        this.element,
+        recordIndexPath
+      )
       const workflowActions = this.$store.getters[
         'workflowAction/getElementWorkflowActions'
       ](this.page, this.element.id)
       return workflowActions
         .filter((wa) => wa.event === this.eventName)
         .some((workflowAction) =>
-          this.$store.getters['workflowAction/getDispatching'](workflowAction)
+          this.$store.getters['workflowAction/getDispatching'](
+            workflowAction,
+            dispatchedById
+          )
         )
     },
     labelWithDefault() {

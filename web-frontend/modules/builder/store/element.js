@@ -11,6 +11,7 @@ const populateElement = (element) => {
     hasNextPage: false,
     reset: 0,
     shouldBeFocused: false,
+    elementNamespacePath: null,
   }
 
   return element
@@ -102,14 +103,18 @@ const mutations = {
     page.elements = []
     updateCachedValues(page)
   },
+  _SET_ELEMENT_NAMESPACE_PATH(state, { element, path }) {
+    element._.elementNamespacePath = path
+  },
 }
 
 const actions = {
   clearAll({ commit }, { page }) {
     commit('CLEAR_ITEMS', { page })
   },
-  forceCreate({ commit }, { page, element }) {
+  forceCreate({ dispatch, commit }, { page, element }) {
     commit('ADD_ITEM', { page, element })
+    dispatch('_setElementNamespacePath', { page, element })
 
     const elementType = this.$registry.get('element', element.type)
     elementType.afterCreate(element, page)
@@ -300,21 +305,35 @@ const actions = {
       throw error
     }
   },
-  async fetch({ commit }, { page }) {
+  async fetch({ dispatch, commit }, { page }) {
     const { data: elements } = await ElementService(this.$client).fetchAll(
       page.id
     )
 
     commit('SET_ITEMS', { page, elements })
 
+    // Set the element namespace path of all elements we've fetched.
+    await Promise.all(
+      elements.map((element) =>
+        dispatch('_setElementNamespacePath', { page, element })
+      )
+    )
+
     return elements
   },
-  async fetchPublished({ commit }, { page }) {
+  async fetchPublished({ dispatch, commit }, { page }) {
     const { data: elements } = await PublicBuilderService(
       this.$client
     ).fetchElements(page)
 
     commit('SET_ITEMS', { page, elements })
+
+    // Set the element namespace ath of all published elements we've fetched.
+    await Promise.all(
+      elements.map((element) =>
+        dispatch('_setElementNamespacePath', { page, element })
+      )
+    )
 
     return elements
   },
@@ -407,6 +426,17 @@ const actions = {
   async selectNextElement({ dispatch, getters }, { page, element, placement }) {
     const elementType = this.$registry.get('element', element.type)
     await elementType.selectNextElement(page, element, placement)
+  },
+  _setElementNamespacePath({ commit, dispatch, getters }, { page, element }) {
+    const elementType = this.$registry.get('element', element.type)
+    const elementNamespacePath = elementType.getElementNamespacePath(
+      element,
+      page
+    )
+    commit('_SET_ELEMENT_NAMESPACE_PATH', {
+      element,
+      path: elementNamespacePath,
+    })
   },
 }
 
@@ -516,6 +546,9 @@ const getters = {
   },
   getSelected(state) {
     return state.selected
+  },
+  getElementNamespacePath: (state) => (element) => {
+    return element._.elementNamespacePath
   },
   /**
    * Given an element, return its closest sibling element.

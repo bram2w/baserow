@@ -5,6 +5,9 @@
       :key="element.id"
       :element="element"
       :mode="mode"
+      :application-context-additions="{
+        recordIndexPath: [],
+      }"
     />
   </ThemeProvider>
 </template>

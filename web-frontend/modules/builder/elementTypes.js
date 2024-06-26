@@ -175,6 +175,29 @@ export class ElementType extends Registerable {
   }
 
   /**
+   * Responsible for returning an array of collection element IDs that represent
+   * the ancestry of this element. It's used to determine the accessible path
+   * between elements that have access to the form data provider. If an element
+   * is in the path of a form element, then it can use its form data.
+   *
+   * @param {Object} element - The element we're the path for.
+   * @param {Object} page - The page the element belongs to.
+   */
+  getElementNamespacePath(element, page) {
+    const ancestors = this.app.store.getters['element/getAncestors'](
+      page,
+      element
+    )
+    return ancestors
+      .map((ancestor) => {
+        const elementType = this.app.$registry.get('element', ancestor.type)
+        return elementType.isCollectionElement ? ancestor.id : null
+      })
+      .filter((id) => id !== null)
+      .reverse()
+  }
+
+  /**
    * A hook that is triggered right after an element is created.
    *
    * @param element - The element that was just created
@@ -377,6 +400,22 @@ export class ElementType extends Registerable {
       PLACEMENTS.RIGHT,
       ...this.getVerticalPlacementsDisabled(page, element),
     ]
+  }
+
+  /**
+   * Generates a unique element id based on the element and if provided, an array
+   * representing a path to access form data. Most elements will have a unique
+   * ID that matches their `id`, but when an element is part of one or more repeats,
+   * we need to ensure that the ID is unique for each record.
+   *
+   * @param {Object} element - The element we want to generate a unique ID for.
+   * @param {Array} recordIndexPath - An array of integers which represent the
+   * record indices we've accumulated through nested collection element ancestors.
+   * @returns {String} - The unique element ID.
+   *
+   */
+  uniqueElementId(element, recordIndexPath) {
+    return [element.id, ...(recordIndexPath || [])].join('.')
   }
 }
 
@@ -814,15 +853,11 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 
   /**
    * The repeat elements will disallow collection elements (including itself),
-   * all form elements, and the form container, from being added as children.
+   * from being added as children.
    * @returns {Array} An array of disallowed child element types.
    */
   get childElementTypesForbidden() {
-    const formContainer = this.app.$registry.get('element', 'form_container')
-    return this.elementTypesAll.filter(
-      (type) =>
-        type.isFormElement || type === formContainer || type.isCollectionElement
-    )
+    return this.elementTypesAll.filter((type) => type.isCollectionElement)
   }
 
   /**
@@ -902,21 +937,6 @@ export class FormElementType extends ElementType {
     return this.name
   }
 
-  afterCreate(element, page) {
-    const initialValue = this.getInitialFormDataValue(element, { page })
-    const payload = {
-      value: initialValue,
-      type: this.formDataType(element),
-      isValid: this.isValid(element, initialValue),
-    }
-
-    return this.app.store.dispatch('formData/setFormData', {
-      page,
-      payload,
-      elementId: element.id,
-    })
-  }
-
   afterDelete(element, page) {
     return this.app.store.dispatch('formData/removeFormData', {
       page,
@@ -993,10 +1013,14 @@ export class InputTextElementType extends FormElementType {
   }
 
   getInitialFormDataValue(element, applicationContext) {
-    return this.resolveFormula(element.default_value, {
-      element,
-      ...applicationContext,
-    })
+    try {
+      return this.resolveFormula(element.default_value, {
+        element,
+        ...applicationContext,
+      })
+    } catch {
+      return ''
+    }
   }
 }
 
@@ -1240,12 +1264,16 @@ export class ChoiceElementType extends FormElementType {
   }
 
   getInitialFormDataValue(element, applicationContext) {
-    return ensureString(
-      this.resolveFormula(element.default_value, {
-        element,
-        ...applicationContext,
-      })
-    )
+    try {
+      return ensureString(
+        this.resolveFormula(element.default_value, {
+          element,
+          ...applicationContext,
+        })
+      )
+    } catch {
+      return element.multiple ? [] : ''
+    }
   }
 
   getDisplayName(element, applicationContext) {

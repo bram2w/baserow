@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "[Builder] Added support for form elements within a repeat element.",
+    "issue_number": 2636,
+    "bullet_points": [],
+    "created_at": "2024-06-17"
+}

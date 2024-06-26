@@ -85,6 +85,7 @@ export function isPromise(p) {
  *
  * @param {Object} obj The object that holds the value
  * @param {string | Array[string]} path The path to the value or a list with the path parts
+ * @param {any} defaultValue The value to return if the path is not found
  * @return {Object} The value held by the path
  */
 export function getValueAtPath(obj, path) {
@@ -112,6 +113,18 @@ export function getValueAtPath(obj, path) {
   }
   const keys = typeof path === 'string' ? _.toPath(path) : path
   return _getValueAtPath(obj, keys)
+}
+
+/**
+ * Responsible for setting a value at a given path in `obj`.
+ *
+ * @param {Object} obj - The object we want to update.
+ * @param {String} path - The path, delimited by periods, to the value.
+ * @param {Any} value - The value to set at the path.
+ * @returns {Object} The object with the updated value.
+ */
+export function setValueAtPath(obj, path, value) {
+  return _.set(obj, path, value)
 }
 
 /**

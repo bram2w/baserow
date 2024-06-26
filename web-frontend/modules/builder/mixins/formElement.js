@@ -9,29 +9,51 @@ export default {
       inputValue: null,
     }
   },
+  mounted() {
+    // When a form element is mounted, we want to set the initial value of the form
+    // data in the store, but *only* after we have a fully complete `recordIndexPath`,
+    // otherwise we will create two entries in the form data store: one for just the
+    // elementId, and once the `recordIndexPath` is set, another one with the full path.
+    const initialValue = this.elementType.getInitialFormDataValue(
+      this.element,
+      this.applicationContext
+    )
+    this.setFormData(initialValue)
+  },
   computed: {
+    uniqueElementId() {
+      return this.elementType.uniqueElementId(
+        this.element,
+        this.applicationContext.recordIndexPath
+      )
+    },
     formElementData() {
-      return this.$store.getters['formData/getFormData'](this.page)[
-        this.element.id
-      ]
+      return this.$store.getters['formData/getElementFormEntry'](
+        this.page,
+        this.uniqueElementId
+      )
     },
     elementFormDataValue() {
       return this.formElementData?.value
     },
     displayFormDataError() {
       return (
-        this.formElementTouched &&
-        !this.formElementData?.isValid &&
-        !this.isEditMode
+        this.formElementTouched && this.formElementInvalid && !this.isEditMode
       )
     },
     errorMessage() {
       return this.displayFormDataError ? this.getErrorMessage() : ''
     },
+    formElementInvalid() {
+      return this.$store.getters['formData/getElementInvalid'](
+        this.page,
+        this.uniqueElementId
+      )
+    },
     formElementTouched() {
       return this.$store.getters['formData/getElementTouched'](
         this.page,
-        this.element.id
+        this.uniqueElementId
       )
     },
     /**
@@ -64,9 +86,10 @@ export default {
     setFormData(value) {
       return this.actionSetFormData({
         page: this.page,
-        elementId: this.element.id,
+        uniqueElementId: this.uniqueElementId,
         payload: {
           value,
+          elementId: this.element.id,
           touched: this.formElementTouched,
           type: this.elementType.formDataType(this.element),
           isValid: this.elementType.isValid(this.element, value),
@@ -81,7 +104,7 @@ export default {
       this.$store.dispatch('formData/setElementTouched', {
         page: this.page,
         wasTouched: true,
-        elementId: this.element.id,
+        uniqueElementId: this.uniqueElementId,
       })
     },
     /** Override this method to display the right error message */
