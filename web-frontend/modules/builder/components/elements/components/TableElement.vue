@@ -17,6 +17,7 @@
           :field="field"
           :application-context-additions="{
             recordIndex: rowIndex,
+            recordIndexPath: [...applicationContext.recordIndexPath, rowIndex],
           }"
           v-bind="value"
         />

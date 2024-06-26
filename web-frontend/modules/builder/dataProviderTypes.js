@@ -372,39 +372,58 @@ export class FormDataProviderType extends DataProviderType {
     return this.app.i18n.t('dataProviderType.formData')
   }
 
-  async init(applicationContext) {
-    const { page } = applicationContext
-    const elements = await this.app.store.getters['element/getElementsOrdered'](
-      page
-    )
-    const formElementTypes = Object.values(this.app.$registry.getAll('element'))
-      .filter((elementType) => elementType.isFormElement)
-      .map((elementType) => elementType.getType())
-    const formElements = elements.filter((element) =>
-      formElementTypes.includes(element.type)
-    )
-
-    return formElements.map((element) => {
-      const elementType = this.app.$registry.get('element', element.type)
-      const initialValue = elementType.getInitialFormDataValue(
-        element,
-        applicationContext
-      )
-      const payload = {
-        value: initialValue,
-        type: elementType.formDataType(element),
-        isValid: elementType.isValid(element, initialValue),
-      }
-      return this.app.store.dispatch('formData/setFormData', {
-        page,
-        payload,
-        elementId: element.id,
-      })
-    })
-  }
-
   getActionDispatchContext(applicationContext) {
     return this.getDataContent(applicationContext)
+  }
+
+  /**
+   * Responsible for filtering down an array of page elements to only those that
+   * are form elements, and are in the same 'element namespace path' as one another.
+   * For example:
+   *
+   * - HeadingRoot (path=[])
+   *     * Can access `InputRoot`
+   *     * Can access `InputContainer`
+   * - InputRoot (path=[])
+   * - FormContainer (path=[])
+   *     - InputContainer (path=[])
+   * - RepeatA (path=[])
+   *     - InputOuter (path=[RepeatA.id])
+   *     - HeadingOuter (path=[RepeatA.id])
+   *         * Can access `InputOuter`
+   *         * Can access `InputRoot`
+   *         * Can access `InputContainer`
+   *     - RepeatB (path=[RepeatA.id])
+   *        - InputInner (path=[RepeatA.id, RepeatB.id])
+   *        - HeadingInner (path=[RepeatA.id, RepeatB.id])
+   *            * Can access `InputInner`
+   *            * Can access `InputOuter`
+   *            * Can access `InputRoot`
+   *            * Can access `InputContainer`
+   *
+   * @param {Object} applicationContext - The application context object.
+   * @param {Object} targetElement - The target element object.
+   * @returns {Array} The filtered array of form elements in the same namespace as the target.
+   */
+  formElementsInNamespacePath(applicationContext, targetElement) {
+    const { page } = applicationContext
+    const targetNamespacePath =
+      this.app.store.getters['element/getElementNamespacePath'](
+        targetElement
+      ).join('.')
+    const elements = this.app.store.getters['element/getElementsOrdered'](page)
+    return elements.filter((element) => {
+      const elementType = this.app.$registry.get('element', element.type)
+      if (!elementType.isFormElement) {
+        // We only want to find accessible *form elements*.
+        return false
+      }
+      const elementNamespacePath =
+        this.app.store.getters['element/getElementNamespacePath'](element).join(
+          '.'
+        )
+      return targetNamespacePath.startsWith(elementNamespacePath)
+    })
   }
 
   getDataChunk(applicationContext, path) {
@@ -413,27 +432,49 @@ export class FormDataProviderType extends DataProviderType {
   }
 
   getDataContent(applicationContext) {
-    const storeObj = this.app.store.getters['formData/getFormData'](
+    const formData = this.app.store.getters['formData/getFormData'](
       applicationContext.page
     )
+    const { element: targetElement, recordIndexPath } = applicationContext
+    const accessibleFormElements = this.formElementsInNamespacePath(
+      applicationContext,
+      targetElement
+    )
     return Object.fromEntries(
-      Object.entries(storeObj).map(([elementId, { value }]) => [
-        elementId,
-        value,
-      ])
+      accessibleFormElements.map((element) => {
+        let formEntry = {}
+        if (recordIndexPath !== undefined) {
+          const uniqueElementId = this.app.$registry
+            .get('element', element.type)
+            .uniqueElementId(element, recordIndexPath)
+          formEntry = getValueAtPath(formData, uniqueElementId)
+        } else {
+          // When `getDataContent` is called by `getNodes`, we won't have
+          // access to `recordIndexPath`, so we need to find the first *array*
+          // in the form data that corresponds to the element.
+          function _findActualValue(currentValue) {
+            if (Array.isArray(currentValue)) {
+              return _findActualValue(currentValue[0])
+            }
+            return currentValue
+          }
+          formEntry = _findActualValue(formData[element.id])
+        }
+        return [element.id, formEntry?.value]
+      })
     )
   }
 
   getDataSchema(applicationContext) {
-    const { page } = applicationContext
+    const { page, element: targetElement } = applicationContext
+    const accessibleFormElements = this.formElementsInNamespacePath(
+      applicationContext,
+      targetElement
+    )
     return {
       type: 'object',
       properties: Object.fromEntries(
-        Object.entries(page.formData || {}).map(([elementId, { type }]) => {
-          const element = this.app.store.getters['element/getElementById'](
-            page,
-            parseInt(elementId)
-          )
+        accessibleFormElements.map((element) => {
           const elementType = this.app.$registry.get('element', element.type)
           const name = elementType.getDisplayName(element, applicationContext)
           const order = this.app.store.getters['element/getElementPosition'](
@@ -441,7 +482,7 @@ export class FormDataProviderType extends DataProviderType {
             element
           )
           return [
-            elementId,
+            element.id,
             {
               title: name,
               order,

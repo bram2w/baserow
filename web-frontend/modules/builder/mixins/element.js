@@ -18,8 +18,16 @@ export default {
       const workflowActions = this.$store.getters[
         'workflowAction/getElementWorkflowActions'
       ](this.page, this.element.id)
+      const { recordIndexPath } = this.applicationContext
+      const dispatchedById = this.elementType.uniqueElementId(
+        this.element,
+        recordIndexPath
+      )
       return workflowActions.some((workflowAction) =>
-        this.$store.getters['workflowAction/getDispatching'](workflowAction)
+        this.$store.getters['workflowAction/getDispatching'](
+          workflowAction,
+          dispatchedById
+        )
       )
     },
     elementType() {

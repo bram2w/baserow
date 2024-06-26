@@ -32,6 +32,9 @@
           :is-first-element="index === 0"
           :is-last-element="index === elements.length - 1"
           :is-copying="copyingElementIndex === index"
+          :application-context-additions="{
+            recordIndexPath: [],
+          }"
           @move="moveElement($event)"
         />
       </div>

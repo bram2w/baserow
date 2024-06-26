@@ -23,6 +23,10 @@
                 :element="child"
                 :application-context-additions="{
                   recordIndex: index,
+                  recordIndexPath: [
+                    ...applicationContext.recordIndexPath,
+                    index,
+                  ],
                 }"
                 @move="moveElement(child, $event)"
               />
@@ -35,6 +39,10 @@
                 :force-mode="isEditMode ? 'public' : mode"
                 :application-context-additions="{
                   recordIndex: index,
+                  recordIndexPath: [
+                    ...applicationContext.recordIndexPath,
+                    index,
+                  ],
                 }"
                 :class="{
                   'repeat-element__preview': index > 0 && isEditMode,

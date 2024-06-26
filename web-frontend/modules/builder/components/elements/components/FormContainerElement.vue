@@ -87,10 +87,12 @@ export default {
         this.page,
         this.element
       )
-      return descendants.filter((element) => {
-        const elementType = this.$registry.get('element', element.type)
-        return elementType.isFormElement
-      })
+      return descendants
+        .map((descendant) => {
+          const descendantType = this.$registry.get('element', descendant.type)
+          return { descendant, descendantType }
+        })
+        .filter(({ descendantType }) => descendantType.isFormElement)
     },
     /*
      * Responsible for determining if any of the form's form elements are invalid. They
@@ -98,10 +100,18 @@ export default {
      * value is invalid.
      */
     formElementChildrenAreInvalid() {
+      const { recordIndexPath } = this.applicationContext
       return this.getFormElementDescendants.some(
-        ({ id }) =>
-          !Object.prototype.hasOwnProperty.call(this.page.formData, id) ||
-          !this.page.formData[id].isValid
+        ({ descendant, descendantType }) => {
+          const uniqueElementId = descendantType.uniqueElementId(
+            descendant,
+            recordIndexPath
+          )
+          return this.$store.getters['formData/getElementInvalid'](
+            this.page,
+            uniqueElementId
+          )
+        }
       )
     },
   },
@@ -114,13 +124,20 @@ export default {
      * as touched, or not touched, depending on what we're achieving in validation.
      */
     setFormElementDescendantsTouched(wasTouched) {
-      this.getFormElementDescendants.forEach((descendant) => {
-        this.$store.dispatch('formData/setElementTouched', {
-          page: this.page,
-          wasTouched,
-          elementId: descendant.id,
-        })
-      })
+      const { recordIndexPath } = this.applicationContext
+      this.getFormElementDescendants.forEach(
+        ({ descendant, descendantType }) => {
+          const uniqueElementId = descendantType.uniqueElementId(
+            descendant,
+            recordIndexPath
+          )
+          this.$store.dispatch('formData/setElementTouched', {
+            page: this.page,
+            wasTouched,
+            uniqueElementId,
+          })
+        }
+      )
     },
     /*
      * Responsible for resetting a form container's elements, depending on
@@ -129,25 +146,32 @@ export default {
      * be left intact.
      */
     resetFormContainerElements() {
+      const { recordIndexPath } = this.applicationContext
       if (this.element.reset_initial_values_post_submission) {
-        this.getFormElementDescendants.forEach((element) => {
-          const elementType = this.$registry.get('element', element.type)
-          const initialValue = elementType.getInitialFormDataValue(
-            element,
-            this.applicationContext
-          )
-          const payload = {
-            touched: false,
-            value: initialValue,
-            type: elementType.formDataType(element),
-            isValid: elementType.isValid(element, initialValue),
+        this.getFormElementDescendants.forEach(
+          ({ descendant, descendantType }) => {
+            const uniqueElementId = descendantType.uniqueElementId(
+              descendant,
+              recordIndexPath
+            )
+            const initialValue = descendantType.getInitialFormDataValue(
+              descendant,
+              this.applicationContext
+            )
+            const payload = {
+              touched: false,
+              value: initialValue,
+              elementId: this.element.id,
+              type: descendantType.formDataType(descendant),
+              isValid: descendantType.isValid(descendant, initialValue),
+            }
+            this.$store.dispatch('formData/setFormData', {
+              page: this.page,
+              payload,
+              uniqueElementId,
+            })
           }
-          this.$store.dispatch('formData/setFormData', {
-            page: this.page,
-            payload,
-            elementId: element.id,
-          })
-        })
+        )
       } else {
         // If we don't want to reset to initial values, we still
         // want to mark the form elements as not touched.
