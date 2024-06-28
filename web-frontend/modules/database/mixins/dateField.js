@@ -1,11 +1,11 @@
 import moment from '@baserow/modules/core/moment'
 import {
-  getDateMomentFormat,
-  getTimeMomentFormat,
-  getDateHumanReadableFormat,
-  getTimeHumanReadableFormat,
-  getFieldTimezone,
   getCellTimezoneAbbr,
+  getDateHumanReadableFormat,
+  getDateMomentFormat,
+  getFieldTimezone,
+  getTimeHumanReadableFormat,
+  getTimeMomentFormat,
 } from '@baserow/modules/database/utils/date'
 
 const DATE_PICKER_FORMAT = 'YYYY-MM-DD'
@@ -92,6 +92,8 @@ export default {
 
         this.updateCopy(field, newDate)
         this.updateFormattedDateValue()
+      } else {
+        this.updateCopy(field, null)
       }
     },
     /**
@@ -148,10 +150,15 @@ export default {
      * properties of a datetime. For example only the month could be updated.
      */
     updateCopy(field, newMomentDate) {
-      this.momentDate = newMomentDate
-      this.copy = field.date_include_time
-        ? this.momentDate.format()
-        : this.momentDate.format('YYYY-MM-DD')
+      if (newMomentDate === null) {
+        this.copy = null
+        this.momentDate = null
+      } else {
+        this.momentDate = newMomentDate
+        this.copy = field.date_include_time
+          ? this.momentDate.format()
+          : this.momentDate.format('YYYY-MM-DD')
+      }
     },
     /**
      * Updates the date and time data by converting the value to the correct formats.
