@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Date field now can be cleared when a row is edited as a form.",
+    "issue_number": 2764,
+    "bullet_points": [],
+    "created_at": "2024-06-28"
+}
