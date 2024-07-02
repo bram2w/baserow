@@ -3,6 +3,7 @@ import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import { getValueAtPath } from '@baserow/modules/core/utils/object'
 
 import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
+import { DEFAULT_USER_ROLE_PREFIX } from '@baserow/modules/builder/constants'
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 
 export class DataSourceDataProviderType extends DataProviderType {
@@ -623,7 +624,7 @@ export class UserDataProviderType extends DataProviderType {
   }
 
   getDataContent(applicationContext) {
-    return {
+    const context = {
       is_authenticated: this.app.store.getters[
         'userSourceUser/isAuthenticated'
       ](applicationContext.builder),
@@ -631,6 +632,20 @@ export class UserDataProviderType extends DataProviderType {
         applicationContext.builder
       ),
     }
+
+    if (context.role.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
+      const loggedUser = this.app.store.getters['userSourceUser/getUser'](
+        applicationContext.builder
+      )
+      const userSourceName = this.app.store.getters[
+        'userSource/getUserSourceById'
+      ](applicationContext.builder, loggedUser.user_source_id).name
+      context.role = this.app.i18n.t('visibilityForm.rolesAllMembersOf', {
+        name: userSourceName,
+      })
+    }
+
+    return context
   }
 
   getDataSchema(applicationContext) {
@@ -652,6 +667,10 @@ export class UserDataProviderType extends DataProviderType {
         username: {
           type: 'string',
           title: this.app.i18n.t('userDataProviderType.username'),
+        },
+        role: {
+          type: 'string',
+          title: this.app.i18n.t('userDataProviderType.role'),
         },
       },
     }

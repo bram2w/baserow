@@ -46,6 +46,7 @@ from baserow.api.user_sources.serializers import (
     TokenRefreshSerializer,
     UpdateUserSourceSerializer,
     UserSourceForceTokenObtainSerializer,
+    UserSourceRolesSerializer,
     UserSourceSerializer,
     UserSourceTokenObtainSerializer,
     UsersPerUserSourceSerializer,
@@ -195,6 +196,56 @@ class UserSourcesView(APIView):
         )
 
         return Response(serializer.data)
+
+
+class UserSourceRolesView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="application_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns only the roles of the application related "
+                "to the provided Id.",
+            )
+        ],
+        tags=["User source roles"],
+        operation_id="list_application_user_source_roles",
+        description=(
+            "Lists all the roles of the application related to the provided "
+            "parameter if the user has access to the related application's workspace. "
+            "If the workspace is related to a template, then this endpoint will be "
+            "publicly accessible."
+        ),
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                user_source_type_registry, UserSourceRolesSerializer
+            ),
+            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request, application_id):
+        """
+        Responds with a list of roles that belong to the application
+        if the user has access to that application.
+        """
+
+        application = CoreHandler().get_application(application_id)
+
+        user_sources = UserSourceService().get_user_sources(request.user, application)
+
+        data = [
+            UserSourceRolesSerializer(user_source).data for user_source in user_sources
+        ]
+
+        return Response(data)
 
 
 class UserSourceView(APIView):

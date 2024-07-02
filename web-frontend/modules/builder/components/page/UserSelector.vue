@@ -21,6 +21,7 @@
               : $t('userSelector.anonymous'),
           })
         }}
+        {{ userRole }}
       </span>
     </a>
     <UserSourceUsersContext ref="user_source_users_context" />
@@ -29,6 +30,7 @@
 
 <script>
 import UserSourceUsersContext from '@baserow/modules/builder/components/page/UserSourceUsersContext'
+import { DEFAULT_USER_ROLE_PREFIX } from '@baserow/modules/builder/constants'
 
 export default {
   components: { UserSourceUsersContext },
@@ -40,6 +42,29 @@ export default {
     },
     loggedUser() {
       return this.$store.getters['userSourceUser/getUser'](this.builder)
+    },
+    userSourceName() {
+      return this.$store.getters['userSource/getUserSourceById'](
+        this.builder,
+        this.loggedUser.user_source_id
+      ).name
+    },
+    userRole() {
+      if (!this.isAuthenticated) {
+        return ''
+      }
+      if (this.loggedUser.role.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
+        return (
+          '- ' +
+          this.$t('userSelector.member', {
+            prefix: this.userSourceName,
+          })
+        )
+      } else if (!this.loggedUser.role.trim().length) {
+        return `- ${this.$t('visibilityForm.noRole')}`
+      } else {
+        return `- ${this.loggedUser.role}`
+      }
     },
   },
 }

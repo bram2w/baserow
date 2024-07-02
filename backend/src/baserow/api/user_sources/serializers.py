@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from django.utils.functional import lazy
 
+from drf_spectacular.plumbing import build_array_type, build_basic_type
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import exceptions, serializers
@@ -21,6 +22,18 @@ from baserow.core.user_sources.jwt_token import UserSourceToken
 from baserow.core.user_sources.models import UserSource
 from baserow.core.user_sources.registries import user_source_type_registry
 from baserow.core.user_sources.service import UserSourceService
+
+
+class UserSourceRolesSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserSource
+        fields = ("id", "roles")
+
+    @extend_schema_field(build_array_type(build_basic_type(OpenApiTypes.STR)))
+    def get_roles(self, user_source):
+        return user_source.get_type().get_roles(user_source.specific)
 
 
 class UserSourceSerializer(serializers.ModelSerializer):
@@ -158,6 +171,7 @@ class UserSourceUserSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
     user_source_id = serializers.IntegerField()
+    role = serializers.CharField()
 
 
 class UsersPerUserSourceSerializer(serializers.Serializer):

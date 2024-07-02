@@ -256,6 +256,9 @@ def stub_user_source_registry(data_fixture, mutable_user_source_registry, fake):
                     return authenticate_return
                 return data_fixture.create_user_source_user(user_source=user_source)
 
+            def get_roles(self):
+                return []
+
         mutable_user_source_registry.registry[
             user_source_type.type
         ] = StubbedUserSourceType()

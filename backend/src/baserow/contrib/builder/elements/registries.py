@@ -18,9 +18,15 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
+from baserow.core.user_sources.handler import UserSourceHandler
 
 from .models import CollectionField, Element
 from .types import ElementDictSubClass, ElementSubClass
+
+BUILDER_PAGE_ELEMENTS = "builder_page_elements"
+ELEMENT_IDS_PROCESSED_FOR_ROLES = "_element_ids_processed_for_roles"
+EXISTING_USER_SOURCE_ROLES = "_existing_user_source_roles"
 
 
 class ElementType(
@@ -34,7 +40,7 @@ class ElementType(
 
     SerializedDict: Type[ElementDictSubClass]
     parent_property_name = "page"
-    id_mapping_name = "builder_page_elements"
+    id_mapping_name = BUILDER_PAGE_ELEMENTS
 
     # The order in which this element type is imported in `import_elements`.
     # By default, the priority is `0`, the lowest value. If this property is
@@ -127,16 +133,16 @@ class ElementType(
         cache: Dict[str, Any] | None = None,
         **kwargs,
     ) -> ElementSubClass:
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
         if cache is None:
             cache = {}
-
-        from baserow.contrib.builder.elements.handler import ElementHandler
 
         import_context = {}
 
         parent_element_id = serialized_values["parent_element_id"]
 
-        # If we have a parent elementthen we want to add used its import context
+        # If we have a parent element then we want to add used its import context
         if parent_element_id:
             imported_parent_element_id = id_mapping["builder_page_elements"][
                 parent_element_id
@@ -146,6 +152,21 @@ class ElementType(
                 id_mapping,
                 element_map=cache.get("imported_element_map", None),
             )
+
+        existing_roles = cache.get("existing_roles", {}).get(page.builder.id)
+        if not existing_roles:
+            existing_roles = UserSourceHandler().get_all_roles_for_application(
+                page.builder
+            )
+            cache.setdefault("existing_roles", {})[page.builder.id] = existing_roles
+
+        serialized_values["roles"] = self.sanitize_element_roles(
+            # TODO: `or []` check should be removed in the next release.
+            #   See: https://gitlab.com/baserow/baserow/-/issues/2724
+            serialized_values["roles"] or [],
+            existing_roles,
+            id_mapping.get("user_sources", {}),
+        )
 
         created_instance = super().import_serialized(
             page,
@@ -163,6 +184,38 @@ class ElementType(
         ] = created_instance
 
         return created_instance
+
+    def sanitize_element_roles(
+        self,
+        roles: List[str],
+        existing_roles: List[str],
+        user_sources_mapping: Dict[int, int],
+    ) -> List[str]:
+        """
+        Given a list of roles, return a sanitized version of it. The sanitized
+        version should not contain any invalid roles.
+
+        An invalid role is a role name that doesn't exist (e.g. due to renaming
+        or deletion). Also, Default User Roles are updated to ensure they contain
+        the new User Source's ID.
+        """
+
+        sanitized_roles = []
+        for role in roles:
+            if role in existing_roles:
+                sanitized_roles.append(role)
+                continue
+
+            # Ensure the default role is using the newly published UserSource ID
+            prefix = str(DEFAULT_USER_ROLE_PREFIX)
+            if role.startswith(prefix) and user_sources_mapping:
+                old_user_source_id = int(role[len(prefix) :])
+                new_user_source_id = user_sources_mapping[old_user_source_id]
+                new_role_name = f"{prefix}{new_user_source_id}"
+                if new_role_name in existing_roles:
+                    sanitized_roles.append(new_role_name)
+
+        return sanitized_roles
 
     def serialize_property(
         self,
@@ -206,8 +259,11 @@ class ElementType(
         :return: the deserialized version for this property.
         """
 
+        if cache is None:
+            cache = {}
+
         if prop_name == "parent_element_id":
-            return id_mapping["builder_page_elements"].get(
+            return id_mapping[BUILDER_PAGE_ELEMENTS].get(
                 value,
                 value,
             )

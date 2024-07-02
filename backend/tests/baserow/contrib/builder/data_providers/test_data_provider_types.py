@@ -25,6 +25,7 @@ from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.core.utils import MirrorDict
 
@@ -760,7 +761,7 @@ def test_user_data_provider_get_data_chunk(data_fixture):
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 0
 
     fake_request.user_source_user = UserSourceUser(
-        None, None, 42, "username", "e@ma.il"
+        None, None, 42, "username", "e@ma.il", "foo_role"
     )
 
     assert user_data_provider_type.get_data_chunk(
@@ -770,6 +771,71 @@ def test_user_data_provider_get_data_chunk(data_fixture):
         user_data_provider_type.get_data_chunk(dispatch_context, ["email"]) == "e@ma.il"
     )
     assert user_data_provider_type.get_data_chunk(dispatch_context, ["id"]) == 42
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["role"]) == "foo_role"
+    )
+
+
+@pytest.mark.django_db
+def test_translate_default_user_role_returns_same_role(data_fixture):
+    """
+    Ensure the UserDataProviderType's get_data_chunk() method returns
+    the same User Role.
+
+    When the role is a non-Default User Role, the same role should be returned.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    user_data_provider_type = UserDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "page_parameter": {},
+    }
+    fake_request.user_source_user = AnonymousUser()
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+
+    user_role = "foo_role"
+    fake_request.user_source_user = UserSourceUser(
+        None, None, 42, "username", "e@ma.il", user_role
+    )
+
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["role"]) == user_role
+    )
+
+
+@pytest.mark.django_db
+def test_translate_default_user_role_returns_translated_role(data_fixture):
+    """
+    Ensure the UserDataProviderType's get_data_chunk() method returns
+    the translated Default User Role.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    user_source_name = "FooUserSource"
+    user_source = data_fixture.create_user_source_with_first_type(name=user_source_name)
+    default_user_source_name = f"{DEFAULT_USER_ROLE_PREFIX}{user_source.id}"
+
+    user_data_provider_type = UserDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "page_parameter": {},
+    }
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    fake_request.user_source_user = UserSourceUser(
+        user_source, None, 42, "username", "e@ma.il", default_user_source_name
+    )
+
+    assert (
+        user_data_provider_type.get_data_chunk(dispatch_context, ["role"])
+        == f"{user_source_name} member"
+    )
 
 
 @pytest.mark.django_db

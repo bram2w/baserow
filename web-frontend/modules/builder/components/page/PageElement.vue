@@ -33,6 +33,13 @@ import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 import { BACKGROUND_TYPES, WIDTH_TYPES } from '@baserow/modules/builder/enums'
 import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
+import {
+  VISIBILITY_NOT_LOGGED,
+  VISIBILITY_LOGGED_IN,
+  ROLE_TYPE_ALLOW_EXCEPT,
+  ROLE_TYPE_DISALLOW_EXCEPT,
+} from '@baserow/modules/builder/constants'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'PageElement',
@@ -70,18 +77,34 @@ export default {
     children() {
       return this.$store.getters['element/getChildren'](this.page, this.element)
     },
+    ...mapGetters({
+      loggedUser: 'userSourceUser/getUser',
+    }),
     isVisible() {
-      switch (this.element.visibility) {
-        case 'logged-in':
-          return this.$store.getters['userSourceUser/isAuthenticated'](
-            this.builder
-          )
-        case 'not-logged':
-          return !this.$store.getters['userSourceUser/isAuthenticated'](
-            this.builder
-          )
-        default:
+      const isAuthenticated = this.$store.getters[
+        'userSourceUser/isAuthenticated'
+      ](this.builder)
+      const user = this.loggedUser(this.builder)
+      const roles = this.element.roles
+      const roleType = this.element.role_type
+
+      const visibility = this.element.visibility
+      if (visibility === VISIBILITY_LOGGED_IN) {
+        if (!isAuthenticated) {
+          return false
+        }
+
+        if (roleType === ROLE_TYPE_ALLOW_EXCEPT) {
+          return !roles.includes(user.role)
+        } else if (roleType === ROLE_TYPE_DISALLOW_EXCEPT) {
+          return roles.includes(user.role)
+        } else {
           return true
+        }
+      } else if (visibility === VISIBILITY_NOT_LOGGED) {
+        return !isAuthenticated
+      } else {
+        return true
       }
     },
     allowedStyles() {

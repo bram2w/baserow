@@ -15,6 +15,7 @@ from baserow.contrib.builder.data_providers.exceptions import (
 from baserow.contrib.builder.elements.element_types import (
     CheckboxElementType,
     ChoiceElementType,
+    HeadingElementType,
     IFrameElementType,
     ImageElementType,
     InputTextElementType,
@@ -28,6 +29,7 @@ from baserow.contrib.builder.elements.models import (
     CheckboxElement,
     ChoiceElement,
     ChoiceElementOption,
+    Element,
     HeadingElement,
     IFrameElement,
     ImageElement,
@@ -41,6 +43,7 @@ from baserow.contrib.builder.elements.registries import (
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.utils import MirrorDict
 
 
@@ -80,6 +83,8 @@ def test_import_element(data_fixture, element_type: ElementType):
         "order": 42,
         "type": element_type.type,
         "parent_element_id": None,
+        "roles": [],
+        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
     }
     serialized.update(element_type.get_pytest_params(data_fixture))
 
@@ -580,6 +585,8 @@ def test_choice_element_import_old_format(data_fixture):
             {"value": "Option 1", "name": "option1"},
             {"value": "Option 2", "name": "option2"},
         ],
+        "roles": [],
+        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
         # multiple property is missing
         # show_as_dropdown property is  missing
     }
@@ -590,3 +597,121 @@ def test_choice_element_import_old_format(data_fixture):
     assert imported_element.multiple is False
     assert imported_element.show_as_dropdown is True
     assert len(imported_element.choiceelementoption_set.all()) == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "initial_roles,valid_roles,cleaned_roles",
+    [
+        (
+            ["invalid_role_a"],
+            [],
+            # "invalid_role_a" is not a valid role, so we expect an empty list
+            [],
+        ),
+        (
+            ["invalid_role_a"],
+            ["foo_role"],
+            # "invalid_role_a" doesn't match valid roles in ["foo_role"], so
+            # we expect an empty list
+            [],
+        ),
+        (
+            ["invalid_role_a", "foo_role"],
+            ["foo_role"],
+            # "foo_role" is the only valid role, so we expect that
+            # "invalid_role_a" is removed and only "foo_role" is returned
+            ["foo_role"],
+        ),
+        (
+            ["foo_role", "bar_role"],
+            ["foo_role", "bar_role"],
+            # Both "foo_role" and "bar_role" are valid, so we expect both
+            # roles to be returned.
+            ["foo_role", "bar_role"],
+        ),
+    ],
+)
+def test_sanitize_element_roles_removes_invalid_roles(
+    initial_roles,
+    valid_roles,
+    cleaned_roles,
+):
+    """
+    Ensure that sanitize_element_roles() removes invalid roles if they exist
+    in the element's roles list.
+
+    This can happen if the role has since been deleted or renamed.
+    """
+
+    element_type = HeadingElementType()
+
+    result = element_type.sanitize_element_roles(
+        initial_roles,
+        valid_roles,
+        {},
+    )
+
+    assert result == cleaned_roles
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_source_ids,initial_roles,valid_roles,cleaned_roles",
+    [
+        (
+            (100, 7777),
+            [],
+            [f"{DEFAULT_USER_ROLE_PREFIX}7777"],
+            # existing roles is empty, so despite there existing a Default User
+            # Role, it shouldn't be returned.
+            [],
+        ),
+        (
+            (100, 7777),
+            ["invalid_role_a"],
+            [f"{DEFAULT_USER_ROLE_PREFIX}7777"],
+            # "invalid_role_a" is not a valid role, so we expect an empty list.
+            [],
+        ),
+        (
+            (100, 7777),
+            ["invalid_role_a", f"{DEFAULT_USER_ROLE_PREFIX}100", "invalid_role_b"],
+            [f"{DEFAULT_USER_ROLE_PREFIX}7777"],
+            # We expect only the default user role to be returned
+            [f"{DEFAULT_USER_ROLE_PREFIX}7777"],
+        ),
+        (
+            (100, 7777),
+            [f"{DEFAULT_USER_ROLE_PREFIX}100"],
+            [],
+            # Although the initial roles contains a Default User Role, it is
+            # not valid, so we expect an empty list.
+            [],
+        ),
+    ],
+)
+def test_sanitize_element_roles_fixes_default_user_role(
+    user_source_ids,
+    initial_roles,
+    valid_roles,
+    cleaned_roles,
+):
+    """
+    Ensure that sanitize_element_roles() fixes the default user role.
+
+    The Default User Role is based on the User Source ID. Since the User Source
+    is newly created during an import, the Default User Role must also be
+    updated.
+    """
+
+    user_sources_mapping = {user_source_ids[0]: user_source_ids[1]}
+    element_type = HeadingElementType()
+
+    result = element_type.sanitize_element_roles(
+        initial_roles,
+        valid_roles,
+        user_sources_mapping,
+    )
+
+    assert result == cleaned_roles

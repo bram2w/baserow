@@ -104,7 +104,13 @@ export const actions = {
       userSource.id,
       credentials
     )
-    dispatch('login', { application, userSource, access, refresh, setCookie })
+    dispatch('login', {
+      application,
+      userSource,
+      access,
+      refresh,
+      setCookie,
+    })
   },
   login(
     { commit, getters },
@@ -119,6 +125,7 @@ export const actions = {
         username: tokenPayload.username,
         email: tokenPayload.email,
         user_source_id: tokenPayload.user_source_id,
+        role: tokenPayload.role,
       },
     })
     commit('SET_AUTHENTICATED', { application, authenticated: true })
@@ -204,12 +211,17 @@ export const getters = {
     }
     return application.userSourceUser.refreshToken
   },
-
+  role(state) {
+    if (!state.authenticated) {
+      return ''
+    }
+    return state.user.role
+  },
   getUser: (state, getters) => (application) => {
     if (getters.isAuthenticated(application)) {
       return application.userSourceUser.user
     }
-    return { email: '', id: 0, username: '' }
+    return { email: '', id: 0, username: '', role: '' }
   },
   shouldRefreshToken: (state, getters) => (application) => {
     // the user must be authenticated to refresh the token

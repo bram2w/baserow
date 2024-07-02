@@ -6,6 +6,7 @@ from baserow.api.user_sources.views import (
     UserSourceBlacklistJSONWebToken,
     UserSourceForceObtainJSONWebToken,
     UserSourceObtainJSONWebToken,
+    UserSourceRolesView,
     UserSourcesView,
     UserSourceTokenRefreshView,
     UserSourceView,
@@ -19,6 +20,11 @@ urlpatterns = [
         r"application/(?P<application_id>[0-9]+)/user-sources/$",
         UserSourcesView.as_view(),
         name="list",
+    ),
+    re_path(
+        r"application/(?P<application_id>[0-9]+)/user-sources/roles/$",
+        UserSourceRolesView.as_view(),
+        name="list_roles",
     ),
     re_path(
         r"application/(?P<application_id>[0-9]+)/list-user-source-users/$",

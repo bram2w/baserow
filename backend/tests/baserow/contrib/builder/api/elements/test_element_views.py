@@ -17,6 +17,60 @@ from baserow.contrib.builder.elements.models import (
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "roles,role_type",
+    [
+        (
+            ["a_role"],
+            Element.ROLE_TYPES.ALLOW_ALL,
+        ),
+        (
+            ["a_role", "b_role"],
+            Element.ROLE_TYPES.ALLOW_ALL,
+        ),
+        (
+            ["a_role"],
+            Element.ROLE_TYPES.ALLOW_ALL_EXCEPT,
+        ),
+        (
+            ["a_role"],
+            Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT,
+        ),
+    ],
+)
+def test_elements_list_endpoint_returns_expected_roles(
+    api_client,
+    data_fixture,
+    roles,
+    role_type,
+):
+    """
+    Ensure the element:list endpoint returns expected values for the
+    roles and role_type fields.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_heading_element(page=page)
+
+    element.roles = roles
+    element.role_type = role_type
+    element.save()
+
+    url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    data = response.json()[0]
+
+    assert data["roles"] == roles
+    assert data["role_type"] == role_type
+
+
+@pytest.mark.django_db
 def test_get_elements(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)

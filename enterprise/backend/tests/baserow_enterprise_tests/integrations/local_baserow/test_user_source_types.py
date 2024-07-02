@@ -1,4 +1,5 @@
 from collections import defaultdict
+from unittest.mock import MagicMock, patch
 
 from django.urls import reverse
 
@@ -6,13 +7,19 @@ import pytest
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.app_auth_providers.models import AppAuthProvider
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user_sources.exceptions import UserSourceImproperlyConfigured
 from baserow.core.user_sources.handler import UserSourceHandler
-from baserow.core.user_sources.registries import user_source_type_registry
+from baserow.core.user_sources.registries import (
+    DEFAULT_USER_ROLE_PREFIX,
+    user_source_type_registry,
+)
 from baserow.core.utils import MirrorDict, Progress
 from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
 from baserow_enterprise.integrations.local_baserow.user_source_types import (
@@ -41,13 +48,14 @@ def test_get_user_sources(api_client, data_fixture):
         columns=[
             ("Email", "text"),
             ("Name", "text"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test"],
+            ["test@baserow.io", "Test", ""],
         ],
     )
 
-    email_field, name_field = fields
+    email_field, name_field, role_field = fields
 
     local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
 
@@ -58,6 +66,7 @@ def test_get_user_sources(api_client, data_fixture):
         table=table,
         email_field=email_field,
         name_field=name_field,
+        role_field=role_field,
     )
 
     user_source2 = data_fixture.create_user_source(
@@ -91,6 +100,7 @@ def test_get_user_sources(api_client, data_fixture):
     assert response_json[0]["table_id"] == table.id
     assert response_json[0]["email_field_id"] == email_field.id
     assert response_json[0]["name_field_id"] == name_field.id
+    assert response_json[0]["role_field_id"] == role_field.id
 
     assert response_json[1]["id"] == user_source2.id
     assert response_json[1]["type"] == "local_baserow"
@@ -98,6 +108,7 @@ def test_get_user_sources(api_client, data_fixture):
     assert response_json[1]["table_id"] == table.id
     assert response_json[1]["email_field_id"] == email_field.id
     assert response_json[1]["name_field_id"] is None
+    assert response_json[1]["role_field_id"] is None
 
     assert response_json[2]["id"] == user_source3.id
     assert response_json[2]["type"] == "local_baserow"
@@ -105,6 +116,24 @@ def test_get_user_sources(api_client, data_fixture):
     assert response_json[2]["table_id"] == table.id
     assert response_json[2]["email_field_id"] is None
     assert response_json[2]["name_field_id"] is None
+    assert response_json[2]["role_field_id"] is None
+
+
+@pytest.fixture(autouse=True)
+def user_source_fixture(data_fixture):
+    """A fixture to help test LocalBaserowUserSourceType."""
+
+    user, _ = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    page = data_fixture.create_builder_page(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
+
+    user_source = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        application=application,
+    )
+    return user_source
 
 
 @pytest.mark.django_db
@@ -236,13 +265,14 @@ def test_create_local_baserow_user_source_w_a_password_auth_source(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "password"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "password"],
+            ["test@baserow.io", "Test", "password", ""],
         ],
     )
 
-    email_field, name_field, password_field = fields
+    email_field, name_field, password_field, role_field = fields
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -254,6 +284,7 @@ def test_create_local_baserow_user_source_w_a_password_auth_source(
             "table_id": table.id,
             "email_field_id": email_field.id,
             "name_field_id": name_field.id,
+            "role_field_id": role_field.id,
             "auth_providers": [
                 {
                     "password_field_id": password_field.id,
@@ -650,6 +681,7 @@ def test_export_user_source(data_fixture):
         "name": "Test name",
         "name_field_id": name_field.id,
         "order": "1.00000000000000000000",
+        "role_field_id": None,
         "table_id": table_from_same_workspace1.id,
         "type": "local_baserow",
         "uid": "uid",
@@ -797,13 +829,14 @@ def test_local_baserow_user_source_token_generation(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "text"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "super not secret"],
+            ["test@baserow.io", "Test", "super not secret", ""],
         ],
     )
 
-    email_field, name_field, password_field = fields
+    email_field, name_field, password_field, role_field = fields
 
     local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
 
@@ -814,6 +847,7 @@ def test_local_baserow_user_source_token_generation(
         table=table,
         email_field=email_field,
         name_field=name_field,
+        role_field=role_field,
     )
 
     user_source_type = user_source.get_type()
@@ -869,12 +903,13 @@ def test_public_dispatch_data_source_with_ab_user_using_user_source(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "text"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "super not secret"],
+            ["test@baserow.io", "Test", "super not secret", ""],
         ],
     )
-    email_field, name_field, password_field = user_fields
+    email_field, name_field, password_field, role_field = user_fields
 
     # Create the user source and the auth provider
     user_source = data_fixture.create_user_source(
@@ -884,6 +919,7 @@ def test_public_dispatch_data_source_with_ab_user_using_user_source(
         table=user_table,
         email_field=email_field,
         name_field=name_field,
+        role_field=role_field,
     )
 
     # Create a domain and publish the application
@@ -1170,6 +1206,7 @@ def test_local_baserow_user_source_authentication_is_configured(
         email_field_id=1,
         name_field_id=2,
         table_id=3,
+        role_field_id=4
     )) is True
     # Missing email field.
     # fmt: off
@@ -1177,6 +1214,7 @@ def test_local_baserow_user_source_authentication_is_configured(
         email_field_id=None,
         name_field_id=2,
         table_id=3,
+        role_field_id=4,
     )) is False
     # Missing name field.
     # fmt: off
@@ -1184,6 +1222,7 @@ def test_local_baserow_user_source_authentication_is_configured(
         email_field_id=1,
         name_field_id=None,
         table_id=3,
+        role_field_id=4,
     )) is False
     # Missing table field.
     # fmt: off
@@ -1191,4 +1230,542 @@ def test_local_baserow_user_source_authentication_is_configured(
         email_field_id=1,
         name_field_id=2,
         table_id=None,
+        role_field_id=4,
     )) is False
+
+
+@pytest.fixture(autouse=True)
+def role_field_id_test_fixture(data_fixture):
+    """Fixture to help test the role_field_id."""
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
+
+    user_source = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        application=application,
+        integration=integration,
+    )
+
+    return user, user_source, application, workspace, integration
+
+
+@pytest.mark.django_db
+def test_prepare_values_role_field_id_raises_if_no_table_to_check(data_fixture):
+    """
+    Test the prepare_values() method when the "role_field_id" is in values.
+
+    Ensure an exception is raised if the table is missing.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+
+    user_source = data["user_source"]
+    user_source_type = LocalBaserowUserSourceType()
+
+    with pytest.raises(RequestBodyValidationException) as e:
+        user_source_type.prepare_values(
+            {"role_field_id": 1},
+            user_source,
+        )
+
+    assert "Please select a table before selecting this field" in str(e.value)
+
+
+@pytest.mark.django_db
+def test_prepare_values_role_field_id_raises_if_field_doesnt_exist(
+    data_fixture,
+    role_field_id_test_fixture,
+):
+    """
+    Test the prepare_values() method when the "role_field_id" is in values.
+
+    Ensure an exception is raised if the role_field is missing.
+    """
+
+    user, user_source, _, _, _ = role_field_id_test_fixture
+
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = data_fixture.create_text_field(table=users_table, order=0, name="role")
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    with pytest.raises(RequestBodyValidationException) as e:
+        LocalBaserowUserSourceType().prepare_values(
+            # Add 100 to the latest role_field, which should simulate a
+            # non-existent ID.
+            {"role_field_id": role_field.id + 100},
+            user,
+            user_source,
+        )
+
+    assert "The provided Id doesn't exist." in str(e.value)
+
+
+@pytest.mark.django_db
+def test_prepare_values_role_field_id_raises_if_field_id_mismatch(
+    data_fixture,
+    role_field_id_test_fixture,
+):
+    """
+    Test the prepare_values() method when the "role_field_id" is in values.
+
+    Ensure an exception is raised if the role field's table_id doesns't match
+    the table's ID.
+    """
+
+    user, user_source, application, _, _ = role_field_id_test_fixture
+
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = data_fixture.create_text_field(table=users_table, order=0, name="role")
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    # Create a different table
+    foo_table = data_fixture.create_database_table(name="foo")
+    local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
+    user_source_2 = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        application=application,
+    )
+    user_source_2.table = foo_table
+    user_source_2.save()
+
+    with pytest.raises(RequestBodyValidationException) as e:
+        LocalBaserowUserSourceType().prepare_values(
+            {"role_field_id": role_field.id},
+            user,
+            user_source_2,
+        )
+
+    assert (
+        f"The field with ID {role_field.id} is not related to the given table."
+        in str(e.value)
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_creator,",
+    [
+        "create_autonumber_field",
+        "create_boolean_field",
+        "create_created_by_field",
+        "create_created_on_field",
+        "create_date_field",
+        "create_duration_field",
+        "create_email_field",
+        "create_file_field",
+        "create_last_modified_by_field",
+        "create_last_modified_field",
+        "create_link_row_field",
+        "create_long_text_field",
+        "create_lookup_field",
+        "create_multiple_collaborators_field",
+        "create_multiple_select_field",
+        "create_number_field",
+        "create_password_field",
+        "create_phone_number_field",
+        "create_rating_field",
+        "create_url_field",
+        "create_uuid_field",
+    ],
+)
+def test_prepare_values_role_field_id_raises_if_field_type_wrong(
+    data_fixture,
+    role_field_id_test_fixture,
+    field_creator,
+):
+    """
+    Test the prepare_values() method when the "role_field_id" is in values.
+
+    Ensure an exception is raised if the role field's type is not allowed.
+    """
+
+    user, user_source, _, _, _ = role_field_id_test_fixture
+
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = getattr(data_fixture, field_creator)(
+        table=users_table, order=0, name="role"
+    )
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    with pytest.raises(RequestBodyValidationException) as e:
+        LocalBaserowUserSourceType().prepare_values(
+            {"role_field_id": role_field.id},
+            user,
+            user_source,
+        )
+
+    assert f"This field type can't be used as a role." in str(e.value)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_creator,",
+    [
+        "create_formula_field",
+        "create_single_select_field",
+        "create_text_field",
+    ],
+)
+def test_prepare_values_role_field_id_returns_values(
+    data_fixture, role_field_id_test_fixture, field_creator
+):
+    """
+    Test the prepare_values() method when the "role_field_id" is in values.
+
+    Ensure that the expected values dict is returned for the valid field types.
+    """
+
+    user, user_source, _, _, _ = role_field_id_test_fixture
+
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = getattr(data_fixture, field_creator)(
+        table=users_table, order=0, name="role"
+    )
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    values = LocalBaserowUserSourceType().prepare_values(
+        {"role_field_id": role_field.id},
+        user,
+        user_source,
+    )
+
+    field = FieldHandler().get_field(role_field.id)
+    assert values["role_field"] == field
+    assert "role_field_id" not in values
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_creator,",
+    [
+        "create_formula_field",
+        "create_single_select_field",
+        "create_text_field",
+    ],
+)
+def test_prepare_values_role_field_id_returns_empty_values_if_role_field_id_is_none(
+    data_fixture, field_creator
+):
+    """
+    Test the prepare_values() method when the "role_field_id" is in values.
+
+    Ensure that the expected values dict is empty if the role_field_id is None.
+    """
+
+    user = data_fixture.create_user()
+
+    values = LocalBaserowUserSourceType().prepare_values(
+        {"role_field_id": None},
+        user,
+    )
+
+    assert values["role_field"] is None
+    assert "role_field_id" not in values
+
+
+@pytest.mark.django_db
+def test_prepare_values_sets_role_field_to_none(
+    data_fixture,
+    role_field_id_test_fixture,
+):
+    """
+    Test the prepare_values() method when the "role_field_id" is
+    missing in values.
+
+    Ensure that role_field with a value of None is added to values.
+    """
+
+    user, user_source, _, workspace, integration = role_field_id_test_fixture
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    users_table = data_fixture.create_database_table(
+        name="test_users", database=database
+    )
+    other_table = data_fixture.create_database_table(
+        name="test_other", database=database
+    )
+
+    role_field = data_fixture.create_text_field(table=users_table, order=0, name="role")
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    values = LocalBaserowUserSourceType().prepare_values(
+        {
+            "table_id": other_table.id,
+            "integration": integration,
+        },
+        user,
+        user_source,
+    )
+
+    assert values["role_field"] is None
+
+
+@pytest.mark.django_db
+def test_get_user_role_returns_role_from_text_field(data_fixture):
+    """
+    Ensure the get_user_role() method returns a specific user role when
+    the Role Field is of type TextFieldType.
+    """
+
+    role_name = "foo_role"
+    data = populate_local_baserow_test_data(data_fixture, role_name=role_name)
+    user_source = data["user_source"]
+
+    UserModel = data["user_table"].get_model()
+    first_user = UserModel.objects.first()
+
+    user_role = LocalBaserowUserSourceType().get_user_role(
+        first_user,
+        user_source,
+    )
+
+    assert user_role == role_name
+
+
+@pytest.mark.django_db
+def test_get_user_role_returns_role_from_single_select_field(data_fixture):
+    """
+    Ensure the get_user_role() method returns a specific user role when
+    the Role Field is of type SingleSelectFieldType.
+    """
+
+    role = "foo_role"
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    role_field = data_fixture.create_single_select_field(
+        table=user_source.table, name="role", order=0
+    )
+    option = data_fixture.create_select_option(field=role_field, value=role)
+
+    user_source.role_field = role_field
+    user_source.save()
+
+    UserModel = data["user_table"].get_model()
+    first_user = UserModel.objects.first()
+    setattr(first_user, user_source.role_field.db_column, option)
+
+    user_role = LocalBaserowUserSourceType().get_user_role(
+        first_user,
+        user_source,
+    )
+
+    assert user_role == role
+
+
+@pytest.mark.django_db
+def test_get_user_role_returns_empty_string_from_single_select_field(data_fixture):
+    """
+    Ensure the get_user_role() method returns an empty string, if the Role
+    Field is of type SingleSelectFieldType, but there is no selection for
+    the row.
+
+    This might happen if a row is created in the Users table, but the Role
+    Field is left blank.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    role_field = data_fixture.create_single_select_field(
+        table=user_source.table, name="role", order=0
+    )
+
+    # The role_field does not have any actual options, so any rows created
+    # would have a null/None value for the Role.
+    user_source.role_field = role_field
+    user_source.save()
+
+    UserModel = data["user_table"].get_model()
+    first_user = UserModel.objects.first()
+    user_role = LocalBaserowUserSourceType().get_user_role(
+        first_user,
+        user_source,
+    )
+
+    assert user_role == ""
+
+
+@pytest.mark.django_db
+def test_get_user_role_returns_default_role(data_fixture):
+    """
+    Ensure the get_user_role() method returns the default user role if
+    the UserRole.role_field is None.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+    user_source.role_field = None
+    user_source.save()
+
+    UserModel = data["user_table"].get_model()
+    first_user = UserModel.objects.first()
+
+    user_role = LocalBaserowUserSourceType().get_user_role(
+        first_user,
+        user_source,
+    )
+
+    assert user_role == f"{DEFAULT_USER_ROLE_PREFIX}{user_source.id}"
+
+
+@pytest.mark.django_db
+def test_get_roles_returns_default_role_if_role_field_is_null(data_fixture):
+    """
+    Ensure get_roles() returns only the Default User Role if the role_field
+    is null.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+    user_source.role_field = None
+    user_source.save()
+
+    roles = LocalBaserowUserSourceType().get_roles(user_source)
+
+    assert roles == [f"{DEFAULT_USER_ROLE_PREFIX}{user_source.id}"]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "roles,expected_roles",
+    [
+        (
+            [],
+            [],
+        ),
+        (
+            [
+                "foo_role",
+            ],
+            [
+                "foo_role",
+            ],
+        ),
+        # We expect the returned roles to be ordered
+        (
+            ["foo_role", "bar_role"],
+            ["bar_role", "foo_role"],
+        ),
+    ],
+)
+def test_get_roles_returns_single_select_roles(data_fixture, roles, expected_roles):
+    """
+    Ensure get_roles() returns the expected list of roles, if the Role Type
+    field is a Single Select Field.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    role_field = data_fixture.create_single_select_field(
+        table=user_source.table, name="role", order=0
+    )
+    for role in roles:
+        data_fixture.create_select_option(field=role_field, value=role)
+
+    user_source.role_field = role_field
+    user_source.save()
+
+    with patch.object(TableHandler, "get_table") as mock_handler:
+        roles = LocalBaserowUserSourceType().get_roles(user_source)
+
+    mock_handler.assert_not_called()
+    assert roles == expected_roles
+
+
+@pytest.mark.django_db
+def test_get_roles_returns_empty_list_if_table_is_trashed(data_fixture):
+    """Ensure get_roles() returns an empty list if Table is trashed."""
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+    role_field = data_fixture.create_text_field(
+        table=user_source.table, order=0, name="role"
+    )
+    user_source.role_field = role_field
+    user_source.save()
+
+    with patch.object(
+        TableHandler, "get_table", MagicMock(side_effect=TableDoesNotExist)
+    ) as mock_handler:
+        roles = LocalBaserowUserSourceType().get_roles(user_source)
+
+    mock_handler.assert_called_once_with(user_source.table.id)
+    assert roles == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_roles,expected_roles",
+    [
+        (
+            ["foo_role"],
+            ["foo_role"],
+        ),
+        (
+            ["foo_role", "bar_role"],
+            ["foo_role", "bar_role"],
+        ),
+        # Ensure empty strings are converted to the default No Role value
+        (
+            ["foo_role", ""],
+            ["foo_role", ""],
+        ),
+        (
+            ["", "foo_role", ""],
+            ["foo_role", ""],
+        ),
+        # Ensure roles with leading/trailing white spaces are trimmed
+        (
+            ["  "],
+            [""],
+        ),
+        (
+            ["foo_role "],
+            ["foo_role"],
+        ),
+        (
+            [" foo_role", "bar_role ", " "],
+            ["foo_role", "bar_role", ""],
+        ),
+    ],
+)
+def test_get_roles_returns_expected_roles(
+    data_fixture, user_source_fixture, user_roles, expected_roles
+):
+    """Ensure get_roles() returns expected roles."""
+
+    user_source = user_source_fixture
+
+    # Create a roles field and add some rows
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = data_fixture.create_text_field(
+        table=users_table, order=0, name="role", text_default=""
+    )
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    # Add some roles
+    model = users_table.get_model()
+    for role in user_roles:
+        model.objects.create(**{f"field_{role_field.id}": role})
+
+    roles = LocalBaserowUserSourceType().get_roles(user_source)
+
+    assert sorted(roles) == sorted(expected_roles)

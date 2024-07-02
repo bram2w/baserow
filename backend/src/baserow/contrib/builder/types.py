@@ -14,6 +14,8 @@ class ElementDict(TypedDict):
     parent_element_id: int
     place_in_container: str
     visibility: str
+    role_type: str
+    roles: list
     style_border_top_color: str
     style_border_top_size: int
     style_padding_top: int

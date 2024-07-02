@@ -13,6 +13,7 @@ from baserow.contrib.builder.builder_beta_init_application import (
 )
 from baserow.contrib.builder.elements.models import (
     ColumnElement,
+    Element,
     HeadingElement,
     TableElement,
     TextElement,
@@ -30,6 +31,10 @@ from baserow.core.db import specific_iterator
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
+from baserow_enterprise.integrations.local_baserow.user_source_types import (
+    LocalBaserowUserSourceType,
+)
 
 
 @pytest.mark.django_db
@@ -217,6 +222,8 @@ def test_builder_application_export(data_fixture):
                         "value": element1.value,
                         "level": element1.level,
                         "alignment": "left",
+                        "roles": [],
+                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                     },
                     {
                         "id": element2.id,
@@ -242,6 +249,8 @@ def test_builder_application_export(data_fixture):
                         "style_background": "none",
                         "value": element2.value,
                         "alignment": "left",
+                        "roles": [],
+                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                         "format": TextElement.TEXT_FORMATS.PLAIN,
                     },
                     {
@@ -269,6 +278,8 @@ def test_builder_application_export(data_fixture):
                         "column_amount": 3,
                         "column_gap": 50,
                         "alignment": "top",
+                        "roles": [],
+                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                     },
                     {
                         "id": element_inside_container.id,
@@ -294,6 +305,8 @@ def test_builder_application_export(data_fixture):
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
                         "alignment": "left",
+                        "roles": [],
+                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                         "format": TextElement.TEXT_FORMATS.PLAIN,
                     },
                 ],
@@ -366,11 +379,15 @@ def test_builder_application_export(data_fixture):
                         "value": element3.value,
                         "level": element3.level,
                         "alignment": "left",
+                        "roles": [],
+                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                     },
                     {
                         "id": element4.id,
                         "type": "table",
                         "order": str(element4.order),
+                        "roles": [],
+                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                         "button_color": "primary",
                         "orientation": {
                             "smartphone": "horizontal",
@@ -427,6 +444,7 @@ def test_builder_application_export(data_fixture):
                 "name": "",
                 "name_field_id": None,
                 "order": "1.00000000000000000000",
+                "role_field_id": None,
                 "table_id": None,
                 "type": "local_baserow",
                 "uid": "12345678123456781234567812345678",
@@ -497,6 +515,8 @@ IMPORT_REFERENCE = {
                     "order": 1,
                     "value": "'foo'",
                     "level": 2,
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 },
                 {
                     "id": 999,
@@ -512,6 +532,8 @@ IMPORT_REFERENCE = {
                     "style_width": "normal",
                     "order": 2,
                     "value": "",
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 },
                 {
                     "id": 1000,
@@ -528,6 +550,8 @@ IMPORT_REFERENCE = {
                     "items_per_page": 42,
                     "order": 2.5,
                     "data_source_id": 5,
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                     "fields": [
                         {
                             "name": "F 1",
@@ -566,6 +590,8 @@ IMPORT_REFERENCE = {
                     "style_padding_bottom": 10,
                     "order": 1.5,
                     "value": "'test'",
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 },
                 {
                     "id": 500,
@@ -585,6 +611,8 @@ IMPORT_REFERENCE = {
                     "column_amount": 3,
                     "column_gap": 50,
                     "alignment": "top",
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 },
                 {
                     "id": 501,
@@ -602,6 +630,8 @@ IMPORT_REFERENCE = {
                     "style_padding_bottom": 10,
                     "order": 1,
                     "value": "'test'",
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 },
             ],
             "data_sources": [
@@ -650,6 +680,8 @@ IMPORT_REFERENCE = {
                     "order": 1,
                     "value": "",
                     "level": 1,
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 }
             ],
             "data_sources": [
@@ -822,6 +854,8 @@ IMPORT_REFERENCE_COMPLEX = {
                     "order": 1,
                     "value": "",
                     "level": 1,
+                    "roles": [],
+                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
                 }
             ],
             "data_sources": [
@@ -1006,3 +1040,211 @@ def test_builder_application_creation_uses_first_customers_table(data_fixture):
     builder_init = BuilderApplicationTypeInitApplication(user, builder)
     target_table = builder_init.get_target_table()
     assert target_table == table1
+
+
+@pytest.mark.django_db
+def test_builder_application_imports_correct_default_roles(data_fixture):
+    """
+    Ensure that when importing, the correct Default User Roles are set.
+
+    The UserSource ID is used to generate a default user role in an element's
+    roles list. If a User Source uses the 'Use Default Role' value for the
+    'Select role field', the backend will generate a default role with the
+    pattern "__user_source_<user_source.id>".
+
+    When the application is imported (e.g. during publishing), a new User
+    Source is created, however the element's roles list will still have
+    the default role which references the old UserSource ID.
+
+    This test checks that when importing, the correct (new) User Source ID
+    is used for any default roles.
+    """
+
+    user = data_fixture.create_user(email="test@baserow.io")
+    workspace = data_fixture.create_workspace(user=user)
+
+    serialized_values = IMPORT_REFERENCE.copy()
+    first_page = serialized_values["pages"][0]
+
+    serialized_user_source = serialized_values["user_sources"][0]
+    serialized_user_source["role_field_id"] = None
+
+    serialized_element = serialized_values["pages"][0]["elements"][0]
+    serialized_element["role_type"] = "allow_all_except"
+    serialized_element["roles"] = [
+        f'__user_source_{serialized_user_source["id"]}',
+    ]
+
+    # Save the single element back to the list. We only need one element
+    # to test.
+    first_page["elements"] = [serialized_element]
+    serialized_values["pages"] = [first_page]
+
+    config = ImportExportConfig(include_permission_data=True)
+    builder = BuilderApplicationType().import_serialized(
+        workspace, serialized_values, config, {}
+    )
+
+    new_element = builder.page_set.all()[0].element_set.all()[0]
+    new_user_source = builder.user_sources.all()[0]
+
+    # Ensure the "old" Default User Role doesn't exist
+    assert f"__user_source_{serialized_user_source['id']}" not in new_element.roles
+    # Ensure the "new" Default User Role uses the new User Source ID
+    assert f"__user_source_{new_user_source.id}" in new_element.roles
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "initial_roles,expected_roles",
+    [
+        (
+            ["foo_role"],
+            [],
+        ),
+        (
+            ["foo_role", "__user_source_{}"],
+            ["__user_source_{}"],
+        ),
+        (
+            ["foo_role", "__user_source_{}", "bar_role"],
+            ["__user_source_{}"],
+        ),
+        (
+            ["foo_role", "__user_source_{}", "bar_role"],
+            ["__user_source_{}"],
+        ),
+    ],
+)
+def test_ensure_new_element_roles_are_sanitized_during_import_for_default_roles(
+    data_fixture,
+    initial_roles,
+    expected_roles,
+):
+    """
+    Ensure that during the import process, both the existing and new Element
+    roles are sanitized when a Default Role is used.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    page = data_fixture.create_builder_page(builder=builder)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, authorized_user=user, name="test"
+    )
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=builder, user=user, integration=integration
+    )
+
+    prefix = str(DEFAULT_USER_ROLE_PREFIX)
+
+    # Update the user source ID in the role if needed
+    _initial_roles = []
+    for role in initial_roles:
+        if role.startswith(prefix):
+            _initial_roles.append(role.format(user_source.id))
+        else:
+            _initial_roles.append(role)
+    initial_roles = _initial_roles
+
+    old_element = data_fixture.create_builder_heading_element(page=page, level=2)
+    old_element.roles = initial_roles
+    old_element.save()
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized = BuilderApplicationType().export_serialized(builder, config)
+
+    builder = BuilderApplicationType().import_serialized(
+        workspace, serialized, config, {}
+    )
+
+    new_user_source = builder.user_sources.all()[0]
+    _expected_roles = []
+    for role in expected_roles:
+        if role.startswith(prefix):
+            _expected_roles.append(role.format(new_user_source.id))
+        else:
+            _expected_roles.append(role)
+    expected_roles = _expected_roles
+
+    # Ensure new element has roles updated
+    new_element = builder.page_set.all()[0].element_set.all()[0]
+    for index, role in enumerate(new_element.roles):
+        # Default Role's User Source should have changed for new elements
+        if role.startswith(prefix):
+            assert role == role.format(new_user_source.id)
+        else:
+            assert role == expected_roles[index]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_source_roles,element_roles,expected_roles",
+    [
+        (
+            [],
+            [],
+            [],
+        ),
+        (
+            [],
+            ["foo_role"],
+            [],
+        ),
+        (
+            ["foo_role"],
+            ["bar_role"],
+            [],
+        ),
+        (
+            ["foo_role"],
+            ["foo_role"],
+            ["foo_role"],
+        ),
+        (
+            ["foo_role", "bar_role", "baz_role"],
+            ["invalid_role_a", "bar_role", "invalid_role_b"],
+            ["bar_role"],
+        ),
+    ],
+)
+def test_ensure_new_element_roles_are_sanitized_during_import_for_roles(
+    data_fixture,
+    user_source_roles,
+    element_roles,
+    expected_roles,
+):
+    """
+    Ensure that during the import process, both the existing and new Element
+    roles are sanitized when using roles.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    page = data_fixture.create_builder_page(builder=builder)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, authorized_user=user, name="test"
+    )
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=builder, user=user, integration=integration
+    )
+    user_source.role_type = Element.ROLE_TYPES.ALLOW_ALL_EXCEPT
+    user_source.save()
+
+    old_element = data_fixture.create_builder_heading_element(page=page, level=2)
+    old_element.roles = element_roles
+    old_element.save()
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized = BuilderApplicationType().export_serialized(builder, config)
+
+    with patch.object(LocalBaserowUserSourceType, "get_roles") as m:
+        m.return_value = user_source_roles
+        builder = BuilderApplicationType().import_serialized(
+            workspace, serialized, config, {}
+        )
+
+    new_element = builder.page_set.all()[0].element_set.all()[0]
+    assert new_element.roles == expected_roles
