@@ -1,5 +1,5 @@
 from ast import Dict
-from typing import Iterable, Optional, Union
+from typing import Iterable, List, Optional, Union
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -141,6 +141,15 @@ class UserSourceHandler:
             )
         else:
             return queryset
+
+    def get_all_roles_for_application(self, application: Application) -> List[str]:
+        """Return a sorted list of all unique user roles for a specific application."""
+
+        user_roles = set()
+        for user_source in self.get_user_sources(application):
+            user_roles.update(user_source.get_type().get_roles(user_source))
+
+        return sorted(list(user_roles))
 
     def create_user_source(
         self,

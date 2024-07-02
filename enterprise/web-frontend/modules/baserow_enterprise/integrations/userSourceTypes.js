@@ -4,6 +4,8 @@ import LocalBaserowUserSourceForm from '@baserow_enterprise/integrations/localBa
 import localBaserowIntegration from '@baserow/modules/integrations/localBaserow/assets/images/localBaserowIntegration.svg'
 
 import {
+  FormulaFieldType,
+  SingleSelectFieldType,
   TextFieldType,
   LongTextFieldType,
   EmailFieldType,
@@ -54,6 +56,21 @@ export class LocalBaserowUserSourceType extends UserSourceType {
       EmailFieldType.getType(),
       NumberFieldType.getType(),
       UUIDFieldType.getType(),
+    ]
+  }
+
+  /**
+   * Returns the allowed field type list for the role field.
+   * It's defined here so that it can be changed by a plugin.
+   *
+   * Please ensure this list is kept in sync with its backend counterpart:
+   * `user_source_types.py::LocalBaserowUserSourceType::field_types_allowed_as_role`
+   */
+  get allowedRoleFieldTypes() {
+    return [
+      TextFieldType.getType(),
+      SingleSelectFieldType.getType(),
+      FormulaFieldType.getType(),
     ]
   }
 

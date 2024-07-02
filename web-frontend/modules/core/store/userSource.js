@@ -223,6 +223,7 @@ const actions = {
 
     return userSources
   },
+
   async move({ dispatch }, { application, userSourceId, beforeUserSourceId }) {
     await dispatch('forceMove', {
       application,

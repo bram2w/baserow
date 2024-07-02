@@ -67,6 +67,8 @@ class ElementSerializer(serializers.ModelSerializer):
             "style_background",
             "style_background_color",
             "style_width",
+            "role_type",
+            "roles",
         )
         extra_kwargs = {
             "id": {"read_only": True},
@@ -149,6 +151,8 @@ class UpdateElementSerializer(serializers.ModelSerializer):
             "style_background",
             "style_background_color",
             "style_width",
+            "role_type",
+            "roles",
         )
 
 

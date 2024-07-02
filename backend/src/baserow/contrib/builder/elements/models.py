@@ -86,6 +86,11 @@ class Element(
         LOGGED_IN = "logged-in"
         NOT_LOGGED = "not-logged"
 
+    class ROLE_TYPES(models.TextChoices):
+        ALLOW_ALL = "allow_all"
+        ALLOW_ALL_EXCEPT = "allow_all_except"
+        DISALLOW_ALL_EXCEPT = "disallow_all_except"
+
     page = models.ForeignKey("builder.Page", on_delete=models.CASCADE)
     order = models.DecimalField(
         help_text="Lowest first.",
@@ -108,6 +113,23 @@ class Element(
         default=None,
         help_text="The parent element, if inside a container.",
         related_name="children",
+    )
+
+    role_type = models.CharField(
+        choices=ROLE_TYPES.choices,
+        max_length=19,
+        default=ROLE_TYPES.ALLOW_ALL,
+        db_index=True,
+        # TODO: null=True to be removed in the next release.
+        #   See: https://gitlab.com/baserow/baserow/-/issues/2724
+        null=True,
+    )
+    roles = models.JSONField(
+        default=list,
+        help_text="User roles associated with this element, used in conjunction with role_type.",
+        # TODO: null=True to be removed in the next release.
+        #   See: https://gitlab.com/baserow/baserow/-/issues/2724
+        null=True,
     )
 
     # The following fields are used to store the position of the element in the

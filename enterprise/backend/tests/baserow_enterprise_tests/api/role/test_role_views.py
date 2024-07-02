@@ -19,6 +19,20 @@ def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_rol
     pass
 
 
+@pytest.fixture(autouse=True)
+def user_source_and_token(data_fixture):
+    """A fixture to help test UserSourceSerializer."""
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    page = data_fixture.create_builder_page(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=application,
+    )
+    return (user_source, token)
+
+
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixture):
@@ -658,3 +672,57 @@ def test_batch_assign_role_is_undoable(api_client, data_fixture):
         .role
         == initial_role_user_3
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "roles,",
+    [
+        ["foo_role"],
+        ["bar_role", "foo_role"],
+        # Intentionally non-alphabetically sorted
+        ["zoo_role", "bar_role", "foo_role"],
+    ],
+)
+def test_list_roles_endpoint_returns_expected_data(
+    api_client, data_fixture, user_source_and_token, roles
+):
+    """
+    Ensure that if the User Source has roles, they are returned as a
+    list of alphabetized strings.
+    """
+
+    user_source, token = user_source_and_token
+
+    # Create a roles field and add some rows
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = data_fixture.create_text_field(
+        table=users_table, order=0, name="role", text_default=""
+    )
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    # Add some roles
+    model = users_table.get_model()
+    for role in roles:
+        model.objects.create(**{f"field_{role_field.id}": role})
+
+    url = reverse(
+        "api:user_sources:list_roles",
+        kwargs={"application_id": user_source.application.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == [
+        {
+            "id": user_source.id,
+            "roles": sorted(roles),
+        }
+    ]

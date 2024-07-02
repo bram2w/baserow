@@ -114,7 +114,6 @@ def test_get_workflow_actions(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 2

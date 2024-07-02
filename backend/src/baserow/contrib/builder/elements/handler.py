@@ -72,6 +72,8 @@ class ElementHandler:
         "style_background",
         "style_background_color",
         "style_width",
+        "role_type",
+        "roles",
     ]
 
     def get_element(

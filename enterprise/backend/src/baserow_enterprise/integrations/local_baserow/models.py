@@ -33,6 +33,14 @@ class LocalBaserowUserSource(UserSource):
         help_text="The Baserow field that contains the name of the user.",
     )
 
+    role_field = models.ForeignKey(
+        Field,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="The Baserow field that contains the role of the user.",
+    )
+
 
 class LocalBaserowPasswordAppAuthProvider(AppAuthProvider):
     password_field = models.ForeignKey(

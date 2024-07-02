@@ -1,4 +1,7 @@
+import re
 from typing import Any, List, Type, Union
+
+from django.utils.translation import gettext as _
 
 from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
@@ -24,8 +27,12 @@ from baserow.contrib.builder.workflow_actions.handler import (
 from baserow.core.formula.exceptions import FormulaRecursion
 from baserow.core.formula.registries import DataProviderType
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
+from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.core.utils import get_value_at_path
 from baserow.core.workflow_actions.exceptions import WorkflowActionDoesNotExist
+
+RE_DEFAULT_ROLE = re.compile(rf"{DEFAULT_USER_ROLE_PREFIX}(\d+)")
 
 
 class PageParameterDataProviderType(DataProviderType):
@@ -296,6 +303,20 @@ class UserDataProviderType(DataProviderType):
 
     type = "user"
 
+    def translate_default_user_role(self, user: UserSourceUser) -> str:
+        """
+        Returns the translated version of the user role if it is a default role,
+        otherwise returns the same user_role back without any changes.
+        """
+
+        matches = RE_DEFAULT_ROLE.search(user.role)
+        if not matches:
+            return user.role
+
+        return _("%(user_source_name)s member") % {
+            "user_source_name": user.user_source.name
+        }
+
     def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
         """
         Loads the user_source_user from the request object and expose it to the
@@ -311,8 +332,9 @@ class UserDataProviderType(DataProviderType):
                 "id": user.id,
                 "email": user.email,
                 "username": user.username,
+                "role": self.translate_default_user_role(user),
             }
         else:
-            user = {"id": 0, "username": "", "email": ""}
+            user = {"id": 0, "username": "", "email": "", "role": ""}
 
         return get_value_at_path({"is_authenticated": is_authenticated, **user}, path)
