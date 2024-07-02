@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import update_last_login
 from django.db import connections, transaction
 from django.test import override_settings
 
@@ -548,14 +547,14 @@ def test_delete_expired_users_and_related_workspaces_if_last_admin(
 
     # Last login before max expiration date (should be deleted)
     with freeze_time("2020-01-01 12:00"):
-        update_last_login(None, user1)
-        update_last_login(None, user3)
-        update_last_login(None, user5)
+        handler.update_last_login(user1)
+        handler.update_last_login(user3)
+        handler.update_last_login(user5)
 
     # Last login after max expiration date (shouldn't be deleted)
     with freeze_time("2020-01-05 12:00"):
-        update_last_login(None, user2)
-        update_last_login(None, user4)
+        handler.update_last_login(user2)
+        handler.update_last_login(user4)
 
     with freeze_time("2020-01-07 12:00"):
         with django_capture_on_commit_callbacks(execute=True):

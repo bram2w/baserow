@@ -77,6 +77,8 @@ User = get_user_model()
 
 tracer = trace.get_tracer(__name__)
 
+LAST_LOGIN_UPDATE_DELAY = timedelta(minutes=1)
+
 
 class UserHandler(metaclass=baserow_trace_methods(tracer)):
     def get_active_user(
@@ -496,6 +498,17 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         authentication_provider.user_signed_in(user)
         self.user_signed_in(user)
 
+    def update_last_login(self, user: AbstractUser):
+        """
+        Update the user last_login date only if the previous last_login is old enough.
+
+        :param user: The user that has just signed in.
+        """
+
+        now = timezone.now()
+        if user.last_login is None or (now - user.last_login) > LAST_LOGIN_UPDATE_DELAY:
+            update_last_login(None, user)
+
     def user_signed_in(self, user: AbstractUser):
         """
         Executes tasks and informs plugins when a user signs in.
@@ -506,7 +519,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if user.profile.to_be_deleted:
             self.cancel_user_deletion(user)
 
-        update_last_login(None, user)
+        self.update_last_login(user)
         UserLogEntry.objects.create(actor=user, action="SIGNED_IN")
 
         # Call the user_signed_in method for each plugin that is in the registry to
@@ -550,7 +563,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         user.profile.save()
 
         # update last login to be more accurate
-        update_last_login(None, user)
+        self.update_last_login(user)
 
         core_settings = CoreHandler().get_settings()
 
