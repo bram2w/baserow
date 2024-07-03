@@ -21,11 +21,13 @@ def test_get_builder_select_related_theme_config(
     data_fixture, django_assert_num_queries
 ):
     builder = data_fixture.create_builder_application()
-    builder.mainthemeconfigblock
+    builder.colorthemeconfigblock
+    builder.typographythemeconfigblock
+    builder.buttonthemeconfigblock
 
     builder = BuilderHandler().get_builder(builder.id)
 
-    # We expect 0 queries here but as Django logs transaction
-    # operations we have 2 of them here
-    with django_assert_num_queries(2):
-        builder.mainthemeconfigblock.id
+    with django_assert_num_queries(0):
+        builder.colorthemeconfigblock.id
+        builder.typographythemeconfigblock.id
+        builder.buttonthemeconfigblock.id

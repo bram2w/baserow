@@ -1,9 +1,5 @@
 <template>
-  <div
-    :style="{
-      '--button-color': resolveColor(element.button_color, colorVariables),
-    }"
-  >
+  <div :style="getStyleOverride('button')">
     <div
       v-if="
         mode === 'editing' &&

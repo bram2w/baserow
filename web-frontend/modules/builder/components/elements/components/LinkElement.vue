@@ -2,9 +2,7 @@
   <div
     class="link-element"
     :class="classes"
-    :style="{
-      '--button-color': resolveColor(element.button_color, colorVariables),
-    }"
+    :style="getStyleOverride('button')"
   >
     <ABLink
       :full-width="element.width === WIDTHS.FULL.value"

@@ -1,5 +1,13 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-if="values.level < 4"
+      v-model="values.styles"
+      style-key="typography"
+      :config-block-types="['typography']"
+      :theme="builder.theme"
+      :element="values"
+    />
     <FormGroup :label="$t('headingElementForm.levelTitle')">
       <Dropdown v-model="values.level" :show-search="false">
         <DropdownItem
@@ -21,42 +29,37 @@
     <FormElement class="control">
       <HorizontalAlignmentsSelector v-model="values.alignment" />
     </FormElement>
-    <FontSelector
-      :default-values="defaultValues"
-      :color-variables="headingColorVariables"
-      @values-changed="$emit('values-changed', $event)"
-    ></FontSelector>
   </form>
 </template>
 
 <script>
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
-import headingElement from '@baserow/modules/builder/mixins/headingElement'
-import FontSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/FontSelector'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector.vue'
 import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
+import CustomStyle from '../style/CustomStyle.vue'
 
 export default {
   name: 'HeaderElementForm',
   components: {
     HorizontalAlignmentsSelector,
-    FontSelector,
     ApplicationBuilderFormulaInputGroup,
+    CustomStyle,
   },
-  mixins: [elementForm, headingElement],
+  mixins: [elementForm],
   data() {
     return {
       values: {
         value: '',
         level: 1,
         alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
+        styles: {},
       },
       levels: [...Array(6).keys()].map((level) => ({
         name: this.$t('headingElementForm.headingName', { level: level + 1 }),
         value: level + 1,
       })),
-      allowedValues: ['value', 'level', 'alignment'],
+      allowedValues: ['value', 'level', 'alignment', 'styles'],
     }
   },
 }

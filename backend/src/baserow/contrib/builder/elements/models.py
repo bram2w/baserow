@@ -149,6 +149,12 @@ class Element(
         db_index=True,
     )
 
+    styles = models.JSONField(
+        default=dict,
+        help_text="The theme overrides for this element",
+        null=True,  # TODO zdm remove me in next release
+    )
+
     style_border_top_color = models.CharField(
         max_length=20,
         default="border",
@@ -387,6 +393,8 @@ class HeadingElement(Element):
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
+
+    # TODO zdm remove me in next release
     font_color = models.CharField(
         max_length=20,
         default="default",
@@ -500,6 +508,7 @@ class LinkElement(Element, NavigationElementMixin):
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
+    # TODO zdm remove me in next release
     button_color = models.CharField(
         max_length=20,
         default="primary",
@@ -585,6 +594,7 @@ class FormContainerElement(ContainerElement):
         "values after a successful form submission.",
     )
 
+    # TODO zdm remove me in next release
     button_color = models.CharField(
         max_length=20,
         default="primary",
@@ -721,6 +731,8 @@ class ButtonElement(Element):
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
+
+    # TODO zdm remove me in next release
     button_color = models.CharField(
         max_length=20,
         default="primary",
@@ -789,6 +801,7 @@ class TableElement(CollectionElement):
     A table element
     """
 
+    # TODO zdm remove me in next release
     button_color = models.CharField(
         max_length=20,
         default="primary",

@@ -1,31 +1,29 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+      :element="values"
+    />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
       :label="$t('buttonElementForm.valueLabel')"
       :placeholder="$t('buttonElementForm.valuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
-    <FormElement class="control">
-      <HorizontalAlignmentsSelector v-model="values.alignment" />
-    </FormElement>
-    <FormElement class="control">
-      <WidthSelector v-model="values.width" />
-    </FormElement>
-    <ColorInputGroup
-      v-model="values.button_color"
-      :label="$t('buttonElementForm.buttonColor')"
-      :color-variables="colorVariables"
-    />
+    <HorizontalAlignmentsSelector v-model="values.alignment" />
+    <WidthSelector v-model="values.width" />
   </form>
 </template>
 
 <script>
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
-import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
@@ -34,6 +32,7 @@ export default {
     WidthSelector,
     ApplicationBuilderFormulaInputGroup,
     HorizontalAlignmentsSelector,
+    CustomStyle,
   },
   mixins: [elementForm],
   data() {
@@ -42,13 +41,10 @@ export default {
         value: '',
         alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
         width: WIDTHS.AUTO.value,
+        styles: {},
       },
+      allowedValues: ['value', 'alignment', 'width', 'styles'],
     }
-  },
-  computed: {
-    colorVariables() {
-      return themeToColorVariables(this.builder.theme)
-    },
   },
 }
 </script>

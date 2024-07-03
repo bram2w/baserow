@@ -107,6 +107,7 @@ class PublicElementSerializer(serializers.ModelSerializer):
             "parent_element_id",
             "place_in_container",
             "visibility",
+            "styles",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",

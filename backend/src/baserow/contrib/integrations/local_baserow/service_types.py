@@ -1014,6 +1014,7 @@ class LocalBaserowGetRowUserServiceType(
             return resolved_values
 
         try:
+            dispatch_context.reset_call_stack()
             resolved_values["row_id"] = ensure_integer(
                 resolve_formula(
                     service.row_id,
@@ -1346,9 +1347,6 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 )
                 raise ServiceImproperlyConfigured(message) from e
             except Exception as e:
-                import traceback
-
-                traceback.print_exc()
                 message = (
                     "Unknown error in formula for "
                     f"field {field_mapping.field.name}({field_mapping.field.id}): {str(e)}"
@@ -1425,7 +1423,13 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
             # Transform and validate the resolved value with the field type's DRF field.
             serializer_field = field_type.get_serializer_field(field.specific)
-            resolved_value = serializer_field.run_validation(resolved_value)
+            try:
+                resolved_value = serializer_field.run_validation(resolved_value)
+            except DRFValidationError as exc:
+                raise ServiceImproperlyConfigured(
+                    "The result value of the formula is not valid for the "
+                    f"field `{field.name} ({field.db_column})`: {str(exc)}"
+                ) from exc
 
             # Then transform and validate the resolved value for prepare value for db.
             try:

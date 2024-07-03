@@ -1,10 +1,11 @@
 <template>
   <div
     class="button-element"
-    :class="classes"
-    :style="{
-      '--button-color': resolveColor(element.button_color, colorVariables),
+    :class="{
+      [`element--alignment-horizontal-${element.alignment}`]: true,
+      'element--no-value': !resolvedValue,
     }"
+    :style="getStyleOverride('button')"
   >
     <ABButton
       :full-width="element.width === WIDTHS.FULL.value"
@@ -43,17 +44,7 @@ export default {
   computed: {
     WIDTHS: () => WIDTHS,
     resolvedValue() {
-      try {
-        return ensureString(this.resolveFormula(this.element.value))
-      } catch {
-        return ''
-      }
-    },
-    classes() {
-      return {
-        [`element--alignment-horizontal-${this.element.alignment}`]: true,
-        'element--no-value': !this.resolvedValue,
-      }
+      return ensureString(this.resolveFormula(this.element.value))
     },
   },
 }

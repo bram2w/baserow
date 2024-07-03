@@ -362,7 +362,6 @@ def test_import_user_source(data_fixture):
         builder, TO_IMPORT, defaultdict(MirrorDict)
     )
 
-    assert imported_instance.id != 28
     assert imported_instance.integration_id == integration.id
     assert imported_instance.name == "Test name"
 

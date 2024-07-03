@@ -37,5 +37,9 @@ def test_update_theme_updated(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    builder = ThemeService().update_theme(user, builder, primary_color="#f00000ff")
-    assert builder.mainthemeconfigblock.primary_color == "#f00000ff"
+    builder = ThemeService().update_theme(
+        user, builder, primary_color="#f00000ff", heading_1_font_size=42
+    )
+
+    assert builder.colorthemeconfigblock.primary_color == "#f00000ff"
+    assert builder.typographythemeconfigblock.heading_1_font_size == 42

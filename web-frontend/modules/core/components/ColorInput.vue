@@ -1,19 +1,25 @@
 <template>
-  <div>
+  <div :class="{ 'color-input--small': small }">
     <ColorPickerContext
       ref="colorPicker"
       :value="value"
-      :variables="colorVariables"
+      :variables="localColorVariables"
       @input="$emit('input', $event)"
     />
-    <a
+    <div
       ref="opener"
-      class="color-input__preview"
-      :style="{
-        'background-color': resolveColor(value, colorVariables),
-      }"
+      class="color-input__input"
+      tabindex="0"
       @click="$refs.colorPicker.toggle($refs.opener)"
-    />
+    >
+      <span
+        class="color-input__preview"
+        :style="{
+          'background-color': actualValue,
+        }"
+      />
+      <span>{{ displayValue }}</span>
+    </div>
   </div>
 </template>
 
@@ -34,6 +40,50 @@ export default {
       type: Array,
       required: false,
       default: () => [],
+    },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    defaultValue: {
+      type: String,
+      required: false,
+      default: null,
+    },
+  },
+  computed: {
+    variablesMap() {
+      return Object.fromEntries(
+        this.localColorVariables.map((v) => [v.value, v])
+      )
+    },
+    localColorVariables() {
+      if (this.defaultValue) {
+        return [
+          {
+            value: this.defaultValue,
+            color: resolveColor(this.defaultValue, this.colorVariables),
+            name: this.$t('colorInput.default'),
+          },
+          ...this.colorVariables,
+        ]
+      } else {
+        return this.colorVariables
+      }
+    },
+    displayValue() {
+      const found = this.localColorVariables.find(
+        ({ value }) => value === this.value
+      )
+      if (found) {
+        return found.name
+      } else {
+        return this.value.toUpperCase()
+      }
+    },
+    actualValue() {
+      return resolveColor(this.value, this.variablesMap)
     },
   },
   methods: { resolveColor },
