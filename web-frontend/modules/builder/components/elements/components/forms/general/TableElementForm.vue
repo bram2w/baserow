@@ -1,5 +1,12 @@
 <template>
   <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+      :element="values"
+    />
     <FormGroup :label="$t('tableElementForm.dataSource')">
       <div class="control__elements">
         <div @click="userHasChangedDataSource = true">
@@ -169,11 +176,6 @@
         </template>
       </DeviceSelector>
     </FormGroup>
-    <ColorInputGroup
-      v-model="values.button_color"
-      :label="$t('tableElementForm.buttonColor')"
-      :color-variables="colorVariables"
-    />
   </form>
 </template>
 
@@ -195,10 +197,15 @@ import collectionElementForm from '@baserow/modules/builder/mixins/collectionEle
 import { TABLE_ORIENTATION } from '@baserow/modules/builder/enums'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
 import { mapActions, mapGetters } from 'vuex'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'TableElementForm',
-  components: { DeviceSelector, ApplicationBuilderFormulaInputGroup },
+  components: {
+    ApplicationBuilderFormulaInputGroup,
+    DeviceSelector,
+    CustomStyle,
+  },
   mixins: [elementForm, collectionElementForm],
   data() {
     return {
@@ -206,14 +213,14 @@ export default {
         'data_source_id',
         'fields',
         'items_per_page',
-        'button_color',
         'orientation',
+        'styles',
       ],
       values: {
         fields: [],
         data_source_id: null,
         items_per_page: 1,
-        button_color: '',
+        styles: {},
         orientation: {},
       },
       userHasChangedDataSource: false,

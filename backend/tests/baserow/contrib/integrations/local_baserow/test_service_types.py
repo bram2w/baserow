@@ -7,7 +7,6 @@ import pytest
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework.exceptions import ValidationError
-from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
     BooleanField,
     CharField,
@@ -2248,7 +2247,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
     dispatch_context = BuilderDispatchContext(Mock(), page)
 
     field_mapping = service.field_mappings.create(field=boolean_field, value="'Horse'")
-    with pytest.raises(DRFValidationError) as exc:
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
         service_type.dispatch_data(
             service, {"table": table, field_mapping.id: "Horse"}, dispatch_context
         )

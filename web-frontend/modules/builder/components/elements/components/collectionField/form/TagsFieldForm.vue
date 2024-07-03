@@ -30,13 +30,16 @@
           />
         </template>
       </ApplicationBuilderFormulaInputGroup>
-      <ColorInputGroup
+      <FormGroup
         v-else
-        v-model="values.colors"
-        :label="$t('tagsFieldForm.fieldColorsLabel')"
-        :color-variables="colorVariables"
         horizontal
+        :label="$t('tagsFieldForm.fieldColorsLabel')"
       >
+        <ColorInput
+          v-model="values.colors"
+          :color-variables="colorVariables"
+          small
+        />
         <template #after-input>
           <ButtonIcon
             icon="iconoir-sigma-function"
@@ -44,7 +47,7 @@
             @click="setColorsToFormula"
           />
         </template>
-      </ColorInputGroup>
+      </FormGroup>
     </div>
   </form>
 </template>
@@ -69,7 +72,7 @@ export default {
       allowedValues: ['values', 'colors', 'colors_is_formula'],
       values: {
         values: '',
-        colors: '',
+        colors: '#acc8f8',
         colors_is_formula: false,
       },
     }
@@ -82,11 +85,11 @@ export default {
   methods: {
     setColorsToFormula() {
       this.values.colors_is_formula = true
-      this.values.colors = ''
+      this.values.colors = `'${this.values.colors}'`
     },
     setColorsToPicker() {
       this.values.colors_is_formula = false
-      this.values.colors = ''
+      this.values.colors = '#acc8f8'
     },
   },
 }

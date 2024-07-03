@@ -52,6 +52,7 @@ class ElementSerializer(serializers.ModelSerializer):
             "parent_element_id",
             "place_in_container",
             "visibility",
+            "styles",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",
@@ -136,6 +137,7 @@ class UpdateElementSerializer(serializers.ModelSerializer):
         model = Element
         fields = (
             "visibility",
+            "styles",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",

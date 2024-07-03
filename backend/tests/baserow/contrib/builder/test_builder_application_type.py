@@ -219,6 +219,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_left": 20,
                         "style_padding_right": 20,
                         "style_background": "none",
+                        "styles": {},
                         "value": element1.value,
                         "level": element1.level,
                         "alignment": "left",
@@ -247,6 +248,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_left": 20,
                         "style_padding_right": 20,
                         "style_background": "none",
+                        "styles": {},
                         "value": element2.value,
                         "alignment": "left",
                         "roles": [],
@@ -274,6 +276,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_left": 20,
                         "style_padding_right": 20,
                         "style_background": "none",
+                        "styles": {},
                         "order": str(element_container.order),
                         "column_amount": 3,
                         "column_gap": 50,
@@ -302,6 +305,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_left": 20,
                         "style_padding_right": 20,
                         "style_background": "none",
+                        "styles": {},
                         "order": str(element_inside_container.order),
                         "value": element_inside_container.value,
                         "alignment": "left",
@@ -376,6 +380,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_left": 20,
                         "style_padding_right": 20,
                         "style_background": "none",
+                        "styles": {},
                         "value": element3.value,
                         "level": element3.level,
                         "alignment": "left",
@@ -412,6 +417,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_left": 20,
                         "style_padding_right": 20,
                         "style_background": "none",
+                        "styles": {},
                         "items_per_page": 42,
                         "data_source_id": element4.data_source.id,
                         "fields": [
@@ -460,15 +466,17 @@ def test_builder_application_export(data_fixture):
             },
         ],
         "theme": {
+            "button_background_color": "primary",
+            "button_hover_background_color": "#96baf6ff",
             "primary_color": "#5190efff",
             "secondary_color": "#0eaa42ff",
             "border_color": "#d7d8d9ff",
             "heading_1_font_size": 24,
-            "heading_1_color": "#070810ff",
+            "heading_1_text_color": "#070810ff",
             "heading_2_font_size": 20,
-            "heading_2_color": "#070810ff",
+            "heading_2_text_color": "#070810ff",
             "heading_3_font_size": 16,
-            "heading_3_color": "#070810ff",
+            "heading_3_text_color": "#070810ff",
         },
         "id": builder.id,
         "name": builder.name,
@@ -744,11 +752,13 @@ IMPORT_REFERENCE = {
         "secondary_color": "#ccccccff",
         "border_color": "#ccccccff",
         "heading_1_font_size": 25,
-        "heading_1_color": "#ccccccff",
+        "heading_1_text_color": "#ccccccff",
         "heading_2_font_size": 21,
-        "heading_2_color": "#ccccccff",
+        "heading_2_color": "#ccccccff",  # Old property name
         "heading_3_font_size": 17,
         "heading_3_color": "#ccccccff",
+        "button_background_color": "#ccccccff",
+        "button_hover_background_color": "#ccccccff",
     },
     "id": 999,
     "name": "Holly Sherman",
@@ -789,15 +799,22 @@ def test_builder_application_import(data_fixture):
     assert first_data_source.name == "source 2"
     assert first_data_source.service.integration.id == first_integration.id
 
-    theme_config_block = builder.mainthemeconfigblock
-    assert theme_config_block.heading_1_color == "#ccccccff"
-    assert theme_config_block.heading_1_font_size == 25
-    assert theme_config_block.heading_2_color == "#ccccccff"
-    assert theme_config_block.heading_2_font_size == 21
-    assert theme_config_block.heading_3_color == "#ccccccff"
-    assert theme_config_block.heading_3_font_size == 17
-    assert theme_config_block.primary_color == "#ccccccff"
-    assert theme_config_block.secondary_color == "#ccccccff"
+    typography_config_block = builder.typographythemeconfigblock
+    assert typography_config_block.heading_1_text_color == "#ccccccff"
+    assert typography_config_block.heading_1_font_size == 25
+    assert typography_config_block.heading_2_text_color == "#ccccccff"
+    assert typography_config_block.heading_2_font_size == 21
+    assert typography_config_block.heading_3_text_color == "#ccccccff"
+    assert typography_config_block.heading_3_font_size == 17
+
+    color_config_block = builder.colorthemeconfigblock
+    assert color_config_block.primary_color == "#ccccccff"
+    assert color_config_block.secondary_color == "#ccccccff"
+    assert color_config_block.border_color == "#ccccccff"
+
+    button_config_block = builder.buttonthemeconfigblock
+    assert button_config_block.button_background_color == "#ccccccff"
+    assert button_config_block.button_hover_background_color == "#ccccccff"
 
     [
         element1,
@@ -918,9 +935,9 @@ IMPORT_REFERENCE_COMPLEX = {
         "secondary_color": "#ccccccff",
         "border_color": "#ccccccff",
         "heading_1_font_size": 25,
-        "heading_1_color": "#ccccccff",
+        "heading_1_text_color": "#ccccccff",
         "heading_2_font_size": 21,
-        "heading_2_color": "#ccccccff",
+        "heading_2_color": "#ccccccff",  # Old property name
         "heading_3_font_size": 17,
         "heading_3_color": "#ccccccff",
     },

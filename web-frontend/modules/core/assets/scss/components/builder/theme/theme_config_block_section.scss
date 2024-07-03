@@ -1,0 +1,22 @@
+.theme-config-block-section {
+  display: flex;
+  width: 100%;
+  gap: 28px;
+}
+
+.theme-config-block-section__properties {
+  flex: 50% 0 0;
+
+  .theme-config-block--no-preview & {
+    flex: 100% 0 0;
+  }
+}
+
+.theme-config-block-section__preview {
+  flex: 50% 0 0;
+  width: 50%;
+
+  .theme-config-block--no-preview & {
+    display: none;
+  }
+}

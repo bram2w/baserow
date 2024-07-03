@@ -84,7 +84,11 @@ import {
   UserDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
-import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
+import {
+  ColorThemeConfigBlockType,
+  TypographyThemeConfigBlockType,
+  ButtonThemeConfigBlockType,
+} from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
   CreateRowWorkflowActionType,
   NotificationWorkflowActionType,
@@ -241,7 +245,18 @@ export default (context) => {
     'builderDataProvider',
     new PreviousActionDataProviderType(context)
   )
-  app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
+  app.$registry.register(
+    'themeConfigBlock',
+    new ColorThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new TypographyThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new ButtonThemeConfigBlockType(context)
+  )
 
   app.$registry.register(
     'workflowAction',

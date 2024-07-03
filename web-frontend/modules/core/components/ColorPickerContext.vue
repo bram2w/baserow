@@ -2,7 +2,7 @@
   <Context class="color-picker-context">
     <ColorPicker
       :value="hexColorIncludingAlpha"
-      @input=";[colorUpdated($event), $emit('input', $event)]"
+      @input="setColorFromPicker($event)"
     ></ColorPicker>
     <div class="color-picker-context__color">
       <Dropdown
@@ -66,21 +66,25 @@
       v-if="Object.keys(variables).length > 0"
       class="color-picker-context__variables"
     >
-      <Dropdown :value="isVariable ? value : ''" small @input="setVariable">
+      <Dropdown
+        :value="selectedVariable?.name || ''"
+        small
+        @input="setVariable"
+      >
         <DropdownItem name="Custom" value=""></DropdownItem>
         <DropdownItem
           v-for="variable in variables"
           :key="variable.name"
           :name="variable.name"
-          :value="variable.value"
+          :value="variable.name"
         >
           <div
             class="color-picker-context__variable-color"
             :style="{ 'background-color': variable.color }"
           ></div>
-          <span class="select__item-name-text" :title="variable.name">{{
-            variable.name
-          }}</span>
+          <span class="select__item-name-text" :title="variable.name">
+            {{ variable.name }}
+          </span>
         </DropdownItem>
       </Dropdown>
     </div>
@@ -91,7 +95,6 @@
 import context from '@baserow/modules/core/mixins/context'
 import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
 import {
-  isColorVariable,
   isValidHexColor,
   convertHexToRgb,
   convertRgbToHex,
@@ -132,9 +135,8 @@ export default {
   },
   computed: {
     COLOR_NOTATIONS: () => COLOR_NOTATIONS,
-    isVariable() {
-      const variableValues = this.variables.map((v) => v.value)
-      return isColorVariable(this.value) && variableValues.includes(this.value)
+    selectedVariable() {
+      return this.variables.find(({ value }) => value === this.value)
     },
   },
   watch: {
@@ -143,8 +145,11 @@ export default {
         // Only update the value if it has actually changed because otherwise the user's
         // input can be overwritten from converting to and from hex values.
         if (value !== oldValue) {
-          if (this.isVariable) {
-            this.setVariable(value)
+          const variable = this.variables.find(
+            (variable) => variable.value === value
+          )
+          if (variable !== undefined) {
+            this.colorUpdated(variable.color)
           } else {
             this.colorUpdated(value)
           }
@@ -154,6 +159,15 @@ export default {
     },
   },
   methods: {
+    setColorFromPicker(value) {
+      this.colorUpdated(value)
+      this.$emit(
+        'input',
+        this.a === 100
+          ? this.hexColorExcludingAlpha
+          : this.hexColorIncludingAlpha
+      )
+    },
     /**
      * Called whenever the original value is updated. It will make sure that all the
      * variables are updated accordingly if the value is a valid hex color.
@@ -206,6 +220,9 @@ export default {
       rgba.r = newRgba.r
       rgba.g = newRgba.g
       rgba.b = newRgba.b
+      if (rgba.a === 1) {
+        delete rgba.a
+      }
       const hex = convertRgbToHex(rgba)
 
       this.colorUpdated(hex)
@@ -220,7 +237,7 @@ export default {
      */
     setVariable(value) {
       const variable = this.variables.find(
-        (variable) => variable.value === value
+        (variable) => variable.name === value
       )
       if (variable !== undefined) {
         this.colorUpdated(variable.color)

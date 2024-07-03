@@ -6,9 +6,7 @@
       :placeholder="$t('textElementForm.textPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
-    <FormElement class="control">
-      <HorizontalAlignmentsSelector v-model="values.alignment" />
-    </FormElement>
+    <HorizontalAlignmentsSelector v-model="values.alignment" />
     <FormGroup :label="$t('textElementForm.textFormatTypeLabel')">
       <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.PLAIN">
         {{ $t('textElementForm.textFormatTypePlain') }}

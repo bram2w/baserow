@@ -381,18 +381,36 @@
     "borderLabel": "Border",
     "paddingLabel": "Padding"
   },
-  "mainThemeConfigBlock": {
-    "colorsLabel": "Colors",
+  "themeConfigBlockType": {
+    "color": "Colors",
+    "typography": "Typography",
+    "button": "Button"
+  },
+  "colorThemeConfigBlock": {
     "primaryColor": "Primary",
     "secondaryColor": "Secondary",
-    "typography": "Typography",
+    "borderColor": "Border"
+  },
+  "colorThemeConfigBlockType": {
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "border": "Border"
+  },
+  "typographyThemeConfigBlock": {
     "headingLabel": "Heading {i} (h{i})",
-    "headingValue": "Heading <h{i}>"
+    "headingValue": "Heading <h{i}>",
+    "color": "Color",
+    "size": "Size"
+  },
+  "buttonThemeConfigBlock": {
+    "backgroundColor": "Background color",
+    "button": "Button",
+    "defaultState": "Default state",
+    "hoverState": "Hover state"
   },
   "buttonElementForm": {
-    "valueLabel": "Text",
-    "valuePlaceholder": "Enter text...",
-    "buttonColor": "Button color"
+    "valueLabel": "Button text",
+    "valuePlaceholder": "Enter text..."
   },
   "buttonElement": {
     "noValue": "Unnamed..."
@@ -605,5 +623,8 @@
   "buttonFieldForm": {
     "infoMessage": "To configure actions for this button, open the \"Events\" tab of the current element.",
     "labelPlaceholder": "Enter a label..."
+  },
+  "resetButton": {
+    "reset": "Reset to default theme value"
   }
 }

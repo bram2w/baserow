@@ -1,8 +1,8 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
-import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
+import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
 
 export default {
   inject: ['workspace', 'builder', 'page', 'mode'],
@@ -59,8 +59,14 @@ export default {
         },
       }
     },
+    themeConfigBlocks() {
+      return this.$registry.getOrderedList('themeConfigBlock')
+    },
     colorVariables() {
-      return themeToColorVariables(this.builder.theme)
+      return ThemeConfigBlockType.getAllColorVariables(
+        this.themeConfigBlocks,
+        this.builder.theme
+      )
     },
   },
   methods: {
@@ -115,7 +121,13 @@ export default {
         }
       }
     },
-
+    getStyleOverride(key, colorVariables = null) {
+      return ThemeConfigBlockType.getAllStyles(
+        this.themeConfigBlocks,
+        this.element.styles[key] || {},
+        colorVariables || this.colorVariables
+      )
+    },
     resolveColor,
   },
 }

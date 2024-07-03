@@ -1,10 +1,5 @@
 <template>
-  <div
-    :style="{
-      '--button-color': resolveColor(element.button_color, colorVariables),
-    }"
-    class="table-element"
-  >
+  <div :style="getStyleOverride('button')" class="table-element">
     <BaserowTable
       :fields="element.fields"
       :rows="rows"

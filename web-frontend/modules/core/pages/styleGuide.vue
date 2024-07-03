@@ -2132,6 +2132,7 @@
           />
         </div>
         <div
+          id="colorPicker"
           class="margin-bottom-3"
           style="background-color: #ffffff; padding: 20px"
         >
@@ -2140,8 +2141,9 @@
           <a
             ref="colorPickerLink"
             @click="$refs.colorPicker.toggle($refs.colorPickerLink)"
-            >Open color picker context</a
           >
+            Open color picker context
+          </a>
           <ColorPickerContext
             ref="colorPicker"
             v-model="color"
@@ -2149,14 +2151,10 @@
           ></ColorPickerContext>
           <br /><br />
           {{ color }} - {{ resolveColor(color, colorVariables) }} <br /><br />
-          <div
-            :style="{
-              width: '40px',
-              height: '20px',
-              'background-color': resolveColor(color, colorVariables),
-            }"
-          ></div>
+          <br />
+          <ColorInput v-model="color" :color-variables="colorVariables" />
         </div>
+
         <div class="margin-bottom-3">
           <h2>Call to action</h2>
           <CallToAction> My call to action. Click me! </CallToAction>

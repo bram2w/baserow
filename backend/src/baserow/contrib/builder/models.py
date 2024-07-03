@@ -3,7 +3,11 @@ from django.db import models
 from baserow.contrib.builder.domains.models import Domain, PublishDomainJob
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
-from baserow.contrib.builder.theme.models import MainThemeConfigBlock
+from baserow.contrib.builder.theme.models import (
+    ButtonThemeConfigBlock,
+    ColorThemeConfigBlock,
+    TypographyThemeConfigBlock,
+)
 from baserow.core.models import Application, UserFile
 
 __all__ = [
@@ -12,7 +16,9 @@ __all__ = [
     "Domain",
     "PublishDomainJob",
     "Element",
-    "MainThemeConfigBlock",
+    "ColorThemeConfigBlock",
+    "TypographyThemeConfigBlock",
+    "ButtonThemeConfigBlock",
 ]
 
 

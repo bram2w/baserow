@@ -235,9 +235,15 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateThemeOperationType())
 
         from .theme.registries import theme_config_block_registry
-        from .theme.theme_config_block_types import MainThemeConfigBlockType
+        from .theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+            ColorThemeConfigBlockType,
+            TypographyThemeConfigBlockType,
+        )
 
-        theme_config_block_registry.register(MainThemeConfigBlockType())
+        theme_config_block_registry.register(ColorThemeConfigBlockType())
+        theme_config_block_registry.register(TypographyThemeConfigBlockType())
+        theme_config_block_registry.register(ButtonThemeConfigBlockType())
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
