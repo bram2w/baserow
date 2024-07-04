@@ -6,6 +6,11 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import SET_NULL, QuerySet
 
+from baserow.contrib.builder.constants import (
+    WIDTHS,
+    HorizontalAlignments,
+    VerticalAlignments,
+)
 from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
@@ -19,23 +24,6 @@ from baserow.core.user_files.models import UserFile
 
 if TYPE_CHECKING:
     from baserow.contrib.builder.pages.models import Page
-
-
-class HorizontalAlignments(models.TextChoices):
-    LEFT = "left"
-    CENTER = "center"
-    RIGHT = "right"
-
-
-class VerticalAlignments(models.TextChoices):
-    TOP = "top"
-    CENTER = "center"
-    BOTTOM = "bottom"
-
-
-class WIDTHS(models.TextChoices):
-    AUTO = "auto"
-    FULL = "full"
 
 
 class BackgroundTypes(models.TextChoices):
@@ -394,13 +382,15 @@ class HeadingElement(Element):
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
 
-    # TODO zdm remove me in next release
+    # TODO zdm remove following fields in next release (after 1.26)
     font_color = models.CharField(
         max_length=20,
         default="default",
         blank=True,
         help_text="The font color of the heading",
     )
+
+    # TODO zdm remove following fields in next release (after 1.26)
     alignment = models.CharField(
         choices=HorizontalAlignments.choices,
         max_length=10,
@@ -418,16 +408,17 @@ class TextElement(Element):
         MARKDOWN = "markdown"
 
     value = FormulaField(default="")
-    alignment = models.CharField(
-        choices=HorizontalAlignments.choices,
-        max_length=10,
-        default=HorizontalAlignments.LEFT,
-    )
     format = models.CharField(
         choices=TEXT_FORMATS.choices,
         help_text="The format of the text",
         max_length=10,
         default=TEXT_FORMATS.PLAIN,
+    )
+    # TODO zdm remove following fields in next release (after 1.26)
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
     )
 
 
@@ -498,11 +489,13 @@ class LinkElement(Element, NavigationElementMixin):
         max_length=10,
         default=VARIANTS.LINK,
     )
+    # TODO zdm remove following fields in next release (after 1.26)
     width = models.CharField(
         choices=WIDTHS.choices,
         max_length=10,
         default=WIDTHS.AUTO,
     )
+    # TODO zdm remove following fields in next release (after 1.26)
     alignment = models.CharField(
         choices=HorizontalAlignments.choices,
         max_length=10,
@@ -552,11 +545,14 @@ class ImageElement(Element):
         default="",
         blank=True,
     )
+
+    # TODO zdm remove following field in next release (after 1.26)
     alignment = models.CharField(
         choices=HorizontalAlignments.choices,
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
+    # TODO zdm remove following field in next release (after 1.26)
     style_max_width = models.PositiveIntegerField(
         null=True,
         help_text="The max-width for this image element.",
@@ -566,6 +562,7 @@ class ImageElement(Element):
             MaxValueValidator(100, message="Value cannot be greater than 100."),
         ],
     )
+    # TODO zdm remove following field in next release (after 1.26)
     style_max_height = models.PositiveIntegerField(
         null=True,
         help_text="The max-height for this image element.",
@@ -574,6 +571,7 @@ class ImageElement(Element):
             MaxValueValidator(3000, message="Value cannot be greater than 3000."),
         ],
     )
+    # TODO zdm remove following field in next release (after 1.26)
     style_image_constraint = models.CharField(
         help_text="The image constraint to apply to this image",
         choices=IMAGE_CONSTRAINT_TYPES.choices,
@@ -594,7 +592,7 @@ class FormContainerElement(ContainerElement):
         "values after a successful form submission.",
     )
 
-    # TODO zdm remove me in next release
+    # TODO zdm remove following fields in next release (after 1.26)
     button_color = models.CharField(
         max_length=20,
         default="primary",
@@ -721,18 +719,22 @@ class ButtonElement(Element):
     """
 
     value = FormulaField(default="", help_text="The caption of the button.")
+
+    # TODO zdm remove following fields in next release (after 1.26)
     width = models.CharField(
         choices=WIDTHS.choices,
         max_length=10,
         default=WIDTHS.AUTO,
     )
+
+    # TODO zdm remove following fields in next release (after 1.26)
     alignment = models.CharField(
         choices=HorizontalAlignments.choices,
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
 
-    # TODO zdm remove me in next release
+    # TODO zdm remove following fields in next release (after 1.26)
     button_color = models.CharField(
         max_length=20,
         default="primary",
@@ -792,6 +794,13 @@ class CollectionElement(Element):
         ],
     )
 
+    button_load_more_label = FormulaField(
+        help_text="The label of the show more button",
+        blank=True,
+        default="",
+        null=True,  # TODO zdm remove me in next release (after 1.26)
+    )
+
     class Meta:
         abstract = True
 
@@ -801,13 +810,6 @@ class TableElement(CollectionElement):
     A table element
     """
 
-    # TODO zdm remove me in next release
-    button_color = models.CharField(
-        max_length=20,
-        default="primary",
-        blank=True,
-        help_text="The color of the button",
-    )
     orientation = models.JSONField(
         blank=True,
         null=True,
@@ -815,6 +817,14 @@ class TableElement(CollectionElement):
         help_text="The table orientation (horizontal or vertical) for each device type",
     )
     fields = models.ManyToManyField(CollectionField)
+
+    # TODO zdm remove following fields in next release (after 1.26)
+    button_color = models.CharField(
+        max_length=20,
+        default="primary",
+        blank=True,
+        help_text="The color of the button",
+    )
 
 
 class IFrameElement(Element):

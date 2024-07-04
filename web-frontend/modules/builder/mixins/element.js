@@ -125,7 +125,8 @@ export default {
       return ThemeConfigBlockType.getAllStyles(
         this.themeConfigBlocks,
         this.element.styles[key] || {},
-        colorVariables || this.colorVariables
+        colorVariables || this.colorVariables,
+        this.builder.theme
       )
     },
     resolveColor,

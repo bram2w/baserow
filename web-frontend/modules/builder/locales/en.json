@@ -189,24 +189,14 @@
     "passwordTypeWarning": "Passwords are sensitive data. Please be careful how you handle and store passwords in your application."
   },
   "imageElementForm": {
-    "fileLabel": "Image file",
+    "fileLabel": "Image",
     "invalidUrlError": "URL is invalid",
     "altTextTitle": "Alt text",
     "altTextDescription": "Is used by screen readers and displayed if the image can't load",
     "fileSourceTypeUpload": "Upload",
     "fileSourceTypeURL": "URL",
     "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
-    "uploadFileButton": "Upload file",
-    "maxWidthLabel": "Max width",
-    "maxHeightLabel": "Max height",
-    "maxHeightPlaceholder": "Enter a maximum height in pixels.",
-    "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
-    "imageConstraintsLabel": "Constraints",
-    "imageConstraintFullWidth": "Extend to max width",
-    "imageConstraintCover": "Cover",
-    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
-    "imageConstraintContain": "Contain",
-    "imageConstraintContainDisabled": "Unavailable with a max height."
+    "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
     "empty": "Empty IFrame...",
@@ -221,6 +211,7 @@
   },
   "columnElementForm": {
     "columnAmountTitle": "Layout",
+    "verticalAlignment": "Vertical alignment",
     "columnAmountName": "no columns | 1 column | {columnAmount} columns",
     "columnGapTitle": "Space between columns",
     "columnGapPlaceholder": "Enter space between columns..."
@@ -315,13 +306,11 @@
     "small": "Small"
   },
   "horizontalAlignmentSelector": {
-    "alignment": "Horizontal alignment",
     "alignmentLeft": "Left",
     "alignmentCenter": "Center",
     "alignmentRight": "Right"
   },
   "verticalAlignmentSelector": {
-    "alignment": "Vertical alignment",
     "alignmentTop": "Top",
     "alignmentCenter": "Middle",
     "alignmentBottom": "Bottom"
@@ -384,7 +373,9 @@
   "themeConfigBlockType": {
     "color": "Colors",
     "typography": "Typography",
-    "button": "Button"
+    "button": "Button",
+    "link": "Link",
+    "image": "Image"
   },
   "colorThemeConfigBlock": {
     "primaryColor": "Primary",
@@ -400,13 +391,38 @@
     "headingLabel": "Heading {i} (h{i})",
     "headingValue": "Heading <h{i}>",
     "color": "Color",
-    "size": "Size"
+    "size": "Size",
+    "textAlignment": "Alignment",
+    "bodyLabel": "Body"
   },
   "buttonThemeConfigBlock": {
     "backgroundColor": "Background color",
     "button": "Button",
     "defaultState": "Default state",
-    "hoverState": "Hover state"
+    "hoverState": "Hover state",
+    "textAlignment": "Text alignment",
+    "alignment": "Alignment",
+    "width": "Width"
+  },
+  "linkThemeConfigBlock": {
+    "color": "Color",
+    "link": "Link",
+    "defaultState": "Default state",
+    "hoverState": "Hover state",
+    "alignment": "Alignment"
+  },
+  "imageThemeConfigBlock": {
+    "alignment": "Alignment",
+    "maxWidthLabel": "Max width",
+    "maxHeightLabel": "Max height",
+    "maxHeightPlaceholder": "Enter a max height",
+    "maxWidthPlaceholder": "Enter a max width",
+    "imageConstraintsLabel": "Constraints",
+    "imageConstraintFullWidth": "Extend to max width",
+    "imageConstraintCover": "Cover",
+    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
+    "imageConstraintContain": "Contain",
+    "imageConstraintContainDisabled": "Unavailable with a max height."
   },
   "buttonElementForm": {
     "valueLabel": "Button text",
@@ -448,7 +464,8 @@
     "refreshFieldsFromDataSource": "refresh fields from data source",
     "orientation": "Orientation",
     "orientationHorizontal": "Horizontal",
-    "orientationVertical": "Vertical"
+    "orientationVertical": "Vertical",
+    "buttonLoadMoreLabel": "Show more label"
   },
   "tableElement": {
     "empty": "No items have been found.",
@@ -467,7 +484,8 @@
     "itemsPerRowDescription": "Number of columns per row and device type.",
     "orientationLabel": "Orientation",
     "orientationVertical": "Vertical",
-    "orientationHorizontal": "Horizontal"
+    "orientationHorizontal": "Horizontal",
+    "buttonLoadMoreLabel": "Show more label"
   },
   "currentRecordDataProviderType": {
     "index": "Index",

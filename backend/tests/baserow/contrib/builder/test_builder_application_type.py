@@ -1,3 +1,4 @@
+import json
 import uuid
 from io import BytesIO
 from unittest.mock import patch
@@ -157,6 +158,8 @@ def test_builder_application_export(data_fixture):
         builder, ImportExportConfig(include_permission_data=True)
     )
 
+    serialized = json.loads(json.dumps(serialized))
+
     reference = {
         "pages": [
             {
@@ -224,7 +227,7 @@ def test_builder_application_export(data_fixture):
                         "level": element1.level,
                         "alignment": "left",
                         "roles": [],
-                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                        "role_type": "allow_all",
                     },
                     {
                         "id": element2.id,
@@ -252,8 +255,8 @@ def test_builder_application_export(data_fixture):
                         "value": element2.value,
                         "alignment": "left",
                         "roles": [],
-                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
-                        "format": TextElement.TEXT_FORMATS.PLAIN,
+                        "role_type": "allow_all",
+                        "format": "plain",
                     },
                     {
                         "id": element_container.id,
@@ -282,7 +285,7 @@ def test_builder_application_export(data_fixture):
                         "column_gap": 50,
                         "alignment": "top",
                         "roles": [],
-                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                        "role_type": "allow_all",
                     },
                     {
                         "id": element_inside_container.id,
@@ -310,8 +313,8 @@ def test_builder_application_export(data_fixture):
                         "value": element_inside_container.value,
                         "alignment": "left",
                         "roles": [],
-                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
-                        "format": TextElement.TEXT_FORMATS.PLAIN,
+                        "role_type": "allow_all",
+                        "format": "plain",
                     },
                 ],
             },
@@ -385,14 +388,15 @@ def test_builder_application_export(data_fixture):
                         "level": element3.level,
                         "alignment": "left",
                         "roles": [],
-                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                        "role_type": "allow_all",
                     },
                     {
                         "id": element4.id,
                         "type": "table",
+                        "button_load_more_label": "",
                         "order": str(element4.order),
                         "roles": [],
-                        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                        "role_type": "allow_all",
                         "button_color": "primary",
                         "orientation": {
                             "smartphone": "horizontal",
@@ -466,17 +470,42 @@ def test_builder_application_export(data_fixture):
             },
         ],
         "theme": {
-            "button_background_color": "primary",
-            "button_hover_background_color": "#96baf6ff",
+            "body_text_color": "#070810ff",
+            "body_font_size": 14,
+            "body_text_alignment": "left",
             "primary_color": "#5190efff",
             "secondary_color": "#0eaa42ff",
             "border_color": "#d7d8d9ff",
             "heading_1_font_size": 24,
             "heading_1_text_color": "#070810ff",
+            "heading_1_text_alignment": "left",
             "heading_2_font_size": 20,
             "heading_2_text_color": "#070810ff",
+            "heading_2_text_alignment": "left",
             "heading_3_font_size": 16,
             "heading_3_text_color": "#070810ff",
+            "heading_3_text_alignment": "left",
+            "heading_4_font_size": 16,
+            "heading_4_text_color": "#070810ff",
+            "heading_4_text_alignment": "left",
+            "heading_5_font_size": 14,
+            "heading_5_text_color": "#070810ff",
+            "heading_5_text_alignment": "left",
+            "heading_6_font_size": 14,
+            "heading_6_text_color": "#202128",
+            "heading_6_text_alignment": "left",
+            "button_background_color": "primary",
+            "button_hover_background_color": "#96baf6ff",
+            "button_alignment": "left",
+            "button_text_alignment": "center",
+            "button_width": "auto",
+            "image_alignment": "left",
+            "image_constraint": "contain",
+            "image_max_height": None,
+            "image_max_width": 100,
+            "link_text_alignment": "left",
+            "link_text_color": "primary",
+            "link_hover_text_color": "#96baf6ff",
         },
         "id": builder.id,
         "name": builder.name,
@@ -524,7 +553,7 @@ IMPORT_REFERENCE = {
                     "value": "'foo'",
                     "level": 2,
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 },
                 {
                     "id": 999,
@@ -541,7 +570,7 @@ IMPORT_REFERENCE = {
                     "order": 2,
                     "value": "",
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 },
                 {
                     "id": 1000,
@@ -559,7 +588,7 @@ IMPORT_REFERENCE = {
                     "order": 2.5,
                     "data_source_id": 5,
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                     "fields": [
                         {
                             "name": "F 1",
@@ -599,7 +628,7 @@ IMPORT_REFERENCE = {
                     "order": 1.5,
                     "value": "'test'",
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 },
                 {
                     "id": 500,
@@ -620,7 +649,7 @@ IMPORT_REFERENCE = {
                     "column_gap": 50,
                     "alignment": "top",
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 },
                 {
                     "id": 501,
@@ -639,7 +668,7 @@ IMPORT_REFERENCE = {
                     "order": 1,
                     "value": "'test'",
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 },
             ],
             "data_sources": [
@@ -689,7 +718,7 @@ IMPORT_REFERENCE = {
                     "value": "",
                     "level": 1,
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 }
             ],
             "data_sources": [
@@ -748,17 +777,41 @@ IMPORT_REFERENCE = {
         },
     ],
     "theme": {
+        "body_text_color": "#ccccccff",
+        "body_font_size": 14,
+        "body_text_alignment": "left",
         "primary_color": "#ccccccff",
         "secondary_color": "#ccccccff",
         "border_color": "#ccccccff",
         "heading_1_font_size": 25,
         "heading_1_text_color": "#ccccccff",
+        "heading_1_text_alignment": "left",
         "heading_2_font_size": 21,
-        "heading_2_color": "#ccccccff",  # Old property name
+        "heading_2_text_color": "#ccccccff",
+        "heading_2_text_alignment": "left",
         "heading_3_font_size": 17,
-        "heading_3_color": "#ccccccff",
+        "heading_3_text_color": "#ccccccff",
+        "heading_3_text_alignment": "left",
+        "heading_4_font_size": 16,
+        "heading_4_text_color": "#ccccccff",
+        "heading_4_text_alignment": "left",
+        "heading_5_font_size": 14,
+        "heading_5_text_color": "#ccccccff",
+        "heading_5_text_alignment": "left",
+        "heading_6_font_size": 14,
+        "heading_6_text_color": "#ccccccff",
+        "heading_6_text_alignment": "left",
         "button_background_color": "#ccccccff",
         "button_hover_background_color": "#ccccccff",
+        "button_alignment": "left",
+        "button_width": "auto",
+        "image_alignment": "left",
+        "image_constraint": "contain",
+        "image_max_height": None,
+        "image_max_width": 100,
+        "link_alignment": "left",
+        "link_text_color": "primary",
+        "link_hover_text_color": "#ccccccff",
     },
     "id": 999,
     "name": "Holly Sherman",
@@ -872,7 +925,7 @@ IMPORT_REFERENCE_COMPLEX = {
                     "value": "",
                     "level": 1,
                     "roles": [],
-                    "role_type": Element.ROLE_TYPES.ALLOW_ALL,
+                    "role_type": "allow_all",
                 }
             ],
             "data_sources": [

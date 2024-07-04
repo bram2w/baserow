@@ -29,6 +29,18 @@
       type="number"
       @blur="$v.values.items_per_page.$touch()"
     ></FormInput>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+    />
+    <ApplicationBuilderFormulaInputGroup
+      v-model="values.button_load_more_label"
+      :label="$t('repeatElementForm.buttonLoadMoreLabel')"
+      :placeholder="$t('elementForms.textInputPlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+    />
     <FormGroup :label="$t('repeatElementForm.orientationLabel')">
       <RadioButton
         v-model="values.orientation"
@@ -82,10 +94,16 @@ import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
 import { mapActions, mapGetters } from 'vuex'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   name: 'RepeatElementForm',
-  components: { DeviceSelector },
+  components: {
+    DeviceSelector,
+    CustomStyle,
+    ApplicationBuilderFormulaInputGroup,
+  },
   mixins: [elementForm, collectionElementForm],
   data() {
     return {
@@ -94,12 +112,16 @@ export default {
         'items_per_page',
         'items_per_row',
         'orientation',
+        'button_load_more_label',
+        'styles',
       ],
       values: {
         data_source_id: null,
         items_per_page: 1,
         items_per_row: {},
         orientation: 'vertical',
+        button_load_more_label: '',
+        styles: {},
       },
     }
   },

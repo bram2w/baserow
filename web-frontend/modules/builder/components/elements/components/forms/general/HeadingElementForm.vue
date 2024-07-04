@@ -1,12 +1,12 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <CustomStyle
-      v-if="values.level < 4"
+      v-if="values.level"
       v-model="values.styles"
       style-key="typography"
       :config-block-types="['typography']"
       :theme="builder.theme"
-      :element="values"
+      :extra-args="{ headingLevel: values.level }"
     />
     <FormGroup :label="$t('headingElementForm.levelTitle')">
       <Dropdown v-model="values.level" :show-search="false">
@@ -26,23 +26,18 @@
       :placeholder="$t('elementForms.textInputPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
-    <FormElement class="control">
-      <HorizontalAlignmentsSelector v-model="values.alignment" />
-    </FormElement>
   </form>
 </template>
 
 <script>
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector.vue'
 import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import CustomStyle from '../style/CustomStyle.vue'
 
 export default {
   name: 'HeaderElementForm',
   components: {
-    HorizontalAlignmentsSelector,
     ApplicationBuilderFormulaInputGroup,
     CustomStyle,
   },
@@ -52,7 +47,7 @@ export default {
       values: {
         value: '',
         level: 1,
-        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT,
         styles: {},
       },
       levels: [...Array(6).keys()].map((level) => ({

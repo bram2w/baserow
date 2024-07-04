@@ -90,9 +90,9 @@ export default {
   computed: {
     flexAlignment() {
       const alignmentMapping = {
-        [VERTICAL_ALIGNMENTS.TOP.value]: 'start',
-        [VERTICAL_ALIGNMENTS.CENTER.value]: 'center',
-        [VERTICAL_ALIGNMENTS.BOTTOM.value]: 'end',
+        [VERTICAL_ALIGNMENTS.TOP]: 'flex-start',
+        [VERTICAL_ALIGNMENTS.CENTER]: 'center',
+        [VERTICAL_ALIGNMENTS.BOTTOM]: 'flex-end',
       }
       return alignmentMapping[this.element.alignment]
     },

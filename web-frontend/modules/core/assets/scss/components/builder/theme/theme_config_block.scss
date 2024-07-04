@@ -5,7 +5,8 @@
   display: flex;
   place-content: center space-between;
   margin-bottom: 15px;
-  width: 50%;
+  width: 60%;
+  padding: 0 20px 0 0;
   user-select: none;
 
   &:hover {
@@ -22,21 +23,24 @@
 }
 
 .theme-config-block {
+  position: relative;
+
   & .control--horizontal {
     flex-wrap: nowrap;
 
-    .control__elements {
-      flex-basis: 50%;
+    .control__label {
+      flex-basis: 40%;
+      color: $color-neutral-700;
     }
 
-    .control__label {
-      flex-basis: 50%;
-      color: $color-neutral-700;
+    .control__elements {
+      flex-basis: 60%;
+      white-space: initial;
     }
   }
 
   &:not(.theme-config-block--no-preview)::after {
-    @include absolute(0, calc(50% - 14px), 0, auto);
+    @include absolute(0, calc(40% - 14px), 0, auto);
 
     content: '';
     border-right: 1px solid $color-neutral-100;

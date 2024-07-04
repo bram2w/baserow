@@ -7,8 +7,10 @@
 }
 
 .custom-style__config-blocks {
-  width: 350px;
+  width: 400px;
   padding: 20px 20px 5px;
+  overflow-y: scroll;
+  max-height: calc(100vh - 20px);
 }
 
 .custom-style__config-block-title {

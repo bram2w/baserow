@@ -1,12 +1,5 @@
 <template>
   <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
-    <CustomStyle
-      v-model="values.styles"
-      style-key="button"
-      :config-block-types="['button']"
-      :theme="builder.theme"
-      :element="values"
-    />
     <FormGroup :label="$t('tableElementForm.dataSource')">
       <div class="control__elements">
         <div @click="userHasChangedDataSource = true">
@@ -40,6 +33,18 @@
       type="number"
       @blur="$v.values.items_per_page.$touch()"
     ></FormInput>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+    />
+    <ApplicationBuilderFormulaInputGroup
+      v-model="values.button_load_more_label"
+      :label="$t('tableElementForm.buttonLoadMoreLabel')"
+      :placeholder="$t('elementForms.textInputPlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+    />
     <FormGroup :label="$t('tableElementForm.fields')">
       <template v-if="values.data_source_id">
         <ButtonText
@@ -136,6 +141,9 @@
                 :is="collectionTypes[field.type].formComponent"
                 :element="element"
                 :default-values="field"
+                :application-context-additions="{
+                  collectionField: field,
+                }"
                 @values-changed="updateField(field, $event)"
               />
             </template>
@@ -215,6 +223,7 @@ export default {
         'items_per_page',
         'orientation',
         'styles',
+        'button_load_more_label',
       ],
       values: {
         fields: [],
@@ -222,6 +231,7 @@ export default {
         items_per_page: 1,
         styles: {},
         orientation: {},
+        button_load_more_label: '',
       },
       userHasChangedDataSource: false,
     }

@@ -1,5 +1,6 @@
 <template>
   <FormElement
+    v-if="!noControl"
     :error="hasError"
     class="control"
     :class="{
@@ -58,6 +59,44 @@
       </div>
     </div>
   </FormElement>
+  <div v-else>
+    <div
+      :class="{
+        'form-input': true,
+        'form-input--with-icon': hasIcon,
+        'form-input--with-icon-left': iconLeft,
+        'form-input--with-icon-right': iconRight,
+        'form-input--error': hasError,
+        'form-input--monospace': monospace,
+        'form-input--loading': loading,
+        'form-input--disabled': disabled,
+        'form-input--focus': focus,
+        'form-input--small': small,
+      }"
+    >
+      <input
+        ref="base_url"
+        class="form-input__input"
+        :class="{ 'remove-number-input-controls': true }"
+        :value="fromValue(value)"
+        :disabled="disabled"
+        :type="type"
+        :placeholder="placeholder"
+        @blur="$emit('blur', $event)"
+        @input="$emit('input', toValue($event.target.value))"
+        @focusin="focus = true"
+        @focusout="focus = false"
+      />
+
+      <i v-if="hasIcon" class="form-input__icon" :class="icon" />
+      <div v-if="$slots.suffix" class="form-input__suffix disabled">
+        <div>
+          <slot name="suffix"></slot>
+        </div>
+      </div>
+    </div>
+    <slot name="after-input" />
+  </div>
 </template>
 
 <script>
@@ -144,6 +183,11 @@ export default {
       default: null,
     },
     small: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    noControl: {
       type: Boolean,
       required: false,
       default: false,

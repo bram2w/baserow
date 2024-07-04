@@ -44,9 +44,11 @@
         @blur="$v.values.password.$touch()"
       />
     </ABFormGroup>
-    <ABButton :disabled="$v.$error" full-width :loading="loading" size="large">
-      {{ $t('action.login') }}
-    </ABButton>
+    <div :style="getStyleOverride('login_button')" class="auth-form__footer">
+      <ABButton :disabled="$v.$error" :loading="loading" size="large">
+        {{ $t('action.login') }}
+      </ABButton>
+    </div>
   </form>
   <p v-else>{{ $t('authFormElement.selectOrConfigureUserSourceFirst') }}</p>
 </template>

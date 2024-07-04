@@ -14,11 +14,11 @@ from baserow.contrib.builder.data_providers.exceptions import (
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
+    CollectionElement,
     CollectionField,
     ContainerElement,
     Element,
     FormElement,
-    TableElement,
 )
 from baserow.contrib.builder.elements.registries import (
     collection_field_type_registry,
@@ -113,26 +113,46 @@ class ContainerElementTypeMixin:
 
 
 class CollectionElementTypeMixin:
-    allowed_fields = ["data_source", "data_source_id", "items_per_page"]
-    serializer_field_names = ["data_source_id", "items_per_page"]
+    allowed_fields = [
+        "data_source",
+        "data_source_id",
+        "items_per_page",
+        "button_load_more_label",
+    ]
+    serializer_field_names = [
+        "data_source_id",
+        "items_per_page",
+        "button_load_more_label",
+    ]
 
     class SerializedDict(ElementDict):
         data_source_id: int
         items_per_page: int
+        button_load_more_label: str
 
     @property
     def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
         return {
             "data_source_id": serializers.IntegerField(
                 allow_null=True,
                 default=None,
-                help_text=TableElement._meta.get_field("data_source").help_text,
+                help_text=CollectionElement._meta.get_field("data_source").help_text,
                 required=False,
             ),
             "items_per_page": serializers.IntegerField(
                 default=20,
-                help_text=TableElement._meta.get_field("items_per_page").help_text,
+                help_text=CollectionElement._meta.get_field("items_per_page").help_text,
                 required=False,
+            ),
+            "button_load_more_label": FormulaSerializerField(
+                help_text=CollectionElement._meta.get_field(
+                    "button_load_more_label"
+                ).help_text,
+                required=False,
+                allow_blank=True,
+                default="",
             ),
         }
 

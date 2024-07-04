@@ -1,7 +1,9 @@
 <template>
-  <ABLink variant="button" :url="url" :target="target">
-    {{ realLinkName }}
-  </ABLink>
+  <div class="link-field">
+    <ABLink variant="button" :url="url" :target="target">
+      {{ realLinkName }}
+    </ABLink>
+  </div>
 </template>
 
 <script>

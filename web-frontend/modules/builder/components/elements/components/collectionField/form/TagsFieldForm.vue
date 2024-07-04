@@ -6,9 +6,6 @@
       :label="$t('tagsFieldForm.fieldValuesLabel')"
       :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-      :application-context-additions="{
-        element,
-      }"
       horizontal
     />
     <div>
@@ -19,7 +16,6 @@
         :label="$t('tagsFieldForm.fieldColorsLabel')"
         :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
         :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-        :application-context-additions="{ element }"
         horizontal
       >
         <template #after-input>
@@ -53,20 +49,13 @@
 </template>
 
 <script>
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
 
 export default {
   name: 'TagsField',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [elementForm],
-  props: {
-    element: {
-      type: Object,
-      required: true,
-    },
-  },
+  mixins: [collectionFieldForm],
   data() {
     return {
       allowedValues: ['values', 'colors', 'colors_is_formula'],
@@ -76,11 +65,6 @@ export default {
         colors_is_formula: false,
       },
     }
-  },
-  computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS() {
-      return DATA_PROVIDERS_ALLOWED_ELEMENTS
-    },
   },
   methods: {
     setColorsToFormula() {

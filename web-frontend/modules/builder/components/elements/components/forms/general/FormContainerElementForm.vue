@@ -5,7 +5,6 @@
       style-key="button"
       :config-block-types="['button']"
       :theme="builder.theme"
-      :element="values"
     />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.submit_button_label"

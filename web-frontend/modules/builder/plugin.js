@@ -88,6 +88,8 @@ import {
   ColorThemeConfigBlockType,
   TypographyThemeConfigBlockType,
   ButtonThemeConfigBlockType,
+  LinkThemeConfigBlockType,
+  ImageThemeConfigBlockType,
 } from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
   CreateRowWorkflowActionType,
@@ -256,6 +258,14 @@ export default (context) => {
   app.$registry.register(
     'themeConfigBlock',
     new ButtonThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new LinkThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new ImageThemeConfigBlockType(context)
   )
 
   app.$registry.register(

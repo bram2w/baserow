@@ -50,44 +50,25 @@ export const IFRAME_SOURCE_TYPES = {
 }
 
 export const HORIZONTAL_ALIGNMENTS = {
-  LEFT: {
-    name: 'horizontalAlignmentSelector.alignmentLeft',
-    value: 'left',
-    icon: 'iconoir-align-left',
-  },
-  CENTER: {
-    name: 'horizontalAlignmentSelector.alignmentCenter',
-    value: 'center',
-    icon: 'iconoir-align-center',
-  },
-  RIGHT: {
-    name: 'horizontalAlignmentSelector.alignmentRight',
-    value: 'right',
-    icon: 'iconoir-align-right',
-  },
+  LEFT: 'left',
+  CENTER: 'center',
+  RIGHT: 'right',
 }
 
 export const VERTICAL_ALIGNMENTS = {
-  TOP: {
-    name: 'verticalAlignmentSelector.alignmentTop',
-    value: 'top',
-    icon: 'iconoir-align-top-box',
-  },
-  CENTER: {
-    name: 'verticalAlignmentSelector.alignmentCenter',
-    value: 'center',
-    icon: 'iconoir-center-align',
-  },
-  BOTTOM: {
-    name: 'verticalAlignmentSelector.alignmentBottom',
-    value: 'bottom',
-    icon: 'iconoir-align-bottom-box',
-  },
+  TOP: 'top',
+  CENTER: 'center',
+  BOTTOM: 'bottom',
 }
 
 export const WIDTHS = {
   AUTO: { value: 'auto', name: 'widthSelector.widthAuto' },
   FULL: { value: 'full', name: 'widthSelector.widthFull' },
+}
+
+export const WIDTHS_NEW = {
+  AUTO: 'auto',
+  FULL: 'full',
 }
 
 export const BACKGROUND_TYPES = {

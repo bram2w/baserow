@@ -30,7 +30,7 @@ export default {
   name: 'ThemeSettings',
   components: { ThemeProvider, ThemeConfigBlock },
   provide() {
-    return { builder: this.builder }
+    return { builder: this.builder, mode: 'edit' }
   },
   props: {
     builder: {
