@@ -2,12 +2,14 @@
   cursor: pointer;
   display: inline-block;
   color: $white;
-  background-color: var(--button-color, $black);
+  background-color: var(--button-background-color, $black);
   line-height: 28px;
   border: none;
   white-space: nowrap;
-  text-align: left;
   text-decoration: none;
+  width: var(--button-width, auto);
+  text-align: var(--button-text-alignment, center);
+  align-self: var(--button-alignment, flex-start);
 
   @include rounded($rounded);
 
@@ -42,17 +44,9 @@
     padding: 5px 12px;
   }
 
-  .element--alignment-horizontal-center & {
-    text-align: center;
-  }
-
-  .element--alignment-horizontal-right & {
-    text-align: right;
-  }
-
   &:not(.loading-spinner):hover,
   &:not(.loading-spinner).ab-button--force-hover {
-    background-color: var(--hover-button-color, $black);
+    background-color: var(--hover-button-background-color, $black);
     text-decoration: none;
   }
 

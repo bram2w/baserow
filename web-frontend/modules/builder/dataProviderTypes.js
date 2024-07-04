@@ -314,11 +314,20 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   }
 
   getDataSchema(applicationContext) {
-    const { page, element } = applicationContext
+    // `collectionField` is set by any collection element using collection fields
+    // If we have a collection field in the application context, we are in
+    // the context of a collection field inside a collection element.
+    const { page, element, collectionField = null } = applicationContext
     const collectionElement = this.getFirstCollectionAncestor(page, element)
     const dataSourceId = collectionElement?.data_source_id
 
-    if (!dataSourceId) {
+    if (
+      // If the collection element doesn't have a data source configured
+      !dataSourceId ||
+      // Or if the collection element IS the current element and we are not in a
+      // collection field
+      (element.id === collectionElement.id && collectionField === null)
+    ) {
       return null
     }
 

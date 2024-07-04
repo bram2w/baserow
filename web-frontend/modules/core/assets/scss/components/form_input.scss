@@ -59,6 +59,8 @@
 
   &::placeholder {
     color: $palette-neutral-700;
+
+    @extend %ellipsis;
   }
 
   @include rounded($rounded-md);
@@ -70,6 +72,10 @@
 
   .form-input--small & {
     padding: 8px 12px;
+  }
+
+  .form-input--with-icon-right & {
+    padding-right: 32px;
   }
 
   .form-input--with-icon-left & {

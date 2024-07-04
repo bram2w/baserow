@@ -6,7 +6,13 @@
       style-key="button"
       :config-block-types="['button']"
       :theme="builder.theme"
-      :element="values"
+    />
+    <CustomStyle
+      v-else
+      v-model="values.styles"
+      style-key="link"
+      :config-block-types="['link']"
+      :theme="builder.theme"
     />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
@@ -29,19 +35,14 @@
         </RadioButton>
       </div>
     </FormGroup>
-
-    <HorizontalAlignmentSelector v-model="values.alignment" />
-
-    <template v-if="values.variant === 'button'">
-      <WidthSelector v-model="values.width" />
-    </template>
   </form>
 </template>
 
 <script>
-import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
-import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
+import {
+  HORIZONTAL_ALIGNMENTS,
+  WIDTHS_NEW,
+} from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
@@ -51,9 +52,7 @@ import CustomStyle from '@baserow/modules/builder/components/elements/components
 export default {
   name: 'LinkElementForm',
   components: {
-    WidthSelector,
     ApplicationBuilderFormulaInputGroup,
-    HorizontalAlignmentSelector,
     LinkNavigationSelectionForm,
     CustomStyle,
   },
@@ -62,9 +61,9 @@ export default {
     return {
       values: {
         value: '',
-        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT,
         variant: 'link',
-        width: WIDTHS.AUTO.value,
+        width: WIDTHS_NEW.AUTO,
         styles: {},
       },
       allowedValues: ['value', 'alignment', 'variant', 'width', 'styles'],

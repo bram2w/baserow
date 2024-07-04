@@ -281,3 +281,158 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
             "heading_1_text_color": "#0000CCCC",
         }
     }
+
+
+@pytest.mark.once_per_day_in_ci
+# You must add --run-once-per-day-in-ci to execute this test
+def test_0026_element_styles(migrator, teardown_table_metadata):
+    migrate_from = [
+        ("builder", "0024_element_role_type_element_roles"),
+    ]
+    migrate_to = [
+        ("builder", "0026_add_more_style_properties"),
+    ]
+
+    old_state = migrator.migrate(migrate_from)
+
+    ContentType = old_state.apps.get_model("contenttypes", "ContentType")
+    Workspace = old_state.apps.get_model("core", "Workspace")
+    Builder = old_state.apps.get_model("builder", "Builder")
+    Page = old_state.apps.get_model("builder", "Page")
+
+    ButtonElement = old_state.apps.get_model("builder", "ButtonElement")
+    HeadingElement = old_state.apps.get_model("builder", "HeadingElement")
+    LinkElement = old_state.apps.get_model("builder", "LinkElement")
+    TextElement = old_state.apps.get_model("builder", "TextElement")
+    ImageElement = old_state.apps.get_model("builder", "ImageElement")
+    TableElement = old_state.apps.get_model("builder", "TableElement")
+    FormContainerElement = old_state.apps.get_model("builder", "FormContainerElement")
+
+    workspace = Workspace.objects.create(name="Workspace")
+    builder = Builder.objects.create(
+        order=2,
+        name="Builder",
+        workspace=workspace,
+        content_type=ContentType.objects.get_for_model(Builder),
+    )
+    page = Page.objects.create(order=2, builder=builder, name="Page", path="page/")
+
+    HeadingElement.objects.create(
+        order=2,
+        page=page,
+        alignment="center",
+        content_type=ContentType.objects.get_for_model(HeadingElement),
+    )
+    ButtonElement.objects.create(
+        order=2,
+        page=page,
+        alignment="right",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
+    ButtonElement.objects.create(
+        order=3,
+        page=page,
+        button_color="#CCCCCCCC",
+        alignment="right",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
+    LinkElement.objects.create(
+        order=2,
+        page=page,
+        button_color="#CCCC00CC",
+        alignment="right",
+        variant="button",
+        content_type=ContentType.objects.get_for_model(LinkElement),
+    )
+    LinkElement.objects.create(
+        order=3,
+        page=page,
+        button_color="#CCCC00CC",
+        alignment="right",
+        variant="link",
+        content_type=ContentType.objects.get_for_model(LinkElement),
+    )
+    TextElement.objects.create(
+        order=2,
+        page=page,
+        alignment="right",
+        content_type=ContentType.objects.get_for_model(TextElement),
+    )
+    ImageElement.objects.create(
+        order=2,
+        page=page,
+        style_image_constraint="full-width",
+        alignment="center",
+        style_max_width="50",
+        style_max_height="50",
+        content_type=ContentType.objects.get_for_model(ImageElement),
+    )
+    FormContainerElement.objects.create(
+        order=2,
+        page=page,
+        content_type=ContentType.objects.get_for_model(FormContainerElement),
+    )
+    TableElement.objects.create(
+        order=1,
+        page=page,
+        items_per_page=5,
+        content_type=ContentType.objects.get_for_model(TableElement),
+    )
+
+    new_state = migrator.migrate(migrate_to)
+
+    ButtonElement = new_state.apps.get_model("builder", "ButtonElement")
+    HeadingElement = new_state.apps.get_model("builder", "HeadingElement")
+    LinkElement = new_state.apps.get_model("builder", "LinkElement")
+    TextElement = new_state.apps.get_model("builder", "TextElement")
+    ImageElement = new_state.apps.get_model("builder", "ImageElement")
+    TableElement = new_state.apps.get_model("builder", "TableElement")
+    FormContainerElement = new_state.apps.get_model("builder", "FormContainerElement")
+
+    heading = HeadingElement.objects.first()
+    [button1, button2] = ButtonElement.objects.all()
+    [link1, link2] = LinkElement.objects.all()
+    text = TextElement.objects.first()
+    image = ImageElement.objects.first()
+    form = FormContainerElement.objects.first()
+    table = TableElement.objects.first()
+
+    assert heading.styles == {
+        "typography": {
+            "heading_1_text_color": "default",
+            "heading_1_text_alignment": "center",
+        }
+    }
+    assert button1.styles == {"button": {"button_alignment": "right"}}
+    assert button2.styles == {
+        "button": {
+            "button_alignment": "right",
+            "button_background_color": "#CCCCCCCC",
+            "button_hover_background_color": "#dbdbdbcc",
+        }
+    }
+    assert link1.styles == {
+        "button": {
+            "button_alignment": "right",
+            "button_background_color": "#CCCC00CC",
+            "button_hover_background_color": "#dbdb4ccc",
+        }
+    }
+    assert link2.styles == {
+        "link": {"link_text_alignment": "right"},
+        "button": {
+            "button_background_color": "#CCCC00CC",
+            "button_hover_background_color": "#dbdb4ccc",
+        },
+    }
+    assert text.styles == {"typography": {"body_text_alignment": "right"}}
+    assert image.styles == {
+        "image": {
+            "image_alignment": "center",
+            "image_max_width": 50,
+            "image_constraint": "full-width",
+            "image_max_height": 50,
+        }
+    }
+    assert form.styles == {"button": {"button_alignment": "right"}}
+    assert table.styles == {"button": {"button_alignment": "center"}}

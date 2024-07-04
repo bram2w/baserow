@@ -4,3 +4,8 @@
     user-select: none;
   }
 }
+
+.auth-form__footer {
+  display: flex;
+  flex-direction: column;
+}

@@ -9,7 +9,7 @@
       :is="themeConfigBlockType.component"
       :preview="preview"
       :theme="theme"
-      :element="element"
+      :extra-args="extraArgs"
       :default-values="defaultValues"
       @values-changed="$emit('values-changed', $event)"
     />
@@ -30,7 +30,7 @@ export default {
       type: Object,
       required: true,
     },
-    element: {
+    extraArgs: {
       type: Object,
       required: false,
       default: null,

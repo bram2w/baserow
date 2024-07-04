@@ -43,6 +43,10 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
     response_json = response.json()
 
     assert response.status_code == HTTP_200_OK
+    assert response_json["theme"]["primary_color"] == "#5190efff"
+
+    del response_json["theme"]  # We are not testing the theme response here.
+
     assert response_json == {
         "favicon_file": UserFileSerializer(builder_to.favicon_file).data,
         "id": builder_to.id,
@@ -52,19 +56,6 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
             {"id": page2.id, "name": page2.name, "path": page2.path, "path_params": []},
         ],
         "type": "builder",
-        "theme": {
-            "primary_color": "#5190efff",
-            "secondary_color": "#0eaa42ff",
-            "border_color": "#d7d8d9ff",
-            "heading_1_font_size": 24,
-            "heading_1_text_color": "#070810ff",
-            "heading_2_font_size": 20,
-            "heading_2_text_color": "#070810ff",
-            "heading_3_font_size": 16,
-            "heading_3_text_color": "#070810ff",
-            "button_background_color": "primary",
-            "button_hover_background_color": "#96baf6ff",
-        },
         "user_sources": [],
     }
 
@@ -145,6 +136,10 @@ def test_get_public_builder_by_id(api_client, data_fixture):
     response_json = response.json()
 
     assert response.status_code == HTTP_200_OK
+    assert response_json["theme"]["primary_color"] == "#5190efff"
+
+    del response_json["theme"]  # We are not testing the theme response here.
+
     assert response_json == {
         "favicon_file": UserFileSerializer(page.builder.favicon_file).data,
         "id": page.builder.id,
@@ -154,19 +149,6 @@ def test_get_public_builder_by_id(api_client, data_fixture):
             {"id": page2.id, "name": page2.name, "path": page2.path, "path_params": []},
         ],
         "type": "builder",
-        "theme": {
-            "primary_color": "#5190efff",
-            "secondary_color": "#0eaa42ff",
-            "border_color": "#d7d8d9ff",
-            "heading_1_font_size": 24,
-            "heading_1_text_color": "#070810ff",
-            "heading_2_font_size": 20,
-            "heading_2_text_color": "#070810ff",
-            "heading_3_font_size": 16,
-            "heading_3_text_color": "#070810ff",
-            "button_background_color": "primary",
-            "button_hover_background_color": "#96baf6ff",
-        },
         "user_sources": [],
     }
 

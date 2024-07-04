@@ -2,7 +2,6 @@
   <div
     :class="{
       'element--no-value': !resolvedValue,
-      [`element--alignment-horizontal-${element.alignment}`]: true,
     }"
   >
     <ABHeading :level="element.level" :style="getStyleOverride('typography')">
@@ -23,7 +22,6 @@ export default {
      * @type {Object}
      * @property {number} level - The size of the heading
      * @property {string} value - The text displayed
-     * @property {string} alignment - The alignment of the element on the page
      */
     element: {
       type: Object,

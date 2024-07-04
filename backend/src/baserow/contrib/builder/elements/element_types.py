@@ -224,22 +224,16 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["button_color", "orientation"]
+        return super().allowed_fields + ["orientation"]
 
     @property
     def serializer_field_names(self):
-        return super().serializer_field_names + ["button_color", "orientation"]
+        return super().serializer_field_names + ["orientation"]
 
     @property
     def serializer_field_overrides(self):
         return {
             **super().serializer_field_overrides,
-            "button_color": serializers.CharField(
-                max_length=20,
-                required=False,
-                default="primary",
-                help_text="Button color.",
-            ),
             "orientation": serializers.JSONField(
                 allow_null=False,
                 default=get_default_table_orientation,
@@ -250,6 +244,7 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "data_source_id": None,
+            "button_load_more_label": "'test'",
             "orientation": get_default_table_orientation(),
         }
 
@@ -262,11 +257,17 @@ class RepeatElementType(
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["orientation", "items_per_row"]
+        return super().allowed_fields + [
+            "orientation",
+            "items_per_row",
+        ]
 
     @property
     def serializer_field_names(self):
-        return super().serializer_field_names + ["orientation", "items_per_row"]
+        return super().serializer_field_names + [
+            "orientation",
+            "items_per_row",
+        ]
 
     class SerializedDict(
         CollectionElementTypeMixin.SerializedDict,
@@ -281,6 +282,7 @@ class RepeatElementType(
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "data_source_id": None,
+            "button_load_more_label": "'test'",
             "orientation": RepeatElement.ORIENTATIONS.VERTICAL,
         }
 

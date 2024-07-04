@@ -28,10 +28,7 @@ export default {
     }
   },
   async fetch() {
-    const Markdown = (await import('markdown-it')).default
-    this.md = new Markdown()
-    this.md.renderer.rules = { ...this.md.renderer.rules, ...this.rules }
-    this.htmlContent = this.md.render(this.content)
+    await this.render(this.content)
   },
   computed: {
     // Makes content watchable
@@ -41,9 +38,18 @@ export default {
   },
   watch: {
     localContent(newValue) {
-      if (this.md) {
-        this.htmlContent = this.md.render(newValue)
+      this.render(newValue)
+    },
+  },
+  methods: {
+    async render(value) {
+      if (!this.md) {
+        const Markdown = (await import('markdown-it')).default
+        this.md = new Markdown()
+        this.md.renderer.rules = { ...this.md.renderer.rules, ...this.rules }
       }
+
+      this.htmlContent = this.md.render(value)
     },
   },
 }

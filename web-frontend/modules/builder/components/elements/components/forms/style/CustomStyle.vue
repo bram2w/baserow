@@ -6,7 +6,7 @@
       @click="openPanel()"
     />
     <Context ref="context">
-      <div class="custom-style__config-blocks">
+      <div v-auto-overflow-scroll class="custom-style__config-blocks">
         <div
           v-for="(themeConfigBlock, index) in themeConfigBlocks"
           :key="themeConfigBlock.getType()"
@@ -20,11 +20,11 @@
           </h2>
           <ThemeConfigBlock
             :theme="theme"
-            :element="element"
             :default-values="value[styleKey] || {}"
             :preview="false"
             :theme-config-block-type="themeConfigBlock"
             :class="{ 'margin-top-3': index >= 1 }"
+            :extra-args="extraArgs"
             @values-changed="onValuesChanged($event)"
           />
         </div>
@@ -51,9 +51,10 @@ export default {
       required: true,
     },
     styleKey: { type: String, required: true },
-    element: {
+    extraArgs: {
       type: Object,
-      required: true,
+      required: false,
+      default: () => null,
     },
   },
   data() {
@@ -68,7 +69,7 @@ export default {
   },
   methods: {
     openPanel() {
-      this.$refs.context.toggle(this.$el, 'bottom', 'left', -100, -380)
+      this.$refs.context.toggle(this.$el, 'bottom', 'left', -100, -425)
     },
     onValuesChanged(newValues) {
       this.$emit('input', {

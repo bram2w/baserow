@@ -6,9 +6,6 @@
       :label="$t('generalForm.labelTitle')"
       :placeholder="$t('buttonFieldForm.labelPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-      :application-context-additions="{
-        element,
-      }"
       horizontal
     />
     <Alert>
@@ -18,20 +15,13 @@
 </template>
 
 <script>
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
-import form from '@baserow/modules/core/mixins/form'
+import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   name: 'ButtonFieldForm',
   components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
-  props: {
-    element: {
-      type: Object,
-      required: true,
-    },
-  },
+  mixins: [collectionFieldForm],
   data() {
     return {
       allowedValues: ['label'],
@@ -39,11 +29,6 @@ export default {
         label: '',
       },
     }
-  },
-  computed: {
-    DATA_PROVIDERS_ALLOWED_ELEMENTS() {
-      return DATA_PROVIDERS_ALLOWED_ELEMENTS
-    },
   },
 }
 </script>

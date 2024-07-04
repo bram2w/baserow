@@ -12,7 +12,7 @@ export default {
       required: false,
       default: true,
     },
-    element: {
+    extraArgs: {
       type: Object,
       required: false,
       default: null,
