@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug causing the 'not_empty' view filter showing empty rows for link to table fields.",
+    "issue_number": 2777,
+    "bullet_points": [],
+    "created_at": "2024-07-03"
+}

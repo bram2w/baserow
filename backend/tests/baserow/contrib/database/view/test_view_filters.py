@@ -3625,6 +3625,38 @@ def test_not_empty_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_not_empty_filter_type_for_link_row_table_with_trashed_rows(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_a_to_b = data_fixture.create_two_linked_tables(user=user)
+    table_a_primary_field = table_a.get_primary_field()
+    table_b_primary_field = table_b.get_primary_field()
+    grid_view = data_fixture.create_grid_view(table=table_a)
+
+    table_a_model = table_a.get_model()
+    table_b_model = table_b.get_model()
+    row_b1 = table_b_model.objects.create(**{table_b_primary_field.db_column: "b1"})
+    row_a1 = RowHandler().force_create_row(
+        user,
+        table_a,
+        {table_a_primary_field.db_column: "a1", link_a_to_b.db_column: [row_b1.id]},
+        model=table_a_model,
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=link_a_to_b, type="not_empty", value=""
+    )
+    assert (
+        handler.apply_filters(grid_view, table_a_model.objects.all()).get().id
+        == row_a1.id
+    )
+
+    RowHandler().delete_row(user, table_b, row_b1, model=table_b_model)
+
+    assert list(handler.apply_filters(grid_view, table_a_model.objects.all())) == []
+
+
+@pytest.mark.django_db
 def test_filename_contains_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

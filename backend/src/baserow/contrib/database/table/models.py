@@ -902,6 +902,9 @@ class Table(
     def get_parent(self):
         return self.database
 
+    def get_primary_field(self) -> Field:
+        return self.field_set.filter(primary=True).first()
+
     @classmethod
     def get_last_order(cls, database):
         queryset = Table.objects.filter(database=database)
