@@ -22,6 +22,7 @@ from django.db.models import (
     Case,
     CharField,
     DateTimeField,
+    Exists,
     Expression,
     F,
     Func,
@@ -33,6 +34,7 @@ from django.db.models import (
     When,
     Window,
 )
+from django.db.models.fields.related import ManyToManyField
 from django.db.models.functions import Coalesce, RowNumber
 
 from dateutil import parser
@@ -2969,6 +2971,24 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
 
     def are_row_values_equal(self, value1: any, value2: any) -> bool:
         return set(value1) == set(value2)
+
+    def empty_query(
+        self,
+        field_name: str,
+        model_field: LinkRowField,
+        field: ManyToManyField,
+    ) -> Q:
+        # Exclude all the trashed rows in the related table.
+        subq = Subquery(
+            model_field.model.objects.filter(
+                id=OuterRef("id"), **{f"{field_name}__trashed": False}
+            )[:1]
+        )
+        annotation_name = f"{field_name}_exists"
+        return AnnotatedQ(
+            annotation={annotation_name: Exists(subq)},
+            q={f"{annotation_name}": False},
+        )
 
 
 class EmailFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
