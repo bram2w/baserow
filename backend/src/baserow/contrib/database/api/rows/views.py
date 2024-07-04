@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import (
     map_exceptions,
+    require_request_data_type,
     validate_body,
     validate_query_parameters,
 )
@@ -786,6 +787,7 @@ class RowView(APIView):
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         }
     )
+    @require_request_data_type(dict)
     def patch(self, request: Request, table_id: int, row_id: int) -> Response:
         """
         Updates the row with the given row_id for the table with the given
@@ -802,6 +804,7 @@ class RowView(APIView):
 
         user_field_names = "user_field_names" in request.GET
         field_ids, field_names = None, None
+
         if user_field_names:
             field_names = request.data.keys()
         else:
