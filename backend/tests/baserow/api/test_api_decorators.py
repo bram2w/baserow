@@ -17,6 +17,7 @@ from baserow.api.decorators import (
     accept_timezone,
     allowed_includes,
     map_exceptions,
+    require_request_data_type,
     validate_body,
     validate_body_custom_fields,
     validate_query_parameters,
@@ -569,3 +570,19 @@ def test_accept_timezone():
         assert now.tzinfo == zoneinfo.ZoneInfo("Etc/GMT+2")
 
     test_1(None, request)
+
+
+def test_request_data_types():
+    class Fake:
+        @require_request_data_type(dict)
+        def callable(self, request, foo, bar):
+            return list(request.data.keys())
+
+    class fakerequest:
+        def __init__(self, data):
+            self.data = data
+
+    with pytest.raises(RequestBodyValidationException):
+        Fake().callable(fakerequest(""), None, None)
+
+    assert Fake().callable(fakerequest({"a": 1}), None, None) == ["a"]
