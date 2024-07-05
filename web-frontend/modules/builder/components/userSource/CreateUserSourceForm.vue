@@ -2,7 +2,7 @@
   <form @submit.prevent="submit">
     <FormGroup
       :label="$t('createUserSourceForm.userSourceType')"
-      :error="getError('type')"
+      :error-message="getError('type')"
       required
       small-label
       class="margin-bottom-2"
@@ -23,7 +23,7 @@
     </FormGroup>
     <FormGroup
       :label="$t('createUserSourceForm.userSourceIntegration')"
-      :error="getError('integration_id')"
+      :error-message="getError('integration_id')"
       required
       small-label
       class="margin-bottom-2"
@@ -37,16 +37,12 @@
     </FormGroup>
 
     <FormGroup
-      :error="getError('name')"
+      :error-message="getError('name')"
       :label="$t('createUserSourceForm.userSourceName')"
       required
       small-label
     >
-      <FormInput
-        v-model="$v.values.name.$model"
-        size="large"
-        :error="getError('name')"
-      />
+      <FormInput v-model="$v.values.name.$model" size="large" />
     </FormGroup>
 
     <input type="submit" hidden />
@@ -107,7 +103,7 @@ export default {
   methods: {
     getError(fieldName) {
       if (!this.$v.values[fieldName].$dirty) {
-        return false
+        return ''
       }
       const fieldState = this.$v.values[fieldName]
       if (!fieldState.required) {
@@ -116,7 +112,7 @@ export default {
       if (fieldName === 'name' && !fieldState.maxLength) {
         return this.$t('error.maxLength', { max: 255 })
       }
-      return false
+      return ''
     },
   },
   validations: {

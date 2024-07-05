@@ -1,18 +1,21 @@
 <template>
   <form ref="form" @submit.prevent="submit">
-    <FormGroup required class="margin-bottom-2">
+    <FormGroup
+      required
+      class="margin-bottom-2"
+      :error-message="
+        $v.values.name.$dirty && !$v.values.name.required
+          ? $t('error.requiredField')
+          : !$v.values.name.maxLength
+          ? $t('error.maxLength', { max: 255 })
+          : ''
+      "
+    >
       <FormInput
         v-model="values.name"
         required
         :label="$t('integrationEditForm.name')"
         :placeholder="$t('integrationEditForm.namePlaceholder')"
-        :error="
-          $v.values.name.$dirty && !$v.values.name.required
-            ? $t('error.requiredField')
-            : !$v.values.name.maxLength
-            ? $t('error.maxLength', { max: 255 })
-            : false
-        "
         @blur="$v.values.name.$touch()"
       />
     </FormGroup>

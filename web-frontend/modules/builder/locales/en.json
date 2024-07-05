@@ -479,6 +479,7 @@
     "fieldValuePlaceholder": "Enter value...",
     "itemsPerPage": "Items per page",
     "fieldDefaultName": "Column",
+    "name": "Name",
     "fieldType": "Type",
     "itemsPerPagePlaceholder": "Enter value...",
     "selectSourceFirst": "Choose a list data source to begin configuring your fields.",

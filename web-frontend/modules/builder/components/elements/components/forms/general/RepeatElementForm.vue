@@ -21,7 +21,7 @@
       small-label
       required
       class="margin-bottom-2"
-      :error="
+      :error-message="
         $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
           ? $t('error.requiredField')
           : !$v.values.items_per_page.integer
@@ -30,7 +30,7 @@
           ? $t('error.minValueField', { min: 1 })
           : !$v.values.items_per_page.maxValue
           ? $t('error.maxValueField', { max: maxItemPerPage })
-          : false
+          : ''
       "
     >
       <FormInput
@@ -39,17 +39,6 @@
         :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
         :to-value="(value) => parseInt(value)"
         class="margin-bottom-2"
-        :error="
-          $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
-            ? $t('error.requiredField')
-            : !$v.values.items_per_page.integer
-            ? $t('error.integerField')
-            : !$v.values.items_per_page.minValue
-            ? $t('error.minValueField', { min: 1 })
-            : !$v.values.items_per_page.maxValue
-            ? $t('error.maxValueField', { max: maxItemPerPage })
-            : false
-        "
         type="number"
         @blur="$v.values.items_per_page.$touch()"
       ></FormInput>
@@ -82,7 +71,7 @@
     </FormGroup>
     <FormGroup
       v-if="values.orientation === 'horizontal'"
-      :error="getItemsPerRowError"
+      :error-message="itemsPerRowError"
       :label="$t('repeatElementForm.itemsPerRowLabel')"
       small-label
       required
@@ -97,7 +86,6 @@
           <FormInput
             :ref="`itemsPerRow-${deviceType.getType()}`"
             v-model="values.items_per_row[deviceType.getType()]"
-            :error="$v.values.items_per_row[deviceType.getType()].$error"
             remove-number-input-controls
             type="number"
             @input="handlePerRowInput($event, deviceType.getType())"
@@ -151,7 +139,7 @@ export default {
     deviceTypes() {
       return Object.values(this.$registry.getOrderedList('device'))
     },
-    getItemsPerRowError() {
+    itemsPerRowError() {
       for (const device of this.deviceTypes) {
         const validation = this.$v.values.items_per_row[device.getType()]
         if (validation.$dirty) {

@@ -29,6 +29,7 @@
       <FormGroup
         v-else
         horizontal
+        small-label
         :label="$t('tagsFieldForm.fieldColorsLabel')"
       >
         <ColorInput

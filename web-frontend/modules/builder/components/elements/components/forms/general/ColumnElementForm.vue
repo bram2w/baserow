@@ -22,22 +22,17 @@
       class="margin-bottom-2"
       small-label
       required
-      :label="$t('columnElementForm.columnAmountTitle')"
-      :error="hasError"
+      :label="$t('columnElementForm.columnGapTitle')"
+      :error-message="errorMessage"
     >
       <FormInput
         v-model="values.column_gap"
         size="large"
         :label="$t('columnElementForm.columnGapTitle')"
         :placeholder="$t('columnElementForm.columnGapPlaceholder')"
-        :error="hasError"
         type="number"
         @blur="$v.values.column_gap.$touch()"
       />
-
-      <template #error>
-        {{ errorMessage }}
-      </template>
     </FormGroup>
 
     <FormGroup
@@ -93,9 +88,6 @@ export default {
         : !this.$v.values.column_gap.maxValue
         ? this.$t('error.maxValueField', { max: 2000 })
         : ''
-    },
-    hasError() {
-      return this.errorMessage !== ''
     },
   },
   methods: {
