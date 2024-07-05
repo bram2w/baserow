@@ -1,5 +1,5 @@
 <template>
-  <FormGroup :label="$t('choiceOptionSelector.label')" small-label>
+  <FormGroup :label="$t('choiceOptionSelector.label')" small-label required>
     <div class="dropdown-option-selector__heading margin-bottom-1">
       <div>
         {{ $t('choiceOptionSelector.value') }}

@@ -1,13 +1,19 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('textElementForm.textFormatTypeLabel')">
-      <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.PLAIN">
-        {{ $t('textElementForm.textFormatTypePlain') }}
-      </RadioButton>
-      <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.MARKDOWN">
-        {{ $t('textElementForm.textFormatTypeMarkdown') }}
-      </RadioButton>
+    <FormGroup
+      :label="$t('textElementForm.textFormatTypeLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.format"
+        type="button"
+        :options="textFormatTypeOptions"
+      >
+      </RadioGroup>
     </FormGroup>
+
     <CustomStyle
       v-model="values.styles"
       style-key="typography"
@@ -43,6 +49,16 @@ export default {
         format: TEXT_FORMAT_TYPES.PLAIN,
         styles: {},
       },
+      textFormatTypeOptions: [
+        {
+          value: TEXT_FORMAT_TYPES.PLAIN,
+          label: this.$t('textElementForm.textFormatTypePlain'),
+        },
+        {
+          value: TEXT_FORMAT_TYPES.MARKDOWN,
+          label: this.$t('textElementForm.textFormatTypeMarkdown'),
+        },
+      ],
     }
   },
   computed: {

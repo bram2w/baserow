@@ -4,16 +4,14 @@
     <Error :error="error"></Error>
     <form @submit.prevent="setPassword">
       <p class="box__description">{{ $t(descriptionText) }}</p>
-      <FormElement :error="fieldHasErrors('password')" class="control">
-        <div class="control__elements">
-          <PasswordInput
-            v-model="values.password"
-            :validation-state="$v.values.password"
-            :show-password-icon="true"
-            :disabled="loading"
-          />
-        </div>
-      </FormElement>
+      <FormGroup :error="fieldHasErrors('password')">
+        <PasswordInput
+          v-model="values.password"
+          :validation-state="$v.values.password"
+          :show-password-icon="true"
+          :disabled="loading"
+        />
+      </FormGroup>
       <div class="actions">
         <ul class="action__links">
           <li>

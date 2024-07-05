@@ -2,57 +2,53 @@
   <div>
     <div class="row">
       <div class="col col-4">
-        <div class="control">
-          <label class="control__label">{{
-            $t('tableCSVExporter.columnSeparatorLabel')
-          }}</label>
-          <div class="control__elements">
-            <Dropdown v-model="values.csv_column_separator" :disabled="loading">
-              <DropdownItem name="," value=","></DropdownItem>
-              <DropdownItem name=";" value=";"></DropdownItem>
-              <DropdownItem name="|" value="|"></DropdownItem>
-              <DropdownItem name="<tab>" value="tab"></DropdownItem>
-              <DropdownItem
-                :name="$t('tableCSVExporter.recordSeparator') + ' (30)'"
-                value="record_separator"
-              ></DropdownItem>
-              <DropdownItem
-                :name="$t('tableCSVExporter.unitSeparator') + ' (31)'"
-                value="unit_separator"
-              ></DropdownItem>
-            </Dropdown>
-          </div>
-        </div>
+        <FormGroup
+          small-label
+          :label="$t('tableCSVExporter.columnSeparatorLabel')"
+          required
+          class="margin-bottom-2"
+        >
+          <Dropdown v-model="values.csv_column_separator" :disabled="loading">
+            <DropdownItem name="," value=","></DropdownItem>
+            <DropdownItem name=";" value=";"></DropdownItem>
+            <DropdownItem name="|" value="|"></DropdownItem>
+            <DropdownItem name="<tab>" value="tab"></DropdownItem>
+            <DropdownItem
+              :name="$t('tableCSVExporter.recordSeparator') + ' (30)'"
+              value="record_separator"
+            ></DropdownItem>
+            <DropdownItem
+              :name="$t('tableCSVExporter.unitSeparator') + ' (31)'"
+              value="unit_separator"
+            ></DropdownItem>
+          </Dropdown>
+        </FormGroup>
       </div>
       <div class="col col-8">
-        <div class="control">
-          <label class="control__label">{{
-            $t('tableCSVExporter.encodingLabel')
-          }}</label>
-          <div class="control__elements">
-            <CharsetDropdown
-              v-model="values.export_charset"
-              :disabled="loading"
-            >
-            </CharsetDropdown>
-          </div>
-        </div>
+        <FormGroup
+          small-label
+          :label="$t('tableCSVExporter.encodingLabel')"
+          required
+          class="margin-bottom-2"
+        >
+          <CharsetDropdown
+            v-model="values.export_charset"
+            :disabled="loading"
+          />
+        </FormGroup>
       </div>
     </div>
     <div class="row">
       <div class="col col-6">
-        <div class="control">
-          <label class="control__label">{{
-            $t('tableCSVExporter.firstRowIsHeaderLabel')
-          }}</label>
-          <div class="control__elements">
-            <Checkbox
-              v-model="values.csv_first_row_header"
-              :disabled="loading"
-              >{{ $t('common.yes') }}</Checkbox
-            >
-          </div>
-        </div>
+        <FormGroup
+          small-label
+          :label="$t('tableCSVExporter.firstRowIsHeaderLabel')"
+          required
+        >
+          <Checkbox v-model="values.csv_first_row_header" :disabled="loading">{{
+            $t('common.yes')
+          }}</Checkbox>
+        </FormGroup>
       </div>
     </div>
   </div>

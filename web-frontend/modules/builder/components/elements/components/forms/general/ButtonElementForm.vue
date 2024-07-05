@@ -8,6 +8,9 @@
     />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('buttonElementForm.valueLabel')"
       :placeholder="$t('buttonElementForm.valuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"

@@ -3,10 +3,12 @@
     <ThemeConfigBlockSection
       v-if="showBody"
       :title="$t('typographyThemeConfigBlock.bodyLabel')"
+      class="margin-bottom-2"
     >
       <template #default>
         <FormGroup
           horizontal
+          small-label
           :label="$t('typographyThemeConfigBlock.textAlignment')"
         >
           <HorizontalAlignmentsSelector
@@ -20,23 +22,24 @@
             />
           </template>
         </FormGroup>
-        <FormGroup horizontal :label="$t('typographyThemeConfigBlock.size')">
-          <div
-            class="input__with-icon typyography-theme-config-block__input-number"
+        <FormGroup
+          horizontal
+          small-label
+          :label="$t('typographyThemeConfigBlock.size')"
+          :error="$v.values[`body_font_size`].$invalid"
+        >
+          <FormInput
+            v-model="values[`body_font_size`]"
+            type="number"
+            remove-number-input-controls
+            :min="fontSizeMin"
+            :max="fontSizeMax"
+            :error="$v.values[`body_font_size`].$invalid"
+            @blur="$v.values[`body_font_size`].$touch()"
           >
-            <input
-              v-model="values[`body_font_size`]"
-              type="number"
-              class="input remove-number-input-controls input--small"
-              :min="fontSizeMin"
-              :max="fontSizeMax"
-              :class="{
-                'input--error': $v.values[`body_font_size`].$invalid,
-              }"
-              @blur="$v.values[`body_font_size`].$touch()"
-            />
-            <i>px</i>
-          </div>
+            <template #suffix>px</template>
+          </FormInput>
+
           <template #after-input>
             <ResetButton
               v-model="values"
@@ -45,7 +48,11 @@
             />
           </template>
         </FormGroup>
-        <FormGroup horizontal :label="$t('typographyThemeConfigBlock.color')">
+        <FormGroup
+          horizontal
+          small-label
+          :label="$t('typographyThemeConfigBlock.color')"
+        >
           <ColorInput
             v-model="values['body_text_color']"
             :color-variables="colorVariables"
@@ -72,10 +79,12 @@
       v-for="level in headings"
       :key="level"
       :title="$t('typographyThemeConfigBlock.headingLabel', { i: level })"
+      class="margin-bottom-2"
     >
       <template #default>
         <FormGroup
           horizontal
+          small-label
           :label="$t('typographyThemeConfigBlock.textAlignment')"
         >
           <HorizontalAlignmentsSelector
@@ -89,33 +98,39 @@
             />
           </template>
         </FormGroup>
-        <FormGroup horizontal :label="$t('typographyThemeConfigBlock.size')">
-          <div
-            class="input__with-icon typyography-theme-config-block__input-number"
+
+        <FormGroup
+          horizontal
+          small-label
+          :label="$t('typographyThemeConfigBlock.size')"
+          :error="$v.values[`heading_${level}_font_size`].$invalid"
+        >
+          <FormInput
+            v-model="values[`heading_${level}_font_size`]"
+            type="number"
+            remove-number-input-controls
+            :min="fontSizeMin"
+            :max="fontSizeMax"
+            :error="$v.values[`heading_${level}_font_size`].$invalid"
+            @blur="$v.values[`heading_${level}_font_size`].$touch()"
           >
-            <input
-              v-model="values[`heading_${level}_font_size`]"
-              type="number"
-              class="input remove-number-input-controls input--small"
-              :min="fontSizeMin"
-              :max="fontSizeMax"
-              :class="{
-                'input--error':
-                  $v.values[`heading_${level}_font_size`].$invalid,
-              }"
-              @blur="$v.values[`heading_${level}_font_size`].$touch()"
-            />
-            <i>px</i>
-          </div>
+            <template #suffix>px</template>
+          </FormInput>
+
           <template #after-input>
             <ResetButton
               v-model="values"
               :theme="theme"
-              :property="`heading_${level}_font_size`"
+              :property="`body_font_size`"
             />
           </template>
         </FormGroup>
-        <FormGroup horizontal :label="$t('typographyThemeConfigBlock.color')">
+
+        <FormGroup
+          horizontal
+          small-label
+          :label="$t('typographyThemeConfigBlock.color')"
+        >
           <ColorInput
             v-model="values[`heading_${level}_text_color`]"
             :color-variables="colorVariables"

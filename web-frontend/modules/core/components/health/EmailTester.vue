@@ -23,30 +23,27 @@
       </Alert>
     </div>
     <form @submit.prevent="submit">
-      <FormElement :error="fieldHasErrors('targetEmail')" class="control">
-        <label class="control__label">{{
-          $t('emailTester.targetEmailLabel')
-        }}</label>
-        <div class="control__elements">
-          <input
-            ref="name"
-            v-model="values.targetEmail"
-            :class="{ 'input--error': fieldHasErrors('targetEmail') }"
-            type="text"
-            class="input"
-            :disabled="loading"
-            @blur="$v.values.targetEmail.$touch()"
-          />
-          <div v-if="fieldHasErrors('targetEmail')" class="error">
-            {{ $t('emailTester.invalidTargetEmail') }}
-          </div>
-        </div>
-      </FormElement>
-      <Button
-        type="primary"
-        :loading="loading"
-        :disabled="loading || $v.$invalid"
+      <FormGroup
+        required
+        small-label
+        class="margin-bottom-2"
+        :label="$t('emailTester.targetEmailLabel')"
+        :error="fieldHasErrors('targetEmail')"
       >
+        <FormInput
+          ref="name"
+          v-model="values.targetEmail"
+          :error="fieldHasErrors('targetEmail')"
+          :disabled="loading"
+          @blur="$v.values.targetEmail.$touch()"
+        ></FormInput>
+
+        <template #error>
+          {{ $t('emailTester.invalidTargetEmail') }}
+        </template>
+      </FormGroup>
+
+      <Button :loading="loading" :disabled="loading || $v.$invalid">
         {{ $t('emailTester.submit') }}
       </Button>
     </form>

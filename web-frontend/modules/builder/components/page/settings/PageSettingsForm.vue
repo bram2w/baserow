@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="row margin-bottom-1">
+    <div class="row margin-bottom-2">
       <div class="col col-6">
         <PageSettingsNameFormElement
           ref="name"

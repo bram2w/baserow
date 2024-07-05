@@ -1,6 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('columnElementForm.columnAmountTitle')">
+    <FormGroup
+      required
+      class="margin-bottom-2"
+      small-label
+      :label="$t('columnElementForm.columnAmountTitle')"
+    >
       <Dropdown v-model="values.column_amount" :show-search="false">
         <DropdownItem
           v-for="columnAmount in columnAmounts"
@@ -12,28 +17,34 @@
         </DropdownItem>
       </Dropdown>
     </FormGroup>
+
     <FormGroup
-      :label="$t('columnElementForm.columnGapTitle')"
-      :error="
-        $v.values.column_gap.$dirty && !$v.values.column_gap.required
-          ? $t('error.requiredField')
-          : !$v.values.column_gap.integer
-          ? $t('error.integerField')
-          : !$v.values.column_gap.minValue
-          ? $t('error.minValueField', { min: 0 })
-          : !$v.values.column_gap.maxValue
-          ? $t('error.maxValueField', { max: 2000 })
-          : ''
-      "
+      class="margin-bottom-2"
+      small-label
+      required
+      :label="$t('columnElementForm.columnAmountTitle')"
+      :error="hasError"
     >
       <FormInput
         v-model="values.column_gap"
-        no-control
+        size="large"
+        :label="$t('columnElementForm.columnGapTitle')"
+        :placeholder="$t('columnElementForm.columnGapPlaceholder')"
+        :error="hasError"
         type="number"
         @blur="$v.values.column_gap.$touch()"
       />
+
+      <template #error>
+        {{ errorMessage }}
+      </template>
     </FormGroup>
-    <FormGroup :label="$t('columnElementForm.verticalAlignment')">
+
+    <FormGroup
+      :label="$t('columnElementForm.verticalAlignment')"
+      small-label
+      required
+    >
       <VerticalAlignmentSelector v-model="values.alignment" />
     </FormGroup>
   </form>
@@ -70,6 +81,21 @@ export default {
         }),
         value: columnAmount + 1,
       }))
+    },
+    errorMessage() {
+      return this.$v.values.column_gap.$dirty &&
+        !this.$v.values.column_gap.required
+        ? this.$t('error.requiredField')
+        : !this.$v.values.column_gap.integer
+        ? this.$t('error.integerField')
+        : !this.$v.values.column_gap.minValue
+        ? this.$t('error.minValueField', { min: 0 })
+        : !this.$v.values.column_gap.maxValue
+        ? this.$t('error.maxValueField', { max: 2000 })
+        : ''
+    },
+    hasError() {
+      return this.errorMessage !== ''
     },
   },
   methods: {

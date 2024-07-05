@@ -1,25 +1,26 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <label class="control__label">
-        {{ $t('snapshotsModal.createLabel') }}
-      </label>
-      <div class="control__elements">
-        <div class="modal-progress__actions">
-          <slot name="input">
-            <input
-              ref="name"
-              v-model="values.name"
-              :class="{ 'input--error': fieldHasErrors('name') }"
-              type="text"
-              class="input snapshots-modal__name-input"
-              @blur="$v.values.name.$touch()"
-            />
-          </slot>
-          <slot></slot>
-        </div>
-      </div>
-    </FormElement>
+    <FormGroup
+      :error="fieldHasErrors('name')"
+      small-label
+      :label="$t('snapshotsModal.createLabel')"
+      required
+    >
+      <slot name="input">
+        <FormInput
+          ref="name"
+          v-model="values.name"
+          size="large"
+          :error="fieldHasErrors('name')"
+          class="snapshots-modal__name-input"
+          @blur="$v.values.name.$touch()"
+        />
+      </slot>
+
+      <template #after-input>
+        <slot></slot>
+      </template>
+    </FormGroup>
   </form>
 </template>
 

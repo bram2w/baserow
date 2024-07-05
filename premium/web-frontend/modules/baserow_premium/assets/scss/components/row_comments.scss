@@ -168,10 +168,11 @@
   border-top: solid 1px $color-neutral-200;
 
   .rich-text-editor__content {
-    border: 1px solid #9fa4ab;
-    padding: 8px 12px;
+    @extend %form-input;
 
-    @include rounded($rounded);
+    height: auto;
+    padding: 11px 16px;
+    min-height: 44px;
   }
 }
 

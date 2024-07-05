@@ -2,7 +2,13 @@
   <div>
     <ThemeConfigBlockSection>
       <template #default>
-        <FormGroup horizontal :label="$t('linkThemeConfigBlock.alignment')">
+        <FormGroup
+          horizontal
+          small-label
+          required
+          :label="$t('linkThemeConfigBlock.alignment')"
+          class="margin-bottom-1"
+        >
           <HorizontalAlignmentsSelector v-model="values.link_text_alignment" />
           <template #after-input>
             <ResetButton
@@ -16,7 +22,13 @@
     </ThemeConfigBlockSection>
     <ThemeConfigBlockSection :title="$t('linkThemeConfigBlock.defaultState')">
       <template #default>
-        <FormGroup horizontal :label="$t('linkThemeConfigBlock.color')">
+        <FormGroup
+          horizontal
+          small-label
+          required
+          class="margin-bottom-1"
+          :label="$t('linkThemeConfigBlock.color')"
+        >
           <ColorInput
             v-model="values.link_text_color"
             :color-variables="colorVariables"
@@ -38,7 +50,13 @@
     </ThemeConfigBlockSection>
     <ThemeConfigBlockSection :title="$t('linkThemeConfigBlock.hoverState')">
       <template #default>
-        <FormGroup horizontal :label="$t('linkThemeConfigBlock.color')">
+        <FormGroup
+          horizontal
+          small-label
+          required
+          class="margin-bottom-1"
+          :label="$t('linkThemeConfigBlock.color')"
+        >
           <ColorInput
             v-model="values.link_hover_text_color"
             :color-variables="colorVariables"

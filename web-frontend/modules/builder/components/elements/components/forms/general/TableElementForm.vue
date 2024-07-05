@@ -1,51 +1,73 @@
 <template>
   <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('tableElementForm.dataSource')">
-      <div class="control__elements">
-        <div @click="userHasChangedDataSource = true">
-          <Dropdown v-model="values.data_source_id" :show-search="false">
-            <DropdownItem
-              v-for="dataSource in availableDataSources"
-              :key="dataSource.id"
-              :name="dataSource.name"
-              :value="dataSource.id"
-            />
-          </Dropdown>
-        </div>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+      :element="values"
+    />
+    <FormGroup
+      class="margin-bottom-2"
+      small-label
+      required
+      :label="$t('tableElementForm.dataSource')"
+    >
+      <div @click="userHasChangedDataSource = true">
+        <Dropdown v-model="values.data_source_id" :show-search="false">
+          <DropdownItem
+            v-for="dataSource in availableDataSources"
+            :key="dataSource.id"
+            :name="dataSource.name"
+            :value="dataSource.id"
+          />
+        </Dropdown>
       </div>
     </FormGroup>
-    <FormInput
-      v-model="values.items_per_page"
+
+    <FormGroup
+      class="margin-bottom-2"
+      small-label
       :label="$t('tableElementForm.itemsPerPage')"
-      :placeholder="$t('tableElementForm.itemsPerPagePlaceholder')"
-      :to-value="(value) => parseInt(value)"
-      :error="
-        $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
-          ? $t('error.requiredField')
-          : !$v.values.items_per_page.integer
-          ? $t('error.integerField')
-          : !$v.values.items_per_page.minValue
-          ? $t('error.minValueField', { min: 1 })
-          : !$v.values.items_per_page.maxValue
-          ? $t('error.maxValueField', { max: maxItemPerPage })
-          : ''
-      "
-      type="number"
-      @blur="$v.values.items_per_page.$touch()"
-    ></FormInput>
+      required
+      :error="itemsPerPageHasError"
+    >
+      <FormInput
+        v-model="values.items_per_page"
+        size="large"
+        :placeholder="$t('tableElementForm.itemsPerPagePlaceholder')"
+        :to-value="(value) => parseInt(value)"
+        :error="itemsPerPageHasError"
+        type="number"
+        @blur="$v.values.items_per_page.$touch()"
+      />
+
+      <template #error>
+        {{ errorMessageItemsPerPage }}
+      </template>
+    </FormGroup>
+
     <CustomStyle
       v-model="values.styles"
       style-key="button"
       :config-block-types="['button']"
       :theme="builder.theme"
     />
+
     <ApplicationBuilderFormulaInputGroup
       v-model="values.button_load_more_label"
       :label="$t('tableElementForm.buttonLoadMoreLabel')"
       :placeholder="$t('elementForms.textInputPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
     />
-    <FormGroup :label="$t('tableElementForm.fields')">
+
+    <FormGroup
+      class="margin-bottom-2"
+      small-label
+      :label="$t('tableElementForm.fields')"
+      required
+    >
       <template v-if="values.data_source_id">
         <ButtonText
           type="primary"
@@ -70,7 +92,7 @@
               ),
               handle: '[data-sortable-handle]',
             }"
-            class="table-element-form__field"
+            class="table-element-form__field margin-bottom-2"
           >
             <template #header="{ toggle, expanded }">
               <div
@@ -89,7 +111,6 @@
                   {{ field.name }}
                 </div>
                 <i
-                  class="fas"
                   :class="
                     expanded
                       ? 'iconoir-nav-arrow-down'
@@ -99,44 +120,48 @@
               </div>
             </template>
             <template #default>
-              <FormInput
-                v-model="field.name"
-                class="table-element-form__field-label"
-                label="Name"
-                small
-                horizontal
-                :error="
-                  !$v.values.fields.$each[index].name.required
-                    ? $t('error.requiredField')
-                    : !$v.values.fields.$each[index].name.maxLength
-                    ? $t('error.maxLength', { max: 255 })
-                    : ''
-                "
-              >
-                <template v-if="values.fields.length > 1" #after-input>
-                  <ButtonIcon icon="iconoir-bin" @click="removeField(field)" />
-                </template>
-              </FormInput>
-              <FormElement class="control control--horizontal">
-                <label class="control__label">
-                  {{ $t('tableElementForm.fieldType') }}
-                </label>
-                <div class="control__elements">
-                  <Dropdown
-                    small
-                    :value="field.type"
-                    :show-search="false"
-                    @input="changeFieldType(field, $event)"
-                  >
-                    <DropdownItem
-                      v-for="collectionType in orderedCollectionTypes"
-                      :key="collectionType.getType()"
-                      :name="collectionType.name"
-                      :value="collectionType.getType()"
+              <FormGroup small-label horizontal required label="Name">
+                <FormInput
+                  v-model="field.name"
+                  class="table-element-form__field-label"
+                  :error="
+                    !$v.values.fields.$each[index].name.required
+                      ? $t('error.requiredField')
+                      : !$v.values.fields.$each[index].name.maxLength
+                      ? $t('error.maxLength', { max: 255 })
+                      : false
+                  "
+                >
+                  <template v-if="values.fields.length > 1" #after-input>
+                    <ButtonIcon
+                      icon="iconoir-bin"
+                      @click="removeField(field)"
                     />
-                  </Dropdown>
-                </div>
-              </FormElement>
+                    />
+                  </template>
+                </FormInput>
+              </FormGroup>
+
+              <FormGroup
+                small-label
+                horizontal
+                required
+                :label="$t('tableElementForm.fieldType')"
+              >
+                <Dropdown
+                  small
+                  :value="field.type"
+                  :show-search="false"
+                  @input="changeFieldType(field, $event)"
+                >
+                  <DropdownItem
+                    v-for="collectionType in orderedCollectionTypes"
+                    :key="collectionType.getType()"
+                    :name="collectionType.name"
+                    :value="collectionType.getType()"
+                  />
+                </Dropdown>
+              </FormGroup>
               <component
                 :is="collectionTypes[field.type].formComponent"
                 :element="element"
@@ -160,7 +185,7 @@
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
     </FormGroup>
-    <FormGroup :label="$t('tableElementForm.orientation')">
+    <FormGroup :label="$t('tableElementForm.orientation')" small-label required>
       <DeviceSelector
         :device-type-selected="deviceTypeSelected"
         direction="row"
@@ -246,6 +271,21 @@ export default {
     },
     collectionTypes() {
       return this.$registry.getAll('collectionField')
+    },
+    errorMessageItemsPerPage() {
+      return this.$v.values.items_per_page.$dirty &&
+        !this.$v.values.items_per_page.required
+        ? this.$t('error.requiredField')
+        : !this.$v.values.items_per_page.integer
+        ? this.$t('error.integerField')
+        : !this.$v.values.items_per_page.minValue
+        ? this.$t('error.minValueField', { min: 1 })
+        : !this.$v.values.items_per_page.maxValue
+        ? this.$t('error.maxValueField', { max: this.maxItemPerPage })
+        : false
+    },
+    itemsPerPageHasError() {
+      return this.errorMessageItemsPerPage !== false
     },
   },
   watch: {

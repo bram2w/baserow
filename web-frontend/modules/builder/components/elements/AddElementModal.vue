@@ -3,6 +3,7 @@
     <h2 class="box__title">{{ $t('addElementModal.title') }}</h2>
     <FormInput
       v-model="search"
+      size="large"
       class="margin-bottom-2"
       :placeholder="$t('addElementModal.searchPlaceholder')"
       icon-right="iconoir-search"

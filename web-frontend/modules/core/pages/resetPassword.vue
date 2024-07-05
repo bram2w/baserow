@@ -26,39 +26,42 @@
       <div v-else>
         <Error :error="error"></Error>
         <form @submit.prevent="resetPassword">
-          <div class="auth__control">
-            <label class="auth__control-label">{{
-              $t('resetPassword.newPassword')
-            }}</label>
-            <div class="control__elements">
-              <PasswordInput
-                v-model="account.password"
-                :validation-state="$v.account.password"
-                :placeholder="$t('signup.passwordPlaceholder')"
-                :error-placeholder-class="'auth__control-error'"
-                :show-error-icon="true"
-              />
-            </div>
-          </div>
-          <div class="auth__control">
-            <label class="auth__control-label">{{
-              $t('resetPassword.repeatNewPassword')
-            }}</label>
-            <div class="control__elements">
-              <input
-                v-model="account.passwordConfirm"
-                :class="{ 'input--error': $v.account.passwordConfirm.$error }"
-                type="password"
-                class="input"
-                @blur="$v.account.passwordConfirm.$touch()"
-              />
-              <div class="auth__control-error">
-                <div v-if="$v.account.passwordConfirm.$error" class="error">
-                  {{ $t('error.notMatchingPassword') }}
-                </div>
-              </div>
-            </div>
-          </div>
+          <FormGroup
+            small-label
+            :label="$t('resetPassword.newPassword')"
+            required
+            class="margin-bottom-2"
+          >
+            <PasswordInput
+              v-model="account.password"
+              :validation-state="$v.account.password"
+              :placeholder="$t('signup.passwordPlaceholder')"
+              :error-placeholder-class="'auth__control-error'"
+              :show-error-icon="true"
+            />
+          </FormGroup>
+
+          <FormGroup
+            small-label
+            :label="$t('resetPassword.repeatNewPassword')"
+            required
+            class="margin-bottom-2"
+            :error="$v.account.passwordConfirm.$error"
+          >
+            <FormInput
+              v-model="account.passwordConfirm"
+              :error="$v.account.passwordConfirm.$error"
+              type="password"
+              size="large"
+              @blur="$v.account.passwordConfirm.$touch()"
+            >
+            </FormInput>
+
+            <template #error>
+              {{ $t('error.notMatchingPassword') }}
+            </template>
+          </FormGroup>
+
           <div class="auth__action">
             <Button
               type="primary"

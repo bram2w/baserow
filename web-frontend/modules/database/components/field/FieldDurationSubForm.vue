@@ -1,27 +1,25 @@
 <template>
-  <div>
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('fieldDurationSubForm.durationFormatLabel')
-      }}</label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.duration_format"
-          :class="{ 'dropdown--error': $v.values.duration_format.$error }"
-          :fixed-items="true"
-          small
-          @hide="$v.values.duration_format.$touch()"
-        >
-          <DropdownItem
-            v-for="option in durationFormatOptions"
-            :key="option.value"
-            :name="option.name"
-            :value="option.value"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-    </div>
-  </div>
+  <FormGroup
+    required
+    small-label
+    class="margin-bottom-2"
+    :label="$t('fieldDurationSubForm.durationFormatLabel')"
+  >
+    <Dropdown
+      v-model="values.duration_format"
+      :class="{ 'dropdown--error': $v.values.duration_format.$error }"
+      :fixed-items="true"
+      small
+      @hide="$v.values.duration_format.$touch()"
+    >
+      <DropdownItem
+        v-for="option in durationFormatOptions"
+        :key="option.value"
+        :name="option.name"
+        :value="option.value"
+      ></DropdownItem>
+    </Dropdown>
+  </FormGroup>
 </template>
 
 <script>

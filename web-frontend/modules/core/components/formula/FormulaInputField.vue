@@ -12,7 +12,7 @@
   <div v-else>
     <EditorContent
       ref="editor"
-      class="input formula-input-field"
+      class="form-input formula-input-field"
       :class="classes"
       :editor="editor"
       @data-component-clicked="dataComponentClicked"

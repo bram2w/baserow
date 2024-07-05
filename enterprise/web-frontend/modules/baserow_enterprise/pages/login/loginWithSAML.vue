@@ -12,35 +12,34 @@
         </h1>
       </div>
       <form @submit.prevent="login">
-        <FormElement :error="fieldHasErrors('email')" class="auth__control">
-          <label class="auth__control-label">{{
-            $t('field.emailAddress')
-          }}</label>
-          <div class="control__elements">
-            <input
-              ref="email"
-              v-model="values.email"
-              :class="{
-                'input--error': fieldHasErrors('email') || loginRequestError,
-              }"
-              type="email"
-              :placeholder="$t('login.emailPlaceholder')"
-              class="input"
-              @input="loginRequestError = null"
-              @blur="$v.values.email.$touch()"
-            />
-            <div class="auth__control-error">
-              <div v-if="fieldHasErrors('email')" class="error">
-                <i class="iconoir-warning-triangle"></i>
-                {{ $t('error.invalidEmail') }}
-              </div>
-              <div v-else-if="loginRequestError" class="error">
-                <i class="iconoir-warning-triangle"></i>
-                {{ $t('loginWithSaml.requestError') }}
-              </div>
-            </div>
-          </div>
-        </FormElement>
+        <FormGroup
+          small-label
+          :label="$t('field.emailAddress')"
+          required
+          :error="fieldHasErrors('email') || loginRequestError"
+        >
+          <FormInput
+            ref="email"
+            v-model="values.email"
+            type="email"
+            size="large"
+            :placeholder="$t('login.emailPlaceholder')"
+            :error="fieldHasErrors('email') || loginRequestError"
+            @input="loginRequestError = null"
+            @blur="$v.values.email.$touch()"
+          ></FormInput>
+
+          <template #error>
+            <span v-if="fieldHasErrors('email')">
+              <i class="iconoir-warning-triangle"></i>
+              {{ $t('error.invalidEmail') }}
+            </span>
+            <span v-else-if="loginRequestError">
+              <i class="iconoir-warning-triangle"></i>
+              {{ $t('loginWithSaml.requestError') }}
+            </span>
+          </template>
+        </FormGroup>
       </form>
       <div class="auth__actions">
         <Button

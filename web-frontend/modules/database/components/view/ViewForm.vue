@@ -1,40 +1,41 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <label class="control__label">
-        {{ $t('viewForm.name') }}
-      </label>
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input"
-          @focus.once="$event.target.select()"
-          @blur="$v.values.name.$touch()"
-        />
-        <div v-if="fieldHasErrors('name')" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('viewForm.whoCanEdit') }}
-      </label>
-      <div class="control__elements view-ownership-select">
-        <component
-          :is="type.getRadioComponent()"
-          v-for="type in availableViewOwnershipTypesForCreation"
-          :key="type.getType()"
-          :view-ownership-type="type"
-          :database="database"
-          :selected-type="values.ownershipType"
-          @input="(value) => (values.ownershipType = value)"
-        ></component>
-      </div>
-    </FormElement>
+    <FormGroup
+      small-label
+      :label="$t('viewForm.name')"
+      required
+      :error="fieldHasErrors('name')"
+      class="margin-bottom-2"
+    >
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        size="large"
+        :error="fieldHasErrors('name')"
+        @focus.once="$event.target.select()"
+        @blur="$v.values.name.$touch()"
+      >
+      </FormInput>
+
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
+    </FormGroup>
+
+    <FormGroup small-label :label="$t('viewForm.whoCanEdit')" required>
+      <component
+        :is="type.getRadioComponent()"
+        v-for="type in availableViewOwnershipTypesForCreation"
+        :key="type.getType()"
+        class="margin-right-2"
+        :view-ownership-type="type"
+        :database="database"
+        :selected-type="values.ownershipType"
+        @input="(value) => (values.ownershipType = value)"
+      >
+      </component>
+    </FormGroup>
+
     <slot></slot>
   </form>
 </template>

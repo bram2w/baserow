@@ -1,42 +1,42 @@
 <template>
   <div>
-    <div class="control">
-      <label class="control__label">
-        {{ $t('databaseForm.importLabel') }}
-      </label>
-      <div class="control__elements">
-        <ul class="choice-items">
-          <li>
-            <a
-              class="choice-items__link"
-              :class="{ active: importType === 'none' }"
-              @click="importType = 'none'"
-            >
-              <i class="choice-items__icon iconoir-copy"></i>
-              <span>{{ $t('databaseForm.emptyLabel') }}</span>
-              <i
-                v-if="importType === 'none'"
-                class="choice-items__icon-active iconoir-check-circle"
-              ></i>
-            </a>
-          </li>
-          <li>
-            <a
-              class="choice-items__link"
-              :class="{ active: importType === 'airtable' }"
-              @click="importType = 'airtable'"
-            >
-              <i class="choice-items__icon iconoir-copy"></i>
-              <span>{{ $t('databaseForm.airtableLabel') }}</span>
-              <i
-                v-if="importType === 'airtable'"
-                class="choice-items__icon-active iconoir-check-circle"
-              ></i>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
+    <FormGroup
+      :label="$t('databaseForm.importLabel')"
+      small-label
+      required
+      class="margin-bottom-3"
+    >
+      <ul class="choice-items">
+        <li>
+          <a
+            class="choice-items__link"
+            :class="{ active: importType === 'none' }"
+            @click="importType = 'none'"
+          >
+            <i class="choice-items__icon iconoir-copy"></i>
+            <span>{{ $t('databaseForm.emptyLabel') }}</span>
+            <i
+              v-if="importType === 'none'"
+              class="choice-items__icon-active iconoir-check-circle"
+            ></i>
+          </a>
+        </li>
+        <li>
+          <a
+            class="choice-items__link"
+            :class="{ active: importType === 'airtable' }"
+            @click="importType = 'airtable'"
+          >
+            <i class="choice-items__icon iconoir-copy"></i>
+            <span>{{ $t('databaseForm.airtableLabel') }}</span>
+            <i
+              v-if="importType === 'airtable'"
+              class="choice-items__icon-active iconoir-check-circle"
+            ></i>
+          </a>
+        </li>
+      </ul>
+    </FormGroup>
     <BlankDatabaseForm
       v-if="importType === 'none'"
       :default-name="defaultName"

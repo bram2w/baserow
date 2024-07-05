@@ -3,99 +3,90 @@
     <h3>{{ $t('workspaceInviteForm.invitationFormTitle') }}</h3>
     <div class="row">
       <div class="col col-7">
-        <FormElement :error="fieldHasErrors('email')" class="control">
-          <div class="control__elements">
-            <input
-              ref="email"
-              v-model="values.email"
-              :class="{ 'input--error': fieldHasErrors('email') }"
-              type="text"
-              class="input input--small"
-              @blur="$v.values.email.$touch()"
-            />
-            <div v-if="fieldHasErrors('email')" class="error">
-              {{ $t('workspaceInviteForm.errorInvalidEmail') }}
-            </div>
-          </div>
-        </FormElement>
+        <FormGroup small-label :error="fieldHasErrors('email')">
+          <FormInput
+            ref="email"
+            v-model="values.email"
+            :error="fieldHasErrors('email')"
+            @blur="$v.values.email.$touch()"
+          >
+          </FormInput>
+
+          <template #error>
+            {{ $t('workspaceInviteForm.errorInvalidEmail') }}
+          </template>
+        </FormGroup>
       </div>
       <div class="col col-5">
-        <FormElement class="control">
-          <div class="control__elements">
-            <div class="group-invite-form__role-selector">
-              <slot name="roleSelectorLabel"></slot>
-              <Dropdown
-                v-model="values.permissions"
-                class="group-invite-form__role-selector-dropdown"
-                :show-search="false"
-                :fixed-items="true"
-                small
+        <FormGroup>
+          <div class="group-invite-form__role-selector">
+            <slot name="roleSelectorLabel"></slot>
+            <Dropdown
+              v-model="values.permissions"
+              class="group-invite-form__role-selector-dropdown"
+              :show-search="false"
+              small
+            >
+              <DropdownItem
+                v-for="(role, index) in roles"
+                :key="index"
+                :ref="'role' + role.uid"
+                :name="role.name"
+                :value="role.uid"
+                :disabled="role.isDeactivated"
+                :description="role.description"
+                @click="clickOnDeactivatedItem($event)"
               >
-                <DropdownItem
-                  v-for="(role, index) in roles"
-                  :key="index"
-                  :ref="'role' + role.uid"
-                  :name="role.name"
-                  :value="role.uid"
-                  :disabled="role.isDeactivated"
-                  :description="role.description"
-                  @click="clickOnDeactivatedItem($event)"
-                >
-                  {{ role.name }}
-                  <Badge
-                    v-if="role.showIsBillable && role.isBillable"
-                    color="cyan"
-                    size="small"
-                    bold
-                    >{{ $t('common.billable') }}
-                  </Badge>
-                  <Badge
-                    v-else-if="
-                      role.showIsBillable &&
-                      !role.isBillable &&
-                      atLeastOneBillableRole
-                    "
-                    color="yellow"
-                    size="small"
-                    bold
-                    class="margin-left-1"
-                    >{{ $t('common.free') }}
-                  </Badge>
-                  <i v-if="role.isDeactivated" class="iconoir-lock"></i>
-                  <component
-                    :is="deactivatedClickModal(role)"
-                    :ref="'deactivatedClickModal-' + role.uid"
-                    :v-if="deactivatedClickModal(role)"
-                    :name="$t('workspaceInviteForm.additionalRoles')"
-                    :workspace="workspace"
-                  ></component>
-                </DropdownItem>
-              </Dropdown>
-            </div>
+                {{ role.name }}
+                <Badge
+                  v-if="role.showIsBillable && role.isBillable"
+                  color="cyan"
+                  size="small"
+                  bold
+                  >{{ $t('common.billable') }}
+                </Badge>
+                <Badge
+                  v-else-if="
+                    role.showIsBillable &&
+                    !role.isBillable &&
+                    atLeastOneBillableRole
+                  "
+                  color="yellow"
+                  size="small"
+                  bold
+                  class="margin-left-1"
+                  >{{ $t('common.free') }}
+                </Badge>
+                <i v-if="role.isDeactivated" class="iconoir-lock"></i>
+                <component
+                  :is="deactivatedClickModal(role)"
+                  :ref="'deactivatedClickModal-' + role.uid"
+                  :v-if="deactivatedClickModal(role)"
+                  :name="$t('workspaceInviteForm.additionalRoles')"
+                  :workspace="workspace"
+                ></component>
+              </DropdownItem>
+            </Dropdown>
           </div>
-        </FormElement>
+        </FormGroup>
       </div>
-      <div class="col col-12">
-        <FormElement class="control">
-          <div class="control__elements">
-            <input
-              ref="message"
-              v-model="values.message"
-              type="text"
-              class="input input--small"
-              :placeholder="
-                $t('workspaceInviteForm.optionalMessagePlaceholder')
-              "
-            />
-            <div v-if="fieldHasErrors('message')" class="error">
-              {{
-                $t('workspaceInviteForm.errorTooLongMessage', {
-                  amount: messageMaxLength,
-                })
-              }}
-            </div>
-          </div>
-        </FormElement>
+      <div class="col col-12 margin-top-2 margin-bottom-2">
+        <FormGroup :error="fieldHasErrors('message')">
+          <FormInput
+            ref="message"
+            v-model="values.message"
+            :error="fieldHasErrors('message')"
+            :placeholder="$t('workspaceInviteForm.optionalMessagePlaceholder')"
+          ></FormInput>
+
+          <template #error>
+            {{
+              $t('workspaceInviteForm.errorTooLongMessage', {
+                amount: messageMaxLength,
+              })
+            }}
+          </template>
+        </FormGroup>
       </div>
       <slot></slot>
     </div>

@@ -2,18 +2,15 @@
   <div>
     <div class="row">
       <div class="col col-12">
-        <div class="control">
-          <label class="control__label">{{
-            $t('tableXMLExporter.encoding')
-          }}</label>
-          <div class="control__elements">
-            <CharsetDropdown
-              v-model="values.export_charset"
-              :disabled="loading"
-            >
-            </CharsetDropdown>
-          </div>
-        </div>
+        <FormGroup
+          :label="$t('tableXMLExporter.encoding')"
+          required
+          small-label
+          class="margin-bottom-2"
+        >
+          <CharsetDropdown v-model="values.export_charset" :disabled="loading">
+          </CharsetDropdown>
+        </FormGroup>
       </div>
     </div>
   </div>

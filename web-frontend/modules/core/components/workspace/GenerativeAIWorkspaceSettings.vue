@@ -19,29 +19,24 @@
         class="margin-top-3"
       >
         <h3 class="margin-bottom-2">{{ modelType.getName() }}</h3>
-        <div
+        <FormGroup
           v-for="setting in modelType.getSettings()"
           :key="setting.key"
-          class="control"
+          small-label
+          :label="setting.label"
+          :error="$v.settings[type][setting.key].$error"
+          required
+          class="margin-bottom-2"
         >
-          <label class="control__label">{{ setting.label }}</label>
-          <MarkdownIt
-            v-if="setting.description"
-            class="control__description"
-            :content="setting.description"
+          <FormInput
+            v-model.trim="$v.settings[type][setting.key].$model"
+            :error="$v.settings[type][setting.key].$error"
           />
-          <div class="control__elements">
-            <input
-              v-model.trim="$v.settings[type][setting.key].$model"
-              :class="{ 'input--error': $v.settings[type][setting.key].$error }"
-              class="input"
-            />
-            <div
-              v-if="$v.settings[type][setting.key].$error"
-              class="error"
-            ></div>
-          </div>
-        </div>
+
+          <template v-if="setting.description" #helper>
+            <MarkdownIt :content="setting.description" />
+          </template>
+        </FormGroup>
       </div>
       <div class="actions actions--right">
         <Button

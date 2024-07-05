@@ -1,27 +1,21 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('domain_name')" class="control">
+    <FormGroup
+      :label="$t('subDomainForm.domainNameLabel')"
+      small-label
+      required
+      :error="fieldHasErrors('domain_name')"
+    >
       <FormInput
         v-model="domainPrefix"
-        :label="$t('subDomainForm.domainNameLabel')"
-        :error="
-          $v.values.domain_name.$dirty && !$v.values.domain_name.required
-            ? $t('error.requiredField')
-            : $v.values.domain_name.$dirty && !$v.values.domain_name.maxLength
-            ? $t('error.maxLength', { max: 255 })
-            : serverErrors.domain_name &&
-              serverErrors.domain_name.code === 'invalid'
-            ? $t('domainForm.invalidDomain')
-            : serverErrors.domain_name &&
-              serverErrors.domain_name.code === 'unique'
-            ? $t('domainForm.notUniqueDomain')
-            : ''
-        "
+        size="large"
+        :error="fieldHasErrors('domain_name')"
         @input="serverErrors.domain_name = null"
       >
         <template #suffix> .{{ domain }} </template>
       </FormInput>
-    </FormElement>
+      <template #error> {{ errorMessage }} </template>
+    </FormGroup>
   </form>
 </template>
 
@@ -39,6 +33,23 @@ export default {
         domain_name: '',
       },
     }
+  },
+  computed: {
+    errorMessage() {
+      return this.$v.values.domain_name.$dirty &&
+        !this.$v.values.domain_name.required
+        ? this.$t('error.requiredField')
+        : this.$v.values.domain_name.$dirty &&
+          !this.$v.values.domain_name.maxLength
+        ? this.$t('error.maxLength', { max: 255 })
+        : this.serverErrors.domain_name &&
+          this.serverErrors.domain_name.code === 'invalid'
+        ? this.$t('domainForm.invalidDomain')
+        : this.serverErrors.domain_name &&
+          this.serverErrors.domain_name.code === 'unique'
+        ? this.$t('domainForm.notUniqueDomain')
+        : false
+    },
   },
   watch: {
     domainPrefix(value) {

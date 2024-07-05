@@ -14,52 +14,52 @@
         <DropdownItem name="RGB" :value="COLOR_NOTATIONS.RGB"></DropdownItem>
       </Dropdown>
       <div v-if="type === 'hex'" class="color-picker-context__color-hex">
-        <input
-          class="input"
+        <FormInput
+          size="large"
           :value="hexColorExcludingAlpha"
           @input="hexChanged"
         />
       </div>
       <div v-if="type === 'rgb'" class="color-picker-context__color-rgb">
-        <input
+        <FormInput
           type="number"
-          min="0"
-          max="255"
+          size="large"
+          :min="0"
+          :max="255"
           :value="r"
-          class="input remove-number-input-controls"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'r')"
         />
-        <input
+        <FormInput
           type="number"
-          min="0"
-          max="255"
+          size="large"
+          :min="0"
+          :max="255"
           :value="g"
-          class="input remove-number-input-controls"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'g')"
         />
-        <input
+        <FormInput
           type="number"
-          min="0"
-          max="255"
+          size="large"
+          :min="0"
+          :max="255"
           :value="b"
-          class="input remove-number-input-controls"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'b')"
         />
       </div>
       <div class="color-picker-context__color-opacity">
-        <div
-          class="form-input form-input--with-icon form-input--with-icon-right"
-        >
-          <input
-            type="number"
-            min="0"
-            max="100"
-            class="form-input__input remove-number-input-controls"
-            :value="a"
-            @input="rgbaChanged($event, 'a')"
-          />
-          <i class="form-input__icon iconoir-percentage"></i>
-        </div>
+        <FormInput
+          type="number"
+          size="large"
+          :min="0"
+          :max="100"
+          :value="a"
+          remove-number-input-controls
+          icon-right="iconoir-percentage"
+          @input="rgbaChanged($event, 'a')"
+        ></FormInput>
       </div>
     </div>
     <div
@@ -194,7 +194,7 @@ export default {
      * text inputs.
      */
     rgbaChanged(event, channel) {
-      const value = parseInt(event.target.value)
+      const value = parseInt(event)
       if (isNaN(value) && value >= 0 && value <= 255) {
         return
       }
@@ -210,7 +210,7 @@ export default {
      * Called when one the raw hex value must be updated.
      */
     hexChanged(event) {
-      const value = event.target.value
+      const value = event
       if (!isValidHexColor(value)) {
         return
       }

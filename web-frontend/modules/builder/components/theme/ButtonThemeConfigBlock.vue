@@ -2,7 +2,13 @@
   <div>
     <ThemeConfigBlockSection>
       <template #default>
-        <FormGroup horizontal :label="$t('buttonThemeConfigBlock.width')">
+        <FormGroup
+          horizontal
+          small-label
+          required
+          :label="$t('buttonThemeConfigBlock.width')"
+          class="margin-bottom-1"
+        >
           <WidthSelector v-model="buttonWidth" />
           <template #after-input>
             <ResetButton
@@ -15,6 +21,9 @@
         <FormGroup
           v-if="values.button_width === 'auto'"
           horizontal
+          small-label
+          required
+          class="margin-bottom-1"
           :label="$t('buttonThemeConfigBlock.alignment')"
         >
           <HorizontalAlignmentsSelector v-model="values.button_alignment" />
@@ -29,6 +38,9 @@
         <FormGroup
           v-else
           horizontal
+          small-label
+          required
+          class="margin-bottom-1"
           :label="$t('buttonThemeConfigBlock.textAlignment')"
         >
           <HorizontalAlignmentsSelector
@@ -48,6 +60,9 @@
       <template #default>
         <FormGroup
           horizontal
+          small-label
+          required
+          class="margin-bottom-1"
           :label="$t('buttonThemeConfigBlock.backgroundColor')"
         >
           <ColorInput
@@ -73,6 +88,9 @@
       <template #default>
         <FormGroup
           horizontal
+          small-label
+          required
+          class="margin-bottom-1"
           :label="$t('buttonThemeConfigBlock.backgroundColor')"
         >
           <ColorInput

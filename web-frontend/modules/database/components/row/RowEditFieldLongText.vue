@@ -1,26 +1,28 @@
 <template>
-  <div class="control__elements">
-    <textarea
+  <FormGroup :error="touched && !valid">
+    <FormTextarea
       ref="input"
       v-model="copy"
-      type="text"
-      class="input field-long-text"
-      :class="{ 'input--error': touched && !valid }"
+      :error="touched && !valid"
       :disabled="readOnly"
+      :rows="5"
       @focus="select()"
       @blur="unselect()"
     />
-    <div v-show="touched && !valid" class="error">
+
+    <template #error>
       {{ error }}
-    </div>
-  </div>
+    </template>
+  </FormGroup>
 </template>
 
 <script>
+import FormTextarea from '@baserow/modules/core/components/FormTextarea.vue'
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 import rowEditFieldInput from '@baserow/modules/database/mixins/rowEditFieldInput'
 
 export default {
+  components: { FormTextarea },
   mixins: [rowEditField, rowEditFieldInput],
 }
 </script>

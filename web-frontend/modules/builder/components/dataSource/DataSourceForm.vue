@@ -4,7 +4,6 @@
       <div class="data-source-form__header-form">
         <FormInput
           v-model="values.name"
-          small
           class="data-source-form__name-input"
           :placeholder="$t('dataSourceForm.namePlaceholder')"
         />

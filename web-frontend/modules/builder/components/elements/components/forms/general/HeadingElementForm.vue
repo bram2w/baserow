@@ -8,7 +8,12 @@
       :theme="builder.theme"
       :extra-args="{ headingLevel: values.level }"
     />
-    <FormGroup :label="$t('headingElementForm.levelTitle')">
+    <FormGroup
+      small-label
+      required
+      :label="$t('headingElementForm.levelTitle')"
+      class="margin-bottom-2"
+    >
       <Dropdown v-model="values.level" :show-search="false">
         <DropdownItem
           v-for="level in levels"
@@ -22,9 +27,12 @@
     </FormGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
+      small-label
+      required
       :label="$t('headingElementForm.textTitle')"
       :placeholder="$t('elementForms.textInputPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
     />
   </form>
 </template>

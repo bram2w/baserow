@@ -1,39 +1,37 @@
 <template>
   <div>
-    <div class="control">
-      <div v-if="tables.length > 0">
-        <label class="control__label control__label--small">
-          {{ $t('fieldLinkRowSubForm.selectTableLabel') }}
-        </label>
-        <div class="control__elements">
-          <Dropdown
-            v-model="values.link_row_table_id"
-            :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
-            :fixed-items="true"
-            :disabled="!isSelectedFieldAccessible"
-            small
-            @hide="$v.values.link_row_table_id.$touch()"
-          >
-            <DropdownItem
-              v-for="table in tablesWhereFieldsCanBeCreated"
-              :key="table.id"
-              :name="table.name"
-              :value="table.id"
-            ></DropdownItem>
-          </Dropdown>
-          <div v-if="$v.values.link_row_table_id.$error" class="error">
-            {{ $t('error.requiredField') }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-show="values.link_row_table_id !== table.id" class="control">
-      <div class="control__elements">
-        <Checkbox v-model="values.has_related_field">{{
-          $t('fieldLinkRowSubForm.hasRelatedFieldLabel')
-        }}</Checkbox>
-      </div>
-    </div>
+    <FormGroup
+      v-if="tables.length > 0"
+      small-label
+      :label="$t('fieldLinkRowSubForm.selectTableLabel')"
+      required
+      :error="$v.values.link_row_table_id.$error"
+      class="margin-bottom-2"
+    >
+      <Dropdown
+        v-model="values.link_row_table_id"
+        :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+        :fixed-items="true"
+        :disabled="!isSelectedFieldAccessible"
+        small
+        @hide="$v.values.link_row_table_id.$touch()"
+      >
+        <DropdownItem
+          v-for="table in tablesWhereFieldsCanBeCreated"
+          :key="table.id"
+          :name="table.name"
+          :value="table.id"
+        ></DropdownItem>
+      </Dropdown>
+
+      <template #error> {{ $t('error.requiredField') }}</template>
+    </FormGroup>
+
+    <FormGroup class="margin-bottom-2">
+      <Checkbox v-model="values.has_related_field">{{
+        $t('fieldLinkRowSubForm.hasRelatedFieldLabel')
+      }}</Checkbox>
+    </FormGroup>
   </div>
 </template>
 

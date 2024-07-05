@@ -5,13 +5,14 @@
     class="formula-field"
   >
     <div class="formula-field__input">
-      <AutoExpandableTextarea
+      <FormTextarea
         ref="textAreaFormulaInput"
         :value="formula"
         class="formula-field__input-formula"
         :placeholder="
           $t('formulaAdvancedEditContext.textAreaFormulaInputPlaceholder')
         "
+        auto-expandable
         @input="formulaChanged"
         @blur="$emit('blur', $event)"
         @click="recalcAutoComplete"
@@ -21,7 +22,7 @@
           $refs.editContext.hide()
           $emit('hidden', $event)
         "
-      ></AutoExpandableTextarea>
+      ></FormTextarea>
     </div>
     <div v-if="error" class="formula-field__input-error">{{ error }}</div>
     <div class="formula-field__body">
@@ -59,7 +60,6 @@
 </template>
 
 <script>
-import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/AutoExpandableTextarea'
 import context from '@baserow/modules/core/mixins/context'
 
 import {
@@ -72,7 +72,6 @@ import FormulaFieldItemDescription from '@baserow/modules/database/components/fo
 export default {
   name: 'FormulaAdvancedEditContext',
   components: {
-    AutoExpandableTextarea,
     FormulaFieldItemDescription,
     FormulaFieldItemGroup,
   },
@@ -185,7 +184,7 @@ export default {
       }
       const cursorLocation =
         this.$refs.textAreaFormulaInput !== undefined
-          ? this.$refs.textAreaFormulaInput.$refs.inputTextArea.selectionStart
+          ? this.$refs.textAreaFormulaInput.$refs.textarea.selectionStart
           : 0
 
       const { filteredFields, filteredFunctions, filtered } =
@@ -217,7 +216,7 @@ export default {
     },
     doAutoComplete(functionCandidate, fieldCandidate) {
       const startingCursorLocation =
-        this.$refs.textAreaFormulaInput.$refs.inputTextArea.selectionStart
+        this.$refs.textAreaFormulaInput.$refs.textarea.selectionStart
 
       const { autocompletedFormula, newCursorPosition } = autocompleteFormula(
         this.formula,
@@ -228,8 +227,8 @@ export default {
       this.formula = autocompletedFormula
 
       this.$nextTick(() => {
-        this.$refs.textAreaFormulaInput.$refs.inputTextArea.focus()
-        this.$refs.textAreaFormulaInput.$refs.inputTextArea.setSelectionRange(
+        this.$refs.textAreaFormulaInput.$refs.textarea.focus()
+        this.$refs.textAreaFormulaInput.$refs.textarea.setSelectionRange(
           newCursorPosition,
           newCursorPosition
         )
@@ -245,8 +244,8 @@ export default {
         -1
       )
       this.$nextTick(() => {
-        this.$refs.textAreaFormulaInput.$refs.inputTextArea.focus()
-        this.$refs.textAreaFormulaInput.$refs.inputTextArea.setSelectionRange(
+        this.$refs.textAreaFormulaInput.$refs.textarea.focus()
+        this.$refs.textAreaFormulaInput.$refs.textarea.setSelectionRange(
           triggeringEl.selectionStart,
           triggeringEl.selectionEnd
         )

@@ -1,0 +1,57 @@
+.theme-settings {
+  position: relative;
+  height: 100%;
+  padding: 32px 0;
+
+  &::after {
+    @include absolute(0, 50%, 0, auto);
+
+    content: '';
+    border-right: 1px solid $color-neutral-200;
+  }
+}
+
+.theme-settings__section {
+  display: flex;
+  width: 100%;
+}
+
+.theme-settings__section-properties {
+  flex: 50% 0 0;
+  padding: 0 20px;
+}
+
+.theme-settings__inputs-wrapper {
+  @include flex-align-items(15px);
+}
+
+.theme-settings__input-font-size {
+  flex: none;
+}
+
+.theme-settings__section-title {
+  color: $color-neutral-900;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  place-content: center space-between;
+  margin-bottom: 20px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.theme-settings__section-title-icon {
+  font-size: 12px;
+}
+
+.theme-settings__section-preview {
+  flex: 50% 0 0;
+  width: 50%;
+  padding: 0 32px;
+}
+
+.theme-settings__section-ellipsis {
+  @extend %ellipsis;
+}

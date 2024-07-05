@@ -2,7 +2,7 @@
   <div>
     <h2 class="box__title">{{ $t('domainSettings.titleAddDomain') }}</h2>
     <Error :error="error"></Error>
-    <FormElement class="control">
+    <FormGroup class="margin-bottom-3">
       <Dropdown
         v-model="selectedDomain"
         :show-search="false"
@@ -15,7 +15,7 @@
           :value="option.value"
         />
       </Dropdown>
-    </FormElement>
+    </FormGroup>
     <component
       :is="currentDomainType.formComponent"
       ref="domainForm"

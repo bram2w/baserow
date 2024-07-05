@@ -1,17 +1,12 @@
 <template>
-  <div>
-    <div class="control">
-      <div class="control__elements">
-        <input
-          ref="text_default"
-          v-model="values.text_default"
-          type="text"
-          class="input input--small"
-          :placeholder="$t('fieldTextSubForm.placeholder')"
-        />
-      </div>
-    </div>
-  </div>
+  <FormGroup class="margin-bottom-2">
+    <FormInput
+      ref="text_default"
+      v-model="values.text_default"
+      type="text"
+      :placeholder="$t('fieldTextSubForm.placeholder')"
+    ></FormInput>
+  </FormGroup>
 </template>
 
 <script>

@@ -7,6 +7,7 @@
       :placeholder="$t('textFieldForm.fieldValuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       horizontal
+      small-label
     />
   </form>
 </template>

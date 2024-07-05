@@ -1,13 +1,11 @@
 <template>
   <div class="select-members-list">
     <div>
-      <input
+      <FormInput
         ref="searchInput"
         v-model="activeSearchTerm"
-        type="text"
-        class="input"
         :placeholder="$t('memberSelectionList.searchPlaceholder')"
-      />
+      ></FormInput>
       <div class="margin-top-2">
         {{
           $t('memberSelectionList.selectedAmountLabel', {

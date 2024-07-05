@@ -1,25 +1,41 @@
 <template>
-  <div>
-    <div v-if="exporterTypes.length > 0" class="control">
-      <label class="control__label">{{
-        $t('exporterTypeChoices.formatLabel')
-      }}</label>
-      <div class="control__elements">
-        <ul class="choice-items">
-          <ExporterTypeChoice
-            v-for="exporterType in exporterTypes"
-            :key="exporterType.type"
-            :exporter-type="exporterType"
-            :active="value !== null && value === exporterType.type"
-            :disabled="loading"
-            :database="database"
-            @selected="switchToExporterType(exporterType.type)"
-          >
-          </ExporterTypeChoice>
-        </ul>
-      </div>
+  <FormGroup
+    small-label
+    :label="$t('exporterTypeChoices.formatLabel')"
+    required
+  >
+    <ul class="choice-items">
+      <ExporterTypeChoice
+        v-for="exporterType in exporterTypes"
+        :key="exporterType.type"
+        :exporter-type="exporterType"
+        :active="value !== null && value === exporterType.type"
+        :disabled="loading"
+        :database="database"
+        @selected="switchToExporterType(exporterType.type)"
+      >
+      </ExporterTypeChoice>
+    </ul>
+  </FormGroup>
+  <!-- <div v-if="exporterTypes.length > 0" class="control">
+    <label class="control__label">{{
+      $t('exporterTypeChoices.formatLabel')
+    }}</label>
+    <div class="control__elements">
+      <ul class="choice-items">
+        <ExporterTypeChoice
+          v-for="exporterType in exporterTypes"
+          :key="exporterType.type"
+          :exporter-type="exporterType"
+          :active="value !== null && value === exporterType.type"
+          :disabled="loading"
+          :database="database"
+          @selected="switchToExporterType(exporterType.type)"
+        >
+        </ExporterTypeChoice>
+      </ul>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script>

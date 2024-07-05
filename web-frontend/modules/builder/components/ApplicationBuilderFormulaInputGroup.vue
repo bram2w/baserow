@@ -1,6 +1,8 @@
 <template>
   <FormulaInputGroup
     v-bind="$attrs"
+    small-label
+    required
     :data-explorer-loading="dataExplorerLoading"
     :data-providers="dataProviders"
     :application-context="

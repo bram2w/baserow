@@ -1,25 +1,24 @@
 <template>
-  <div class="control__elements">
-    <input
+  <FormGroup class="margin-bottom-2" :error="touched && !valid">
+    <FormInput
       ref="input"
       v-model="formattedValue"
+      size="large"
       :placeholder="field.duration_format"
-      type="text"
-      class="input field-duration"
-      :class="{
-        'input--error': touched && !valid,
-      }"
+      :error="touched && !valid"
       :disabled="readOnly"
+      class="field-duration"
       @keypress="onKeyPress(field, $event)"
       @keyup.enter="$refs.input.blur()"
       @keyup="updateCopy(field, $event.target.value)"
       @focus="select()"
       @blur="unselect()"
-    />
-    <div v-show="touched && !valid" class="error">
+    ></FormInput>
+
+    <template #error>
       {{ error }}
-    </div>
-  </div>
+    </template>
+  </FormGroup>
 </template>
 
 <script>

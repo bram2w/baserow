@@ -2,121 +2,130 @@
   <div>
     <ThemeConfigBlockSection>
       <template #default>
-        <FormGroup horizontal :label="$t('imageThemeConfigBlock.alignment')">
-          <div class="flex">
-            <HorizontalAlignmentsSelector
-              v-model="values.image_alignment"
-              class="flex-grow-1"
-            />
+        <FormGroup
+          horizontal
+          small-label
+          required
+          :label="$t('imageThemeConfigBlock.alignment')"
+          class="margin-bottom-1"
+        >
+          <HorizontalAlignmentsSelector v-model="values.image_alignment" />
+
+          <template #after-input>
             <ResetButton
               v-model="values"
               :theme="theme"
               property="image_alignment"
             />
-          </div>
+          </template>
         </FormGroup>
         <FormGroup
           horizontal
           :label="$t('imageThemeConfigBlock.maxWidthLabel')"
-          :error="
-            $v.values.image_max_width.$dirty &&
-            !$v.values.image_max_width.integer
-              ? $t('error.integerField')
-              : !$v.values.image_max_width.minValue
-              ? $t('error.minValueField', { min: 0 })
-              : !$v.values.image_max_width.maxValue
-              ? $t('error.maxValueField', { max: 100 })
-              : ''
-          "
+          small-label
+          required
+          class="margin-bottom-1"
         >
-          <div class="flex">
-            <FormInput
-              v-model="values.image_max_width"
-              class="flex-grow-1"
-              no-control
-              small
-              type="number"
-              icon-right="iconoir-percentage"
-              :placeholder="$t('imageThemeConfigBlock.maxWidthPlaceholder')"
-              :to-value="(value) => (value ? parseInt(value) : null)"
-            ></FormInput>
+          <FormInput
+            v-model="values.image_max_width"
+            small
+            type="number"
+            :error="
+              $v.values.image_max_width.$dirty &&
+              !$v.values.image_max_width.integer
+                ? $t('error.integerField')
+                : !$v.values.image_max_width.minValue
+                ? $t('error.minValueField', { min: 0 })
+                : !$v.values.image_max_width.maxValue
+                ? $t('error.maxValueField', { max: 100 })
+                : false
+            "
+            :placeholder="$t('imageThemeConfigBlock.maxWidthPlaceholder')"
+            :to-value="(value) => (value ? parseInt(value) : null)"
+          >
+            <template #suffix>
+              <i class="iconoir-percentage"></i>
+            </template>
+          </FormInput>
+
+          <template #after-input>
             <ResetButton
               v-model="values"
               :theme="theme"
               property="image_max_width"
             />
-          </div>
+          </template>
         </FormGroup>
         <FormGroup
           horizontal
+          small-label
+          required
           :label="$t('imageThemeConfigBlock.maxHeightLabel')"
-          :error="
-            $v.values.image_max_height.$dirty &&
-            !$v.values.image_max_height.integer
-              ? $t('error.integerField')
-              : !$v.values.image_max_height.minValue
-              ? $t('error.minValueField', { min: 5 })
-              : !$v.values.image_max_height.maxValue
-              ? $t('error.maxValueField', { max: 3000 })
-              : ''
-          "
+          class="margin-bottom-1"
         >
-          <div class="flex">
-            <FormInput
-              v-model="imageMaxHeight"
-              class="flex-grow-1"
-              no-control
-              small
-              type="number"
-              iicon-right="iconoir-ruler-combine"
-              :placeholder="$t('imageThemeConfigBlock.maxHeightPlaceholder')"
-              :to-value="(value) => (value ? parseInt(value) : null)"
-            >
-              <template #suffix>
-                <i>px</i>
-              </template>
-            </FormInput>
+          <FormInput
+            v-model="imageMaxHeight"
+            small
+            type="number"
+            :error="
+              $v.values.image_max_height.$dirty &&
+              !$v.values.image_max_height.integer
+                ? $t('error.integerField')
+                : !$v.values.image_max_height.minValue
+                ? $t('error.minValueField', { min: 5 })
+                : !$v.values.image_max_height.maxValue
+                ? $t('error.maxValueField', { max: 3000 })
+                : false
+            "
+            :placeholder="$t('imageThemeConfigBlock.maxHeightPlaceholder')"
+            :to-value="(value) => (value ? parseInt(value) : null)"
+          >
+            <template #suffix>px</template>
+          </FormInput>
+
+          <template #after-input>
             <ResetButton
-              v-model="imageMaxHeightForReset"
+              v-model="values"
               :theme="theme"
               property="image_max_height"
             />
-          </div>
+          </template>
         </FormGroup>
         <FormGroup
           horizontal
+          small-label
+          required
+          class="margin-bottom-1"
           :label="$t('imageThemeConfigBlock.imageConstraintsLabel')"
         >
-          <div class="flex">
-            <Dropdown
-              v-model="values.image_constraint"
-              small
-              fixed-items
-              :show-search="true"
-              class="flex-grow-1"
+          <Dropdown
+            v-model="values.image_constraint"
+            small
+            fixed-items
+            :show-search="true"
+            class="flex-grow-1"
+          >
+            <DropdownItem
+              v-for="{ name, label } in imageConstraintChoices"
+              :key="name"
+              :disabled="constraintDisabled(name)"
+              :description="
+                constraintDisabled(name)
+                  ? $t(`imageThemeConfigBlock.imageConstraint${label}Disabled`)
+                  : ''
+              "
+              :name="label"
+              :value="name"
             >
-              <DropdownItem
-                v-for="{ name, label } in imageConstraintChoices"
-                :key="name"
-                :disabled="constraintDisabled(name)"
-                :description="
-                  constraintDisabled(name)
-                    ? $t(
-                        `imageThemeConfigBlock.imageConstraint${label}Disabled`
-                      )
-                    : ''
-                "
-                :name="label"
-                :value="name"
-              >
-              </DropdownItem>
-            </Dropdown>
+            </DropdownItem>
+          </Dropdown>
+          <template #after-input>
             <ResetButton
               v-model="imageConstraintForReset"
               :theme="theme"
               property="image_constraint"
             />
-          </div>
+          </template>
         </FormGroup>
       </template>
       <template #preview>

@@ -2,52 +2,60 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.label"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('generalForm.labelTitle')"
       :placeholder="$t('generalForm.labelPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('generalForm.valueTitle')"
       :placeholder="$t('generalForm.valuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.placeholder"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('generalForm.placeholderTitle')"
       :placeholder="$t('generalForm.placeholderPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
-
-    <FormGroup :label="$t('generalForm.requiredTitle')">
+    <FormGroup
+      :label="$t('generalForm.requiredTitle')"
+      class="margin-bottom-2"
+      small-label
+      required
+    >
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
 
-    <FormGroup :label="$t('choiceElementForm.multiple')">
+    <FormGroup
+      :label="$t('choiceElementForm.multiple')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Checkbox v-model="values.multiple"></Checkbox>
     </FormGroup>
 
-    <FormGroup :label="$t('choiceElementForm.display')">
-      <RadioButton
+    <FormGroup
+      :label="$t('choiceElementForm.display')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
         v-model="values.show_as_dropdown"
-        icon="iconoir-list"
-        :value="true"
-      >
-        {{ $t('choiceElementForm.dropdown') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.show_as_dropdown"
-        :icon="
-          values.multiple ? 'baserow-icon-check-square' : 'iconoir-check-circle'
-        "
-        :value="false"
-      >
-        {{
-          values.multiple
-            ? $t('choiceElementForm.checkbox')
-            : $t('choiceElementForm.radio')
-        }}
-      </RadioButton>
+        :options="displayOptions"
+        type="button"
+      />
     </FormGroup>
 
     <ChoiceOptionsSelector
@@ -101,6 +109,28 @@ export default {
         this.page,
         this.values.id
       )
+    },
+    displayOptions() {
+      return [
+        {
+          title: this.$t('choiceElementForm.dropdown'),
+          label: this.$t('choiceElementForm.dropdown'),
+          value: true,
+          icon: 'iconoir-list',
+        },
+        {
+          title: this.values.multiple
+            ? this.$t('choiceElementForm.checkbox')
+            : this.$t('choiceElementForm.radio'),
+          label: this.values.multiple
+            ? this.$t('choiceElementForm.checkbox')
+            : this.$t('choiceElementForm.radio'),
+          value: false,
+          icon: this.values.multiple
+            ? 'baserow-icon-check-square'
+            : 'iconoir-check-circle',
+        },
+      ]
     },
   },
   watch: {

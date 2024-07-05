@@ -28,7 +28,7 @@
             ref="showDescription"
             tag="a"
             class="button-text--no-underline"
-            icon="iconoir iconoir-plus"
+            icon="iconoir-plus"
             type="secondary"
             @click="showDescriptionField"
           >

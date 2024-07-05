@@ -1,26 +1,27 @@
 <template>
   <div>
     <form v-if="dateFields.length > 0" @submit.prevent="submit">
-      <FormElement class="control">
-        <label class="control__label">
-          {{ $t('dateFieldSelectForm.dateField') }}
-        </label>
-        <div class="control__elements">
-          <Dropdown v-model="values.dateFieldId" :show-search="true">
-            <DropdownItem
-              v-for="dateField in dateFields"
-              :key="dateField.id"
-              :name="dateField.name"
-              :value="dateField.id"
-              :icon="fieldIcon(dateField.type)"
-            >
-            </DropdownItem>
-          </Dropdown>
-          <div v-if="fieldHasErrors('dateFieldId')" class="error">
-            {{ $t('error.requiredField') }}
-          </div>
-        </div>
-      </FormElement>
+      <FormGroup
+        :label="$t('dateFieldSelectForm.dateField')"
+        small-label
+        :error="fieldHasErrors('dateFieldId')"
+        required
+      >
+        <Dropdown v-model="values.dateFieldId" :show-search="true">
+          <DropdownItem
+            v-for="dateField in dateFields"
+            :key="dateField.id"
+            :name="dateField.name"
+            :value="dateField.id"
+            :icon="fieldIcon(dateField.type)"
+          >
+          </DropdownItem>
+        </Dropdown>
+
+        <template #error>
+          {{ $t('error.requiredField') }}
+        </template>
+      </FormGroup>
       <slot></slot>
     </form>
     <div v-else class="warning">

@@ -1,5 +1,6 @@
 .field-date__container {
   display: flex;
+  gap: 8px;
 }
 
 .field-date {
@@ -11,14 +12,12 @@
 
 .field-date__time {
   width: 25%;
-  margin-left: 4px;
   flex: 25;
   min-width: 70px;
   max-width: 150px;
 }
 
 .field-date__tzinfo {
-  padding-left: 10px;
   width: 10%;
   margin-top: auto;
   margin-bottom: auto;

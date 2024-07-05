@@ -5,6 +5,7 @@
       class="local-baserow-user-source-form__table-selector"
       :databases="integration.context_data.databases"
       :display-view-dropdown="false"
+      dropdown-sizes="large"
     />
 
     <p>{{ $t('localBaserowUserSourceForm.description') }}</p>
@@ -12,6 +13,7 @@
       <FormGroup
         :label="$t('localBaserowUserSourceForm.emailFieldLabel')"
         small-label
+        required
       >
         <Dropdown
           v-model="values.email_field_id"
@@ -37,6 +39,7 @@
       <FormGroup
         :label="$t('localBaserowUserSourceForm.nameFieldLabel')"
         small-label
+        required
       >
         <Dropdown
           v-model="values.name_field_id"

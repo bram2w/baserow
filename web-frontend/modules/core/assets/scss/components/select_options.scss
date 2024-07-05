@@ -4,20 +4,20 @@
 
 .select-options__item {
   display: flex;
-  margin: 8px 0;
+  gap: 10px;
+  margin: 12px 0;
 }
 
 .select-options__color {
-  flex: 0 0 36px;
+  width: 36px;
   text-align: center;
   color: $color-neutral-900;
   font-size: 14px;
-  margin-right: 12px;
   justify-content: center;
   height: 36px;
 
   @include rounded($rounded);
-  @include flex-align-items(center);
+  @include flex-align-items;
 }
 
 .select-options__value {
@@ -51,5 +51,4 @@
 .select-options--scrollable {
   max-height: 25vh;
   overflow-y: scroll;
-  margin-bottom: 12px;
 }

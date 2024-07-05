@@ -3,8 +3,10 @@
     <FormGroup
       :label="$t('localBaserowPasswordAppAuthProviderForm.passwordFieldLabel')"
       small-label
+      horizontal
       horizontal-variable
-      class="local-baserow-password-app-auth-provider-form__field-selector"
+      class="margin-top-2"
+      required
     >
       <Dropdown
         v-model="values.password_field_id"

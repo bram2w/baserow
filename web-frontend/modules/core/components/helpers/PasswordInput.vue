@@ -27,49 +27,47 @@ modules/core/validators.js
 
 -->
 <template>
-  <div>
-    <input
-      :class="{ 'input--error': validationState.$error }"
+  <FormGroup
+    small-label
+    :label="label"
+    required
+    :error="validationState.$error"
+  >
+    <FormInput
+      :error="validationState.$error"
       type="password"
-      class="input"
+      size="large"
       :autocomplete="autocomplete"
       :value="value"
       :placeholder="placeholder"
       @blur="validationState.$touch()"
-      @input="$emit('input', $event.target.value)"
-    />
-    <div :class="errorPlaceholderClass">
-      <div
-        v-if="validationState.$error && !validationState.required"
-        class="error"
-      >
+      @input="$emit('input', $event)"
+    >
+    </FormInput>
+
+    <template #error>
+      <span v-if="validationState.$error && !validationState.required">
         <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{ $t('error.inputRequired') }}
-      </div>
-      <div
-        v-if="validationState.$error && !validationState.maxLength"
-        class="error"
-      >
+      </span>
+      <span v-if="validationState.$error && !validationState.maxLength">
         <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{
           $t('error.maxLength', {
             max: validationState.$params.maxLength.max,
           })
         }}
-      </div>
-      <div
-        v-if="validationState.$error && !validationState.minLength"
-        class="error"
-      >
+      </span>
+      <span v-if="validationState.$error && !validationState.minLength">
         <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{
           $t('error.minLength', {
             min: validationState.$params.minLength.min,
           })
         }}
-      </div>
-    </div>
-  </div>
+      </span>
+    </template>
+  </FormGroup>
 </template>
 
 <script>
@@ -83,6 +81,11 @@ export default {
     value: {
       type: String,
       required: true,
+    },
+    label: {
+      type: String,
+      required: false,
+      default: null,
     },
     autocomplete: {
       type: String,

@@ -13,90 +13,102 @@
     </Alert>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
-      <div class="auth__control">
-        <label class="auth__control-label">{{
-          $t('field.emailAddress')
-        }}</label>
-        <div class="control__elements">
-          <input
-            v-if="invitation !== null"
-            ref="email"
-            type="email"
-            class="input"
-            disabled
-            :value="account.email"
-          />
-          <input
-            v-else
-            ref="email"
-            v-model="account.email"
-            :class="{ 'input--error': $v.account.email.$error }"
-            type="text"
-            autocomplete="username"
-            class="input"
-            :placeholder="$t('signup.emailPlaceholder')"
-            @blur="$v.account.email.$touch()"
-          />
-          <div class="auth__control-error">
-            <div v-if="$v.account.email.$error" class="error">
-              <i class="iconoir-warning-triangle"></i>
-              {{ $t('error.invalidEmail') }}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="auth__control">
-        <label class="auth__control-label">{{ $t('field.name') }}</label>
-        <div class="control__elements">
-          <input
-            v-model="account.name"
-            :class="{ 'input--error': $v.account.name.$error }"
-            type="text"
-            class="input"
-            :placeholder="$t('signup.namePlaceholder')"
-            @blur="$v.account.name.$touch()"
-          />
-          <div class="auth__control-error">
-            <div v-if="$v.account.name.$error" class="error">
-              <i class="iconoir-warning-triangle"></i>
-              {{ $t('error.minMaxLength', { min: 2, max: 150 }) }}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="auth__control">
-        <label class="auth__control-label">{{ $t('field.password') }}</label>
-        <div class="control__elements">
-          <PasswordInput
-            v-model="account.password"
-            :validation-state="$v.account.password"
-            :placeholder="$t('signup.passwordPlaceholder')"
-            :error-placeholder-class="'auth__control-error'"
-            :show-error-icon="true"
-          />
-        </div>
-      </div>
-      <div class="auth__control">
-        <label class="auth__control-label">{{
-          $t('field.passwordRepeat')
-        }}</label>
-        <div class="control__elements">
-          <input
-            v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
-            type="password"
-            class="input"
-            :placeholder="$t('signup.passwordRepeatPlaceholder')"
-            @blur="$v.account.passwordConfirm.$touch()"
-          />
-          <div class="auth__control-error">
-            <div v-if="$v.account.passwordConfirm.$error" class="error">
-              <i class="iconoir-warning-triangle"></i>
-              {{ $t('error.notMatchingPassword') }}
-            </div>
-          </div>
-        </div>
-      </div>
+      <FormGroup
+        small-label
+        :label="$t('field.emailAddress')"
+        :error="$v.account.email.$error"
+        required
+        class="margin-bottom-2"
+      >
+        <FormInput
+          v-if="invitation !== null"
+          ref="email"
+          type="email"
+          disabled
+          :value="account.email"
+          :placeholder="$t('signup.emailPlaceholder')"
+        ></FormInput>
+
+        <FormInput
+          v-else
+          ref="email"
+          v-model="account.email"
+          size="large"
+          type="text"
+          autocomplete="username"
+          :placeholder="$t('signup.emailPlaceholder')"
+          :error="$v.account.email.$error"
+          @blur="$v.account.email.$touch()"
+        />
+
+        <template #error>
+          <i class="iconoir-warning-triangle"></i>
+          {{ $t('error.invalidEmail') }}
+        </template>
+      </FormGroup>
+
+      <FormGroup
+        small-label
+        :label="$t('field.name')"
+        :error="$v.account.name.$error"
+        required
+        class="margin-bottom-2"
+      >
+        <FormInput
+          v-model="account.name"
+          :error="$v.account.name.$error"
+          type="text"
+          size="large"
+          :placeholder="$t('signup.namePlaceholder')"
+          @blur="$v.account.name.$touch()"
+        >
+        </FormInput>
+
+        <template #error>
+          <i class="iconoir-warning-triangle"></i>
+          {{ $t('error.minMaxLength', { min: 2, max: 150 }) }}
+        </template>
+      </FormGroup>
+
+      <FormGroup
+        small-label
+        :label="$t('field.password')"
+        required
+        class="margin-bottom-2"
+      >
+        <PasswordInput
+          v-model="account.password"
+          :validation-state="$v.account.password"
+          :placeholder="$t('signup.passwordPlaceholder')"
+          :error-placeholder-class="'auth__control-error'"
+          :show-error-icon="true"
+        />
+      </FormGroup>
+
+      <FormGroup
+        small-label
+        :label="$t('field.passwordRepeat')"
+        required
+        :error="$v.account.passwordConfirm.$error"
+        class="margin-bottom-2"
+      >
+        <FormInput
+          v-model="account.passwordConfirm"
+          :error="$v.account.passwordConfirm.$error"
+          type="password"
+          size="large"
+          :placeholder="$t('signup.passwordRepeatPlaceholder')"
+          @blur="$v.account.passwordConfirm.$touch()"
+        ></FormInput>
+
+        <template #error>
+          <span>
+            <i class="iconoir-warning-triangle"></i>
+            {{ $t('error.notMatchingPassword') }}
+          </span>
+        </template>
+      </FormGroup>
+
       <component
         :is="component"
         v-for="(component, index) in registerComponents"

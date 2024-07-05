@@ -1,19 +1,15 @@
 <template>
   <form @submit.prevent="doSearch(headerSearchTerm, true)">
-    <div
-      class="input__with-icon input__with-icon--left"
-      :class="{ 'input__with-icon--loading': loading }"
+    <FormInput
+      ref="searchInput"
+      v-model="headerSearchTerm"
+      size="large"
+      :placeholder="$t('crudTableSearch.search')"
+      icon-left="iconoir-search"
+      :loading="loading"
+      @keyup="searchIfChanged(headerSearchTerm, false)"
     >
-      <input
-        ref="searchInput"
-        v-model="headerSearchTerm"
-        type="text"
-        :placeholder="$t('crudTableSearch.search')"
-        class="input"
-        @keyup="searchIfChanged(headerSearchTerm, false)"
-      />
-      <i class="iconoir-search"></i>
-    </div>
+    </FormInput>
   </form>
 </template>
 

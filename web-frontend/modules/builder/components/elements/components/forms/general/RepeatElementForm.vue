@@ -1,6 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('repeatElementForm.dataSource')">
+    <FormGroup
+      :label="$t('repeatElementForm.dataSource')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Dropdown v-model="values.data_source_id" :show-search="false">
         <DropdownItem
           v-for="dataSource in availableDataSources"
@@ -10,11 +15,12 @@
         />
       </Dropdown>
     </FormGroup>
-    <FormInput
-      v-model="values.items_per_page"
+
+    <FormGroup
       :label="$t('repeatElementForm.itemsPerPage')"
-      :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
-      :to-value="(value) => parseInt(value)"
+      small-label
+      required
+      class="margin-bottom-2"
       :error="
         $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
           ? $t('error.requiredField')
@@ -24,43 +30,62 @@
           ? $t('error.minValueField', { min: 1 })
           : !$v.values.items_per_page.maxValue
           ? $t('error.maxValueField', { max: maxItemPerPage })
-          : ''
+          : false
       "
-      type="number"
-      @blur="$v.values.items_per_page.$touch()"
-    ></FormInput>
-    <CustomStyle
-      v-model="values.styles"
-      style-key="button"
-      :config-block-types="['button']"
-      :theme="builder.theme"
-    />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.button_load_more_label"
-      :label="$t('repeatElementForm.buttonLoadMoreLabel')"
-      :placeholder="$t('elementForms.textInputPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-    />
-    <FormGroup :label="$t('repeatElementForm.orientationLabel')">
-      <RadioButton
+    >
+      <FormInput
+        v-model="values.items_per_page"
+        size="large"
+        :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
+        :to-value="(value) => parseInt(value)"
+        class="margin-bottom-2"
+        :error="
+          $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
+            ? $t('error.requiredField')
+            : !$v.values.items_per_page.integer
+            ? $t('error.integerField')
+            : !$v.values.items_per_page.minValue
+            ? $t('error.minValueField', { min: 1 })
+            : !$v.values.items_per_page.maxValue
+            ? $t('error.maxValueField', { max: maxItemPerPage })
+            : false
+        "
+        type="number"
+        @blur="$v.values.items_per_page.$touch()"
+      ></FormInput>
+
+      <CustomStyle
+        v-model="values.styles"
+        style-key="button"
+        :config-block-types="['button']"
+        :theme="builder.theme"
+      />
+      <ApplicationBuilderFormulaInputGroup
+        v-model="values.button_load_more_label"
+        :label="$t('repeatElementForm.buttonLoadMoreLabel')"
+        :placeholder="$t('elementForms.textInputPlaceholder')"
+        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      />
+    </FormGroup>
+    <FormGroup
+      :label="$t('repeatElementForm.orientationLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
         v-model="values.orientation"
-        value="vertical"
-        icon="iconoir-table-rows"
+        :options="imageSourceTypeOptions"
+        type="button"
       >
-        {{ $t('repeatElementForm.orientationVertical') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.orientation"
-        value="horizontal"
-        icon="iconoir-view-columns-3"
-      >
-        {{ $t('repeatElementForm.orientationHorizontal') }}
-      </RadioButton>
+      </RadioGroup>
     </FormGroup>
     <FormGroup
       v-if="values.orientation === 'horizontal'"
       :error="getItemsPerRowError"
       :label="$t('repeatElementForm.itemsPerRowLabel')"
+      small-label
+      required
       :description="$t('repeatElementForm.itemsPerRowDescription')"
     >
       <DeviceSelector
@@ -69,16 +94,12 @@
         @selected="actionSetDeviceTypeSelected"
       >
         <template #deviceTypeControl="{ deviceType }">
-          <input
+          <FormInput
             :ref="`itemsPerRow-${deviceType.getType()}`"
             v-model="values.items_per_row[deviceType.getType()]"
-            :class="{
-              'input--error':
-                $v.values.items_per_row[deviceType.getType()].$error,
-              'remove-number-input-controls': true,
-            }"
+            :error="$v.values.items_per_row[deviceType.getType()].$error"
+            remove-number-input-controls
             type="number"
-            class="input"
             @input="handlePerRowInput($event, deviceType.getType())"
           />
         </template>
@@ -147,6 +168,20 @@ export default {
       }
       return ''
     },
+    imageSourceTypeOptions() {
+      return [
+        {
+          label: this.$t('repeatElementForm.orientationVertical'),
+          value: 'vertical',
+          icon: 'iconoir-table-rows',
+        },
+        {
+          label: this.$t('repeatElementForm.orientationHorizontal'),
+          value: 'horizontal',
+          icon: 'iconoir-view-columns-3',
+        },
+      ]
+    },
   },
   mounted() {
     if (_.isEmpty(this.values.items_per_row)) {
@@ -162,7 +197,7 @@ export default {
     }),
     handlePerRowInput(event, deviceTypeType) {
       this.$v.values.items_per_row[deviceTypeType].$touch()
-      this.values.items_per_row[deviceTypeType] = parseInt(event.target.value)
+      this.values.items_per_row[deviceTypeType] = parseInt(event)
       this.$emit('input', this.values)
     },
   },

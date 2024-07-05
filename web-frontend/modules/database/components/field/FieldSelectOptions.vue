@@ -24,17 +24,18 @@
         >
           <i class="iconoir-nav-arrow-down"></i>
         </a>
-        <input
+        <FormInput
           ref="inputs"
           v-model="item.value"
-          class="input input--small select-options__value"
-          :class="{ 'input--error': $v.value.$each[index].value.$error }"
+          :error="$v.value.$each[index].value.$error"
           @input="$emit('input', value)"
           @blur="$v.value.$each[index].value.$touch()"
         />
-        <a class="select-options__remove" @click.stop.prevent="remove(index)">
-          <i class="iconoir-cancel"></i>
-        </a>
+        <ButtonIcon
+          tag="a"
+          icon="iconoir-cancel"
+          @click.stop.prevent="remove(index)"
+        ></ButtonIcon>
       </div>
     </div>
     <ButtonText icon="iconoir-plus" tag="a" @click="add()">

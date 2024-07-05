@@ -6,7 +6,12 @@
       :config-block-types="['image']"
       :theme="builder.theme"
     />
-    <FormGroup :label="$t('imageElementForm.fileLabel')">
+    <FormGroup
+      class="margin-bottom-2"
+      required
+      small-label
+      :label="$t('imageElementForm.fileLabel')"
+    >
       <RadioGroup
         v-model="values.image_source_type"
         :options="imageSourceTypeOptions"
@@ -14,7 +19,10 @@
       >
       </RadioGroup>
     </FormGroup>
-    <FormGroup v-if="values.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD">
+    <FormGroup
+      v-if="values.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD"
+      class="margin-bottom-2"
+    >
       <Button
         v-if="values.image_file === null"
         type="upload"
@@ -38,7 +46,9 @@
     </FormGroup>
     <FormGroup
       v-if="values.image_source_type === IMAGE_SOURCE_TYPES.URL"
-      :description="$t('imageElementForm.urlWarning')"
+      class="margin-bottom-2"
+      :helper-text="$t('imageElementForm.urlWarning')"
+      small-label
     >
       <ApplicationBuilderFormulaInputGroup
         v-model="values.image_url"
@@ -47,8 +57,11 @@
       />
     </FormGroup>
     <FormGroup
+      class="margin-bottom-2"
       :label="$t('imageElementForm.altTextTitle')"
-      :description="$t('imageElementForm.altTextDescription')"
+      :helper-text="$t('imageElementForm.altTextDescription')"
+      small-label
+      required
     >
       <ApplicationBuilderFormulaInputGroup
         v-model="values.alt_text"

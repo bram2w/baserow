@@ -5,61 +5,61 @@
       :database="database"
       @ai-type-changed="setFileFieldSupported"
     ></SelectAIModelForm>
-    <div v-if="fileFieldSupported" class="control">
-      <label class="control__label control__label--small">
+
+    <FormGroup
+      v-if="fileFieldSupported"
+      required
+      small-label
+      class="margin-bottom-2"
+    >
+      <template #label>
         {{ $t('selectAIModelForm.fileField') }}
         <HelpIcon
-          class="margin-left-1"
           :tooltip="$t('fieldAISubForm.fileFieldHelp')"
           :tooltip-content-classes="'tooltip__content--expandable'"
         />
-      </label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.ai_file_field_id"
-          class="dropdown--floating"
-          :class="{
-            'dropdown--error': $v.values.ai_file_field_id.$error,
-          }"
-          :fixed-items="true"
-          :show-search="false"
-          small
-          @hide="$v.values.ai_file_field_id.$touch()"
-        >
-          <DropdownItem
-            :name="$t('fieldAISubForm.emptyFileField')"
-            :value="null"
-          />
-          <DropdownItem
-            v-for="field in fileFields"
-            :key="field.id"
-            :name="field.name"
-            :value="field.id"
-          />
-        </Dropdown>
+      </template>
+
+      <Dropdown
+        v-model="values.ai_file_field_id"
+        class="dropdown--floating"
+        :class="{
+          'dropdown--error': $v.values.ai_file_field_id.$error,
+        }"
+        :fixed-items="true"
+        :show-search="false"
+        small
+        @hide="$v.values.ai_file_field_id.$touch()"
+      >
+        <DropdownItem
+          :name="$t('fieldAISubForm.emptyFileField')"
+          :value="null"
+        />
+        <DropdownItem
+          v-for="field in fileFields"
+          :key="field.id"
+          :name="field.name"
+          :value="field.id"
+        />
+      </Dropdown>
+    </FormGroup>
+    <FormGroup
+      small-label
+      :label="$t('fieldAISubForm.prompt')"
+      :error="$v.values.ai_prompt.$dirty && $v.values.ai_prompt.$error"
+      required
+      class="margin-bottom-2"
+    >
+      <div style="max-width: 366px">
+        <FormulaInputField
+          v-model="values.ai_prompt"
+          :data-providers="dataProviders"
+          :application-context="applicationContext"
+          placeholder="What is Baserow?"
+        ></FormulaInputField>
       </div>
-    </div>
-    <div class="control">
-      <label class="control__label control__label--small">
-        {{ $t('fieldAISubForm.prompt') }}
-      </label>
-      <div class="control__elements">
-        <div style="max-width: 366px">
-          <FormulaInputField
-            v-model="values.ai_prompt"
-            :data-providers="dataProviders"
-            :application-context="applicationContext"
-            placeholder="What is Baserow?"
-          ></FormulaInputField>
-        </div>
-        <div
-          v-if="$v.values.ai_prompt.$dirty && $v.values.ai_prompt.$error"
-          class="error"
-        >
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </div>
+      <template #error> {{ $t('error.requiredField') }}</template>
+    </FormGroup>
   </div>
   <div v-else>
     <p>

@@ -10,6 +10,9 @@
     />
     <FormGroup
       v-if="isStyleAllowed('style_background')"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('defaultStyleForm.backgroundLabel')"
     >
       <Dropdown v-model="values.style_background">
@@ -35,6 +38,8 @@
     <FormGroup
       v-if="isStyleAllowed('style_width')"
       :label="$t('defaultStyleForm.widthLabel')"
+      small-label
+      required
     >
       <Dropdown v-model="values.style_width">
         <DropdownItem

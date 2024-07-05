@@ -1,45 +1,45 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkNavigationSelection.navigateTo') }}
-      </label>
-      <div class="control__elements">
-        <Dropdown v-model="navigateTo" :show-search="false" small>
-          <template #value>
-            <template v-if="destinationPage">
-              {{ destinationPage.name }}
-              <span
-                class="link-navigation-selection-form__navigate-option-page-path"
-              >
-                {{ destinationPage.path }}
-              </span></template
-            >
-            <span v-else>{{
-              $t('linkNavigationSelection.navigateToCustom')
-            }}</span>
-          </template>
-          <DropdownItem
-            v-for="pageItem in pages"
-            :key="pageItem.id"
-            :value="pageItem.id"
-            :name="pageItem.name"
-          >
-            {{ pageItem.name }}
+    <FormGroup
+      :label="$t('linkNavigationSelection.navigateTo')"
+      small-label
+      class="margin-bottom-2"
+      required
+    >
+      <Dropdown v-model="navigateTo" :show-search="false" small>
+        <template #value>
+          <template v-if="destinationPage">
+            {{ destinationPage.name }}
             <span
               class="link-navigation-selection-form__navigate-option-page-path"
             >
-              {{ pageItem.path }}
-            </span>
-          </DropdownItem>
-          <DropdownItem
-            :name="$t('linkNavigationSelection.navigateToCustom')"
-            value="custom"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-    </FormElement>
-    <FormElement v-if="navigateTo === 'custom'" class="control">
+              {{ destinationPage.path }}
+            </span></template
+          >
+          <span v-else>{{
+            $t('linkNavigationSelection.navigateToCustom')
+          }}</span>
+        </template>
+        <DropdownItem
+          v-for="pageItem in pages"
+          :key="pageItem.id"
+          :value="pageItem.id"
+          :name="pageItem.name"
+        >
+          {{ pageItem.name }}
+          <span
+            class="link-navigation-selection-form__navigate-option-page-path"
+          >
+            {{ pageItem.path }}
+          </span>
+        </DropdownItem>
+        <DropdownItem
+          :name="$t('linkNavigationSelection.navigateToCustom')"
+          value="custom"
+        ></DropdownItem>
+      </Dropdown>
+    </FormGroup>
+    <FormGroup v-if="navigateTo === 'custom'" class="margin-bottom-2" required>
       <ApplicationBuilderFormulaInputGroup
         v-model="values.navigate_to_url"
         :page="page"
@@ -48,8 +48,8 @@
         :data-providers-allowed="dataProvidersAllowed"
         small
       />
-    </FormElement>
-    <FormElement v-if="destinationPage" class="control">
+    </FormGroup>
+    <FormGroup v-if="destinationPage" class="margin-bottom-2" required>
       <template v-if="parametersInError">
         <Alert type="error">
           <p>
@@ -66,7 +66,7 @@
         </Alert>
       </template>
       <div v-else>
-        <div v-for="param in values.page_parameters" :key="param.name">
+        <div v-for="param in values.page_parameters" :key="param.name" required>
           <ApplicationBuilderFormulaInputGroup
             v-model="param.value"
             :page="page"
@@ -78,20 +78,19 @@
           />
         </div>
       </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkNavigationSelection.target') }}
-      </label>
-      <div class="control__elements control__elements--flex">
-        <RadioButton v-model="values.target" value="self">
-          {{ $t('linkNavigationSelection.targetSelf') }}
-        </RadioButton>
-        <RadioButton v-model="values.target" value="blank">
-          {{ $t('linkNavigationSelection.targetNewTab') }}
-        </RadioButton>
-      </div>
-    </FormElement>
+    </FormGroup>
+    <FormGroup
+      small-label
+      :label="$t('linkNavigationSelection.target')"
+      class="margin-bottom-2"
+      required
+    >
+      <RadioGroup
+        v-model="values.target"
+        type="button"
+        :options="linkNavigationSelectionTargetOptions"
+      ></RadioGroup>
+    </FormGroup>
   </form>
 </template>
 
@@ -132,6 +131,13 @@ export default {
         page_parameters: [],
         target: 'self',
       },
+      linkNavigationSelectionTargetOptions: [
+        { value: 'self', label: this.$t('linkNavigationSelection.targetSelf') },
+        {
+          value: 'blank',
+          label: this.$t('linkNavigationSelection.targetNewTab'),
+        },
+      ],
     }
   },
   computed: {

@@ -4,44 +4,37 @@
       :database="database"
       :default-values="defaultValues"
     ></SelectAIModelForm>
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('aiFormulaModal.label')
-      }}</label>
-      <div class="control__description">
-        {{ $t('aiFormulaModal.labelDescription') }}
-      </div>
-      <div class="control__elements">
-        <div>
-          <textarea
-            v-model="values.ai_prompt"
-            type="text"
-            class="input field-long-text"
-            :class="{
-              'input--error':
-                $v.values.ai_prompt.$dirty && $v.values.ai_prompt.$error,
-            }"
-            @input="$v.values.ai_prompt.$touch()"
-          ></textarea>
-        </div>
-        <div
-          v-if="$v.values.ai_prompt.$error && !$v.values.ai_prompt.maxLength"
-          class="error"
-        >
+
+    <FormGroup
+      class="margin-bottom-2"
+      small-label
+      required
+      :label="$t('aiFormulaModal.label')"
+      :help-text="$t('aiFormulaModal.labelDescription')"
+      :error="$v.values.ai_prompt.$dirty && $v.values.ai_prompt.$error"
+    >
+      <FormTextarea
+        v-model="values.ai_prompt"
+        :error="$v.values.ai_prompt.$dirty && $v.values.ai_prompt.$error"
+        auto-expandable
+        :min-rows="5"
+        @input="$v.values.ai_prompt.$touch()"
+      >
+      </FormTextarea>
+      <template #error>
+        <span v-if="$v.values.ai_prompt.maxLength">
           {{
             $t('error.maxLength', {
               max: $v.values.ai_prompt.$params.maxLength.max,
             })
-          }}
-        </div>
-        <div
-          v-if="$v.values.ai_prompt.$error && !$v.values.ai_prompt.required"
-          class="error"
+          }}</span
         >
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </div>
+
+        <span v-if="$v.values.ai_prompt.required">
+          {{ $t('error.requiredField') }}</span
+        >
+      </template>
+    </FormGroup>
     <div class="align-right">
       <slot></slot>
     </div>

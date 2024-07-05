@@ -1,36 +1,24 @@
 <template>
-  <FormElement
-    class="control"
-    :class="{ control: !small, 'control--horizontal': horizontal }"
+  <FormGroup
+    :label="label"
+    :small-label="smallLabel"
+    :horizontal="horizontal"
+    :helper-text="helpText"
+    :required="required"
   >
-    <label
-      v-if="label"
-      class="control__label"
-      :class="{ 'control__label--small': smallLabel }"
-    >
-      {{ label }}
-    </label>
-    <div
-      class="control__elements"
-      :class="{
-        'control__elements--small': small,
-        'control__elements--flex': $slots['after-input'],
-      }"
-    >
-      <FormulaInputField
-        :value="value"
-        :small="small"
-        :placeholder="placeholder"
-        :data-providers="dataProviders"
-        :data-explorer-loading="dataExplorerLoading"
-        :application-context="applicationContext"
-        class="flex-grow-1"
-        @input="$emit('input', $event)"
-      />
+    <FormulaInputField
+      :value="value"
+      :placeholder="placeholder"
+      :data-providers="dataProviders"
+      :data-explorer-loading="dataExplorerLoading"
+      :application-context="applicationContext"
+      :small="small"
+      @input="$emit('input', $event)"
+    />
+    <template #after-input>
       <slot name="after-input"></slot>
-      <p v-if="helpText">{{ helpText }}</p>
-    </div>
-  </FormElement>
+    </template>
+  </FormGroup>
 </template>
 
 <script>
@@ -63,6 +51,11 @@ export default {
       default: false,
     },
     smallLabel: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    required: {
       type: Boolean,
       required: false,
       default: false,

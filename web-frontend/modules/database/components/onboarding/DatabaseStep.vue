@@ -13,17 +13,18 @@
       ></SegmentControl>
     </div>
     <template v-if="hasName">
-      <FormInput
-        v-model="name"
-        :placeholder="$t('databaseStep.databaseNameLabel')"
-        :label="$t('databaseStep.databaseNameLabel')"
-        large
-        :error="
-          $v.name.$dirty && !$v.name.required ? $t('error.requiredField') : null
-        "
-        @input="updateValue"
-        @blur="$v.name.$touch()"
-      />
+      <FormGroup :error="$v.name.$dirty && !$v.name.required">
+        <FormInput
+          v-model="name"
+          :placeholder="$t('databaseStep.databaseNameLabel')"
+          :label="$t('databaseStep.databaseNameLabel')"
+          size="large"
+          :error="$v.name.$dirty && !$v.name.required"
+          @input="updateValue"
+          @blur="$v.name.$touch()"
+        />
+        <template #error>{{ $t('error.requiredField') }}</template>
+      </FormGroup>
     </template>
     <AirtableImportForm
       v-if="selectedType === 'airtable'"

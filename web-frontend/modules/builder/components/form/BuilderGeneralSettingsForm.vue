@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('generalSettings.labelForm')">
+    <FormGroup :label="$t('generalSettings.labelForm')" required>
       <ImageInput
         v-model="values.favicon_file"
         :default-image="defaultFavicon"

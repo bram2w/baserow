@@ -1,5 +1,5 @@
 <template>
-  <FormElement
+  <FormGroup
     :error="hasError"
     class="ab-form-group"
     :class="{
@@ -26,7 +26,7 @@
         {{ errorMessage }}
       </div>
     </div>
-  </FormElement>
+  </FormGroup>
 </template>
 
 <script>
