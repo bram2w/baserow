@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent>
     <FormGroup
-      class="margin-bottom-2"
+      class="style-box-form__control margin-bottom-2"
       :label="label"
       small-label
       required
@@ -54,7 +54,6 @@
 <script>
 import { required, integer, between } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
-import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
@@ -100,15 +99,9 @@ export default {
      */
     error() {
       return this.$v.values.padding.$error || this.$v.values.border_size.$error
-      // if (this.$v.values.padding.$error || this.$v.values.border_size.$error) {
-      //   return this.$t('error.minMaxValueField', { min: 0, max: 200 })
-      // } else {
-      //   return false
-      // }
     },
   },
   methods: {
-    resolveColor,
     getDefaultValues() {
       return this.value
     },

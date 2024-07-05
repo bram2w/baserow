@@ -6,7 +6,11 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-    <FormGroup :label="$t('authFormElementForm.userSource')">
+    <FormGroup
+      :label="$t('authFormElementForm.userSource')"
+      small-label
+      required
+    >
       <Dropdown v-model="values.user_source_id" :show-search="false">
         <DropdownItem
           v-for="userSource in userSources"
