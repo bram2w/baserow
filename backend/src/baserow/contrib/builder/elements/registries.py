@@ -163,7 +163,7 @@ class ElementType(
         serialized_values["roles"] = self.sanitize_element_roles(
             # TODO: `or []` check should be removed in the next release.
             #   See: https://gitlab.com/baserow/baserow/-/issues/2724
-            serialized_values["roles"] or [],
+            serialized_values.get("roles") or [],
             existing_roles,
             id_mapping.get("user_sources", {}),
         )
