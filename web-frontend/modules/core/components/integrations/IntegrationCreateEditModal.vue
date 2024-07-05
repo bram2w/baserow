@@ -14,6 +14,7 @@
         }}</template>
         <p>{{ actualIntegrationType.warning }}</p>
       </Alert>
+
       <IntegrationEditForm
         ref="form"
         :application="application"

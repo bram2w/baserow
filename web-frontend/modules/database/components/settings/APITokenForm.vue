@@ -1,25 +1,31 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <label class="control__label">{{ $t('apiTokenForm.nameLabel') }}</label>
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input"
-          @blur="$v.values.name.$touch()"
-        />
-        <div v-if="fieldHasErrors('name')" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement :error="fieldHasErrors('workspace')" class="control">
-      <label class="control__label">{{
-        $t('apiTokenForm.workspaceLabel')
-      }}</label>
+    <FormGroup
+      :label="$t('apiTokenForm.nameLabel')"
+      small-label
+      required
+      :error="fieldHasErrors('name')"
+      class="margin-bottom-2"
+    >
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        size="large"
+        :error="fieldHasErrors('name')"
+        @blur="$v.values.name.$touch()"
+      >
+      </FormInput>
+
+      <template #error> {{ $t('error.requiredField') }}</template>
+    </FormGroup>
+
+    <FormGroup
+      :error="fieldHasErrors('workspace')"
+      small-label
+      :label="$t('apiTokenForm.workspaceLabel')"
+      required
+      class="margin-bottom-2"
+    >
       <Dropdown
         v-model="values.workspace"
         class="col-4"
@@ -32,12 +38,12 @@
           :value="workspace.id"
         ></DropdownItem>
       </Dropdown>
-      <div class="control__elements">
-        <div v-if="fieldHasErrors('workspace')" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
+
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
+    </FormGroup>
+
     <slot></slot>
   </form>
 </template>

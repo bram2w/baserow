@@ -1,81 +1,151 @@
 <template>
   <textarea
-    ref="inputTextArea"
-    :value="value"
+    ref="textarea"
+    :value="fromValue(value)"
+    class="form-textarea"
+    :rows="autoExpandable ? minRows : rows"
     :placeholder="placeholder"
-    class="input auto-expandable-textarea"
-    :style="{
-      height: textBoxSize + 'px',
-      overflow: textBoxOverflow,
+    :disabled="disabled"
+    :maxlength="maxlength"
+    :class="{
+      'form-textarea--error': error,
+      'form-textarea--disabled': disabled,
     }"
-    rows="1"
-    @input="$emit('input', $event.target.value)"
-    @click="$emit('click', $event)"
+    :style="{
+      height: textBoxSize ? `${textBoxSize}px` : 'auto',
+      overflow: textBoxOverflow ? textBoxOverflow : 'visible',
+    }"
+    @blur="$emit('blur', $event)"
+    @focus="$emit('focus', $event)"
+    @input="$emit('input', toValue($event.target.value))"
     @keyup="$emit('keyup', $event)"
     @keydown="$emit('keydown', $event)"
-    @blur="$emit('blur', $event)"
-  />
+  ></textarea>
 </template>
+
 <script>
-/**
- * A blank textarea with no surrounding box styling (see AutoExpandableTextareaInput if
- * you want a nice styled box around this) which will automatically expand given the
- * users input to the maximum number of rows specified by the maxRows prop.
- */
 export default {
-  name: 'AutoExpandableTextarea',
+  name: 'FormTextarea',
   props: {
-    value: {
-      required: true,
-      type: String,
+    /**
+     * The number of rows to display.
+     */
+    rows: {
+      type: Number,
+      required: false,
+      default: 12,
     },
-    loading: {
+    /**
+     * The placeholder to display.
+     */
+    placeholder: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    /**
+     * If true, the textarea will be disabled.
+     */
+    disabled: {
+      type: Boolean,
       required: false,
       default: false,
+    },
+    /**
+     * If true, the textarea will be in an error state.
+     */
+    error: {
       type: Boolean,
-    },
-    placeholder: {
       required: false,
-      type: String,
-      default: '',
+      default: false,
     },
+    /**
+     * The value of the textarea.
+     */
+    value: {
+      type: String,
+      default: null,
+    },
+    toValue: {
+      type: Function,
+      required: false,
+      default: (value) => value,
+    },
+    fromValue: {
+      type: Function,
+      required: false,
+      default: (value) => value,
+    },
+    /**
+     * If true, the textarea will automatically expand to fit the content.
+     */
+    autoExpandable: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    /**
+     * The maximum number of rows to display when autoExpandable is true.
+     */
     maxRows: {
       required: false,
       type: Number,
       default: 4,
     },
-    startingRows: {
+    /**
+     * The minimum number of rows to display when autoExpandable is true.
+     */
+    minRows: {
       required: false,
       type: Number,
       default: 1,
     },
+    /**
+     * The maximum length of the textarea.
+     */
+    maxlength: {
+      required: false,
+      type: Number,
+      default: null,
+    },
   },
   data() {
     return {
-      numTextAreaLines: this.startingRows,
+      numTextAreaLines: this.minRows,
     }
   },
   computed: {
     textBoxSize() {
-      return 22 * Math.min(this.numTextAreaLines, this.maxRows)
+      if (this.autoExpandable)
+        return 22 * Math.min(this.numTextAreaLines, this.maxRows)
+      return null
     },
     textBoxOverflow() {
-      return this.numTextAreaLines > this.maxRows ? 'auto' : 'hidden'
+      if (this.autoExpandable)
+        return this.numTextAreaLines > this.maxRows ? 'auto' : 'hidden'
+      return null
     },
   },
   watch: {
     value() {
-      this.resizeTextArea()
+      if (this.autoExpandable) this.resizeTextArea()
     },
   },
   mounted() {
-    this.resizeTextArea()
+    if (this.autoExpandable) this.resizeTextArea()
   },
+
   methods: {
+    focus() {
+      this.$refs.textarea.focus()
+    },
+    blur() {
+      this.$refs.textarea.blur()
+    },
     resizeTextArea() {
       this.$nextTick(() => {
-        const inputTextArea = this.$refs.inputTextArea
-        this.numTextAreaLines = this.calculateHeight(inputTextArea)
+        const textAreaElement = this.$refs.textarea
+        this.numTextAreaLines = this.calculateHeight(textAreaElement)
       })
     },
     /**
@@ -136,9 +206,6 @@ export default {
       const taHeight = this.calculateContentHeight(ta, taLineHeight)
       // calculate the number of lines
       return Math.ceil(taHeight / taLineHeight)
-    },
-    focus() {
-      this.$refs.inputTextArea.focus()
     },
   },
 }

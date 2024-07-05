@@ -16,7 +16,10 @@
     />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
+      class="margin-bottom-2"
       :label="$t('linkElementForm.text')"
+      small-label
+      required
       :placeholder="$t('linkElementForm.textPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
@@ -25,15 +28,18 @@
       :default-values="defaultValues"
       @values-changed="emitChange($event)"
     />
-    <FormGroup :label="$t('linkElementForm.variant')">
-      <div class="control__elements--flex">
-        <RadioButton v-model="values.variant" value="link">
-          {{ $t('linkElementForm.variantLink') }}
-        </RadioButton>
-        <RadioButton v-model="values.variant" value="button">
-          {{ $t('linkElementForm.variantButton') }}
-        </RadioButton>
-      </div>
+    <FormGroup
+      :label="$t('linkElementForm.variant')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.variant"
+        :options="linkElementFormVariantOptions"
+        type="button"
+      >
+      </RadioGroup>
     </FormGroup>
   </form>
 </template>
@@ -67,6 +73,10 @@ export default {
         styles: {},
       },
       allowedValues: ['value', 'alignment', 'variant', 'width', 'styles'],
+      linkElementFormVariantOptions: [
+        { value: 'link', label: this.$t('linkElementForm.variantLink') },
+        { value: 'button', label: this.$t('linkElementForm.variantButton') },
+      ],
     }
   },
 }

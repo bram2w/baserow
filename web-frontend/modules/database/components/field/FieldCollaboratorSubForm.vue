@@ -1,13 +1,9 @@
 <template>
-  <div>
-    <div class="control">
-      <div class="control__elements">
-        <Checkbox v-model="values.notify_user_when_added">
-          {{ $t('fieldCollaboratorSubForm.notifyUserWhenAdded') }}
-        </Checkbox>
-      </div>
-    </div>
-  </div>
+  <FormGroup>
+    <Checkbox v-model="values.notify_user_when_added">
+      {{ $t('fieldCollaboratorSubForm.notifyUserWhenAdded') }}
+    </Checkbox>
+  </FormGroup>
 </template>
 
 <script>

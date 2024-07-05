@@ -1,10 +1,11 @@
 <template>
   <div class="control__elements">
-    <textarea
+    <FormTextarea
       ref="input"
       v-model="value"
       type="text"
-      class="input field-long-text margin-bottom-2"
+      class="margin-bottom-2"
+      :rows="6"
       :disabled="true"
     />
 

@@ -1,97 +1,90 @@
 <template>
   <form class="context__form" @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input input--small"
-          :placeholder="$t('fieldForm.name')"
-          @blur="$v.values.name.$touch()"
-          @input="isPrefilledWithSuggestedFieldName = false"
-          @keydown.enter="handleKeydownEnter($event)"
-        />
-        <div
-          v-if="$v.values.name.$dirty && !$v.values.name.required"
-          class="error"
-        >
+    <FormGroup :error="fieldHasErrors('name')" class="margin-bottom-2">
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        :error="fieldHasErrors('name')"
+        :placeholder="$t('fieldForm.name')"
+        @blur="$v.values.name.$touch()"
+        @input="isPrefilledWithSuggestedFieldName = false"
+        @keydown.enter="handleKeydownEnter($event)"
+      ></FormInput>
+      <template #error>
+        <span v-if="$v.values.name.$dirty && !$v.values.name.required">
           {{ $t('error.requiredField') }}
-        </div>
-        <div
+        </span>
+        <span
           v-else-if="
             $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
           "
-          class="error"
         >
           {{ $t('fieldForm.fieldAlreadyExists') }}
-        </div>
-        <div
+        </span>
+        <span
           v-else-if="
             $v.values.name.$dirty &&
             !$v.values.name.mustNotClashWithReservedName
           "
-          class="error"
         >
-          {{ $t('fieldForm.nameNotAllowed') }}
-        </div>
-        <div
-          v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength"
-          class="error"
+          {{ $t('error.nameNotAllowed') }}
+        </span>
+        <span v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength">
+          {{ $t('error.nameTooLong') }}
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      v-if="forcedType === null"
+      :error="$v.values.type.$error"
+      class="margin-bottom-2"
+    >
+      <Dropdown
+        ref="fieldTypesDropdown"
+        v-model="values.type"
+        :class="{ 'dropdown--error': $v.values.type.$error }"
+        :fixed-items="true"
+        small
+        @hide="$v.values.type.$touch()"
+      >
+        <DropdownItem
+          v-for="(fieldType, type) in fieldTypes"
+          :key="type"
+          :icon="fieldType.iconClass"
+          :name="fieldType.getName()"
+          :value="fieldType.type"
+          :disabled="
+            (primary && !fieldType.canBePrimaryField) ||
+            !fieldType.isEnabled(workspace) ||
+            fieldType.isDeactivated(workspace.id)
+          "
+          @click="clickOnDeactivatedItem($event, fieldType)"
         >
-          {{ $t('fieldForm.nameTooLong') }}
-        </div>
-      </div>
-    </FormElement>
-    <div v-if="forcedType === null" class="control">
-      <div class="control__elements">
-        <Dropdown
-          ref="fieldTypesDropdown"
-          v-model="values.type"
-          :class="{ 'dropdown--error': $v.values.type.$error }"
-          :fixed-items="true"
-          small
-          @hide="$v.values.type.$touch()"
-        >
-          <DropdownItem
-            v-for="(fieldType, type) in fieldTypes"
-            :key="type"
-            :icon="fieldType.iconClass"
-            :name="fieldType.getName()"
-            :value="fieldType.type"
-            :disabled="
-              (primary && !fieldType.canBePrimaryField) ||
-              !fieldType.isEnabled(workspace) ||
-              fieldType.isDeactivated(workspace.id)
+          <i class="select__item-icon" :class="fieldType.iconClass" />
+          <span class="select__item-name-text" :title="fieldType.getName()">{{
+            fieldType.getName()
+          }}</span>
+          <i
+            v-if="fieldType.isDeactivated(workspace.id)"
+            class="iconoir-lock"
+          ></i>
+          <component
+            :is="fieldType.getDeactivatedClickModal(workspace.id)"
+            :ref="'deactivatedClickModal-' + fieldType.type"
+            :v-if="
+              fieldType.isDeactivated(workspace.id) &&
+              fieldType.getDeactivatedClickModal(workspace.id)
             "
-            @click="clickOnDeactivatedItem($event, fieldType)"
-          >
-            <i class="select__item-icon" :class="fieldType.iconClass" />
-            <span class="select__item-name-text" :title="fieldType.getName()">{{
-              fieldType.getName()
-            }}</span>
-            <i
-              v-if="fieldType.isDeactivated(workspace.id)"
-              class="iconoir-lock"
-            ></i>
-            <component
-              :is="fieldType.getDeactivatedClickModal(workspace.id)"
-              :ref="'deactivatedClickModal-' + fieldType.type"
-              :v-if="
-                fieldType.isDeactivated(workspace.id) &&
-                fieldType.getDeactivatedClickModal(workspace.id)
-              "
-              :name="$t(fieldType.getName())"
-              :workspace="workspace"
-            ></component>
-          </DropdownItem>
-        </Dropdown>
-        <div v-if="$v.values.type.$error" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </div>
+            :name="$t(fieldType.getName())"
+            :workspace="workspace"
+          ></component>
+        </DropdownItem>
+      </Dropdown>
+
+      <template #error> {{ $t('error.requiredField') }}</template>
+    </FormGroup>
+
     <template v-if="hasFormComponent">
       <component
         :is="getFormComponent(values.type)"
@@ -112,7 +105,7 @@
     <FormElement
       v-if="showDescription"
       :error="fieldHasErrors('description')"
-      class="control"
+      class="control margin-bottom-2"
     >
       <label class="control__label control__label--small">{{
         $t('fieldForm.description')

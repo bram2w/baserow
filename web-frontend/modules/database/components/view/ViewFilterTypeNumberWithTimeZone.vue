@@ -1,25 +1,15 @@
 <template>
   <div class="filters__multi-value">
-    <input
+    <FormInput
       ref="input"
       v-model="xAgo"
       type="text"
-      class="input filters__combined-value-input filters__value-input filters__value-input--small"
-      :class="{ 'input--error': $v.xAgo.$error }"
+      :error="$v.xAgo.$error"
       :disabled="disabled"
-      @input="
-        ;[
-          setCopy($event.target.value),
-          delayedUpdate($event.target.value, true),
-        ]
-      "
-      @keydown.enter="
-        ;[
-          setCopy($event.target.value),
-          delayedUpdate($event.target.value, true),
-        ]
-      "
-    />
+      @input=";[setCopy($event), delayedUpdate($event, true)]"
+      @keydown.enter=";[setCopy($event), delayedUpdate($event, true)]"
+    ></FormInput>
+
     <span class="filters__value-timezone">{{ getTimezoneAbbr() }}</span>
   </div>
 </template>

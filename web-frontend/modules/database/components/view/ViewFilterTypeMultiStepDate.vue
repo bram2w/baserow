@@ -24,32 +24,35 @@
         {{ operatorLabel(opr) }}
       </DropdownItem>
     </Dropdown>
-    <input
+
+    <FormInput
       v-if="selectedOperator?.hasNrInputValue"
       ref="input"
       v-model="copy"
-      type="text"
-      class="input filters__combined-value-input filters__value-input filters__value-input--small"
+      class="filters__combined-value-input filters__value-input--small"
       :disabled="disabled"
-      @input="setValue($event.target.value)"
-      @keydown.enter="setValue($event.target.value)"
+      @input="setValue($event)"
+      @keydown.enter="setValue($event)"
       @keypress="acceptOnlyNumber($event)"
     />
+
     <div>
-      <input
-        v-if="selectedOperator?.hasDateInputValue"
-        ref="date"
-        v-model="dateString"
-        type="text"
-        class="input filters__value-input input--small"
-        :disabled="disabled"
-        :class="{ 'input--error': !isInputValid() }"
-        :placeholder="getDatePlaceholder(field)"
-        @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
-        @blur="$refs.dateContext.hide()"
-        @input="setCopyFromDateString(dateString, 'dateString')"
-        @keydown.enter="delayedUpdate(copy, true)"
-      />
+      <span ref="date">
+        <FormInput
+          v-if="selectedOperator?.hasDateInputValue"
+          v-model="dateString"
+          type="text"
+          class="filters__value-input input--small"
+          :error="!isInputValid()"
+          :disabled="disabled"
+          :placeholder="getDatePlaceholder(field)"
+          @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
+          @blur="$refs.dateContext.hide()"
+          @input="setCopyFromDateString(dateString, 'dateString')"
+          @keydown.enter="delayedUpdate(copy, truel)"
+        />
+      </span>
+
       <Context
         ref="dateContext"
         :hide-on-click-outside="false"
@@ -150,6 +153,7 @@ export default {
       this.delayedUpdate(this.value, true)
     },
     setValue(value) {
+      console.log(value)
       this.copy = value
       this.delayedUpdate(value, true)
     },

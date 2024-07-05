@@ -16,64 +16,68 @@
       </Alert>
       <div class="row">
         <div class="col col-12">
-          <FormElement :error="fieldHasErrors('name')" class="control">
-            <label class="control__label">
-              {{ $t('webhookForm.inputLabels.name') }}
-            </label>
-            <div class="control__elements">
-              <input
-                v-model="values.name"
-                class="input input--small"
-                :class="{ 'input--error': fieldHasErrors('name') }"
-                @blur="$v.values.name.$touch()"
-              />
-              <div v-if="fieldHasErrors('name')" class="error">
-                {{ $t('error.requiredField') }}
-              </div>
-            </div>
-          </FormElement>
+          <FormGroup
+            small-label
+            :label="$t('webhookForm.inputLabels.name')"
+            :error="fieldHasErrors('name')"
+            required
+            class="margin-bottom-2"
+          >
+            <FormInput
+              v-model="values.name"
+              :error="fieldHasErrors('name')"
+              @blur="$v.values.name.$touch()"
+            ></FormInput>
+
+            <template #error>
+              {{ $t('error.requiredField') }}
+            </template>
+          </FormGroup>
         </div>
         <div class="col col-12">
-          <div class="control">
-            <label class="control__label">
-              {{ $t('webhookForm.inputLabels.userFieldNames') }}
-            </label>
-            <div class="control__elements">
-              <Checkbox v-model="values.use_user_field_names">{{
-                $t('webhookForm.checkbox.sendUserFieldNames')
-              }}</Checkbox>
-            </div>
-          </div>
+          <FormGroup
+            small-label
+            :label="$t('webhookForm.inputLabels.userFieldNames')"
+            required
+            class="margin-bottom-2"
+          >
+            <Checkbox v-model="values.use_user_field_names">{{
+              $t('webhookForm.checkbox.sendUserFieldNames')
+            }}</Checkbox>
+          </FormGroup>
         </div>
         <div class="col col-4">
-          <div class="control">
-            <div class="control__label">
-              {{ $t('webhookForm.inputLabels.requestMethod') }}
-            </div>
-            <div class="control__elements">
-              <Dropdown v-model="values.request_method" small>
-                <DropdownItem name="GET" value="GET"></DropdownItem>
-                <DropdownItem name="POST" value="POST"></DropdownItem>
-                <DropdownItem name="PATCH" value="PATCH"></DropdownItem>
-                <DropdownItem name="PUT" value="PUT"></DropdownItem>
-                <DropdownItem name="DELETE" value="DELETE"></DropdownItem>
-              </Dropdown>
-            </div>
-          </div>
+          <FormGroup
+            small-label
+            :label="$t('webhookForm.inputLabels.requestMethod')"
+            required
+            class="margin-bottom-2"
+          >
+            <Dropdown v-model="values.request_method" small>
+              <DropdownItem name="GET" value="GET"></DropdownItem>
+              <DropdownItem name="POST" value="POST"></DropdownItem>
+              <DropdownItem name="PATCH" value="PATCH"></DropdownItem>
+              <DropdownItem name="PUT" value="PUT"></DropdownItem>
+              <DropdownItem name="DELETE" value="DELETE"></DropdownItem>
+            </Dropdown>
+          </FormGroup>
         </div>
         <div class="col col-8">
-          <FormElement :error="fieldHasErrors('url')" class="control">
-            <label class="control__label">
-              {{ $t('webhookForm.inputLabels.url') }}
-            </label>
-            <div class="control__elements">
-              <input
-                v-model="values.url"
-                :placeholder="$t('webhookForm.inputLabels.url')"
-                class="input input--small"
-                :class="{ 'input--error': fieldHasErrors('url') }"
-                @blur="$v.values.url.$touch()"
-              />
+          <FormGroup
+            small-label
+            :label="$t('webhookForm.inputLabels.url')"
+            required
+            :error="fieldHasErrors('url')"
+            class="margin-bottom-2"
+          >
+            <FormInput
+              v-model="values.url"
+              :placeholder="$t('webhookForm.inputLabels.url')"
+              :error="fieldHasErrors('url')"
+              @blur="$v.values.url.$touch()"
+            ></FormInput>
+
+            <template #error>
               <div
                 v-if="
                   fieldHasErrors('url') &&
@@ -94,127 +98,129 @@
                   })
                 }}
               </div>
-            </div>
-          </FormElement>
+            </template>
+          </FormGroup>
         </div>
       </div>
-      <div class="control">
-        <label class="control__label">
-          {{ $t('webhookForm.inputLabels.events') }}
-        </label>
-        <div class="control__elements">
-          <RadioGroup
-            v-model="values.include_all_events"
-            :options="eventsRadioOptions"
-            vertical-layout
-          >
-          </RadioGroup>
-          <div v-if="!values.include_all_events" class="webhook__types">
-            <Checkbox
-              v-for="webhookEvent in webhookEventTypes"
-              :key="webhookEvent.type"
-              :checked="values.events.includes(webhookEvent.type)"
-              class="webhook__type"
-              @input="
-                $event
-                  ? values.events.push(webhookEvent.type)
-                  : values.events.splice(
-                      values.events.indexOf(webhookEvent.type),
-                      1
-                    )
+
+      <FormGroup
+        small-label
+        :label="$t('webhookForm.inputLabels.events')"
+        required
+        class="margin-bottom-2"
+      >
+        <RadioGroup
+          v-model="values.include_all_events"
+          :options="eventsRadioOptions"
+          vertical-layout
+        >
+        </RadioGroup>
+      </FormGroup>
+
+      <div
+        v-if="!values.include_all_events"
+        class="webhook__types margin-bottom-2"
+      >
+        <Checkbox
+          v-for="webhookEvent in webhookEventTypes"
+          :key="webhookEvent.type"
+          :checked="values.events.includes(webhookEvent.type)"
+          class="webhook__type"
+          @input="
+            $event
+              ? values.events.push(webhookEvent.type)
+              : values.events.splice(
+                  values.events.indexOf(webhookEvent.type),
+                  1
+                )
+          "
+          >{{ webhookEvent.getName() }}</Checkbox
+        >
+      </div>
+
+      <FormGroup
+        small-label
+        :label="$t('webhookForm.inputLabels.headers')"
+        required
+        :error="$v.headers.$anyError"
+        class="margin-bottom-2"
+      >
+        <div
+          v-for="(header, index) in headers.concat({
+            name: '',
+            value: '',
+          })"
+          :key="`header-input-${index}`"
+          class="webhook__header"
+        >
+          <div class="webhook__header-row">
+            <FormInput
+              v-model="header.name"
+              :error="!lastHeader(index) && $v.headers.$each[index].name.$error"
+              class="webhook__header-key"
+              :placeholder="$t('webhookForm.inputLabels.name')"
+              @input="lastHeader(index) && addHeader(header.name, header.value)"
+              @blur="
+                !lastHeader(index) && $v.headers.$each[index].name.$touch()
               "
-              >{{ webhookEvent.getName() }}</Checkbox
+            />
+            <FormInput
+              v-model="header.value"
+              class="webhook__header-value"
+              :error="
+                !lastHeader(index) && $v.headers.$each[index].value.$error
+              "
+              :placeholder="$t('webhookForm.inputLabels.value')"
+              @input="lastHeader(index) && addHeader(header.name, header.value)"
+              @blur="
+                !lastHeader(index) && $v.headers.$each[index].value.$touch()
+              "
+            />
+            <ButtonIcon
+              v-if="!lastHeader(index)"
+              icon="iconoir-bin"
+              class="webhook__header-delete"
+              @click="removeHeader(index)"
             >
+            </ButtonIcon>
           </div>
         </div>
-      </div>
-      <div class="control">
-        <div class="control__label">
-          {{ $t('webhookForm.inputLabels.headers') }}
-        </div>
-        <div class="control__elements">
-          <div
-            v-for="(header, index) in headers.concat({
-              name: '',
-              value: '',
-            })"
-            :key="`header-input-${index}`"
-            class="webhook__header"
-          >
-            <div class="webhook__header-row">
-              <input
-                v-model="header.name"
-                class="input input--small webhook__header-key"
-                :class="{
-                  'input--error':
-                    !lastHeader(index) && $v.headers.$each[index].name.$error,
-                }"
-                :placeholder="$t('webhookForm.inputLabels.name')"
-                @input="
-                  lastHeader(index) && addHeader(header.name, header.value)
-                "
-                @blur="
-                  !lastHeader(index) && $v.headers.$each[index].name.$touch()
-                "
-              />
-              <input
-                v-model="header.value"
-                class="input input--small webhook__header-value"
-                :class="{
-                  'input--error':
-                    !lastHeader(index) && $v.headers.$each[index].value.$error,
-                }"
-                :placeholder="$t('webhookForm.inputLabels.value')"
-                @input="
-                  lastHeader(index) && addHeader(header.name, header.value)
-                "
-                @blur="
-                  !lastHeader(index) && $v.headers.$each[index].value.$touch()
-                "
-              />
-              <ButtonIcon
-                v-if="!lastHeader(index)"
-                type="danger"
-                icon="iconoir-bin"
-                class="webhook__header-delete"
-                @click="removeHeader(index)"
-              >
-              </ButtonIcon>
-            </div>
-          </div>
+        <template #error>
           <div v-if="$v.headers.$anyError" class="error">
             {{ $t('webhookForm.errors.invalidHeaders') }}
           </div>
-        </div>
-      </div>
-      <div class="control">
-        <div class="control__label">
-          {{ $t('webhookForm.inputLabels.example') }}
-        </div>
-        <div class="control__elements">
-          <div class="webhook__code-with-dropdown">
-            <div class="webhook__code-dropdown">
-              <Dropdown
-                v-model="exampleWebhookEventType"
-                class="dropdown--floating-left"
-                small
-              >
-                <DropdownItem
-                  v-for="webhookEvent in webhookEventTypes"
-                  :key="webhookEvent.type"
-                  :name="webhookEvent.getName()"
-                  :value="webhookEvent.type"
-                ></DropdownItem>
-              </Dropdown>
-            </div>
-            <div class="webhook__code-container">
-              <pre
-                class="webhook__code"
-              ><code>{{ JSON.stringify(testExample, null, 4)}}</code></pre>
-            </div>
+        </template>
+      </FormGroup>
+
+      <FormGroup
+        small-label
+        :label="$t('webhookForm.inputLabels.example')"
+        required
+        class="margin-bottom-2"
+      >
+        <div class="webhook__code-with-dropdown">
+          <div class="webhook__code-dropdown">
+            <Dropdown
+              v-model="exampleWebhookEventType"
+              class="dropdown--floating-left"
+              small
+            >
+              <DropdownItem
+                v-for="webhookEvent in webhookEventTypes"
+                :key="webhookEvent.type"
+                :name="webhookEvent.getName()"
+                :value="webhookEvent.type"
+              ></DropdownItem>
+            </Dropdown>
+          </div>
+          <div class="webhook__code-container">
+            <pre
+              class="webhook__code"
+            ><code>{{ JSON.stringify(testExample, null, 4)}}</code></pre>
           </div>
         </div>
-      </div>
+      </FormGroup>
+
       <Button type="secondary" tag="a" @click="openTestModal()">{{
         $t('webhookForm.triggerButton')
       }}</Button>

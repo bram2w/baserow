@@ -162,7 +162,9 @@
   }
 
   &:hover {
-    &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging) {
+    &:not(.kanban-view__stack-card--disabled):not(
+        .kanban-view__stack-card--dragging
+      ) {
       cursor: pointer;
 
       @include elevation($elevation-medium);
@@ -217,4 +219,8 @@
   font-size: 13px;
   line-height: 18px;
   margin-bottom: 16px;
+}
+
+.kanban-view__option-item {
+  @include flex-align-items(12px);
 }

@@ -3,35 +3,34 @@
     <div v-if="loading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <div
+
+    <FormGroup
       v-else-if="fieldsInThroughTable.length > 0 && isSelectedFieldAccessible"
-      class="control"
+      :label="label"
+      small-label
+      required
+      :error="$v.values.target_field_id.$error"
+      class="margin-bottom-2"
     >
-      <label class="control__label control__label--small">
-        {{ label }}
-      </label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.target_field_id"
-          :class="{ 'dropdown--error': $v.values.target_field_id.$error }"
-          :fixed-items="true"
-          small
-          @hide="$v.values.target_field_id.$touch()"
-          @input="targetFieldChanged($event)"
-        >
-          <DropdownItem
-            v-for="field in fieldsInThroughTable"
-            :key="field.id"
-            :name="field.name"
-            :value="field.id"
-            :icon="field.icon"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-      <div v-if="$v.values.target_field_id.$error" class="error">
-        {{ $t('error.requiredField') }}
-      </div>
-    </div>
+      <Dropdown
+        v-model="values.target_field_id"
+        :class="{ 'dropdown--error': $v.values.target_field_id.$error }"
+        :fixed-items="true"
+        small
+        @hide="$v.values.target_field_id.$touch()"
+        @input="targetFieldChanged($event)"
+      >
+        <DropdownItem
+          v-for="field in fieldsInThroughTable"
+          :key="field.id"
+          :name="field.name"
+          :value="field.id"
+          :icon="field.icon"
+        ></DropdownItem>
+      </Dropdown>
+
+      <template #error> {{ $t('error.requiredField') }}</template>
+    </FormGroup>
   </div>
 </template>
 

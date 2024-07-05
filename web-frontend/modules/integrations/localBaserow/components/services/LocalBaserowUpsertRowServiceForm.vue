@@ -3,6 +3,7 @@
     <FormGroup
       :label="$t('upsertRowWorkflowActionForm.integrationDropdownLabel')"
       small-label
+      required
     >
       <IntegrationDropdown
         v-model="values.integration_id"

@@ -6,7 +6,6 @@
   place-content: center space-between;
   margin-bottom: 15px;
   width: 60%;
-  padding: 0 20px 0 0;
   user-select: none;
 
   &:hover {
@@ -19,25 +18,11 @@
 }
 
 .theme-config-block__title-icon {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .theme-config-block {
   position: relative;
-
-  & .control--horizontal {
-    flex-wrap: nowrap;
-
-    .control__label {
-      flex-basis: 40%;
-      color: $color-neutral-700;
-    }
-
-    .control__elements {
-      flex-basis: 60%;
-      white-space: initial;
-    }
-  }
 
   &:not(.theme-config-block--no-preview)::after {
     @include absolute(0, calc(40% - 14px), 0, auto);

@@ -26,683 +26,490 @@
           </p>
         </div>
         <div class="margin-bottom-3">
-          <div class="control">
-            <div class="control__elements">
-              <textarea
-                ref="input"
-                type="text"
-                class="input field-long-text"
-                placeholder="Enter something here"
-              />
-            </div>
-          </div>
+          <FormTextarea
+            ref="input"
+            placeholder="Textarea"
+            class="margin-bottom-2"
+            value=""
+          />
+
+          <FormTextarea
+            ref="input"
+            auto-expandable
+            placeholder="Auto expandable textarea"
+            class="margin-bottom-2"
+            :max-rows="14"
+            value=""
+          />
 
           <FormInput
-            v-model="input"
             disabled
             placeholder="Enter something here"
-            label="Small text field"
             value="This is the value"
             icon-right="iconoir-clock"
+            class="margin-bottom-2"
           />
+
           <FormInput
             v-model="input"
-            label="Small text field"
-            value="This is the value"
+            placeholder="Error state"
+            error
+            icon-left="iconoir-search"
+            class="margin-bottom-2"
           />
+
           <FormInput
             v-model="input"
-            label="Small text field with error"
-            error="Please do something different"
-          />
-          <FormInput
-            v-model="input"
-            label="Small text field with placeholder"
-            placeholder="Enter something here"
-          />
-          <FormInput
-            v-model="input"
-            label="Small text field disabled"
-            placeholder="Enter something here"
-            disabled
-          />
-          <FormInput
-            v-model="input"
-            label="Small text field loading"
-            placeholder="Enter something here"
+            placeholder="Loading state..."
             loading
-          />
-          <FormInput
-            v-model="input"
-            label="Icon text field"
-            placeholder="Enter something here"
-            icon-right="iconoi-clock"
-          />
-          <FormInput
-            v-model="input"
-            label="Icon text field with error"
-            placeholder="Enter something here"
-            icon-right="iconoir-clock"
-            error="This field is mandatory"
-          />
-          <FormInput
-            v-model="input"
-            label="Icon text field left"
-            placeholder="Enter something here"
-            icon-left="iconoir-search"
-          />
-          <FormInput
-            v-model="input"
-            label="Icon text field right loading"
-            placeholder="Enter something here"
-            icon-right="iconoir-search"
-            loading
-          />
-          <FormInput
-            v-model="input"
-            label="Icon text field left loading"
-            placeholder="Enter something here"
-            icon-left="iconoir-search"
-            loading
-          />
-          <FormInput
-            v-model="input"
-            label="Large text field"
-            placeholder="Enter something here"
-          />
-          <FormInput
-            v-model="input"
-            label="Large password field"
-            placeholder="Enter something here"
-            type="password"
-          />
-          <FormInput
-            v-model="input"
-            label="Large icon field"
-            placeholder="Enter something here"
-            icon-right="iconoir-clock"
-          />
-          <FormInput
-            v-model="input"
-            label="Large icon field left"
-            placeholder="Enter something here"
-            icon-left="iconoir-search"
-          />
-          <FormInput
-            v-model="input"
-            small
-            label="Reduced height field"
-            placeholder="Enter something here"
-            icon-left="iconoir-search"
-          />
-          <FormInput
-            v-model="input"
-            horizontal
-            label="Horizontal Large icon field left"
-            placeholder="Enter something here"
-            icon-left="iconoir-search"
+            class="margin-bottom-2"
           />
 
-          <div class="control">
-            <label class="control__label">Native input</label>
-            <div class="control__elements">
-              <input
-                ref="name"
-                type="text"
-                class="input"
-                placeholder="Native input"
-              />
-            </div>
-          </div>
+          <FormInput
+            v-model="input"
+            placeholder="Left icon"
+            icon-left="iconoir-search"
+            class="margin-bottom-2"
+          />
 
-          <div class="control">
-            <label class="control__label">Native input reduced height</label>
-            <div class="control__elements">
-              <input
-                ref="name"
-                type="text"
-                class="input input--small"
-                placeholder="Native input reduced height"
-              />
-            </div>
-          </div>
+          <FormInput
+            v-model="input"
+            placeholder="Right icon"
+            icon-right="iconoir-db"
+            class="margin-bottom-2"
+          />
 
-          <div class="control">
-            <label class="control__label">Checkbox field</label>
-            <div class="control__elements">
-              value: {{ checkbox }}
-              <br />
-              <br />
-              <Checkbox v-model="checkbox" class="margin-bottom-1"></Checkbox>
-              <Checkbox v-model="checkbox">With text</Checkbox>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Radio field</label>
-            <div class="control__elements">
-              value: {{ radio }}
-              <br />
-              <br />
-              <span>Native Radio input</span>
-              <br />
+          <FormInput
+            v-model="input"
+            size="small"
+            placeholder="Small input"
+            icon-right="iconoir-db"
+            class="margin-bottom-2"
+          />
 
-              <Radio v-model="radio" value="a">Option A</Radio>
-              <Radio v-model="radio" value="b">Option B</Radio>
-              <Radio v-model="radio" value="c">Option C</Radio>
-              <Radio v-model="radio" value="d" disabled>Option D</Radio>
-              <Radio v-model="radio" value="e" loading>Option E</Radio>
-              <br />
-              <br />
-              <span>Radio button</span>
-              <br />
-              <RadioButton v-model="radio" value="a">Option A</RadioButton>
-              <RadioButton v-model="radio" value="b">Option B</RadioButton>
-              <RadioButton v-model="radio" value="c">Option C</RadioButton>
-              <RadioButton v-model="radio" value="d" disabled
-                >Option D</RadioButton
-              >
-              <RadioButton v-model="radio" value="e" loading
-                >Option E</RadioButton
-              >
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Radio buttons</label>
-            <div
-              class="control__elements"
-              :style="{ backgroundColor: 'white', padding: '5px' }"
+          <FormInput
+            v-model="input"
+            size="large"
+            placeholder="Large input"
+            icon-right="iconoir-db"
+            class="margin-bottom-2"
+          />
+
+          <FormGroup class="margin-bottom-2" label="Form Group">
+            <FormInput
+              ref="name"
+              v-model="input"
+              type="text"
+              placeholder="Native input"
+            />
+            <template #helper>Description text</template>
+          </FormGroup>
+
+          <FormGroup
+            class="margin-bottom-2"
+            label="Form Group error"
+            :error="true"
+            required
+          >
+            <FormInput
+              ref="name"
+              v-model="input"
+              :error="true"
+              placeholder="Native input"
+            />
+            <template #helper>Description text</template>
+            <template #error>Error message</template>
+          </FormGroup>
+
+          <FormGroup label="Checkbox field" required class="margin-bottom-3">
+            <Checkbox v-model="checkbox" class="margin-bottom-1"></Checkbox>
+            <Checkbox v-model="checkbox">With text</Checkbox>
+          </FormGroup>
+
+          <FormGroup
+            class="margin-bottom-3"
+            label="Native Radio input"
+            required
+          >
+            <RadioGroup v-model="radio" :options="radioOptions"> </RadioGroup>
+          </FormGroup>
+
+          <FormGroup class="margin-bottom-3" label="Radio buttons" required>
+            <RadioGroup v-model="radio" type="button" :options="radioOptions">
+            </RadioGroup>
+          </FormGroup>
+
+          <FormGroup
+            class="margin-bottom-3"
+            label="Radio buttons with icons"
+            required
+          >
+            <RadioGroup
+              v-model="radio"
+              type="button"
+              :options="radioOptionIcons"
             >
-              value: {{ radioButton }}
-              <br />
-              <br />
+            </RadioGroup>
+          </FormGroup>
 
-              <div class="">
-                <RadioButton v-model="radioButton" value="">None</RadioButton>
-                <RadioButton v-model="radioButton" value="a"
-                  >Option A</RadioButton
-                >
-                <RadioButton v-model="radioButton" value="b"
-                  >Option B</RadioButton
-                >
-                <RadioButton v-model="radioButton" value="c"
-                  >Option C</RadioButton
-                >
-
-                <RadioButton v-model="radioButton" value="g" :disabled="true">
-                  Option D
-                </RadioButton>
-                <RadioButton v-model="radioButton" value="h" :loading="true">
-                  Option E
-                </RadioButton>
-              </div>
-            </div>
-
-            <div
-              class="control__elements"
-              :style="{ backgroundColor: 'white', padding: '5px' }"
+          <FormGroup label="Switch Input" class="margin-bottom-3" required>
+            <SwitchInput
+              v-model="switchValue"
+              class="margin-bottom-2"
+            ></SwitchInput>
+            <SwitchInput v-model="switchValue" class="margin-bottom-2"
+              >With text</SwitchInput
             >
-              <RadioButton
-                v-model="radioButton"
-                value="d"
-                icon="iconoir-align-left"
-              ></RadioButton>
-              <RadioButton
-                v-model="radioButton"
-                value="e"
-                icon="iconoir-align-center"
-              ></RadioButton>
-              <RadioButton
-                v-model="radioButton"
-                value="f"
-                icon="iconoir-align-right"
-              ></RadioButton>
-            </div>
-            <div
-              class="control__elements"
-              :style="{ backgroundColor: 'white', padding: '5px' }"
+            <SwitchInput v-model="switchUnknown" class="margin-bottom-2"
+              >With text</SwitchInput
             >
-              <RadioButton
-                v-model="radioButton"
-                value="d"
-                icon="iconoir-align-left"
-                size="small"
-              ></RadioButton>
-              <RadioButton
-                v-model="radioButton"
-                value="e"
-                icon="iconoir-align-center"
-                size="small"
-              ></RadioButton>
-              <RadioButton
-                v-model="radioButton"
-                value="f"
-                icon="iconoir-align-right"
-                size="small"
-              ></RadioButton>
+            <SwitchInput v-model="switchUnknown" small class="margin-bottom-2"
+              >Small With text</SwitchInput
+            >
+            <SwitchInput
+              v-model="switchValue"
+              class="margin-bottom-2"
+              small
+            ></SwitchInput>
+            <SwitchInput v-model="switchValue" class="margin-bottom-1" large>
+              Small with text
+            </SwitchInput>
+            <SwitchInput
+              v-model="switchUnknown"
+              class="margin-bottom-2"
+              disabled
+            >
+              Disabled
+            </SwitchInput>
+            <SwitchInput
+              v-model="switchUnknown"
+              class="margin-bottom-2"
+              disabled
+              small
+            >
+              Small disabled
+            </SwitchInput>
+          </FormGroup>
+
+          <FormGroup label="Dropdown" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <Dropdown v-model="dropdown">
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 5"
+                  value="choice-5"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 6"
+                  value="choice-6"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+              </Dropdown>
             </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Switch field</label>
-            <div class="control__elements">
-              value: {{ switchValue }}
-              <br />
-              <SwitchInput
-                v-model="switchValue"
-                class="margin-bottom-1"
-              ></SwitchInput>
-              <SwitchInput v-model="switchValue" class="margin-bottom-1"
-                >With text</SwitchInput
+          </FormGroup>
+
+          <FormGroup label="Dropdown multiple" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <Dropdown v-model="dropdownMultiple" multiple>
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 5"
+                  value="choice-5"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 6"
+                  value="choice-6"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+              </Dropdown>
+            </div>
+          </FormGroup>
+
+          <FormGroup label="Dropdown small" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <Dropdown v-model="dropdown" small>
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 5"
+                  value="choice-5"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 6"
+                  value="choice-6"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+              </Dropdown>
+            </div>
+          </FormGroup>
+
+          <FormGroup label="Dropdown disabled" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <Dropdown v-model="dropdown" disabled>
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 5"
+                  value="choice-5"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 6"
+                  value="choice-6"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+              </Dropdown>
+            </div>
+          </FormGroup>
+
+          <FormGroup
+            label="Very long dropdown"
+            required
+            class="margin-bottom-2"
+          >
+            <div style="width: 200px">
+              <Dropdown v-model="longDropdown">
+                <DropdownItem
+                  :key="'some-2'"
+                  :name="'Something'"
+                  :value="'some-2'"
+                ></DropdownItem>
+                <DropdownItem
+                  :key="'test-3'"
+                  :name="'Test 3'"
+                  :value="'test3'"
+                ></DropdownItem>
+                <DropdownItem
+                  v-for="i in [
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                  ]"
+                  :key="i"
+                  :name="'Choice ' + i"
+                  :value="i"
+                  :disabled="i === 7"
+                ></DropdownItem>
+                <DropdownItem
+                  :key="'test-1'"
+                  :name="'Test 1'"
+                  :value="'test1'"
+                ></DropdownItem>
+                <DropdownItem
+                  :key="'test-2'"
+                  :name="'Test 2'"
+                  :value="'test2'"
+                ></DropdownItem>
+              </Dropdown>
+            </div>
+          </FormGroup>
+
+          <FormGroup
+            label="Dropdown with footer"
+            required
+            class="margin-bottom-2"
+          >
+            <div style="width: 200px">
+              <Dropdown v-model="dropdown" show-search show-footer>
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+                <template #footer>
+                  <a
+                    class="select__footer-button"
+                    @click="$refs.IntegrationCreateEditModal.show()"
+                  >
+                    <i class="iconoir-plus"></i>
+                    Add item
+                  </a>
+                </template>
+              </Dropdown>
+            </div>
+          </FormGroup>
+
+          <FormGroup label="Dropdown by link" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <a
+                ref="dropdownLink"
+                @click="$refs.dropdown1.toggle($refs.dropdownLink)"
+                >Open dropdown</a
               >
-              <SwitchInput v-model="switchUnknown" class="margin-bottom-1"
-                >With text</SwitchInput
+              <Dropdown ref="dropdown1" v-model="dropdown" :show-input="false">
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+              </Dropdown>
+            </div>
+          </FormGroup>
+
+          <FormGroup label="Dropdown tiny" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <Dropdown
+                v-model="dropdown"
+                :show-search="false"
+                class="dropdown--tiny"
               >
-              <SwitchInput v-model="switchUnknown" small class="margin-bottom-1"
-                >Small With text</SwitchInput
-              >
-              <SwitchInput
-                v-model="switchValue"
-                class="margin-bottom-1"
-                small
-              ></SwitchInput>
-              <SwitchInput v-model="switchValue" class="margin-bottom-1" large>
-                Small with text
-              </SwitchInput>
-              <SwitchInput
-                v-model="switchUnknown"
-                class="margin-bottom-1"
-                disabled
-              >
-                Disabled
-              </SwitchInput>
-              <SwitchInput
-                v-model="switchUnknown"
-                class="margin-bottom-1"
-                disabled
-                small
-              >
-                Small disabled
-              </SwitchInput>
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+              </Dropdown>
             </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown</label>
-            <div class="control__elements">
-              value: {{ dropdown }}
-              <br />
-              <br />
-              <div style="width: 200px">
-                <Dropdown v-model="dropdown">
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 5"
-                    value="choice-5"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 6"
-                    value="choice-6"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
+          </FormGroup>
+
+          <FormGroup label="Dropdown error" required class="margin-bottom-2">
+            <div style="width: 200px">
+              <Dropdown v-model="dropdown" class="dropdown--error">
+                <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                <DropdownItem
+                  name="Choice 2"
+                  value="choice-2"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 3"
+                  value="choice-3"
+                  icon="iconoir-db"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 4"
+                  value="choice-4"
+                  icon="iconoir-cancel"
+                  :disabled="true"
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 5"
+                  value="choice-5"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+                <DropdownItem
+                  name="Choice 6"
+                  value="choice-6"
+                  icon="iconoir-edit-pencil"
+                  description="Lorem ipsum dolor sit amet, consectetur."
+                ></DropdownItem>
+              </Dropdown>
             </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown multiple</label>
-            <div class="control__elements">
-              value: {{ dropdownMultiple }}
-              <br />
-              <br />
-              <div style="width: 200px">
-                <Dropdown v-model="dropdownMultiple" :multiple="true">
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 5"
-                    value="choice-5"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 6"
-                    value="choice-6"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown small</label>
-            <div class="control__elements">
-              value: {{ dropdown }}
-              <br />
-              <br />
-              <div style="width: 200px">
-                <Dropdown v-model="dropdown" small>
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 5"
-                    value="choice-5"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 6"
-                    value="choice-6"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown disabled</label>
-            <div class="control__elements">
-              <div style="width: 200px">
-                <Dropdown v-model="dropdown" disabled>
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 5"
-                    value="choice-5"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 6"
-                    value="choice-6"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown</label>
-            <div class="control__elements">
-              value: {{ dropdown }}
-              <br />
-              <br />
-              <div style="width: 200px">
-                <Dropdown v-model="dropdown" :show-search="false">
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Very long dropdown</label>
-            <div class="control__elements">
-              <div style="width: 200px">
-                <Dropdown v-model="longDropdown">
-                  <DropdownItem
-                    :key="'some-2'"
-                    :name="'Something'"
-                    :value="'some-2'"
-                  ></DropdownItem>
-                  <DropdownItem
-                    :key="'test-3'"
-                    :name="'Test 3'"
-                    :value="'test3'"
-                  ></DropdownItem>
-                  <DropdownItem
-                    v-for="i in [
-                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-                    ]"
-                    :key="i"
-                    :name="'Choice ' + i"
-                    :value="i"
-                    :disabled="i === 7"
-                  ></DropdownItem>
-                  <DropdownItem
-                    :key="'test-1'"
-                    :name="'Test 1'"
-                    :value="'test1'"
-                  ></DropdownItem>
-                  <DropdownItem
-                    :key="'test-2'"
-                    :name="'Test 2'"
-                    :value="'test2'"
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown with footer</label>
-            <div class="control__elements">
-              value: {{ dropdown }}
-              <br />
-              <br />
-              <div style="width: 200px">
-                <Dropdown v-model="dropdown" show-search show-footer>
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                  <template #footer>
-                    <a
-                      class="select__footer-button"
-                      @click="$refs.IntegrationCreateEditModal.show()"
-                    >
-                      <i class="iconoir-plus"></i>
-                      Add item
-                    </a>
-                  </template>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">
-              Dropdown by link {{ dropdown }}
-            </label>
-            <div class="control__elements">
-              <div style="width: 200px">
-                <a
-                  ref="dropdownLink"
-                  @click="$refs.dropdown1.toggle($refs.dropdownLink)"
-                  >Open dropdown</a
-                >
-                <Dropdown
-                  ref="dropdown1"
-                  v-model="dropdown"
-                  :show-input="false"
-                >
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown tiny</label>
-            <div class="control__elements">
-              value: {{ dropdown }}
-              <br />
-              <br />
-              <div style="width: 200px">
-                <Dropdown
-                  v-model="dropdown"
-                  :show-search="false"
-                  class="dropdown--tiny"
-                >
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Dropdown error</label>
-            <div class="control__elements">
-              <div style="width: 200px">
-                <Dropdown v-model="dropdown" class="dropdown--error">
-                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
-                  <DropdownItem
-                    name="Choice 2"
-                    value="choice-2"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 3"
-                    value="choice-3"
-                    icon="iconoir-db"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 4"
-                    value="choice-4"
-                    icon="iconoir-cancel"
-                    :disabled="true"
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 5"
-                    value="choice-5"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                  <DropdownItem
-                    name="Choice 6"
-                    value="choice-6"
-                    icon="iconoir-edit-pencil"
-                    description="Lorem ipsum dolor sit amet, consectetur."
-                  ></DropdownItem>
-                </Dropdown>
-              </div>
-            </div>
-          </div>
+          </FormGroup>
+
           <div class="control">
             <label class="control__label">Datepicker field</label>
             <div class="control__elements">
@@ -1300,10 +1107,11 @@
         </div>
         <div class="formula-field margin-bottom-3">
           <div class="formula-field__input">
-            <AutoExpandableTextarea
+            <FormTextarea
               v-model="formula"
+              auto-expandable
               class="formula-field__input-formula"
-            ></AutoExpandableTextarea>
+            ></FormTextarea>
           </div>
           <div class="formula-field__body">
             <div class="formula-field__items">
@@ -1890,14 +1698,10 @@
             <div class="data-table__header">
               <h1 class="data-table__title">12 Members in ACME Corp</h1>
               <div class="data-table__actions">
-                <div class="input__with-icon input__with-icon--left">
-                  <input
-                    type="text"
-                    placeholder="Find member..."
-                    class="input"
-                  />
-                  <i class="iconoir-search"></i>
-                </div>
+                <FormInput
+                  left-icon="iconoir-search"
+                  placeholder="Find member..."
+                ></FormInput>
                 <Button href="#" size="large" class="margin-left-2">
                   Invite member
                 </Button>
@@ -2173,7 +1977,6 @@
 
 <script>
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
-import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/AutoExpandableTextarea'
 import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
 import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext.vue'
 import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
@@ -2185,7 +1988,6 @@ export default {
     ColorPicker,
     ColorPickerContext,
     Toasts,
-    AutoExpandableTextarea,
     Paginator,
   },
   data() {
@@ -2206,6 +2008,18 @@ export default {
       colorVariables: [
         { name: 'Primary', value: 'primary', color: '#985353ff' },
         { name: 'Secondary', value: 'secondary', color: '#545398ff' },
+      ],
+      radioOptions: [
+        { value: 'a', label: 'Option A' },
+        { value: 'b', label: 'Option B' },
+        { value: 'c', label: 'Option C' },
+        { value: 'd', label: 'Option D', loading: true },
+        { value: 'e', label: 'Option D', disabled: true },
+      ],
+      radioOptionIcons: [
+        { value: 'a', icon: 'iconoir-align-left' },
+        { value: 'a', icon: 'iconoir-align-center' },
+        { value: 'a', icon: 'iconoir-align-right' },
       ],
     }
   },

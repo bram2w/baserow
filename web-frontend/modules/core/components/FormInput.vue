@@ -1,101 +1,58 @@
 <template>
-  <FormElement
-    v-if="!noControl"
-    :error="hasError"
-    class="control"
+  <div
+    class="form-input"
     :class="{
-      'control--horizontal': horizontal,
-      'control--horizontal-variable': horizontalVariable,
+      'form-input--error': error,
+      'form-input--monospace': monospace,
+      'form-input--icon-left': iconLeft,
+      'form-input--icon-right': iconRight,
+      'form-input--loading': loading,
+      'form-input--disabled': disabled,
+      'form-input--small': size === 'small',
+      'form-input--large': size === 'large',
+      'form-input--loading': loading,
+      'form-input--suffix': hasSuffixSlot,
+      'form-input--no-controls': removeNumberInputControls,
     }"
+    @click="focus"
   >
-    <label
-      v-if="label"
-      class="control__label"
-      :class="{ 'control__label--small': smallLabel }"
-    >
-      {{ label }}
-    </label>
-    <div class="control__elements">
-      <div class="form-input__input-wrapper">
-        <div
-          :class="{
-            'form-input': true,
-            'form-input--with-icon': hasIcon,
-            'form-input--with-icon-left': iconLeft,
-            'form-input--with-icon-right': iconRight,
-            'form-input--error': hasError,
-            'form-input--monospace': monospace,
-            'form-input--loading': loading,
-            'form-input--disabled': disabled,
-            'form-input--focus': focus,
-            'form-input--small': small,
-          }"
-        >
-          <input
-            ref="base_url"
-            class="form-input__input"
-            :class="{ 'remove-number-input-controls': true }"
-            :value="fromValue(value)"
-            :disabled="disabled"
-            :type="type"
-            :placeholder="placeholder"
-            @blur="$emit('blur', $event)"
-            @input="$emit('input', toValue($event.target.value))"
-            @focusin="focus = true"
-            @focusout="focus = false"
-          />
+    <i
+      v-if="iconLeft"
+      class="form-input__icon form-input__icon-left"
+      :class="iconLeft"
+    />
 
-          <i v-if="hasIcon" class="form-input__icon" :class="icon" />
-          <div v-if="$slots.suffix" class="form-input__suffix disabled">
-            <div>
-              <slot name="suffix"></slot>
-            </div>
-          </div>
-        </div>
-        <slot name="after-input" />
-      </div>
-      <div v-if="hasError" class="error">
-        {{ error }}
-      </div>
-    </div>
-  </FormElement>
-  <div v-else>
-    <div
-      :class="{
-        'form-input': true,
-        'form-input--with-icon': hasIcon,
-        'form-input--with-icon-left': iconLeft,
-        'form-input--with-icon-right': iconRight,
-        'form-input--error': hasError,
-        'form-input--monospace': monospace,
-        'form-input--loading': loading,
-        'form-input--disabled': disabled,
-        'form-input--focus': focus,
-        'form-input--small': small,
-      }"
-    >
+    <div class="form-input__wrapper">
       <input
-        ref="base_url"
+        :id="id"
+        ref="input"
         class="form-input__input"
-        :class="{ 'remove-number-input-controls': true }"
         :value="fromValue(value)"
         :disabled="disabled"
         :type="type"
+        :min="type == 'number' && min > -1 ? parseInt(min) : false"
+        :max="type == 'number' && max > -1 ? parseInt(max) : false"
         :placeholder="placeholder"
+        :required="required"
+        :autocomplete="autocomplete"
         @blur="$emit('blur', $event)"
+        @click="$emit('click', $event)"
+        @focus="$emit('focus', $event)"
+        @keyup="$emit('keyup', $event)"
+        @keydown="$emit('keydown', $event)"
+        @keypress="$emit('keypress', $event)"
         @input="$emit('input', toValue($event.target.value))"
-        @focusin="focus = true"
-        @focusout="focus = false"
       />
-
-      <i v-if="hasIcon" class="form-input__icon" :class="icon" />
-      <div v-if="$slots.suffix" class="form-input__suffix disabled">
-        <div>
-          <slot name="suffix"></slot>
-        </div>
-      </div>
+      <i
+        v-if="iconRight"
+        class="form-input__icon form-input__icon-right"
+        :class="iconRight"
+      />
     </div>
-    <slot name="after-input" />
+
+    <div v-if="hasSuffixSlot" class="form-input__suffix">
+      <slot name="suffix"></slot>
+    </div>
   </div>
 </template>
 
@@ -103,15 +60,28 @@
 export default {
   name: 'FormInput',
   props: {
-    error: {
+    id: {
       type: String,
       required: false,
       default: null,
+    },
+    error: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     label: {
       type: String,
       required: false,
       default: null,
+    },
+    size: {
+      type: String,
+      required: false,
+      validator: function (value) {
+        return ['regular', 'small', 'large'].includes(value)
+      },
+      default: 'regular',
     },
     placeholder: {
       type: String,
@@ -147,26 +117,6 @@ export default {
       required: false,
       default: false,
     },
-    smallLabel: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    large: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    horizontal: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    horizontalVariable: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     loading: {
       type: Boolean,
       required: false,
@@ -175,38 +125,53 @@ export default {
     iconLeft: {
       type: String,
       required: false,
-      default: null,
+      default: '',
     },
     iconRight: {
       type: String,
       required: false,
-      default: null,
+      default: '',
     },
-    small: {
+    required: {
       type: Boolean,
       required: false,
       default: false,
     },
-    noControl: {
+    removeNumberInputControls: {
       type: Boolean,
       required: false,
       default: false,
+    },
+    autocomplete: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    min: {
+      type: Number,
+      required: false,
+      default: -1,
+    },
+    max: {
+      type: Number,
+      required: false,
+      default: -1,
     },
   },
   data() {
-    return {
-      focus: false,
-    }
+    return {}
   },
   computed: {
-    hasError() {
-      return Boolean(this.error)
+    hasSuffixSlot() {
+      return !!this.$slots.suffix
     },
-    hasIcon() {
-      return Boolean(this.iconLeft || this.iconRight)
+  },
+  methods: {
+    focus() {
+      this.$refs.input.focus()
     },
-    icon() {
-      return this.iconRight || this.iconLeft
+    blur() {
+      this.$refs.input.blur()
     },
   },
 }

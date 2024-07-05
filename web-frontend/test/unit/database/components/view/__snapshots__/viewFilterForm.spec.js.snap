@@ -583,10 +583,25 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
           <div
             class="filters__value filters__value--with-input-field"
           >
-            <input
-              class="input filters__value-input input--small"
-              type="text"
-            />
+            <div
+              class="form-input"
+            >
+              <!---->
+               
+              <div
+                class="form-input__wrapper"
+              >
+                <input
+                  autocomplete=""
+                  class="form-input__input"
+                  type="text"
+                />
+                 
+                <!---->
+              </div>
+               
+              <!---->
+            </div>
               
             <!---->
              

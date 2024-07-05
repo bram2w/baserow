@@ -3,6 +3,9 @@
     <FormGroup
       :label="$t('createUserSourceForm.userSourceType')"
       :error="getError('type')"
+      required
+      small-label
+      class="margin-bottom-2"
     >
       <Dropdown
         v-model="$v.values.type.$model"
@@ -21,6 +24,9 @@
     <FormGroup
       :label="$t('createUserSourceForm.userSourceIntegration')"
       :error="getError('integration_id')"
+      required
+      small-label
+      class="margin-bottom-2"
     >
       <IntegrationDropdown
         v-model="$v.values.integration_id.$model"
@@ -29,11 +35,20 @@
         :integration-type="currentUserSourceType?.integrationType"
       />
     </FormGroup>
-    <FormInput
-      v-model="$v.values.name.$model"
+
+    <FormGroup
       :error="getError('name')"
       :label="$t('createUserSourceForm.userSourceName')"
-    />
+      required
+      small-label
+    >
+      <FormInput
+        v-model="$v.values.name.$model"
+        size="large"
+        :error="getError('name')"
+      />
+    </FormGroup>
+
     <input type="submit" hidden />
   </form>
 </template>
@@ -92,7 +107,7 @@ export default {
   methods: {
     getError(fieldName) {
       if (!this.$v.values[fieldName].$dirty) {
-        return ''
+        return false
       }
       const fieldState = this.$v.values[fieldName]
       if (!fieldState.required) {
@@ -101,7 +116,7 @@ export default {
       if (fieldName === 'name' && !fieldState.maxLength) {
         return this.$t('error.maxLength', { max: 255 })
       }
-      return ''
+      return false
     },
   },
   validations: {

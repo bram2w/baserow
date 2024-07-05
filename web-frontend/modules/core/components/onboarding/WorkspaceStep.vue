@@ -1,17 +1,19 @@
 <template>
   <div>
     <h1>{{ $t('workspaceStep.title') }}</h1>
-    <FormInput
-      v-model="name"
-      :placeholder="$t('workspaceStep.workspaceLabel') + '...'"
-      :label="$t('workspaceStep.workspaceLabel')"
-      large
-      :error="
-        $v.name.$dirty && !$v.name.required ? $t('error.requiredField') : null
-      "
-      @input="updateValue"
-      @blur="$v.name.$touch()"
-    />
+
+    <FormGroup :error="$v.name.$dirty && !$v.name.required">
+      <FormInput
+        v-model="name"
+        :placeholder="$t('workspaceStep.workspaceLabel') + '...'"
+        :label="$t('workspaceStep.workspaceLabel')"
+        size="large"
+        :error="$v.name.$dirty && !$v.name.required"
+        @input="updateValue"
+        @blur="$v.name.$touch()"
+      />
+      <template #error>{{ $t('error.requiredField') }}</template>
+    </FormGroup>
   </div>
 </template>
 

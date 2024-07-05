@@ -1,5 +1,5 @@
 <template>
-  <FormGroup v-if="!labelAfter" :label="label" :horizontal="horizontal">
+  <FormGroup v-if="!labelAfter" small-label required :label="label">
     <ColorInput
       :value="value"
       :color-variables="colorVariables"

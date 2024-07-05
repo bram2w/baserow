@@ -1,23 +1,36 @@
 <template>
   <div>
     <h1>{{ $t('moreStep.title') }}</h1>
-    <FormInput
-      v-model="role"
-      :placeholder="$t('moreStep.roleOrJob') + '...'"
+
+    <FormGroup
+      small-label
       :label="$t('moreStep.roleOrJob')"
-      large
-      :error="
-        $v.role.$dirty && !$v.role.required ? $t('error.requiredField') : ''
-      "
-      @blur="$v.role.$touch()"
-    />
+      required
+      :error="$v.role.$dirty && !$v.role.required"
+      class="margin-bottom-3"
+    >
+      <FormInput
+        v-model="role"
+        :placeholder="$t('moreStep.roleOrJob') + '...'"
+        size="large"
+        :error="$v.role.$dirty && !$v.role.required"
+        @blur="$v.role.$touch()"
+      />
+
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
+    </FormGroup>
     <FormGroup
       :label="$t('moreStep.people')"
       :error="
         $v.companySize.$dirty && !$v.companySize.required
           ? $t('error.requiredField')
-          : ''
+          : false
       "
+      class="margin-bottom-3"
+      required
+      small-label
     >
       <div class="flex flex-wrap" style="--gap: 8px">
         <Chips
@@ -28,14 +41,17 @@
           >{{ size }}</Chips
         >
       </div>
+
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
     </FormGroup>
     <FormGroup
       :label="$t('moreStep.country')"
-      :error="
-        $v.country.$dirty && !$v.country.required
-          ? $t('error.requiredField')
-          : ''
-      "
+      :error="$v.country.$dirty && !$v.country.required"
+      required
+      small-label
+      class="margin-bottom-2"
     >
       <Dropdown
         v-model="country"
@@ -50,9 +66,8 @@
         ></DropdownItem>
       </Dropdown>
     </FormGroup>
-    <FormGroup class="margin-top-3">
-      <Checkbox v-model="share">{{ $t('moreStep.share') }}</Checkbox>
-    </FormGroup>
+
+    <Checkbox v-model="share">{{ $t('moreStep.share') }}</Checkbox>
   </div>
 </template>
 

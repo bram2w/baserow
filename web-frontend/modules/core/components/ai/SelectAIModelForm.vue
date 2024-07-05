@@ -1,57 +1,60 @@
 <template>
   <div>
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('selectAIModelForm.AIType')
-      }}</label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.ai_generative_ai_type"
-          class="dropdown--floating"
-          :class="{
-            'dropdown--error': $v.values.ai_generative_ai_type.$error,
-          }"
-          :fixed-items="true"
-          :show-search="false"
-          small
-          @hide="$v.values.ai_generative_ai_type.$touch()"
-          @change="$refs.aiModel.select(aIModelsPerType[0])"
-        >
-          <DropdownItem
-            v-for="aIType in aITypes"
-            :key="aIType"
-            :name="aIType"
-            :value="aIType"
-          />
-        </Dropdown>
-      </div>
-    </div>
-    <div class="control">
-      <label class="control__label control__label--small">
-        {{ $t('selectAIModelForm.AIModel') }}
-      </label>
-      <div class="control__elements">
-        <Dropdown
-          ref="aiModel"
-          v-model="values.ai_generative_ai_model"
-          class="dropdown--floating"
-          :class="{
-            'dropdown--error': $v.values.ai_generative_ai_model.$error,
-          }"
-          :fixed-items="true"
-          :show-search="false"
-          small
-          @hide="$v.values.ai_generative_ai_model.$touch()"
-        >
-          <DropdownItem
-            v-for="aIType in aIModelsPerType"
-            :key="aIType"
-            :name="aIType"
-            :value="aIType"
-          />
-        </Dropdown>
-      </div>
-    </div>
+    <FormGroup
+      small-label
+      :label="$t('selectAIModelForm.AIType')"
+      :error="$v.values.ai_generative_ai_type.$error"
+      class="margin-bottom-2"
+      required
+    >
+      <Dropdown
+        v-model="values.ai_generative_ai_type"
+        class="dropdown--floating"
+        :class="{
+          'dropdown--error': $v.values.ai_generative_ai_type.$error,
+        }"
+        :fixed-items="true"
+        :show-search="false"
+        small
+        @hide="$v.values.ai_generative_ai_type.$touch()"
+        @change="$refs.aiModel.select(aIModelsPerType[0])"
+      >
+        <DropdownItem
+          v-for="aIType in aITypes"
+          :key="aIType"
+          :name="aIType"
+          :value="aIType"
+        />
+      </Dropdown>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      :label="$t('selectAIModelForm.AIModel')"
+      :error="$v.values.ai_generative_ai_model.$error"
+      class="margin-bottom-2"
+      required
+    >
+      <Dropdown
+        ref="aiModel"
+        v-model="values.ai_generative_ai_model"
+        class="dropdown--floating"
+        :class="{
+          'dropdown--error': $v.values.ai_generative_ai_model.$error,
+        }"
+        :fixed-items="true"
+        :show-search="false"
+        small
+        @hide="$v.values.ai_generative_ai_model.$touch()"
+      >
+        <DropdownItem
+          v-for="aIType in aIModelsPerType"
+          :key="aIType"
+          :name="aIType"
+          :value="aIType"
+        />
+      </Dropdown>
+    </FormGroup>
   </div>
 </template>
 

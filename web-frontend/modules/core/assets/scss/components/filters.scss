@@ -134,33 +134,20 @@
   margin-left: 12px;
 }
 
-.filters__value {
-  flex: 0 0;
-}
-
 .filters__multi-value {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-direction: row;
-  width: 100%;
 }
 
 .filters__multi-value-operator {
   max-width: 144px;
 }
 
-.filters__value-input {
-  padding-top: 0;
-  padding-bottom: 0;
-  line-height: 36px;
-}
-
 .filters__combined-value-input {
   &.filters__value-input--small {
     width: 50px;
-    height: 36px;
-    padding: 12px;
     text-align: center;
   }
 }

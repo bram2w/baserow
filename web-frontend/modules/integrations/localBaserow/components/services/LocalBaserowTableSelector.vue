@@ -3,12 +3,13 @@
     <FormGroup
       :label="$t('localBaserowTableSelector.databaseFieldLabel')"
       small-label
+      required
     >
       <Dropdown
         v-model="databaseSelectedId"
         :show-search="false"
         fixed-items
-        small
+        :small="smallDropdowns"
       >
         <DropdownItem
           v-for="database in databases"
@@ -24,13 +25,14 @@
     <FormGroup
       :label="$t('localBaserowTableSelector.tableFieldLabel')"
       small-label
+      required
     >
       <Dropdown
         :value="value"
         :show-search="false"
         :disabled="databaseSelectedId === null"
         fixed-items
-        small
+        :small="smallDropdowns"
         @input="$emit('input', $event)"
       >
         <DropdownItem
@@ -47,13 +49,14 @@
       v-if="displayViewDropdown"
       :label="$t('localBaserowTableSelector.viewFieldLabel')"
       small-label
+      required
     >
       <Dropdown
         :value="viewId"
         :show-search="false"
         :disabled="value === null"
         fixed-items
-        small
+        :small="smallDropdowns"
         @input="$emit('update:view-id', $event)"
       >
         <DropdownItem
@@ -96,6 +99,14 @@ export default {
       type: Boolean,
       default: true,
     },
+    dropdownSizes: {
+      type: String,
+      required: false,
+      validator: function (value) {
+        return ['small', 'large'].includes(value)
+      },
+      default: 'small',
+    },
   },
   data() {
     return {
@@ -117,6 +128,9 @@ export default {
           (view) => view.table_id === this.value
         ) || []
       )
+    },
+    smallDropdowns() {
+      return this.dropdownSizes === 'small'
     },
   },
   watch: {

@@ -17,8 +17,8 @@
           {{ labelDescription || $t('imageInput.labelDescription') }}
         </span>
         <Button
-          prepend-icon="iconoir-upload-square"
-          type="primary"
+          icon="iconoir-upload-square"
+          type="upload"
           @click="openFileUploadModal"
         >
           {{ labelButton || $t('imageInput.labelButton') }}

@@ -1,9 +1,11 @@
 .custom-style {
-  height: 2px;
+  position: relative;
 }
 
 .custom-style__button {
-  float: right;
+  position: absolute;
+  right: 0;
+  top: -6px;
 }
 
 .custom-style__config-blocks {

@@ -33,7 +33,7 @@ describe('Webhook form Input Tests', () => {
   }
 
   function getErrorDivs(wrapper) {
-    return wrapper.findAll('div > .error')
+    return wrapper.findAll('div > .control__messages--error')
   }
 
   function getErrorTexts(errorDivs) {

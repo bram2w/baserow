@@ -5,16 +5,12 @@
       {{ $t('templateCategories.title') }}
     </div>
     <div class="templates__search">
-      <div class="input__with-icon input__with-icon--left">
-        <input
-          ref="searchInput"
-          v-model="search"
-          type="text"
-          class="input"
-          :placeholder="$t('templateCategories.search')"
-        />
-        <i class="iconoir-search"></i>
-      </div>
+      <FormInput
+        ref="searchInput"
+        v-model="search"
+        icon-left="iconoir-search"
+        :placeholder="$t('templateCategories.search')"
+      ></FormInput>
     </div>
     <ul class="templates__categories">
       <li

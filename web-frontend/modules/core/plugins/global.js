@@ -32,6 +32,7 @@ import Chips from '@baserow/modules/core/components/Chips'
 import Presentation from '@baserow/modules/core/components/Presentation'
 import FormInput from '@baserow/modules/core/components/FormInput'
 import ImageInput from '@baserow/modules/core/components/ImageInput'
+import FormTextarea from '@baserow/modules/core/components/FormTextarea'
 import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
 import FormRow from '@baserow/modules/core/components/FormRow'
@@ -94,6 +95,7 @@ function setupVue(Vue) {
   Vue.component('Avatar', Avatar)
   Vue.component('Presentation', Presentation)
   Vue.component('FormInput', FormInput)
+  Vue.component('FormTextarea', FormTextarea)
   Vue.component('CallToAction', CallToAction)
   Vue.component('FormGroup', FormGroup)
   Vue.component('FormRow', FormRow)

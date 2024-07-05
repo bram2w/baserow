@@ -1,12 +1,10 @@
 <template>
   <div class="dropdown-option">
     <FormInput
-      small
       :value="option.value"
       @input="$emit('update', { value: $event })"
     />
     <FormInput
-      small
       :value="option.name"
       @input="$emit('update', { name: $event })"
     />

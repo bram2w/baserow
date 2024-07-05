@@ -2,7 +2,7 @@
   <div>
     <div class="control">
       <template v-if="filename === ''">
-        <label class="control__label">{{
+        <label class="control__label control__label--small">{{
           $t('tableJSONImporter.fileLabel')
         }}</label>
         <div class="control__description">

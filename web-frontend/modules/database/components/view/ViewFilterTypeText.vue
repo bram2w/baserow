@@ -1,14 +1,13 @@
 <template>
-  <input
+  <FormInput
     ref="input"
     v-model="copy"
-    type="text"
-    class="input filters__value-input input--small"
-    :class="{ 'input--error': $v?.copy.$error }"
+    :error="$v?.copy.$error"
     :disabled="disabled"
-    @input="delayedUpdate($event.target.value)"
+    @input="delayedUpdate($event)"
     @keydown.enter="delayedUpdate($event.target.value, true)"
-  />
+  >
+  </FormInput>
 </template>
 
 <script>

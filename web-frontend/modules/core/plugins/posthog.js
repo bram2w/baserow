@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-named-as-default
 import posthog from 'posthog-js'
 import Vue from 'vue'
 

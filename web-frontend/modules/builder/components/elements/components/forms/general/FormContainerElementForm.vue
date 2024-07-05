@@ -9,6 +9,9 @@
     <ApplicationBuilderFormulaInputGroup
       v-model="values.submit_button_label"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('formContainerElementForm.submitButtonLabel')"
       :placeholder="$t('formContainerElementForm.submitButtonPlaceholder')"
     />
@@ -17,6 +20,8 @@
       :description="
         $t('formContainerElementForm.resetToInitialValuesDescription')
       "
+      small-label
+      required
     >
       <Checkbox
         v-model="values.reset_initial_values_post_submission"

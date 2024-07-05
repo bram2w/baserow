@@ -3,33 +3,35 @@
     <Alert v-if="linkRowFieldsInThisTable.length === 0" type="error">
       <p>{{ $t('fieldSelectThroughFieldSubForm.noTable') }}</p>
     </Alert>
-    <div v-if="linkRowFieldsInThisTable.length > 0" class="control">
-      <label class="control__label control__label--small">
-        {{ $t('fieldSelectThroughFieldSubForm.selectThroughFieldLabel') }}
-      </label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.through_field_id"
-          :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
-          :fixed-items="true"
-          small
-          @hide="$v.values.through_field_id.$touch()"
-          @input="throughFieldChanged($event)"
-        >
-          <DropdownItem
-            v-for="field in linkRowFieldsInThisTable"
-            :key="field.id"
-            :disabled="field.disabled"
-            :name="field.name"
-            :value="field.id"
-            :icon="field.icon"
-          ></DropdownItem>
-        </Dropdown>
-        <div v-if="$v.values.through_field_id.$error" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </div>
+
+    <FormGroup
+      v-if="linkRowFieldsInThisTable.length > 0"
+      small-label
+      :label="$t('fieldSelectThroughFieldSubForm.selectThroughFieldLabel')"
+      required
+      :error="$v.values.through_field_id.$error"
+      class="margin-bottom-2"
+    >
+      <Dropdown
+        v-model="values.through_field_id"
+        :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
+        :fixed-items="true"
+        small
+        @hide="$v.values.through_field_id.$touch()"
+        @input="throughFieldChanged($event)"
+      >
+        <DropdownItem
+          v-for="field in linkRowFieldsInThisTable"
+          :key="field.id"
+          :disabled="field.disabled"
+          :name="field.name"
+          :value="field.id"
+          :icon="field.icon"
+        ></DropdownItem>
+      </Dropdown>
+
+      <template #error>{{ $t('error.requiredField') }}</template>
+    </FormGroup>
   </div>
 </template>
 

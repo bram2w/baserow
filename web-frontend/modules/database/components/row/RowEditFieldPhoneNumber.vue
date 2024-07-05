@@ -1,20 +1,22 @@
 <template>
-  <div class="control__elements">
-    <input
+  <FormGroup :error="touched && !valid">
+    <FormInput
       ref="input"
       v-model="copy"
+      size="large"
       type="tel"
-      class="input"
-      :class="{ 'input--error': touched && !valid }"
+      :error="touched && !valid"
       :disabled="readOnly"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"
-    />
-    <div v-show="touched && !valid" class="error">
+    >
+    </FormInput>
+
+    <template #error>
       {{ error }}
-    </div>
-  </div>
+    </template>
+  </FormGroup>
 </template>
 
 <script>

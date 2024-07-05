@@ -1,10 +1,12 @@
 <template>
   <form class="context__form" @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('value')" class="control">
-      <label class="control__label">{{
-        $t('kanbanViewOptionForm.selectOption')
-      }}</label>
-      <div class="control__elements">
+    <FormGroup
+      :label="$t('kanbanViewOptionForm.selectOption')"
+      required
+      :error="fieldHasErrors('value')"
+      class="margin-bottom-2"
+    >
+      <div class="kanban-view__option-item">
         <div class="select-options">
           <div class="select-options__item">
             <a
@@ -23,19 +25,18 @@
             >
               <i class="iconoir-nav-arrow-down"></i>
             </a>
-            <input
-              v-model="values.value"
-              class="form-input form-input--small select-options__value"
-              :class="{ 'input--error': fieldHasErrors('value') }"
-              @blur="$v.values.value.$touch()"
-            />
           </div>
         </div>
+        <FormInput
+          v-model="values.value"
+          :error="fieldHasErrors('value')"
+          @blur="$v.values.value.$touch()"
+        >
+        </FormInput>
       </div>
-      <div v-if="fieldHasErrors('value')" class="error">
-        {{ $t('error.requiredField') }}
-      </div>
-    </FormElement>
+      <template #error> {{ $t('error.requiredField') }}</template>
+    </FormGroup>
+
     <slot></slot>
     <ColorSelectContext
       ref="colorContext"

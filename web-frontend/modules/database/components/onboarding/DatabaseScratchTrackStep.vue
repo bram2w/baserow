@@ -17,38 +17,46 @@
         >{{ $t('databaseScratchTrackStep.addYourOwn') }}</Chips
       >
     </div>
-    <FormInput
+    <FormGroup
       v-if="what === 'own'"
-      v-model="tableName"
-      :placeholder="$t('databaseScratchTrackStep.tableName') + '...'"
+      :error="$v.tableName.$dirty && !$v.tableName.required"
       :label="$t('databaseScratchTrackStep.tableName')"
-      large
-      :error="
-        $v.tableName.$dirty && !$v.tableName.required
-          ? $t('error.requiredField')
-          : null
-      "
-      @input="updateValue"
-      @blur="$v.tableName.$touch()"
-    />
-    <template v-if="what !== ''">
+      required
+      small-label
+      class="margin-bottom-2"
+    >
       <FormInput
+        v-model="tableName"
+        :placeholder="$t('databaseScratchTrackStep.tableName') + '...'"
+        size="large"
+        :error="$v.tableName.$dirty && !$v.tableName.required"
+        @input="updateValue"
+        @blur="$v.tableName.$touch()"
+      />
+      <template #error>{{ $t('error.requiredField') }}</template>
+    </FormGroup>
+
+    <template v-if="what !== ''">
+      <FormGroup
         v-for="(row, index) in [0, 1, 2]"
         :key="index"
-        v-model="$data['row' + index]"
-        :placeholder="$t('databaseScratchTrackStep.rowName') + '...'"
-        :label="
-          index === 0 ? $t('databaseScratchTrackStep.thisIncludes') : null
-        "
-        large
-        :error="
-          $v['row' + index].$dirty && $v['row' + index].$invalid
-            ? $t('error.requiredField')
-            : null
-        "
-        @input="updateValue"
-        @blur="$v['row' + index].$touch()"
-      />
+        class="margin-bottom-2"
+        :error="$v['row' + index].$dirty && $v['row' + index].$invalid"
+        small-label
+      >
+        <template v-if="index === 0" #label>
+          {{ $t('databaseScratchTrackStep.thisIncludes') }}</template
+        >
+        <FormInput
+          v-model="$data['row' + index]"
+          :placeholder="$t('databaseScratchTrackStep.rowName') + '...'"
+          size="large"
+          :error="$v['row' + index].$dirty && $v['row' + index].$invalid"
+          @input="updateValue"
+          @blur="$v['row' + index].$touch()"
+        />
+        <template #error>{{ $t('error.requiredField') }}</template>
+      </FormGroup>
     </template>
   </div>
 </template>

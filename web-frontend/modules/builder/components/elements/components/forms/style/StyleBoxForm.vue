@@ -1,6 +1,12 @@
 <template>
   <form @submit.prevent>
-    <FormGroup :label="label" :error="error">
+    <FormGroup
+      class="margin-bottom-2"
+      :label="label"
+      small-label
+      required
+      :error="error"
+    >
       <div
         v-if="borderIsAllowed || paddingIsAllowed"
         class="row margin-bottom-2"
@@ -10,29 +16,27 @@
           <div class="margin-bottom-1">
             {{ $t('styleBoxForm.borderLabel') }}
           </div>
-          <input
+          <FormInput
             v-model="values.border_size"
+            size="large"
             type="number"
-            class="input"
-            :class="{
-              'input--error': error,
-            }"
+            :min="0"
+            :max="200"
+            :error="error"
             @blur="$v.values.border_size.$touch()"
-          />
+          ></FormInput>
         </div>
         <div v-if="paddingIsAllowed" class="col col-4">
           <div class="margin-bottom-1">
             {{ $t('styleBoxForm.paddingLabel') }}
           </div>
-          <input
+          <FormInput
             v-model="values.padding"
+            size="large"
             type="number"
-            class="input"
-            :class="{
-              'input--error': error,
-            }"
+            :error="error"
             @blur="$v.values.padding.$touch()"
-          />
+          ></FormInput>
         </div>
       </div>
       <ColorInputGroup
@@ -95,11 +99,12 @@ export default {
      * field as the style fields are on the same line.
      */
     error() {
-      if (this.$v.values.padding.$error || this.$v.values.border_size.$error) {
-        return this.$t('error.minMaxValueField', { min: 0, max: 200 })
-      } else {
-        return ''
-      }
+      return this.$v.values.padding.$error || this.$v.values.border_size.$error
+      // if (this.$v.values.padding.$error || this.$v.values.border_size.$error) {
+      //   return this.$t('error.minMaxValueField', { min: 0, max: 200 })
+      // } else {
+      //   return false
+      // }
     },
   },
   methods: {
