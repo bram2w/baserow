@@ -55,6 +55,10 @@
   .control__elements--small {
     margin-bottom: 0;
   }
+
+  .control--horizontal.control--after-input .control__wrapper {
+    flex-basis: 100%;
+  }
 }
 
 .table-element-form__field-label .form-input__input-wrapper {

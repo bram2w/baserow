@@ -9,7 +9,6 @@
     <FormInput
       size="large"
       :value="value"
-      :error="hasErrors"
       :disabled="disabled"
       @input="$emit('input', $event)"
       @blur="$emit('blur')"

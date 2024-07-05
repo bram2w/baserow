@@ -23,21 +23,16 @@
       small-label
       :label="$t('tableElementForm.itemsPerPage')"
       required
-      :error="itemsPerPageHasError"
+      :error-message="errorMessageItemsPerPage"
     >
       <FormInput
         v-model="values.items_per_page"
         size="large"
         :placeholder="$t('tableElementForm.itemsPerPagePlaceholder')"
         :to-value="(value) => parseInt(value)"
-        :error="itemsPerPageHasError"
         type="number"
         @blur="$v.values.items_per_page.$touch()"
       />
-
-      <template #error>
-        {{ errorMessageItemsPerPage }}
-      </template>
     </FormGroup>
 
     <CustomStyle
@@ -54,12 +49,7 @@
       class="margin-bottom-2"
     />
 
-    <FormGroup
-      class="margin-bottom-2"
-      small-label
-      :label="$t('tableElementForm.fields')"
-      required
-    >
+    <FormSection class="margin-bottom-2" :title="$t('tableElementForm.fields')">
       <template v-if="values.data_source_id">
         <ButtonText
           type="primary"
@@ -112,26 +102,27 @@
               </div>
             </template>
             <template #default>
-              <FormGroup small-label horizontal required label="Name">
+              <FormGroup
+                small-label
+                horizontal
+                required
+                :label="$t('tableElementForm.name')"
+                :error-message="
+                  !$v.values.fields.$each[index].name.required
+                    ? $t('error.requiredField')
+                    : !$v.values.fields.$each[index].name.maxLength
+                    ? $t('error.maxLength', { max: 255 })
+                    : ''
+                "
+              >
                 <FormInput
                   v-model="field.name"
                   class="table-element-form__field-label"
-                  :error="
-                    !$v.values.fields.$each[index].name.required
-                      ? $t('error.requiredField')
-                      : !$v.values.fields.$each[index].name.maxLength
-                      ? $t('error.maxLength', { max: 255 })
-                      : false
-                  "
                 >
-                  <template v-if="values.fields.length > 1" #after-input>
-                    <ButtonIcon
-                      icon="iconoir-bin"
-                      @click="removeField(field)"
-                    />
-                    />
-                  </template>
                 </FormInput>
+                <template v-if="values.fields.length > 1" #after-input>
+                  <ButtonIcon icon="iconoir-bin" @click="removeField(field)" />
+                </template>
               </FormGroup>
 
               <FormGroup
@@ -176,7 +167,7 @@
         </ButtonText>
       </template>
       <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
-    </FormGroup>
+    </FormSection>
     <FormGroup :label="$t('tableElementForm.orientation')" small-label required>
       <DeviceSelector
         :device-type-selected="deviceTypeSelected"
@@ -274,10 +265,7 @@ export default {
         ? this.$t('error.minValueField', { min: 1 })
         : !this.$v.values.items_per_page.maxValue
         ? this.$t('error.maxValueField', { max: this.maxItemPerPage })
-        : false
-    },
-    itemsPerPageHasError() {
-      return this.errorMessageItemsPerPage !== false
+        : ''
     },
   },
   watch: {

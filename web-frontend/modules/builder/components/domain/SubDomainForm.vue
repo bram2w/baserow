@@ -4,17 +4,14 @@
       :label="$t('subDomainForm.domainNameLabel')"
       small-label
       required
-      :error="fieldHasErrors('domain_name')"
+      :error-message="errorMessage"
     >
       <FormInput
         v-model="domainPrefix"
-        size="large"
-        :error="fieldHasErrors('domain_name')"
         @input="serverErrors.domain_name = null"
       >
         <template #suffix> .{{ domain }} </template>
       </FormInput>
-      <template #error> {{ errorMessage }} </template>
     </FormGroup>
   </form>
 </template>
@@ -48,7 +45,7 @@ export default {
         : this.serverErrors.domain_name &&
           this.serverErrors.domain_name.code === 'unique'
         ? this.$t('domainForm.notUniqueDomain')
-        : false
+        : ''
     },
   },
   watch: {

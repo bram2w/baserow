@@ -63,6 +63,17 @@
       small-label
       required
       class="margin-bottom-2"
+      :error-message="
+        $v.values.rows.$dirty && !$v.values.rows.required
+          ? $t('error.requiredField')
+          : !$v.values.rows.integer
+          ? $t('error.integerField')
+          : !$v.values.rows.minValue
+          ? $t('error.minValueField', { min: 1 })
+          : !$v.values.rows.maxValue
+          ? $t('error.maxValueField', { max: 100 })
+          : ''
+      "
     >
       <FormInput
         v-model="values.rows"
@@ -71,17 +82,6 @@
         :label="$t('inputTextElementForm.rowsTitle')"
         :placeholder="$t('inputTextElementForm.rowsPlaceholder')"
         :to-value="(value) => parseInt(value)"
-        :error="
-          $v.values.rows.$dirty && !$v.values.rows.required
-            ? $t('error.requiredField')
-            : !$v.values.rows.integer
-            ? $t('error.integerField')
-            : !$v.values.rows.minValue
-            ? $t('error.minValueField', { min: 1 })
-            : !$v.values.rows.maxValue
-            ? $t('error.maxValueField', { max: 100 })
-            : false
-        "
       ></FormInput>
     </FormGroup>
 

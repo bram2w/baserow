@@ -39,6 +39,17 @@
       :label="$t('iframeElementForm.heightLabel')"
       small-label
       required
+      :error-message="
+        $v.values.height.$dirty && !$v.values.height.required
+          ? $t('error.requiredField')
+          : !$v.values.height.integer
+          ? $t('error.integerField')
+          : !$v.values.height.minValue
+          ? $t('error.minValueField', { min: 1 })
+          : !$v.values.height.maxValue
+          ? $t('error.maxValueField', { max: 2000 })
+          : ''
+      "
     >
       <FormInput
         v-model="values.height"
@@ -46,17 +57,6 @@
         type="number"
         :placeholder="$t('iframeElementForm.heightPlaceholder')"
         :to-value="(value) => parseInt(value)"
-        :error="
-          $v.values.height.$dirty && !$v.values.height.required
-            ? $t('error.requiredField')
-            : !$v.values.height.integer
-            ? $t('error.integerField')
-            : !$v.values.height.minValue
-            ? $t('error.minValueField', { min: 1 })
-            : !$v.values.height.maxValue
-            ? $t('error.maxValueField', { max: 2000 })
-            : false
-        "
       ></FormInput>
     </FormGroup>
   </form>

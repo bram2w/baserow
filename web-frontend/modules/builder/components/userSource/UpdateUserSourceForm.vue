@@ -5,19 +5,18 @@
         :label="$t('updateUserSourceForm.nameFieldLabel')"
         required
         small-label
-        :error="getError('name')"
+        :error-message="getError('name')"
       >
         <FormInput
           v-model="$v.values.name.$model"
           size="large"
           class="update-user-source-form__name-input"
           :placeholder="$t('updateUserSourceForm.nameFieldPlaceholder')"
-          :error="getError('name')"
         />
       </FormGroup>
       <FormGroup
         :label="$t('updateUserSourceForm.integrationFieldLabel')"
-        :error="getError('integration_id')"
+        :error-message="getError('integration_id')"
         required
         small-label
       >
@@ -183,7 +182,7 @@ export default {
     },
     getError(fieldName) {
       if (!this.$v.values[fieldName].$dirty) {
-        return false
+        return ''
       }
       const fieldState = this.$v.values[fieldName]
       if (!fieldState.required) {
@@ -192,7 +191,7 @@ export default {
       if (fieldName === 'name' && !fieldState.maxLength) {
         return this.$t('error.maxLength', { max: 255 })
       }
-      return false
+      return ''
     },
   },
   validations: {
