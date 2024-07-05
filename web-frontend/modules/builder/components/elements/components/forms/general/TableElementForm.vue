@@ -92,7 +92,7 @@
               ),
               handle: '[data-sortable-handle]',
             }"
-            class="table-element-form__field margin-bottom-2"
+            class="table-element-form__field"
           >
             <template #header="{ toggle, expanded }">
               <div
