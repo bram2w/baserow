@@ -124,7 +124,7 @@ export default {
     getStyleOverride(key, colorVariables = null) {
       return ThemeConfigBlockType.getAllStyles(
         this.themeConfigBlocks,
-        this.element.styles[key] || {},
+        this.element.styles?.[key] || {},
         colorVariables || this.colorVariables,
         this.builder.theme
       )

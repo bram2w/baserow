@@ -18,3 +18,9 @@ class VerticalAlignments(models.TextChoices):
 class WIDTHS(models.TextChoices):
     AUTO = "auto"
     FULL = "full"
+
+
+class BACKGROUND_IMAGE_MODES(models.TextChoices):
+    TILE = "tile"
+    FILL = "fill"
+    FIT = "fit"

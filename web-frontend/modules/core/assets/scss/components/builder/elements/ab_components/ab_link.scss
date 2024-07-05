@@ -3,6 +3,7 @@
   text-decoration: var(--link-text-decoration, underline);
   color: var(--link-text-color, $black);
   align-self: var(--link-text-alignment, flex-start);
+  font-family: var(--link-font-family, Inter);
 
   &:hover,
   &--force-hover {

@@ -7,6 +7,7 @@
       'control--horizontal-variable': horizontalVariable,
       'control--messages': hasMessages,
       'control--after-input': hasAfterInputSlot,
+      'control--error': hasError,
     }"
   >
     <label
@@ -42,7 +43,8 @@
           <slot v-if="hasHelperSlot" name="helper" />
         </p>
         <p v-if="hasError" class="control__messages--error">
-          <slot name="error" />
+          <slot v-if="hasErrorSlot" name="error" />
+          <template v-else-if="errorMessage">{{ errorMessage }}</template>
         </p>
         <p v-if="hasWarningSlot" class="control__messages--warning">
           <slot name="warning" />
@@ -63,6 +65,14 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    /**
+     * Shorthand when you don't need a specific error display.
+     */
+    errorMessage: {
+      type: String,
+      required: false,
+      default: '',
     },
     /**
      * The id of the form group.
@@ -123,7 +133,10 @@ export default {
   },
   computed: {
     hasError() {
-      return Boolean(this.error)
+      return Boolean(this.error) || Boolean(this.errorMessage)
+    },
+    hasErrorSlot() {
+      return !!this.$slots.error
     },
     hasLabelSlot() {
       return !!this.$slots.label

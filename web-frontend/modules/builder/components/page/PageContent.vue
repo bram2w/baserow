@@ -1,5 +1,5 @@
 <template>
-  <ThemeProvider>
+  <ThemeProvider class="page">
     <PageElement
       v-for="element in elements"
       :key="element.id"

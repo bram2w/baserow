@@ -7,6 +7,7 @@
     />
     <Context ref="context">
       <div v-auto-overflow-scroll class="custom-style__config-blocks">
+        <h2>{{ $t('customStyle.themeOverrides') }}</h2>
         <div
           v-for="(themeConfigBlock, index) in themeConfigBlocks"
           :key="themeConfigBlock.getType()"
@@ -20,7 +21,7 @@
           </h2>
           <ThemeConfigBlock
             :theme="theme"
-            :default-values="value[styleKey] || {}"
+            :default-values="value?.[styleKey]"
             :preview="false"
             :theme-config-block-type="themeConfigBlock"
             :class="{ 'margin-top-3': index >= 1 }"

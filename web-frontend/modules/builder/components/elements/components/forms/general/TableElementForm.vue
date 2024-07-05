@@ -1,12 +1,5 @@
 <template>
   <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
-    <CustomStyle
-      v-model="values.styles"
-      style-key="button"
-      :config-block-types="['button']"
-      :theme="builder.theme"
-      :element="values"
-    />
     <FormGroup
       class="margin-bottom-2"
       small-label
@@ -53,7 +46,6 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-
     <ApplicationBuilderFormulaInputGroup
       v-model="values.button_load_more_label"
       :label="$t('tableElementForm.buttonLoadMoreLabel')"

@@ -159,10 +159,6 @@
   "imageElement": {
     "emptyState": "No alt text defined..."
   },
-  "imageInput": {
-    "labelDescription": "Default description",
-    "labelButton": "Upload"
-  },
   "generalForm": {
     "labelTitle": "Label",
     "labelPlaceholder": "Enter a label (optional)",
@@ -300,7 +296,8 @@
     "color": "Color"
   },
   "widthTypes": {
-    "full": "Full width",
+    "fullBleed": "Full bleed",
+    "fullWidth": "Full width",
     "normal": "Normal",
     "medium": "Medium",
     "small": "Small"
@@ -364,14 +361,19 @@
     "boxRight": "Right",
     "backgroundLabel": "Background",
     "backgroundColor": "Background color",
-    "widthLabel": "Width"
+    "widthLabel": "Width",
+    "backgroundImage": "Image",
+    "backgroundImageMode": "Fill mode"
   },
   "styleBoxForm": {
-    "borderLabel": "Border",
-    "paddingLabel": "Padding"
+    "borderColor": "Border color",
+    "borderLabel": "Size",
+    "paddingLabel": "Padding",
+    "marginLabel": "Margin"
   },
   "themeConfigBlockType": {
     "color": "Colors",
+    "page": "Page",
     "typography": "Typography",
     "button": "Button",
     "link": "Link",
@@ -380,12 +382,23 @@
   "colorThemeConfigBlock": {
     "primaryColor": "Primary",
     "secondaryColor": "Secondary",
-    "borderColor": "Border"
+    "borderColor": "Border",
+    "successColor": "Success",
+    "warningColor": "Warning",
+    "errorColor": "Error"
+  },
+  "pageThemeConfigBlock": {
+    "backgroundColor": "Background color",
+    "backgroundImage": "Background image",
+    "backgroundMode": "Background mode"
   },
   "colorThemeConfigBlockType": {
     "primary": "Primary",
     "secondary": "Secondary",
-    "border": "Border"
+    "border": "Border",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
   },
   "typographyThemeConfigBlock": {
     "headingLabel": "Heading {i} (h{i})",
@@ -393,7 +406,8 @@
     "color": "Color",
     "size": "Size",
     "textAlignment": "Alignment",
-    "bodyLabel": "Body"
+    "bodyLabel": "Body",
+    "fontFamily": "Font"
   },
   "buttonThemeConfigBlock": {
     "backgroundColor": "Background color",
@@ -402,14 +416,22 @@
     "hoverState": "Hover state",
     "textAlignment": "Text alignment",
     "alignment": "Alignment",
-    "width": "Width"
+    "width": "Width",
+    "textColor": "Text color",
+    "borderColor": "Border color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Font size"
   },
   "linkThemeConfigBlock": {
     "color": "Color",
     "link": "Link",
     "defaultState": "Default state",
     "hoverState": "Hover state",
-    "alignment": "Alignment"
+    "alignment": "Alignment",
+    "fontFamily": "Font"
   },
   "imageThemeConfigBlock": {
     "alignment": "Alignment",
@@ -644,5 +666,13 @@
   },
   "resetButton": {
     "reset": "Reset to default theme value"
+  },
+  "backgroundModes": {
+    "fill": "Fill",
+    "tile": "Tile",
+    "fit": "Fit"
+  },
+  "customStyle": {
+    "themeOverrides": "Theme overrides"
   }
 }

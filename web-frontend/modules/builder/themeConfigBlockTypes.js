@@ -4,10 +4,12 @@ import TypographyThemeConfigBlock from '@baserow/modules/builder/components/them
 import ButtonThemeConfigBlock from '@baserow/modules/builder/components/theme/ButtonThemeConfigBlock'
 import LinkThemeConfigBlock from '@baserow/modules/builder/components/theme/LinkThemeConfigBlock'
 import ImageThemeConfigBlock from '@baserow/modules/builder/components/theme/ImageThemeConfigBlock'
+import PageThemeConfigBlock from '@baserow/modules/builder/components/theme/PageThemeConfigBlock'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import {
   WIDTHS_NEW,
   HORIZONTAL_ALIGNMENTS,
+  BACKGROUND_MODES,
 } from '@baserow/modules/builder/enums'
 import get from 'lodash/get'
 
@@ -118,11 +120,7 @@ export class ColorThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
-    style.addIfExists(theme, 'primary_color', '--primary-color')
-    style.addIfExists(theme, 'secondary_color', '--secondary-color')
-    style.addIfExists(theme, 'border_color', '--border-color')
-    return style.toObject()
+    return {}
   }
 
   getColorVariables(theme) {
@@ -142,6 +140,21 @@ export class ColorThemeConfigBlockType extends ThemeConfigBlockType {
         name: i18n.t('colorThemeConfigBlockType.border'),
         value: 'border',
         color: theme.border_color,
+      },
+      {
+        name: i18n.t('colorThemeConfigBlockType.success'),
+        value: 'success',
+        color: theme.main_success_color,
+      },
+      {
+        name: i18n.t('colorThemeConfigBlockType.warning'),
+        value: 'warning',
+        color: theme.main_warning_color,
+      },
+      {
+        name: i18n.t('colorThemeConfigBlockType.error'),
+        value: 'error',
+        color: theme.main_error_color,
       },
     ]
   }
@@ -185,6 +198,15 @@ export class TypographyThemeConfigBlockType extends ThemeConfigBlockType {
         `--heading-h${level}-text-alignment`,
         (v) => v
       )
+      style.addIfExists(
+        theme,
+        `heading_${level}_font_family`,
+        `--heading-h${level}-font-family`,
+        (v) => {
+          const fontFamilyType = this.app.$registry.get('fontFamily', v)
+          return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+        }
+      )
     })
     style.addIfExists(
       theme,
@@ -201,6 +223,10 @@ export class TypographyThemeConfigBlockType extends ThemeConfigBlockType {
       `--body-text-alignment`,
       (v) => v
     )
+    style.addIfExists(theme, `body_font_family`, `--body-font-family`, (v) => {
+      const fontFamilyType = this.app.$registry.get('fontFamily', v)
+      return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+    })
     return style.toObject()
   }
 
@@ -233,7 +259,28 @@ export class ButtonThemeConfigBlockType extends ThemeConfigBlockType {
     style.addIfExists(
       theme,
       'button_hover_background_color',
-      '--hover-button-background-color',
+      '--button-hover-background-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(theme, 'button_text_color', '--button-text-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'button_hover_text_color',
+      '--button-hover-text-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'button_border_color',
+      '--button-border-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'button_hover_border_color',
+      '--button-hover-border-color',
       (v) => resolveColor(v, colorVariables)
     )
     style.addIfExists(theme, 'button_width', '--button-width', (v) =>
@@ -255,6 +302,51 @@ export class ButtonThemeConfigBlockType extends ThemeConfigBlockType {
           [HORIZONTAL_ALIGNMENTS.CENTER]: 'center',
           [HORIZONTAL_ALIGNMENTS.RIGHT]: 'flex-end',
         }[v])
+    )
+    style.addIfExists(
+      theme,
+      'button_font_alignment',
+      '--button-text-alignment',
+      (v) => v
+    )
+    style.addIfExists(
+      theme,
+      `button_font_family`,
+      `--button-font-family`,
+      (v) => {
+        const fontFamilyType = this.app.$registry.get('fontFamily', v)
+        return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+      }
+    )
+    style.addIfExists(
+      theme,
+      `button_font_size`,
+      `--button-font-size`,
+      (v) => `${Math.min(100, v)}px`
+    )
+    style.addIfExists(
+      theme,
+      `button_border_radius`,
+      `--button-border-radius`,
+      (v) => `${v}px`
+    )
+    style.addIfExists(
+      theme,
+      `button_border_size`,
+      `--button-border-size`,
+      (v) => `${v}px`
+    )
+    style.addIfExists(
+      theme,
+      `button_horizontal_padding`,
+      `--button-horizontal-padding`,
+      (v) => `${v}px`
+    )
+    style.addIfExists(
+      theme,
+      `button_vertical_padding`,
+      `--button-vertical-padding`,
+      (v) => `${v}px`
     )
     return style.toObject()
   }
@@ -299,6 +391,10 @@ export class LinkThemeConfigBlockType extends ThemeConfigBlockType {
           [HORIZONTAL_ALIGNMENTS.RIGHT]: 'flex-end',
         }[v])
     )
+    style.addIfExists(theme, `link_font_family`, `--link-font-family`, (v) => {
+      const fontFamilyType = this.app.$registry.get('fontFamily', v)
+      return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+    })
     return style.toObject()
   }
 
@@ -350,31 +446,40 @@ export class ImageThemeConfigBlockType extends ThemeConfigBlockType {
       baseTheme?.image_constraint
     )
 
-    style.style['--image-wrapper-width'] = `${imageMaxWidth}%`
-    style.style['--image-wrapper-max-width'] = `${imageMaxWidth}%`
-
-    if (imageMaxHeight) {
-      style.style['--image-max-width'] = 'auto'
-      style.style['--image-wrapper-max-height'] = `${imageMaxHeight}px`
+    if (Object.prototype.hasOwnProperty.call(theme, 'image_max_width')) {
+      style.style['--image-wrapper-width'] = `${imageMaxWidth}%`
+      style.style['--image-wrapper-max-width'] = `${imageMaxWidth}%`
     }
 
-    switch (imageConstraint) {
-      case 'cover':
-        style.style['--image-wrapper-width'] = '100%'
-        style.style['--image-object-fit'] = 'cover'
-        style.style['--image-width'] = '100%'
-        style.style['--image-height'] = '100%'
-        break
-      case 'contain':
-        style.style['--image-object-fit'] = 'contain'
-        style.style['--image-max-width'] = '100%'
-        break
-      case 'full-width':
-        style.style['--image-object-fit'] = 'fill'
-        style.style['--image-width'] = '100%'
-        style.style['--image-height'] = '100%'
-        style.style['--image-max-width'] = 'none'
-        break
+    if (Object.prototype.hasOwnProperty.call(theme, 'image_max_height')) {
+      if (imageMaxHeight) {
+        style.style['--image-max-width'] = 'auto'
+        style.style['--image-wrapper-max-height'] = `${imageMaxHeight}px`
+      } else {
+        style.style['--image-max-width'] = 'auto'
+        style.style['--image-wrapper-max-height'] = 'auto'
+      }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(theme, 'image_constraint')) {
+      switch (imageConstraint) {
+        case 'cover':
+          style.style['--image-wrapper-width'] = '100%'
+          style.style['--image-object-fit'] = 'cover'
+          style.style['--image-width'] = '100%'
+          style.style['--image-height'] = '100%'
+          break
+        case 'contain':
+          style.style['--image-object-fit'] = 'contain'
+          style.style['--image-max-width'] = '100%'
+          break
+        case 'full-width':
+          style.style['--image-object-fit'] = 'fill'
+          style.style['--image-width'] = '100%'
+          style.style['--image-height'] = '100%'
+          style.style['--image-max-width'] = 'none'
+          break
+      }
     }
 
     return style.toObject()
@@ -386,5 +491,52 @@ export class ImageThemeConfigBlockType extends ThemeConfigBlockType {
 
   getOrder() {
     return 60
+  }
+}
+
+export class PageThemeConfigBlockType extends ThemeConfigBlockType {
+  static getType() {
+    return 'page'
+  }
+
+  get label() {
+    return this.app.i18n.t('themeConfigBlockType.page')
+  }
+
+  getCSS(theme, colorVariables, baseTheme = null) {
+    const style = new ThemeStyle()
+    style.addIfExists(
+      theme,
+      'page_background_color',
+      '--page-background-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'page_background_file',
+      '--page-background-image',
+      (v) => (v ? `url(${v.url})` : 'none')
+    )
+    if (theme.page_background_mode === BACKGROUND_MODES.FILL) {
+      style.style['--page-background-size'] = 'cover'
+      style.style['--page-background-repeat'] = 'no-repeat'
+    }
+    if (theme.page_background_mode === BACKGROUND_MODES.TILE) {
+      style.style['--page-background-size'] = 'auto'
+      style.style['--page-background-repeat'] = 'repeat'
+    }
+    if (theme.page_background_mode === BACKGROUND_MODES.FIT) {
+      style.style['--page-background-size'] = 'contain'
+      style.style['--page-background-repeat'] = 'no-repeat'
+    }
+    return style.toObject()
+  }
+
+  get component() {
+    return PageThemeConfigBlock
+  }
+
+  getOrder() {
+    return 15
   }
 }

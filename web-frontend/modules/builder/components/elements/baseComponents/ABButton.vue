@@ -9,7 +9,7 @@
     }"
     @click="onClick"
   >
-    <slot></slot>
+    <span><slot></slot></span>
   </button>
 </template>
 

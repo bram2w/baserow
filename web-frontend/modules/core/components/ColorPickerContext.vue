@@ -2,6 +2,7 @@
   <Context class="color-picker-context">
     <ColorPicker
       :value="hexColorIncludingAlpha"
+      :allow-opacity="allowOpacity"
       @input="setColorFromPicker($event)"
     ></ColorPicker>
     <div class="color-picker-context__color">
@@ -9,21 +10,18 @@
         v-model="type"
         class="dropdown--floating color-picker-context__color-type"
         :show-search="false"
+        small
       >
         <DropdownItem name="Hex" :value="COLOR_NOTATIONS.HEX"></DropdownItem>
         <DropdownItem name="RGB" :value="COLOR_NOTATIONS.RGB"></DropdownItem>
       </Dropdown>
       <div v-if="type === 'hex'" class="color-picker-context__color-hex">
-        <FormInput
-          size="large"
-          :value="hexColorExcludingAlpha"
-          @input="hexChanged"
-        />
+        <FormInput small :value="hexColorExcludingAlpha" @input="hexChanged" />
       </div>
       <div v-if="type === 'rgb'" class="color-picker-context__color-rgb">
         <FormInput
           type="number"
-          size="large"
+          small
           :min="0"
           :max="255"
           :value="r"
@@ -32,7 +30,7 @@
         />
         <FormInput
           type="number"
-          size="large"
+          small
           :min="0"
           :max="255"
           :value="g"
@@ -41,7 +39,7 @@
         />
         <FormInput
           type="number"
-          size="large"
+          small
           :min="0"
           :max="255"
           :value="b"
@@ -49,17 +47,18 @@
           @input="rgbaChanged($event, 'b')"
         />
       </div>
-      <div class="color-picker-context__color-opacity">
+      <div class="flex-grow-1" />
+      <div v-if="allowOpacity" class="color-picker-context__color-opacity">
         <FormInput
           type="number"
-          size="large"
+          small
           :min="0"
           :max="100"
           :value="a"
-          remove-number-input-controls
           icon-right="iconoir-percentage"
+          remove-number-input-controls
           @input="rgbaChanged($event, 'a')"
-        ></FormInput>
+        />
       </div>
     </div>
     <div
@@ -120,6 +119,11 @@ export default {
       type: Array,
       required: false,
       default: () => [],
+    },
+    allowOpacity: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {
@@ -182,7 +186,12 @@ export default {
       this.r = rgba.r * 255
       this.g = rgba.g * 255
       this.b = rgba.b * 255
-      this.a = Math.round(rgba.a * 100)
+
+      if (this.allowOpacity) {
+        this.a = Math.round(rgba.a * 100)
+      } else {
+        this.a = 100
+      }
 
       this.hexColorIncludingAlpha = convertRgbToHex(rgba)
 

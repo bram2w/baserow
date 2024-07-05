@@ -38,17 +38,23 @@ export default {
   },
   methods: {
     /**
-     * Returns all the provided default values, but if the allowedValues are set
-     * an object only containing those values is returned. This could be useful
-     * when the defaultValues also contain other values which must not be used
-     * when submitting.
+     * Returns whether a key of the given defaultValue should be handled by this
+     * form component. This is useful when the defaultValues also contain other
+     * values which must not be used when submitting. By default this implementation
+     * is filtered by the list of `allowedValues`.
+     */
+    isAllowedKey(key) {
+      if (this.allowedValues !== null) {
+        return this.allowedValues.includes(key)
+      }
+      return true
+    },
+    /**
+     * Returns all the provided default values filtered by the `isAllowedKey` method.
      */
     getDefaultValues() {
-      if (this.allowedValues === null) {
-        return clone(this.defaultValues)
-      }
       return Object.keys(this.defaultValues).reduce((result, key) => {
-        if (this.allowedValues.includes(key)) {
+        if (this.isAllowedKey(key)) {
           let value = this.defaultValues[key]
 
           // If the value is an array or object, it could be that it contains

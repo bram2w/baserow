@@ -4,6 +4,7 @@
       ref="colorPicker"
       :value="value"
       :variables="localColorVariables"
+      :allow-opacity="allowOpacity"
       @input="$emit('input', $event)"
     />
     <div
@@ -15,7 +16,7 @@
       <span
         class="color-input__preview"
         :style="{
-          'background-color': actualValue,
+          '--selected-color': actualValue,
         }"
       />
       <span>{{ displayValue }}</span>
@@ -50,6 +51,11 @@ export default {
       type: String,
       required: false,
       default: null,
+    },
+    allowOpacity: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   computed: {

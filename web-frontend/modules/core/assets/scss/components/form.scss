@@ -17,6 +17,11 @@
       align-items: start;
     }
   }
+
+  &.control--error .form-input__input,
+  &.control--error .form-input__icon {
+    color: $palette-red-600;
+  }
 }
 
 .control__elements--flex {
@@ -179,4 +184,27 @@
   color: $palette-yellow-600;
 
   @include flex-align-items(3px);
+}
+
+.form-section {
+  border-bottom: 1px solid $color-neutral-200;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+
+  // If we have an horizontal FormGroup
+  // these labels should be grayer for better effect.
+  & .control--horizontal .control__label {
+    color: $color-neutral-700;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border: none;
+  }
+}
+
+.form-section__title {
+  font-size: 13px;
+  font-weight: 500;
 }

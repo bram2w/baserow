@@ -13,25 +13,25 @@ import _ from 'lodash'
 export default {
   inject: ['builder'],
   props: {
-    theme: { type: Object, required: false, default: null },
-    property: { type: String, required: true },
-    value: { type: Object, required: true },
+    value: { required: true, validator: (v) => true },
+    defaultValue: {
+      required: false,
+      validator: (v) => true,
+      default: undefined,
+    },
   },
   data() {
     return {}
   },
   methods: {
     propertyModified() {
-      if (!this.theme) {
-        return false
-      }
-      return !_.isEqual(this.value[this.property], this.theme[this.property])
+      return (
+        this.defaultValue !== undefined &&
+        !_.isEqual(this.value, this.defaultValue)
+      )
     },
     resetProperty() {
-      this.$emit('input', {
-        ...this.value,
-        [this.property]: this.theme[this.property],
-      })
+      this.$emit('input', this.defaultValue)
     },
   },
 }

@@ -1,8 +1,12 @@
+from baserow.core.user_files.handler import UserFileHandler
+
 from .models import (
     ButtonThemeConfigBlock,
     ColorThemeConfigBlock,
     ImageThemeConfigBlock,
     LinkThemeConfigBlock,
+    PageThemeConfigBlock,
+    ThemeConfigBlock,
     TypographyThemeConfigBlock,
 )
 from .registries import ThemeConfigBlockType
@@ -11,67 +15,11 @@ from .registries import ThemeConfigBlockType
 class ColorThemeConfigBlockType(ThemeConfigBlockType):
     type = "color"
     model_class = ColorThemeConfigBlock
-    allowed_fields = [
-        "primary_color",
-        "secondary_color",
-        "border_color",
-    ]
-    serializer_field_names = [
-        "primary_color",
-        "secondary_color",
-        "border_color",
-    ]
 
 
 class TypographyThemeConfigBlockType(ThemeConfigBlockType):
     type = "typography"
     model_class = TypographyThemeConfigBlock
-    allowed_fields = [
-        "body_font_size",
-        "body_text_color",
-        "body_text_alignment",
-        "heading_1_font_size",
-        "heading_1_text_color",
-        "heading_1_text_alignment",
-        "heading_2_font_size",
-        "heading_2_text_color",
-        "heading_2_text_alignment",
-        "heading_3_font_size",
-        "heading_3_text_color",
-        "heading_3_text_alignment",
-        "heading_4_font_size",
-        "heading_4_text_color",
-        "heading_4_text_alignment",
-        "heading_5_font_size",
-        "heading_5_text_color",
-        "heading_5_text_alignment",
-        "heading_6_font_size",
-        "heading_6_text_color",
-        "heading_6_text_alignment",
-    ]
-    serializer_field_names = [
-        "body_font_size",
-        "body_text_color",
-        "body_text_alignment",
-        "heading_1_font_size",
-        "heading_1_text_color",
-        "heading_1_text_alignment",
-        "heading_2_font_size",
-        "heading_2_text_color",
-        "heading_2_text_alignment",
-        "heading_3_font_size",
-        "heading_3_text_color",
-        "heading_3_text_alignment",
-        "heading_4_font_size",
-        "heading_4_text_color",
-        "heading_4_text_alignment",
-        "heading_5_font_size",
-        "heading_5_text_color",
-        "heading_5_text_alignment",
-        "heading_6_font_size",
-        "heading_6_text_color",
-        "heading_6_text_alignment",
-    ]
 
     def import_serialized(self, parent, serialized_values, id_mapping):
         # Translate from old color property names to new names for compat with templates
@@ -87,49 +35,91 @@ class TypographyThemeConfigBlockType(ThemeConfigBlockType):
 class ButtonThemeConfigBlockType(ThemeConfigBlockType):
     type = "button"
     model_class = ButtonThemeConfigBlock
-    allowed_fields = [
-        "button_background_color",
-        "button_hover_background_color",
-        "button_text_alignment",
-        "button_alignment",
-        "button_width",
-    ]
-    serializer_field_names = [
-        "button_background_color",
-        "button_hover_background_color",
-        "button_text_alignment",
-        "button_alignment",
-        "button_width",
-    ]
 
 
 class LinkThemeConfigBlockType(ThemeConfigBlockType):
     type = "link"
     model_class = LinkThemeConfigBlock
-    allowed_fields = [
-        "link_text_alignment",
-        "link_text_color",
-        "link_hover_text_color",
-    ]
-    serializer_field_names = [
-        "link_text_alignment",
-        "link_text_color",
-        "link_hover_text_color",
-    ]
 
 
 class ImageThemeConfigBlockType(ThemeConfigBlockType):
     type = "image"
     model_class = ImageThemeConfigBlock
-    allowed_fields = [
-        "image_alignment",
-        "image_max_width",
-        "image_max_height",
-        "image_constraint",
-    ]
-    serializer_field_names = [
-        "image_alignment",
-        "image_max_width",
-        "image_max_height",
-        "image_constraint",
-    ]
+
+
+class PageThemeConfigBlockType(ThemeConfigBlockType):
+    type = "page"
+    model_class = PageThemeConfigBlock
+
+    def get_property_names(self):
+        """
+        Let's replace the page_background_file property with page_background_file_id.
+        """
+
+        return [
+            n if n != "page_background_file" else "page_background_file_id"
+            for n in super().get_property_names()
+        ]
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.api.user_files.serializers import UserFileField
+        from baserow.contrib.builder.api.validators import image_file_validation
+
+        return {
+            "page_background_file": UserFileField(
+                allow_null=True,
+                required=False,
+                help_text="The image file",
+                validators=[image_file_validation],
+            ),
+        }
+
+    def serialize_property(
+        self,
+        theme_config_block: ThemeConfigBlock,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "page_background_file_id":
+            return UserFileHandler().export_user_file(
+                theme_config_block.page_background_file,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
+            )
+
+        return super().serialize_property(
+            theme_config_block,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value,
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        if prop_name == "page_background_file_id":
+            user_file = UserFileHandler().import_user_file(
+                value, files_zip=files_zip, storage=storage
+            )
+            if user_file:
+                return user_file.id
+            return None
+
+        return value

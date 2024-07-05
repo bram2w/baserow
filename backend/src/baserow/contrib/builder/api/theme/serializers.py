@@ -5,6 +5,49 @@ from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.theme.registries import theme_config_block_registry
 
 
+class DynamicConfigBlockSerializer(serializers.Serializer):
+    """
+    Style overrides for this element.
+    """
+
+    def __init__(
+        self,
+        *args,
+        property_name=None,
+        theme_config_block_type_name=None,
+        serializer_kwargs=None,
+        **kwargs,
+    ):
+        if property_name is None:
+            raise ValueError("Missing property_name parameter")
+        if theme_config_block_type_name is None:
+            raise ValueError("Missing theme_block_type parameter")
+
+        super().__init__(*args, **kwargs)
+
+        if serializer_kwargs is None:
+            serializer_kwargs = {}
+
+        if not isinstance(property_name, list):
+            property_name = [property_name]
+
+        if not isinstance(theme_config_block_type_name, list):
+            theme_config_block_type_name = [theme_config_block_type_name]
+
+        for prop, type_name in zip(property_name, theme_config_block_type_name):
+            theme_config_block_type = theme_config_block_registry.get(type_name)
+            self.fields[prop] = theme_config_block_type.get_serializer_class()(
+                **({"help_text": f"Styles overrides for {prop}"} | serializer_kwargs)
+            )
+
+        # Dynamically create the Meta class with ref name to prevent collision
+        class DynamicMeta:
+            type_names = "".join([p.capitalize() for p in theme_config_block_type_name])
+            ref_name = f"{type_names}ConfigBlockSerializer"
+
+        self.Meta = DynamicMeta
+
+
 def serialize_builder_theme(builder: Builder) -> dict:
     """
     A helper function that serializes all theme properties of the provided builder.
@@ -35,7 +78,7 @@ def get_combined_theme_config_blocks_serializer_class() -> serializers.Serialize
     :return: The generated serializer.
     """
 
-    if hasattr(get_combined_theme_config_blocks_serializer_class, "cache"):
+    if hasattr(get_combined_theme_config_blocks_serializer_class, "cached_class"):
         return get_combined_theme_config_blocks_serializer_class.cached_class
 
     if len(theme_config_block_registry.registry.values()) == 0:

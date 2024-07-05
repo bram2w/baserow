@@ -19,6 +19,7 @@
       style-key="typography"
       :config-block-types="['typography']"
       :theme="builder.theme"
+      :extra-args="{ onlyBody: values.format === TEXT_FORMAT_TYPES.PLAIN }"
     />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
