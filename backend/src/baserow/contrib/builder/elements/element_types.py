@@ -161,6 +161,12 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
@@ -183,6 +189,12 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
                     "reset_initial_values_post_submission"
                 ).help_text,
                 required=False,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -232,12 +244,25 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
+
         return {
             **super().serializer_field_overrides,
             "orientation": serializers.JSONField(
                 allow_null=False,
                 default=get_default_table_orientation,
                 help_text=TableElement._meta.get_field("orientation").help_text,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -276,6 +301,25 @@ class RepeatElementType(
         orientation: str
         items_per_row: dict
 
+    @property
+    def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
+
+        return {
+            **super().serializer_field_overrides,
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
+            ),
+        }
+
     def import_context_addition(self, instance, id_mapping):
         return {"data_source_id": instance.data_source_id}
 
@@ -305,6 +349,12 @@ class HeadingElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            TypographyThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -325,6 +375,12 @@ class HeadingElementType(ElementType):
                 required=False,
                 allow_blank=True,
                 help_text="Heading font color.",
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="typography",
+                theme_config_block_type_name=TypographyThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -379,6 +435,12 @@ class TextElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            TypographyThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
@@ -392,6 +454,12 @@ class TextElementType(ElementType):
                 choices=TextElement.TEXT_FORMATS.choices,
                 default=TextElement.TEXT_FORMATS.PLAIN,
                 help_text=TextElement._meta.get_field("format").help_text,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="typography",
+                theme_config_block_type_name=TypographyThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -636,6 +704,13 @@ class LinkElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+            LinkThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = (
@@ -669,8 +744,18 @@ class LinkElementType(ElementType):
                     default="primary",
                     help_text="Button color.",
                 ),
+                "styles": DynamicConfigBlockSerializer(
+                    required=False,
+                    property_name=["button", "link"],
+                    theme_config_block_type_name=[
+                        ButtonThemeConfigBlockType.type,
+                        LinkThemeConfigBlockType.type,
+                    ],
+                    serializer_kwargs={"required": False},
+                ),
             }
         )
+
         return overrides
 
     def get_pytest_params(self, pytest_data_fixture):
@@ -753,6 +838,12 @@ class ImageElementType(ElementType):
     @property
     def serializer_field_overrides(self):
         from baserow.api.user_files.serializers import UserFileSerializer
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ImageThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -769,6 +860,12 @@ class ImageElementType(ElementType):
                 allow_blank=True,
                 default="",
             ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="image",
+                theme_config_block_type_name=ImageThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
+            ),
         }
 
         overrides.update(super().serializer_field_overrides)
@@ -777,7 +874,13 @@ class ImageElementType(ElementType):
     @property
     def request_serializer_field_overrides(self):
         from baserow.api.user_files.serializers import UserFileField
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
         from baserow.contrib.builder.api.validators import image_file_validation
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ImageThemeConfigBlockType,
+        )
 
         overrides = {
             "image_file": UserFileField(
@@ -797,6 +900,12 @@ class ImageElementType(ElementType):
                 allow_null=ImageElement._meta.get_field("style_max_width").null,
                 default=ImageElement._meta.get_field("style_max_width").default,
                 help_text=ImageElement._meta.get_field("style_max_width").help_text,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="image",
+                theme_config_block_type_name=ImageThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
         if super().request_serializer_field_overrides is not None:
@@ -1014,6 +1123,12 @@ class ButtonElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -1038,6 +1153,12 @@ class ButtonElementType(ElementType):
                 required=False,
                 default="primary",
                 help_text="Button color.",
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 

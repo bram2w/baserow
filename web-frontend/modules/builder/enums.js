@@ -72,15 +72,22 @@ export const WIDTHS_NEW = {
 }
 
 export const BACKGROUND_TYPES = {
-  NONE: { value: 'none', name: 'backgroundTypes.none' },
-  COLOR: { value: 'color', name: 'backgroundTypes.color' },
+  NONE: 'none',
+  COLOR: 'color',
+}
+
+export const BACKGROUND_MODES = {
+  FILL: 'fill',
+  TILE: 'tile',
+  FIT: 'fit',
 }
 
 export const WIDTH_TYPES = {
-  FULL: { value: 'full', name: 'widthTypes.full' },
-  NORMAL: { value: 'normal', name: 'widthTypes.normal' },
-  MEDIUM: { value: 'medium', name: 'widthTypes.medium' },
   SMALL: { value: 'small', name: 'widthTypes.small' },
+  MEDIUM: { value: 'medium', name: 'widthTypes.medium' },
+  NORMAL: { value: 'normal', name: 'widthTypes.normal' },
+  FULL: { value: 'full', name: 'widthTypes.fullBleed' },
+  FULL_WIDTH: { value: 'full-width', name: 'widthTypes.fullWidth' },
 }
 
 /**

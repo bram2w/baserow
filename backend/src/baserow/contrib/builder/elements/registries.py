@@ -18,6 +18,7 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.handler import UserSourceHandler
 
@@ -233,6 +234,14 @@ class ElementType(
         if prop_name == "order":
             return str(element.order)
 
+        if prop_name == "style_background_file_id":
+            return UserFileHandler().export_user_file(
+                element.style_background_file,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
+            )
+
         return super().serialize_property(
             element, prop_name, files_zip=files_zip, storage=storage, cache=cache
         )
@@ -267,6 +276,14 @@ class ElementType(
                 value,
                 value,
             )
+
+        if prop_name == "style_background_file_id":
+            user_file = UserFileHandler().import_user_file(
+                value, files_zip=files_zip, storage=storage
+            )
+            if user_file:
+                return user_file.id
+            return None
 
         return value
 

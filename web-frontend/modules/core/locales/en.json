@@ -711,5 +711,9 @@
   },
   "colorInput": {
     "default": "Default"
+  },
+  "imageInput": {
+    "labelDescription": "Select an image to upload...",
+    "labelButton": "Upload"
   }
 }

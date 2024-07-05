@@ -62,6 +62,7 @@ export default {
     },
     getBoxStyleValue(pos) {
       return {
+        margin: this.defaultValues[`style_margin_${pos}`],
         padding: this.defaultValues[`style_padding_${pos}`],
         border_color: this.defaultValues[`style_border_${pos}_color`],
         border_size: this.defaultValues[`style_border_${pos}_size`],
@@ -69,6 +70,7 @@ export default {
     },
     setBoxStyleValue(pos, newValue) {
       if (newValue.padding !== undefined) {
+        this.values[`style_margin_${pos}`] = newValue.margin
         this.values[`style_padding_${pos}`] = newValue.padding
         this.values[`style_border_${pos}_color`] = newValue.border_color
         this.values[`style_border_${pos}_size`] = newValue.border_size
@@ -104,7 +106,8 @@ export default {
     },
     getValuesFromElement(allowedValues) {
       return allowedValues.reduce((obj, value) => {
-        obj[value] = this.element[value] || null
+        obj[value] =
+          this.element[value] === undefined ? null : this.element[value]
         return obj
       }, {})
     },

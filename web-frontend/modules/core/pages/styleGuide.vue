@@ -612,7 +612,7 @@
             </template>
           </Alert>
 
-          <Alert type="error" close-button>
+          <Alert type="danger" close-button>
             <template #title>Alert title</template>
             <template #actions>
               <button
@@ -1375,7 +1375,7 @@
             toggle error toast
           </Button>
           <Button
-            type="warning"
+            type="danger"
             @click="
               $store.dispatch('toast/warning', {
                 title: 'Custom warning toast',
@@ -1957,6 +1957,11 @@
           {{ color }} - {{ resolveColor(color, colorVariables) }} <br /><br />
           <br />
           <ColorInput v-model="color" :color-variables="colorVariables" />
+          <ColorInput
+            v-model="color"
+            :color-variables="colorVariables"
+            :allow-opacity="false"
+          />
         </div>
 
         <div class="margin-bottom-3">

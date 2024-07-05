@@ -56,7 +56,9 @@ class ThemeView(APIView):
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         }
     )
-    @validate_body(CombinedThemeConfigBlocksSerializer, return_validated=True)
+    @validate_body(
+        CombinedThemeConfigBlocksSerializer, return_validated=True, partial=True
+    )
     def patch(self, request, data: Dict, builder_id: int):
         builder = BuilderHandler().get_builder(builder_id)
 

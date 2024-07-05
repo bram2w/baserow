@@ -1,11 +1,18 @@
 .element__wrapper {
-  background-color: var(--background-color, $black);
-  border-top: var(--border-top, none);
-  border-bottom: var(--border-bottom, none);
-  border-left: var(--border-left, none);
-  border-right: var(--border-right, none);
+  background-color: var(--element-background-color, transparent);
+  background-image: var(--element-background-image, none);
+  background-size: var(--element-background-size, cover);
+  background-repeat: var(--element-background-repeat, no-repeat);
   margin: 0 auto;
   max-width: $builder-page-max-width;
+
+  // We use padding here as margin to prevent margin collapsing
+  padding: var(--element-margin-top, 0) var(--element-margin-right, 0)
+    var(--element-margin-bottom, 0) var(--element-margin-left, 0);
+
+  &--full-bleed {
+    max-width: 100%;
+  }
 
   &--full-width {
     max-width: 100%;
@@ -21,21 +28,17 @@
 }
 
 .element__inner-wrapper {
-  padding: var(--padding-top, 0) var(--padding-right, 0)
-    var(--padding-bottom, 0) var(--padding-left, 0);
+  border-top: var(--element-border-top, none);
+  border-bottom: var(--element-border-bottom, none);
+  border-left: var(--element-border-left, none);
+  border-right: var(--element-border-right, none);
+  padding: var(--element-padding-top, 0) var(--element-padding-right, 0)
+    var(--element-padding-bottom, 0) var(--element-padding-left, 0);
   margin: 0 auto;
   max-width: $builder-page-max-width;
 
-  &--full-width {
+  .element__wrapper--full-width & {
     max-width: 100%;
-  }
-
-  &--medium-width {
-    max-width: 960px;
-  }
-
-  &--small-width {
-    max-width: 680px;
   }
 }
 

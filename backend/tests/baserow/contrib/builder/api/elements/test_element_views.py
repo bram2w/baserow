@@ -225,6 +225,25 @@ def test_update_element(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_element_styles(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": element1.id})
+    response = api_client.patch(
+        url,
+        {"styles": {"typography": {"heading_1_text_color": "#CCCCCCCC"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["styles"] == {
+        "typography": {"heading_1_text_color": "#CCCCCCCC"}
+    }
+
+
+@pytest.mark.django_db
 def test_update_element_bad_request(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
@@ -254,6 +273,35 @@ def test_update_element_does_not_exist(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_ELEMENT_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_update_element_bad_style_property(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": element1.id})
+
+    # Bad root property
+    response = api_client.patch(
+        url,
+        {"styles": {"typpography": {"heading_1_text_color": "#CCCCCCCC"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["styles"] == {}
+
+    # Bad theme property
+    response = api_client.patch(
+        url,
+        {"styles": {"typography": {"heading_25_text_color": "#CCCCCCCC"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["styles"] == {"typography": {}}
 
 
 @pytest.mark.django_db

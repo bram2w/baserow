@@ -6,15 +6,29 @@
           horizontal
           small-label
           required
-          :label="$t('linkThemeConfigBlock.alignment')"
           class="margin-bottom-1"
+          :label="$t('linkThemeConfigBlock.fontFamily')"
+        >
+          <FontFamilySelector v-model="values.link_font_family" />
+          <template #after-input>
+            <ResetButton
+              v-model="values.link_font_family"
+              :default-value="theme?.link_font_family"
+            />
+          </template>
+        </FormGroup>
+        <FormGroup
+          horizontal
+          small-label
+          required
+          class="margin-bottom-1"
+          :label="$t('linkThemeConfigBlock.alignment')"
         >
           <HorizontalAlignmentsSelector v-model="values.link_text_alignment" />
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              property="link_text_alignment"
+              v-model="values.link_text_alignment"
+              :default-value="theme?.link_text_alignment"
             />
           </template>
         </FormGroup>
@@ -37,9 +51,8 @@
           />
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              property="link_text_color"
+              v-model="values.link_text_color"
+              :default-value="theme?.link_text_color"
             />
           </template>
         </FormGroup>
@@ -65,9 +78,8 @@
           />
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              property="link_hover_text_color"
+              v-model="values.link_hover_text_color"
+              :default-value="theme?.link_hover_text_color"
             />
           </template>
         </FormGroup>
@@ -86,6 +98,7 @@ import themeConfigBlock from '@baserow/modules/builder/mixins/themeConfigBlock'
 import ThemeConfigBlockSection from '@baserow/modules/builder/components/theme/ThemeConfigBlockSection'
 import ResetButton from '@baserow/modules/builder/components/theme/ResetButton'
 import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/HorizontalAlignmentsSelector'
+import FontFamilySelector from '@baserow/modules/builder/components/FontFamilySelector'
 
 export default {
   name: 'LinkThemeConfigBlock',
@@ -93,17 +106,18 @@ export default {
     ThemeConfigBlockSection,
     ResetButton,
     HorizontalAlignmentsSelector,
+    FontFamilySelector,
   },
   mixins: [themeConfigBlock],
   data() {
     return {
       values: {},
-      allowedValues: [
-        'link_text_color',
-        'link_hover_text_color',
-        'link_text_alignment',
-      ],
     }
+  },
+  methods: {
+    isAllowedKey(key) {
+      return key.startsWith('link_')
+    },
   },
 }
 </script>

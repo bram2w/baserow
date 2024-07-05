@@ -6,19 +6,18 @@ from django.db.models import QuerySet
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
-    ImportExportMixin,
+    EasyImportExportMixin,
     Instance,
     Registry,
 )
 from baserow.core.utils import extract_allowed
 
-from .models import ThemeConfigBlock
 from .types import ThemeConfigBlockSubClass
 
 
 class ThemeConfigBlockType(
     Instance,
-    ImportExportMixin[ThemeConfigBlock],
+    EasyImportExportMixin,
     CustomFieldsInstanceMixin,
     ABC,
 ):
@@ -33,6 +32,31 @@ class ThemeConfigBlockType(
     polymorphic.
     """
 
+    parent_property_name = "builder"
+
+    def get_property_names(self):
+        """
+        We want all properties here to make it easier.
+        """
+
+        return [
+            f.name
+            for f in self.model_class._meta.get_fields()
+            if f.name not in ["builder", "id"]
+        ]
+
+    @property
+    def allowed_fields(self):
+        return [
+            f.name
+            for f in self.model_class._meta.get_fields()
+            if f.name not in ["id", "builder"]
+        ]
+
+    @property
+    def serializer_field_names(self):
+        return self.allowed_fields
+
     @property
     def related_name_in_builder_model(self) -> str:
         """
@@ -41,15 +65,6 @@ class ThemeConfigBlockType(
         """
 
         return self.model_class.__name__.lower()
-
-    def export_serialized(self, instance):
-        return {field: getattr(instance, field) for field in self.allowed_fields}
-
-    def import_serialized(self, parent, serialized_values, id_mapping):
-        allowed_values = extract_allowed(serialized_values, self.allowed_fields)
-        theme_config_block = self.model_class(builder=parent, **allowed_values)
-        theme_config_block.save()
-        return theme_config_block
 
     def update_properties(
         self, builder, **kwargs: dict
@@ -64,10 +79,14 @@ class ThemeConfigBlockType(
 
         instance = getattr(builder, self.related_name_in_builder_model)
         allowed_values = extract_allowed(kwargs, self.allowed_fields)
+
         for key, value in allowed_values.items():
             setattr(instance, key, value)
+
         instance.save()
+
         setattr(builder, self.related_name_in_builder_model, instance)
+
         return instance
 
 

@@ -35,9 +35,18 @@
 .page-preview__scaled {
   width: 100%;
   min-height: 100%;
-  background-color: $white;
   overflow: auto;
   position: relative;
+
+  // These properties are duplicated from the page element because during the SSR
+  // the screen size is fixed to an arbitrary value and when returned to the browser
+  // there is a small gap at the bottom of the screen between the end of the `.page` and
+  // the end of this element. By duplicating them, we hide the difference before the
+  // front hydratation.
+  background-color: var(--page-background-color, #fff);
+  background-image: var(--page-background-image, none);
+  background-size: var(--page-background-size, cover);
+  background-repeat: var(--page-background-repeat, no-repeat);
 
   // We need to do this because the border of the preview is round and we need to round
   // the border of the selection box so that border has to have the same shape.

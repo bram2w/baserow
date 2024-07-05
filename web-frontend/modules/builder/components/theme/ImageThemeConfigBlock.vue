@@ -13,9 +13,8 @@
 
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              property="image_alignment"
+              v-model="values.image_alignment"
+              :default-value="theme?.image_alignment"
             />
           </template>
         </FormGroup>
@@ -30,7 +29,8 @@
             v-model="values.image_max_width"
             small
             type="number"
-            :error="
+            remove-number-input-controls
+            :error-message="
               $v.values.image_max_width.$dirty &&
               !$v.values.image_max_width.integer
                 ? $t('error.integerField')
@@ -50,9 +50,8 @@
 
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              property="image_max_width"
+              v-model="values.image_max_width"
+              :default-value="theme?.image_max_width"
             />
           </template>
         </FormGroup>
@@ -67,7 +66,8 @@
             v-model="imageMaxHeight"
             small
             type="number"
-            :error="
+            remove-number-input-controls
+            :error-message="
               $v.values.image_max_height.$dirty &&
               !$v.values.image_max_height.integer
                 ? $t('error.integerField')
@@ -85,9 +85,8 @@
 
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              property="image_max_height"
+              v-model="imageMaxHeight"
+              :default-value="theme?.image_max_height"
             />
           </template>
         </FormGroup>
@@ -122,8 +121,7 @@
           <template #after-input>
             <ResetButton
               v-model="imageConstraintForReset"
-              :theme="theme"
-              property="image_constraint"
+              :default-value="theme?.image_constraint"
             />
           </template>
         </FormGroup>
@@ -191,18 +189,18 @@ export default {
     },
     imageConstraintForReset: {
       get() {
-        return { image_constraint: this.values.image_constraint }
+        return this.values.image_constraint
       },
       set(value) {
-        if (value.image_constraint === 'contain') {
+        if (value === 'contain') {
           // Reset the height as we can't have a max height with contain
           this.values.image_max_height = null
         }
-        if (value.image_constraint === 'cover') {
+        if (value === 'cover') {
           // Set the height to what is defined in theme
           this.values.image_max_height = this.theme.image_max_height
         }
-        this.values.image_constraint = value.image_constraint
+        this.values.image_constraint = value
       },
     },
     IMAGE_SOURCE_TYPES() {
@@ -234,6 +232,9 @@ export default {
           this.values.image_max_height && this.values.image_max_height > 0
         )
       }
+    },
+    isAllowedKey(key) {
+      return key.startsWith('image_')
     },
   },
   validations: {

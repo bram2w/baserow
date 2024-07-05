@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models import SET_NULL, QuerySet
 
 from baserow.contrib.builder.constants import (
+    BACKGROUND_IMAGE_MODES,
     WIDTHS,
     HorizontalAlignments,
     VerticalAlignments,
@@ -29,10 +30,12 @@ if TYPE_CHECKING:
 class BackgroundTypes(models.TextChoices):
     NONE = "none"
     COLOR = "color"
+    IMAGE = "image"
 
 
 class WidthTypes(models.TextChoices):
     FULL = "full"
+    FULL_WIDTH = "full-width"
     NORMAL = "normal"
     MEDIUM = "medium"
     SMALL = "small"
@@ -155,6 +158,11 @@ class Element(
     style_padding_top = models.PositiveIntegerField(
         default=10, help_text="Padding size of the top border."
     )
+    style_margin_top = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the top border.",
+        null=True,  # TODO zdm remove me after v1.26
+    )
 
     style_border_bottom_color = models.CharField(
         max_length=20,
@@ -167,6 +175,11 @@ class Element(
     )
     style_padding_bottom = models.PositiveIntegerField(
         default=10, help_text="Padding size of the bottom border."
+    )
+    style_margin_bottom = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the bottom border.",
+        null=True,  # TODO zdm remove me after v1.26
     )
 
     style_border_left_color = models.CharField(
@@ -181,6 +194,11 @@ class Element(
     style_padding_left = models.PositiveIntegerField(
         default=20, help_text="Padding size of the left border."
     )
+    style_margin_left = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the left border.",
+        null=True,  # TODO zdm remove me after v1.26
+    )
 
     style_border_right_color = models.CharField(
         max_length=20,
@@ -194,6 +212,11 @@ class Element(
     style_padding_right = models.PositiveIntegerField(
         default=20, help_text="Padding size of the right border."
     )
+    style_margin_right = models.PositiveIntegerField(
+        default=0,
+        help_text="Margin size of the right border.",
+        null=True,  # TODO zdm remove me after v1.26
+    )
 
     style_background = models.CharField(
         choices=BackgroundTypes.choices,
@@ -206,6 +229,22 @@ class Element(
         default="#ffffffff",
         blank=True,
         help_text="The background color if `style_background` is color.",
+    )
+
+    style_background_file = models.ForeignKey(
+        UserFile,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="element_background_image_file",
+        help_text="An image file uploaded by the user to be used as element background",
+    )
+
+    style_background_mode = models.CharField(
+        help_text="The mode of the background image",
+        choices=BACKGROUND_IMAGE_MODES.choices,
+        max_length=32,
+        default=BACKGROUND_IMAGE_MODES.FILL,
+        null=True,  # TODO zdm remove me after v1.26
     )
 
     style_width = models.CharField(

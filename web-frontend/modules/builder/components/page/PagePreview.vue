@@ -23,21 +23,23 @@
         >
           {{ $t('pagePreview.emptyMessage') }}
         </CallToAction>
-        <AddElementModal ref="addElementModal" :page="page" />
-        <ElementPreview
-          v-for="(element, index) in elements"
-          :key="element.id"
-          is-root-element
-          :element="element"
-          :is-first-element="index === 0"
-          :is-last-element="index === elements.length - 1"
-          :is-copying="copyingElementIndex === index"
-          :application-context-additions="{
-            recordIndexPath: [],
-          }"
-          @move="moveElement($event)"
-        />
+        <div class="page">
+          <ElementPreview
+            v-for="(element, index) in elements"
+            :key="element.id"
+            is-root-element
+            :element="element"
+            :is-first-element="index === 0"
+            :is-last-element="index === elements.length - 1"
+            :is-copying="copyingElementIndex === index"
+            :application-context-additions="{
+              recordIndexPath: [],
+            }"
+            @move="moveElement($event)"
+          />
+        </div>
       </div>
+      <AddElementModal ref="addElementModal" :page="page" />
     </div>
   </ThemeProvider>
 </template>

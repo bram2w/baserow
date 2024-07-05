@@ -73,12 +73,18 @@ export class ElementType extends Registerable {
       'style_padding_bottom',
       'style_padding_left',
       'style_padding_right',
+      'style_margin_top',
+      'style_margin_bottom',
+      'style_margin_left',
+      'style_margin_right',
       'style_border_top',
       'style_border_bottom',
       'style_border_left',
       'style_border_right',
       'style_background',
       'style_background_color',
+      'style_background_file',
+      'style_background_mode',
       'style_width',
     ]
   }

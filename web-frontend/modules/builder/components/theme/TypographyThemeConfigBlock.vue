@@ -3,54 +3,66 @@
     <ThemeConfigBlockSection
       v-if="showBody"
       :title="$t('typographyThemeConfigBlock.bodyLabel')"
-      class="margin-bottom-2"
     >
       <template #default>
         <FormGroup
           horizontal
           small-label
+          class="margin-bottom-1"
+          :label="$t('typographyThemeConfigBlock.fontFamily')"
+        >
+          <FontFamilySelector v-model="values.body_font_family" />
+          <template #after-input>
+            <ResetButton
+              v-model="values.body_font_family"
+              :default-value="theme?.body_font_family"
+            />
+          </template>
+        </FormGroup>
+        <FormGroup
+          horizontal
+          small-label
+          class="margin-bottom-1"
           :label="$t('typographyThemeConfigBlock.textAlignment')"
         >
-          <HorizontalAlignmentsSelector
-            v-model="values[`body_text_alignment`]"
+          <HorizontalAlignmentsSelector v-model="values.body_text_alignment" />
+          <template #after-input>
+            <ResetButton
+              v-model="values.body_text_alignment"
+              :default-value="theme?.body_text_alignment"
+            />
+          </template>
+        </FormGroup>
+        <FormGroup
+          horizontal
+          small-label
+          class="margin-bottom-1"
+          :label="$t('typographyThemeConfigBlock.size')"
+          :error-message="
+            $v.values[`body_font_size`].$invalid
+              ? $t('error.minMaxValueField', {
+                  min: fontSizeMin,
+                  max: bodyFontSizeMax,
+                })
+              : ''
+          "
+        >
+          <PixelValueSelector
+            v-model="values.body_font_size"
+            class="typography-theme-config-block__input-number"
+            @blur="$v.values[`body_font_size`].$touch()"
           />
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              :property="`body_text_alignment`"
+              v-model="values.body_font_size"
+              :default-value="theme?.body_font_size"
             />
           </template>
         </FormGroup>
         <FormGroup
           horizontal
           small-label
-          :label="$t('typographyThemeConfigBlock.size')"
-          :error="$v.values[`body_font_size`].$invalid"
-        >
-          <FormInput
-            v-model="values[`body_font_size`]"
-            type="number"
-            remove-number-input-controls
-            :min="fontSizeMin"
-            :max="fontSizeMax"
-            :error="$v.values[`body_font_size`].$invalid"
-            @blur="$v.values[`body_font_size`].$touch()"
-          >
-            <template #suffix>px</template>
-          </FormInput>
-
-          <template #after-input>
-            <ResetButton
-              v-model="values"
-              :theme="theme"
-              :property="`body_font_size`"
-            />
-          </template>
-        </FormGroup>
-        <FormGroup
-          horizontal
-          small-label
+          class="margin-bottom-1"
           :label="$t('typographyThemeConfigBlock.color')"
         >
           <ColorInput
@@ -61,9 +73,8 @@
           />
           <template #after-input>
             <ResetButton
-              v-model="values"
-              :theme="theme"
-              :property="'body_text_color'"
+              v-model="values.body_text_color"
+              :default-value="theme?.body_text_color"
             />
           </template>
         </FormGroup>
@@ -75,87 +86,103 @@
         </ABParagraph>
       </template>
     </ThemeConfigBlockSection>
-    <ThemeConfigBlockSection
-      v-for="level in headings"
-      :key="level"
-      :title="$t('typographyThemeConfigBlock.headingLabel', { i: level })"
-      class="margin-bottom-2"
-    >
-      <template #default>
-        <FormGroup
-          horizontal
-          small-label
-          :label="$t('typographyThemeConfigBlock.textAlignment')"
-        >
-          <HorizontalAlignmentsSelector
-            v-model="values[`heading_${level}_text_alignment`]"
-          />
-          <template #after-input>
-            <ResetButton
-              v-model="values"
-              :theme="theme"
-              :property="`heading_${level}_text_alignment`"
-            />
-          </template>
-        </FormGroup>
-
-        <FormGroup
-          horizontal
-          small-label
-          :label="$t('typographyThemeConfigBlock.size')"
-          :error="$v.values[`heading_${level}_font_size`].$invalid"
-        >
-          <FormInput
-            v-model="values[`heading_${level}_font_size`]"
-            type="number"
-            remove-number-input-controls
-            :min="fontSizeMin"
-            :max="fontSizeMax"
-            :error="$v.values[`heading_${level}_font_size`].$invalid"
-            @blur="$v.values[`heading_${level}_font_size`].$touch()"
+    <template v-if="showHeadings">
+      <ThemeConfigBlockSection
+        v-for="level in headings"
+        :key="level"
+        :title="$t('typographyThemeConfigBlock.headingLabel', { i: level })"
+      >
+        <template #default>
+          <FormGroup
+            horizontal
+            small-label
+            class="margin-bottom-1"
+            :label="$t('typographyThemeConfigBlock.fontFamily')"
           >
-            <template #suffix>px</template>
-          </FormInput>
-
-          <template #after-input>
-            <ResetButton
-              v-model="values"
-              :theme="theme"
-              :property="`body_font_size`"
+            <FontFamilySelector
+              v-model="values[`heading_${level}_font_family`]"
             />
-          </template>
-        </FormGroup>
-
-        <FormGroup
-          horizontal
-          small-label
-          :label="$t('typographyThemeConfigBlock.color')"
-        >
-          <ColorInput
-            v-model="values[`heading_${level}_text_color`]"
-            :color-variables="colorVariables"
-            :default-value="theme ? theme[`heading_${level}_text_color`] : null"
-            small
-          />
-          <template #after-input>
-            <ResetButton
-              v-model="values"
-              :theme="theme"
-              :property="`heading_${level}_text_color`"
+            <template #after-input>
+              <ResetButton
+                v-model="values[`heading_${level}_font_family`]"
+                :default-value="theme?.[`heading_${level}_font_family`]"
+              />
+            </template>
+          </FormGroup>
+          <FormGroup
+            horizontal
+            small-label
+            class="margin-bottom-1"
+            :label="$t('typographyThemeConfigBlock.textAlignment')"
+          >
+            <HorizontalAlignmentsSelector
+              v-model="values[`heading_${level}_text_alignment`]"
             />
-          </template>
-        </FormGroup>
-      </template>
-      <template #preview>
-        <component
-          :is="`h${level}`"
-          class="margin-bottom-2 theme-settings__section-ellipsis"
-          :class="`ab-heading--h${level}`"
-        >
-          {{ $t('typographyThemeConfigBlock.headingValue', { i: level }) }}
-        </component>
-      </template>
-    </ThemeConfigBlockSection>
+            <template #after-input>
+              <ResetButton
+                v-model="values[`heading_${level}_text_alignment`]"
+                :default-value="theme?.[`heading_${level}_text_alignment`]"
+              />
+            </template>
+          </FormGroup>
+          <FormGroup
+            horizontal
+            small-label
+            class="margin-bottom-1"
+            :label="$t('typographyThemeConfigBlock.size')"
+            :error-message="
+              $v.values[`heading_${level}_font_size`].$invalid
+                ? $t('error.minMaxValueField', {
+                    min: fontSizeMin,
+                    max: fontSizeMax,
+                  })
+                : ''
+            "
+          >
+            <PixelValueSelector
+              v-model="values[`heading_${level}_font_size`]"
+              class="typography-theme-config-block__input-number"
+              @blur="$v.values[`heading_${level}_font_size`].$touch()"
+            />
+            <template #after-input>
+              <ResetButton
+                v-model="values[`heading_${level}_font_size`]"
+                :default-value="theme?.[`heading_${level}_font_size`]"
+              />
+            </template>
+          </FormGroup>
+          <FormGroup
+            horizontal
+            small-label
+            class="margin-bottom-1"
+            :label="$t('typographyThemeConfigBlock.color')"
+          >
+            <ColorInput
+              v-model="values[`heading_${level}_text_color`]"
+              :color-variables="colorVariables"
+              :default-value="
+                theme ? theme[`heading_${level}_text_color`] : null
+              "
+              small
+            />
+            <template #after-input>
+              <ResetButton
+                v-model="values[`heading_${level}_text_color`]"
+                :default-value="theme?.[`heading_${level}_text_color`]"
+              />
+            </template>
+          </FormGroup>
+        </template>
+        <template #preview>
+          <ABHeading
+            class="typography-theme-config-block__heading-preview"
+            :level="level"
+          >
+            {{ $t('typographyThemeConfigBlock.headingValue', { i: level }) }}
+          </ABHeading>
+        </template>
+      </ThemeConfigBlockSection>
+    </template>
   </div>
 </template>
 
@@ -165,9 +192,12 @@ import themeConfigBlock from '@baserow/modules/builder/mixins/themeConfigBlock'
 import ThemeConfigBlockSection from '@baserow/modules/builder/components/theme/ThemeConfigBlockSection'
 import ResetButton from '@baserow/modules/builder/components/theme/ResetButton'
 import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/HorizontalAlignmentsSelector'
+import FontFamilySelector from '@baserow/modules/builder/components/FontFamilySelector'
+import PixelValueSelector from '@baserow/modules/builder/components/PixelValueSelector'
 
 const fontSizeMin = 1
 const fontSizeMax = 100
+const bodyFontSizeMax = 30
 const headings = [1, 2, 3, 4, 5, 6]
 
 export default {
@@ -176,23 +206,13 @@ export default {
     ThemeConfigBlockSection,
     ResetButton,
     HorizontalAlignmentsSelector,
+    FontFamilySelector,
+    PixelValueSelector,
   },
   mixins: [themeConfigBlock],
   data() {
     return {
       values: {},
-      allowedValues: [
-        ...headings
-          .map((level) => [
-            `heading_${level}_text_color`,
-            `heading_${level}_font_size`,
-            `heading_${level}_text_alignment`,
-          ])
-          .flat(),
-        'body_font_size',
-        'body_text_alignment',
-        'body_text_color',
-      ],
     }
   },
   computed: {
@@ -206,11 +226,22 @@ export default {
     showBody() {
       return !this.extraArgs?.headingLevel
     },
+    showHeadings() {
+      return !this.extraArgs?.onlyBody
+    },
     fontSizeMin() {
       return fontSizeMin
     },
     fontSizeMax() {
       return fontSizeMax
+    },
+    bodyFontSizeMax() {
+      return bodyFontSizeMax
+    },
+  },
+  methods: {
+    isAllowedKey(key) {
+      return key.startsWith('heading_') || key.startsWith('body_')
     },
   },
   validations: {
@@ -228,7 +259,7 @@ export default {
         required,
         integer,
         minValue: minValue(fontSizeMin),
-        maxValue: maxValue(fontSizeMax),
+        maxValue: maxValue(bodyFontSizeMax),
       },
     },
   },

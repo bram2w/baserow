@@ -151,6 +151,11 @@ def test_get_builder_application(api_client, data_fixture):
     )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
+
+    # Check we have the theme but don't want to check every single property
+    assert response_json["theme"]["body_text_color"] == "#070810ff"
+    del response_json["theme"]
+
     assert response_json == {
         "favicon_file": UserFileSerializer(application.favicon_file).data,
         "id": application.id,
@@ -168,44 +173,6 @@ def test_get_builder_application(api_client, data_fixture):
             "generative_ai_models_enabled": {},
         },
         "pages": [],
-        "theme": {
-            "body_text_color": "#070810ff",
-            "body_font_size": 14,
-            "body_text_alignment": "left",
-            "primary_color": "#5190efff",
-            "secondary_color": "#0eaa42ff",
-            "border_color": "#d7d8d9ff",
-            "heading_1_font_size": 24,
-            "heading_1_text_color": "#070810ff",
-            "heading_1_text_alignment": "left",
-            "heading_2_font_size": 20,
-            "heading_2_text_color": "#070810ff",
-            "heading_2_text_alignment": "left",
-            "heading_3_font_size": 16,
-            "heading_3_text_color": "#070810ff",
-            "heading_3_text_alignment": "left",
-            "heading_4_font_size": 16,
-            "heading_4_text_color": "#070810ff",
-            "heading_4_text_alignment": "left",
-            "heading_5_font_size": 14,
-            "heading_5_text_color": "#070810ff",
-            "heading_5_text_alignment": "left",
-            "heading_6_font_size": 14,
-            "heading_6_text_color": "#202128",
-            "heading_6_text_alignment": "left",
-            "button_background_color": "primary",
-            "button_hover_background_color": "#96baf6ff",
-            "button_alignment": "left",
-            "button_text_alignment": "center",
-            "button_width": "auto",
-            "image_alignment": "left",
-            "image_constraint": "contain",
-            "image_max_height": None,
-            "image_max_width": 100,
-            "link_text_alignment": "left",
-            "link_text_color": "primary",
-            "link_hover_text_color": "#96baf6ff",
-        },
     }
 
 
@@ -230,6 +197,11 @@ def test_list_builder_applications(api_client, data_fixture):
     )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
+
+    # Check we have the theme but don't want to check every single property
+    assert response_json[0]["theme"]["body_text_color"] == "#070810ff"
+    del response_json[0]["theme"]
+
     assert response_json == [
         {
             "favicon_file": UserFileSerializer(application.favicon_file).data,
@@ -248,43 +220,5 @@ def test_list_builder_applications(api_client, data_fixture):
                 "generative_ai_models_enabled": {},
             },
             "pages": [],
-            "theme": {
-                "body_text_color": "#070810ff",
-                "body_font_size": 14,
-                "body_text_alignment": "left",
-                "primary_color": "#5190efff",
-                "secondary_color": "#0eaa42ff",
-                "border_color": "#d7d8d9ff",
-                "heading_1_font_size": 24,
-                "heading_1_text_color": "#070810ff",
-                "heading_1_text_alignment": "left",
-                "heading_2_font_size": 20,
-                "heading_2_text_color": "#070810ff",
-                "heading_2_text_alignment": "left",
-                "heading_3_font_size": 16,
-                "heading_3_text_color": "#070810ff",
-                "heading_3_text_alignment": "left",
-                "heading_4_font_size": 16,
-                "heading_4_text_color": "#070810ff",
-                "heading_4_text_alignment": "left",
-                "heading_5_font_size": 14,
-                "heading_5_text_color": "#070810ff",
-                "heading_5_text_alignment": "left",
-                "heading_6_font_size": 14,
-                "heading_6_text_color": "#202128",
-                "heading_6_text_alignment": "left",
-                "button_background_color": "primary",
-                "button_hover_background_color": "#96baf6ff",
-                "button_alignment": "left",
-                "button_text_alignment": "center",
-                "button_width": "auto",
-                "image_alignment": "left",
-                "image_constraint": "contain",
-                "image_max_height": None,
-                "image_max_width": 100,
-                "link_text_alignment": "left",
-                "link_text_color": "primary",
-                "link_hover_text_color": "#96baf6ff",
-            },
         }
     ]
