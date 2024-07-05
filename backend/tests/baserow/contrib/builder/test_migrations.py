@@ -161,7 +161,7 @@ def test_0025_theme_config_block(migrator, teardown_table_metadata):
     new_state = migrator.migrate(migrate_to)
 
     Builder = new_state.apps.get_model("builder", "Builder")
-    builder = Builder.objects.first()
+    builder = Builder.objects.get(id=builder.id)
 
     assert builder.colorthemeconfigblock.primary_color == "#f00000ff"
     assert builder.colorthemeconfigblock.secondary_color == "#0eaa42ff"
@@ -204,6 +204,10 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
         workspace=workspace,
         content_type=ContentType.objects.get_for_model(Builder),
     )
+    builder.mainthemeconfigblock.secondary_color = "#0eaa42ff"
+    builder.mainthemeconfigblock.border_color = "#0eaa42ff"
+    builder.mainthemeconfigblock.save()
+
     page = Page.objects.create(order=2, builder=builder, name="Page", path="page/")
 
     TableElement.objects.create(
@@ -217,6 +221,24 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
         order=2,
         page=page,
         button_color="#CC00CCCC",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
+    ButtonElement.objects.create(
+        order=3,
+        page=page,
+        button_color="secondary",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
+    ButtonElement.objects.create(
+        order=4,
+        page=page,
+        button_color="border",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
+    ButtonElement.objects.create(
+        order=5,
+        page=page,
+        button_color="blue",
         content_type=ContentType.objects.get_for_model(ButtonElement),
     )
     LinkElement.objects.create(
@@ -246,11 +268,13 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
     FormContainerElement = new_state.apps.get_model("builder", "FormContainerElement")
     TableElement = new_state.apps.get_model("builder", "TableElement")
 
-    heading = HeadingElement.objects.first()
-    button = ButtonElement.objects.first()
-    link = LinkElement.objects.first()
-    form = FormContainerElement.objects.first()
-    table = TableElement.objects.first()
+    heading = HeadingElement.objects.get(page__builder_id=builder.id)
+    [button1, button2, button3, button4] = ButtonElement.objects.filter(
+        page__builder_id=builder.id
+    )
+    link = LinkElement.objects.get(page__builder_id=builder.id)
+    form = FormContainerElement.objects.get(page__builder_id=builder.id)
+    table = TableElement.objects.get(page__builder_id=builder.id)
 
     assert table.styles == {
         "button": {
@@ -258,10 +282,28 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
             "button_hover_background_color": "#dbdbdbcc",
         }
     }
-    assert button.styles == {
+    assert button1.styles == {
         "button": {
             "button_background_color": "#CC00CCCC",
             "button_hover_background_color": "#db4cdbcc",
+        }
+    }
+    assert button2.styles == {
+        "button": {
+            "button_background_color": "secondary",
+            "button_hover_background_color": "#56c37aff",
+        }
+    }
+    assert button3.styles == {
+        "button": {
+            "button_background_color": "border",
+            "button_hover_background_color": "#56c37aff",
+        }
+    }
+    assert button4.styles == {
+        "button": {
+            "button_background_color": "blue",
+            "button_hover_background_color": "blue",
         }
     }
     assert link.styles == {
@@ -316,6 +358,9 @@ def test_0026_element_styles(migrator, teardown_table_metadata):
         content_type=ContentType.objects.get_for_model(Builder),
     )
     page = Page.objects.create(order=2, builder=builder, name="Page", path="page/")
+    builder.mainthemeconfigblock.secondary_color = "#0eaa42ff"
+    builder.mainthemeconfigblock.border_color = "#0eaa42ff"
+    builder.mainthemeconfigblock.save()
 
     HeadingElement.objects.create(
         order=2,
@@ -336,6 +381,18 @@ def test_0026_element_styles(migrator, teardown_table_metadata):
         alignment="right",
         content_type=ContentType.objects.get_for_model(ButtonElement),
     )
+    ButtonElement.objects.create(
+        order=4,
+        page=page,
+        button_color="secondary",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
+    ButtonElement.objects.create(
+        order=5,
+        page=page,
+        button_color="blue",
+        content_type=ContentType.objects.get_for_model(ButtonElement),
+    )
     LinkElement.objects.create(
         order=2,
         page=page,
@@ -350,6 +407,12 @@ def test_0026_element_styles(migrator, teardown_table_metadata):
         button_color="#CCCC00CC",
         alignment="right",
         variant="link",
+        content_type=ContentType.objects.get_for_model(LinkElement),
+    )
+    LinkElement.objects.create(
+        order=4,
+        page=page,
+        button_color="border",
         content_type=ContentType.objects.get_for_model(LinkElement),
     )
     TextElement.objects.create(
@@ -389,13 +452,15 @@ def test_0026_element_styles(migrator, teardown_table_metadata):
     TableElement = new_state.apps.get_model("builder", "TableElement")
     FormContainerElement = new_state.apps.get_model("builder", "FormContainerElement")
 
-    heading = HeadingElement.objects.first()
-    [button1, button2] = ButtonElement.objects.all()
-    [link1, link2] = LinkElement.objects.all()
-    text = TextElement.objects.first()
-    image = ImageElement.objects.first()
-    form = FormContainerElement.objects.first()
-    table = TableElement.objects.first()
+    heading = HeadingElement.objects.get(page__builder_id=builder.id)
+    [button1, button2, button3, button4] = ButtonElement.objects.filter(
+        page__builder_id=builder.id
+    )
+    [link1, link2, link3] = LinkElement.objects.filter(page__builder_id=builder.id)
+    text = TextElement.objects.get(page__builder_id=builder.id)
+    image = ImageElement.objects.get(page__builder_id=builder.id)
+    form = FormContainerElement.objects.get(page__builder_id=builder.id)
+    table = TableElement.objects.get(page__builder_id=builder.id)
 
     assert heading.styles == {
         "typography": {
@@ -411,6 +476,18 @@ def test_0026_element_styles(migrator, teardown_table_metadata):
             "button_hover_background_color": "#dbdbdbcc",
         }
     }
+    assert button3.styles == {
+        "button": {
+            "button_background_color": "secondary",
+            "button_hover_background_color": "#56c37aff",
+        }
+    }
+    assert button4.styles == {
+        "button": {
+            "button_background_color": "blue",
+            "button_hover_background_color": "blue",
+        }
+    }
     assert link1.styles == {
         "button": {
             "button_alignment": "right",
@@ -423,6 +500,12 @@ def test_0026_element_styles(migrator, teardown_table_metadata):
         "button": {
             "button_background_color": "#CCCC00CC",
             "button_hover_background_color": "#dbdb4ccc",
+        },
+    }
+    assert link3.styles == {
+        "button": {
+            "button_background_color": "border",
+            "button_hover_background_color": "#56c37aff",
         },
     }
     assert text.styles == {"typography": {"body_text_alignment": "right"}}
