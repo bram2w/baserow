@@ -341,6 +341,17 @@ describe('test error handling', () => {
       }
     }
   )
+  test('test an 500 response returns action not completed error', async () => {
+    try {
+      await errorInterceptorWithStubAppAndStore()({
+        response: 'traceback from backend',
+      })
+    } catch (error) {
+      expect(error.response).toBe('traceback from backend')
+      expect(error.handler.code).toBe(500)
+      expect(error.handler.detail).toBe(null)
+    }
+  })
   describe('test invalid response details for request body validation errors', () => {
     const invalidDetails = [
       null,
