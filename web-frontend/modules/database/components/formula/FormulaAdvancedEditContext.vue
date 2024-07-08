@@ -8,7 +8,7 @@
       <FormTextarea
         ref="textAreaFormulaInput"
         :value="formula"
-        class="formula-field__input-formula"
+        class="auto-expandable-textarea--input-formula"
         :placeholder="
           $t('formulaAdvancedEditContext.textAreaFormulaInputPlaceholder')
         "

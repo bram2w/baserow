@@ -15,6 +15,10 @@
       border-color: $palette-blue-500;
     }
   }
+
+  &--small {
+    padding: 8px 12px;
+  }
 }
 
 .form-textarea--error {

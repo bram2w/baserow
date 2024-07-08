@@ -4,7 +4,7 @@
       small-label
       :label="$t('fieldType.formula')"
       required
-      :error="error"
+      :error="!!error"
       class="margin-bottom-2"
     >
       <FormInput

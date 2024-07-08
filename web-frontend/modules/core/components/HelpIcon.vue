@@ -63,9 +63,9 @@ export default {
      * Additional css classes for tooltip content container
      * */
     tooltipContentClasses: {
-      type: String,
+      type: Array,
       requred: false,
-      default: '',
+      default: () => [],
     },
   },
   computed: {
@@ -78,7 +78,7 @@ export default {
     },
     tooltipText() {
       if (this.tooltipContentType === TooltipContentMarkdown) {
-        const md = new Markdown()
+        const md = new Markdown({ html: false })
         return md.render(this.tooltip)
       }
       return this.tooltip

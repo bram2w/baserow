@@ -76,4 +76,8 @@
       border: 2px solid transparent;
     }
   }
+
+  &--expandable-plain-text {
+    white-space: pre-wrap;
+  }
 }

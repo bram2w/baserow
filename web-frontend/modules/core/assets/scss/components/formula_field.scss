@@ -27,20 +27,6 @@
   padding: 14px;
 }
 
-.formula-field__input-formula {
-  font-family: monospace;
-  font-size: 13px;
-  color: $color-neutral-900;
-  line-height: 22px;
-  height: 22px;
-  background-color: transparent;
-  outline: none;
-  box-shadow: none;
-  border: none;
-  resize: none;
-  padding: 0;
-}
-
 .formula-field__input-error {
   width: 100%;
   flex-shrink: 0;
