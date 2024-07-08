@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Show a notification of a 500 error in the frontend",
+    "issue_number": 2754,
+    "bullet_points": [],
+    "created_at": "2024-07-05"
+}

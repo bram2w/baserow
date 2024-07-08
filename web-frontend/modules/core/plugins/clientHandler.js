@@ -479,6 +479,8 @@ export function makeErrorResponseInterceptor(
       'detail' in rspData
     ) {
       error.handler.setError(rspData.error, rspData.detail)
+    } else if (typeof rspData !== 'object') {
+      error.handler.setError(500, null)
     }
 
     return Promise.reject(error)
