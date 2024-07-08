@@ -1,6 +1,6 @@
 from abc import ABC
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
@@ -133,6 +133,21 @@ class ServiceType(
         :param instance: The to be deleted service instance.
         """
 
+    def get_context_data(self, service: ServiceSubClass):
+        """
+        Return the context data for this service.
+
+        This can be overridden by child classes to provide extra context data,
+        to complement this service results.
+        """
+
+        return None
+
+    def get_context_data_schema(self, service: ServiceSubClass):
+        """Return the schema for the context data."""
+
+        return None
+
     def resolve_service_formulas(
         self,
         service: ServiceSubClass,
@@ -259,6 +274,26 @@ class ServiceType(
             cache=cache,
             **kwargs,
         )
+
+    def import_path(self, path, id_mapping, **kwargs):
+        """
+        Allows to hook into the path import resolution.
+
+        If not implemented, returns the path as it is.
+        """
+
+        return path
+
+    def import_context_path(
+        self, path: List[str], id_mapping: Dict[int, int], **kwargs
+    ):
+        """
+        Allows to hook into the context path import resolution.
+
+        If not implemented, returns the path as it is.
+        """
+
+        return path
 
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)

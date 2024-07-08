@@ -12,10 +12,15 @@ import InputTextElementForm from '@baserow/modules/builder/components/elements/c
 import TableElement from '@baserow/modules/builder/components/elements/components/TableElement'
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm'
 import {
+  ensureArray,
   ensureBoolean,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
-import { ELEMENT_EVENTS, PLACEMENTS } from '@baserow/modules/builder/enums'
+import {
+  CHOICE_OPTION_TYPES,
+  ELEMENT_EVENTS,
+  PLACEMENTS,
+} from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -909,7 +914,8 @@ export class FormElementType extends ElementType {
    * Given a form element, and a form data value, is responsible for validating
    * this form element type against that value. Returns whether the value is valid.
    * @param element - The form element
-   * @param value
+   * @param value - The value to be validated against
+   * @param applicationContext - The context of the current application
    * @returns {boolean}
    */
   isValid(element, value) {
@@ -966,7 +972,7 @@ export class InputTextElementType extends FormElementType {
     return 'input_text'
   }
 
-  isValid(element, value) {
+  isValid(element, value, applicationContext) {
     if (!value) {
       return !element.required
     }
@@ -1301,17 +1307,36 @@ export class ChoiceElementType extends FormElementType {
    * test if the value is one of the choice's own values.
    * @param element - The choice form element
    * @param value - The value we are validating.
+   * @param applicationContext - Required when using formula resolution.
    * @returns {boolean}
    */
-  isValid(element, value) {
+  isValid(element, value, applicationContext) {
+    const options =
+      element.option_type === CHOICE_OPTION_TYPES.FORMULAS
+        ? ensureArray(
+            this.resolveFormula(element.formula_value, {
+              element,
+              ...applicationContext,
+            })
+          ).map(ensureString)
+        : element.options.map((option) => option.value)
+
     const validOption = element.multiple
-      ? element.options.find((option) => value.includes(option.value))
-      : element.options.find((option) => option.value === value)
+      ? options.some((option) => value.includes(option))
+      : options.includes(value)
     return !(element.required && !validOption)
   }
 
   isInError({ element, builder }) {
-    return element.options.length === 0
+    switch (element.option_type) {
+      case CHOICE_OPTION_TYPES.MANUAL:
+        return element.options.length === 0
+      case CHOICE_OPTION_TYPES.FORMULAS: {
+        return element.formula_value === ''
+      }
+      default:
+        return true
+    }
   }
 
   getDataSchema(element) {

@@ -1,5 +1,5 @@
 import re
-from typing import Any, List, Type, Union
+from typing import Any, Dict, List, Type, Union
 
 from django.utils.translation import gettext as _
 
@@ -64,7 +64,9 @@ class PageParameterDataProviderType(DataProviderType):
 class FormDataProviderType(DataProviderType):
     type = "form_data"
 
-    def validate_data_chunk(self, element_id: str, data_chunk: Any):
+    def validate_data_chunk(
+        self, element_id: str, data_chunk: Any, dispatch_context: DispatchContext
+    ):
         """
         :param element_id: The ID of the element we're validating.
         :param data_chunk: The form data value which we're validating.
@@ -75,7 +77,7 @@ class FormDataProviderType(DataProviderType):
         element_type: FormElementTypeMixin = element.get_type()  # type: ignore
 
         try:
-            return element_type.is_valid(element, data_chunk)
+            return element_type.is_valid(element, data_chunk, dispatch_context)
         except FormDataProviderChunkInvalidException as exc:
             raise FormDataProviderChunkInvalidException(
                 f"Provided value for form element with ID {element.id} of "
@@ -97,7 +99,7 @@ class FormDataProviderType(DataProviderType):
             dispatch_context.request.data.get("form_data", {}), path
         )
 
-        return self.validate_data_chunk(int(element_id), data_chunk)
+        return self.validate_data_chunk(int(element_id), data_chunk, dispatch_context)
 
     def import_path(self, path, id_mapping, **kwargs):
         """
@@ -125,33 +127,14 @@ class DataSourceDataProviderType(DataProviderType):
 
     type = "data_source"
 
-    def get_data_source_by_id(
-        self, dispatch_context: BuilderDispatchContext, data_source_id: int
-    ):
-        """
-        Helper to get data source from a name from the cache or populate the cache
-        if not populated.
-        """
-
-        if "data_sources" not in dispatch_context.cache:
-            dispatch_context.cache[
-                "data_sources"
-            ] = DataSourceHandler().get_data_sources(dispatch_context.page)
-
-        for data_source in dispatch_context.cache["data_sources"]:
-            if data_source.id == data_source_id:
-                return data_source
-
-        raise DataSourceImproperlyConfigured(
-            f"Data source with id {data_source_id} doesn't exist"
-        )
-
     def get_data_chunk(self, dispatch_context: BuilderDispatchContext, path: List[str]):
         """Load a data chunk from a datasource of the page in context."""
 
         data_source_id, *rest = path
 
-        data_source = self.get_data_source_by_id(dispatch_context, int(data_source_id))
+        data_source = DataSourceHandler().get_data_source_with_cache(
+            dispatch_context.page, int(data_source_id)
+        )
 
         # Declare the call and check for recursion
         try:
@@ -191,6 +174,49 @@ class DataSourceDataProviderType(DataProviderType):
 
             service_type = data_source.service.specific.get_type()
             rest = service_type.import_path(rest, id_mapping)
+
+        return [str(data_source_id), *rest]
+
+
+class DataSourceContextDataProviderType(DataProviderType):
+    """
+    The data source context provider provides extra metadata related to the data source.
+    """
+
+    type = "data_source_context"
+
+    def get_data_chunk(self, dispatch_context: BuilderDispatchContext, path: List[str]):
+        """Load a data chunk from a datasource of the page in context."""
+
+        data_source_id, *rest = path
+        data_source = DataSourceHandler().get_data_source_with_cache(
+            dispatch_context.page, int(data_source_id)
+        )
+
+        service_type = data_source.service.get_type()
+        context_data = service_type.get_context_data(data_source.service)
+
+        return get_value_at_path(context_data, rest)
+
+    def import_path(self, path: List[str], id_mapping: Dict, **kwargs):
+        """
+        Update the data_source_id of the path, similar to
+        `DataSourceDataProviderType.import_path.`
+        """
+
+        data_source_id, *rest = path
+
+        if "builder_data_sources" in id_mapping:
+            try:
+                data_source_id = id_mapping["builder_data_sources"][int(data_source_id)]
+                data_source = DataSourceHandler().get_data_source(data_source_id)
+            except (KeyError, DataSourceDoesNotExist):
+                # The data source have probably been deleted, so we return the
+                # initial path
+                return [str(data_source_id), *rest]
+
+            service_type = data_source.service.specific.get_type()
+            rest = service_type.import_context_path(rest, id_mapping)
 
         return [str(data_source_id), *rest]
 

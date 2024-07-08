@@ -12,30 +12,28 @@
         'choice-element--error': displayFormDataError,
       }"
       :placeholder="
-        element.options.length
-          ? placeholderResolved
-          : $t('choiceElement.addOptions')
+        canHaveOptions ? placeholderResolved : $t('choiceElement.addOptions')
       "
       :show-search="false"
       :multiple="element.multiple"
       @hide="onFormElementTouch"
     >
       <ABDropdownItem
-        v-for="option in element.options"
+        v-for="option in optionsResolved"
         :key="option.id"
         :name="option.name || option.value"
         :value="option.value"
       />
     </ABDropdown>
     <template v-else>
-      <template v-if="element.options.length">
+      <template v-if="canHaveOptions">
         <template v-if="element.multiple">
           <ABCheckbox
-            v-for="option in optionsBooleanResolved"
+            v-for="option in optionsResolved"
             :key="option.id"
             :read-only="isEditMode"
             :error="displayFormDataError"
-            :value="option.booleanValue"
+            :value="inputValue.includes(option.value)"
             @input="onOptionChange(option, $event)"
           >
             {{ option.name || option.value }}
@@ -43,7 +41,7 @@
         </template>
         <template v-else>
           <ABRadio
-            v-for="option in element.options"
+            v-for="option in optionsResolved"
             :key="option.id"
             :read-only="isEditMode"
             :error="displayFormDataError"
@@ -65,6 +63,7 @@ import {
   ensureString,
   ensureArray,
 } from '@baserow/modules/core/utils/validator'
+import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'ChoiceElement',
@@ -79,6 +78,9 @@ export default {
      * @property {boolean} multiple - If the choice element allows multiple selections
      * @property {boolean} show_as_dropdown - If the choice element should be displayed as a dropdown
      * @property {Array} options - The options of the choice element
+     * @property {string} option_type - The type of the options
+     * @property {string} formula_name - The formula for the name of the option
+     * @property {string} formula_value - The formula for the value of the option
      */
     element: {
       type: Object,
@@ -94,17 +96,10 @@ export default {
     },
     defaultValueResolved() {
       if (this.element.multiple) {
-        return ensureArray(
-          this.resolveFormula(this.element.default_value)
-        ).reduce((acc, value) => {
-          if (
-            !acc.includes(value) &&
-            this.element.options.some((o) => o.value === value)
-          ) {
-            acc.push(value)
-          }
-          return acc
-        }, [])
+        const existingValues = this.optionsResolved.map(({ value }) => value)
+        return ensureArray(this.resolveFormula(this.element.default_value))
+          .map(ensureString)
+          .filter((value) => existingValues.includes(value))
       } else {
         // Always return a string if we have a default value, otherwise
         // set the value to null as single select fields will only skip
@@ -115,11 +110,34 @@ export default {
         return resolvedSingleValue.length ? resolvedSingleValue : null
       }
     },
-    optionsBooleanResolved() {
-      return this.element.options.map((option) => ({
-        ...option,
-        booleanValue: this.inputValue.includes(option.value),
-      }))
+    canHaveOptions() {
+      return !this.elementType.isInError({
+        element: this.element,
+        builder: this.builder,
+      })
+    },
+    optionsResolved() {
+      switch (this.element.option_type) {
+        case CHOICE_OPTION_TYPES.MANUAL:
+          return this.element.options
+        case CHOICE_OPTION_TYPES.FORMULAS: {
+          const formulaValues = ensureArray(
+            this.resolveFormula(this.element.formula_value)
+          )
+          const formulaNames = ensureArray(
+            this.resolveFormula(this.element.formula_name)
+          )
+          return formulaValues.map((value, index) => ({
+            id: index,
+            value: ensureString(value),
+            name: ensureString(
+              index < formulaValues.length ? formulaNames[index] : value
+            ),
+          }))
+        }
+        default:
+          return []
+      }
     },
   },
   watch: {

@@ -159,7 +159,11 @@ export default {
               value: initialValue,
               elementId: this.element.id,
               type: descendantType.formDataType(descendant),
-              isValid: descendantType.isValid(descendant, initialValue),
+              isValid: descendantType.isValid(
+                descendant,
+                initialValue,
+                this.applicationContext
+              ),
             }
             this.$store.dispatch('formData/setFormData', {
               page: this.page,

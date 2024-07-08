@@ -699,6 +699,10 @@ class InputTextElement(FormElement):
 
 
 class ChoiceElement(FormElement):
+    class OPTION_TYPE(models.TextChoices):
+        MANUAL = "manual"
+        FORMULAS = "formulas"
+
     label = FormulaField(
         default="",
         help_text="The text label for this choice",
@@ -720,6 +724,22 @@ class ChoiceElement(FormElement):
         default=True,
         help_text="Whether to show the choices as a dropdown.",
         null=True,  # TODO zdm remove me in next release
+    )
+    option_type = models.CharField(
+        choices=OPTION_TYPE.choices,
+        max_length=32,
+        default=OPTION_TYPE.MANUAL,
+        null=True,  # TODO remove me in next release
+    )
+    formula_value = FormulaField(
+        default="",
+        help_text="The value of the option if it is a formula",
+        null=True,  # TODO remove me in next release
+    )
+    formula_name = FormulaField(
+        default="",
+        help_text="The display name of the option if it is a formula",
+        null=True,  # TODO remove me in next release
     )
 
 

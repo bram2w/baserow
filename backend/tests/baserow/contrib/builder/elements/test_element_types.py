@@ -2,6 +2,7 @@ import json
 from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
+from unittest.mock import MagicMock
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.core.files.storage import FileSystemStorage
@@ -11,6 +12,9 @@ from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
+)
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
 )
 from baserow.contrib.builder.elements.element_types import (
     CheckboxElementType,
@@ -42,6 +46,7 @@ from baserow.contrib.builder.elements.registries import (
 )
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.utils import MirrorDict
@@ -200,6 +205,7 @@ def test_input_text_element_is_valid(data_fixture):
                         validation_type=test["type"], required=test["required"]
                     ),
                     test["value"],
+                    {},
                 )
                 == test["result"]
             ), repr(test["value"])
@@ -210,6 +216,7 @@ def test_input_text_element_is_valid(data_fixture):
                         validation_type=test["type"], required=test["required"]
                     ),
                     test["value"],
+                    {},
                 )
 
 
@@ -256,95 +263,179 @@ def test_choice_element_is_valid(data_fixture):
     choice.required = True
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, "")
+        ChoiceElementType().is_valid(choice, "", {})
 
-    assert ChoiceElementType().is_valid(choice, "uk") == "uk"
+    assert ChoiceElementType().is_valid(choice, "uk", {}) == "uk"
 
     choice.multiple = True
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, [])
+        ChoiceElementType().is_valid(choice, [], {})
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, [""])
+        ChoiceElementType().is_valid(choice, [""], {})
 
-    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
-    assert ChoiceElementType().is_valid(choice, "uk") == ["uk"]
-    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
-    assert ChoiceElementType().is_valid(choice, "uk,it") == ["uk", "it"]
-
-    with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, ["uk", "it", "pt"])
+    assert ChoiceElementType().is_valid(choice, ["uk"], {}) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, "uk", {}) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"], {}) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, "uk,it", {}) == ["uk", "it"]
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, "uk,it,pt")
+        ChoiceElementType().is_valid(choice, ["uk", "it", "pt"], {})
+
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, "uk,it,pt", {})
 
     choice.multiple = False
     choice.required = False
 
-    assert ChoiceElementType().is_valid(choice, "") == ""
-    assert ChoiceElementType().is_valid(choice, "uk") == "uk"
+    assert ChoiceElementType().is_valid(choice, "", {}) == ""
+    assert ChoiceElementType().is_valid(choice, "uk", {}) == "uk"
 
     choice.multiple = True
 
-    assert ChoiceElementType().is_valid(choice, []) == []
-    assert ChoiceElementType().is_valid(choice, "") == []
+    assert ChoiceElementType().is_valid(choice, [], {}) == []
+    assert ChoiceElementType().is_valid(choice, "", {}) == []
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, [""])
+        ChoiceElementType().is_valid(choice, [""], {})
 
-    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
-    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
-    assert ChoiceElementType().is_valid(choice, "uk,it") == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, ["uk"], {}) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"], {}) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, "uk,it", {}) == ["uk", "it"]
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, ["uk", "it", "pt"])
+        ChoiceElementType().is_valid(choice, ["uk", "it", "pt"], {})
 
     choice.choiceelementoption_set.create(value="", name="Blank")
     choice.multiple = False
     choice.required = True
 
-    assert ChoiceElementType().is_valid(choice, "") == ""
+    assert ChoiceElementType().is_valid(choice, "", {}) == ""
 
     choice.multiple = True
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, [])
+        ChoiceElementType().is_valid(choice, [], {})
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, "")
+        ChoiceElementType().is_valid(choice, "", {})
 
-    assert ChoiceElementType().is_valid(choice, [""]) == [""]
-    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
-    assert ChoiceElementType().is_valid(choice, "uk") == ["uk"]
-    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
-    assert ChoiceElementType().is_valid(choice, "uk,it") == ["uk", "it"]
-    assert ChoiceElementType().is_valid(choice, ["uk", "it", ""]) == [
+    assert ChoiceElementType().is_valid(choice, [""], {}) == [""]
+    assert ChoiceElementType().is_valid(choice, ["uk"], {}) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, "uk", {}) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"], {}) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, "uk,it", {}) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it", ""], {}) == [
         "uk",
         "it",
         "",
     ]
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, ["uk", "it", "", "pt"])
+        ChoiceElementType().is_valid(choice, ["uk", "it", "", "pt"], {})
 
     choice.multiple = False
     choice.required = False
 
-    assert ChoiceElementType().is_valid(choice, "uk") == "uk"
+    assert ChoiceElementType().is_valid(choice, "uk", {}) == "uk"
 
     choice.multiple = True
 
-    assert ChoiceElementType().is_valid(choice, []) == []
-    assert ChoiceElementType().is_valid(choice, [""]) == [""]
-    assert ChoiceElementType().is_valid(choice, ["uk"]) == ["uk"]
-    assert ChoiceElementType().is_valid(choice, ["uk", "it"]) == ["uk", "it"]
-    assert ChoiceElementType().is_valid(choice, ["uk", "it", ""]) == [
+    assert ChoiceElementType().is_valid(choice, [], {}) == []
+    assert ChoiceElementType().is_valid(choice, [""], {}) == [""]
+    assert ChoiceElementType().is_valid(choice, ["uk"], {}) == ["uk"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it"], {}) == ["uk", "it"]
+    assert ChoiceElementType().is_valid(choice, ["uk", "it", ""], {}) == [
         "uk",
         "it",
         "",
     ]
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        ChoiceElementType().is_valid(choice, ["uk", "it", "", "pt"])
+        ChoiceElementType().is_valid(choice, ["uk", "it", "", "pt"], {})
+
+
+@pytest.mark.django_db
+def test_choice_element_is_valid_formula_data_source(data_fixture):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[("Name", "text")],
+        rows=[["BMW"], ["Audi"], ["Seat"], ["Volvo"]],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    choice = ElementService().create_element(
+        page=page,
+        user=user,
+        element_type=element_type_registry.get("choice"),
+        option_type=ChoiceElement.OPTION_TYPE.FORMULAS,
+        formula_value=f"get('data_source.{data_source.id}.*.{fields[0].db_column}')",
+    )
+
+    # Call is_valid with an option that is not present in the list raises an exception
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
+
+    # Call is_valid with a valid option simply returns its value
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    assert ChoiceElementType().is_valid(choice, "BMW", dispatch_context) == "BMW"
+
+
+@pytest.mark.django_db
+def test_choice_element_is_valid_formula_context(data_fixture):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(user=user, columns=[], rows=[])
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Country",
+        select_options=[
+            {"value": "Germany", "color": "white"},
+            {"value": "Spain", "color": "red"},
+            {"value": "Sweden", "color": "yellow"},
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    choice = ElementService().create_element(
+        page=page,
+        user=user,
+        element_type=element_type_registry.get("choice"),
+        option_type=ChoiceElement.OPTION_TYPE.FORMULAS,
+        formula_value=f"get('data_source_context.{data_source.id}.{field.db_column}.*.value')",
+    )
+
+    # Call is_valid with an option that is not present in the list raises an exception
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
+
+    # Call is_valid with a valid option simply returns its value
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    assert (
+        ChoiceElementType().is_valid(choice, "Germany", dispatch_context) == "Germany"
+    )
 
 
 def test_element_type_import_element_priority():
@@ -423,26 +514,35 @@ def test_checkbox_element_import_export_formula(data_fixture):
 @pytest.mark.django_db
 def test_checkbox_text_element_is_valid(data_fixture):
     with pytest.raises(FormDataProviderChunkInvalidException):
-        CheckboxElementType().is_valid(CheckboxElement(required=True), False)
+        CheckboxElementType().is_valid(CheckboxElement(required=True), False, {})
 
     with pytest.raises(FormDataProviderChunkInvalidException):
-        CheckboxElementType().is_valid(CheckboxElement(required=True), 0)
+        CheckboxElementType().is_valid(CheckboxElement(required=True), 0, {})
 
-    assert CheckboxElementType().is_valid(CheckboxElement(required=True), True) is True
-
-    assert CheckboxElementType().is_valid(CheckboxElement(required=True), 1) is True
     assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=True), "true") is True
+        CheckboxElementType().is_valid(CheckboxElement(required=True), True, {}) is True
+    )
+
+    assert CheckboxElementType().is_valid(CheckboxElement(required=True), 1, {}) is True
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=True), "true", {})
+        is True
     )
     assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=False), False) is False
-    )
-    assert (
-        CheckboxElementType().is_valid(CheckboxElement(required=False), "false")
+        CheckboxElementType().is_valid(CheckboxElement(required=False), False, {})
         is False
     )
-    assert CheckboxElementType().is_valid(CheckboxElement(required=False), 0) is False
-    assert CheckboxElementType().is_valid(CheckboxElement(required=False), True) is True
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), "false", {})
+        is False
+    )
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), 0, {}) is False
+    )
+    assert (
+        CheckboxElementType().is_valid(CheckboxElement(required=False), True, {})
+        is True
+    )
 
 
 @pytest.mark.django_db

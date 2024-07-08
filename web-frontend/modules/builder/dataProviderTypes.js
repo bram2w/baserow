@@ -49,8 +49,7 @@ export class DataSourceDataProviderType extends DataProviderType {
     ](applicationContext.page, parseInt(dataSourceId))
 
     const content = this.getDataSourceContent(applicationContext, dataSource)
-    const result = content ? getValueAtPath(content, rest.join('.')) : null
-    return result
+    return content ? getValueAtPath(content, rest.join('.')) : null
   }
 
   getDataSourceContent(applicationContext, dataSource) {
@@ -100,13 +99,15 @@ export class DataSourceDataProviderType extends DataProviderType {
       this.app.store.getters['dataSource/getPageDataSources'](page)
 
     const dataSourcesSchema = Object.fromEntries(
-      dataSources.map((dataSource) => {
-        const dsSchema = this.getDataSourceSchema(dataSource)
-        if (dsSchema) {
-          delete dsSchema.$schema
-        }
-        return [dataSource.id, dsSchema]
-      })
+      dataSources
+        .map((dataSource) => {
+          const dsSchema = this.getDataSourceSchema(dataSource)
+          if (dsSchema) {
+            delete dsSchema.$schema
+          }
+          return [dataSource.id, dsSchema]
+        })
+        .filter(([, schema]) => schema)
     )
 
     return { type: 'object', properties: dataSourcesSchema }
@@ -121,6 +122,68 @@ export class DataSourceDataProviderType extends DataProviderType {
           page,
           dataSourceId
         )?.name || `data_source_${dataSourceId}`
+      )
+    }
+    return super.getPathTitle(applicationContext, pathParts)
+  }
+}
+
+export class DataSourceContextDataProviderType extends DataProviderType {
+  static getType() {
+    return 'data_source_context'
+  }
+
+  get name() {
+    return this.app.i18n.t('dataProviderType.dataSourceContext')
+  }
+
+  getDataChunk({ page }, path) {
+    const [dataSourceId, ...rest] = path
+
+    const dataSource = this.app.store.getters[
+      'dataSource/getPageDataSourceById'
+    ](page, parseInt(dataSourceId))
+
+    return getValueAtPath(dataSource.context_data, rest.join('.'))
+  }
+
+  getDataContent({ page }) {
+    const dataSources =
+      this.app.store.getters['dataSource/getPageDataSources'](page)
+
+    return Object.fromEntries(
+      dataSources.map((dataSource) => [dataSource.id, dataSource.context_data])
+    )
+  }
+
+  getDataSchema({ page }) {
+    const dataSources =
+      this.app.store.getters['dataSource/getPageDataSources'](page)
+
+    const contextDataSchema = Object.fromEntries(
+      dataSources
+        .filter((dataSource) => dataSource?.type)
+        .map((dataSource) => [
+          dataSource.id,
+          this.app.$registry
+            .get('service', dataSource.type)
+            .getContextDataSchema(dataSource),
+        ])
+        .filter(([, schema]) => schema)
+    )
+
+    return { type: 'object', properties: contextDataSchema }
+  }
+
+  getPathTitle(applicationContext, pathParts) {
+    if (pathParts.length === 2) {
+      const page = applicationContext?.page
+      const dataSourceId = parseInt(pathParts[1])
+      return (
+        this.app.store.getters['dataSource/getPageDataSourceById'](
+          page,
+          dataSourceId
+        )?.name || `data_source_context_${dataSourceId}`
       )
     }
     return super.getPathTitle(applicationContext, pathParts)
