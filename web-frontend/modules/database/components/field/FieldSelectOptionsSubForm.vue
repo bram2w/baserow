@@ -7,7 +7,6 @@
       small-label
       required
       :label="$t('fieldSingleSelectSubForm.optionsLabel')"
-      class="margin-bottom-2"
     >
       <FieldSelectOptions
         ref="selectOptions"
