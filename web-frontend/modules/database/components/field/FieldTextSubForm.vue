@@ -1,5 +1,5 @@
 <template>
-  <FormGroup class="margin-bottom-2">
+  <FormGroup>
     <FormInput
       ref="text_default"
       v-model="values.text_default"

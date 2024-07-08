@@ -97,6 +97,7 @@
         :name="values.name"
         :default-values="defaultValues"
         :database="database"
+        class="margin-bottom-2"
         @validate="$v.$touch"
         @suggested-field-name="handleSuggestedFieldName($event)"
       />

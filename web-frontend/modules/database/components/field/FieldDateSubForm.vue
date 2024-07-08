@@ -1,5 +1,5 @@
 <template>
-  <div class="margin-bottom-2">
+  <div>
     <FormGroup
       :label="$t('fieldDateSubForm.dateFormatLabel')"
       small-label

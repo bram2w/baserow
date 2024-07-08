@@ -27,7 +27,7 @@
       <template #error> {{ $t('error.requiredField') }}</template>
     </FormGroup>
 
-    <FormGroup class="margin-bottom-2">
+    <FormGroup>
       <Checkbox v-model="values.has_related_field">{{
         $t('fieldLinkRowSubForm.hasRelatedFieldLabel')
       }}</Checkbox>

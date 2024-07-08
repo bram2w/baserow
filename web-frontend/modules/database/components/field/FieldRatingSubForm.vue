@@ -1,11 +1,6 @@
 <template>
   <div class="rating-field-form">
-    <FormGroup
-      required
-      small-label
-      :label="$t('fieldRatingSubForm.color')"
-      class="margin-bottom-2"
-    >
+    <FormGroup required small-label :label="$t('fieldRatingSubForm.color')">
       <a
         ref="color-select"
         :class="'rating-field__color' + ' background-color--' + values.color"
@@ -19,7 +14,6 @@
       required
       small-label
       :label="$t('fieldRatingSubForm.style')"
-      class="margin-bottom-2"
       :error="$v.values.style.$error"
     >
       <Dropdown
@@ -45,7 +39,6 @@
       required
       small-label
       :label="$t('fieldRatingSubForm.maxValue')"
-      class="margin-bottom-2"
       :error="$v.values.max_value.$error"
     >
       <Dropdown

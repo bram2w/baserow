@@ -4,7 +4,7 @@
       small-label
       :error="$v.values.number_decimal_places.$error"
       :label="$t('fieldNumberSubForm.decimalPlacesLabel')"
-      class="margin-bottom-2"
+      :class="{ 'margin-bottom-2': allowSetNumberNegative }"
       required
     >
       <Dropdown
