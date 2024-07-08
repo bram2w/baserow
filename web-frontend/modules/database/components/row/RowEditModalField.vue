@@ -9,10 +9,12 @@
       {{ field.name }}
       <span v-if="field.description" class="margin-left-1">
         <HelpIcon
-          :tooltip="descriptionText"
-          :tooltip-duration="3"
-          :tooltip-content-type="'html'"
-          :tooltip-content-classes="'tooltip__content--expandable'"
+          :tooltip="field.description || ''"
+          :tooltip-content-type="'plain'"
+          :tooltip-content-classes="[
+            'tooltip__content--expandable',
+            'tooltip__content--expandable-plain-text',
+          ]"
           :icon="'info-empty'"
         />
       </span>
@@ -119,11 +121,6 @@ export default {
       type: Boolean,
       required: false,
       default: () => true,
-    },
-  },
-  computed: {
-    descriptionText() {
-      return (this.field.description || '').replaceAll('\n', '<br/>')
     },
   },
   methods: {

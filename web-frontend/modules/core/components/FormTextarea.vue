@@ -10,6 +10,7 @@
     :class="{
       'form-textarea--error': error,
       'form-textarea--disabled': disabled,
+      'form-textarea--small': size === 'small',
     }"
     :style="{
       height: textBoxSize ? `${textBoxSize}px` : 'auto',
@@ -108,16 +109,32 @@ export default {
       type: Number,
       default: null,
     },
+    /**
+     * The size of the textarea.
+     */
+    size: {
+      type: String,
+      required: false,
+      validator: function (value) {
+        return ['regular', 'small'].includes(value)
+      },
+      default: 'regular',
+    },
   },
   data() {
     return {
       numTextAreaLines: this.minRows,
+      verticalPadding: 0,
     }
   },
   computed: {
     textBoxSize() {
-      if (this.autoExpandable)
-        return 22 * Math.min(this.numTextAreaLines, this.maxRows)
+      if (this.autoExpandable) {
+        return (
+          22 * Math.min(this.numTextAreaLines, this.maxRows) +
+          this.verticalPadding
+        )
+      }
       return null
     },
     textBoxOverflow() {
@@ -199,11 +216,16 @@ export default {
         ? window.getComputedStyle(ta)
         : ta.currentStyle
 
+      this.verticalPadding =
+        parseInt(style.paddingTop.replace('px', '')) +
+        parseInt(style.paddingBottom.replace('px', ''))
+
       // This will get the line-height only if it is set in the css,
       // otherwise it's "normal"
       const taLineHeight = parseInt(style.lineHeight, 10)
       // Get the scroll height of the textarea
-      const taHeight = this.calculateContentHeight(ta, taLineHeight)
+      const taHeight =
+        this.calculateContentHeight(ta, taLineHeight) - this.verticalPadding
       // calculate the number of lines
       return Math.ceil(taHeight / taLineHeight)
     },

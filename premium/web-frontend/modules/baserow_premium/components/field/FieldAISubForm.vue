@@ -16,7 +16,7 @@
         {{ $t('selectAIModelForm.fileField') }}
         <HelpIcon
           :tooltip="$t('fieldAISubForm.fileFieldHelp')"
-          :tooltip-content-classes="'tooltip__content--expandable'"
+          :tooltip-content-classes="['tooltip__content--expandable']"
         />
       </template>
 

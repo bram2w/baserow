@@ -1,40 +1,19 @@
-.auto-expandable-textarea__container {
-  position: relative;
-  appearance: none;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  border: 1px solid #9fa4ab;
-  padding: 8px 0 8px 12px;
-  outline: none;
-  background-color: white;
-
-  @include rounded($rounded);
-}
-
 .auto-expandable-textarea {
-  font-size: 14px;
-  line-height: 22px;
   resize: none;
-  padding: 0;
-  padding-right: 14px;
-  border: 0;
   width: 100%;
+  line-height: 22px;
+  font-size: 13px;
+  padding: 6px 14px 8px 12px;
 
-  &--loading {
-    margin-right: 7px;
-
-    @include loading(14px);
-  }
-
-  &--loading-overlay {
-    &::before {
-      content: '';
-      border-radius: 2px;
-      background-color: rgba(0, 0, 0, 0.16);
-      z-index: 2;
-
-      @include absolute(0, 0, 0, 0);
-    }
+  &--input-formula {
+    font-family: monospace;
+    color: $color-neutral-900;
+    height: 22px;
+    background-color: transparent;
+    outline: none;
+    box-shadow: none;
+    border: none;
+    resize: none;
+    padding: 0;
   }
 }

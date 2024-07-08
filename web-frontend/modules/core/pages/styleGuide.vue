@@ -1110,7 +1110,7 @@
             <FormTextarea
               v-model="formula"
               auto-expandable
-              class="formula-field__input-formula"
+              class="auto-expandable-textarea--input-formula"
             ></FormTextarea>
           </div>
           <div class="formula-field__body">

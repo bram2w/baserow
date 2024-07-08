@@ -102,28 +102,25 @@
       />
     </template>
 
-    <FormElement
+    <FormGroup
       v-if="showDescription"
+      class="margin-bottom-2"
       :error="fieldHasErrors('description')"
-      class="control margin-bottom-2"
+      :label="$t('fieldForm.description')"
+      :small-label="true"
     >
-      <label class="control__label control__label--small">{{
-        $t('fieldForm.description')
-      }}</label>
       <div class="control__elements">
-        <RichTextEditor
+        <FormTextarea
           ref="description"
-          :value="editorValue"
-          class="field-form__editor rich-text-editor rich-text-editor--fixed-size"
-          :editable="true"
-          :enter-stop-edit="false"
-          :thin-scrollbar="true"
-          :enable-rich-text-formatting="false"
+          v-model="values.description"
+          :min-rows="1"
+          :max-rows="16"
+          auto-expandable
           :placeholder="$t('fieldForm.description')"
-          @blur="onDescriptionBlur"
+          size="small"
         />
       </div>
-    </FormElement>
+    </FormGroup>
     <slot v-if="!selectedFieldIsDeactivated"></slot>
   </form>
 </template>
@@ -131,9 +128,9 @@
 <script>
 import { mapGetters } from 'vuex'
 import { required, maxLength } from 'vuelidate/lib/validators'
+import FormTextarea from '@baserow/modules/core/components/FormTextarea'
 
 import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
-import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
 import form from '@baserow/modules/core/mixins/form'
 import {
   RESERVED_BASEROW_FIELD_NAMES,
@@ -143,7 +140,7 @@ import {
 // @TODO focus form on open
 export default {
   name: 'FieldForm',
-  components: { RichTextEditor },
+  components: { FormTextarea },
   mixins: [form],
   props: {
     table: {
@@ -209,11 +206,6 @@ export default {
       } catch {
         return false
       }
-    },
-    editorValue() {
-      // temp fix to have proper line breaks
-      // this will not be needed when RTE will be in minimal mode
-      return (this.values.description || '').replaceAll('\n', '<br/>')
     },
     ...mapGetters({
       fields: 'field/getAll',
@@ -310,6 +302,9 @@ export default {
      */
     showDescriptionField() {
       this.showDescription = true
+      this.$nextTick(() => {
+        this.$refs.description.focus()
+      })
     },
     /**
      * Helper method to get information if description is not empty.
@@ -318,12 +313,6 @@ export default {
     isDescriptionFieldNotEmpty() {
       this.showDescription = !!this.values.description
       return this.showDescription
-    },
-    onDescriptionBlur() {
-      // Handle blur event on field description text editor.
-      // A bit hacky way to get current state of description editor once the
-      // edition finished.
-      this.values.description = this.$refs.description.editor.getText()
     },
   },
 }
