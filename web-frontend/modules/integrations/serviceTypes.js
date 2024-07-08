@@ -35,6 +35,10 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
     return service.schema
   }
 
+  getContextDataSchema(service) {
+    return service.context_data_schema
+  }
+
   /**
    * A hook called prior to an update to modify the filters and
    * sortings if the `table_id` changes from one ID to another.
@@ -87,6 +91,10 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
 
   getDataSchema(service) {
     return service.schema
+  }
+
+  getContextDataSchema(service) {
+    return service.context_data_schema
   }
 
   get maxResultLimit() {

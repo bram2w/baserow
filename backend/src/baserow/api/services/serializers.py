@@ -15,25 +15,46 @@ class ServiceSerializer(serializers.ModelSerializer):
 
     type = serializers.SerializerMethodField(help_text="The type of the service.")
     schema = serializers.SerializerMethodField(help_text="The schema of the service.")
+    context_data = serializers.SerializerMethodField(
+        help_text="The context data of the service."
+    )
+    context_data_schema = serializers.SerializerMethodField(
+        help_text="The schema context data of the service."
+    )
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data(self, instance):
+        return instance.get_type().get_context_data(instance.specific)
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data_schema(self, instance):
+        return instance.get_type().get_context_data_schema(instance.specific)
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
-        return service_type_registry.get_by_model(instance.specific_class).type
+        return instance.get_type().type
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_schema(self, instance):
-        return service_type_registry.get_by_model(
-            instance.specific_class
-        ).generate_schema(instance)
+        return instance.get_type().generate_schema(instance.specific)
 
     class Meta:
         model = Service
-        fields = ("id", "integration_id", "type", "schema")
+        fields = (
+            "id",
+            "integration_id",
+            "type",
+            "schema",
+            "context_data",
+            "context_data_schema",
+        )
         extra_kwargs = {
             "id": {"read_only": True},
             "integration_id": {"read_only": True},
             "type": {"read_only": True},
             "schema": {"read_only": True},
+            "context_data": {"read_only": True},
+            "context_data_schema": {"read_only": True},
         }
 
 
@@ -49,12 +70,17 @@ class PublicServiceSerializer(serializers.ModelSerializer):
     def get_type(self, instance):
         return service_type_registry.get_by_model(instance.specific_class).type
 
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data(self, instance):
+        return instance.get_type().get_context_data(instance.specific)
+
     class Meta:
         model = Service
         fields = ("id", "type")
         extra_kwargs = {
             "id": {"read_only": True},
             "type": {"read_only": True},
+            "context_data": {"read_only": True},
         }
 
 

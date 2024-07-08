@@ -1,0 +1,328 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ChoiceElement as default 1`] = `
+<div
+  class="control ab-form-group"
+>
+  <!---->
+   
+  <!---->
+   
+  <div
+    class="control__wrapper"
+  >
+    <div
+      class="control__elements"
+    >
+      <div
+        class="flex-grow-1"
+      >
+        <!---->
+         
+        <div
+          class="ab-form-group__children"
+        >
+          <div
+            class="ab-dropdown choice-element"
+            tabindex="0"
+          >
+            <a
+              class="ab-dropdown__selected"
+            >
+              <span
+                class="ab-dropdown__selected-placeholder"
+              >
+                choiceElement.addOptions
+              </span>
+               
+              <i
+                class="ab-dropdown__toggle-icon iconoir-nav-arrow-down"
+              />
+            </a>
+             
+            <div
+              class="ab-dropdown__items hidden"
+            >
+              <!---->
+               
+              <ul
+                class="select__items"
+                tabindex=""
+              />
+               
+              <!---->
+               
+              <!---->
+            </div>
+          </div>
+           
+          <!---->
+        </div>
+      </div>
+       
+    </div>
+     
+    <!---->
+  </div>
+</div>
+`;
+
+exports[`ChoiceElement as manual checkboxes 1`] = `
+<div
+  class="control ab-form-group"
+>
+  <!---->
+   
+  <!---->
+   
+  <div
+    class="control__wrapper"
+  >
+    <div
+      class="control__elements"
+    >
+      <div
+        class="flex-grow-1"
+      >
+        <!---->
+         
+        <div
+          class="ab-form-group__children"
+        >
+          <div
+            class="ab-checkbox"
+          >
+            <input
+              class="ab-checkbox__input"
+              type="checkbox"
+            />
+             
+            <label
+              class="ab-checkbox__label"
+            >
+              
+          First
+        
+            </label>
+          </div>
+          <div
+            class="ab-checkbox"
+          >
+            <input
+              class="ab-checkbox__input"
+              type="checkbox"
+            />
+             
+            <label
+              class="ab-checkbox__label"
+            >
+              
+          Second
+        
+            </label>
+          </div>
+           
+          <!---->
+        </div>
+      </div>
+       
+    </div>
+     
+    <!---->
+  </div>
+</div>
+`;
+
+exports[`ChoiceElement as manual dropdown 1`] = `
+<div
+  class="control ab-form-group"
+>
+  <!---->
+   
+  <!---->
+   
+  <div
+    class="control__wrapper"
+  >
+    <div
+      class="control__elements"
+    >
+      <div
+        class="flex-grow-1"
+      >
+        <!---->
+         
+        <div
+          class="ab-form-group__children"
+        >
+          <div
+            class="ab-dropdown choice-element"
+            tabindex="0"
+          >
+            <a
+              class="ab-dropdown__selected"
+            >
+              <span
+                class="ab-dropdown__selected-placeholder"
+              >
+                action.makeChoice
+              </span>
+               
+              <i
+                class="ab-dropdown__toggle-icon iconoir-nav-arrow-down"
+              />
+            </a>
+             
+            <div
+              class="ab-dropdown__items hidden"
+            >
+              <!---->
+               
+              <ul
+                class="select__items"
+                tabindex=""
+              >
+                <li
+                  class="ab-dropdownitem__item ab-dropdownitem__item--no-options"
+                >
+                  <a
+                    class="ab-dropdownitem__item-link"
+                  >
+                    <div
+                      class="ab-dropdownitem__item-name"
+                    >
+                      <!---->
+                       
+                      <!---->
+                       
+                      <!---->
+                       
+                      <span
+                        class="ab-dropdownitem__item-name-text"
+                        title="First"
+                      >
+                        First
+                      </span>
+                    </div>
+                     
+                    <!---->
+                  </a>
+                   
+                  <i
+                    class="ab-dropdownitem__item-active-icon iconoir-check"
+                  />
+                </li>
+                <li
+                  class="ab-dropdownitem__item ab-dropdownitem__item--no-options"
+                >
+                  <a
+                    class="ab-dropdownitem__item-link"
+                  >
+                    <div
+                      class="ab-dropdownitem__item-name"
+                    >
+                      <!---->
+                       
+                      <!---->
+                       
+                      <!---->
+                       
+                      <span
+                        class="ab-dropdownitem__item-name-text"
+                        title="Second"
+                      >
+                        Second
+                      </span>
+                    </div>
+                     
+                    <!---->
+                  </a>
+                   
+                  <i
+                    class="ab-dropdownitem__item-active-icon iconoir-check"
+                  />
+                </li>
+              </ul>
+               
+              <!---->
+               
+              <!---->
+            </div>
+          </div>
+           
+          <!---->
+        </div>
+      </div>
+       
+    </div>
+     
+    <!---->
+  </div>
+</div>
+`;
+
+exports[`ChoiceElement as manual radio 1`] = `
+<div
+  class="control ab-form-group"
+>
+  <!---->
+   
+  <!---->
+   
+  <div
+    class="control__wrapper"
+  >
+    <div
+      class="control__elements"
+    >
+      <div
+        class="flex-grow-1"
+      >
+        <!---->
+         
+        <div
+          class="ab-form-group__children"
+        >
+          <div
+            class="ab-radio"
+          >
+            <input
+              class="ab-radio__input"
+              type="radio"
+            />
+             
+            <label
+              class="ab-radio__label"
+            >
+              
+          First
+        
+            </label>
+          </div>
+          <div
+            class="ab-radio"
+          >
+            <input
+              class="ab-radio__input"
+              type="radio"
+            />
+             
+            <label
+              class="ab-radio__label"
+            >
+              
+          Second
+        
+            </label>
+          </div>
+           
+          <!---->
+        </div>
+      </div>
+       
+    </div>
+     
+    <!---->
+  </div>
+</div>
+`;

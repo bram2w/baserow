@@ -52,9 +52,17 @@ from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
+from baserow.core.formula import resolve_formula
+from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.types import BaserowFormula
-from baserow.core.formula.validator import ensure_array, ensure_boolean, ensure_integer
+from baserow.core.formula.validator import (
+    ensure_array,
+    ensure_boolean,
+    ensure_integer,
+    ensure_string,
+)
 from baserow.core.registry import T
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_files.handler import UserFileHandler
 
 
@@ -1080,7 +1088,9 @@ class InputTextElementType(InputElementType):
             "input_type": "text",
         }
 
-    def is_valid(self, element: InputTextElement, value: Any) -> bool:
+    def is_valid(
+        self, element: InputTextElement, value: Any, dispatch_context: DispatchContext
+    ) -> bool:
         """
         :param element: The element we're trying to use form data in.
         :param value: The form data value, which may be invalid.
@@ -1239,7 +1249,9 @@ class CheckboxElementType(InputElementType):
             prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
-    def is_valid(self, element: CheckboxElement, value: Any) -> bool:
+    def is_valid(
+        self, element: CheckboxElement, value: Any, dispatch_context: DispatchContext
+    ) -> bool:
         if element.required and not value:
             raise FormDataProviderChunkInvalidException(
                 "The value is required for this element."
@@ -1270,6 +1282,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "placeholder",
         "multiple",
         "show_as_dropdown",
+        "option_type",
+        "formula_value",
+        "formula_name",
     ]
     serializer_field_names = [
         "label",
@@ -1279,6 +1294,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "options",
         "multiple",
         "show_as_dropdown",
+        "option_type",
+        "formula_value",
+        "formula_name",
     ]
     request_serializer_field_names = [
         "label",
@@ -1288,6 +1306,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "options",
         "multiple",
         "show_as_dropdown",
+        "option_type",
+        "formula_value",
+        "formula_name",
     ]
 
     class SerializedDict(ElementDict):
@@ -1298,6 +1319,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         options: List
         multiple: bool
         show_as_dropdown: bool
+        option_type: str
+        formula_value: BaserowFormula
+        formula_name: BaserowFormula
 
     @property
     def serializer_field_overrides(self):
@@ -1340,6 +1364,24 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
                 default=True,
                 required=False,
             ),
+            "option_type": serializers.ChoiceField(
+                choices=ChoiceElement.OPTION_TYPE.choices,
+                help_text=ChoiceElement._meta.get_field("option_type").help_text,
+                required=False,
+                default=ChoiceElement.OPTION_TYPE.MANUAL,
+            ),
+            "formula_value": FormulaSerializerField(
+                help_text=ChoiceElement._meta.get_field("formula_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "formula_name": FormulaSerializerField(
+                help_text=ChoiceElement._meta.get_field("formula_name").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
         }
 
         return overrides
@@ -1379,13 +1421,13 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         cache=None,
         **kwargs,
     ) -> Any:
-        if prop_name == "label":
-            return import_formula(value, id_mapping)
-
-        if prop_name == "default_value":
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "placeholder":
+        if prop_name in [
+            "label",
+            "default_value",
+            "placeholder",
+            "formula_value",
+            "formula_name",
+        ]:
             return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
@@ -1465,6 +1507,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
             "placeholder": "'some placeholder'",
             "multiple": False,
             "show_as_dropdown": True,
+            "option_type": ChoiceElement.OPTION_TYPE.MANUAL,
+            "formula_value": "",
+            "formula_name": "",
         }
 
     def after_create(self, instance: ChoiceElement, values: Dict):
@@ -1483,7 +1528,12 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
                 [ChoiceElementOption(choice=instance, **option) for option in options]
             )
 
-    def is_valid(self, element: ChoiceElement, value: Union[List, str]) -> bool:
+    def is_valid(
+        self,
+        element: ChoiceElement,
+        value: Union[List, str],
+        dispatch_context: DispatchContext,
+    ) -> bool:
         """
         Responsible for validating `ChoiceElement` form data. We handle
         this validation a little differently to ensure that if someone creates
@@ -1495,6 +1545,16 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         """
 
         options = set(element.choiceelementoption_set.values_list("value", flat=True))
+
+        if element.option_type == ChoiceElement.OPTION_TYPE.FORMULAS:
+            options = ensure_array(
+                resolve_formula(
+                    element.formula_value,
+                    formula_runtime_function_registry,
+                    dispatch_context,
+                )
+            )
+            options = [ensure_string(option) for option in options]
 
         if element.multiple:
             try:

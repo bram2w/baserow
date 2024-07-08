@@ -33,6 +33,7 @@ import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import {
   CurrentRecordDataProviderType,
+  DataSourceContextDataProviderType,
   DataSourceDataProviderType,
   PageParameterDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
@@ -56,6 +57,7 @@ export default {
         CurrentRecordDataProviderType.getType(),
         PageParameterDataProviderType.getType(),
         DataSourceDataProviderType.getType(),
+        DataSourceContextDataProviderType.getType(),
       ]
     },
   },

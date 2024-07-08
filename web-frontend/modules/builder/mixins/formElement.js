@@ -92,7 +92,11 @@ export default {
           elementId: this.element.id,
           touched: this.formElementTouched,
           type: this.elementType.formDataType(this.element),
-          isValid: this.elementType.isValid(this.element, value),
+          isValid: this.elementType.isValid(
+            this.element,
+            value,
+            this.applicationContext
+          ),
         },
       })
     },

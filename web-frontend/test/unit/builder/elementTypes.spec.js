@@ -309,7 +309,7 @@ describe('elementTypes tests', () => {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, '')).toBe(false)
+      expect(elementType.isValid(element, '', {})).toBe(false)
     })
     test('ChoiceElementType | required | blank option.', () => {
       const elementType = new ChoiceElementType()
@@ -320,7 +320,7 @@ describe('elementTypes tests', () => {
           { id: 2, value: 'uk', name: 'UK' },
         ],
       }
-      expect(elementType.isValid(element, '')).toBe(true)
+      expect(elementType.isValid(element, '', {})).toBe(true)
     })
     test('ChoiceElementType | required | valid value.', () => {
       const elementType = new ChoiceElementType()
@@ -328,7 +328,7 @@ describe('elementTypes tests', () => {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, 'uk')).toBe(true)
+      expect(elementType.isValid(element, 'uk', {})).toBe(true)
     })
     test('ChoiceElementType | not required | no value.', () => {
       const elementType = new ChoiceElementType()
@@ -336,7 +336,7 @@ describe('elementTypes tests', () => {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, '')).toBe(true)
+      expect(elementType.isValid(element, '', {})).toBe(true)
     })
     test('ChoiceElementType | not required | valid value.', () => {
       const elementType = new ChoiceElementType()
@@ -344,7 +344,7 @@ describe('elementTypes tests', () => {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, 'uk')).toBe(true)
+      expect(elementType.isValid(element, 'uk', {})).toBe(true)
     })
   })
 

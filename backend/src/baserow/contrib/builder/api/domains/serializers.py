@@ -302,6 +302,9 @@ class PublicDataSourceSerializer(PublicServiceSerializer):
         help_text=DataSource._meta.get_field("order").help_text
     )
     type = serializers.SerializerMethodField(help_text="The type of the data source.")
+    context_data = serializers.SerializerMethodField(
+        help_text="The context data of the data source."
+    )
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
@@ -326,11 +329,27 @@ class PublicDataSourceSerializer(PublicServiceSerializer):
     def get_order(self, instance):
         return self.context["data_source"].order
 
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data(self, instance):
+        service_instance = (
+            instance.service if isinstance(instance, DataSource) else instance
+        )
+        if service_instance:
+            return super().get_context_data(service_instance)
+        else:
+            return {}
+
     class Meta(PublicServiceSerializer.Meta):
-        fields = PublicServiceSerializer.Meta.fields + ("name", "page_id", "order")
+        fields = PublicServiceSerializer.Meta.fields + (
+            "name",
+            "page_id",
+            "order",
+            "context_data",
+        )
         extra_kwargs = {
             **PublicServiceSerializer.Meta.extra_kwargs,
             "name": {"read_only": True},
             "page_id": {"read_only": True},
             "order": {"read_only": True, "help_text": "Lowest first."},
+            "context_data": {"read_only": True},
         }

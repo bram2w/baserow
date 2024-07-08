@@ -354,6 +354,8 @@ def test_create_create_row_workflow_action(api_client, data_fixture):
         "schema": None,
         "table_id": None,
         "field_mappings": [],
+        "context_data": None,
+        "context_data_schema": None,
     }
 
 
@@ -443,6 +445,8 @@ def test_create_update_row_workflow_action(api_client, data_fixture):
         "row_id": "",
         "table_id": None,
         "field_mappings": [],
+        "context_data": None,
+        "context_data_schema": None,
     }
 
 

@@ -480,6 +480,55 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return f"Table{service.table_id}Schema"
 
+    def get_context_data(self, service: ServiceSubClass) -> Dict[str, Any]:
+        table = service.table
+        if not table:
+            return None
+
+        ret = {}
+        fields = FieldHandler().get_fields(table, specific=True)
+        for field in fields:
+            field_type = field_type_registry.get_by_model(field)
+            if field_type.can_have_select_options:
+                field_serializer = field_type.get_serializer(field, FieldSerializer)
+                ret[field.db_column] = field_serializer.data["select_options"]
+
+        return ret
+
+    def get_context_data_schema(self, service: ServiceSubClass) -> Dict[str, Any]:
+        table = service.table
+        if not table:
+            return None
+
+        properties = {}
+        fields = FieldHandler().get_fields(table, specific=True)
+
+        for field in fields:
+            field_type = field_type_registry.get_by_model(field)
+            if field_type.can_have_select_options:
+                properties[field.db_column] = {
+                    "type": "array",
+                    "title": field.name,
+                    "default": None,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "value": {"type": "string"},
+                            "id": {"type": "number"},
+                            "color": {"type": "string"},
+                        },
+                    },
+                }
+
+        if len(properties) == 0:
+            return None
+
+        return {
+            "type": "object",
+            "title": self.get_schema_name(service),
+            "properties": properties,
+        }
+
     def get_json_type_from_response_serializer_field(
         self, field, field_type
     ) -> Dict[str, Any]:
@@ -687,6 +736,35 @@ class LocalBaserowListRowsUserServiceType(
         )
 
         return [row, f"field_{field_id}", *rest]
+
+    def import_context_path(
+        self, path: List[str], id_mapping: Dict[int, int], **kwargs
+    ):
+        """
+        Updates the field ids in the path.
+
+        For context path data there is no row ID, as it represents the structure of the
+        overall data, and not a specific row.
+        """
+
+        # Only process the path name if it includes at least one database field id
+        if len(path) >= 1:
+            field_dbname, *rest = path
+        else:
+            return path
+
+        if field_dbname == "id":
+            return path
+
+        # Strip the `field_` prefix and extract its numeric ID
+        original_field_id = int(field_dbname[6:])
+
+        # Apply the mapping in case it is present for this field
+        field_id = id_mapping.get("database_fields", {}).get(
+            original_field_id, original_field_id
+        )
+
+        return [f"field_{field_id}", *rest]
 
     def deserialize_property(
         self,
@@ -924,6 +1002,15 @@ class LocalBaserowGetRowUserServiceType(
         )
 
         return [f"field_{field_id}", *rest]
+
+    def import_context_path(
+        self, path: List[str], id_mapping: Dict[int, int], **kwargs
+    ):
+        """
+        Update the field ids in the path, similar to `import_path` method.
+        """
+
+        return self.import_path(path, id_mapping)
 
     def deserialize_property(
         self,
@@ -1490,3 +1577,12 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         )
 
         return [f"field_{field_id}", *rest]
+
+    def import_context_path(
+        self, path: List[str], id_mapping: Dict[int, int], **kwargs
+    ):
+        """
+        Updates the field ids in the path, similar to `import_path` method.
+        """
+
+        return self.import_path(path, id_mapping)

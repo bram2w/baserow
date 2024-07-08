@@ -1,11 +1,13 @@
 {
   "dataProviderType": {
-    "dataSource": "Data",
+    "dataSource": "Data records",
+    "dataSourceContext": "Available options",
     "pageParameter": "Parameter",
     "currentRecord": "Data source",
     "formData": "Form data",
     "previousAction": "Previous action",
-    "user": "User"
+    "user": "User",
+    "metadata": "Metadata"
   },
   "formDataProviderType": {
     "nodeMissing": "Missing"
@@ -580,9 +582,15 @@
   },
   "choiceOptionSelector": {
     "label": "Options",
-    "value": "Value",
-    "name": "Name",
-    "addOption": "add option"
+    "value": "Option values",
+    "valuePlaceholder": "Enter value",
+    "name": "Option display names",
+    "namePlaceholder": "Enter name",
+    "addOption": "add option",
+    "optionType": "Options type",
+    "manual": "Manual",
+    "dataSource": "Data source",
+    "formulas": "Formulas"
   },
   "dispatchWorkflowActionError": {
     "defaultTitle": "Event error",

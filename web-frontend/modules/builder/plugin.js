@@ -82,6 +82,7 @@ import {
   FormDataProviderType,
   PreviousActionDataProviderType,
   UserDataProviderType,
+  DataSourceContextDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 import {
@@ -249,6 +250,10 @@ export default (context) => {
   app.$registry.register(
     'builderDataProvider',
     new DataSourceDataProviderType(context)
+  )
+  app.$registry.register(
+    'builderDataProvider',
+    new DataSourceContextDataProviderType(context)
   )
   app.$registry.register(
     'builderDataProvider',

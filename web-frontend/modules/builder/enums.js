@@ -4,6 +4,7 @@ import {
 } from '@baserow/modules/core/utils/validator'
 import {
   DataSourceDataProviderType,
+  DataSourceContextDataProviderType,
   PageParameterDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
@@ -101,6 +102,7 @@ export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
+  DataSourceContextDataProviderType.getType(),
   FormDataProviderType.getType(),
 ]
 
@@ -109,6 +111,7 @@ export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
+  DataSourceContextDataProviderType.getType(),
 ]
 
 /**
@@ -139,4 +142,10 @@ export const ELEMENT_EVENTS = {
 export const TABLE_ORIENTATION = {
   HORIZONTAL: 'horizontal',
   VERTICAL: 'vertical',
+}
+
+export const CHOICE_OPTION_TYPES = {
+  MANUAL: 'manual',
+  DATA_SOURCE: 'data_source',
+  FORMULAS: 'formulas',
 }
