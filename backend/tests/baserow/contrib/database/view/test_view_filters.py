@@ -3730,6 +3730,70 @@ def test_filename_contains_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_filename_contains_filter_type_multiple_filters(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test.png"},
+                {"visible_name": "another.png"},
+            ],
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test.doc"},
+                {"visible_name": "test.txt"},
+            ]
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "another.doc"},
+            ],
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="filename_contains",
+        value="test",
+    )
+
+    view_filter2 = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="filename_contains",
+        value="another",
+    )
+
+    grid_view.filter_type = "AND"
+    grid_view.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    grid_view.filter_type = "OR"
+    grid_view.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+
+@pytest.mark.django_db
 def test_has_file_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

@@ -169,9 +169,12 @@ def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotated
     annotation_query = FileNameContainsExpr(
         F(field_name), Value(f"%{value}%"), output_field=BooleanField()
     )
+    hashed_value = hash(value)
     return AnnotatedQ(
-        annotation={f"{field_name}_matches_visible_names": annotation_query},
-        q={f"{field_name}_matches_visible_names": True},
+        annotation={
+            f"{field_name}_matches_visible_names_{hashed_value}": annotation_query
+        },
+        q={f"{field_name}_matches_visible_names_{hashed_value}": True},
     )
 
 

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix multiple usage of filename contains filter",
+    "issue_number": 2746,
+    "bullet_points": [],
+    "created_at": "2024-06-21"
+}
