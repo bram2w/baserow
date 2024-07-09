@@ -294,7 +294,9 @@
         "noFields": "No hay campos",
         "nameFieldLabel": "Seleccionar campo de nombre",
         "nameFieldPlaceholder": "Selecciona un campo...",
-        "emailFieldLabelPlaceholder": "Selecciona un campo..."
+        "emailFieldLabelPlaceholder": "Selecciona un campo...",
+        "roleFieldLabel": "Seleccionar campo de función",
+        "roleFieldPlaceholder": "Selecciona un campo..."
     },
     "localBaserowUserSourceType": {
         "notConfigured": "No configurado"

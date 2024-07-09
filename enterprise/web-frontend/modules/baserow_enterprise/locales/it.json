@@ -294,7 +294,9 @@
         "description": "Ogni riga nella tabella è un utente. Scegli i campi corrispondenti nella tabella. Il campo email sarà utilizzato per identificare l'utente.",
         "emailFieldLabel": "Scegli il campo email",
         "emailFieldLabelPlaceholder": "Scegli un campo...",
-        "noFields": "Nessuno campo"
+        "noFields": "Nessuno campo",
+        "roleFieldLabel": "Scegli il campo per il ruolo",
+        "roleFieldPlaceholder": "Scegli un campo..."
     },
     "localBaserowUserSourceType": {
         "notConfigured": "Non configurato"
@@ -319,6 +321,7 @@
         "title": "Effettua l'upgrade per usare {name}",
         "viewPricing": "Vedi prezzi",
         "enterprise": "Enterprise",
-        "premium": "Premium"
+        "premium": "Premium",
+        "description": "Il tuo account non ha accesso alle funzionalità advanced/enterprise. Effettua l'upgrade per iniziare ad utilizzare {name}. Clicca per vedere i prezzi delle licenze."
     }
 }

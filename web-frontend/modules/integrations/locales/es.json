@@ -54,8 +54,8 @@
         "localBaserowWarning": "Autorizar su cuenta les otorga a todos los que tienen permisos de edición en la aplicación acceso completo a los datos a los que usted tiene acceso. Es posible crear un segundo usuario, otorgarle los permisos correctos y usarlo."
     },
     "serviceType": {
-        "localBaserowGetRow": "Obtener una fila",
-        "localBaserowListRows": "Listar filas"
+        "localBaserowGetRow": "Obtener una sola fila",
+        "localBaserowListRows": "Obtener varias filas"
     },
     "userSourceType": {
         "localBaserow": "Autenticación de la tabla de Baserow"

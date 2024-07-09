@@ -166,7 +166,8 @@
         "primary": "Indica se il campo è un campo primario. Se `true`, il campo non può essere eliminato e il valore deve rappresentare l'intera riga.",
         "type": "Tipo definito per questo campo.",
         "extraProps": "Alcune proprietà extra non sono descritte qui perché sono specifiche del tipo.",
-        "readOnly": "Indica se un campo e in sola lettura. Se vero, non è possibile modificare il valore delle cella."
+        "readOnly": "Indica se un campo e in sola lettura. Se vero, non è possibile modificare il valore delle cella.",
+        "descriptionField": "Descrizione campo"
     },
     "apiDocsTableDeleteRow": {
         "description": "Elimina una riga esistente {nome}.",
@@ -246,7 +247,9 @@
         "name": "Nome",
         "fieldAlreadyExists": "Un campo con questo nome esiste già.",
         "nameNotAllowed": "Il nome di questo campo non è consentito.",
-        "nameTooLong": "Il nome di questo campo è troppo lungo."
+        "nameTooLong": "Il nome di questo campo è troppo lungo.",
+        "description": "Descrizione",
+        "addDescription": "Aggiungi descrizione"
     },
     "fieldLookupSubForm": {
         "noTable": "Serve almeno un campo riga di collegamento per creare un campo di ricerca.",
@@ -830,7 +833,8 @@
         "notifyUserWhenAdded": "Notifica gli utenti quando vengono aggiunti"
     },
     "viewFieldConditionsForm": {
-        "addCondition": "Aggiungi condizione"
+        "addCondition": "Aggiungi condizione",
+        "addConditionGroup": "Aggiungi gruppo"
     },
     "fieldPasswordSubForm": {
         "description": "Non è ancora possibile fare nulla direttamente con il campo password, questo viene utilizzato solo dall'autenticazione dell'utente nell'application builder."
@@ -859,5 +863,46 @@
     },
     "fieldLongTextSubForm": {
         "enableRichTextFormatting": "Abilita la formattazione RTF"
+    },
+    "databaseScratchTrackStep": {
+        "rowName": "Nome riga",
+        "campaignsRow3": "Rilancio del brand",
+        "description": "Scegli da uno dei nostri esempi, o creane uno tu.",
+        "thisIncludes": "Includi:",
+        "projects": "Progetti",
+        "productsRow2": "Ricerca clienti",
+        "productsRow3": "Campagna ad a pagamento",
+        "teams": "Squadre",
+        "teamsRow1": "Vendite",
+        "teamsRow2": "HR",
+        "tasksRow1": "Redesign del logo aziendale",
+        "campaignsRow1": "Vendita estiva",
+        "campaignsRow2": "Premi fedeltà",
+        "addYourOwn": "Aggiungi il tuo",
+        "tableName": "Nome tabella",
+        "title": "Cosa ti piacerebbe creare?",
+        "productsRow1": "Cambio nome sito",
+        "teamsRow3": "Marketing",
+        "tasks": "Compiti",
+        "tasksRow2": "Invia email",
+        "tasksRow3": "Scrivi un post per il blog",
+        "campaigns": "Campagne"
+    },
+    "databaseImportStep": {
+        "description": "Carica i tuoi dati in Baserow in pochi click.",
+        "title": "Importa i tuoi dati",
+        "tableNameLabel": "Nome tabella"
+    },
+    "databaseStep": {
+        "title": "Crea il tuo primo database",
+        "description": "Raccontaci su cosa stai lavorando.",
+        "databaseNameLabel": "Nome database",
+        "scratch": "Dall'inizio",
+        "airtable": "Da Airtable",
+        "import": "Da file"
+    },
+    "ViewFilterTypeDateUpgradeToMultiStep": {
+        "migrateButtonText": "Usa i nuovi filtri per le date",
+        "migrateButtonTooltip": "Abbiamo introdotto nuovi filtri per le date. Clicca per aggiornare. Il risultato è lo stesso, le potenzialità sono molte di più."
     }
 }

@@ -225,7 +225,9 @@
     "fieldLinkRowSubForm": {
         "noTable": "Je hebt minstens één andere tabel in dezelfde database nodig om naar te linken.",
         "selectTableLabel": "Selecteer een tabel om naar te linken",
-        "hasRelatedFieldLabel": "Maak gerelateerd veld"
+        "hasRelatedFieldLabel": "Maak gerelateerd veld",
+        "limitToView": "Selectie beperken tot weergave",
+        "limitToViewDescription": "Merk op dat dit alleen visueel is. Het is nog steeds mogelijk om relaties te leggen buiten de weergave via de gerelateerde tabel of API."
     },
     "fieldSelectOptions": {
         "add": "Een optie toevoegen"
@@ -833,7 +835,8 @@
         "notifyUserWhenAdded": "Gebruiker op de hoogte stellen wanneer toegevoegd"
     },
     "viewFieldConditionsForm": {
-        "addCondition": "Voorwaarde toevoegen"
+        "addCondition": "Voorwaarde toevoegen",
+        "addConditionGroup": "Voorwaarde groep toevoegen"
     },
     "formSubmittedNotification": {
         "title": "{formName} is verstuurd in tabel {tableName}:",

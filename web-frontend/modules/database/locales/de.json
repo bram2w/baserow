@@ -166,7 +166,8 @@
         "primary": "Gibt an, wenn das Feld ein Primärfeld ist. Wenn `true`, kann das Feld nicht gelöscht werden und der Wert sollte die gesamte Zeile repräsentieren.",
         "type": "Für dieses Feld definierter Typ.",
         "extraProps": "Einige zusätzliche Eigenschaften werden hier nicht beschrieben, da sie typspezifisch sind.",
-        "readOnly": "Zeigt an, ob das Feld ein schreibgeschütztes Feld ist. Wenn \"true\", kann der Wert der Zelle nicht aktualisiert werden."
+        "readOnly": "Zeigt an, ob das Feld ein schreibgeschütztes Feld ist. Wenn \"true\", kann der Wert der Zelle nicht aktualisiert werden.",
+        "descriptionField": "Feldbeschreibung"
     },
     "apiDocsTableDeleteRow": {
         "description": "Löscht eine vorhandene {name} Zeile.",
@@ -194,7 +195,8 @@
         "filter": "Filter",
         "exampleValue": "Beispielwert",
         "example": "Volles Beispiel",
-        "field": "feld {name}"
+        "field": "feld {name}",
+        "deprecated": "veraltet"
     },
     "fieldTextSubForm": {
         "placeholder": "Standardtext"
@@ -245,7 +247,9 @@
         "name": "Name",
         "fieldAlreadyExists": "Ein Feld mit diesem Namen existiert bereits.",
         "nameNotAllowed": "Dieser Feldname ist nicht zulässig.",
-        "nameTooLong": "Der Name dieses Feldes ist zu lang."
+        "nameTooLong": "Der Name dieses Feldes ist zu lang.",
+        "description": "Beschreibung",
+        "addDescription": "Beschreibung hinzufügen"
     },
     "fieldLookupSubForm": {
         "noTable": "Sie benötigen mindestens ein Verknüpfungszeilenfeld, um ein Nachschlagefeld zu erstellen.",
@@ -505,7 +509,10 @@
         "copyRowURL": "Zeilen-URL kopieren",
         "copiedRowURL": "Zeilen-URL kopiert",
         "copiedRowURLMessage": "Die URL aus Zeile {id} wurde in die Zwischenablage kopiert.",
-        "tooManyItemsTitle": "Zu viele Elemente"
+        "tooManyItemsTitle": "Zu viele Elemente",
+        "AIValuesGenerationErrorTitle": "Werterstellung mittels KI fehlgeschlagen",
+        "AIValuesGenerationErrorMessage": "Bitte überprüfen Sie Ihren API_KEY und das ausgewählte Modell.",
+        "generateCellsValues": "Mit KI Werte generieren"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"
@@ -586,7 +593,7 @@
         "airtableLabel": "Importieren von Airtable (beta)"
     },
     "importFromAirtable": {
-        "airtableShareLinkTitle": "Teilen Sie einen Link zu Ihrer Base",
+        "airtableShareLinkTitle": "Teilen Sie einen Link zu Ihrer Basis",
         "airtableShareLinkBeta": "Beachten Sie, dass sich diese Funktion noch in Beta befindet. Ihre Tabellen, Felder (außer formula, lookup, und count) und Daten werden importiert. Ihre Views werden nicht importiert.",
         "airtableShareLinkPaste": "Den Link hier einfügen",
         "importButtonLabel": "Importieren von Airtable",
@@ -594,7 +601,7 @@
         "importError": "Etwas ist schief gelaufen",
         "statePending": "Warten",
         "stateFailed": "Fehlgeschlagen",
-        "stateFinished": "Fertig",
+        "stateFinished": "Abgeschlossen",
         "stateDownloadingBase": "Herunterladen das Baseschemas",
         "stateConverting": "Konvertierung zu Baserow",
         "stateDownloadingFiles": "Herunterladen von Dateien",
@@ -610,7 +617,7 @@
         "warningWhenNothingToChooseOrCreate": "Es gibt keine einzelnen Auswahlfelder, aus denen Sie auswählen können, und Sie haben keine Berechtigung, eines zu erstellen."
     },
     "shareViewEnablePasswordModal": {
-        "newPasswordTitle": "Geben Sie ein password ein",
+        "newPasswordTitle": "Geben Sie ein Passwort ein",
         "changePasswordSave": "Passwort ändern",
         "newPasswordSave": "Passwort setzen",
         "changePasswordTitle": "Passwort ändern",
@@ -834,5 +841,67 @@
     "formSubmittedNotification": {
         "title": "{formName} wurde in Tabelle {tableName} abgesendet:",
         "moreValues": "0 | und 1 weiteres Feld. | und {count} weitere Felder."
+    },
+    "fieldLongTextSubForm": {
+        "enableRichTextFormatting": "Rich-Text-Formatierung aktivieren"
+    },
+    "rowHistoryFieldPassword": {
+        "passwordSet": "Das Passwort wurde festgelegt",
+        "passwordUpdated": "Das Passwort wurde aktualisiert",
+        "passwordDeleted": "Das Passwort wurde entfernt"
+    },
+    "dataProviderTypes": {
+        "fieldsName": "Felder"
+    },
+    "databaseScratchTrackStep": {
+        "teamsRow3": "Marketing",
+        "tasks": "Aufgaben",
+        "tasksRow1": "Logo-Redesign",
+        "tasksRow2": "E-Mail versenden",
+        "tasksRow3": "Blogpost schreiben",
+        "campaigns": "Kampagnen",
+        "tableName": "Tabellenname",
+        "productsRow2": "Kundenbefragung",
+        "productsRow3": "Bezahlte Anzeigenkampagne",
+        "teams": "Teams",
+        "teamsRow1": "Verkauf",
+        "teamsRow2": "Personalwesen",
+        "campaignsRow1": "Sommerschlussverkauf",
+        "campaignsRow2": "Treueprämien",
+        "title": "Was möchten Sie verfolgen?",
+        "campaignsRow3": "Marken-Relaunch",
+        "productsRow1": "Rebranding-Website",
+        "description": "Wählen Sie aus gängigen Anwendungsfällen oder erstellen Sie Ihre eigenen.",
+        "addYourOwn": "Erstellen Sie Ihren eigenen",
+        "rowName": "Zeilenname",
+        "thisIncludes": "Das beinhaltet:",
+        "projects": "Projekte"
+    },
+    "fieldPasswordSubForm": {
+        "description": "Es ist noch nicht möglich, direkt etwas mit dem Passwortfeld zu tun. Dieses wird nur von der Benutzerauthentifizierung im Application Builder verwendet."
+    },
+    "rowEditFieldPassword": {
+        "setPassword": "Passwort festlegen"
+    },
+    "databaseImportStep": {
+        "title": "Importieren Sie Ihre Daten",
+        "description": "Verschieben Sie Ihre Daten mit nur wenigen Klicks in Baserow.",
+        "tableNameLabel": "Tabellenname"
+    },
+    "databaseStep": {
+        "scratch": "Von Grund auf",
+        "import": "Aus einer Datei",
+        "title": "Erstellen Sie Ihre erste Datenbank",
+        "airtable": "Von Airtable",
+        "databaseNameLabel": "Datenbankname",
+        "description": "Lassen Sie uns wissen, woran Sie gerade arbeiten."
+    },
+    "userMentionInRichTextFieldNotification": {
+        "deletedUser": "Ein gelöschter Benutzer",
+        "title": "{sender} hat Sie in Feld {fieldName} aus Zeile {rowId} in {tableName} erwähnt"
+    },
+    "ViewFilterTypeDateUpgradeToMultiStep": {
+        "migrateButtonText": "Umstellung auf mehrstufigen Datumsfilter",
+        "migrateButtonTooltip": "Neuer Filter verfügbar. Zum Aktualisieren anklicken. Er funktioniert genauso."
     }
 }

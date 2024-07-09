@@ -371,7 +371,10 @@
         "AIType": "AI Type",
         "AIModel": "AI-model",
         "prompt": "Prompt",
-        "premiumFeature": "Het AI-veld is een premium functie"
+        "premiumFeature": "Het AI-veld is een premium functie",
+        "emptyFileField": "Geen",
+        "fileFieldHelp": "Het eerste compatibele bestand in het veld wordt gebruikt als de kennisbasis voor de prompt. Het bestand moet een tekstbestand zijn met een ondersteunde bestandsextensie zoals .txt, .md, .pdf, .docx.",
+        "promptPlaceholder": "Wat is Baserow?"
     },
     "rowEditFieldAI": {
         "generate": "Genereren",

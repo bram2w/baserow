@@ -771,7 +771,8 @@
     },
     "selectAIModelForm": {
         "AIType": "Tipo de IA",
-        "AIModel": "Modelo de IA"
+        "AIModel": "Modelo de IA",
+        "fileField": "Campo de archivo"
     },
     "inviteStep": {
         "title": "Invitar a colaboradores",
@@ -784,5 +785,12 @@
         "people": "¿Cuántas personas hay en tu equipo?",
         "country": "País",
         "share": "Estoy de acuerdo en compartir esto con el equipo de Baserow"
+    },
+    "colorInput": {
+        "default": "Por defecto"
+    },
+    "imageInput": {
+        "labelButton": "Subir",
+        "labelDescription": "Selecciona una imagen para subir..."
     }
 }

@@ -33,7 +33,8 @@
         "integrationsName": "Integrationen",
         "themeName": "Theme",
         "domainsName": "Domänen",
-        "userSourcesName": "Benutzer"
+        "userSourcesName": "Benutzer",
+        "generalName": "Allgemein"
     },
     "elementType": {
         "textDescription": "Mehrzeiliger Text",
@@ -61,7 +62,9 @@
         "checkbox": "Kontrollkästchen",
         "dropdown": "Dropdown",
         "authForm": "Anmeldeformular",
-        "authFormDescription": "Ein Benutzer-Anmeldeformular"
+        "authFormDescription": "Ein Benutzer-Anmeldeformular",
+        "repeat": "Wiederholen",
+        "repeatDescription": "Eine wiederholbare Menge an Elementen"
     },
     "addElementButton": {
         "label": "Element"
@@ -127,7 +130,8 @@
         "pageParameter": "Parameter",
         "dataSource": "Daten",
         "formData": "Formulardaten",
-        "user": "Benutzer"
+        "user": "Benutzer",
+        "previousAction": "Vorherige Aktion"
     },
     "pageErrors": {
         "errorStartingSlash": "Ein Pfad muss mit '/' beginnen",
@@ -204,7 +208,8 @@
     "updateUserSourceForm": {
         "integrationFieldLabel": "Integration",
         "nameFieldPlaceholder": "Einen Namen eingeben...",
-        "nameFieldLabel": "Name"
+        "nameFieldLabel": "Name",
+        "authTitle": "Authentifizierung"
     },
     "upsertRowWorkflowActionForm": {
         "rowIdPlaceholder": "Wählen Sie eine Zeilen-ID aus",
@@ -253,7 +258,15 @@
         "altTextDescription": "Wird von Screen-Readern verwendet und angezeigt, wenn das Bild nicht geladen werden kann",
         "urlWarning": "Hinweis: Bitte vergewissern Sie sich, dass Sie die Kontrolle über die eingegebene URL haben oder dieser vertrauen.",
         "maxWidthLabel": "Maximale Breite",
-        "maxHeightLabel": "Maximale Höhe"
+        "maxHeightLabel": "Maximale Höhe",
+        "maxHeightPlaceholder": "Geben Sie eine maximale Höhe in Pixeln ein.",
+        "maxWidthPlaceholder": "Geben Sie eine maximale Breite in Prozent an.",
+        "imageConstraintsLabel": "Beschränkungen",
+        "imageConstraintCoverDisabled": "Nicht verfügbar mit leerer maximaler Höhe.",
+        "imageConstraintFullWidth": "Auf maximale Breite ausweiten",
+        "imageConstraintContainDisabled": "Nicht verfügbar mit gesetzter maximaler Höhe.",
+        "imageConstraintCover": "Cover",
+        "imageConstraintContain": "Contain"
     },
     "columnElementForm": {
         "columnAmountTitle": "Layout",
@@ -267,7 +280,7 @@
     "horizontalAlignmentSelector": {
         "alignmentRight": "Rechtsbündig",
         "alignmentCenter": "Zentrieren",
-        "alignmentLeft": "Verknüpfung",
+        "alignmentLeft": "Links",
         "alignment": "Horizontale Ausrichtung"
     },
     "verticalAlignmentSelector": {
@@ -347,7 +360,8 @@
         "fieldType": "Typ",
         "itemsPerPagePlaceholder": "Wert eingeben...",
         "selectSourceFirst": "Wählen Sie eine Listen-Datenquelle, um mit der Konfiguration Ihrer Felder zu beginnen.",
-        "buttonColor": "Buttonfarbe"
+        "buttonColor": "Buttonfarbe",
+        "refreshFieldsFromDataSource": "Felder aus der Datenquelle aktualisieren"
     },
     "tableElement": {
         "empty": "Es wurden keine Elemente gefunden.",
@@ -357,7 +371,9 @@
         "createRowLabel": "Zeile erstellen",
         "openPageLabel": "Seite öffnen",
         "updateRowLabel": "Zeile aktualisieren",
-        "notificationLabel": "Benachrichtigung anzeigen"
+        "notificationLabel": "Benachrichtigung anzeigen",
+        "logoutLabel": "Abmelden",
+        "refreshDataSourceLabel": "Datenquelle aktualisieren"
     },
     "notificationWorkflowActionForm": {
         "titleLabel": "Titel",
@@ -374,7 +390,9 @@
     },
     "collectionFieldType": {
         "text": "Text",
-        "link": "Verknüpfung"
+        "link": "Verknüpfung",
+        "boolean": "Boolesch",
+        "tags": "Tags"
     },
     "linkFieldForm": {
         "fieldLinkNamePlaceholder": "Wert eingeben...",
@@ -391,11 +409,15 @@
     "formContainerElementForm": {
         "submitButtonLabel": "Absenden-Button",
         "submitButtonPlaceholder": "Wert eingeben...",
-        "buttonColor": "Buttonfarbe"
+        "buttonColor": "Buttonfarbe",
+        "resetToInitialValuesTitle": "Nach der Übermittlung auf Standardwerte zurücksetzen",
+        "resetToInitialValuesDescription": "Wenn diese Option aktiviert ist, werden die Standardwerte des Formulars verwendet, um das Formular nach erfolgreicher Übermittlung zurückzusetzen. Falls der Haken nicht gesetzt ist, bleiben die Werte des Benutzers erhalten."
     },
     "dispatchWorkflowActionError": {
         "defaultTitle": "Ereignisfehler",
-        "defaultMessage": "Beim Auslösen des Ereignisses ist ein Fehler aufgetreten."
+        "defaultMessage": "Beim Auslösen des Ereignisses ist ein Fehler aufgetreten.",
+        "formDataInvalidTitle": "Ungültiges Formular",
+        "formDataInvalidMessage": "Ein oder mehrere Felder enthalten ungültige Werte."
     },
     "textFieldForm": {
         "fieldValuePlaceholder": "Wert eingeben...",
@@ -408,7 +430,8 @@
         "labelPlaceholder": "Geben Sie eine Bezeichnung ein (optional)",
         "labelTitle": "Bezeichnung",
         "valueTitle": "Standardwert",
-        "placeholderTitle": "Platzhalter"
+        "placeholderTitle": "Platzhalter",
+        "validationTitle": "Überprüfung"
     },
     "iframeElementForm": {
         "urlHelp": "Hinweis: Bitte vergewissern Sie sich, dass Sie die Kontrolle über die eingegebene URL haben oder dieser vertrauen.",
@@ -428,10 +451,13 @@
         "navigateTo": "Navigieren zu",
         "url": "Ziel-URL",
         "paramsInErrorDescription": "Die gespeicherten Parameter stimmen nicht mit den Seitenparametern überein. Die Seite wurde wahrscheinlich gelöscht oder aktualisiert.",
-        "paramsInErrorButton": "Parameter aktualisieren"
+        "paramsInErrorButton": "Parameter aktualisieren",
+        "targetSelf": "Gleicher Tab",
+        "targetNewTab": "Neuer Tab",
+        "target": "Öffnen in..."
     },
     "integrationSettings": {
-        "noIntegrationMessage": "Sie haben noch keine Verbindung erstellt. Sie können durch Hinzufügen von Datenquelle, Aktion oder Benutzerauthentifizierung erstellt werden.",
+        "noIntegrationMessage": "Sie haben noch keine Integrationen erstellt. Diese können durch Hinzufügen von Datenquelle, Aktion oder Benutzerauthentifizierung erstellt werden.",
         "title": "Integrationen",
         "integrationMessage": "Sie können neue Integrationen erstellen, indem Sie Datenquellen, Aktionen oder Benutzerauthentifizierungen hinzufügen."
     },
@@ -441,7 +467,17 @@
     "inputTextElementForm": {
         "multilineTitle": "Mehrzeilig",
         "rowsTitle": "Zeilenanzahl",
-        "rowsPlaceholder": "Geben Sie die Anzahl der Zeilen für diese Eingabe ein"
+        "rowsPlaceholder": "Geben Sie die Anzahl der Zeilen für diese Eingabe ein",
+        "validationTypeAnyLabel": "Jeglich(e)",
+        "validationTypeIntegerLabel": "Zahl",
+        "validationTypeAnyDescription": "Erlaubt die Eingabe eines beliebigen Wertes.",
+        "validationTypeIntegerDescription": "Erzwinge einen Zahlenwert in diesem Eingabefeld.",
+        "validationTypeEmailLabel": "E-Mailadresse",
+        "validationTypeEmailDescription": "Erzwinge eine E-Mailadresse in diesem Eingabefeld.",
+        "inputType": "Eingabetyp",
+        "inputTypeTextLabel": "Text",
+        "passwordTypeWarning": "Passwörter sind sensible Daten. Bitte geben Sie acht, wie Sie Passwörter in Ihrer Anwendung behandeln und speichern.",
+        "inputTypePasswordLabel": "Passwort"
     },
     "buttonElementForm": {
         "valuePlaceholder": "Text eingeben...",
@@ -453,13 +489,14 @@
     },
     "eventTypes": {
         "clickLabel": "Bei Klick",
-        "submitLabel": "Beim Absenden"
+        "submitLabel": "Beim Absenden",
+        "afterLoginLabel": "Nach dem Login"
     },
     "getFormulaComponent": {
         "errorTooltip": "Ungültiger Bezug"
     },
     "fontSidePanelForm": {
-        "label": "Schriftart"
+        "label": "Schriftfarbe"
     },
     "dropdownOptionSelector": {
         "label": "Optionen",
@@ -469,5 +506,87 @@
     },
     "linkField": {
         "details": "Details"
+    },
+    "userSourceUsersContext": {
+        "searchPlaceholder": "Benutzer suchen",
+        "anonymous": "Anonym",
+        "unnamed": "Unbenannt",
+        "noEmail": "Keine E-Mailadresse"
+    },
+    "imageInput": {
+        "labelDescription": "Standardbeschreibung",
+        "labelButton": "Hochladen"
+    },
+    "generalSettings": {
+        "labelDescription": "Wählen Sie eine 128x128 Pixel große ICO-, PNG-, GIF- oder JPEG-Datei.",
+        "titleOverview": "Allgemein",
+        "labelForm": "Favicon",
+        "cantUploadFaviconTitle": "Konnte die Favicon-Datei nicht hochladen",
+        "labelButton": "Favicon hochladen",
+        "cantUpdateApplicationTitle": "Konnte die Anwendung nicht aktualisieren",
+        "cantUploadFaviconDescription": "Leider konnte kein Favicon-Bild hochgeladen werden. Bitte stellen Sie sicher, dass die Bilddatei eindeutig ist und in einem der unterstützten Bildformate vorliegt.",
+        "cantUpdateApplicationDescription": "Entschuldigung, konnte die Anwendung nicht aktualisieren."
+    },
+    "repeatElement": {
+        "showMore": "Mehr anzeigen",
+        "missingDataSourceTooltip": "Wählen Sie eine Datenquelle, um mit dem Hinzufügen von Elementen zu beginnen.",
+        "empty": "Es wurden keine Elemente gefunden."
+    },
+    "repeatElementForm": {
+        "dataSource": "Datenquelle",
+        "itemsPerPage": "Elemente pro Seite",
+        "itemsPerRowLabel": "Elemente pro Zeile",
+        "orientationHorizontal": "Horizontal",
+        "itemsPerPagePlaceholder": "Wert eingeben...",
+        "itemsPerRowDescription": "Legen Sie für jeden Gerätetyp fest, wie viele Wiederholungen pro Zeile erfolgen sollen.",
+        "orientationLabel": "Ausrichtung",
+        "orientationVertical": "Vertikal"
+    },
+    "tagsFieldForm": {
+        "fieldValuesLabel": "Werte",
+        "fieldValuesPlaceholder": "Werte eingeben...",
+        "fieldColorsLabel": "Farben",
+        "fieldColorsPlaceholder": "Farben eingeben..."
+    },
+    "formContainerElement": {
+        "submitDeactivatedText": "Füllen Sie alle erforderlichen Felder aus, um das Formular abzusenden"
+    },
+    "authFormElementForm": {
+        "userSource": "Benutzerquelle"
+    },
+    "authFormElement": {
+        "email": "E-Mailadresse",
+        "password": "Passwort",
+        "emailPlaceholder": "Geben Sie ihre E-Mailadresse ein...",
+        "passwordPlaceholder": "Geben Sie ihr Passwort ein...",
+        "selectOrConfigureUserSourceFirst": "Wählen Sie eine Benutzerquelle, um dieses Anmelde-Element zu verwenden."
+    },
+    "userSelector": {
+        "viewAs": "Anzeigen als: {user}",
+        "anonymous": "Anonym"
+    },
+    "visibilityForm": {
+        "allVisitors": "Alle Besucher",
+        "loggedInVisitors": "Eingeloggte Besucher",
+        "notLoggedInVisitors": "Ausgeloggte Besucher",
+        "warningTitle": "Wir verbessern kontinuierlich die Sicherheit",
+        "warningMessage": "Im Moment wird die Sichtbarkeit nur in der Benutzeroberfläche angewendet, die zugrunde liegenden Daten sind weiterhin über die API zugänglich. Weitere Informationen zur Datensicherheit entnehmen Sie bitte der <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>Dokumentation</a>."
+    },
+    "dispatchDataSourceError": {
+        "defaultTitle": "Datenladefehler",
+        "defaultMessage": "Beim Laden der Daten für diese Seite ist ein Fehler aufgetreten."
+    },
+    "userDataProviderType": {
+        "isAuthenticated": "Ist authentifiziert",
+        "id": "ID",
+        "email": "E-Mailadresse",
+        "username": "Benutzername"
+    },
+    "buttonField": {
+        "noLabel": "Unbenannt..."
+    },
+    "buttonFieldForm": {
+        "infoMessage": "Um Aktionen für diese Schaltfläche zu konfigurieren, öffnen Sie die Registerkarte „Ereignisse“ des aktuellen Elements.",
+        "labelPlaceholder": "Geben Sie eine Bezeichnung ein..."
     }
 }

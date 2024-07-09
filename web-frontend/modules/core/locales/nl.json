@@ -188,7 +188,8 @@
         "fromTemplate": "Van sjabloon"
     },
     "applicationForm": {
-        "nameLabel": "Naam"
+        "nameLabel": "Naam",
+        "namePlaceholder": "Voer de naam in..."
     },
     "connectingNotification": {
         "title": "Opnieuw verbinden",
@@ -720,7 +721,8 @@
     },
     "selectAIModelForm": {
         "AIModel": "AI-model",
-        "AIType": "AI-type"
+        "AIType": "AI-type",
+        "fileField": "Bestandsveld"
     },
     "onboarding": {
         "title": "Onboarding",
@@ -784,5 +786,12 @@
     "workspaceStep": {
         "title": "Creëer je workspace",
         "workspaceLabel": "Workspace naam"
+    },
+    "imageInput": {
+        "labelButton": "Uploaden",
+        "labelDescription": "Selecteer een afbeelding om te uploaden..."
+    },
+    "colorInput": {
+        "default": "Standaard"
     }
 }

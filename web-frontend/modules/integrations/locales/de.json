@@ -18,7 +18,9 @@
         "filterTypeNotFound": "Die Filterart ist nicht kompatibel.",
         "addFilter": "Zusätzliche Filter hinzufügen",
         "noFilterTitle": "Sie haben bisher keinen Datenquellen-Filter erstellt",
-        "formulaFilterInputPlaceholder": "Text eingeben..."
+        "formulaFilterInputPlaceholder": "Text eingeben...",
+        "useFormulaForValue": "Eine Formel für diesen Filter verwenden",
+        "useDefaultForValue": "Standardfilter für dieses Feld verwenden"
     },
     "localBaserowTableServiceSortForm": {
         "noTableChosenForSorting": "Wählen Sie eine Tabelle, um die Datenquellen-Sortierung zu verwenden.",
@@ -61,5 +63,10 @@
         "noTableChosenForSorting": "Wählen Sie eine Tabelle um die Datenquellen-Sortierung zu nutzen.",
         "searchFieldPlaceHolder": "Geben Sie einen Suchbegriff ein...",
         "noTableChosenForFiltering": "Wählen Sie eine Tabelle um die Filter der Datenquelle nutzen zu können."
+    },
+    "localBaserowIntegrationType": {
+        "localBaserowSummary": "Lokales Baserow - {name}, {username}",
+        "localBaserowNoUser": "Lokales Baserow - Nicht konfiguriert",
+        "localBaserowWarning": "Wenn Sie Ihr Konto autorisieren, hat jeder mit Bearbeitungsrechten für die Anwendung auch vollen Zugriff auf die Daten, auf welche Sie Zugriff haben. Es ist möglich einen zweiten Benutzer zu erstellen, diesem die passenden Berechtigungen zu geben und stattdessen diesen zu verwenden."
     }
 }
