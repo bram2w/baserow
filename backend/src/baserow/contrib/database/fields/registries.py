@@ -43,7 +43,7 @@ from baserow.core.registry import (
     Registry,
 )
 
-from .deferred_field_fk_updater import DeferredFieldFkUpdater
+from .deferred_foreign_key_updater import DeferredForeignKeyUpdater
 from .exceptions import (
     FieldTypeAlreadyRegistered,
     FieldTypeDoesNotExist,
@@ -894,7 +894,7 @@ class FieldType(
         serialized_values: Dict[str, Any],
         import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
-        deferred_fk_update_collector: DeferredFieldFkUpdater,
+        deferred_fk_update_collector: DeferredForeignKeyUpdater,
     ) -> Field:
         """
         Imported an exported serialized field dict that was exported via the

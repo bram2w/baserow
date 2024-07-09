@@ -7,8 +7,8 @@ import pytest
 from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
+from baserow.contrib.database.fields.deferred_foreign_key_updater import (
+    DeferredForeignKeyUpdater,
 )
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -462,7 +462,7 @@ def test_import_export_lookup_field_when_through_field_trashed(
         lookup_serialized,
         ImportExportConfig(include_permission_data=True),
         id_mapping,
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
     assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name
@@ -517,7 +517,7 @@ def test_import_export_lookup_field_trashed_target_field(data_fixture, api_clien
         lookup_serialized,
         ImportExportConfig(include_permission_data=True),
         id_mapping,
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
     assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name

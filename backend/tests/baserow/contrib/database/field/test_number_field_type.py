@@ -4,8 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 
 import pytest
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
+from baserow.contrib.database.fields.deferred_foreign_key_updater import (
+    DeferredForeignKeyUpdater,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import NumberField
@@ -203,7 +203,7 @@ def test_import_export_number_field(data_fixture):
         number_serialized,
         ImportExportConfig(include_permission_data=True),
         {},
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
     assert number_field.number_negative == number_field_imported.number_negative
     assert number_field.number_decimal_places == (
