@@ -29,6 +29,16 @@ export default {
       default: true,
       required: false,
     },
+    hideOnScroll: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    hideOnResize: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     overflowScroll: {
       type: Boolean,
       default: false,
@@ -189,9 +199,11 @@ export default {
       })
 
       this.$el.updatePositionViaScrollEvent = (event) => {
-        // The context menu itself can have a scrollbar, and resizing everytime you
-        // scroll internally doesn't make sense because it can't influence the position.
-        if (
+        if (this.hideOnScroll) {
+          this.hide()
+        } else if (
+          // The context menu itself can have a scrollbar, and resizing everytime you
+          // scroll internally doesn't make sense because it can't influence the position.
           !isElement(this.$el, event.target) &&
           // If the scroll was not inside one of the context children of this context
           // menu.
@@ -209,7 +221,11 @@ export default {
       )
 
       this.$el.updatePositionViaResizeEvent = () => {
-        updatePosition()
+        if (this.hideOnResize) {
+          this.hide()
+        } else {
+          updatePosition()
+        }
       }
       window.addEventListener('resize', this.$el.updatePositionViaResizeEvent)
 
