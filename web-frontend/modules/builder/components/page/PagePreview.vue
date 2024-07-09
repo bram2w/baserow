@@ -23,7 +23,7 @@
         >
           {{ $t('pagePreview.emptyMessage') }}
         </CallToAction>
-        <div class="page">
+        <div v-else class="page">
           <ElementPreview
             v-for="(element, index) in elements"
             :key="element.id"
