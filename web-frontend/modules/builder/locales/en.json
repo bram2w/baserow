@@ -6,8 +6,7 @@
     "currentRecord": "Data source",
     "formData": "Form data",
     "previousAction": "Previous action",
-    "user": "User",
-    "metadata": "Metadata"
+    "user": "User"
   },
   "formDataProviderType": {
     "nodeMissing": "Missing"

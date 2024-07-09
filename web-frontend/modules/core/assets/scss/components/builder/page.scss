@@ -8,4 +8,8 @@
     // We want to fill the screen when it's the published version
     min-height: 100vh;
   }
+
+  .page-preview__scaled & {
+    min-height: 100%;
+  }
 }

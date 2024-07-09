@@ -16,7 +16,7 @@ class ElementDict(TypedDict):
     visibility: str
     role_type: str
     roles: list
-    styles: object
+    styles: dict
     style_border_top_color: str
     style_border_top_size: int
     style_padding_top: int
