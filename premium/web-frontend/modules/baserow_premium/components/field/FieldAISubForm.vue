@@ -55,7 +55,7 @@
           v-model="values.ai_prompt"
           :data-providers="dataProviders"
           :application-context="applicationContext"
-          placeholder="What is Baserow?"
+          :placeholder="$t('fieldAISubForm.promptPlaceholder')"
         ></FormulaInputField>
       </div>
       <template #error> {{ $t('error.requiredField') }}</template>
