@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.db import transaction
+
 import pytest
 from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 
@@ -61,7 +63,8 @@ def test_view_signals_not_collaborative(
     # view_deleted
 
     with patch("baserow.ws.registries.broadcast_to_channel_group") as broadcast:
-        ViewHandler().delete_view(user=user, view=view)
+        with transaction.atomic():
+            ViewHandler().delete_view(user=user, view=view)
         broadcast.delay.assert_not_called()
 
     view = data_fixture.create_grid_view(user=user, table=table)
@@ -72,7 +75,8 @@ def test_view_signals_not_collaborative(
     with patch(
         "baserow.contrib.database.ws.views.signals.broadcast_to_users"
     ) as broadcast:
-        ViewHandler().delete_view(user=user, view=view)
+        with transaction.atomic():
+            ViewHandler().delete_view(user=user, view=view)
         args = broadcast.delay.call_args
         assert args[0][0] == [user.id]
 

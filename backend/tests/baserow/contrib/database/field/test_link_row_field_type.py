@@ -1,12 +1,19 @@
 from io import BytesIO
+from unittest.mock import patch
 
 from django.apps.registry import apps
-from django.db import connections
+from django.db import connection, connections
 from django.shortcuts import reverse
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
-from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
@@ -22,6 +29,7 @@ from baserow.contrib.database.fields.models import Field, LinkRowField, TextFiel
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.registries import ImportExportConfig
@@ -640,6 +648,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["name"] == "Link 1"
     assert response_json["type"] == "link_row"
     assert response_json["link_row_table_id"] == customers_table.id
+    assert response_json["link_row_limit_selection_view_id"] is None
     assert LinkRowField.objects.all().count() == 2
     field_id = response_json["id"]
 
@@ -667,6 +676,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["type"] == "link_row"
     assert response_json["link_row_table_id"] == customers_table.id
     assert response_json["link_row_related_field_id"] == related_field.id
+    assert response_json["link_row_limit_selection_view_id"] is None
 
     # Just fetching the related field and check if is has the correct values.
     response = api_client.get(
@@ -678,6 +688,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["name"] == "Example"
     assert response_json["link_row_table_id"] == table.id
     assert response_json["link_row_related_field_id"] == field.id
+    assert response_json["link_row_limit_selection_view_id"] is None
 
     # Only updating the name of the field without changing anything else
     response = api_client.patch(
@@ -692,6 +703,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["type"] == "link_row"
     assert response_json["link_row_table_id"] == customers_table.id
     assert response_json["link_row_related_field_id"] == related_field.id
+    assert response_json["link_row_limit_selection_view_id"] is None
 
     # Only try to update the link_row_related_field, but this is a read only field so
     # nothing should happen.
@@ -707,6 +719,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["type"] == "link_row"
     assert response_json["link_row_table_id"] == customers_table.id
     assert response_json["link_row_related_field_id"] == related_field.id
+    assert response_json["link_row_limit_selection_view_id"] is None
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field_id}),
@@ -720,6 +733,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json["type"] == "link_row"
     assert response_json["link_row_table_id"] == cars_table.id
     assert response_json["link_row_related_field_id"] == related_field.id
+    assert response_json["link_row_limit_selection_view_id"] is None
 
     field.refresh_from_db()
     related_field.refresh_from_db()
@@ -734,6 +748,253 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_200_OK
     assert LinkRowField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_create_link_row_field_type_limit_selection_view_api_views(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    customers_view = data_fixture.create_grid_view(table=customers_table)
+    form_view = data_fixture.create_form_view(table=customers_table)
+    unrelated_view = data_fixture.create_grid_view()
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Link 1",
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": 0,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    # Form view is not supported, so we expect a 404.
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Link 1",
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": form_view.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Link 1",
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": unrelated_view.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_NOT_IN_TABLE"
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Link 1",
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": customers_view.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["link_row_limit_selection_view_id"] == customers_view.id
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Link 2",
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": None,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["link_row_limit_selection_view_id"] is None
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_update_link_row_field_type_limit_selection_view_api_views(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    other_table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    customers_view = data_fixture.create_grid_view(table=customers_table)
+    unrelated_view = data_fixture.create_grid_view()
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Link 1", "type": "link_row", "link_row_table": customers_table.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    field_id = response_json["id"]
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {"link_row_limit_selection_view_id": 0},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {"link_row_limit_selection_view_id": unrelated_view.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_NOT_IN_TABLE"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {"link_row_limit_selection_view_id": customers_view.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["link_row_limit_selection_view_id"] == customers_view.id
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {
+            "link_row_table_id": other_table.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_NOT_IN_TABLE"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {"link_row_limit_selection_view_id": None},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["link_row_limit_selection_view_id"] is None
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_update_link_row_field_type_limit_selection_view_api_views_from_text_field(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    other_table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    customers_view = data_fixture.create_grid_view(table=customers_table)
+    unrelated_view = data_fixture.create_grid_view()
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Link 1",
+            "type": "text",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    field_id = response_json["id"]
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": 0,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": unrelated_view.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_NOT_IN_TABLE"
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_id}),
+        {
+            "type": "link_row",
+            "link_row_table": customers_table.id,
+            "link_row_limit_selection_view_id": customers_view.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["link_row_limit_selection_view_id"] == customers_view.id
 
 
 @pytest.mark.django_db
@@ -913,6 +1174,9 @@ def test_import_export_link_row_field(data_fixture):
     customers_table = data_fixture.create_database_table(
         name="Customers", database=database
     )
+    customers_view = data_fixture.create_grid_view(
+        name="Filtered", table=customers_table
+    )
     field_handler = FieldHandler()
     core_handler = CoreHandler()
     link_row_field = field_handler.create_field(
@@ -921,6 +1185,7 @@ def test_import_export_link_row_field(data_fixture):
         name="Link Row",
         type_name="link_row",
         link_row_table=customers_table,
+        link_row_limit_selection_view=customers_view,
     )
 
     row_handler = RowHandler()
@@ -944,6 +1209,8 @@ def test_import_export_link_row_field(data_fixture):
     imported_tables = imported_database.table_set.all()
     imported_table = imported_tables[0]
     imported_customers_table = imported_tables[1]
+    imported_customers_table_views = imported_customers_table.view_set.all()
+    imported_customers_table_view = imported_customers_table_views[0]
     imported_link_row_field = imported_table.field_set.all().first().specific
     imported_link_row_relation_field = (
         imported_customers_table.field_set.all().first().specific
@@ -956,6 +1223,11 @@ def test_import_export_link_row_field(data_fixture):
     assert imported_link_row_field.id != link_row_field.id
     assert imported_link_row_field.name == link_row_field.name
     assert imported_link_row_field.link_row_table_id == imported_customers_table.id
+    assert (
+        imported_link_row_field.link_row_limit_selection_view_id
+        == imported_customers_table_view.id
+    )
+    assert imported_link_row_field.link_row_limit_selection_view_id != customers_view.id
     assert imported_link_row_relation_field.link_row_table_id == imported_table.id
     assert imported_link_row_field.link_row_relation_id == (
         imported_link_row_relation_field.link_row_relation_id
@@ -1837,3 +2109,118 @@ def test_link_row_are_row_values_equal(data_fixture, django_assert_num_queries):
             LinkRowFieldType().are_row_values_equal([table2_row1.id], [table2_row2.id])
             is False
         )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+@patch("baserow.contrib.database.fields.receivers.field_updated.send")
+def test_clear_link_row_limit_selection_view_when_view_is_deleted(
+    mock_field_updated,
+    data_fixture,
+):
+    user = data_fixture.create_user(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table_with_view = data_fixture.create_database_table(
+        name="Example", database=database
+    )
+    view = data_fixture.create_grid_view(name="Filtered", table=table_with_view)
+    view_2 = data_fixture.create_grid_view(name="Filtered", table=table_with_view)
+    view_3 = data_fixture.create_grid_view(name="Filtered", table=table_with_view)
+
+    table_1 = data_fixture.create_database_table(name="Customers", database=database)
+    table_2 = data_fixture.create_database_table(name="Cars", database=database)
+
+    field_handler = FieldHandler()
+    table_1_link_row_field_1 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        name="Link Row 1",
+        type_name="link_row",
+        link_row_table=table_with_view,
+        link_row_limit_selection_view=view,
+    )
+    table_1_link_row_field_2 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        name="Link Row 2",
+        type_name="link_row",
+        link_row_table=table_with_view,
+        link_row_limit_selection_view=view,
+    )
+    table_1_link_row_field_3 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        name="Link Row 3",
+        type_name="link_row",
+        link_row_table=table_with_view,
+        link_row_limit_selection_view=view_2,
+    )
+    table_1_link_row_field_4 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        name="Link Row 4",
+        type_name="link_row",
+        link_row_table=table_with_view,
+        link_row_limit_selection_view=view,
+    )
+    TrashHandler.trash(
+        user,
+        database.workspace,
+        database,
+        table_1_link_row_field_4,
+    )
+    table_2_link_row_field_1 = field_handler.create_field(
+        user=user,
+        table=table_2,
+        name="Link Row 5",
+        type_name="link_row",
+        link_row_table=table_with_view,
+        link_row_limit_selection_view=view,
+    )
+    table_2_link_row_field_2 = field_handler.create_field(
+        user=user,
+        table=table_2,
+        name="Link Row 6",
+        type_name="link_row",
+        link_row_table=table_2,
+    )
+
+    view_handler = ViewHandler()
+
+    with CaptureQueriesContext(connection) as queries_request_1:
+        view_handler.delete_view(user, view_3)
+
+    with CaptureQueriesContext(connection) as queries_request_2:
+        view_handler.delete_view(user, view)
+
+    assert len(queries_request_1.captured_queries) + 1 == len(
+        queries_request_2.captured_queries
+    )
+
+    table_1_link_row_field_1.refresh_from_db()
+    table_1_link_row_field_2.refresh_from_db()
+    table_1_link_row_field_3.refresh_from_db()
+    table_1_link_row_field_4.refresh_from_db()
+    table_2_link_row_field_1.refresh_from_db()
+    table_2_link_row_field_2.refresh_from_db()
+
+    assert table_1_link_row_field_1.link_row_limit_selection_view is None
+    assert table_1_link_row_field_2.link_row_limit_selection_view is None
+    assert table_1_link_row_field_3.link_row_limit_selection_view_id == view_2.id
+    assert table_1_link_row_field_4.link_row_limit_selection_view is None
+    assert table_2_link_row_field_1.link_row_limit_selection_view is None
+    assert table_2_link_row_field_2.link_row_limit_selection_view is None
+
+    assert len(mock_field_updated.call_args_list) == 2
+    assert mock_field_updated.call_args_list[0].kwargs == {
+        "field": table_1_link_row_field_1,
+        "related_fields": [table_1_link_row_field_2],
+        "user": None,
+    }
+    assert mock_field_updated.call_args_list[1].kwargs == {
+        "field": table_2_link_row_field_1,
+        "related_fields": [],
+        "user": None,
+    }

@@ -71,6 +71,10 @@ from baserow.contrib.database.api.fields.serializers import (
     PasswordSerializer,
     SelectOptionSerializer,
 )
+from baserow.contrib.database.api.views.errors import (
+    ERROR_VIEW_DOES_NOT_EXIST,
+    ERROR_VIEW_NOT_IN_TABLE,
+)
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.formula import (
@@ -91,6 +95,8 @@ from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
+from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
+from baserow.contrib.database.views.models import OWNERSHIP_TYPE_COLLABORATIVE, View
 from baserow.core.db import (
     CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
     collate_expression,
@@ -113,7 +119,7 @@ from ..formula.types.formula_types import (
     BaserowFormulaSingleFileType,
 )
 from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
-from .deferred_field_fk_updater import DeferredFieldFkUpdater
+from .deferred_foreign_key_updater import DeferredForeignKeyUpdater
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
     SelfReferenceFieldDependencyError,
@@ -213,7 +219,6 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import FieldObject, GeneratedTableModel
-    from baserow.contrib.database.views.models import View
 
 
 class CollationSortMixin:
@@ -1898,12 +1903,15 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         "link_row_related_field",
         "link_row_table",
         "link_row_relation_id",
+        "link_row_limit_selection_view_id",
+        "link_row_limit_selection_view",
     ]
     serializer_field_names = [
         "link_row_table_id",
         "link_row_related_field_id",
         "link_row_table",
         "link_row_related_field",
+        "link_row_limit_selection_view_id",
     ]
     serializer_field_overrides = {
         "link_row_table_id": serializers.IntegerField(
@@ -1926,11 +1934,18 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             required=False,
             help_text="(Deprecated) The id of the related field.",
         ),
+        "link_row_limit_selection_view_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The ID of the view in the related table where row selection "
+            "must be limited to.",
+        ),
     }
     request_serializer_field_names = [
         "link_row_table_id",
         "link_row_table",
         "has_related_field",
+        "link_row_limit_selection_view_id",
     ]
     request_serializer_field_overrides = {
         "has_related_field": serializers.BooleanField(required=False),
@@ -1946,6 +1961,16 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             source="link_row_table.id",
             help_text="(Deprecated) The id of the linked table.",
         ),
+        "link_row_limit_selection_view_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            # The default value is `-1` because anything lower than 0 will be
+            # ignored. This allows clearing the value by providing `None`,
+            # but ignoring it if not provided.
+            default=-1,
+            help_text="The ID of the view in the related table where row selection "
+            "must be limited to.",
+        ),
     }
 
     api_exceptions_map = {
@@ -1953,6 +1978,8 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
         IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
         SelfReferencingLinkRowCannotHaveRelatedField: ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
+        ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+        ViewNotInTable: ERROR_VIEW_NOT_IN_TABLE,
     }
     _can_order_by = False
     can_be_primary_field = False
@@ -2399,6 +2426,11 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         from baserow.contrib.database.table.models import Table
 
         link_row_table_id = values.pop("link_row_table_id", None)
+        # If the value is not set, it will be equal to `-1`. This is to allow setting
+        # the value to `None`, to clear it.
+        link_row_limit_selection_view_id = values.pop(
+            "link_row_limit_selection_view_id", -1
+        )
 
         if link_row_table_id is None:
             link_row_table = values.pop("link_row_table", None)
@@ -2422,6 +2454,32 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
                 context=table,
             )
             values["link_row_table"] = table
+
+        # If the value it not provided, it defaults to -1 in the API. This means it
+        # must be ignored. We're doing that because the value is clearable by
+        # providing `None`.
+        if link_row_limit_selection_view_id is None:
+            values["link_row_limit_selection_view"] = None
+        elif (
+            isinstance(link_row_limit_selection_view_id, int)
+            and link_row_limit_selection_view_id > -1
+        ):
+            from baserow.contrib.database.views.handler import ViewHandler
+            from baserow.contrib.database.views.registries import view_type_registry
+
+            view = ViewHandler().get_view(
+                link_row_limit_selection_view_id,
+                base_queryset=View.objects.filter(
+                    ownership_type=OWNERSHIP_TYPE_COLLABORATIVE
+                ),
+            )
+            view_type = view_type_registry.get_by_model(view.specific_class)
+            if not view_type.can_filter:
+                raise ViewDoesNotExist(
+                    f"The view with id {link_row_limit_selection_view_id} doesn't "
+                    f"support filters."
+                )
+            values["link_row_limit_selection_view"] = view
 
         return values
 
@@ -2448,6 +2506,10 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         """
 
         link_row_table = allowed_field_values.get("link_row_table")
+        link_row_limit_selection_view = allowed_field_values.get(
+            "link_row_limit_selection_view"
+        )
+
         if link_row_table is None:
             raise LinkRowTableNotProvided(
                 "The link_row_table argument must be provided when creating a link_row "
@@ -2459,6 +2521,12 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
                 f"The link row table {link_row_table.id} is not in the same database "
                 f"as the table {table.id}."
             )
+
+        if (
+            link_row_limit_selection_view is not None
+            and link_row_limit_selection_view.table_id != link_row_table.id
+        ):
+            raise ViewNotInTable(link_row_limit_selection_view.id)
 
         CoreHandler().check_permissions(
             user,
@@ -2483,6 +2551,22 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         """
 
         link_row_table = to_field_values.get("link_row_table")
+
+        existing_or_new_table = to_field_values.get(
+            "link_row_table", getattr(from_field, "link_row_table", None)
+        )
+        existing_or_new_limit_selection_view = to_field_values.get(
+            "link_row_limit_selection_view",
+            getattr(from_field, "link_row_limit_selection_view", None),
+        )
+
+        if (
+            existing_or_new_limit_selection_view is not None
+            and existing_or_new_limit_selection_view.table_id
+            != existing_or_new_table.id
+        ):
+            raise ViewNotInTable(existing_or_new_limit_selection_view.id)
+
         if link_row_table is None:
             field_kwargs.setdefault(
                 "has_related_field", from_field.link_row_table_has_related_field
@@ -2731,6 +2815,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         serialized = super().export_serialized(field, False)
         serialized["link_row_table_id"] = field.link_row_table_id
         serialized["link_row_related_field_id"] = field.link_row_related_field_id
+        serialized[
+            "link_row_limit_selection_view_id"
+        ] = field.link_row_limit_selection_view_id
         serialized["has_related_field"] = field.link_row_table_has_related_field
         return serialized
 
@@ -2740,12 +2827,15 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         serialized_values: Dict[str, Any],
         import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
-        deferred_fk_update_collector: DeferredFieldFkUpdater,
+        deferred_fk_update_collector: DeferredForeignKeyUpdater,
     ) -> Optional[Field]:
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
         ]
+        link_row_limit_selection_view_id = serialized_copy.pop(
+            "link_row_limit_selection_view_id", None
+        )
         link_row_related_field_id = serialized_copy.pop(
             "link_row_related_field_id", None
         )
@@ -2785,6 +2875,14 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             # set it right now.
             related_field.link_row_related_field_id = field.id
             related_field.save()
+
+        if link_row_limit_selection_view_id:
+            deferred_fk_update_collector.add_deferred_fk_to_update(
+                field,
+                "link_row_limit_selection_view_id",
+                link_row_limit_selection_view_id,
+                "database_views",
+            )
 
         return field
 
@@ -4827,7 +4925,7 @@ class CountFieldType(FormulaFieldType):
         serialized_values: Dict[str, Any],
         import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
-        deferred_fk_update_collector: DeferredFieldFkUpdater,
+        deferred_fk_update_collector: DeferredForeignKeyUpdater,
     ) -> "Field":
         serialized_copy = serialized_values.copy()
         # We have to temporarily remove the `through_field_id`, because it can be
@@ -4842,7 +4940,7 @@ class CountFieldType(FormulaFieldType):
             deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
-            field, "through_field_id", original_through_field_id
+            field, "through_field_id", original_through_field_id, "database_fields"
         )
         return field
 
@@ -4978,7 +5076,7 @@ class RollupFieldType(FormulaFieldType):
         serialized_values: Dict[str, Any],
         import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
-        deferred_fk_update_collector: DeferredFieldFkUpdater,
+        deferred_fk_update_collector: DeferredForeignKeyUpdater,
     ) -> "Field":
         serialized_copy = serialized_values.copy()
         # We have to temporarily remove the `through_field_id` and `target_field_id`,
@@ -4994,10 +5092,10 @@ class RollupFieldType(FormulaFieldType):
             deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
-            field, "through_field_id", original_through_field_id
+            field, "through_field_id", original_through_field_id, "database_fields"
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
-            field, "target_field_id", original_target_field_id
+            field, "target_field_id", original_target_field_id, "database_fields"
         )
         return field
 
@@ -5219,7 +5317,7 @@ class LookupFieldType(FormulaFieldType):
         serialized_values: Dict[str, Any],
         import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
-        deferred_fk_update_collector: DeferredFieldFkUpdater,
+        deferred_fk_update_collector: DeferredForeignKeyUpdater,
     ) -> "Field":
         serialized_copy = serialized_values.copy()
         # We have to temporarily set the `through_field_id` and `target_field_id`,
@@ -5235,10 +5333,10 @@ class LookupFieldType(FormulaFieldType):
             deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
-            field, "through_field_id", original_through_field_id
+            field, "through_field_id", original_through_field_id, "database_fields"
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
-            field, "target_field_id", original_target_field_id
+            field, "target_field_id", original_target_field_id, "database_fields"
         )
         return field
 

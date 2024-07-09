@@ -388,6 +388,15 @@ class LinkRowField(Field):
         blank=True,
     )
     link_row_relation_id = SerialField(null=True, unique=False)
+    link_row_limit_selection_view = models.ForeignKey(
+        "database.View",
+        on_delete=models.SET_NULL,
+        help_text="Visually only select rows that match the view filter. Note that "
+        "this is frontend only, and it will still be possible to make relationship to "
+        "rows that don't match the view.",
+        blank=True,
+        null=True,
+    )
 
     @property
     def through_table_name(self):

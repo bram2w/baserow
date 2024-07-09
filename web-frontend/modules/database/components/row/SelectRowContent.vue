@@ -81,6 +81,11 @@ export default {
       type: Number,
       required: true,
     },
+    viewId: {
+      type: [Number, null],
+      required: false,
+      default: null,
+    },
     value: {
       type: Array,
       required: false,
@@ -261,6 +266,7 @@ export default {
           page,
           size: 10,
           search: this.search,
+          viewId: this.viewId,
         })
         data.results.forEach((part, index) => populateRow(data.results[index]))
 

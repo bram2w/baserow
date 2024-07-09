@@ -325,6 +325,8 @@ class ViewType(
 
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}
+            # Must be kept in sync with
+            # `src/baserow/contrib/database/table/handler.py::duplicate_table`
             id_mapping["database_view_filters"] = {}
             id_mapping["database_view_filter_groups"] = {}
             id_mapping["database_view_sortings"] = {}

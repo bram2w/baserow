@@ -33,6 +33,7 @@
       v-if="!disabled"
       ref="selectModal"
       :table-id="field.link_row_table_id"
+      :view-id="field.link_row_limit_selection_view_id"
       @selected="setValue"
     ></SelectRowModal>
   </a>

@@ -813,6 +813,88 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_form_view_link_row_lookup_view_with_link_row_limit_selection_view(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    lookup_table = data_fixture.create_database_table(database=database)
+    form = data_fixture.create_form_view(table=table, public=True)
+    text_field = data_fixture.create_text_field(table=table)
+    primary_related_field = data_fixture.create_text_field(
+        table=lookup_table, primary=True
+    )
+    secondary_related_field = data_fixture.create_text_field(
+        table=lookup_table, primary=False
+    )
+    lookup_table_view = data_fixture.create_grid_view(
+        table=lookup_table, name="Filtered"
+    )
+    data_fixture.create_view_filter(
+        user,
+        field=primary_related_field,
+        view=lookup_table_view,
+        type="contains",
+        value="1",
+    )
+    data_fixture.create_view_filter(
+        user,
+        field=secondary_related_field,
+        view=lookup_table_view,
+        type="contains",
+        value="1",
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table,
+        link_row_table=lookup_table,
+        link_row_limit_selection_view=lookup_table_view,
+    )
+    data_fixture.create_text_field(table=lookup_table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True, order=1
+    )
+    data_fixture.create_form_view_field_option(
+        form, link_row_field, required=True, enabled=True, order=2
+    )
+
+    lookup_model = lookup_table.get_model()
+    i1 = lookup_model.objects.create(
+        **{
+            f"field_{primary_related_field.id}": "Test 1",
+            f"field_{secondary_related_field.id}": "Test 1",
+        }
+    )
+    i2 = lookup_model.objects.create(
+        **{
+            f"field_{primary_related_field.id}": "Test 2",
+            f"field_{secondary_related_field.id}": "Test 2",
+        }
+    )
+    i3 = lookup_model.objects.create(
+        **{
+            f"field_{primary_related_field.id}": "Test 3",
+            f"field_{secondary_related_field.id}": "Test 3",
+        }
+    )
+
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": form.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == i1.id
+    assert response_json["results"][0]["value"] == "Test 1"
+
+
+@pytest.mark.django_db
 def test_test_enable_form_view_file_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"

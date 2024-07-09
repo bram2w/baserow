@@ -51,7 +51,8 @@ def test_view_deleted(mock_broadcast_to_channel_group, data_fixture):
     view = data_fixture.create_grid_view(user=user)
     view_id = view.id
     table_id = view.table_id
-    ViewHandler().delete_view(user=user, view=view)
+    with transaction.atomic():
+        ViewHandler().delete_view(user=user, view=view)
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args

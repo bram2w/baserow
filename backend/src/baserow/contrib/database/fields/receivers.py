@@ -1,0 +1,52 @@
+from collections import defaultdict
+
+from django.dispatch import receiver
+
+from baserow.contrib.database.fields.signals import field_updated
+from baserow.contrib.database.views import signals as view_signals
+
+from .models import LinkRowField
+
+
+@receiver(view_signals.view_deleted)
+def clear_link_row_limit_selection_view_when_view_is_deleted(
+    sender, view_id, view, user, **kwargs
+):
+    """
+    A view can have dependencies in the form of the `link_row_limit_selection_view`
+    foreign key. When the view is trashed, the foreignkey keeps existing,
+    but the functionality doesn't work anymore because the view is trashed. This
+    function listens the view delete signal, checks if there are dependencies,
+    and if so, it will clear them. Doing it manually is much more performant than
+    calling the `update_field` method.
+    """
+
+    link_rows = LinkRowField.objects_and_trash.filter(
+        link_row_limit_selection_view=view,
+    ).select_for_update()
+
+    if len(link_rows) == 0:
+        return
+
+    for link_row in link_rows:
+        link_row.link_row_limit_selection_view = None
+
+    LinkRowField.objects_and_trash.bulk_update(
+        link_rows, ["link_row_limit_selection_view"]
+    )
+
+    # Group by table so that one we can send one `field_update` signal for each
+    # table. If there are multiple link row fields, we combine them in one request by
+    # adding them into the `related_fields` parameter. This ensures that one
+    # real-time event is sent per table if needed.
+    grouped_by_table = defaultdict(list)
+    for link_row in link_rows:
+        if not link_row.trashed:
+            grouped_by_table[link_row.table_id].append(link_row)
+    for table_id, link_rows in grouped_by_table.items():
+        field_updated.send(
+            sender,
+            field=link_rows[0],
+            related_fields=link_rows[1:],
+            user=None,
+        )

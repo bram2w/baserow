@@ -7,8 +7,8 @@ from django.shortcuts import reverse
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
+from baserow.contrib.database.fields.deferred_foreign_key_updater import (
+    DeferredForeignKeyUpdater,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import UUIDField
@@ -244,7 +244,7 @@ def test_import_export_uuid_field(data_fixture):
         field_serialized,
         ImportExportConfig(include_permission_data=True),
         id_mapping,
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
 
     assert field_imported.id != field.id

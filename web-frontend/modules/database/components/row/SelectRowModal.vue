@@ -8,6 +8,7 @@
     -->
     <SelectRowContent
       :table-id="tableId"
+      :view-id="viewId"
       :value="value"
       @selected="selected"
       @hide="hide"
@@ -28,6 +29,11 @@ export default {
     tableId: {
       type: Number,
       required: true,
+    },
+    viewId: {
+      type: [Number, null],
+      required: false,
+      default: null,
     },
     value: {
       type: Array,

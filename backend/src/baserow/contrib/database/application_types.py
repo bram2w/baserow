@@ -37,7 +37,7 @@ from baserow.core.utils import ChildProgressBuilder, grouper
 from .constants import IMPORT_SERIALIZED_IMPORTING, IMPORT_SERIALIZED_IMPORTING_TABLE
 from .db.atomic import read_repeatable_single_database_atomic_transaction
 from .export_serialized import DatabaseExportSerializedStructure
-from .fields.deferred_field_fk_updater import DeferredFieldFkUpdater
+from .fields.deferred_foreign_key_updater import DeferredForeignKeyUpdater
 from .search.handler import SearchHandler
 from .table.models import Table
 
@@ -330,7 +330,7 @@ class DatabaseApplicationType(ApplicationType):
         # Because view properties might depend on fields, we first want to create all
         # the fields.
         all_fields = []
-        deferred_fk_update_collector = DeferredFieldFkUpdater()
+        deferred_fk_update_collector = DeferredForeignKeyUpdater()
         for serialized_table in serialized_tables:
             for serialized_field in serialized_table["fields"]:
                 field_type = field_type_registry.get(serialized_field["type"])
@@ -358,8 +358,11 @@ class DatabaseApplicationType(ApplicationType):
             SearchHandler.after_field_created(external_field)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
+        # Because only the fields have been created, we must first run the deferred
+        # foreign key updates of those. The update for the views happens later
+        # because they haven't been created yet.
         deferred_fk_update_collector.run_deferred_fk_updates(
-            id_mapping["database_fields"]
+            id_mapping, "database_fields"
         )
 
         # For each field we call `after_import_serialized` which ensures that
@@ -561,6 +564,12 @@ class DatabaseApplicationType(ApplicationType):
             sequence_sql = connection.ops.sequence_reset_sql(no_style(), [table_model])
             with connection.cursor() as cursor:
                 cursor.execute(sequence_sql[0])
+
+        # Now that the fields have been created, we need to run the deferred fk
+        # updates pointing to those.
+        deferred_fk_update_collector.run_deferred_fk_updates(
+            id_mapping, "database_views"
+        )
 
         # The progress off `apply_updates_and_get_updated_fields` takes 5% of the
         # total progress of this import.

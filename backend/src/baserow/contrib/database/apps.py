@@ -793,6 +793,7 @@ class DatabaseConfig(AppConfig):
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
+        import baserow.contrib.database.fields.receivers  # noqa: F401
         import baserow.contrib.database.fields.tasks  # noqa: F401
         import baserow.contrib.database.rows.history  # noqa: F401
         import baserow.contrib.database.rows.tasks  # noqa: F401

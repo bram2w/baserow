@@ -10,7 +10,7 @@ export default (client) => {
     get(tableId, rowId) {
       return client.get(`/database/rows/table/${tableId}/${rowId}/`)
     },
-    fetchAll({ tableId, page = 1, size = 10, search = null }) {
+    fetchAll({ tableId, page = 1, size = 10, search = null, viewId = null }) {
       const config = {
         params: {
           page,
@@ -20,6 +20,10 @@ export default (client) => {
 
       if (search !== null && search !== '') {
         config.params.search = search
+      }
+
+      if (viewId !== null) {
+        config.params.view_id = viewId
       }
 
       return client.get(`/database/rows/table/${tableId}/`, config)
