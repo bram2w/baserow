@@ -31,7 +31,7 @@
             >
               <LocalBaserowTableServiceConditionalForm
                 v-if="values.table_id && dataSource.schema"
-                v-model="values.filters"
+                v-model="dataSourceFilters"
                 :schema="dataSource.schema"
                 :table-loading="tableLoading"
                 :filter-type.sync="values.filter_type"
@@ -117,6 +117,14 @@ export default {
     }
   },
   computed: {
+    dataSourceFilters: {
+      get() {
+        return this.excludeTrashedFields(this.values.filters)
+      },
+      set(newValue) {
+        this.values.filters = newValue
+      },
+    },
     dataSourceLoading() {
       return this.$store.getters['dataSource/getLoading'](this.page)
     },
@@ -150,6 +158,26 @@ export default {
         this.tableLoading = false
       },
       immediate: true,
+    },
+  },
+  methods: {
+    /**
+     * Given an array of objects containing a `field` property (e.g. the data
+     * source filters array), this method will return a new array
+     * containing only the objects where the field is part of the schema, so,
+     * untrashed.
+     *
+     * @param {Array} value - The array of objects to filter.
+     * @returns {Array} - The filtered array.
+     */
+    excludeTrashedFields(value) {
+      const schema = this.dataSource.schema
+      const schemaProperties =
+        schema.type === 'array' ? schema.items.properties : schema.properties
+      const localBaserowFieldIds = Object.values(schemaProperties)
+        .filter(({ metadata }) => metadata)
+        .map((prop) => prop.metadata.id)
+      return value.filter(({ field }) => localBaserowFieldIds.includes(field))
     },
   },
 }
