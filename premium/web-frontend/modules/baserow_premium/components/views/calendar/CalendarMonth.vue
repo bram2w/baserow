@@ -31,8 +31,7 @@
           :read-only="readOnly"
           :table="table"
           :view="view"
-          @edit-row="$emit('edit-row', $event)"
-          @create-row="$emit('create-row', $event)"
+          v-on="$listeners"
         >
         </CalendarMonthDay>
       </ol>

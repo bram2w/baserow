@@ -134,6 +134,10 @@
   }
 }
 
+.context__menu-wrapper {
+  z-index: $z-index-highlight-overlay;
+}
+
 .context__menu {
   list-style: none;
   padding: 0;

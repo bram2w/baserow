@@ -1,5 +1,9 @@
 <template>
-  <div class="calendar-card" @click="$emit('edit-row', row)">
+  <div
+    class="calendar-card"
+    @click="$emit('edit-row', row)"
+    @contextmenu.prevent="$emit('row-context', { row, event: $event })"
+  >
     <RecursiveWrapper
       :components="
         wrapperDecorations.map((comp) => ({

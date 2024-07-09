@@ -10,6 +10,7 @@
       :view="view"
       @edit-row="openRowEditModal($event)"
       @create-row="openCreateRowModal"
+      @row-context="showRowContext($event.event, $event.row)"
     ></CalendarMonth>
     <RowCreateModal
       ref="rowCreateModal"
@@ -67,6 +68,36 @@
       @navigate-previous="$emit('navigate-previous', $event)"
       @navigate-next="$emit('navigate-next', $event)"
     ></RowEditModal>
+    <Context
+      ref="cardContext"
+      :overflow-scroll="true"
+      :hide-on-scroll="true"
+      :hide-on-resize="true"
+      :max-height-if-outside-viewport="true"
+      class="context__menu-wrapper"
+    >
+      <ul class="context__menu">
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.delete_row',
+              table,
+              database.workspace.id
+            )
+          "
+          class="context__menu-item"
+        >
+          <a
+            class="context__menu-item-link js-ctx-delete-row"
+            @click="deleteRow(selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-bin"></i>
+            {{ $t('gridView.deleteRow') }}
+          </a>
+        </li>
+      </ul>
+    </Context>
   </div>
 </template>
 <script>
@@ -125,6 +156,7 @@ export default {
   data() {
     return {
       showHiddenFieldsInRowModal: false,
+      selectedRow: null,
     }
   },
   computed: {
@@ -254,6 +286,33 @@ export default {
         }
       }
       this.$refs.rowCreateModal.show(defaults)
+    },
+
+    showRowContext(event, row) {
+      this.selectedRow = row
+      this.$refs.cardContext.toggleNextToMouse(event)
+    },
+
+    async deleteRow(row) {
+      try {
+        this.$refs.cardContext.hide()
+        await this.$store.dispatch(
+          this.storePrefix + 'view/calendar/deleteRow',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            row,
+          }
+        )
+        await this.$store.dispatch('toast/restore', {
+          trash_item_type: 'row',
+          parent_trash_item_id: this.table.id,
+          trash_item_id: row.id,
+        })
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
     },
   },
 }
