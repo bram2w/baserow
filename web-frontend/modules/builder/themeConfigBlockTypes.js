@@ -455,9 +455,8 @@ export class ImageThemeConfigBlockType extends ThemeConfigBlockType {
       if (imageMaxHeight) {
         style.style['--image-max-width'] = 'auto'
         style.style['--image-wrapper-max-height'] = `${imageMaxHeight}px`
-      } else {
-        style.style['--image-max-width'] = 'auto'
-        style.style['--image-wrapper-max-height'] = 'auto'
+      } else if (baseTheme?.image_max_height) {
+        style.style['--image-wrapper-max-height'] = 'none'
       }
     }
 

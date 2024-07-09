@@ -1,3 +1,5 @@
+from rest_framework import serializers
+
 from baserow.core.user_files.handler import UserFileHandler
 
 from .models import (
@@ -45,6 +47,28 @@ class LinkThemeConfigBlockType(ThemeConfigBlockType):
 class ImageThemeConfigBlockType(ThemeConfigBlockType):
     type = "image"
     model_class = ImageThemeConfigBlock
+
+    @property
+    def serializer_field_overrides(self):
+        # For some reason if we don't allow_null=False here the null value is returned
+        return {
+            "image_max_height": serializers.IntegerField(
+                allow_null=False,
+                required=False,
+                help_text="The image max height",
+            ),
+        }
+
+    @property
+    def request_serializer_field_overrides(self):
+        return {
+            "image_max_height": serializers.IntegerField(
+                allow_null=True,
+                required=False,
+                default=None,
+                help_text="The image max height",
+            ),
+        }
 
 
 class PageThemeConfigBlockType(ThemeConfigBlockType):
