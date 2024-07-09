@@ -272,8 +272,8 @@
         "chooseAColor": "Welches Einzelauswahlfeld soll zum färben der Zeile verwendet werden?"
     },
     "redirectToBaserowModal": {
-        "title": "Weiterleitung an http://baserow.io",
-        "content": "Sie verlassen Ihre selbst gehostete Instanz und werden zu http://baserow.io umgeleitet."
+        "title": "Weiterleitung zu https://baserow.io",
+        "content": "Sie verlassen Ihre selbst-gehostete Instanz und werden zu https://baserow.io weitergeleitet."
     },
     "premiumTopSidebar": {
         "impersonateDescription": "Dieses Konto wird imitiert. Eine Seitenaktualisierung stoppt es.",
@@ -290,7 +290,8 @@
         "surveyForm": "Umfrageformular",
         "publicLogoRemoval": "Entfernung des öffentlichen Logos",
         "personalViews": "Persönliche Ansichten",
-        "calendarView": "Kalenderansicht"
+        "calendarView": "Kalenderansicht",
+        "aiFeatures": "KI-Feld"
     },
     "premiumModal": {
         "description": "Ihr Konto hat keinen Zugang zu den Premium-Funktionen. Führen Sie ein Upgrade auf die Premium-Version durch, um {name} nutzen zu können. Sie können Ihr Konto erweitern, indem Sie eine Lizenz erwerben. Klicken Sie auf den Knopf unten, um die Preise zu sehen.",
@@ -358,5 +359,36 @@
         "modeAllDesc": "Sie erhalten Benachrichtigungen für alle Kommentare in dieser Zeile.",
         "modeMentionsTitle": "Nur Erwähnungen",
         "modeAllTitle": "Alle Kommentare"
+    },
+    "functionalGridViewFieldAI": {
+        "generate": "Generieren"
+    },
+    "gridViewFieldAI": {
+        "generate": "Generieren",
+        "regenerate": "Regenerieren"
+    },
+    "rowEditFieldAI": {
+        "generate": "Generieren",
+        "createRowBefore": "Der KI-Wert kann nach der Erstellung der Zeile generiert werden."
+    },
+    "fieldAISubForm": {
+        "prompt": "Eingabeaufforderung",
+        "premiumFeature": "Das KI-Feld ist eine Premium-Funktion"
+    },
+    "premiumFieldType": {
+        "ai": "KI-Eingabeaufforderung",
+        "aiDescription": "Ein schreibgeschütztes Feld, das den von KI generierten Text auf der Grundlage der Feld-Eingabeaufforderung enthält."
+    },
+    "aiFormulaModal": {
+        "labelDescription": "Beschreiben Sie die Formel, die Sie erstellen möchten",
+        "description": "Beachten Sie, dass die generierten Formeln möglicherweise nicht immer wie erwartet funktionieren. Wir erstellen eine Eingabeaufforderung für das Modell und wir laden die Ausgabe in die Formeleingabe. Dies funktioniert am besten mit einem Viel-Parameter-Modell wie gpt-4-turbo-preview.",
+        "title": "Formel mittels KI generieren",
+        "label": "Eingabeaufforderung",
+        "generate": "Generieren",
+        "noModels": "In Ihrer Baserow-Instanz und Ihrem Arbeitsbereich sind keine KI-Modelle konfiguriert. Klicken Sie auf die drei Punkte neben Ihrem Arbeitsbereich und dann auf Einstellungen, um sie zu konfigurieren."
+    },
+    "formulaFieldAI": {
+        "generateWithAI": "Mittels KI generieren",
+        "featureName": "Formel mittels KI generieren"
     }
 }

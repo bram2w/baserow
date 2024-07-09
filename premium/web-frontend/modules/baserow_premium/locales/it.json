@@ -365,14 +365,16 @@
         "generate": "Genera"
     },
     "gridViewFieldAI": {
-        "regenerate": "Ri-genera",
+        "regenerate": "Rigenera",
         "generate": "Genera"
     },
     "fieldAISubForm": {
         "AIModel": "Modello IA",
         "prompt": "Prompt",
         "premiumFeature": "Il campo IA è una caratteristica premium",
-        "AIType": "Tipo IA"
+        "AIType": "Tipo IA",
+        "emptyFileField": "Nessuno",
+        "fileFieldHelp": "Verrà utilizzato il primo file compatibile. I file compatibili sono file di testo con estensioni .txt, .md, .pdf, .docx."
     },
     "rowEditFieldAI": {
         "createRowBefore": "Il valore IA può essere generato dopo che la riga è stata creata.",
@@ -386,7 +388,9 @@
         "title": "Genera una formula usando l'AI",
         "label": "Prompt",
         "labelDescription": "Descrivi la formula che vuoi generare",
-        "generate": "Genera"
+        "generate": "Genera",
+        "description": "In alcuni casi la formula generata potrebbe funzionare diversamente da",
+        "noModels": "La tua istanza e il workspace di Baserow non hanno modelli di intelligenza artificiale configurati. Clicca sui tre punti accanto al tuo workspace, poi su impostazioni per configurarli."
     },
     "formulaFieldAI": {
         "generateWithAI": "Genera usando l'AI",

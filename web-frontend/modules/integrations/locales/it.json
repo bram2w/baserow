@@ -66,6 +66,7 @@
     },
     "localBaserowIntegrationType": {
         "localBaserowSummary": "Baserow Locale - {name}, {username}",
-        "localBaserowNoUser": "Baserow Locale - Non configurato"
+        "localBaserowNoUser": "Baserow Locale - Non configurato",
+        "localBaserowWarning": "Autorizzare il tuo account consente a chiunque abbia i permessi di modifica sull'applicazione di avere pieno accesso ai dati a cui hai accesso tu. È possibile creare un secondo utente, assegnare i permessi appropriati e utilizzare quello."
     }
 }

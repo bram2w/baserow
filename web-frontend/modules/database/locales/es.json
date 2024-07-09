@@ -833,7 +833,8 @@
         "notifyUserWhenAdded": "Notificar al usuario cuando se añade"
     },
     "viewFieldConditionsForm": {
-        "addCondition": "Añadir condición"
+        "addCondition": "Añadir condición",
+        "addConditionGroup": "Añadir grupo de condiciones"
     },
     "formSubmittedNotification": {
         "title": "Se ha enviado {nombreDelFormulario} en la tabla {nombreDeLaTabla}:",

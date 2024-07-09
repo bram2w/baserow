@@ -362,14 +362,16 @@
         "modeMentionsTitle": "Sólo menciones"
     },
     "gridViewFieldAI": {
-        "regenerate": "Re-generar",
+        "regenerate": "Regenerar",
         "generate": "Generar"
     },
     "fieldAISubForm": {
         "AIType": "Tipo de IA",
         "AIModel": "Modelo de IA",
         "prompt": "Pregunta",
-        "premiumFeature": "El campo de IA es una función premium"
+        "premiumFeature": "El campo de IA es una función premium",
+        "emptyFileField": "Ninguno",
+        "fileFieldHelp": "El primer archivo compatible del campo se utilizará como base de conocimientos para la consulta. El archivo tiene que ser un archivo de texto con la extensión de archivo compatible como .txt, .md, .pdf, .docx."
     },
     "rowEditFieldAI": {
         "generate": "Generar",

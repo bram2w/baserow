@@ -6,7 +6,8 @@
         "none": "Kein",
         "free": "Kostenlos",
         "comingSoon": "In Kürze verfügbar...",
-        "billable": "Abrechenbar"
+        "billable": "Abrechenbar",
+        "all": "Alle"
     },
     "action": {
         "upload": "Hochladen",
@@ -24,7 +25,7 @@
         "makeChoice": "Treffen Sie eine Auswahl",
         "cancel": "Abbrechen",
         "save": "Speichern",
-        "retry": "Wiederholen",
+        "retry": "Erneut versuchen",
         "search": "Suche",
         "copy": "Kopieren",
         "paste": "Einfügen",
@@ -77,7 +78,9 @@
         "integerField": "Das Feld muss eine Ganzzahl sein.",
         "minValueField": "Das Feld muss größer oder gleich als {min} sein.",
         "maxValueField": "Das Feld muss größer oder gleich als {max} sein.",
-        "minMaxValueField": "Der Feldwert muss zwischen {min} und {max} liegen."
+        "minMaxValueField": "Der Feldwert muss zwischen {min} und {max} liegen.",
+        "invalidNumber": "Das Feld muss eine Zahl sein.",
+        "email": "Das Feld muss eine E-Mailadresse sein."
     },
     "permission": {
         "admin": "Administration",
@@ -117,7 +120,9 @@
         "duration": "Dauer",
         "multipleSelectCheckboxes": "Kontrollkästchen",
         "autonumber": "Automatische Nummerierung",
-        "singleSelectDropdown": "Dropdown"
+        "singleSelectDropdown": "Dropdown",
+        "password": "Passwort",
+        "ai": "KI-Eingabeaufforderung"
     },
     "fieldErrors": {
         "invalidNumber": "Ungültige Zahl",
@@ -127,13 +132,15 @@
         "invalidEmail": "Ungültige E-Mail",
         "invalidPhoneNumber": "Ungültige Telefonnummer",
         "invalidDuration": "Ungültiges Format ({durationFormat}).",
-        "overflowDuration": "Der Wert ist zu groß."
+        "overflowDuration": "Der Wert liegt außerhalb des zulässigen Bereichs.",
+        "minChars": "Mindestens {min} Zeichen.",
+        "maxChars": "Maximal {max} Zeichen."
     },
     "fieldDocs": {
         "readOnly": "Dies ist ein schreibgeschütztes Feld.",
         "text": "Akzeptiert einzeiligen Text.",
-        "longText": "Akzeptiert mehrzeiligen Text.",
-        "linkRow": "Akzeptiert ein Array mit den Bezeichnern oder Hauptfeldtextwerten der verbundenen Zeilen der Tabelle id {table}. Alle Bezeichner müssen jedes Mal angegeben werden, wenn die Beziehungen aktualisiert werden. Wenn ein leeres Array angegeben wird, werden alle Relationen gelöscht. Bei Angabe eines Textwerts anstelle eines Bezeichners wird eine Zeile mit dem übereinstimmenden Wert für ihr Hauptfeld gesucht. Wenn mehr als eine Übereinstimmung gefunden wird, wird die erste in der Reihenfolge der Tabelle ausgewählt. Sie können eine Zeichenfolge mit durch Komma getrennten Namen senden. In diesem Fall wird die Zeichenfolge in ein Array von Zeilennamen umgewandelt.",
+        "longText": "Akzeptiert mehrzeiligen Text. Wenn die Rich-Text-Formatierung aktiviert ist, können Sie den Text mit Markdown formatieren.",
+        "linkRow": "Akzeptiert ein Array mit den Bezeichnern oder Hauptfeldtextwerten der verbundenen Zeilen der Tabelle id {table}. Alle Bezeichner müssen jedes Mal angegeben werden, wenn die Beziehungen aktualisiert werden. Wenn ein leeres Array angegeben wird, werden alle Relationen gelöscht. Bei Angabe eines Textwerts anstelle eines Bezeichners wird eine Zeile mit dem übereinstimmenden Wert für ihr Hauptfeld gesucht. Wenn mehr als eine Übereinstimmung gefunden wird, wird die erste in der Reihenfolge der Tabelle ausgewählt. Sie können eine Zeichenfolge mit durch Komma getrennten Namen senden. In diesem Fall wird die Zeichenfolge in ein Array von Zeilennamen umgewandelt. Sie können alternativ auch nur die ID einer Zeile senden.",
         "number": "Akzeptiert eine Nummer.",
         "numberPositive": "Akzeptiert eine positive Zahl.",
         "decimal": "Akzeptiert eine Dezimalzahl mit {Stellen} Dezimalstellen nach dem Punkt.",
@@ -148,7 +155,7 @@
         "createdOnReadOnly": "Das Feld Erstellt am ist ein schreibgeschütztes Feld.",
         "url": "Akzeptiert eine Zeichenfolge, die eine URL sein muss.",
         "email": "Akzeptiert eine Zeichenkette, die eine E-Mail-Adresse sein muss.",
-        "file": "Akzeptiert ein Array von Objekten, das mindestens den Namen der Benutzerdatei enthält. Sie können die \"File uploads\"-Endpunkte verwenden, um die Datei hochzuladen. Die Antwort auf diese Aufrufe kann hier direkt als Objekt bereitgestellt werden. Die Endpunkte sind in der linken Seitenleiste zu finden.",
+        "file": "Akzeptiert ein Array von Objekten, das mindestens den Namen der Benutzerdatei enthält. Alternativ können Sie auch eine durch Kommata getrennte Liste von Dateinamen oder ein Array von Dateinamen angeben. Sie können die \"File uploads\"-Endpunkte verwenden, um die Datei hochzuladen. Die Antwort auf diese Aufrufe kann hier direkt als Objekt bereitgestellt werden. Die Endpunkte sind in der linken Seitenleiste zu finden.",
         "singleSelect": "Akzeptiert eine Ganzzahl oder einen Textwert, der die gewählte Select-Option-ID oder den Optionswert darstellt. Ein Nullwert bedeutet, dass keine Option ausgewählt ist. Im Falle eines Textwerts wird die erste übereinstimmende Option ausgewählt.",
         "multipleSelect": "Akzeptiert ein Array von gemischten Ganzzahlen oder Textwerten, die jeweils die gewählte Select-Option id oder den Wert darstellen. Im Falle eines Textwertes wird die erste passende Option ausgewählt. Sie können eine Zeichenkette mit durch Komma getrennten Namen als Wert senden. In diesem Fall wird die Zeichenkette in ein Array von Optionsnamen umgewandelt.",
         "phoneNumber": "Akzeptiert eine Telefonnummer mit einer maximalen Länge von 100 Zeichen, die nur aus Ziffern, Leerzeichen und den folgenden Zeichen besteht: Nx,._+*()#=;/- .",
@@ -161,7 +168,8 @@
         "createdBy": "Das Feld \"Erstellt von\" ist ein schreibgeschütztes Feld, das den Benutzer anzeigt, der die Zeile erstellt hat.",
         "uuid": "Eine schreibgeschützte, eindeutige und dauerhafte UUID.",
         "autonumber": "Ein schreibgeschütztes Feld, das bei jeder neuen Zeile automatisch eine Zahl hochzählt.",
-        "duration": "Akzeptiert eine zeitbasierte Dauer als Zeichenkette im Format {format} oder als Zahl, die die Gesamtzahl der Sekunden angibt."
+        "duration": "Akzeptiert eine zeitbasierte Dauer als Zeichenkette im Format {format} oder als Zahl, die die Gesamtzahl der Sekunden angibt.",
+        "password": "Ein schreibgeschütztes Feld, das ein gehashtes Passwort enthält. Der Wert ist `null`, wenn es nicht gesetzt ist, oder `true`, wenn es gesetzt wurde. Es akzeptiert eine Zeichenkette, um es zu setzen."
     },
     "viewFilter": {
         "contains": "enthält",
@@ -182,8 +190,8 @@
         "isToday": "ist heute",
         "inThisMonth": "in diesem Monat",
         "inThisYear": "in diesem Jahr",
-        "lowerThan": "niedriger als",
-        "lengthIsLowerThan": "Länge ist niedriger als",
+        "lowerThan": "kleiner als",
+        "lengthIsLowerThan": "Länge ist kleiner als",
         "hasFileType": "hat Dateityp",
         "isDaysAgo": "ist Tage alt",
         "inThisWeek": "in dieser Woche",
@@ -200,7 +208,37 @@
         "isWithinWeeks": "ist innerhalb von Wochen",
         "isAfterDaysAgo": "ist nach Tagen vor",
         "isEvenAndWhole": "ist gerade und eine Ganzzahl",
-        "filesLowerThan": "Dateien kleiner als"
+        "filesLowerThan": "Dateien kleiner als",
+        "isNoneOf": "ist keine(r) von",
+        "isAnyOf": "ist eine(r) von",
+        "higherThanOrEqual": "größer als oder gleich",
+        "today": "heute",
+        "yesterday": "gestern",
+        "tomorrow": "morgen",
+        "thisWeek": "diese Woche",
+        "oneWeekAgo": "vor einer Woche",
+        "nextWeek": "nächste Woche",
+        "thisMonth": "diesen Monat",
+        "oneMonthAgo": "vor einem Monat",
+        "nextMonth": "nächsten Monat",
+        "thisYear": "dieses Jahr",
+        "oneYearAgo": "vor einem Jahr",
+        "nextYear": "nächstes Jahr",
+        "nrYearsAgo": "Jahre her",
+        "isAfter": "ist nach",
+        "isOnOrBefore": "ist am oder vor",
+        "isOnOrAfter": "ist am oder nach",
+        "isWithin": "ist zwischen",
+        "nrDaysAgo": "Tage her",
+        "nrWeeksAgo": "Wochen her",
+        "nrMonthsAgo": "Monate her",
+        "nrMonthsFromNow": "Monate ab jetzt",
+        "nrDaysFromNow": "Tage ab jetzt",
+        "nrWeeksFromNow": "Wochen ab jetzt",
+        "isBefore": "ist vor",
+        "nrYearsFromNow": "Jahre ab jetzt",
+        "exactDate": "exaktes Datum",
+        "lowerThanOrEqual": "kleiner als oder gleich"
     },
     "viewType": {
         "grid": "Gitternetz",
@@ -313,7 +351,17 @@
         "cannotCreateFieldTypeDescription": "Der gewünschte Feldtyp kann derzeit nicht erstellt werden. Möglicherweise handelt es sich nur um ein vorübergehendes Problem mit älteren Tabellen. Bitte versuchen Sie es später noch einmal.",
         "adminAlreadyExistsDescription": "Dieser Benutzername kann nicht verwendet werden, da er bereits existiert.",
         "adminAlreadyExistsTitle": "Dieser Benutzername kann nicht verwendet werden",
-        "cannotCreateFieldTypeTitle": "Feld kann nicht erstellt werden"
+        "cannotCreateFieldTypeTitle": "Feld kann nicht erstellt werden",
+        "generativeAIDoesNotExistTitle": "Generative KI existiert nicht",
+        "generativeAIDoesNotExistDescription": "Das generative KI-Modell existiert nicht.",
+        "modelDoesNotBelongToTypeTitle": "Das ausgewählte Modell gehört nicht zum KI-Typ",
+        "generateAIPromptTitle": "Eingabeaufforderungs-Fehler",
+        "generateAIPromptDescription": "Etwas stimmte mit der konstruierten Eingabeaufforderung nicht.",
+        "outputParserTitle": "Falsche Ausgabe",
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Sie haben die maximale Anzahl an ausstehenden Einladungen für diesen Arbeitsbereich erreicht. Bitte lassen Sie die Eingeladenen die Einladung annehmen oder sagen Sie bestehende Einladungen ab um fortzufahren.",
+        "outputParserDescription": "Das Modell hat mit einer falschen Ausgabe geantwortet. Bitte versuchen Sie es erneut.",
+        "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Maximale Anzahl an ausstehenden Einladungen erreicht",
+        "modelDoesNotBelongToTypeDescription": "Das ausgewählte Modell gehört nicht zum ausgewählten KI-Typ."
     },
     "importerType": {
         "csv": "Importieren einer CSV-Datei",
@@ -461,7 +509,9 @@
         "getFileCountDescription": "Gibt die Anzahl der Dateien im referenzierten Dateifeld zurück",
         "getFileSizeDescription": "Gibt die Dateigröße einer einzelnen Datei zurück, die von der Indexfunktion zurückgegeben wurde.",
         "getImageWidthDescription": "Gibt die Bildbreite einer einzelnen Datei zurück, die von der Indexfunktion zurückgegeben wurde.",
-        "indexDescription": "Gibt die Datei aus einem Dateifeld an der durch das zweite Argument angegebenen Position zurück."
+        "indexDescription": "Gibt die Datei aus einem Dateifeld an der durch das zweite Argument angegebenen Position zurück.",
+        "secondsToDurationDescription": "Wandelt die angegebene Anzahl von Sekunden in eine Dauer um.",
+        "durationToSecondsDescription": "Wandelt die angegebene Dauer in die entsprechende Anzahl von Sekunden um."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"

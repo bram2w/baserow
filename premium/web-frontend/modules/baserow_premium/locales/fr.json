@@ -372,7 +372,9 @@
         "AIType": "Type d'IA",
         "AIModel": "Modèle d'IA",
         "prompt": "Prompt",
-        "premiumFeature": "Le champ IA est une fonctionnalité premium"
+        "premiumFeature": "Le champ IA est une fonctionnalité premium",
+        "emptyFileField": "Aucun(e)",
+        "fileFieldHelp": "Le premier fichier compatible dans le champ sera utilisé comme base de connaissances pour l'invite. Le fichier doit être un fichier texte avec une extension supportée comme .txt, .md, .pdf, .docx."
     },
     "rowEditFieldAI": {
         "createRowBefore": "La valeur du champ IA peut être générée après la création de la ligne.",
