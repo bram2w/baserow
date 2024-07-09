@@ -49,7 +49,7 @@
       >
         <a
           class="context__menu-item-link"
-          :class="{ 'context__menu-item--loading': duplicateLoading }"
+          :class="{ 'context__menu-item-link--loading': duplicateLoading }"
           @click="duplicateView()"
         >
           <i class="context__menu-item-icon iconoir-copy"></i>

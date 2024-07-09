@@ -18,7 +18,10 @@
     }
   }
 
-  &.control--error .form-input__input,
+  &.control--error .form-input__input {
+    border-color: $palette-red-600;
+  }
+
   &.control--error .form-input__icon {
     color: $palette-red-600;
   }

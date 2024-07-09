@@ -269,7 +269,8 @@
     "fromTemplate": "From template"
   },
   "applicationForm": {
-    "nameLabel": "Name"
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter the name..."
   },
   "connectingToast": {
     "title": "Reconnecting",

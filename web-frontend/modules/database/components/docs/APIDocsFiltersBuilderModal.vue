@@ -1,15 +1,15 @@
 <template>
   <Modal :wide="true">
     <h2 class="box__title">{{ $t('apiDocsFiltersBuilderModal.title') }}</h2>
-    <div class="control">
+    <div class="control margin-bottom-2">
       <div class="control__elements">
         <Checkbox v-model="mutableUserFieldNames">{{
           $t('apiDocsFiltersBuilderModal.userFieldNames')
         }}</Checkbox>
       </div>
     </div>
-    <div class="control">
-      <label class="control__label">{{
+    <div class="control margin-bottom-2">
+      <label class="control__label control__label--small">{{
         $t('apiDocsFiltersBuilderModal.json')
       }}</label>
       <div class="control__description">
@@ -29,8 +29,8 @@
         ><code>{{ JSONFilters }}</code></pre>
       </div>
     </div>
-    <div class="control">
-      <label class="control__label">{{
+    <div class="control margin-bottom-2">
+      <label class="control__label control__label--small">{{
         $t('apiDocsFiltersBuilderModal.queryParameter')
       }}</label>
       <div class="control__description">

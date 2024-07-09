@@ -81,8 +81,8 @@
         ref="secret"
         v-model="values.secret"
         size="large"
-        :class="{ 'input--error': fieldHasErrors('secret') }"
         :placeholder="$t('oauthSettingsForm.secretPlaceholder')"
+        :error="fieldHasErrors('secret')"
         @blur="$v.values.secret.$touch()"
       ></FormInput>
 

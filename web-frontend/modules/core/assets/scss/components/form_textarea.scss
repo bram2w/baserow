@@ -11,18 +11,18 @@
   &:active,
   &:focus,
   &:focus-within {
-    &:not(.form-textarea--disabled) {
+    &:not(.form-textarea--disabled):not(.form-textarea--error) {
       border-color: $palette-blue-500;
     }
+  }
+
+  &.form-textarea--error {
+    border-color: $palette-red-600;
   }
 
   &--small {
     padding: 8px 12px;
   }
-}
-
-.form-textarea--error {
-  border-color: $palette-red-600;
 }
 
 .form-textarea--disabled {
