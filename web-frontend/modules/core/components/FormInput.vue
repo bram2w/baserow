@@ -10,7 +10,6 @@
       'form-input--disabled': disabled,
       'form-input--small': size === 'small',
       'form-input--large': size === 'large',
-      'form-input--loading': loading,
       'form-input--suffix': hasSuffixSlot,
       'form-input--no-controls': removeNumberInputControls,
     }"
