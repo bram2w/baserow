@@ -11,6 +11,7 @@
       >
         <FormInput
           v-model="values.url"
+          size="large"
           :error="$v.values.url.$error"
           @blur="$v.values.url.$touch()"
         >

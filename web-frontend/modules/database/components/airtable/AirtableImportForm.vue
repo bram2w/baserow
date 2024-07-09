@@ -1,5 +1,10 @@
 <template>
   <form @submit.prevent="submit">
+    <p class="margin-bottom-2">
+      {{ $t('importFromAirtable.airtableShareLinkDescription') }}
+      <br /><br />
+      {{ $t('importFromAirtable.airtableShareLinkBeta') }}
+    </p>
     <FormGroup
       :label="$t('importFromAirtable.airtableShareLinkTitle')"
       :error="$v.values.airtableUrl.$error"
@@ -22,13 +27,6 @@
       ></FormInput>
       <template #error>
         {{ $t('importFromAirtable.linkError') }}
-      </template>
-      <template #helper>
-        <p class="margin-bottom-2">
-          {{ $t('importFromAirtable.airtableShareLinkDescription') }}
-          <br /><br />
-          {{ $t('importFromAirtable.airtableShareLinkBeta') }}
-        </p>
       </template>
     </FormGroup>
     <slot></slot>

@@ -8,13 +8,14 @@
       required
       :helper-text="$t('tablePasteImporter.pasteDescription')"
     >
-      <FormTextarea @input="changed($event)"></FormTextarea>
+      <FormTextarea rows="10" @input="changed($event)"></FormTextarea>
 
       <template #error>{{ $t('error.fieldRequired') }}</template>
     </FormGroup>
 
     <FormGroup
       :label="$t('tablePasteImporter.firstRowHeader')"
+      small-label
       class="margin-bottom-2"
       required
     >

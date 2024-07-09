@@ -5,7 +5,7 @@
       v-model="richCopy"
       class="form-input field-rich-text"
       :class="{
-        'input--error': touched && !isValid(),
+        'form-input--error': touched && !isValid(),
         active: editing,
       }"
       :disabled="readOnly"

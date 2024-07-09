@@ -10,6 +10,7 @@
         ref="license"
         v-model="values.license"
         :error="fieldHasErrors('license')"
+        rows="6"
         @blur="$v.values.license.$touch()"
       />
 
