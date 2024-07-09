@@ -12,6 +12,7 @@ from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.contrib.builder.api.theme.serializers import (
+    CombinedThemeConfigBlocksRequestSerializer,
     CombinedThemeConfigBlocksSerializer,
     serialize_builder_theme,
 )
@@ -57,7 +58,7 @@ class ThemeView(APIView):
         }
     )
     @validate_body(
-        CombinedThemeConfigBlocksSerializer, return_validated=True, partial=True
+        CombinedThemeConfigBlocksRequestSerializer, return_validated=True, partial=True
     )
     def patch(self, request, data: Dict, builder_id: int):
         builder = BuilderHandler().get_builder(builder_id)

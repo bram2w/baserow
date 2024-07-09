@@ -1,3 +1,5 @@
+from functools import cache
+
 from loguru import logger
 from rest_framework import serializers
 
@@ -16,6 +18,7 @@ class DynamicConfigBlockSerializer(serializers.Serializer):
         property_name=None,
         theme_config_block_type_name=None,
         serializer_kwargs=None,
+        request_serializer=False,
         **kwargs,
     ):
         if property_name is None:
@@ -36,9 +39,9 @@ class DynamicConfigBlockSerializer(serializers.Serializer):
 
         for prop, type_name in zip(property_name, theme_config_block_type_name):
             theme_config_block_type = theme_config_block_registry.get(type_name)
-            self.fields[prop] = theme_config_block_type.get_serializer_class()(
-                **({"help_text": f"Styles overrides for {prop}"} | serializer_kwargs)
-            )
+            self.fields[prop] = theme_config_block_type.get_serializer_class(
+                request_serializer=request_serializer
+            )(**({"help_text": f"Styles overrides for {prop}"} | serializer_kwargs))
 
         # Dynamically create the Meta class with ref name to prevent collision
         class DynamicMeta:
@@ -69,7 +72,10 @@ def serialize_builder_theme(builder: Builder) -> dict:
     return theme
 
 
-def get_combined_theme_config_blocks_serializer_class() -> serializers.Serializer:
+@cache
+def get_combined_theme_config_blocks_serializer_class(
+    request_serializer=False,
+) -> serializers.Serializer:
     """
     This helper function generates one single serializer that contains all the fields
     of all the theme config blocks. The API always communicates all theme properties
@@ -77,9 +83,6 @@ def get_combined_theme_config_blocks_serializer_class() -> serializers.Serialize
 
     :return: The generated serializer.
     """
-
-    if hasattr(get_combined_theme_config_blocks_serializer_class, "cached_class"):
-        return get_combined_theme_config_blocks_serializer_class.cached_class
 
     if len(theme_config_block_registry.registry.values()) == 0:
         logger.warning(
@@ -90,7 +93,9 @@ def get_combined_theme_config_blocks_serializer_class() -> serializers.Serialize
     attrs = {}
 
     for theme_config_block in theme_config_block_registry.get_all():
-        serializer = theme_config_block.get_serializer_class()
+        serializer = theme_config_block.get_serializer_class(
+            request_serializer=request_serializer
+        )
         serializer_fields = serializer().get_fields()
 
         for name, field in serializer_fields.items():
@@ -105,10 +110,13 @@ def get_combined_theme_config_blocks_serializer_class() -> serializers.Serialize
         "CombinedThemeConfigBlocksSerializer", (serializers.Serializer,), attrs
     )
 
-    get_combined_theme_config_blocks_serializer_class.cached_class = class_object
     return class_object
 
 
 CombinedThemeConfigBlocksSerializer = (
     get_combined_theme_config_blocks_serializer_class()
+)
+
+CombinedThemeConfigBlocksRequestSerializer = (
+    get_combined_theme_config_blocks_serializer_class(request_serializer=True)
 )

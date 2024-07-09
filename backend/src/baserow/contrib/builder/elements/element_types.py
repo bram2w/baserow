@@ -914,6 +914,7 @@ class ImageElementType(ElementType):
                 property_name="image",
                 theme_config_block_type_name=ImageThemeConfigBlockType.type,
                 serializer_kwargs={"required": False},
+                request_serializer=True,
             ),
         }
         if super().request_serializer_field_overrides is not None:
