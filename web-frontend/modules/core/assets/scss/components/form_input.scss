@@ -28,7 +28,7 @@
   }
 
   &.form-input--error {
-    color: $palette-red-600;
+    border-color: $palette-red-600;
   }
 
   &.form-input--disabled {
