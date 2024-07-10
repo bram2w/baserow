@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 
@@ -21,6 +22,8 @@ from baserow.core.user_files.exceptions import (
     MaximumUniqueTriesError,
 )
 from baserow.core.user_files.handler import UserFileHandler
+
+GENERATED_FILE_NAME_LENGTH = 16  # 12 hexdigest + '.' + ext
 
 
 @pytest.mark.django_db
@@ -489,6 +492,126 @@ def test_upload_user_file_by_url_with_slash(data_fixture, tmpdir) -> None:
     assert user_file.original_extension == "txt"
     assert len(user_file.unique) == 32
     assert user_file.mime_type == "text/plain"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is False
+    assert user_file.image_width is None
+    assert user_file.image_height is None
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_without_path(data_fixture, tmpdir) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io/"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=b"Hello World",
+        status=200,
+        content_type="text/plain; charset:utf-8",
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert (
+        user_file.original_name
+        and user_file.original_name.endswith(".txt")
+        and len(user_file.original_name) == GENERATED_FILE_NAME_LENGTH
+    )
+    assert user_file.original_extension == "txt"
+    assert len(user_file.unique) == 32
+    assert user_file.mime_type == "text/plain"
+    assert user_file.uploaded_by_id == user.id
+    assert user_file.uploaded_at.year == 2022
+    assert user_file.uploaded_at.month == 8
+    assert user_file.uploaded_at.day == 30
+    assert user_file.is_image is False
+    assert user_file.image_width is None
+    assert user_file.image_height is None
+
+
+@pytest.mark.parametrize(
+    "uri,remote_file",
+    [
+        # uri is url used by http client, remote_file is the name
+        # that UseFileHandler receives because
+        # http client will translate `/.`, `/..`, `/../` paths to `/`
+        (
+            "https://baserow.io/",
+            "https://baserow.io/../",
+        ),
+        ("https://baserow.io/", "https://baserow.io/../.."),
+        ("https://baserow.io/", "https://baserow.io/../."),
+        ("https://baserow.io/", "https://baserow.io/.."),
+        (
+            "https://baserow.io/",
+            "https://baserow.io/.",
+        ),
+    ],
+)
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_invalid_paths(
+    data_fixture, tmpdir, uri, remote_file
+) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    httpretty.register_uri(
+        httpretty.GET,
+        uri=uri,
+        body=b"Hello World",
+        status=200,
+        content_type="text/plain",
+    )
+
+    # upload will end up with django error
+    with pytest.raises(SuspiciousFileOperation):
+        handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+
+@pytest.mark.django_db
+@httpretty.activate(verbose=True, allow_net_connect=False)
+def test_upload_user_file_by_url_with_invalid_content_type(
+    data_fixture, tmpdir
+) -> None:
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    remote_file = "https://baserow.io//"
+
+    httpretty.register_uri(
+        httpretty.GET,
+        remote_file,
+        body=b"Hello World",
+        status=200,
+        content_type="foobar/barfoo",
+    )
+
+    with freeze_time("2022-08-30 09:00"):
+        user_file = handler.upload_user_file_by_url(user, remote_file, storage=storage)
+
+    assert (
+        user_file.original_name
+        and user_file.original_name.endswith(".bin")
+        and len(user_file.original_name) == GENERATED_FILE_NAME_LENGTH
+    )
+    assert user_file.original_extension == "bin"
+    assert len(user_file.unique) == 32
+    assert user_file.mime_type == "application/octet-stream"
     assert user_file.uploaded_by_id == user.id
     assert user_file.uploaded_at.year == 2022
     assert user_file.uploaded_at.month == 8
