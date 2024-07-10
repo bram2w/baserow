@@ -11,7 +11,7 @@
     <FormGroup
       class="margin-bottom-3"
       small-label
-      label="When the form is submitted"
+      :label="$t('formViewMetaControls.whenSubmittedLabel')"
       required
     >
       <ul class="choice-items choice-items--inline">
@@ -27,7 +27,7 @@
                 view.submit_action !== 'MESSAGE' &&
                 $emit('updated-form', { submit_action: 'MESSAGE' })
             "
-            ><span>Show a message</span>
+            ><span>{{ $t('formViewMetaControls.showMessage') }}</span>
             <i
               v-if="view.submit_action === 'MESSAGE'"
               class="choice-items__icon-active iconoir-check-circle"
@@ -46,7 +46,7 @@
                 view.submit_action !== 'REDIRECT' &&
                 $emit('updated-form', { submit_action: 'REDIRECT' })
             "
-            ><span>Redirect to URL</span>
+            ><span>{{ $t('formViewMetaControls.urlRedirect') }}</span>
             <i
               v-if="view.submit_action === 'REDIRECT'"
               class="choice-items__icon-active iconoir-check-circle"
@@ -58,14 +58,14 @@
 
     <FormGroup
       v-if="view.submit_action === 'MESSAGE'"
-      label="The message"
+      :label="$t('formViewMetaControls.theMessage')"
       small-label
       required
     >
       <FormTextarea
         v-model="submit_action_message"
         class="form-view__meta-message-textarea"
-        placeholder="The message"
+        :placeholder="$t('formViewMetaControls.theMessage')"
         :rows="3"
         :disabled="readOnly"
         @blur="
@@ -79,13 +79,19 @@
     <FormGroup
       v-if="view.submit_action === 'REDIRECT'"
       small-label
-      label="The URL"
+      :error="$v.submit_action_redirect_url.$error"
+      :error-message="
+        $v.submit_action_redirect_url.$error ? $t('error.invalidURL') : ''
+      "
+      :label="$t('formViewMetaControls.theURL')"
+      :helper-text="$t('formViewMeta.includeRowId')"
       required
     >
       <FormInput
         v-model="submit_action_redirect_url"
-        placeholder="The URL"
+        :placeholder="$t('formViewMetaControls.theURL')"
         :disabled="readOnly"
+        :error="$v.submit_action_redirect_url.$error"
         @blur="
           ;[
             $v.submit_action_redirect_url.$touch(),
@@ -95,7 +101,8 @@
               }),
           ]
         "
-      ></FormInput>
+      >
+      </FormInput>
     </FormGroup>
   </div>
 </template>
