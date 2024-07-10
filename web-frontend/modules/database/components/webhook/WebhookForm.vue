@@ -84,14 +84,10 @@
                   (!$v.values.url.required ||
                     !$v.values.url.isValidURLWithHttpScheme)
                 "
-                class="error"
               >
                 {{ $t('webhookForm.errors.urlField') }}
               </div>
-              <div
-                v-else-if="$v.values.url.$error && !$v.values.url.maxLength"
-                class="error"
-              >
+              <div v-else-if="$v.values.url.$error && !$v.values.url.maxLength">
                 {{
                   $t('error.maxLength', {
                     max: $v.values.url.$params.maxLength.max,

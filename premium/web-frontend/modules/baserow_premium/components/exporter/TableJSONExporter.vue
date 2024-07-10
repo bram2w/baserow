@@ -6,6 +6,7 @@
           :label="$t('tableJSONExporter.encoding')"
           required
           small-label
+          class="margin-bottom-2"
         >
           <CharsetDropdown v-model="values.export_charset" :disabled="loading">
           </CharsetDropdown>

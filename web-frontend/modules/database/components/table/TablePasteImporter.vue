@@ -10,7 +10,7 @@
     >
       <FormTextarea rows="10" @input="changed($event)"></FormTextarea>
 
-      <template #error>{{ $t('error.fieldRequired') }}</template>
+      <template #error>{{ $t('error.requiredField') }}</template>
     </FormGroup>
 
     <FormGroup
