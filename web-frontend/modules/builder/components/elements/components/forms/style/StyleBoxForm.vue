@@ -1,53 +1,55 @@
 <template>
-  <form @submit.prevent>
-    <FormGroup
-      v-if="borderIsAllowed"
-      horizontal
-      class="margin-bottom-1"
-      small-label
-      required
-      :label="$t('styleBoxForm.borderColor')"
-    >
-      <ColorInput
-        v-model="values.border_color"
-        small
-        :color-variables="colorVariables"
-      />
-    </FormGroup>
-    <FormGroup
-      v-if="borderIsAllowed"
-      class="margin-bottom-1"
-      small-label
-      required
-      :label="$t('styleBoxForm.borderLabel')"
-      horizontal
-      :error-message="sizeError"
-    >
-      <PixelValueSelector v-model="values.border_size" />
-    </FormGroup>
-    <FormGroup
-      v-if="paddingIsAllowed"
-      class="margin-bottom-1"
-      small-label
-      required
-      :label="$t('styleBoxForm.paddingLabel')"
-      horizontal
-      :error-message="paddingError"
-    >
-      <PixelValueSelector v-model="values.padding" />
-    </FormGroup>
-    <FormGroup
-      v-if="marginIsAllowed"
-      class="margin-bottom-1"
-      small-label
-      required
-      :label="$t('styleBoxForm.marginLabel')"
-      horizontal
-      :error-message="marginError"
-    >
-      <PixelValueSelector v-model="actualMargin" />
-    </FormGroup>
-  </form>
+  <FormSection :title="title">
+    <form @submit.prevent>
+      <FormGroup
+        v-if="borderIsAllowed"
+        horizontal
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.borderColor')"
+      >
+        <ColorInput
+          v-model="values.border_color"
+          small
+          :color-variables="colorVariables"
+        />
+      </FormGroup>
+      <FormGroup
+        v-if="borderIsAllowed"
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.borderLabel')"
+        horizontal
+        :error-message="sizeError"
+      >
+        <PixelValueSelector v-model="values.border_size" />
+      </FormGroup>
+      <FormGroup
+        v-if="paddingIsAllowed"
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.paddingLabel')"
+        horizontal
+        :error-message="paddingError"
+      >
+        <PixelValueSelector v-model="values.padding" />
+      </FormGroup>
+      <FormGroup
+        v-if="marginIsAllowed"
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.marginLabel')"
+        horizontal
+        :error-message="marginError"
+      >
+        <PixelValueSelector v-model="actualMargin" />
+      </FormGroup>
+    </form>
+  </FormSection>
 </template>
 
 <script>
@@ -63,6 +65,10 @@ export default {
   mixins: [form],
   inject: ['builder'],
   props: {
+    title: {
+      type: String,
+      required: true,
+    },
     value: {
       type: Object,
       required: true,

@@ -1,9 +1,11 @@
 .read-only-form {
   & input,
   & .input,
+  & .form-input,
   & .formula-input-field,
   & .dropdown,
-  & .color-input__preview,
+  & .control__label,
+  & .color-input__input,
   & .checkbox,
   & .radio,
   & a,

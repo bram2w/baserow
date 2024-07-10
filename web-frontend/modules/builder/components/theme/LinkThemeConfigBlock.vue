@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <form @submit.prevent @keydown.enter.prevent>
     <ThemeConfigBlockSection>
       <template #default>
         <FormGroup
@@ -90,7 +90,7 @@
         </ABLink>
       </template>
     </ThemeConfigBlockSection>
-  </div>
+  </form>
 </template>
 
 <script>

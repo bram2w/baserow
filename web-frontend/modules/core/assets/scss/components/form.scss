@@ -17,12 +17,16 @@
       align-items: start;
     }
   }
+}
 
-  &.control--error .form-input__input {
+.control--error {
+  .form-input,
+  .dropdown__selected,
+  .form-textarea {
     border-color: $palette-red-600;
   }
 
-  &.control--error .form-input__icon {
+  .form-input__icon {
     color: $palette-red-600;
   }
 }

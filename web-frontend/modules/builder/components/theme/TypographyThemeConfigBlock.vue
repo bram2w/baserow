@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <form @submit.prevent @keydown.enter.prevent>
     <ThemeConfigBlockSection
       v-if="showBody"
       :title="$t('typographyThemeConfigBlock.bodyLabel')"
@@ -183,7 +183,7 @@
         </template>
       </ThemeConfigBlockSection>
     </template>
-  </div>
+  </form>
 </template>
 
 <script>

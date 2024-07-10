@@ -72,14 +72,15 @@
         </Dropdown>
       </FormGroup>
     </FormSection>
-    <FormSection v-for="{ name, label } in borders" :key="name" :title="label">
-      <StyleBoxForm
-        v-model="boxStyles[name]"
-        :padding-is-allowed="isStyleAllowed(`style_padding_${name}`)"
-        :border-is-allowed="isStyleAllowed(`style_border_${name}`)"
-        :margin-is-allowed="isStyleAllowed(`style_margin_${name}`)"
-      />
-    </FormSection>
+    <StyleBoxForm
+      v-for="{ name, label } in borders"
+      :key="name"
+      v-model="boxStyles[name]"
+      :title="label"
+      :padding-is-allowed="isStyleAllowed(`style_padding_${name}`)"
+      :border-is-allowed="isStyleAllowed(`style_border_${name}`)"
+      :margin-is-allowed="isStyleAllowed(`style_margin_${name}`)"
+    />
   </form>
 </template>
 
