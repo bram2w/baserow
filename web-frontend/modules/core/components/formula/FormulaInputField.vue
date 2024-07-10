@@ -165,11 +165,33 @@ export default {
         this.unSelectNode()
       } else {
         this.unSelectNode()
+
+        /**
+         * The Context.vue calculates where to display the Context menu
+         * relative to the input field that triggered it. When the Context
+         * decides that the Context menu should be top-adjusted, it will set
+         * its bottom coordinate to match the input field's top coordinate,
+         * plus a "margin". This "margin" is the verticalOffset and is a
+         * negative number; it is negative because the Context menu should not
+         * appear below the input field.
+         *
+         * When the Context menu's bottom coordinate is less than zero, it
+         * is hidden.
+         *
+         * By setting the verticalOffset to the negative value of the input
+         * field's height, we ensure that as long as the input field is within
+         * the viewport, the bottom coordinate of the Context menu is always
+         * >= the bottom coordinate of the input field that triggered it.
+         */
+        const verticalOffset = -Math.abs(
+          this.$el.getBoundingClientRect().height
+        )
+
         this.$refs.dataExplorer.show(
           this.$refs.editor.$el,
           'bottom',
           'left',
-          -100,
+          verticalOffset,
           -330
         )
       }
