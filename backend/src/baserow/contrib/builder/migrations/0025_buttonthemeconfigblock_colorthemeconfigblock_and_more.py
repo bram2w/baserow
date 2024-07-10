@@ -71,10 +71,11 @@ def migrate_element_styles(apps, schema_editor):
 
     elements_to_update = []
     for heading in HeadingElement.objects.all():
-        heading.styles["typography"] = {
-            f"heading_{heading.level}_text_color": heading.font_color
-        }
-        elements_to_update.append(heading)
+        if heading.font_color != "default":
+            heading.styles["typography"] = {
+                f"heading_{heading.level}_text_color": heading.font_color
+            }
+            elements_to_update.append(heading)
     HeadingElement.objects.bulk_update(elements_to_update, ["styles"], batch_size=100)
 
     elements_to_update = []
