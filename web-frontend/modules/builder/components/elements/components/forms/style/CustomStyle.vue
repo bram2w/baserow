@@ -20,6 +20,7 @@
             {{ themeConfigBlock.label }}
           </h2>
           <ThemeConfigBlock
+            ref="configBlocks"
             :theme="theme"
             :default-values="value?.[styleKey]"
             :preview="false"
@@ -77,6 +78,21 @@ export default {
         ...this.value,
         [this.styleKey]: newValues,
       })
+    },
+    /**
+     * With isFormValid and reset we mimic the form mixin API so the forms are reset
+     * when an error happens during the update request.
+     */
+    isFormValid() {
+      return (this.$refs.configBlocks || [])
+        .map((confBlock) => confBlock.isFormValid())
+        .every((v) => v)
+    },
+    async reset() {
+      await this.$nextTick() // Wait the default value to be updated
+      return (this.$refs.configBlocks || []).forEach((confBlock) =>
+        confBlock.reset()
+      )
     },
   },
 }

@@ -7,6 +7,7 @@
   >
     <component
       :is="themeConfigBlockType.component"
+      ref="themeConfigBlockForm"
       :preview="preview"
       :theme="theme"
       :extra-args="extraArgs"
@@ -39,6 +40,14 @@ export default {
       type: Boolean,
       required: false,
       default: true,
+    },
+  },
+  methods: {
+    reset() {
+      this.$refs.themeConfigBlockForm.reset()
+    },
+    isFormValid() {
+      return this.$refs.themeConfigBlockForm.isFormValid()
     },
   },
 }

@@ -8,6 +8,7 @@
       >
         <div class="padding-top-2">
           <ThemeConfigBlock
+            ref="themeConfigBlocks"
             :default-values="builder.theme"
             :theme-config-block-type="themeConfigBlock"
             @values-changed="update($event)"
@@ -61,6 +62,9 @@ export default {
           )
         )
       } catch (error) {
+        this.$refs.themeConfigBlocks.forEach((themeConfigBlock) =>
+          themeConfigBlock.reset()
+        )
         notifyIf(error, 'application')
       }
     },
