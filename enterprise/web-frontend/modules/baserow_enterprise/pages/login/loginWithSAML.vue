@@ -17,6 +17,7 @@
           :label="$t('field.emailAddress')"
           required
           :error="fieldHasErrors('email') || loginRequestError"
+          class="margin-bottom-2"
         >
           <FormInput
             ref="email"
