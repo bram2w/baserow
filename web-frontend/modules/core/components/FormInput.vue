@@ -13,7 +13,7 @@
       'form-input--suffix': hasSuffixSlot,
       'form-input--no-controls': removeNumberInputControls,
     }"
-    @click="focus"
+    @click="focusOnClick && focus()"
   >
     <i
       v-if="iconLeft"
@@ -41,6 +41,8 @@
         @keydown="$emit('keydown', $event)"
         @keypress="$emit('keypress', $event)"
         @input="$emit('input', toValue($event.target.value))"
+        @mouseup="$emit('mouseup', $event)"
+        @mousedown="$emit('mousedown', $event)"
       />
       <i
         v-if="iconRight"
@@ -155,6 +157,11 @@ export default {
       type: Number,
       required: false,
       default: -1,
+    },
+    focusOnClick: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {
