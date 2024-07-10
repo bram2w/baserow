@@ -1,0 +1,6 @@
+{
+  "type": "bug",
+  "message": "Generate file name for files uploaded by url where URL doesn't contain any path.",
+  "issue_number": 2738,
+  "created_at": "2024-06-26"
+}
