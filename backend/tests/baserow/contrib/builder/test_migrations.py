@@ -259,6 +259,12 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
         font_color="#0000CCCC",
         content_type=ContentType.objects.get_for_model(HeadingElement),
     )
+    HeadingElement.objects.create(
+        order=3,
+        page=page,
+        font_color="default",
+        content_type=ContentType.objects.get_for_model(HeadingElement),
+    )
 
     new_state = migrator.migrate(migrate_to)
 
@@ -268,7 +274,7 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
     FormContainerElement = new_state.apps.get_model("builder", "FormContainerElement")
     TableElement = new_state.apps.get_model("builder", "TableElement")
 
-    heading = HeadingElement.objects.get(page__builder_id=builder.id)
+    [heading1, heading2] = HeadingElement.objects.filter(page__builder_id=builder.id)
     [button1, button2, button3, button4] = ButtonElement.objects.filter(
         page__builder_id=builder.id
     )
@@ -318,11 +324,12 @@ def test_0025_element_properties(migrator, teardown_table_metadata):
             "button_hover_background_color": "#dbdbdb00",
         }
     }
-    assert heading.styles == {
+    assert heading1.styles == {
         "typography": {
             "heading_1_text_color": "#0000CCCC",
         }
     }
+    assert heading2.styles == {}
 
 
 @pytest.mark.once_per_day_in_ci
