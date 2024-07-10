@@ -16,14 +16,14 @@ export const state = () => ({
 })
 
 const checkApplication = (application) => {
-  if (!Object.prototype.hasOwnProperty.call(application, 'userSourceUser')) {
+  if (!application.userSourceUser) {
     Vue.set(application, 'userSourceUser', {
       refreshing: false,
       token: null,
       refreshToken: null,
       tokenUpdatedAt: 0,
       tokenPayload: null,
-      user: {},
+      user: { email: '', id: 0, username: '', role: '', user_source_id: 0 },
       authenticated: false,
     })
   }
@@ -33,33 +33,43 @@ export const mutations = {
   SET_TOKENS(state, { application, access, refresh, tokenUpdatedAt }) {
     checkApplication(application)
 
-    application.userSourceUser.token = access
-    application.userSourceUser.refreshToken = refresh
-    application.userSourceUser.tokenUpdatedAt =
-      tokenUpdatedAt || new Date().getTime()
-    application.userSourceUser.tokenPayload = jwtDecode(
-      application.userSourceUser.token
-    )
+    application.userSourceUser = {
+      ...application.userSourceUser,
+      token: access,
+      refreshToken: refresh,
+      tokenUpdatedAt: tokenUpdatedAt || new Date().getTime(),
+      tokenPayload: jwtDecode(access),
+    }
   },
   SET_USER_DATA(state, { application, data }) {
     checkApplication(application)
 
-    application.userSourceUser.user = { ...data }
+    application.userSourceUser = {
+      ...application.userSourceUser,
+      user: { ...data },
+    }
   },
   CLEAR_USER_DATA(state, { application }) {
     checkApplication(application)
 
-    application.userSourceUser.user = {}
+    application.userSourceUser = {
+      ...application.userSourceUser,
+      user: {},
+    }
   },
   LOGOFF(state, { application }) {
     checkApplication(application)
 
-    application.userSourceUser.token = null
-    application.userSourceUser.refreshToken = null
-    application.userSourceUser.tokenUpdatedAt = 0
-    application.userSourceUser.tokenPayload = null
-    application.userSourceUser.user = {}
-    application.userSourceUser.authenticated = false
+    application.userSourceUser = {
+      ...application.userSourceUser,
+      refreshing: false,
+      token: null,
+      refreshToken: null,
+      tokenUpdatedAt: 0,
+      tokenPayload: null,
+      user: {},
+      authenticated: false,
+    }
   },
   SET_AUTHENTICATED(state, { application, authenticated }) {
     checkApplication(application)
@@ -193,11 +203,7 @@ export const getters = {
     return state.currentApplication
   },
   isAuthenticated: (state) => (application) => {
-    return (
-      application &&
-      Object.prototype.hasOwnProperty.call(application, 'userSourceUser') &&
-      application.userSourceUser.authenticated
-    )
+    return !!application?.userSourceUser?.authenticated
   },
   isRefreshing: (state) => (application) => {
     return application.userSourceUser.refreshing
@@ -221,7 +227,7 @@ export const getters = {
     if (getters.isAuthenticated(application)) {
       return application.userSourceUser.user
     }
-    return { email: '', id: 0, username: '', role: '' }
+    return { email: '', id: 0, username: '', role: '', user_source_id: 0 }
   },
   shouldRefreshToken: (state, getters) => (application) => {
     // the user must be authenticated to refresh the token

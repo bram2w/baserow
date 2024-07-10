@@ -696,19 +696,18 @@ export class UserDataProviderType extends DataProviderType {
   }
 
   getDataContent(applicationContext) {
+    const loggedUser = this.app.store.getters['userSourceUser/getUser'](
+      applicationContext.builder
+    )
+
     const context = {
       is_authenticated: this.app.store.getters[
         'userSourceUser/isAuthenticated'
       ](applicationContext.builder),
-      ...this.app.store.getters['userSourceUser/getUser'](
-        applicationContext.builder
-      ),
+      ...loggedUser,
     }
 
     if (context.role.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
-      const loggedUser = this.app.store.getters['userSourceUser/getUser'](
-        applicationContext.builder
-      )
       const userSourceName = this.app.store.getters[
         'userSource/getUserSourceById'
       ](applicationContext.builder, loggedUser.user_source_id).name
