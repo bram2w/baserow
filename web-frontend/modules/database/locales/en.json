@@ -633,6 +633,13 @@
   "formViewMeta": {
     "includeRowId": "Use {row_id} to include the newly created row id in the URL."
   },
+  "formViewMetaControls": {
+    "whenSubmittedLabel": "When the form is submitted",
+    "showMessage": "Show a message",
+    "urlRedirect": "Redirect to URL",
+    "theMessage": "The message",
+    "theURL": "The URL"
+  },
   "previewAny": {
     "externalWarning": "Opening your file via an external service exposes your file to their servers."
   },
