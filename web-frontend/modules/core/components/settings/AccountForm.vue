@@ -11,6 +11,7 @@
         ref="first_name"
         v-model="values.first_name"
         size="large"
+        :error="fieldHasErrors('first_name')"
         @blur="$v.values.first_name.$touch()"
       ></FormInput>
 

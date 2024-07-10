@@ -5,6 +5,7 @@
       :error="fieldHasErrors('name')"
       required
       small-label
+      class="margin-bottom-2"
     >
       <template #label>
         <i class="iconoir-text"></i> {{ $t('tableForm.name') }}</template
@@ -15,14 +16,13 @@
         size="large"
         :error="fieldHasErrors('name')"
         :disabled="!creation"
-        class="margin-bottom-2"
         @focus.once="$event.target.select()"
         @blur="$v.values.name.$touch()"
       >
-        <template #error>
-          {{ $t('error.requiredField') }}
-        </template>
       </FormInput>
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
     </FormGroup>
     <slot></slot>
   </form>

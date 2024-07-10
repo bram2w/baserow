@@ -63,8 +63,8 @@
         </div>
       </div>
     </div>
-    <div v-if="filename !== ''" class="control">
-      <label class="control__label">{{
+    <div v-if="filename !== ''" class="control margin-top-2">
+      <label class="control__label control__label--small">{{
         $t('tableJSONImporter.encodingLabel')
       }}</label>
       <div class="control__elements">
