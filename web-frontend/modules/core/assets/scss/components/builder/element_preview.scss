@@ -94,7 +94,7 @@
 .element-preview__name {
   @include elevation($elevation-low);
   @include absolute(-26px, auto, auto, 5px);
-  @include rounded($rounded);
+  @include rounded($rounded-3xl);
 
   background-color: $palette-blue-500;
   color: $white;

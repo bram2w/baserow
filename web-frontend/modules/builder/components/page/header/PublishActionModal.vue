@@ -37,7 +37,7 @@
               target="_blank"
               @click.stop=""
             >
-              <i class="iconoir-link" />
+              <i class="iconoir-open-new-window" />
             </a>
           </Radio>
           <LastPublishedDomainDate
