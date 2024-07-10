@@ -54,6 +54,8 @@ export class BuilderApplicationType extends ApplicationType {
       values.userSources = []
     }
     values._loadedOnce = false
+
+    values.userSourceUser = null
     return values
   }
 
