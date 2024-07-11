@@ -443,6 +443,7 @@ class LocalBaserowUserSourceType(UserSourceType):
             f"{user_source.id}"
             f"_{user_source.table_id if user_source.table_id else '?'}"
             f"_{user_source.email_field_id if user_source.email_field_id else '?'}"
+            f"_{user_source.role_field_id if user_source.role_field_id else '?'}"
         )
 
     def get_user_role(self, user, user_source: UserSource) -> str:
