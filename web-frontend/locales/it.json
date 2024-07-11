@@ -357,7 +357,13 @@
         "modelDoesNotBelongToTypeDescription": "Il modello selezionato non appartiene al tipo di IA selezionato.",
         "generativeAIDoesNotExistTitle": "Impossibile trovare l'IA generativa",
         "generativeAIDoesNotExistDescription": "Il modello di IA generativa non esiste.",
-        "modelDoesNotBelongToTypeTitle": "Il modello selezionato non appartiene al tipo di IA"
+        "modelDoesNotBelongToTypeTitle": "Il modello selezionato non appartiene al tipo di IA",
+        "generateAIPromptTitle": "Errore  dal prompt",
+        "outputParserTitle": "Output errato",
+        "outputParserDescription": "Il modello ha risposto in un formato errato. Si prega di riprovare più tardi.",
+        "generateAIPromptDescription": "Qualcosa è andato storto con l'AI.",
+        "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Massimo numero di inviti raggiunto",
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Hai raggiunto il massimo numero di inviti in attesa per questo progetto. Per favore, attendi che le persone accettino gli inviti o cancellane alcuni per continuare."
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -504,7 +510,9 @@
         "encodeUriDescription": "Ritorna un URI codificato a partire dalla stringa data.",
         "getIsImageDescription": "Ritorna vero se il file è un'immagine, falso altrimenti. Utilizzare la funzione index per estrarre una singola immagine da un campo file.",
         "getFileMimeTypeDescription": "Ritorna il mime type del file. Utilizzare la funzione index per estrarre un singolo file da un campo file.",
-        "hasOptionDescription": "Ritorna true se il nome dell'opzione fornito come secondo argomento è presente nel campo fornito come primo argomento."
+        "hasOptionDescription": "Ritorna true se il nome dell'opzione fornito come secondo argomento è presente nel campo fornito come primo argomento.",
+        "durationToSecondsDescription": "Converte la durata nel corrispondente numero di secondi",
+        "secondsToDurationDescription": "Converte il numero di secondi in una durata."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

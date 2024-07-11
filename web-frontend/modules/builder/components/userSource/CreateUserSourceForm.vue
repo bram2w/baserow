@@ -2,7 +2,10 @@
   <form @submit.prevent="submit">
     <FormGroup
       :label="$t('createUserSourceForm.userSourceType')"
-      :error="getError('type')"
+      :error-message="getError('type')"
+      required
+      small-label
+      class="margin-bottom-2"
     >
       <Dropdown
         v-model="$v.values.type.$model"
@@ -20,7 +23,10 @@
     </FormGroup>
     <FormGroup
       :label="$t('createUserSourceForm.userSourceIntegration')"
-      :error="getError('integration_id')"
+      :error-message="getError('integration_id')"
+      required
+      small-label
+      class="margin-bottom-2"
     >
       <IntegrationDropdown
         v-model="$v.values.integration_id.$model"
@@ -29,11 +35,16 @@
         :integration-type="currentUserSourceType?.integrationType"
       />
     </FormGroup>
-    <FormInput
-      v-model="$v.values.name.$model"
-      :error="getError('name')"
+
+    <FormGroup
+      :error-message="getError('name')"
       :label="$t('createUserSourceForm.userSourceName')"
-    />
+      required
+      small-label
+    >
+      <FormInput v-model="$v.values.name.$model" size="large" />
+    </FormGroup>
+
     <input type="submit" hidden />
   </form>
 </template>

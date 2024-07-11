@@ -7,6 +7,7 @@
         @mousedown.prevent
       ></div>
       <WorkflowActionSelector
+        class="flex-grow-1"
         :available-workflow-action-types="availableWorkflowActionTypes"
         :workflow-action="workflowAction"
         :disabled="loading"

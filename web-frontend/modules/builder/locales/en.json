@@ -1,6 +1,7 @@
 {
   "dataProviderType": {
-    "dataSource": "Data",
+    "dataSource": "Data records",
+    "dataSourceContext": "Available options",
     "pageParameter": "Parameter",
     "currentRecord": "Data source",
     "formData": "Form data",
@@ -159,10 +160,6 @@
   "imageElement": {
     "emptyState": "No alt text defined..."
   },
-  "imageInput": {
-    "labelDescription": "Default description",
-    "labelButton": "Upload"
-  },
   "generalForm": {
     "labelTitle": "Label",
     "labelPlaceholder": "Enter a label (optional)",
@@ -189,24 +186,14 @@
     "passwordTypeWarning": "Passwords are sensitive data. Please be careful how you handle and store passwords in your application."
   },
   "imageElementForm": {
-    "fileLabel": "Image file",
+    "fileLabel": "Image",
     "invalidUrlError": "URL is invalid",
     "altTextTitle": "Alt text",
     "altTextDescription": "Is used by screen readers and displayed if the image can't load",
     "fileSourceTypeUpload": "Upload",
     "fileSourceTypeURL": "URL",
     "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
-    "uploadFileButton": "Upload file",
-    "maxWidthLabel": "Max width",
-    "maxHeightLabel": "Max height",
-    "maxHeightPlaceholder": "Enter a maximum height in pixels.",
-    "maxWidthPlaceholder": "Enter a maximum width as a percentage.",
-    "imageConstraintsLabel": "Constraints",
-    "imageConstraintFullWidth": "Extend to max width",
-    "imageConstraintCover": "Cover",
-    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
-    "imageConstraintContain": "Contain",
-    "imageConstraintContainDisabled": "Unavailable with a max height."
+    "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
     "empty": "Empty IFrame...",
@@ -221,6 +208,7 @@
   },
   "columnElementForm": {
     "columnAmountTitle": "Layout",
+    "verticalAlignment": "Vertical alignment",
     "columnAmountName": "no columns | 1 column | {columnAmount} columns",
     "columnGapTitle": "Space between columns",
     "columnGapPlaceholder": "Enter space between columns..."
@@ -309,19 +297,18 @@
     "color": "Color"
   },
   "widthTypes": {
-    "full": "Full width",
+    "fullBleed": "Full bleed",
+    "fullWidth": "Full width",
     "normal": "Normal",
     "medium": "Medium",
     "small": "Small"
   },
   "horizontalAlignmentSelector": {
-    "alignment": "Horizontal alignment",
     "alignmentLeft": "Left",
     "alignmentCenter": "Center",
     "alignmentRight": "Right"
   },
   "verticalAlignmentSelector": {
-    "alignment": "Vertical alignment",
     "alignmentTop": "Top",
     "alignmentCenter": "Middle",
     "alignmentBottom": "Bottom"
@@ -375,24 +362,94 @@
     "boxRight": "Right",
     "backgroundLabel": "Background",
     "backgroundColor": "Background color",
-    "widthLabel": "Width"
+    "widthLabel": "Width",
+    "backgroundImage": "Image",
+    "backgroundImageMode": "Fill mode"
   },
   "styleBoxForm": {
-    "borderLabel": "Border",
-    "paddingLabel": "Padding"
+    "borderColor": "Border color",
+    "borderLabel": "Size",
+    "paddingLabel": "Padding",
+    "marginLabel": "Margin"
   },
-  "mainThemeConfigBlock": {
-    "colorsLabel": "Colors",
+  "themeConfigBlockType": {
+    "color": "Colors",
+    "page": "Page",
+    "typography": "Typography",
+    "button": "Button",
+    "link": "Link",
+    "image": "Image"
+  },
+  "colorThemeConfigBlock": {
     "primaryColor": "Primary",
     "secondaryColor": "Secondary",
-    "typography": "Typography",
+    "borderColor": "Border",
+    "successColor": "Success",
+    "warningColor": "Warning",
+    "errorColor": "Error"
+  },
+  "pageThemeConfigBlock": {
+    "backgroundColor": "Background color",
+    "backgroundImage": "Background image",
+    "backgroundMode": "Background mode"
+  },
+  "colorThemeConfigBlockType": {
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "border": "Border",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
+  },
+  "typographyThemeConfigBlock": {
     "headingLabel": "Heading {i} (h{i})",
-    "headingValue": "Heading <h{i}>"
+    "headingValue": "Heading <h{i}>",
+    "color": "Color",
+    "size": "Size",
+    "textAlignment": "Alignment",
+    "bodyLabel": "Body",
+    "fontFamily": "Font"
+  },
+  "buttonThemeConfigBlock": {
+    "backgroundColor": "Background color",
+    "button": "Button",
+    "defaultState": "Default state",
+    "hoverState": "Hover state",
+    "textAlignment": "Text alignment",
+    "alignment": "Alignment",
+    "width": "Width",
+    "textColor": "Text color",
+    "borderColor": "Border color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Font size"
+  },
+  "linkThemeConfigBlock": {
+    "color": "Color",
+    "link": "Link",
+    "defaultState": "Default state",
+    "hoverState": "Hover state",
+    "alignment": "Alignment",
+    "fontFamily": "Font"
+  },
+  "imageThemeConfigBlock": {
+    "alignment": "Alignment",
+    "maxWidthLabel": "Max width",
+    "maxHeightLabel": "Max height",
+    "maxHeightPlaceholder": "Enter a max height",
+    "maxWidthPlaceholder": "Enter a max width",
+    "imageConstraintsLabel": "Constraints",
+    "imageConstraintFullWidth": "Extend to max width",
+    "imageConstraintCover": "Cover",
+    "imageConstraintCoverDisabled": "Unavailable with empty max height.",
+    "imageConstraintContain": "Contain",
+    "imageConstraintContainDisabled": "Unavailable with a max height."
   },
   "buttonElementForm": {
-    "valueLabel": "Text",
-    "valuePlaceholder": "Enter text...",
-    "buttonColor": "Button color"
+    "valueLabel": "Button text",
+    "valuePlaceholder": "Enter text..."
   },
   "buttonElement": {
     "noValue": "Unnamed..."
@@ -423,6 +480,7 @@
     "fieldValuePlaceholder": "Enter value...",
     "itemsPerPage": "Items per page",
     "fieldDefaultName": "Column",
+    "name": "Name",
     "fieldType": "Type",
     "itemsPerPagePlaceholder": "Enter value...",
     "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
@@ -430,7 +488,8 @@
     "refreshFieldsFromDataSource": "refresh fields from data source",
     "orientation": "Orientation",
     "orientationHorizontal": "Horizontal",
-    "orientationVertical": "Vertical"
+    "orientationVertical": "Vertical",
+    "buttonLoadMoreLabel": "Show more label"
   },
   "tableElement": {
     "empty": "No items have been found.",
@@ -449,7 +508,8 @@
     "itemsPerRowDescription": "Number of columns per row and device type.",
     "orientationLabel": "Orientation",
     "orientationVertical": "Vertical",
-    "orientationHorizontal": "Horizontal"
+    "orientationHorizontal": "Horizontal",
+    "buttonLoadMoreLabel": "Show more label"
   },
   "currentRecordDataProviderType": {
     "index": "Index",
@@ -521,9 +581,15 @@
   },
   "choiceOptionSelector": {
     "label": "Options",
-    "value": "Value",
-    "name": "Name",
-    "addOption": "add option"
+    "value": "Option values",
+    "valuePlaceholder": "Enter value",
+    "name": "Option display names",
+    "namePlaceholder": "Enter name",
+    "addOption": "add option",
+    "optionType": "Options type",
+    "manual": "Manual",
+    "dataSource": "Data source",
+    "formulas": "Formulas"
   },
   "dispatchWorkflowActionError": {
     "defaultTitle": "Event error",
@@ -568,20 +634,36 @@
   },
   "userSelector": {
     "viewAs": "View as: {user}",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "member": "{prefix} member"
   },
   "visibilityForm": {
     "allVisitors": "All visitors",
     "loggedInVisitors": "Logged-in visitors",
     "notLoggedInVisitors": "Logged-out visitors",
-    "warningTitle": "We’re constantly enhancing the security",
-    "warningMessage": "At the moment the visibility is only applied in the UI, the underlying data is still accessible from the API. Please check the <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentation</a> for more information on data security."
+    "warningTitle": "We're constantly enhancing the security",
+    "warningMessage": "At the moment the visibility is only applied in the UI, the underlying data is still accessible from the API. Please check the <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api' target='_blank'>documentation</a> for more information on data security.",
+    "excludedRolesLabel": "all roles except",
+    "switchAllowLabel": "Allow",
+    "switchDisallowLabel": "Disallow",
+    "rolesSelectAll": "Select all",
+    "rolesDeselectAll": "Deselect all",
+    "rolesSelectHint": "Select one or more roles",
+    "roleTypesHint": "Select a Role Type",
+    "roleTypeAllowAllRoles": "All roles",
+    "roleTypeAllowAllRolesExcept": "Disallow roles...",
+    "roleTypeDisallowAllRolesExcept": "Allow roles...",
+    "rolesAllMembersOf": "All members of {name}",
+    "noRole": "No role",
+    "errorFetchingRolesTitle": "Could not fetch User Roles",
+    "errorFetchingRolesMessage": "There was a problem while fetching User Roles."
   },
   "userDataProviderType": {
     "isAuthenticated": "Is authenticated",
     "id": "Id",
     "email": "Email",
-    "username": "Username"
+    "username": "Username",
+    "role": "Role"
   },
   "buttonField": {
     "noLabel": "Unnamed..."
@@ -589,5 +671,16 @@
   "buttonFieldForm": {
     "infoMessage": "To configure actions for this button, open the \"Events\" tab of the current element.",
     "labelPlaceholder": "Enter a label..."
+  },
+  "resetButton": {
+    "reset": "Reset to default theme value"
+  },
+  "backgroundModes": {
+    "fill": "Fill",
+    "tile": "Tile",
+    "fit": "Fit"
+  },
+  "customStyle": {
+    "themeOverrides": "Theme overrides"
   }
 }

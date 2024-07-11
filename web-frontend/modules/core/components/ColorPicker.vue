@@ -46,6 +46,7 @@
       />
     </div>
     <div
+      v-if="allowOpacity"
       ref="alphaSpace"
       class="color-picker__slider color-picker__slider--alpha color-picker__thumb--negative-bottom-margin"
       draggable="false"
@@ -90,6 +91,11 @@ export default {
     value: {
       type: String,
       default: '#ffffffff',
+    },
+    allowOpacity: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {

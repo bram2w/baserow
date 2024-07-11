@@ -1,29 +1,28 @@
 <template>
-  <div class="image-input">
-    <div class="image-input__image-placeholder">
+  <div class="image-input image-input--with-image">
+    <div v-if="imageUrl" class="image-input__image-placeholder">
       <img class="image-input__image-placeholder-img" :src="imageUrl" />
-      <a
-        v-if="removable"
-        class="image-input__thumbnail-remove"
-        @click="$emit('input', null)"
-      >
-        <i class="iconoir-cancel"></i>
-        {{ $t('action.remove') }}
-      </a>
     </div>
-    <div>
-      <div class="image-input__image-upload">
-        <span class="image-input__image-upload-description">
+    <div class="image-input__image-upload">
+      <template v-if="!hasImage">
+        <p class="image-input__image-upload-description">
           {{ labelDescription || $t('imageInput.labelDescription') }}
-        </span>
+        </p>
         <Button
-          prepend-icon="iconoir-upload-square"
-          type="primary"
+          icon="iconoir-upload-square"
+          type="upload"
           @click="openFileUploadModal"
         >
           {{ labelButton || $t('imageInput.labelButton') }}
         </Button>
-      </div>
+      </template>
+    </div>
+    <div class="image-input__image-delete">
+      <ButtonIcon
+        v-if="hasImage"
+        icon="iconoir-bin"
+        @click="$emit('input', null)"
+      />
     </div>
     <UserFilesModal
       ref="userFilesModal"
@@ -75,7 +74,7 @@ export default {
     defaultImage: {
       type: String,
       required: false,
-      default: '',
+      default: null,
     },
   },
   data() {
@@ -83,12 +82,19 @@ export default {
   },
   computed: {
     imageUrl() {
-      if (!this.value) {
-        return this.defaultImage
+      if (this.value === null) {
+        if (this.defaultImage) {
+          return this.defaultImage
+        } else {
+          return null
+        }
       }
       return this.value.url
     },
     removable() {
+      return this.value !== null
+    },
+    hasImage() {
       return this.value !== null
     },
   },

@@ -1,13 +1,12 @@
 <template>
   <div
     class="button-element"
-    :class="classes"
-    :style="{
-      '--button-color': resolveColor(element.button_color, colorVariables),
+    :class="{
+      'element--no-value': !resolvedValue,
     }"
+    :style="getStyleOverride('button')"
   >
     <ABButton
-      :full-width="element.width === WIDTHS.FULL.value"
       :loading="workflowActionsInProgress"
       @click="fireEvent(elementType.getEventByName(element, 'click'))"
     >
@@ -19,13 +18,11 @@
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import { ensureString } from '@baserow/modules/core/utils/validator'
-import { WIDTHS } from '@baserow/modules/builder/enums'
 
 /**
  * @typedef ButtonElement
  * @property {string} value The text inside the button
- * @property {string} alignment left|center|right
- * @property {string} width auto|full
+ * @property {Object} styles contains style overides
  */
 
 export default {
@@ -41,19 +38,8 @@ export default {
     },
   },
   computed: {
-    WIDTHS: () => WIDTHS,
     resolvedValue() {
-      try {
-        return ensureString(this.resolveFormula(this.element.value))
-      } catch {
-        return ''
-      }
-    },
-    classes() {
-      return {
-        [`element--alignment-horizontal-${this.element.alignment}`]: true,
-        'element--no-value': !this.resolvedValue,
-      }
+      return ensureString(this.resolveFormula(this.element.value))
     },
   },
 }

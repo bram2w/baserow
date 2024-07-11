@@ -304,6 +304,8 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
         "style_padding_bottom": 10,
         "data_source_id": 42,
         "items_per_page": 20,
+        "roles": [],
+        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
         "fields": [
             {
                 "name": "Field 1",
@@ -464,6 +466,8 @@ def test_table_element_import_fields_with_no_uid(data_fixture):
         "order": "1.00000000000000000000",
         "type": "table",
         "parent_element_id": None,
+        "roles": [],
+        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
         "fields": [
             {
                 # NOTE: 'uid' property is missing here
@@ -505,6 +509,8 @@ def test_table_element_import_field_with_formula_with_current_record(data_fixtur
         "order": "1.00000000000000000000",
         "type": "table",
         "parent_element_id": None,
+        "roles": [],
+        "role_type": Element.ROLE_TYPES.ALLOW_ALL,
         "fields": [
             {
                 "uid": "7778cf93-77e5-4064-ab32-3342e2b1656a",

@@ -103,7 +103,7 @@ export default class UserAdminUserHelpers {
 
   getModalFieldErrorText(modal) {
     return modal
-      .find('.error')
+      .find('.control__messages--error')
       .text()
       .replace(/\n/gm, '')
       .replace(/\s\s+/g, ' ')

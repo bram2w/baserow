@@ -52,12 +52,6 @@
         @update-order="orderFieldOptions"
       ></ViewFieldsContext>
     </li>
-    <li v-if="isDev" class="header__filter-item">
-      <div>
-        <Badge color="yellow" indicator>Debug</Badge>
-        <span>{{ timezone(fields) }}</span>
-      </div>
-    </li>
     <li class="header__filter-item header__filter-item--right">
       <ViewSearch
         :view="view"

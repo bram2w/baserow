@@ -1,10 +1,13 @@
 <template>
-  <ThemeProvider>
+  <ThemeProvider class="page">
     <PageElement
       v-for="element in elements"
       :key="element.id"
       :element="element"
       :mode="mode"
+      :application-context-additions="{
+        recordIndexPath: [],
+      }"
     />
   </ThemeProvider>
 </template>

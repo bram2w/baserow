@@ -1,66 +1,64 @@
 <template>
   <div class="rating-field-form">
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('fieldRatingSubForm.color')
-      }}</label>
-      <div class="control__elements">
-        <a
-          ref="color-select"
-          :class="'rating-field__color' + ' background-color--' + values.color"
-          @click="openColor()"
-        >
-          <i class="iconoir-nav-arrow-down"></i>
-        </a>
-      </div>
-    </div>
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('fieldRatingSubForm.style')
-      }}</label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.style"
-          class="dropdown--floating rating-field-form__dropdown-style"
-          :class="{ 'dropdown--error': $v.values.style.$error }"
-          :fixed-items="true"
-          :show-search="false"
-          small
-          @hide="$v.values.style.$touch()"
-        >
-          <DropdownItem
-            v-for="style in styles"
-            :key="style"
-            name=""
-            :value="style"
-            :icon="`baserow-icon-${style}`"
-          />
-        </Dropdown>
-      </div>
-    </div>
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('fieldRatingSubForm.maxValue')
-      }}</label>
-      <div class="control__elements">
-        <Dropdown
-          v-model="values.max_value"
-          class="dropdown--floating"
-          :class="{ 'dropdown--error': $v.values.max_value.$error }"
-          :show-search="false"
-          :fixed-items="true"
-          small
-          @hide="$v.values.max_value.$touch()"
-        >
-          <DropdownItem
-            v-for="index in 10"
-            :key="index"
-            :name="`${index}`"
-            :value="index"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-    </div>
+    <FormGroup required small-label :label="$t('fieldRatingSubForm.color')">
+      <a
+        ref="color-select"
+        :class="'rating-field__color' + ' background-color--' + values.color"
+        @click="openColor()"
+      >
+        <i class="iconoir-nav-arrow-down"></i>
+      </a>
+    </FormGroup>
+
+    <FormGroup
+      required
+      small-label
+      :label="$t('fieldRatingSubForm.style')"
+      :error="$v.values.style.$error"
+    >
+      <Dropdown
+        v-model="values.style"
+        class="dropdown--floating rating-field-form__dropdown-style"
+        :class="{ 'dropdown--error': $v.values.style.$error }"
+        :fixed-items="true"
+        :show-search="false"
+        small
+        @hide="$v.values.style.$touch()"
+      >
+        <DropdownItem
+          v-for="style in styles"
+          :key="style"
+          name=""
+          :value="style"
+          :icon="`baserow-icon-${style}`"
+        />
+      </Dropdown>
+    </FormGroup>
+
+    <FormGroup
+      required
+      small-label
+      :label="$t('fieldRatingSubForm.maxValue')"
+      :error="$v.values.max_value.$error"
+    >
+      <Dropdown
+        v-model="values.max_value"
+        class="dropdown--floating"
+        :class="{ 'dropdown--error': $v.values.max_value.$error }"
+        :show-search="false"
+        :fixed-items="true"
+        small
+        @hide="$v.values.max_value.$touch()"
+      >
+        <DropdownItem
+          v-for="index in 10"
+          :key="index"
+          :name="`${index}`"
+          :value="index"
+        ></DropdownItem>
+      </Dropdown>
+    </FormGroup>
+
     <ColorSelectContext
       ref="colorContext"
       :colors="colors"

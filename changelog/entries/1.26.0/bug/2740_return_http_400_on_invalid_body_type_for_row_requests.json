@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "When POST/PATCH operation on a row receives body other than a dict, HTTP 400 will be returned.",
+    "issue_number": 2740,
+    "bullet_points": [],
+    "created_at": "2024-06-18"
+}

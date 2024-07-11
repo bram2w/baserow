@@ -781,6 +781,26 @@ def test_create_row(api_client, data_fixture):
     assert response_json["detail"][f"field_{number_field.id}"][0]["code"] == "min_value"
     assert response_json["detail"][f"field_{boolean_field.id}"][0]["code"] == "null"
 
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.post(
+        f"{url}",
+        "",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+
+    assert response.status_code == HTTP_400_BAD_REQUEST, response_json
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"] == {
+        "non_field_errors": [
+            {
+                "code": "invalid",
+                "error": "Invalid data. Expected a dictionary, but got str.",
+            }
+        ]
+    }
+
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
         {},
@@ -1205,6 +1225,26 @@ def test_update_row(api_client, data_fixture):
     assert response_json["detail"][f"field_{number_field.id}"][0]["code"] == "min_value"
     assert response_json["detail"][f"field_{boolean_field.id}"][0]["code"] == "null"
 
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        f"{url}",
+        "",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"] == {
+        "non_field_errors": [
+            {
+                "code": "invalid",
+                "error": "Invalid data. Expected a dictionary, but got str.",
+            }
+        ]
+    }
     url = reverse(
         "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
     )

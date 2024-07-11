@@ -1,11 +1,12 @@
 .color-picker-context {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .color-picker-context__color {
   display: flex;
   margin-top: 12px;
-  width: 288px;
 }
 
 .color-picker-context__color-type {
@@ -13,26 +14,28 @@
 }
 
 .color-picker-context__color-hex {
-  flex-basis: 95px;
+  width: 95px;
   margin-left: 16px;
 }
 
 .color-picker-context__color-rgb {
   display: flex;
   gap: 5px;
-  flex-basis: 150px;
+  width: 135px;
   margin-left: 11px;
 
-  input {
-    width: 38px;
-    padding-left: 5px;
-    padding-right: 5px;
+  .form-input__input {
+    padding: 12px 5px;
+    text-align: center;
   }
 }
 
 .color-picker-context__color-opacity {
-  flex: 0 0 70px;
-  margin-left: auto;
+  width: 80px;
+
+  .form-input__input {
+    padding-right: 5px;
+  }
 }
 
 .color-picker-context__variables {

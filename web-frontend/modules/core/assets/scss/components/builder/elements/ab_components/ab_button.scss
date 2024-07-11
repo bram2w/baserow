@@ -1,57 +1,26 @@
 .ab-button {
   cursor: pointer;
-  display: inline-block;
-  color: $white;
-  background-color: var(--button-color, $black);
-  line-height: 28px;
-  border: none;
   white-space: nowrap;
-  text-align: left;
+  display: inline-block;
   text-decoration: none;
+  line-height: 1em;
+  color: var(--button-text-color, $white);
+  background-color: var(--button-background-color, $black);
+  font-size: var(--button-font-size, 12px);
+  border: var(--button-border-size, 0) solid var(--button-border-color, black);
+  border-radius: var(--button-border-radius, 4px);
+  width: var(--button-width, auto);
+  text-align: var(--button-text-alignment, center);
+  align-self: var(--button-alignment, flex-start);
+  font-family: var(--button-font-family, Inter);
+  padding: var(--button-vertical-padding, 4px)
+    var(--button-horizontal-padding, 12px);
 
-  @include rounded($rounded);
-
-  &--full-width {
-    width: 100%;
-  }
-
-  &--left {
-    text-align: left;
-  }
-
-  &--center {
-    text-align: center;
-  }
-
-  &--right {
-    text-align: right;
-  }
-
-  &--small {
-    font-size: 12px;
-    padding: 0 8px;
-  }
-
-  &--medium {
-    font-size: 14px;
-    padding: 0 12px;
-  }
-
-  &--large {
-    font-size: 15px;
-    padding: 5px 12px;
-  }
-
-  .element--alignment-horizontal-center & {
-    text-align: center;
-  }
-
-  .element--alignment-horizontal-right & {
-    text-align: right;
-  }
-
-  &:not(.loading-spinner):hover {
-    filter: brightness(1.3);
+  &:not(.loading-spinner):hover,
+  &:not(.loading-spinner).ab-button--force-hover {
+    background-color: var(--button-hover-background-color, $black);
+    border-color: var(--button-hover-border-color, $white);
+    color: var(--button-hover-text-color, $white);
     text-decoration: none;
   }
 

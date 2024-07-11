@@ -90,7 +90,7 @@
     },
     "workspaceInvitation": {
         "title": "Einladung",
-        "message": "{by} hat Sie eingeladen, der {workspace} beizutreten.",
+        "message": "{by} hat Sie eingeladen, dem {workspace} beizutreten.",
         "reject": "Abgelehnt",
         "accept": "Akzeptiert"
     },
@@ -107,7 +107,8 @@
         "invitationFormTitle": "Einladen per E-Mail",
         "optionalMessagePlaceholder": "Optionale Nachricht",
         "errorInvalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein.",
-        "errorTooLongMessage": "Nachrichten sind auf {amount} Zeichen begrenzt."
+        "errorTooLongMessage": "Nachrichten sind auf {amount} Zeichen begrenzt.",
+        "additionalRoles": "Zusätzliche Rollen"
     },
     "workspacesContext": {
         "search": "Suche nach Arbeitsbereichen",
@@ -120,7 +121,8 @@
         "viewTrash": "Papierkorb ansehen",
         "leaveWorkspace": "Arbeitsbereich verlassen",
         "deleteWorkspace": "Arbeitsbereich löschen",
-        "auditLog": "Audit-Log"
+        "auditLog": "Audit-Log",
+        "settings": "Einstellungen"
     },
     "createWorkspaceModal": {
         "createNew": "Neuen Arbeitsbereich erstellen",
@@ -180,7 +182,7 @@
         "title": "Hochladen von meinem Gerät",
         "drop": "Hier ablegen",
         "clickOrDrop": "Klicken Sie hier oder legen Sie Ihre Dateien ab",
-        "retry": "Wiederholung"
+        "retry": "Erneut versuchen"
     },
     "createApplicationContext": {
         "fromTemplate": "Von Vorlage"
@@ -294,14 +296,20 @@
         "settingAllowSignupsViaWorkspaceInvitationDescription": "Auch wenn die Erstellung von neuen Konten deaktiviert ist können Nutzer:innen durch Setzen dieser Option Nutzer:innen ein Konto erstellen.",
         "settingUserDeletionGraceDelayDescription": "Dies ist die Anzahl der Tage ohne Anmeldung, nach denen ein zur Löschung vorgesehenes Konto endgültig gelöscht wird.",
         "userDeletionGraceDelay": "Benutzerlöschung",
-        "settingUserDeletionGraceDelay": "Gnadenfrist",
+        "settingUserDeletionGraceDelay": "Gnadenfrist löschen",
         "invalidAccountDeletionGraceDelay": "Dieser Wert ist erforderlich und muss eine positive ganze Zahl kleiner als 32000 sein",
         "settingAllowNonStaffCreateWorkspaceOperation": "Jedem die Möglichkeit geben, neue Arbeitsbereiche zu erstellen",
         "settingAllowNonStaffCreateWorkspaceOperationDescription": "Standardmäßig kann jeder neue Arbeitsbereiche erstellen. Deaktivieren Sie diese Option, damit nur Mitglieder neue Arbeitsbereiche erstellen können.",
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "Für neue Benutzer wird automatisch ein Arbeitsbereich erstellt, in der sie Administrator sind.",
         "maintenance": "Wartung",
         "settingTrackWorkspaceUsage": "Arbeitsbereichnutzung verfolgen",
-        "settingTrackWorkspaceUsageDescription": "Aktiviert einen nächtlichen Job, der die Zeilen- und Dateinutzung pro Arbeitsbereich zählt und auf der Verwaltungsseite für Premium-Arbeitsbereiche angezeigt wird."
+        "settingTrackWorkspaceUsageDescription": "Aktiviert einen nächtlichen Job, der die Zeilen- und Dateinutzung pro Arbeitsbereich zählt und auf der Verwaltungsseite für Premium-Arbeitsbereiche angezeigt wird.",
+        "emailVerificationNoVerification": "Keine Verifizierung",
+        "userSettings": "Benutzer",
+        "emailVerification": "E-Mail-Verifizierung",
+        "emailVerificationDescription": "Gibt an, ob E-Mailadressen bestätigt werden müssen.",
+        "emailVerificationRecommended": "Empfohlen",
+        "emailVerificationEnforced": "Erzwungen"
     },
     "undoRedoNotification": {
         "redoingText": "Deine Aktion wird wieder hergestellt",
@@ -427,7 +435,7 @@
     "job": {
         "statePending": "Warten auf den Start...",
         "stateStarted": "Gestartet...",
-        "stateFinished": "Fertig",
+        "stateFinished": "Abgeschlossen",
         "stateFailed": "Gescheitert",
         "errorJobAlreadyRunningTitle": "Wird bereits ausgeführt",
         "errorJobAlreadyRunningDescription": "Es läuft bereits ein anderer Importauftrag. Sie müssen warten, bis dieser beendet ist, bevor Sie einen weiteren Auftrag starten."
@@ -518,7 +526,8 @@
         "title": "Berechtigungen aktualisiert"
     },
     "editRoleContext": {
-        "billableRolesLink": "Dokumentation zu abrechenbaren Rollen"
+        "billableRolesLink": "Dokumentation zu abrechenbaren Rollen",
+        "additionalRoles": "Zusätzliche Rollen"
     },
     "highestPaidRoleField": {
         "billable": "Verrechenbar"
@@ -661,5 +670,119 @@
     },
     "formulaInputField": {
         "errorInvalidFormula": "Die Formel ist ungültig."
+    },
+    "generativeAIWorkspaceSettings": {
+        "description": "Diese Einstellungen können verwendet werden, um optional die generative KI-Konfiguration auf Arbeitsbereichsebene festzulegen. Funktionen wie das KI-Feld können deaktiviert werden, weil ihnen ein API-Schlüssel für eines der unterstützten Modelle fehlt. Indem Sie die Einstellungen hier vornehmen, können Sie diese Funktionen aktivieren. Wenn Sie einen Wert leer lassen, werden die globalen Instanzeinstellungen wiederhergestellt. Beachten Sie, dass diese Einstellungen im Arbeitsbereich gleichermaßen für alle gelten.",
+        "title": "Generative-KI-Einstellungen",
+        "submitButton": "Einstellungen aktualisieren",
+        "changedTitle": "Einstellungen erfolgreich aktualisiert",
+        "changedDescription": "Die Einstellungen wurden aktualisiert und werden nun in diesem Arbeitsbereich verwendet."
+    },
+    "verifyEmailAddress": {
+        "invalidToken": "Kein gültiger Bestätigungs-Token.",
+        "disabledPasswordProvider": "Der Passwortauthentifizierungs-Provider wurde deaktiviert.",
+        "confirmation": "Ihre E-Mailadresse wurde bestätigt.",
+        "goToDashboard": "Zum Dashboard",
+        "emailMismatchWarning": "Bitte beachten Sie, dass die bestätigte E-Mailadresse nicht zu dem Konto gehört, welches Sie gerade verwenden."
+    },
+    "resendEmailVerification": {
+        "confirmationEmailSentDescription": "Die Bestätigungs-E-Mail wurde versendet.",
+        "confirmationEmailSentTitle": "Bestätigungs-E-Mail versendet"
+    },
+    "dashboardVerifyEmail": {
+        "title": "Bitte prüfen Sie Ihre Mailbox und klicken Sie auf den Link, um Ihre E-Mailadresse zu bestätigen.",
+        "resendConfirmationEmail": "Bestätigungs-E-Mail erneut versenden"
+    },
+    "generativeAIModelType": {
+        "openaiOrganization": "Organisation (optional)",
+        "openaiModelsLabel": "Aktivierte Modelle",
+        "openaiModelsDescription": "Geben Sie eine durch Kommata getrennte Liste von [OpenAI-Modellen] (https://platform.openai.com/docs/models/continuous-model-upgrades) an, die in Baserow verwendet werden können. (z. B. `gpt-3.5-turbo,gpt-4`)",
+        "ollamaModelsDescription": "Geben Sie eine durch Kommata getrennte Liste von [bei Ollama installierten Modellen](https://ollama.com/library) an. Beachten Sie, dass das Modell heruntergeladen und installiert werden muss, bevor es verwendet werden kann. (z.B. `llama2,mistral`)",
+        "openaiApiKeyLabel": "API-Schlüssel",
+        "openaiApiKeyDescription": "Geben Sie einen OpenAI-API-Schlüssel an, wenn Sie die Integration aktivieren möchten. [Anleitung zum Erhalt eines API-Schlüssels] (https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+        "openai": "OpenAI",
+        "ollamaHostDescription": "Geben Sie den Hostnamen Ihres [Ollama](https://ollama.com/)-Servers an. Dieser läuft normalerweise lokal auf Ihrem eigenen Gerät.",
+        "ollamaModelsLabel": "Aktivierte Modelle",
+        "ollama": "Ollama",
+        "ollamaHostLabel": "Host"
+    },
+    "emailNotVerified": {
+        "title": "Bestätigung der E-Mailadresse notwendig",
+        "description": "Bitte überprüfen Sie Ihre Mailbox und klicken Sie auf den darin enthaltenen Bestätigungslink. Nach der Verifizierung wird Ihr Konto aktiviert.",
+        "resend": "Bestätigungs-E-Mail erneut versenden"
+    },
+    "workspaceSettingsModal": {
+        "title": "Arbeitsbereich-Einstellungen"
+    },
+    "workspaceSettingType": {
+        "generativeAI": "Generative KI"
+    },
+    "richTextEditorBubbleMenu": {
+        "bold": "Fett",
+        "italic": "Kursiv",
+        "linkEditPlaceholder": "Verknüpfungs-URL...",
+        "linkEditDone": "Fertig",
+        "underline": "Unterstrichen",
+        "link": "Verknüpfung",
+        "strikethrough": "Durchgestrichen"
+    },
+    "richTextEditorFloatingMenu": {
+        "orderedList": "Nummerierte Liste",
+        "unorderedList": "Liste",
+        "code": "Code",
+        "taskList": "Aufgabenliste",
+        "heading3": "Überschrift 3",
+        "hierarchy": "Hierarchie",
+        "paragraph": "Absatz",
+        "lists": "Listen",
+        "heading1": "Überschrift 1",
+        "heading2": "Überschrift 2"
+    },
+    "selectAIModelForm": {
+        "AIType": "KI-Typ",
+        "AIModel": "KI-Modell"
+    },
+    "onboarding": {
+        "failedDescription": "Die Einführung wurde nicht vollständig abgeschlossen, auch wenn einige Teile davon bereits abgeschlossen sind.",
+        "failedTryAgain": "Erneut versuchen",
+        "failedSkip": "Einführung überspringen",
+        "title": "Einführung",
+        "creating": "Erstellen Ihres ersten Arbeitsbereichs",
+        "cancel": "Ich möchte bei der Einrichtung keine Unterstützung",
+        "continue": "Fortfahren",
+        "skip": "Vorerst überspringen",
+        "failedTitle": "Etwas ist schiefgegangen"
+    },
+    "inviteStep": {
+        "title": "Mitarbeitende einladen",
+        "description": "Sie können später noch mehr hinzufügen.",
+        "collaboratorsLabel": "Mitarbeitende"
+    },
+    "moreStep": {
+        "title": "Erzählen Sie uns etwas mehr",
+        "roleOrJob": "Rolle oder Job-Bezeichnung...",
+        "country": "Land",
+        "people": "Wie viele Personen sind Teil Ihres Teams?",
+        "share": "Ich bin einverstanden, dies mit dem Baserow-Team zu teilen"
+    },
+    "teamStep": {
+        "description": "Zu welchem Team gehören Sie?",
+        "financeTeam": "Finanzwesen",
+        "creativeProductionTeam": "Kreativbereich",
+        "salesAndAccountManagementTeam": "Vertrieb & Kundenbetreuung",
+        "otherPersonalTeam": "Sonstiges / Persönlich",
+        "marketingTeam": "Marketing",
+        "title": "Lassen Sie uns gemeinsam Ihren ersten Arbeitsbereich einrichten!",
+        "itAndSupportTeam": "IT & Support",
+        "productAndDesignTeam": "Produkt & Design",
+        "engineeringTeam": "Technik",
+        "operationsTeam": "Betrieb",
+        "hrAndLegalTeam": "Personal- & Rechtsabteilung",
+        "customerServiceTeam": "Kundenservice",
+        "manufacturingTeam": "Fertigung"
+    },
+    "workspaceStep": {
+        "title": "Erstellen Sie Ihren Arbeitsbereich",
+        "workspaceLabel": "Name des Arbeitsbereichs"
     }
 }

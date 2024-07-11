@@ -82,9 +82,17 @@ import {
   FormDataProviderType,
   PreviousActionDataProviderType,
   UserDataProviderType,
+  DataSourceContextDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
-import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
+import {
+  ColorThemeConfigBlockType,
+  TypographyThemeConfigBlockType,
+  ButtonThemeConfigBlockType,
+  LinkThemeConfigBlockType,
+  ImageThemeConfigBlockType,
+  PageThemeConfigBlockType,
+} from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
   CreateRowWorkflowActionType,
   NotificationWorkflowActionType,
@@ -101,6 +109,19 @@ import {
   ButtonCollectionFieldType,
   TagsCollectionFieldType,
 } from '@baserow/modules/builder/collectionFieldTypes'
+
+import {
+  InterFontFamilyType,
+  ArialFontFamilyType,
+  VerdanaFontFamilyType,
+  TahomaFontFamilyType,
+  TrebuchetMSFontFamilyType,
+  TimesNewRomanFontFamilyType,
+  GeorgiaFontFamilyType,
+  GaramondFontFamilyType,
+  CourierNewFontFamilyType,
+  BrushScriptMTFontFamilyType,
+} from '@baserow/modules/builder/fontFamilyTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -140,6 +161,7 @@ export default (context) => {
   app.$registry.registerNamespace('pathParamType')
   app.$registry.registerNamespace('builderDataProvider')
   app.$registry.registerNamespace('themeConfigBlock')
+  app.$registry.registerNamespace('fontFamily')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -231,6 +253,10 @@ export default (context) => {
   )
   app.$registry.register(
     'builderDataProvider',
+    new DataSourceContextDataProviderType(context)
+  )
+  app.$registry.register(
+    'builderDataProvider',
     new PageParameterDataProviderType(context)
   )
   app.$registry.register(
@@ -241,7 +267,30 @@ export default (context) => {
     'builderDataProvider',
     new PreviousActionDataProviderType(context)
   )
-  app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
+  app.$registry.register(
+    'themeConfigBlock',
+    new ColorThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new TypographyThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new ButtonThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new LinkThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new ImageThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new PageThemeConfigBlockType(context)
+  )
 
   app.$registry.register(
     'workflowAction',
@@ -288,4 +337,15 @@ export default (context) => {
     'collectionField',
     new ButtonCollectionFieldType(context)
   )
+
+  app.$registry.register('fontFamily', new InterFontFamilyType(context))
+  app.$registry.register('fontFamily', new ArialFontFamilyType(context))
+  app.$registry.register('fontFamily', new VerdanaFontFamilyType(context))
+  app.$registry.register('fontFamily', new TahomaFontFamilyType(context))
+  app.$registry.register('fontFamily', new TrebuchetMSFontFamilyType(context))
+  app.$registry.register('fontFamily', new TimesNewRomanFontFamilyType(context))
+  app.$registry.register('fontFamily', new GeorgiaFontFamilyType(context))
+  app.$registry.register('fontFamily', new GaramondFontFamilyType(context))
+  app.$registry.register('fontFamily', new CourierNewFontFamilyType(context))
+  app.$registry.register('fontFamily', new BrushScriptMTFontFamilyType(context))
 }

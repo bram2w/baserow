@@ -1,25 +1,27 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <label class="control__label">
-        <i class="iconoira-text"></i>
+    <FormGroup :error="fieldHasErrors('name')" required small-label>
+      <template #label>
+        <i class="iconoir-text"></i>
         {{ $t('applicationForm.nameLabel') }}
-      </label>
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input"
-          @focus.once="$event.target.select()"
-          @blur="$v.values.name.$touch()"
-        />
-        <div v-if="fieldHasErrors('name')" class="error">
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
+      </template>
+
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        :error="fieldHasErrors('name')"
+        type="text"
+        size="large"
+        :placeholder="$t('applicationForm.namePlaceholder')"
+        @focus.once="$event.target.select()"
+        @blur="$v.values.name.$touch()"
+      ></FormInput>
+
+      <template #error>
+        {{ $t('error.requiredField') }}
+      </template>
+    </FormGroup>
+
     <div class="actions">
       <div class="align-right">
         <Button

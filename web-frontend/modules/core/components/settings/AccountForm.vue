@@ -1,46 +1,46 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('first_name')" class="control">
-      <label class="control__label">
-        {{ $t('accountForm.nameLabel') }}
-      </label>
-      <div class="control__elements">
-        <input
-          ref="first_name"
-          v-model="values.first_name"
-          :class="{ 'input--error': fieldHasErrors('first_name') }"
-          type="text"
-          class="input"
-          @blur="$v.values.first_name.$touch()"
-        />
-        <div v-if="!$v.values.first_name.required" class="error">
+    <FormGroup
+      small-label
+      :label="$t('accountForm.nameLabel')"
+      required
+      :error="fieldHasErrors('first_name')"
+      class="margin-bottom-2"
+    >
+      <FormInput
+        ref="first_name"
+        v-model="values.first_name"
+        size="large"
+        :error="fieldHasErrors('first_name')"
+        @blur="$v.values.first_name.$touch()"
+      ></FormInput>
+
+      <template #error>
+        <span v-if="!$v.values.first_name.required">
           {{ $t('error.requiredField') }}
-        </div>
-        <div v-if="hasMinMaxError" class="error">
+        </span>
+        <spam v-if="hasMinMaxError">
           {{
             $t('error.minMaxLength', {
               max: $v.values.first_name.$params.maxLength.max,
               min: $v.values.first_name.$params.minLength.min,
             })
           }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">
-        <i class="iconoir-globe"></i> {{ $t('accountForm.languageLabel') }}
-      </label>
-      <div class="control__elements">
-        <Dropdown v-model="values.language" :show-search="false">
-          <DropdownItem
-            v-for="locale in $i18n.locales"
-            :key="locale.code"
-            :name="locale.name"
-            :value="locale.code"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-    </FormElement>
+        </spam>
+      </template>
+    </FormGroup>
+
+    <FormGroup :label="$t('accountForm.languageLabel')" small-label required>
+      <Dropdown v-model="values.language" :show-search="false">
+        <DropdownItem
+          v-for="locale in $i18n.locales"
+          :key="locale.code"
+          :name="locale.name"
+          :value="locale.code"
+        ></DropdownItem>
+      </Dropdown>
+    </FormGroup>
+
     <slot></slot>
   </form>
 </template>

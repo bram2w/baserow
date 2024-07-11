@@ -114,7 +114,6 @@ def test_get_workflow_actions(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 2
@@ -355,6 +354,8 @@ def test_create_create_row_workflow_action(api_client, data_fixture):
         "schema": None,
         "table_id": None,
         "field_mappings": [],
+        "context_data": None,
+        "context_data_schema": None,
     }
 
 
@@ -444,6 +445,8 @@ def test_create_update_row_workflow_action(api_client, data_fixture):
         "row_id": "",
         "table_id": None,
         "field_mappings": [],
+        "context_data": None,
+        "context_data_schema": None,
     }
 
 

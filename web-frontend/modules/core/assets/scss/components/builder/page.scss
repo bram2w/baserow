@@ -1,0 +1,15 @@
+.page {
+  background-color: var(--page-background-color, #fff);
+  background-image: var(--page-background-image, none);
+  background-size: var(--page-background-size, cover);
+  background-repeat: var(--page-background-repeat, no-repeat);
+
+  .public-page & {
+    // We want to fill the screen when it's the published version
+    min-height: 100vh;
+  }
+
+  .page-preview__scaled & {
+    min-height: 100%;
+  }
+}

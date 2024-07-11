@@ -1,6 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('repeatElementForm.dataSource')">
+    <FormGroup
+      :label="$t('repeatElementForm.dataSource')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Dropdown v-model="values.data_source_id" :show-search="false">
         <DropdownItem
           v-for="dataSource in availableDataSources"
@@ -10,12 +15,13 @@
         />
       </Dropdown>
     </FormGroup>
-    <FormInput
-      v-model="values.items_per_page"
+
+    <FormGroup
       :label="$t('repeatElementForm.itemsPerPage')"
-      :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
-      :to-value="(value) => parseInt(value)"
-      :error="
+      small-label
+      required
+      class="margin-bottom-2"
+      :error-message="
         $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
           ? $t('error.requiredField')
           : !$v.values.items_per_page.integer
@@ -26,29 +32,49 @@
           ? $t('error.maxValueField', { max: maxItemPerPage })
           : ''
       "
-      type="number"
-      @blur="$v.values.items_per_page.$touch()"
-    ></FormInput>
-    <FormGroup :label="$t('repeatElementForm.orientationLabel')">
-      <RadioButton
+    >
+      <FormInput
+        v-model="values.items_per_page"
+        size="large"
+        :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
+        :to-value="(value) => parseInt(value)"
+        class="margin-bottom-2"
+        type="number"
+        @blur="$v.values.items_per_page.$touch()"
+      ></FormInput>
+
+      <CustomStyle
+        v-model="values.styles"
+        style-key="button"
+        :config-block-types="['button']"
+        :theme="builder.theme"
+      />
+      <ApplicationBuilderFormulaInputGroup
+        v-model="values.button_load_more_label"
+        :label="$t('repeatElementForm.buttonLoadMoreLabel')"
+        :placeholder="$t('elementForms.textInputPlaceholder')"
+        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      />
+    </FormGroup>
+    <FormGroup
+      :label="$t('repeatElementForm.orientationLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
         v-model="values.orientation"
-        value="vertical"
-        icon="iconoir-table-rows"
+        :options="imageSourceTypeOptions"
+        type="button"
       >
-        {{ $t('repeatElementForm.orientationVertical') }}
-      </RadioButton>
-      <RadioButton
-        v-model="values.orientation"
-        value="horizontal"
-        icon="iconoir-view-columns-3"
-      >
-        {{ $t('repeatElementForm.orientationHorizontal') }}
-      </RadioButton>
+      </RadioGroup>
     </FormGroup>
     <FormGroup
       v-if="values.orientation === 'horizontal'"
-      :error="getItemsPerRowError"
+      :error-message="itemsPerRowError"
       :label="$t('repeatElementForm.itemsPerRowLabel')"
+      small-label
+      required
       :description="$t('repeatElementForm.itemsPerRowDescription')"
     >
       <DeviceSelector
@@ -57,16 +83,11 @@
         @selected="actionSetDeviceTypeSelected"
       >
         <template #deviceTypeControl="{ deviceType }">
-          <input
+          <FormInput
             :ref="`itemsPerRow-${deviceType.getType()}`"
             v-model="values.items_per_row[deviceType.getType()]"
-            :class="{
-              'input--error':
-                $v.values.items_per_row[deviceType.getType()].$error,
-              'remove-number-input-controls': true,
-            }"
+            remove-number-input-controls
             type="number"
-            class="input"
             @input="handlePerRowInput($event, deviceType.getType())"
           />
         </template>
@@ -82,10 +103,16 @@ import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
 import { mapActions, mapGetters } from 'vuex'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   name: 'RepeatElementForm',
-  components: { DeviceSelector },
+  components: {
+    DeviceSelector,
+    CustomStyle,
+    ApplicationBuilderFormulaInputGroup,
+  },
   mixins: [elementForm, collectionElementForm],
   data() {
     return {
@@ -94,12 +121,16 @@ export default {
         'items_per_page',
         'items_per_row',
         'orientation',
+        'button_load_more_label',
+        'styles',
       ],
       values: {
         data_source_id: null,
         items_per_page: 1,
         items_per_row: {},
         orientation: 'vertical',
+        button_load_more_label: '',
+        styles: {},
       },
     }
   },
@@ -108,7 +139,7 @@ export default {
     deviceTypes() {
       return Object.values(this.$registry.getOrderedList('device'))
     },
-    getItemsPerRowError() {
+    itemsPerRowError() {
       for (const device of this.deviceTypes) {
         const validation = this.$v.values.items_per_row[device.getType()]
         if (validation.$dirty) {
@@ -125,6 +156,20 @@ export default {
       }
       return ''
     },
+    imageSourceTypeOptions() {
+      return [
+        {
+          label: this.$t('repeatElementForm.orientationVertical'),
+          value: 'vertical',
+          icon: 'iconoir-table-rows',
+        },
+        {
+          label: this.$t('repeatElementForm.orientationHorizontal'),
+          value: 'horizontal',
+          icon: 'iconoir-view-columns-3',
+        },
+      ]
+    },
   },
   mounted() {
     if (_.isEmpty(this.values.items_per_row)) {
@@ -140,7 +185,7 @@ export default {
     }),
     handlePerRowInput(event, deviceTypeType) {
       this.$v.values.items_per_row[deviceTypeType].$touch()
-      this.values.items_per_row[deviceTypeType] = parseInt(event.target.value)
+      this.values.items_per_row[deviceTypeType] = parseInt(event)
       this.$emit('input', this.values)
     },
   },

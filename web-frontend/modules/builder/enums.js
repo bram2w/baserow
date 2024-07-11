@@ -4,6 +4,7 @@ import {
 } from '@baserow/modules/core/utils/validator'
 import {
   DataSourceDataProviderType,
+  DataSourceContextDataProviderType,
   PageParameterDataProviderType,
   CurrentRecordDataProviderType,
   FormDataProviderType,
@@ -50,39 +51,15 @@ export const IFRAME_SOURCE_TYPES = {
 }
 
 export const HORIZONTAL_ALIGNMENTS = {
-  LEFT: {
-    name: 'horizontalAlignmentSelector.alignmentLeft',
-    value: 'left',
-    icon: 'iconoir-align-left',
-  },
-  CENTER: {
-    name: 'horizontalAlignmentSelector.alignmentCenter',
-    value: 'center',
-    icon: 'iconoir-align-center',
-  },
-  RIGHT: {
-    name: 'horizontalAlignmentSelector.alignmentRight',
-    value: 'right',
-    icon: 'iconoir-align-right',
-  },
+  LEFT: 'left',
+  CENTER: 'center',
+  RIGHT: 'right',
 }
 
 export const VERTICAL_ALIGNMENTS = {
-  TOP: {
-    name: 'verticalAlignmentSelector.alignmentTop',
-    value: 'top',
-    icon: 'iconoir-align-top-box',
-  },
-  CENTER: {
-    name: 'verticalAlignmentSelector.alignmentCenter',
-    value: 'center',
-    icon: 'iconoir-center-align',
-  },
-  BOTTOM: {
-    name: 'verticalAlignmentSelector.alignmentBottom',
-    value: 'bottom',
-    icon: 'iconoir-align-bottom-box',
-  },
+  TOP: 'top',
+  CENTER: 'center',
+  BOTTOM: 'bottom',
 }
 
 export const WIDTHS = {
@@ -90,16 +67,28 @@ export const WIDTHS = {
   FULL: { value: 'full', name: 'widthSelector.widthFull' },
 }
 
+export const WIDTHS_NEW = {
+  AUTO: 'auto',
+  FULL: 'full',
+}
+
 export const BACKGROUND_TYPES = {
-  NONE: { value: 'none', name: 'backgroundTypes.none' },
-  COLOR: { value: 'color', name: 'backgroundTypes.color' },
+  NONE: 'none',
+  COLOR: 'color',
+}
+
+export const BACKGROUND_MODES = {
+  FILL: 'fill',
+  TILE: 'tile',
+  FIT: 'fit',
 }
 
 export const WIDTH_TYPES = {
-  FULL: { value: 'full', name: 'widthTypes.full' },
-  NORMAL: { value: 'normal', name: 'widthTypes.normal' },
-  MEDIUM: { value: 'medium', name: 'widthTypes.medium' },
   SMALL: { value: 'small', name: 'widthTypes.small' },
+  MEDIUM: { value: 'medium', name: 'widthTypes.medium' },
+  NORMAL: { value: 'normal', name: 'widthTypes.normal' },
+  FULL: { value: 'full', name: 'widthTypes.fullBleed' },
+  FULL_WIDTH: { value: 'full-width', name: 'widthTypes.fullWidth' },
 }
 
 /**
@@ -113,6 +102,7 @@ export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
+  DataSourceContextDataProviderType.getType(),
   FormDataProviderType.getType(),
 ]
 
@@ -121,6 +111,7 @@ export const DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS = [
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
+  DataSourceContextDataProviderType.getType(),
 ]
 
 /**
@@ -151,4 +142,10 @@ export const ELEMENT_EVENTS = {
 export const TABLE_ORIENTATION = {
   HORIZONTAL: 'horizontal',
   VERTICAL: 'vertical',
+}
+
+export const CHOICE_OPTION_TYPES = {
+  MANUAL: 'manual',
+  DATA_SOURCE: 'data_source',
+  FORMULAS: 'formulas',
 }

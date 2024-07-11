@@ -294,7 +294,9 @@
         "noFields": "Geen velden",
         "nameFieldLabel": "Selecteer naam veld",
         "nameFieldPlaceholder": "Selecteer een veld...",
-        "emailFieldLabelPlaceholder": "Selecteer een veld..."
+        "emailFieldLabelPlaceholder": "Selecteer een veld...",
+        "roleFieldLabel": "Selecteer rolveld",
+        "roleFieldPlaceholder": "Selecteer een veld..."
     },
     "localBaserowUserSourceType": {
         "notConfigured": "Niet geconfigureerd"

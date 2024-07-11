@@ -1,5 +1,32 @@
 # Changelog
 
+## Released 1.26.0
+
+### New features
+* Limit selection of link to table row to a view. [#1242](https://gitlab.com/baserow/baserow/-/issues/1242)
+* [Builder] Improved application styling capabilities [#2388](https://gitlab.com/baserow/baserow/-/issues/2388)
+* [Builder] More styles of the builder elements can be customized [#2388](https://gitlab.com/baserow/baserow/-/issues/2388)
+* [Builder] Allow choice element options to be populated from formulas [#2489](https://gitlab.com/baserow/baserow/-/issues/2489)
+* [Builder] Add support for controlling Element visibility via User Roles in the Element's Visibility Tab. [#2498](https://gitlab.com/baserow/baserow/-/issues/2498)
+* [Builder] Added support for form elements within a repeat element. [#2636](https://gitlab.com/baserow/baserow/-/issues/2636)
+* Add ability to delete row in calendar view [#2722](https://gitlab.com/baserow/baserow/-/issues/2722)
+
+### Bug fixes
+* Ensure that Context menus can be opened for input fields that are fully within the viewport. [#2013](https://gitlab.com/baserow/baserow/-/issues/2013)
+* Generate file name for files uploaded by url where URL doesn't contain any path. [#2738](https://gitlab.com/baserow/baserow/-/issues/2738)
+* When POST/PATCH operation on a row receives body other than a dict, HTTP 400 will be returned. [#2740](https://gitlab.com/baserow/baserow/-/issues/2740)
+* Fix multiple usage of filename contains filter [#2746](https://gitlab.com/baserow/baserow/-/issues/2746)
+* Show a notification of a 500 error in the frontend [#2754](https://gitlab.com/baserow/baserow/-/issues/2754)
+* Date field now can be cleared when a row is edited as a form. [#2764](https://gitlab.com/baserow/baserow/-/issues/2764)
+* Fix a bug causing the 'not_empty' view filter showing empty rows for link to table fields. [#2777](https://gitlab.com/baserow/baserow/-/issues/2777)
+* [Builder] Resolved an error where data source filters and sortings wouldn't work properly when they were targeting a trashed Baserow field. [#2790](https://gitlab.com/baserow/baserow/-/issues/2790)
+* Prevent last_login update if the last_login time diff is < 1 minute
+
+### Refactors
+* Refactor formInput, formTextarea, formGroup components [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* [Builder] Make Element tag's appearance more rounded. Change Publish app's Open Tab action to use the open-new-window icon. [#2705](https://gitlab.com/baserow/baserow/-/issues/2705)
+
+
 ## Released 1.25.2
 
 ### New features

@@ -1,115 +1,109 @@
 <template>
   <div class="form-view__meta-controls">
-    <div
-      v-if="
-        !readOnly &&
-        $hasPermission(
-          'database.table.view.update',
-          view,
-          database.workspace.id
-        )
-      "
-      class="control form-view__control-notification-on-submit"
+    <SwitchInput
+      small
+      :value="view.receive_notification_on_submit"
+      class="margin-bottom-3"
+      @input="$emit('updated-form', { receive_notification_on_submit: $event })"
+      >{{ $t('formSidebar.notifyUserOnSubmit') }}</SwitchInput
     >
-      <SwitchInput
-        small
-        :value="view.receive_notification_on_submit"
-        @input="
-          $emit('updated-form', { receive_notification_on_submit: $event })
+
+    <FormGroup
+      class="margin-bottom-3"
+      small-label
+      :label="$t('formViewMetaControls.whenSubmittedLabel')"
+      required
+    >
+      <ul class="choice-items choice-items--inline">
+        <li>
+          <a
+            class="choice-items__link"
+            :class="{
+              active: view.submit_action === 'MESSAGE',
+              disabled: readOnly,
+            }"
+            @click="
+              !readOnly &&
+                view.submit_action !== 'MESSAGE' &&
+                $emit('updated-form', { submit_action: 'MESSAGE' })
+            "
+            ><span>{{ $t('formViewMetaControls.showMessage') }}</span>
+            <i
+              v-if="view.submit_action === 'MESSAGE'"
+              class="choice-items__icon-active iconoir-check-circle"
+            ></i
+          ></a>
+        </li>
+        <li>
+          <a
+            class="choice-items__link"
+            :class="{
+              active: view.submit_action === 'REDIRECT',
+              disabled: readOnly,
+            }"
+            @click="
+              !readOnly &&
+                view.submit_action !== 'REDIRECT' &&
+                $emit('updated-form', { submit_action: 'REDIRECT' })
+            "
+            ><span>{{ $t('formViewMetaControls.urlRedirect') }}</span>
+            <i
+              v-if="view.submit_action === 'REDIRECT'"
+              class="choice-items__icon-active iconoir-check-circle"
+            ></i
+          ></a>
+        </li>
+      </ul>
+    </FormGroup>
+
+    <FormGroup
+      v-if="view.submit_action === 'MESSAGE'"
+      :label="$t('formViewMetaControls.theMessage')"
+      small-label
+      required
+    >
+      <FormTextarea
+        v-model="submit_action_message"
+        class="form-view__meta-message-textarea"
+        :placeholder="$t('formViewMetaControls.theMessage')"
+        :rows="3"
+        :disabled="readOnly"
+        @blur="
+          $emit('updated-form', {
+            submit_action_message,
+          })
         "
-      ></SwitchInput>
-      {{ $t('formSidebar.notifyUserOnSubmit') }}
-    </div>
-    <div class="control">
-      <label class="control__label">When the form is submitted</label>
-      <div class="control__elements">
-        <ul class="choice-items choice-items--inline">
-          <li>
-            <a
-              class="choice-items__link"
-              :class="{
-                active: view.submit_action === 'MESSAGE',
-                disabled: readOnly,
-              }"
-              @click="
-                !readOnly &&
-                  view.submit_action !== 'MESSAGE' &&
-                  $emit('updated-form', { submit_action: 'MESSAGE' })
-              "
-              ><span>Show a message</span>
-              <i
-                v-if="view.submit_action === 'MESSAGE'"
-                class="choice-items__icon-active iconoir-check-circle"
-              ></i
-            ></a>
-          </li>
-          <li>
-            <a
-              class="choice-items__link"
-              :class="{
-                active: view.submit_action === 'REDIRECT',
-                disabled: readOnly,
-              }"
-              @click="
-                !readOnly &&
-                  view.submit_action !== 'REDIRECT' &&
-                  $emit('updated-form', { submit_action: 'REDIRECT' })
-              "
-              ><span>Redirect to URL</span>
-              <i
-                v-if="view.submit_action === 'REDIRECT'"
-                class="choice-items__icon-active iconoir-check-circle"
-              ></i
-            ></a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div v-if="view.submit_action === 'MESSAGE'" class="control">
-      <label class="control__label">The message</label>
-      <div class="control__elements">
-        <textarea
-          v-model="submit_action_message"
-          type="text"
-          class="input form-view__meta-message-textarea"
-          placeholder="The message"
-          rows="3"
-          :disabled="readOnly"
-          @blur="
-            $emit('updated-form', {
-              submit_action_message,
-            })
-          "
-        />
-      </div>
-    </div>
-    <div v-if="view.submit_action === 'REDIRECT'" class="control">
-      <label class="control__label">The URL</label>
-      <div class="control__elements">
-        <input
-          v-model="submit_action_redirect_url"
-          type="text"
-          class="input"
-          placeholder="The URL"
-          :disabled="readOnly"
-          @blur="
-            ;[
-              $v.submit_action_redirect_url.$touch(),
-              !$v.submit_action_redirect_url.$error &&
-                $emit('updated-form', {
-                  submit_action_redirect_url,
-                }),
-            ]
-          "
-        />
-        <div v-if="$v.submit_action_redirect_url.$error" class="error">
-          Please enter a valid URL
-        </div>
-      </div>
-      <div class="form-view__meta-controls-help">
-        {{ $t('formViewMeta.includeRowId') }}
-      </div>
-    </div>
+      />
+    </FormGroup>
+
+    <FormGroup
+      v-if="view.submit_action === 'REDIRECT'"
+      small-label
+      :error="$v.submit_action_redirect_url.$error"
+      :error-message="
+        $v.submit_action_redirect_url.$error ? $t('error.invalidURL') : ''
+      "
+      :label="$t('formViewMetaControls.theURL')"
+      :helper-text="$t('formViewMeta.includeRowId')"
+      required
+    >
+      <FormInput
+        v-model="submit_action_redirect_url"
+        :placeholder="$t('formViewMetaControls.theURL')"
+        :disabled="readOnly"
+        :error="$v.submit_action_redirect_url.$error"
+        @blur="
+          ;[
+            $v.submit_action_redirect_url.$touch(),
+            !$v.submit_action_redirect_url.$error &&
+              $emit('updated-form', {
+                submit_action_redirect_url,
+              }),
+          ]
+        "
+      >
+      </FormInput>
+    </FormGroup>
   </div>
 </template>
 

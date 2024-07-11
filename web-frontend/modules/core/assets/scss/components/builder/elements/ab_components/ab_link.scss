@@ -1,5 +1,13 @@
 .ab-link {
-  font-size: 14px;
-  color: $black;
-  text-decoration: underline;
+  font-size: var(--link-font-size, 14px);
+  text-decoration: var(--link-text-decoration, underline);
+  color: var(--link-text-color, $black);
+  align-self: var(--link-text-alignment, flex-start);
+  font-family: var(--link-font-family, Inter);
+
+  &:hover,
+  &--force-hover {
+    color: var(--link-hover-text-color, $black);
+    text-decoration: var(--link-hover-text-decoration, underline);
+  }
 }

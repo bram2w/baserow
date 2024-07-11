@@ -156,7 +156,8 @@
   white-space: pre-wrap;
 }
 
-.remove-number-input-controls {
+.remove-number-input-controls,
+%remove-number-input-controls {
   appearance: textfield !important;
 
   &::-webkit-outer-spin-button,

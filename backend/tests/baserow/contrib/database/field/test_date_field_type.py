@@ -7,8 +7,8 @@ from django.utils.timezone import datetime, utc
 import pytest
 from pytest_unordered import unordered
 
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
+from baserow.contrib.database.fields.deferred_foreign_key_updater import (
+    DeferredForeignKeyUpdater,
 )
 from baserow.contrib.database.fields.field_types import DateFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -549,7 +549,7 @@ def test_import_export_date_field(data_fixture):
         number_serialized,
         ImportExportConfig(include_permission_data=True),
         {},
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
     assert date_field.date_format == number_field_imported.date_format
     assert date_field.date_include_time == number_field_imported.date_include_time

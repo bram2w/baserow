@@ -107,6 +107,105 @@
         "domainPlaceholder": "Vložte název domény společnosti...",
         "invalidDomain": "Neplatný název domény",
         "domainAlreadyExists": "Poskytovatel SAML pro tuto doménu již existuje",
-        "metadata": "Metadata"
+        "metadata": "Metadata",
+        "metadataPlaceholder": "Vlož metadata poskytovatele identity...",
+        "relayStateUrl": "Výchozí URL adresa Relay State",
+        "acsUrl": "Adresa URL pro Single Sign On",
+        "invalidMetadata": "Neplatná XML metadata pro poskytovatele identit",
+        "providerIsVerified": "Poskytovatel byl ověřen"
+    },
+    "loginError": {
+        "errorInvalidSamlRequest": "Požadavek SAML je neplatný.",
+        "errorInvalidSamlResponse": "Odpověď SAML je neplatná.",
+        "errorProviderDoesNotExist": "tento zprostředkovatel ověřování neexistuje nebo není k dispozici.",
+        "errorWorkspaceInvitationEmailMismatch": "Tvoje e-mailová adresa neodpovídá pozvánce.",
+        "loginText": "Již máš účet?",
+        "help": "Pro pomoc, prosím, kontaktuj svého administrátora.",
+        "errorAuthFlowError": "během ověřovacího procesu s vybraným zprostředkovatelem došlo k chybě.",
+        "errorDifferentProvider": "použijprosím poskytovatele, u kterého jsi se původně zaregistroval.",
+        "errorSignupDisabled": "přihlášení bylo administrátorem zakázáno.",
+        "title": "Něco se nepodařilo:",
+        "defaultErrorMessage": "Průběh přihlášení pomocí SSO nebylo možné dokončit.",
+        "errorSsoFeatureNotActive": "Funkce SSO není aktivní. Kontaktuj svého administrátora.",
+        "errorUserDeactivated": "uživatel byl zakázán."
+    },
+    "roles": {
+        "builder": {
+            "name": "Builder",
+            "description": "Může plně konfigurovat a upravovat aplikace."
+        },
+        "commenter": {
+            "name": "Commenter",
+            "description": "Může pouze číst a komentovat data."
+        },
+        "admin": {
+            "name": "Admin",
+            "description": "Může plně konfigurovat a upravovat pracovní prostory a aplikace."
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "Může plně upravovat data, ale ne konfigurovat aplikace nebo pracovní prostory."
+        },
+        "noAccess": {
+            "name": "No access",
+            "description": "Nemá k ničemu přístup."
+        },
+        "noRoleLowPriority": {
+            "name": "No role",
+            "description": "Získat výchozí roli pracovního prostoru od svých týmů."
+        },
+        "viewer": {
+            "name": "Viewer",
+            "description": "Může pouze číst data."
+        }
+    },
+    "memberRolesTab": {
+        "table": {
+            "warningMessage": "Ostatní uživatelé mohou zdědit přístup prostřednictvím svých příslušných rolí v nadřazené databázi nebo pracovním prostoru.",
+            "headerTooltip": "Role tabulky budou mít přednost před rolemi pracovního prostoru a databáze.",
+            "title": "Tabulka {name}",
+            "warningTitle": "Ostatní uživatelé mohou zdědit přístup!",
+            "selectMembers": "Vybrat členy",
+            "everyoneHasAccess": "Všichni z pracovního prostoru {name} mají přístup k této tabulce.",
+            "onlyYouHaveAccess": "K této tabulce máš přístup pouze Ty."
+        },
+        "database": {
+            "title": "databáze {name}",
+            "warningTitle": "Ostatní uživatelé mohou zdědit přístup!",
+            "everyoneHasAccess": "Všichni v pracovním prostoru {name} mají přístup k této databázi.",
+            "onlyYouHaveAccess": "K databázi máš přístup pouze Ty.",
+            "warningMessage": "Ostatní uživatelé mohou zdědit přístup prostřednictvím svých příslušných rolí v nadřazeném pracovním prostoru.",
+            "headerTooltip": "Role databáze budou mít přednost před rolemi pracovního prostoru.",
+            "selectMembers": "Vybrat členy"
+        }
+    },
+    "loginWithSaml": {
+        "loginText": "Již máš heslo?",
+        "signInWithSaml": "Přihlásit se pomocí SAML SSO",
+        "redirecting": "Přesměrování na poskytovatele identity...",
+        "continueWithSaml": "Pokračovat k poskytovateli SAML SSO",
+        "requestError": "Tato doména není nakonfigurována pomocí SAML SSO"
+    },
+    "memberRolesShareToggle": {
+        "subLabel": "Počet členů pracovního prostoru: {totalUserAmount}",
+        "label": "Sdílet s každým v {name}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Upravit {name}"
+    },
+    "deleteAuthProviderModal": {
+        "title": "Smazat {name}",
+        "comment": "Opravdu chcete smazat toto: {type}?"
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Databáze",
+        "error": {
+            "title": "Nelze načíst data",
+            "description": "Při načítání dat člena došlo k chybě."
+        },
+        "memberRolesTableTabTitle": "Aktuální tabulka"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Vlož nový {type}"
     }
 }

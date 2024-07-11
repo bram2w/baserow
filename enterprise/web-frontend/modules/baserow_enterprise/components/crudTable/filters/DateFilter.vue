@@ -1,21 +1,23 @@
 <template>
   <div>
-    <input
-      ref="date"
-      v-model="dateString"
-      type="text"
-      class="input input--small crud-table-filters__filter-value-input"
-      :disabled="disabled"
-      :class="{ 'input--error': $v.copy.$error }"
-      :placeholder="placeholder"
-      @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
-      @click="$refs.dateContext.show($refs.date, 'bottom', 'left', 0)"
-      @blur="$refs.dateContext.hide()"
-      @input="
-        ;[setCopyFromDateString(dateString, 'dateString'), $emit('input', copy)]
-      "
-      @keydown.enter="$emit('input', copy)"
-    />
+    <div ref="date">
+      <FormInput
+        v-model="dateString"
+        :error="$v.copy.$error"
+        :disabled="disabled"
+        :placeholder="placeholder"
+        @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"
+        @click="$refs.dateContext.show($refs.date, 'bottom', 'left', 0)"
+        @blur="$refs.dateContext.hide()"
+        @input="
+          ;[
+            setCopyFromDateString(dateString, 'dateString'),
+            $emit('input', copy),
+          ]
+        "
+        @keydown.enter="$emit('input', copy)"
+      ></FormInput>
+    </div>
     <Context
       ref="dateContext"
       :hide-on-click-outside="false"

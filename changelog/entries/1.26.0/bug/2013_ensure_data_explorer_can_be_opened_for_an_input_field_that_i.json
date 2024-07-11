@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Ensure that Context menus can be opened for input fields that are fully within the viewport.",
+    "issue_number": 2013,
+    "bullet_points": [],
+    "created_at": "2024-07-05"
+}

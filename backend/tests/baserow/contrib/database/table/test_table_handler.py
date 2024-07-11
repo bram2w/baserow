@@ -40,7 +40,7 @@ from baserow.contrib.database.table.exceptions import (
 )
 from baserow.contrib.database.table.handler import TableHandler, TableUsageHandler
 from baserow.contrib.database.table.models import Table, TableUsage, TableUsageUpdate
-from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions, View
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
@@ -655,6 +655,67 @@ def test_duplicate_interesting_table(data_fixture):
                 original_link.link_row_table_has_related_field
                 == duplicated_link.link_row_table_has_related_field
             )
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_duplicate_table_with_limit_view_link_row_field(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    related_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    related_view = data_fixture.create_grid_view(table=related_table)
+
+    field_handler = FieldHandler()
+    table_1_link_row_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Link Row 1",
+        type_name="link_row",
+        link_row_table=related_table,
+        link_row_limit_selection_view=related_view,
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+
+    duplicated_link_row = LinkRowField.objects.get(table=duplicated_table)
+
+    assert duplicated_link_row.id != table_1_link_row_field_1.id
+    assert duplicated_link_row.link_row_table_id == related_table.id
+    assert duplicated_link_row.link_row_limit_selection_view_id == related_view.id
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_duplicate_table_with_limit_view_link_row_field_same_table(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    table_1_link_row_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Link Row 1",
+        type_name="link_row",
+        link_row_table=table,
+        link_row_limit_selection_view=view,
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+    duplicated_link_row = LinkRowField.objects.get(table=duplicated_table)
+    duplicated_view = View.objects.get(table=duplicated_table)
+
+    assert duplicated_link_row.id != table_1_link_row_field_1.id
+    assert duplicated_link_row.link_row_table_id == duplicated_table.id
+    assert duplicated_link_row.link_row_limit_selection_view_id == duplicated_view.id
 
 
 @pytest.mark.django_db()

@@ -1,33 +1,29 @@
 <template>
   <div>
-    <div class="control">
-      <label class="control__label">{{
-        $t('tablePasteImporter.pasteLabel')
-      }}</label>
-      <div class="control__description">
-        {{ $t('tablePasteImporter.pasteDescription') }}
-      </div>
-      <div class="control__elements">
-        <textarea
-          type="text"
-          class="input textarea--modal"
-          @input="changed($event.target.value)"
-        ></textarea>
-        <div v-if="$v.content.$error" class="error">
-          {{ $t('error.fieldRequired') }}
-        </div>
-      </div>
-    </div>
-    <div class="control">
-      <label class="control__label">{{
-        $t('tablePasteImporter.firstRowHeader')
-      }}</label>
-      <div class="control__elements">
-        <Checkbox v-model="firstRowHeader" @input="reload()">{{
-          $t('common.yes')
-        }}</Checkbox>
-      </div>
-    </div>
+    <FormGroup
+      :label="$t('tablePasteImporter.pasteLabel')"
+      small-label
+      :error="$v.content.$error"
+      class="margin-bottom-2"
+      required
+      :helper-text="$t('tablePasteImporter.pasteDescription')"
+    >
+      <FormTextarea rows="10" @input="changed($event)"></FormTextarea>
+
+      <template #error>{{ $t('error.requiredField') }}</template>
+    </FormGroup>
+
+    <FormGroup
+      :label="$t('tablePasteImporter.firstRowHeader')"
+      small-label
+      class="margin-bottom-2"
+      required
+    >
+      <Checkbox v-model="firstRowHeader" @input="reload()">
+        {{ $t('common.yes') }}
+      </Checkbox>
+    </FormGroup>
+
     <Alert v-if="error !== ''" type="error">
       <template #title> {{ $t('common.wrong') }} </template>
       {{ error }}
@@ -57,7 +53,6 @@ export default {
     changed(content) {
       this.$emit('changed')
       this.resetImporterState()
-
       this.content = content
       this.reload()
     },
@@ -66,7 +61,6 @@ export default {
         this.resetImporterState()
         return
       }
-
       const limit = this.$config.INITIAL_TABLE_DATA_LIMIT
       const count = this.content.split(/\r\n|\r|\n/).length
       if (limit !== null && count > limit) {
@@ -87,7 +81,6 @@ export default {
           // doesn't need to be reactive.
           let data
           let header
-
           if (this.firstRowHeader) {
             const [rawHeader, ...rest] = parsedResult.data
             data = rest
@@ -96,7 +89,6 @@ export default {
             data = parsedResult.data
             header = this.prepareHeader([], data)
           }
-
           const getData = () => {
             return new Promise((resolve) => {
               resolve(data)

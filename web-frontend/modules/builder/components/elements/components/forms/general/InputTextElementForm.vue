@@ -5,25 +5,38 @@
       :label="$t('generalForm.labelTitle')"
       :placeholder="$t('generalForm.labelPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
+      class="margin-bottom-2"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
       :label="$t('generalForm.valueTitle')"
       :placeholder="$t('generalForm.valuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
+      class="margin-bottom-2"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.placeholder"
       :label="$t('generalForm.placeholderTitle')"
       :placeholder="$t('generalForm.placeholderPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
+      class="margin-bottom-2"
     ></ApplicationBuilderFormulaInputGroup>
 
-    <FormGroup :label="$t('generalForm.requiredTitle')">
+    <FormGroup
+      :label="$t('generalForm.requiredTitle')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Checkbox v-model="values.required"></Checkbox>
     </FormGroup>
 
-    <FormGroup :label="$t('generalForm.validationTitle')">
+    <FormGroup
+      :label="$t('generalForm.validationTitle')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Dropdown v-model="values.validation_type" :show-search="true">
         <DropdownItem
           v-for="validationType in validationTypes"
@@ -36,39 +49,53 @@
       </Dropdown>
     </FormGroup>
 
-    <FormGroup :label="$t('inputTextElementForm.multilineTitle')">
+    <FormGroup
+      :label="$t('inputTextElementForm.multilineTitle')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <Checkbox v-model="values.is_multiline"></Checkbox>
     </FormGroup>
 
-    <FormElement v-if="values.is_multiline">
+    <FormGroup
+      v-if="values.is_multiline"
+      small-label
+      required
+      class="margin-bottom-2"
+      :error-message="
+        $v.values.rows.$dirty && !$v.values.rows.required
+          ? $t('error.requiredField')
+          : !$v.values.rows.integer
+          ? $t('error.integerField')
+          : !$v.values.rows.minValue
+          ? $t('error.minValueField', { min: 1 })
+          : !$v.values.rows.maxValue
+          ? $t('error.maxValueField', { max: 100 })
+          : ''
+      "
+    >
       <FormInput
         v-model="values.rows"
         type="number"
+        size="large"
         :label="$t('inputTextElementForm.rowsTitle')"
         :placeholder="$t('inputTextElementForm.rowsPlaceholder')"
         :to-value="(value) => parseInt(value)"
-        :error="
-          $v.values.rows.$dirty && !$v.values.rows.required
-            ? $t('error.requiredField')
-            : !$v.values.rows.integer
-            ? $t('error.integerField')
-            : !$v.values.rows.minValue
-            ? $t('error.minValueField', { min: 1 })
-            : !$v.values.rows.maxValue
-            ? $t('error.maxValueField', { max: 100 })
-            : ''
-        "
       ></FormInput>
-    </FormElement>
+    </FormGroup>
 
     <FormGroup
       v-else
       :label="$t('inputTextElementForm.inputType')"
-      :description="
+      :helper-text="
         values.input_type === 'password'
           ? $t('inputTextElementForm.passwordTypeWarning')
           : null
       "
+      small-label
+      required
+      class="margin-bottom-2"
     >
       <Dropdown v-model="values.input_type" :show-search="false">
         <DropdownItem

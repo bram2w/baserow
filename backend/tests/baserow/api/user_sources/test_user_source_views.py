@@ -738,12 +738,14 @@ def test_get_user_source_users(api_client, data_fixture, stub_user_source_regist
         str(user_source1.id): [
             {
                 "id": 1,
+                "role": "",
                 "email": "test1@mail.com",
                 "username": "user1",
                 "user_source_id": user_source1.id,
             },
             {
                 "id": 2,
+                "role": "",
                 "email": "test2@mail.com",
                 "username": "user2",
                 "user_source_id": user_source1.id,
@@ -752,6 +754,7 @@ def test_get_user_source_users(api_client, data_fixture, stub_user_source_regist
         str(user_source2.id): [
             {
                 "id": 3,
+                "role": "",
                 "email": "test3@mail.com",
                 "username": "user3",
                 "user_source_id": user_source2.id,
@@ -822,12 +825,14 @@ def test_get_user_source_users_with_search(
         str(user_source1.id): [
             {
                 "id": 1,
+                "role": "",
                 "email": "test1@mail.com",
                 "username": "user1",
                 "user_source_id": user_source1.id,
             },
             {
                 "id": 2,
+                "role": "",
                 "email": "test2@mail.com",
                 "username": "user2",
                 "user_source_id": user_source1.id,
@@ -852,6 +857,7 @@ def test_get_user_source_users_with_search(
         str(user_source2.id): [
             {
                 "id": 3,
+                "role": "",
                 "email": "test3@mail.com",
                 "username": "user3",
                 "user_source_id": user_source2.id,

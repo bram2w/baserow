@@ -74,7 +74,9 @@
         "authForm": "Formulaire de connexion",
         "authFormDescription": "Formulaire de connexion pour les utilisateurs",
         "repeat": "Répétition",
-        "repeatDescription": "Répète des éléments"
+        "repeatDescription": "Répète des éléments",
+        "choice": "Sélecteur",
+        "choiceDescription": "Pour la sélection d'une ou plusieurs valeurs"
     },
     "elementMenu": {
         "moveDown": "Descendre",
@@ -88,7 +90,8 @@
     },
     "addElementModal": {
         "title": "Ajouter un élément",
-        "searchPlaceholder": "Chercher des éléments"
+        "searchPlaceholder": "Chercher des éléments",
+        "disabledElementTooltip": "Non disponible à l'intérieur de cet élément"
     },
     "duplicatePageJobType": {
         "duplicating": "Duplication",
@@ -311,7 +314,8 @@
         "columnGapPlaceholder": "Entrez l'espace entre les colonnes...",
         "columnGapTitle": "Espace entre colonnes",
         "columnAmountTitle": "Mise en page",
-        "columnAmountName": "pas de colonnes | 1 colonne | {columnAmount} colonnes"
+        "columnAmountName": "pas de colonnes | 1 colonne | {columnAmount} colonnes",
+        "verticalAlignment": "Alignement vertical"
     },
     "tableElementForm": {
         "addField": "ajouter un champ",
@@ -325,7 +329,12 @@
         "fieldDefaultName": "Colonne",
         "selectSourceFirst": "Choisissez une source de données de type liste pour commencer à configurer vos champs.",
         "buttonColor": "Couleur du bouton",
-        "refreshFieldsFromDataSource": "Réinitialiser les champs à partir de la source de données"
+        "refreshFieldsFromDataSource": "Réinitialiser les champs à partir de la source de données",
+        "name": "Nom",
+        "orientation": "Orientation",
+        "orientationHorizontal": "Horizontale",
+        "orientationVertical": "Verticale",
+        "buttonLoadMoreLabel": "Libellé « afficher plus »"
     },
     "mainThemeConfigBlock": {
         "colorsLabel": "Couleurs",
@@ -348,11 +357,13 @@
         "backgroundLabel": "Arrière plan",
         "backgroundColor": "Couleur d'arrière-plan",
         "boxLeft": "Gauche",
-        "boxRight": "Droit"
+        "boxRight": "Droit",
+        "backgroundImageMode": "Mode de remplissage",
+        "backgroundImage": "Image"
     },
     "buttonElementForm": {
         "valuePlaceholder": "Saisir le texte...",
-        "valueLabel": "Texte",
+        "valueLabel": "Texte du bouton",
         "buttonColor": "Couleur du bouton"
     },
     "subDomainDetails": {
@@ -375,10 +386,12 @@
     "dataProviderType": {
         "currentRecord": "Source de données",
         "pageParameter": "Paramètre",
-        "dataSource": "Données",
+        "dataSource": "Données reçues",
         "formData": "Données de formulaire",
         "user": "Utilisateur",
-        "previousAction": "Action précédente"
+        "previousAction": "Action précédente",
+        "dataSourceContext": "Choix disponibles",
+        "metadata": "Métadonnées"
     },
     "openPageWorkflowActionForm": {
         "urlLabel": "URL",
@@ -399,9 +412,11 @@
     },
     "styleBoxForm": {
         "paddingError": "La valeur doit être comprise entre 0 et 200.",
-        "borderLabel": "Bordure",
+        "borderLabel": "Épaisseur",
         "paddingLabel": "Espacement",
-        "error": "La valeur doit être comprise entre 0 et 200."
+        "error": "La valeur doit être comprise entre 0 et 200.",
+        "marginLabel": "Marge",
+        "borderColor": "Couleur de la bordure"
     },
     "subDomainForm": {
         "domainNameLabel": "Nom de domaine"
@@ -439,7 +454,9 @@
         "full": "Pleine largeur",
         "small": "Petite",
         "medium": "Moyenne",
-        "normal": "Normale"
+        "normal": "Normale",
+        "fullBleed": "Fond étendu",
+        "fullWidth": "Pleine largeur"
     },
     "userSourceSettings": {
         "titleOverview": "Sources d'utilisateurs",
@@ -555,7 +572,8 @@
     },
     "userSelector": {
         "viewAs": "Voir en tant que : {user}",
-        "anonymous": "Anonyme"
+        "anonymous": "Anonyme",
+        "member": "Membre de {prefix}"
     },
     "dispatchDataSourceError": {
         "defaultTitle": "Erreur de chargement des données",
@@ -572,7 +590,21 @@
         "loggedInVisitors": "Visiteurs connectés",
         "notLoggedInVisitors": "Visiteurs déconnectés",
         "warningTitle": "Nous améliorons constamment la sécurité",
-        "warningMessage": "Pour l'instant, la visibilité d'une information n'est appliquée que dans l'interface utilisateur, les données sous-jacentes restant accessibles à partir de l'API. Veuillez consulter la <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api'>documentation</a> pour plus d'informations sur la sécurité des données."
+        "warningMessage": "Pour l'instant, la visibilité d'une information n'est appliquée que dans l'interface utilisateur, les données sous-jacentes restant accessibles à partir de l'API. Veuillez consulter la <a href='https://baserow.io/user-docs/application-builder-element-visibility#note-accessing-hidden-data-via-api' target='_blank'>documentation</a> pour plus d'informations sur la sécurité des données.",
+        "excludedRolesLabel": "tous les rôles sauf",
+        "switchAllowLabel": "Autoriser",
+        "switchDisallowLabel": "Interdir",
+        "rolesSelectAll": "Sélectionner tout",
+        "rolesDeselectAll": "Désélectionner tout",
+        "rolesSelectHint": "Sélectionnez un ou plusieurs rôles",
+        "roleTypesHint": "Sélectionnez un type de rôle",
+        "roleTypeDisallowAllRolesExcept": "Autoriser les rôles...",
+        "roleTypeAllowAllRoles": "Tous les rôles",
+        "roleTypeAllowAllRolesExcept": "Interdire les rôles...",
+        "errorFetchingRolesMessage": "Il y a eu un problème lors de la récupération des rôles d'utilisateur.",
+        "rolesAllMembersOf": "Tous les membres de {name}",
+        "noRole": "Sans rôle",
+        "errorFetchingRolesTitle": "Impossible de récupérer les rôles des utilisateurs"
     },
     "imageInput": {
         "labelDescription": "Description par défaut",
@@ -599,15 +631,17 @@
         "orientationLabel": "Orientation",
         "itemsPerPagePlaceholder": "Saisir la valeur...",
         "itemsPerRowLabel": "Nombre de colonne",
-        "itemsPerRowDescription": "Choisissez, par type d'appareil, le nombre de colonnes par ligne.",
+        "itemsPerRowDescription": "Nombre de colonnes par ligne et type d'appareil.",
         "orientationVertical": "Verticale",
-        "orientationHorizontal": "Horizontale"
+        "orientationHorizontal": "Horizontale",
+        "buttonLoadMoreLabel": "Libellé « afficher plus »"
     },
     "userDataProviderType": {
         "isAuthenticated": "Est authentifié",
         "id": "Id",
         "email": "Courriel",
-        "username": "Nom d'utilisateur"
+        "username": "Nom d'utilisateur",
+        "role": "Rôle"
     },
     "buttonFieldForm": {
         "labelPlaceholder": "Saisir le nom...",
@@ -621,5 +655,113 @@
     },
     "buttonField": {
         "noLabel": "Sans nom..."
+    },
+    "themeConfigBlockType": {
+        "color": "Couleurs",
+        "page": "Page",
+        "typography": "Typographie",
+        "button": "Bouton",
+        "link": "Lien",
+        "image": "Image"
+    },
+    "colorThemeConfigBlock": {
+        "primaryColor": "Primaire",
+        "secondaryColor": "Secondaire",
+        "borderColor": "Bordure",
+        "successColor": "Succès",
+        "warningColor": "Avertissement",
+        "errorColor": "Erreur"
+    },
+    "pageThemeConfigBlock": {
+        "backgroundColor": "Couleur d'arrière-plan",
+        "backgroundImage": "Image d'arrière plan",
+        "backgroundMode": "Mode d'arrière-plan"
+    },
+    "colorThemeConfigBlockType": {
+        "primary": "Primaire",
+        "secondary": "Secondaire",
+        "success": "Succès",
+        "warning": "Avertissement",
+        "border": "Bordure",
+        "error": "Erreur"
+    },
+    "typographyThemeConfigBlock": {
+        "headingValue": "Titre <h{i}>",
+        "color": "Couleur",
+        "size": "Taille",
+        "textAlignment": "Alignement",
+        "bodyLabel": "Corps",
+        "fontFamily": "Police",
+        "headingLabel": "Titre {i} (h{i})"
+    },
+    "buttonThemeConfigBlock": {
+        "backgroundColor": "Couleur d'arrière-plan",
+        "defaultState": "État par défaut",
+        "hoverState": "État de survol",
+        "textAlignment": "Alignement du texte",
+        "alignment": "Alignement",
+        "width": "Largeur",
+        "borderSize": "Épaisseur de la bordure",
+        "borderRadius": "Rayon de l'arrondi",
+        "padding": "Espacement",
+        "fontFamily": "Police",
+        "size": "Taille de la police",
+        "textColor": "Couleur du texte",
+        "button": "Bouton",
+        "borderColor": "Couleur de la bordure"
+    },
+    "linkThemeConfigBlock": {
+        "color": "Couleur",
+        "link": "Lien",
+        "defaultState": "État par défaut",
+        "hoverState": "État de survol",
+        "alignment": "Alignement",
+        "fontFamily": "Police"
+    },
+    "imageThemeConfigBlock": {
+        "alignment": "Alignement",
+        "maxWidthLabel": "Pleine largeur",
+        "maxHeightLabel": "Hauteur max.",
+        "maxHeightPlaceholder": "Entrer une hauteur max.",
+        "maxWidthPlaceholder": "Entrer une largeur max.",
+        "imageConstraintsLabel": "Contraintes",
+        "imageConstraintFullWidth": "Extension à la largeur maximale",
+        "imageConstraintCover": "Couvrir",
+        "imageConstraintCoverDisabled": "Indisponible avec une hauteur maximale vide.",
+        "imageConstraintContain": "Contenir",
+        "imageConstraintContainDisabled": "Indisponible avec une hauteur maximale."
+    },
+    "choiceElementForm": {
+        "display": "Affichage",
+        "dropdown": "Liste déroulante",
+        "radio": "Boutons radio",
+        "multiple": "Autoriser plusieurs valeurs",
+        "checkbox": "Case à cocher"
+    },
+    "choiceOptionSelector": {
+        "label": "Options",
+        "value": "Valeurs des options",
+        "valuePlaceholder": "Saisir la valeur",
+        "name": "Libellé des options",
+        "namePlaceholder": "Saisir le nom",
+        "addOption": "ajouter une option",
+        "optionType": "Type d'options",
+        "manual": "Manuelle",
+        "dataSource": "Source de données",
+        "formulas": "Formules"
+    },
+    "choiceElement": {
+        "addOptions": "Ajouter des options pour utiliser cet élément..."
+    },
+    "resetButton": {
+        "reset": "Rétablissement de la valeur par défaut du thème"
+    },
+    "backgroundModes": {
+        "fill": "Remplir",
+        "tile": "Tuilage",
+        "fit": "Contenir"
+    },
+    "customStyle": {
+        "themeOverrides": "Style spécifique"
     }
 }

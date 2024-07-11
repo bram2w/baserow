@@ -13,6 +13,7 @@ from baserow.core.user_sources.exceptions import UserSourceDoesNotExist
 from baserow.core.user_sources.handler import UserSourceHandler
 from baserow.core.user_sources.models import UserSource
 from baserow.core.user_sources.registries import (
+    DEFAULT_USER_ROLE_PREFIX,
     UserSourceType,
     user_source_type_registry,
 )
@@ -302,6 +303,7 @@ def test_export_user_source(data_fixture):
         "name": "Test name",
         "name_field_id": None,
         "order": "1.00000000000000000000",
+        "role_field_id": None,
         "table_id": None,
         "type": "local_baserow",
         "uid": "12345678123456781234567812345678",
@@ -360,7 +362,6 @@ def test_import_user_source(data_fixture):
         builder, TO_IMPORT, defaultdict(MirrorDict)
     )
 
-    assert imported_instance.id != 28
     assert imported_instance.integration_id == integration.id
     assert imported_instance.name == "Test name"
 
@@ -433,3 +434,89 @@ def test_export_then_import_user_source(data_fixture):
 
     # Should update the uid only if it already exists
     assert imported_instance.uid == "another_uid"
+
+
+@pytest.mark.django_db
+def test_get_default_user_role(data_fixture):
+    """Ensure the get_default_user_role() returns the default user role."""
+
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=application,
+    )
+
+    default_user_role = user_source.get_type().get_default_user_role(user_source)
+
+    assert default_user_role == f"{DEFAULT_USER_ROLE_PREFIX}{user_source.id}"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "roles_a,roles_b,expected_roles",
+    [
+        (
+            [],
+            [],
+            [],
+        ),
+        (
+            [],
+            ["zig_role"],
+            ["zig_role"],
+        ),
+        (
+            ["foo_role"],
+            [],
+            ["foo_role"],
+        ),
+        (
+            ["foo_role"],
+            ["zig_role"],
+            ["foo_role", "zig_role"],
+        ),
+        (
+            ["foo_role", "bar_role"],
+            ["zig_role", "zag_role"],
+            ["bar_role", "foo_role", "zag_role", "zig_role"],
+        ),
+    ],
+)
+def test_get_all_roles_for_application_returns_user_roles(
+    data_fixture,
+    roles_a,
+    roles_b,
+    expected_roles,
+):
+    builder = data_fixture.create_builder_application()
+    user_source_1 = data_fixture.create_user_source_with_first_type(application=builder)
+    users_table_1 = data_fixture.create_database_table(name="test_users_1")
+    role_field_1 = data_fixture.create_text_field(
+        table=users_table_1, order=0, name="role", text_default=""
+    )
+    user_source_1.table = users_table_1
+    user_source_1.role_field = role_field_1
+    user_source_1.save()
+
+    # Add some roles
+    model = users_table_1.get_model()
+    for role in roles_a:
+        model.objects.create(**{f"field_{role_field_1.id}": role})
+
+    user_source_2 = data_fixture.create_user_source_with_first_type(application=builder)
+    users_table_2 = data_fixture.create_database_table(name="test_users_2")
+    role_field_2 = data_fixture.create_text_field(
+        table=users_table_2, order=0, name="role", text_default=""
+    )
+    user_source_2.table = users_table_2
+    user_source_2.role_field = role_field_2
+    user_source_2.save()
+
+    # Add some roles
+    model = users_table_2.get_model()
+    for role in roles_b:
+        model.objects.create(**{f"field_{role_field_2.id}": role})
+
+    user_roles = UserSourceHandler().get_all_roles_for_application(builder)
+
+    assert user_roles == expected_roles

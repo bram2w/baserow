@@ -1,45 +1,47 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('columnElementForm.columnAmountTitle') }}
-      </label>
-      <div class="control__elements">
-        <Dropdown v-model="values.column_amount" :show-search="false">
-          <DropdownItem
-            v-for="columnAmount in columnAmounts"
-            :key="columnAmount.value"
-            :name="columnAmount.name"
-            :value="columnAmount.value"
-          >
-            {{ columnAmount.name }}
-          </DropdownItem>
-        </Dropdown>
-      </div>
-    </FormElement>
-    <FormElement class="control">
+    <FormGroup
+      required
+      class="margin-bottom-2"
+      small-label
+      :label="$t('columnElementForm.columnAmountTitle')"
+    >
+      <Dropdown v-model="values.column_amount" :show-search="false">
+        <DropdownItem
+          v-for="columnAmount in columnAmounts"
+          :key="columnAmount.value"
+          :name="columnAmount.name"
+          :value="columnAmount.value"
+        >
+          {{ columnAmount.name }}
+        </DropdownItem>
+      </Dropdown>
+    </FormGroup>
+
+    <FormGroup
+      class="margin-bottom-2"
+      small-label
+      required
+      :label="$t('columnElementForm.columnGapTitle')"
+      :error-message="errorMessage"
+    >
       <FormInput
         v-model="values.column_gap"
+        size="large"
         :label="$t('columnElementForm.columnGapTitle')"
         :placeholder="$t('columnElementForm.columnGapPlaceholder')"
-        :error="
-          $v.values.column_gap.$dirty && !$v.values.column_gap.required
-            ? $t('error.requiredField')
-            : !$v.values.column_gap.integer
-            ? $t('error.integerField')
-            : !$v.values.column_gap.minValue
-            ? $t('error.minValueField', { min: 0 })
-            : !$v.values.column_gap.maxValue
-            ? $t('error.maxValueField', { max: 2000 })
-            : ''
-        "
         type="number"
         @blur="$v.values.column_gap.$touch()"
-      ></FormInput>
-    </FormElement>
-    <FormElement class="control">
+      />
+    </FormGroup>
+
+    <FormGroup
+      :label="$t('columnElementForm.verticalAlignment')"
+      small-label
+      required
+    >
       <VerticalAlignmentSelector v-model="values.alignment" />
-    </FormElement>
+    </FormGroup>
   </form>
 </template>
 
@@ -47,7 +49,7 @@
 import form from '@baserow/modules/core/mixins/form'
 import { VERTICAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
-import VerticalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/VerticalAlignmentSelector'
+import VerticalAlignmentSelector from '@baserow/modules/builder/components/VerticalAlignmentSelector'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
@@ -61,7 +63,7 @@ export default {
       values: {
         column_amount: 1,
         column_gap: 30,
-        alignment: VERTICAL_ALIGNMENTS.TOP.value,
+        alignment: VERTICAL_ALIGNMENTS.TOP,
       },
     }
   },
@@ -74,6 +76,18 @@ export default {
         }),
         value: columnAmount + 1,
       }))
+    },
+    errorMessage() {
+      return this.$v.values.column_gap.$dirty &&
+        !this.$v.values.column_gap.required
+        ? this.$t('error.requiredField')
+        : !this.$v.values.column_gap.integer
+        ? this.$t('error.integerField')
+        : !this.$v.values.column_gap.minValue
+        ? this.$t('error.minValueField', { min: 0 })
+        : !this.$v.values.column_gap.maxValue
+        ? this.$t('error.maxValueField', { max: 2000 })
+        : ''
     },
   },
   methods: {

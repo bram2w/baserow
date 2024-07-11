@@ -1,4 +1,6 @@
+import typing
 from datetime import datetime, timezone
+from functools import wraps
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.db import OperationalError
@@ -10,12 +12,10 @@ from baserow.api.errors import (
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
     ERROR_PERMISSION_DENIED,
 )
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.core.exceptions import PermissionException, is_max_lock_exceeded_exception
 
-from .exceptions import (
-    QueryParameterValidationException,
-    RequestBodyValidationException,
-)
+from .exceptions import QueryParameterValidationException
 from .utils import ExceptionMappingType, get_request
 from .utils import map_exceptions as map_exceptions_utility
 from .utils import validate_data, validate_data_custom_fields
@@ -386,3 +386,44 @@ def accept_timezone():
         return func_wrapper
 
     return validate_decorator
+
+
+def require_request_data_type(*rtypes: typing.Type) -> typing.Callable:
+    """
+    Decorate a view function to restrict allowed request.data to specific types,
+    allowing request.data type checks before actual view is called.
+
+    In case of type mismatch decorator raises RequestBodyValidationException with
+    a payload mimicking Serializer's invalid data error.
+
+    >>> class AppView(APIView):
+        @require_request_data_type(dict)
+        def post(self, request):
+            return request.data.keys()
+
+    or using multiple types:
+
+    >>> class AppView(APIView):
+        @require_request_data_type(dict, list)
+        def post(self, request):
+            return request.data.keys()
+    """
+
+    def wrapper(f):
+        @wraps(f)
+        def _wrap(_self, request, *args, **kwargs):
+            if not isinstance(request.data, rtypes):
+                detail = {
+                    "non_field_errors": [
+                        {
+                            "code": "invalid",
+                            "error": f"Invalid data. Expected a dictionary, but got {type(request.data).__name__}.",
+                        }
+                    ]
+                }
+                raise RequestBodyValidationException(detail=detail, code=None)
+            return f(_self, request, *args, **kwargs)
+
+        return _wrap
+
+    return wrapper

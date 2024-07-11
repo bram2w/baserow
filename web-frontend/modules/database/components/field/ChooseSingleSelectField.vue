@@ -6,16 +6,16 @@
     <div v-else class="warning">
       {{ $t('chooseSingleSelectField.warningWhenNothingToChooseOrCreate') }}
     </div>
-    <Radio
-      v-for="field in singleSelectFields"
-      :key="field.id"
-      :value="field.id"
+
+    <RadioGroup
       :model-value="value"
-      :loading="loading && field.id === value"
+      vertical-layout
+      :options="singleSelectFieldsOptions"
       :disabled="loading || readOnly"
       @input="$emit('input', $event)"
-      >{{ field.name }}</Radio
     >
+    </RadioGroup>
+
     <div v-if="canCreateSingleSelectField" class="margin-top-2">
       <span ref="createFieldContextLink">
         <ButtonText
@@ -81,6 +81,7 @@ export default {
       default: false,
     },
   },
+
   computed: {
     canCreateSingleSelectField() {
       return (
@@ -99,6 +100,22 @@ export default {
       return this.fields.filter(
         (field) => field.type === this.singleSelectFieldType
       )
+    },
+    singleSelectFieldsOptions() {
+      return this.singleSelectFields.map((singleSelectField) => {
+        return {
+          label: singleSelectField.name,
+          value: singleSelectField.id,
+        }
+      })
+    },
+  },
+  watch: {
+    loading(isLoading) {
+      if (isLoading)
+        this.singleSelectFieldsOptions.find(
+          (option) => option.value === this.value
+        ).loading = true
     },
   },
 }

@@ -1,11 +1,66 @@
 .color-input__preview {
   display: block;
-  width: 40px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 2px;
-  box-shadow: 1px 1px 1px 1px rgba($black, 0.2);
+  position: relative;
+  border: 1px solid $palette-neutral-400;
+}
 
-  &:hover {
-    box-shadow: 1px 1px 1px 0 rgba($black, 0.2);
+.color-input__preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-size: 14px 14px;
+  background-image: conic-gradient(
+    $white 90deg,
+    $color-neutral-400 90deg 180deg,
+    $white 180deg 270deg,
+    $color-neutral-400 270deg
+  );
+}
+
+.color-input__preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--selected-color, black);
+}
+
+.color-input__input {
+  width: 100%;
+  border: 1px solid $palette-neutral-400;
+  padding: 0 12px;
+  outline: none;
+  height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: 10px;
+  font-weight: 400;
+  font-size: 13px;
+  user-select: none;
+  min-width: 120px;
+  font-family: Inter, sans-serif;
+  cursor: pointer;
+
+  @include rounded($rounded-md);
+  @include elevation($elevation-low);
+
+  &:active,
+  &:focus {
+    border-color: $palette-blue-500;
+  }
+
+  .color-input--small & {
+    height: 36px;
+    padding: 8px 12px;
+  }
+
+  &[disabled] {
+    color: $palette-neutral-700;
+    box-shadow: none;
+    background-color: $palette-neutral-100;
   }
 }

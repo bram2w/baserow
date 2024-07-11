@@ -1,4 +1,13 @@
-export const IMAGE_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
+export const IMAGE_FILE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/apng',
+  'image/gif',
+  'image/tiff',
+  'image/bmp',
+  'image/webp',
+]
 
 export const FAVICON_IMAGE_FILE_TYPES = [...IMAGE_FILE_TYPES, 'image/x-icon']
 

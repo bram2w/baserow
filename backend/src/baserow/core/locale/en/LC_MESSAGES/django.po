@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-22 20:54+0000\n"
+"POT-Creation-Date: 2024-06-20 07:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -215,7 +215,16 @@ msgstr ""
 msgid "You have %(count)d new notifications - Baserow"
 msgstr ""
 
-#: src/baserow/core/handler.py:1985 src/baserow/core/user/handler.py:261
+#: src/baserow/core/fields.py:112
+#, python-format
+msgid "“%(value)s” value must be a decimal number."
+msgstr ""
+
+#: src/baserow/core/fields.py:114
+msgid "Decimal number"
+msgstr ""
+
+#: src/baserow/core/handler.py:2039 src/baserow/core/user/handler.py:266
 #, python-format
 msgid "%(name)s's workspace"
 msgstr ""
@@ -434,80 +443,80 @@ msgstr ""
 msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:176
+#: src/baserow/core/user/actions.py:178
 msgid "Schedule user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:178
+#: src/baserow/core/user/actions.py:180
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) scheduled to be deleted after grace "
 "time"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:212
+#: src/baserow/core/user/actions.py:214
 msgid "Cancel user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:214
+#: src/baserow/core/user/actions.py:216
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
 "process"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:248
+#: src/baserow/core/user/actions.py:250
 msgid "Sign In User"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:250
+#: src/baserow/core/user/actions.py:252
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) signed in via "
 "\"%(auth_provider_type)s\" (%(auth_provider_id)s) auth provider"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:307
+#: src/baserow/core/user/actions.py:309
 msgid "Send reset user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:308
+#: src/baserow/core/user/actions.py:310
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:341
+#: src/baserow/core/user/actions.py:343
 msgid "Change user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:342
+#: src/baserow/core/user/actions.py:344
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:381
+#: src/baserow/core/user/actions.py:383
 msgid "Reset user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:382
+#: src/baserow/core/user/actions.py:384
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:418
+#: src/baserow/core/user/actions.py:420
 msgid "Send verify email"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:419
+#: src/baserow/core/user/actions.py:421
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to verify email"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:452
+#: src/baserow/core/user/actions.py:454
 msgid "Verify email"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:453
+#: src/baserow/core/user/actions.py:455
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) verify email"
 msgstr ""
@@ -526,4 +535,9 @@ msgstr ""
 
 #: src/baserow/core/user/emails.py:74
 msgid "Account deletion cancelled - Baserow"
+msgstr ""
+
+#: src/baserow/core/user_sources/user_source_user.py:81
+#, python-format
+msgid "%(user_source_name)s member"
 msgstr ""

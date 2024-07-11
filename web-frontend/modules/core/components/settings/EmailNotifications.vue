@@ -2,25 +2,20 @@
   <div>
     <h2 class="box__title">{{ $t('emailNotifications.title') }}</h2>
     <form @submit.prevent="updateEmailNotificationFrequency">
-      <FormElement
+      <FormGroup
+        :label="$t('emailNotifications.label')"
+        :help-text="$t('emailNotifications.description')"
         :error="fieldHasErrors('email_notification_frequency')"
-        class="control"
+        required
       >
-        <label class="control__label">
-          {{ $t('emailNotifications.label') }}
-        </label>
-        <div class="control__description">
-          {{ $t('emailNotifications.description') }}
-        </div>
-        <div class="control__elements">
-          <RadioGroup
-            v-model="values.email_notification_frequency"
-            :options="emailNotificationOptions"
-            vertical-layout
-          >
-          </RadioGroup>
-        </div>
-      </FormElement>
+        <RadioGroup
+          v-model="values.email_notification_frequency"
+          :options="emailNotificationOptions"
+          vertical-layout
+        >
+        </RadioGroup>
+      </FormGroup>
+
       <div class="actions actions--right">
         <Button
           type="primary"

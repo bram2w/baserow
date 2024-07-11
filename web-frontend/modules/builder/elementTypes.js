@@ -12,10 +12,15 @@ import InputTextElementForm from '@baserow/modules/builder/components/elements/c
 import TableElement from '@baserow/modules/builder/components/elements/components/TableElement'
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm'
 import {
+  ensureArray,
   ensureBoolean,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
-import { ELEMENT_EVENTS, PLACEMENTS } from '@baserow/modules/builder/enums'
+import {
+  CHOICE_OPTION_TYPES,
+  ELEMENT_EVENTS,
+  PLACEMENTS,
+} from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -73,12 +78,18 @@ export class ElementType extends Registerable {
       'style_padding_bottom',
       'style_padding_left',
       'style_padding_right',
+      'style_margin_top',
+      'style_margin_bottom',
+      'style_margin_left',
+      'style_margin_right',
       'style_border_top',
       'style_border_bottom',
       'style_border_left',
       'style_border_right',
       'style_background',
       'style_background_color',
+      'style_background_file',
+      'style_background_mode',
       'style_width',
     ]
   }
@@ -172,6 +183,29 @@ export class ElementType extends Registerable {
     )
 
     return resolveFormula(formula, formulaFunctions, runtimeFormulaContext)
+  }
+
+  /**
+   * Responsible for returning an array of collection element IDs that represent
+   * the ancestry of this element. It's used to determine the accessible path
+   * between elements that have access to the form data provider. If an element
+   * is in the path of a form element, then it can use its form data.
+   *
+   * @param {Object} element - The element we're the path for.
+   * @param {Object} page - The page the element belongs to.
+   */
+  getElementNamespacePath(element, page) {
+    const ancestors = this.app.store.getters['element/getAncestors'](
+      page,
+      element
+    )
+    return ancestors
+      .map((ancestor) => {
+        const elementType = this.app.$registry.get('element', ancestor.type)
+        return elementType.isCollectionElement ? ancestor.id : null
+      })
+      .filter((id) => id !== null)
+      .reverse()
   }
 
   /**
@@ -377,6 +411,22 @@ export class ElementType extends Registerable {
       PLACEMENTS.RIGHT,
       ...this.getVerticalPlacementsDisabled(page, element),
     ]
+  }
+
+  /**
+   * Generates a unique element id based on the element and if provided, an array
+   * representing a path to access form data. Most elements will have a unique
+   * ID that matches their `id`, but when an element is part of one or more repeats,
+   * we need to ensure that the ID is unique for each record.
+   *
+   * @param {Object} element - The element we want to generate a unique ID for.
+   * @param {Array} recordIndexPath - An array of integers which represent the
+   * record indices we've accumulated through nested collection element ancestors.
+   * @returns {String} - The unique element ID.
+   *
+   */
+  uniqueElementId(element, recordIndexPath) {
+    return [element.id, ...(recordIndexPath || [])].join('.')
   }
 }
 
@@ -814,15 +864,11 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 
   /**
    * The repeat elements will disallow collection elements (including itself),
-   * all form elements, and the form container, from being added as children.
+   * from being added as children.
    * @returns {Array} An array of disallowed child element types.
    */
   get childElementTypesForbidden() {
-    const formContainer = this.app.$registry.get('element', 'form_container')
-    return this.elementTypesAll.filter(
-      (type) =>
-        type.isFormElement || type === formContainer || type.isCollectionElement
-    )
+    return this.elementTypesAll.filter((type) => type.isCollectionElement)
   }
 
   /**
@@ -868,7 +914,8 @@ export class FormElementType extends ElementType {
    * Given a form element, and a form data value, is responsible for validating
    * this form element type against that value. Returns whether the value is valid.
    * @param element - The form element
-   * @param value
+   * @param value - The value to be validated against
+   * @param applicationContext - The context of the current application
    * @returns {boolean}
    */
   isValid(element, value) {
@@ -902,21 +949,6 @@ export class FormElementType extends ElementType {
     return this.name
   }
 
-  afterCreate(element, page) {
-    const initialValue = this.getInitialFormDataValue(element, { page })
-    const payload = {
-      value: initialValue,
-      type: this.formDataType(element),
-      isValid: this.isValid(element, initialValue),
-    }
-
-    return this.app.store.dispatch('formData/setFormData', {
-      page,
-      payload,
-      elementId: element.id,
-    })
-  }
-
   afterDelete(element, page) {
     return this.app.store.dispatch('formData/removeFormData', {
       page,
@@ -940,7 +972,7 @@ export class InputTextElementType extends FormElementType {
     return 'input_text'
   }
 
-  isValid(element, value) {
+  isValid(element, value, applicationContext) {
     if (!value) {
       return !element.required
     }
@@ -993,10 +1025,14 @@ export class InputTextElementType extends FormElementType {
   }
 
   getInitialFormDataValue(element, applicationContext) {
-    return this.resolveFormula(element.default_value, {
-      element,
-      ...applicationContext,
-    })
+    try {
+      return this.resolveFormula(element.default_value, {
+        element,
+        ...applicationContext,
+      })
+    } catch {
+      return ''
+    }
   }
 }
 
@@ -1240,12 +1276,16 @@ export class ChoiceElementType extends FormElementType {
   }
 
   getInitialFormDataValue(element, applicationContext) {
-    return ensureString(
-      this.resolveFormula(element.default_value, {
-        element,
-        ...applicationContext,
-      })
-    )
+    try {
+      return ensureString(
+        this.resolveFormula(element.default_value, {
+          element,
+          ...applicationContext,
+        })
+      )
+    } catch {
+      return element.multiple ? [] : ''
+    }
   }
 
   getDisplayName(element, applicationContext) {
@@ -1267,17 +1307,36 @@ export class ChoiceElementType extends FormElementType {
    * test if the value is one of the choice's own values.
    * @param element - The choice form element
    * @param value - The value we are validating.
+   * @param applicationContext - Required when using formula resolution.
    * @returns {boolean}
    */
-  isValid(element, value) {
+  isValid(element, value, applicationContext) {
+    const options =
+      element.option_type === CHOICE_OPTION_TYPES.FORMULAS
+        ? ensureArray(
+            this.resolveFormula(element.formula_value, {
+              element,
+              ...applicationContext,
+            })
+          ).map(ensureString)
+        : element.options.map((option) => option.value)
+
     const validOption = element.multiple
-      ? element.options.find((option) => value.includes(option.value))
-      : element.options.find((option) => option.value === value)
+      ? options.some((option) => value.includes(option))
+      : options.includes(value)
     return !(element.required && !validOption)
   }
 
   isInError({ element, builder }) {
-    return element.options.length === 0
+    switch (element.option_type) {
+      case CHOICE_OPTION_TYPES.MANUAL:
+        return element.options.length === 0
+      case CHOICE_OPTION_TYPES.FORMULAS: {
+        return element.formula_value === ''
+      }
+      default:
+        return true
+    }
   }
 
   getDataSchema(element) {

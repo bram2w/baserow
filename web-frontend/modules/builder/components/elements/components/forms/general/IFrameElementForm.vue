@@ -1,6 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('iframeElementForm.sourceTypeLabel')">
+    <FormGroup
+      :label="$t('iframeElementForm.sourceTypeLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <RadioGroup
         v-model="values.source_type"
         :options="iframeSourceTypeOptions"
@@ -8,6 +13,7 @@
       >
       </RadioGroup>
     </FormGroup>
+
     <ApplicationBuilderFormulaInputGroup
       v-if="values.source_type === IFRAME_SOURCE_TYPES.URL"
       key="url"
@@ -16,7 +22,9 @@
       :placeholder="$t('iframeElementForm.urlPlaceholder')"
       :help-text="$t('iframeElementForm.urlHelp')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
     ></ApplicationBuilderFormulaInputGroup>
+
     <ApplicationBuilderFormulaInputGroup
       v-if="values.source_type === IFRAME_SOURCE_TYPES.EMBED"
       key="embed"
@@ -24,14 +32,14 @@
       :label="$t('iframeElementForm.embedLabel')"
       :placeholder="$t('iframeElementForm.embedPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
     ></ApplicationBuilderFormulaInputGroup>
-    <FormInput
-      v-model="values.height"
-      type="number"
+
+    <FormGroup
       :label="$t('iframeElementForm.heightLabel')"
-      :placeholder="$t('iframeElementForm.heightPlaceholder')"
-      :to-value="(value) => parseInt(value)"
-      :error="
+      small-label
+      required
+      :error-message="
         $v.values.height.$dirty && !$v.values.height.required
           ? $t('error.requiredField')
           : !$v.values.height.integer
@@ -42,7 +50,15 @@
           ? $t('error.maxValueField', { max: 2000 })
           : ''
       "
-    ></FormInput>
+    >
+      <FormInput
+        v-model="values.height"
+        size="large"
+        type="number"
+        :placeholder="$t('iframeElementForm.heightPlaceholder')"
+        :to-value="(value) => parseInt(value)"
+      ></FormInput>
+    </FormGroup>
   </form>
 </template>
 

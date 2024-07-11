@@ -39,7 +39,7 @@ describe('Password Input Tests', () => {
   }
 
   function getErrorDiv(wrapper) {
-    return wrapper.find('div > .error')
+    return wrapper.find('div > .control__messages--error')
   }
 
   function getErrorText(errorDiv) {

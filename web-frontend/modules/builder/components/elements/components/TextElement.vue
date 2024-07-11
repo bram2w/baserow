@@ -3,30 +3,25 @@
     class="text-element"
     :class="{
       'element--no-value': !resolvedValue,
-      [`element--alignment-horizontal-${element.alignment}`]: true,
     }"
+    :style="getStyleOverride('typography')"
   >
     <template v-if="element.format === TEXT_FORMAT_TYPES.MARKDOWN">
       <MarkdownIt
         v-if="resolvedValue"
-        class="ab-paragraph"
         :content="resolvedValue"
         :rules="rules"
         @click.native="onClick"
       ></MarkdownIt>
-      <p v-else class="ab-paragraph">{{ $t('textElement.noValue') }}</p>
+      <ABParagraph v-else>{{ $t('textElement.noValue') }}</ABParagraph>
     </template>
     <template v-else>
-      <p
-        v-for="paragraph in paragraphs"
-        :key="paragraph.id"
-        class="ab-paragraph"
-      >
+      <ABParagraph v-for="paragraph in paragraphs" :key="paragraph.id">
         {{ paragraph.content }}
-      </p>
-      <p v-if="!paragraphs.length" class="ab-paragraph">
+      </ABParagraph>
+      <ABParagraph v-if="!paragraphs.length">
         {{ $t('textElement.noValue') }}
-      </p>
+      </ABParagraph>
     </template>
   </div>
 </template>
@@ -61,11 +56,7 @@ export default {
   },
   computed: {
     resolvedValue() {
-      try {
-        return ensureString(this.resolveFormula(this.element.value))
-      } catch {
-        return ''
-      }
+      return ensureString(this.resolveFormula(this.element.value))
     },
     paragraphs() {
       return this.resolvedValue
@@ -98,11 +89,11 @@ export default {
             this.mode
           )
           tokens[idx].attrSet('href', url)
-          tokens[idx].attrJoin('class', 'link-element__link')
+          tokens[idx].attrJoin('class', 'ab-link')
           return renderer.renderToken(tokens, idx, options)
         },
         image: (tokens, idx, options, env, renderer) => {
-          tokens[idx].attrJoin('class', 'image-element__img')
+          tokens[idx].attrJoin('class', 'ab-image')
           return renderer.renderToken(tokens, idx, options)
         },
         paragraph_open: (tokens, idx, options, env, renderer) => {

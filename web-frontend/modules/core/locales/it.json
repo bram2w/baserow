@@ -291,7 +291,7 @@
         "settingAllowSignupsViaWorkspaceInvitationDescription": "Anche se la creazione di nuovi account è disabilitata, questa opzione permette agli utenti invitati direttamente di creare un account.",
         "enabled": "abilitato",
         "userDeletionGraceDelay": "Eliminazione account",
-        "settingUserDeletionGraceDelay": "Tempo di grazia",
+        "settingUserDeletionGraceDelay": "Tempo prima dell'eliminazione definitiva",
         "settingUserDeletionGraceDelayDescription": "Questo è il numero di giorni dopo i quali verrà definitivamente cancellato l'account.",
         "invalidAccountDeletionGraceDelay": "Questo campo è obbligatorio e deve essere un valore intero positivo più piccolo di 32000",
         "settingAllowNonStaffCreateWorkspaceOperation": "Permetti a chiunque di creare nuovi progetti di lavoro",
@@ -299,7 +299,13 @@
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "Quando questa impostazione è abilitata, i nuovi utenti verranno assegnati automaticamente ad un nuovo progetto del quale saranno amministratori, e quindi conteggiati al termine della giornata come licenze paganti. Per evitare costi inaspettati, disabilita questa impostazione e invita nuovi utenti con ruoli predefiniti.",
         "settingTrackWorkspaceUsage": "Monitora l'utilizzo delle risorse per progetto",
         "maintenance": "Manutenzione",
-        "settingTrackWorkspaceUsageDescription": "Abilita un task periodico che monitora il numero di righe e lo spazio disco utilizzato per ogni progetto, visibile nella pagina di riepilogo dei progetti."
+        "settingTrackWorkspaceUsageDescription": "Abilita un task periodico che monitora il numero di righe e lo spazio disco utilizzato per ogni progetto, visibile nella pagina di riepilogo dei progetti.",
+        "emailVerificationNoVerification": "Nessuna verifica",
+        "emailVerificationEnforced": "Obbligatoria",
+        "userSettings": "Utente",
+        "emailVerificationRecommended": "Raccomandata",
+        "emailVerificationDescription": "Controlla se l'indirizzo email deve essere verificato.",
+        "emailVerification": "Verifica email"
     },
     "undoRedoNotification": {
         "undoingTitle": "Annullando..",
@@ -731,5 +737,60 @@
         "title": "Verifica email richiesta",
         "description": "Verifica la tua posta e clicca il link ricevuto per email. Una volta effettuata la verifica, il tuo account verrà attivato.",
         "resend": "Invia email di nuovo"
+    },
+    "onboarding": {
+        "creating": "Crea il tuo primo workplace",
+        "continue": "Continua",
+        "failedTitle": "Qualcosa è andato storto",
+        "failedDescription": "L'onboarding non è del tutto riuscito, anche se alcune parti sono state completate.",
+        "failedTryAgain": "Riprova",
+        "failedSkip": "Salta l'onboarding",
+        "title": "Onboarding",
+        "skip": "Salta per ora",
+        "cancel": "Non mi serve aiuto per iniziare"
+    },
+    "inviteStep": {
+        "title": "Invita dei collaboratori",
+        "description": "Puoi sempre aggiungere altro più tardi.",
+        "collaboratorsLabel": "Collaboratori"
+    },
+    "moreStep": {
+        "title": "Raccontaci di più",
+        "roleOrJob": "Ruolo o titolo...",
+        "people": "Quante persone siete in azienda?",
+        "share": "Accetto di condividere queste informazioni con il team di Baserow per migliorare il prodotto",
+        "country": "Paese"
+    },
+    "teamStep": {
+        "description": "Di cosa ti occupi?",
+        "operationsTeam": "Operations",
+        "itAndSupportTeam": "Supporto e IT",
+        "hrAndLegalTeam": "HR & Legal",
+        "creativeProductionTeam": "Creative Production",
+        "salesAndAccountManagementTeam": "Vendite",
+        "otherPersonalTeam": "Altro / Personale",
+        "title": "Creiamo il primo progetto insieme!",
+        "engineeringTeam": "Ingegneria",
+        "marketingTeam": "Marketing",
+        "productAndDesignTeam": "Design e prodotto",
+        "financeTeam": "Finanza",
+        "customerServiceTeam": "Supporto clienti",
+        "manufacturingTeam": "Manifattura"
+    },
+    "workspaceStep": {
+        "title": "Crea il tuo progetto",
+        "workspaceLabel": "Nome progetto"
+    },
+    "selectAIModelForm": {
+        "AIType": "Tipo AI",
+        "AIModel": "Modello AI",
+        "fileField": "Campo file"
+    },
+    "colorInput": {
+        "default": "Default"
+    },
+    "imageInput": {
+        "labelDescription": "Scegli un immagine da caricare...",
+        "labelButton": "Carica"
     }
 }

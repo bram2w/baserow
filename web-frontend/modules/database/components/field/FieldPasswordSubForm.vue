@@ -1,5 +1,5 @@
 <template>
-  <div class="margin-bottom-2">
+  <div>
     <!--
     this temporary message will be removed after the API password check support will
     be implemented. I therefore thought it was okay to use some inline styles, for now.

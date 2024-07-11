@@ -6,23 +6,27 @@
     <div>
       <Error :error="error"></Error>
       <form @submit.prevent="authorizeView">
-        <p class="box__description">
-          {{ $t('publicViewAuthLogin.description') }}
-        </p>
-        <FormElement :error="fieldHasErrors('password')" class="control">
-          <div class="control__elements">
-            <input
-              ref="password"
-              v-model="values.password"
-              :class="{ 'input--error': fieldHasErrors('password') }"
-              type="password"
-              class="input"
-            />
-            <div v-if="fieldHasErrors('password')" class="error">
-              {{ $t('error.passwordRequired') }}
-            </div>
-          </div>
-        </FormElement>
+        <FormGroup
+          :label="$t('publicViewAuthLogin.description')"
+          small-label
+          required
+          :helper-text="$t('publicViewAuthLogin.description')"
+          :error="fieldHasErrors('password')"
+          class="margin-bottom-2"
+        >
+          <FormInput
+            ref="password"
+            v-model="values.password"
+            size="large"
+            :error="fieldHasErrors('password')"
+            type="password"
+          ></FormInput>
+
+          <template #error>
+            {{ $t('error.passwordRequired') }}
+          </template>
+        </FormGroup>
+
         <div class="public-view-auth__actions">
           <Button
             type="primary"

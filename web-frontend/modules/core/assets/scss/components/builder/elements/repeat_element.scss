@@ -9,3 +9,8 @@
   pointer-events: none;
   user-select: none;
 }
+
+.repeat-element__footer {
+  display: flex;
+  flex-direction: column;
+}

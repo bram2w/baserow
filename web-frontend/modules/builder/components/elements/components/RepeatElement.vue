@@ -23,6 +23,10 @@
                 :element="child"
                 :application-context-additions="{
                   recordIndex: index,
+                  recordIndexPath: [
+                    ...applicationContext.recordIndexPath,
+                    index,
+                  ],
                 }"
                 @move="moveElement(child, $event)"
               />
@@ -35,6 +39,10 @@
                 :force-mode="isEditMode ? 'public' : mode"
                 :application-context-additions="{
                   recordIndex: index,
+                  recordIndexPath: [
+                    ...applicationContext.recordIndexPath,
+                    index,
+                  ],
                 }"
                 :class="{
                   'repeat-element__preview': index > 0 && isEditMode,
@@ -87,11 +95,12 @@
     <div class="repeat-element__footer">
       <ABButton
         v-if="hasMorePage && children.length > 0"
+        :style="getStyleOverride('button')"
         :disabled="contentLoading"
         :loading="contentLoading"
         @click="loadMore()"
       >
-        {{ $t('repeatElement.showMore') }}
+        {{ resolvedButtonLoadMoreLabel || $t('repeatElement.showMore') }}
       </ABButton>
     </div>
   </div>
@@ -107,6 +116,7 @@ import AddElementModal from '@baserow/modules/builder/components/elements/AddEle
 import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview'
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'RepeatElement',
@@ -153,6 +163,11 @@ export default {
           }, 1fr)`,
         }
       }
+    },
+    resolvedButtonLoadMoreLabel() {
+      return ensureString(
+        this.resolveFormula(this.element.button_load_more_label)
+      )
     },
   },
   methods: {

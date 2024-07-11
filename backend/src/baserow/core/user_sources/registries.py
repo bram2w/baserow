@@ -1,6 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, Optional, Type, TypeVar
+from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -16,6 +16,7 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
 
 from .models import UserSource
@@ -188,6 +189,19 @@ class UserSourceType(
 
         return created_user_source
 
+    def get_default_user_role(self, user_source: UserSource) -> str:
+        """
+        Generate the Default User Role for the User Source.
+
+        The Visibility permission manager needs a user role to check whether
+        a user has permissions to view a specific element.
+
+        When the User Source does not have roles defined, a default user role
+        is used by the Visibility permission manager to control access to elements.
+        """
+
+        return f"{DEFAULT_USER_ROLE_PREFIX}{user_source.id}"
+
     @abstractmethod
     def gen_uid(self, user_source):
         """
@@ -207,6 +221,15 @@ class UserSourceType(
         :param count: The number of user we want.
         :param search: A search term to filter the users.
         :return: An iterable of users.
+        """
+
+    @abstractmethod
+    def get_roles(self, user_source: UserSource) -> List[str]:
+        """
+        Returns a list of strings representing valid roles for the user_source.
+
+        :param user_source: The user source used to get the roles.
+        :return: A list of roles if any found with the given parameters.
         """
 
     @abstractmethod

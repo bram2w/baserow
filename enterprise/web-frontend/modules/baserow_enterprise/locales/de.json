@@ -206,14 +206,16 @@
         }
     },
     "memberRolesShareToggle": {
-        "label": "Teilen Sie mit allen bei {name}",
+        "label": "Mit allen bei {name} teilen",
         "subLabel": "{totalUserAmount} Workspace-Mitglieder"
     },
     "memberRolesDatabaseContexItem": {
-        "label": "Mitglieder verwalten"
+        "label": "Mitglieder verwalten",
+        "additionalRoles": "Zusätzliche Rollen"
     },
     "memberRolesTableContexItem": {
-        "label": "Mitglieder verwalten"
+        "label": "Mitglieder verwalten",
+        "additionalRoles": "Zusätzliche Rollen"
     },
     "memberRolesMembersList": {
         "adminHelpText": "Admins können die Rollen anderer Admins einschränken.",
@@ -261,7 +263,10 @@
     },
     "enterpriseFeatures": {
         "sso": "Single-Sign-On",
-        "rbac": "Rollenbasierte Zugangskontrolle"
+        "rbac": "Rollenbasierte Zugangskontrolle",
+        "coBranding": "Co-Branding Logo-Ersatz",
+        "auditLogs": "Audit-Logs",
+        "support": "Direkte Unterstützung"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Direkte Unterstützung"
@@ -293,5 +298,28 @@
     "auditLogSidebarWorkspace": {
         "title": "Audit-Log",
         "deactivated": "Verfügbar in Advanced/Enterprise"
+    },
+    "localBaserowPasswordAppAuthProviderForm": {
+        "passwordFieldLabel": "Passwort-Feld auswählen",
+        "noFields": "Keine kompatiblen Felder"
+    },
+    "enterpriseSettings": {
+        "coBrandingLogoDescription": "Ersetzt das Baserow-Logo durch eine individuelle Co-Branding-Alternative (176x29).",
+        "showBaserowHelpMessage": "Hilfe anzeigen",
+        "deactivated": "Verfügbar in der Enterprise-Version",
+        "uploadFileButton": "Bild hochladen",
+        "showBaserowHelpMessageDescription": "Gibt an, ob die Nachricht über die Hilfeanfrage im Dashboard angezeigt werden soll.",
+        "coBrandingLogo": "Logo",
+        "branding": "Branding"
+    },
+    "enterpriseModal": {
+        "description": "Ihr Konto hat keinen Zugriff auf die Advanced / Enterprise-Funktionen. Führen Sie ein Upgrade auf die Advanced / Enterprise-Version durch, um {name} zu verwenden. Sie können Ihr Konto upgraden, indem Sie eine Lizenz erwerben. Klicken Sie auf die Schaltfläche unten, um die Preise anzuzeigen.",
+        "viewPricing": "Preise anzeigen",
+        "title": "Upgraden, um {name} zu verwenden",
+        "enterprise": "Enterprise",
+        "premium": "Premium"
+    },
+    "appAuthProviderType": {
+        "localBaserowPassword": "E-Mailadresse / Passwort"
     }
 }

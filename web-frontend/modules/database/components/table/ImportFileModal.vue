@@ -3,7 +3,6 @@
     :right-sidebar="!isTableCreation"
     :right-sidebar-scrollable="true"
     :close-button="false"
-    :content-scrollable="true"
     @show=";[(importer = ''), reset()]"
     @hide="stopPollIfRunning()"
   >
@@ -25,12 +24,13 @@
         </div>
       </div>
 
-      <div class="control">
-        <label class="control__label">
-          {{ $t('importFileModal.importLabel') }}
-        </label>
-        <div class="control__elements">
-          <ul class="choice-items">
+      <div class="control margin-bottom-2">
+        <FormGroup
+          :label="$t('importFileModal.importLabel')"
+          small-label
+          required
+        >
+          <ul class="choice-items margin-top-1">
             <li v-if="isTableCreation">
               <a
                 class="choice-items__link"
@@ -63,11 +63,12 @@
               </a>
             </li>
           </ul>
-        </div>
+        </FormGroup>
       </div>
 
       <TableForm
         ref="tableForm"
+        class="margin-top-3 margin-bottom-2"
         :default-name="getDefaultName()"
         :creation="isTableCreation"
         @submitted="submitted"
@@ -168,11 +169,15 @@
         <div v-if="header.length > 0" class="import-modal__field-mapping-body">
           <h3>{{ $t('importFileModal.fieldMappingTitle') }}</h3>
           <p>{{ $t('importFileModal.fieldMappingDescription') }}</p>
-          <div v-for="(head, index) in header" :key="head" class="control">
-            <label class="control__label control__label--small">
-              {{ head }}
-            </label>
-            <Dropdown v-model="mapping[index]">
+          <FormGroup
+            v-for="(head, index) in header"
+            :key="head"
+            :label="head"
+            small-label
+            required
+            class="margin-bottom-2"
+          >
+            <Dropdown v-model="mapping[index]" small>
               <DropdownItem name="Skip" :value="0" icon="ban" />
               <DropdownItem
                 v-for="field in availableFields"
@@ -186,7 +191,7 @@
                 "
               />
             </Dropdown>
-          </div>
+          </FormGroup>
         </div>
         <div v-else class="import-modal__field-mapping--empty">
           <i class="import-modal__field-mapping-empty-icon iconoir-shuffle" />

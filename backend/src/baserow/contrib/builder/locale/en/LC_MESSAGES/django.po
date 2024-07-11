@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-22 20:54+0000\n"
+"POT-Creation-Date: 2024-06-20 05:25+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,9 +50,9 @@ msgstr ""
 msgid "Data source"
 msgstr ""
 
-#: src/baserow/contrib/builder/elements/mixins.py:286
-#: src/baserow/contrib/builder/elements/mixins.py:291
-#: src/baserow/contrib/builder/elements/mixins.py:296
+#: src/baserow/contrib/builder/elements/mixins.py:289
+#: src/baserow/contrib/builder/elements/mixins.py:294
+#: src/baserow/contrib/builder/elements/mixins.py:299
 #, python-format
 msgid "Column %(count)s"
 msgstr ""

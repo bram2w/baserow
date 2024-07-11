@@ -107,7 +107,7 @@ export default {
   },
   computed: {
     files() {
-      return this.value.concat(this.filesInProgress)
+      return this.value?.concat(this.filesInProgress)
     },
     uploadFileFunction() {
       return this.uploadFile || UserFileService(this.$client).uploadFile

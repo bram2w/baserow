@@ -3,9 +3,9 @@
     <RichTextEditor
       ref="input"
       v-model="richCopy"
-      class="input field-rich-text"
+      class="form-input field-rich-text"
       :class="{
-        'input--error': touched && !isValid(),
+        'form-input--error': touched && !isValid(),
         active: editing,
       }"
       :disabled="readOnly"

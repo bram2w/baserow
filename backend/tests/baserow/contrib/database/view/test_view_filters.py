@@ -3625,6 +3625,38 @@ def test_not_empty_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_not_empty_filter_type_for_link_row_table_with_trashed_rows(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_a_to_b = data_fixture.create_two_linked_tables(user=user)
+    table_a_primary_field = table_a.get_primary_field()
+    table_b_primary_field = table_b.get_primary_field()
+    grid_view = data_fixture.create_grid_view(table=table_a)
+
+    table_a_model = table_a.get_model()
+    table_b_model = table_b.get_model()
+    row_b1 = table_b_model.objects.create(**{table_b_primary_field.db_column: "b1"})
+    row_a1 = RowHandler().force_create_row(
+        user,
+        table_a,
+        {table_a_primary_field.db_column: "a1", link_a_to_b.db_column: [row_b1.id]},
+        model=table_a_model,
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=link_a_to_b, type="not_empty", value=""
+    )
+    assert (
+        handler.apply_filters(grid_view, table_a_model.objects.all()).get().id
+        == row_a1.id
+    )
+
+    RowHandler().delete_row(user, table_b, row_b1, model=table_b_model)
+
+    assert list(handler.apply_filters(grid_view, table_a_model.objects.all())) == []
+
+
+@pytest.mark.django_db
 def test_filename_contains_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -3695,6 +3727,70 @@ def test_filename_contains_filter_type(data_fixture):
         filter_type="AND",
     )
     assert len(results) == 1
+
+
+@pytest.mark.django_db
+def test_filename_contains_filter_type_multiple_filters(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test.png"},
+                {"visible_name": "another.png"},
+            ],
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test.doc"},
+                {"visible_name": "test.txt"},
+            ]
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "another.doc"},
+            ],
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="filename_contains",
+        value="test",
+    )
+
+    view_filter2 = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="filename_contains",
+        value="another",
+    )
+
+    grid_view.filter_type = "AND"
+    grid_view.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    grid_view.filter_type = "OR"
+    grid_view.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
 
 
 @pytest.mark.django_db

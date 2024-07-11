@@ -1,91 +1,95 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('domain')" class="control">
-      <label class="control__label"
-        >{{ $t('samlSettingsForm.domain') }}
-        <img
-          v-if="authProvider && authProvider.is_verified"
-          class="control__label-right-icon"
-          :alt="$t('samlSettingsForm.providerIsVerified')"
-          :title="$t('samlSettingsForm.providerIsVerified')"
-          :src="getVerifiedIcon()"
-        />
-      </label>
-      <div class="control__elements">
-        <input
-          ref="domain"
-          v-model="values.domain"
-          :class="{
-            'input--error': fieldHasErrors('domain') || serverErrors.domain,
-          }"
-          type="text"
-          class="input"
-          :placeholder="$t('samlSettingsForm.domainPlaceholder')"
-          @input="serverErrors.domain = null"
-          @blur="$v.values.domain.$touch()"
-        />
-        <div
-          v-if="$v.values.domain.$dirty && !$v.values.domain.required"
-          class="error"
-        >
+    <FormGroup
+      small-label
+      required
+      :label="$t('samlSettingsForm.domain')"
+      :error="fieldHasErrors('domain')"
+      class="margin-bottom-2"
+    >
+      <img
+        v-if="authProvider && authProvider.is_verified"
+        class="control__label-right-icon"
+        :alt="$t('samlSettingsForm.providerIsVerified')"
+        :title="$t('samlSettingsForm.providerIsVerified')"
+        :src="getVerifiedIcon()"
+      />
+
+      <FormInput
+        ref="domain"
+        v-model="values.domain"
+        size="large"
+        :error="fieldHasErrors('domain') || serverErrors.domain"
+        :placeholder="$t('samlSettingsForm.domainPlaceholder')"
+        @input="serverErrors.domain = null"
+        @blur="$v.values.domain.$touch()"
+      ></FormInput>
+
+      <template #error>
+        <span v-if="$v.values.domain.$dirty && !$v.values.domain.required">
           {{ $t('error.requiredField') }}
-        </div>
-        <div
+        </span>
+
+        <span
           v-else-if="
             $v.values.domain.$dirty && !$v.values.domain.mustHaveUniqueDomain
           "
           class="error"
         >
           {{ $t('samlSettingsForm.domainAlreadyExists') }}
-        </div>
-        <div v-else-if="serverErrors.domain" class="error">
+        </span>
+
+        <span v-else-if="serverErrors.domain" class="error">
           {{ $t('samlSettingsForm.invalidDomain') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement :error="fieldHasErrors('metadata')" class="control">
-      <label class="control__label">
-        {{ $t('samlSettingsForm.metadata') }}
-      </label>
-      <div class="control__elements">
-        <textarea
-          ref="metadata"
-          v-model="values.metadata"
-          rows="12"
-          :class="{
-            'input--error': fieldHasErrors('metadata') || serverErrors.metadata,
-          }"
-          type="textarea"
-          class="input saml-settings__metadata"
-          :placeholder="$t('samlSettingsForm.metadataPlaceholder')"
-          @input="serverErrors.metadata = null"
-          @blur="$v.values.metadata.$touch()"
-        ></textarea>
-        <div
-          v-if="$v.values.metadata.$dirty && !$v.values.metadata.required"
-          class="error"
-        >
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      required
+      :label="$t('samlSettingsForm.metadata')"
+      :error="fieldHasErrors('metadata')"
+      class="margin-bottom-2"
+    >
+      <FormTextarea
+        ref="metadata"
+        v-model="values.metadata"
+        rows="12"
+        :error="fieldHasErrors('metadata') || serverErrors.metadata"
+        :placeholder="$t('samlSettingsForm.metadataPlaceholder')"
+        @input="serverErrors.metadata = null"
+        @blur="$v.values.metadata.$touch()"
+      ></FormTextarea>
+
+      <template #error>
+        <span v-if="$v.values.metadata.$dirty && !$v.values.metadata.required">
           {{ $t('error.requiredField') }}
-        </div>
-        <div v-else-if="serverErrors.metadata" class="error">
+        </span>
+        <span v-else-if="serverErrors.metadata">
           {{ $t('samlSettingsForm.invalidMetadata') }}
-        </div>
-      </div>
-    </FormElement>
-    <div class="control">
-      <label class="control__label">{{
-        $t('samlSettingsForm.relayStateUrl')
-      }}</label>
-      <div class="control__elements">
-        <code>{{ getRelayStateUrl() }}</code>
-      </div>
-    </div>
-    <div class="control">
-      <label class="control__label">{{ $t('samlSettingsForm.acsUrl') }}</label>
-      <div class="control__elements">
-        <code>{{ getAcsUrl() }}</code>
-      </div>
-    </div>
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      required
+      :label="$t('samlSettingsForm.relayStateUrl')"
+      class="margin-bottom-2"
+    >
+      <code>{{ getRelayStateUrl() }}</code>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      required
+      :label="$t('samlSettingsForm.relayStateUrl')"
+      class="margin-bottom-2"
+    >
+      <code>{{ getAcsUrl() }}</code>
+    </FormGroup>
+
     <slot></slot>
   </form>
 </template>

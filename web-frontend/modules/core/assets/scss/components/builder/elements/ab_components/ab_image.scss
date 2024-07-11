@@ -1,0 +1,18 @@
+.ab-image {
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  width: var(--image-wrapper-width, 100%);
+  max-width: var(--image-wrapper-max-width, 100%);
+  max-height: var(--image-wrapper-max-height, auto);
+  align-self: var(--image-alignment, flex-start);
+}
+
+.ab-image__img {
+  align-self: var(--image-alignment, flex-start);
+  object-fit: var(--image-object-fit, cover);
+  max-width: var(--image-max-width, auto);
+  max-height: var(--image-max-height, auto);
+  width: var(--image-width, auto);
+  height: var(--image-height, auto);
+}

@@ -273,14 +273,10 @@ class DataSourceService:
         :return: The result of dispatching all the data source dispatch mapped by ID.
         """
 
-        data_sources = self.handler.get_data_sources(page)
+        data_sources = self.handler.get_data_sources_with_cache(page)
 
         if not data_sources:
             return {}
-
-        # Here we cache the data sources into the context because we know they are used
-        # later in the data providers
-        dispatch_context.cache["data_sources"] = data_sources
 
         return self.dispatch_data_sources(user, data_sources, dispatch_context)
 

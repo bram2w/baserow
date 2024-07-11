@@ -35,6 +35,7 @@ from baserow.contrib.database.table.expressions import (
     BaserowTableRowCount,
 )
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig, application_type_registry
@@ -835,9 +836,28 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         all_table_dependency_field_ids = {
             field_id: field_id for field_id in all_table_dependency_field_ids
         }
+
+        # It can happen that a field has a reference to another view. We would
+        # therefore need to construct a mapping that contains all the existing views,
+        # and they will remain the same
+        all_database_views_ids = View.objects.filter(
+            table__database_id=table.database_id
+        ).values_list("id")
+        all_database_view_ids = {
+            view_id[0]: view_id[0] for view_id in all_database_views_ids
+        }
+
         id_mapping: Dict[str, Any] = {
             "database_tables": {},
             "database_fields": all_table_dependency_field_ids,
+            "database_views": all_database_view_ids,
+            # The properties below must be kept in sync with
+            # `src/baserow/contrib/database/views/registries.py::import_serialized`
+            "database_view_filters": {},
+            "database_view_filter_groups": {},
+            "database_view_sortings": {},
+            "database_view_group_bys": {},
+            "database_view_decorations": {},
             # We have to create the `database_field_select_options` because that's
             # otherwise not created later on.
             "database_field_select_options": {},
@@ -850,6 +870,7 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         )
         progress.increment(by=export_progress)
 
+        print(id_mapping)
         imported_tables = database_type.import_tables_serialized(
             database,
             [exported_table],

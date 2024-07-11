@@ -1,8 +1,9 @@
 <template>
-  <div>
-    <label class="control__label">
-      {{ $t('verticalAlignmentSelector.alignment') }}
-    </label>
+  <FormGroup
+    small-label
+    required
+    :label="$t('verticalAlignmentSelector.alignment')"
+  >
     <Dropdown
       class="control__elements"
       :show-search="false"
@@ -17,7 +18,7 @@
         :value="alignment.value"
       />
     </Dropdown>
-  </div>
+  </FormGroup>
 </template>
 
 <script>

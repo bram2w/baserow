@@ -1,59 +1,42 @@
 <template>
-  <FormElement :error="hasErrors" class="control">
-    <label class="control__label">
-      {{ $t('pageForm.pathTitle') }}
-    </label>
-    <div class="control__description">
-      {{ $t('pageForm.pathSubtitle') }}
-    </div>
-    <div class="control__elements">
-      <input
-        :value="value"
-        class="input"
-        :class="{ 'input--error': hasErrors }"
-        type="text"
-        :disabled="disabled"
-        @input="$emit('input', $event.target.value)"
-        @blur="$emit('blur')"
-      />
-      <div
-        v-if="validationState.$dirty && !validationState.required"
-        class="error"
-      >
+  <FormGroup
+    required
+    small-label
+    :label="$t('pageForm.pathTitle')"
+    :error="hasErrors"
+    :helper-text="$t('pageForm.pathSubtitle')"
+  >
+    <FormInput
+      size="large"
+      :value="value"
+      :disabled="disabled"
+      @input="$emit('input', $event)"
+      @blur="$emit('blur')"
+    ></FormInput>
+
+    <template #error>
+      <span v-if="validationState.$dirty && !validationState.required">
         {{ $t('error.requiredField') }}
-      </div>
-      <div
-        v-if="validationState.$dirty && !validationState.isUnique"
-        class="error"
-      >
+      </span>
+      <span v-if="validationState.$dirty && !validationState.isUnique">
         {{ $t('pageErrors.errorPathNotUnique') }}
-      </div>
-      <div
-        v-if="validationState.$dirty && !validationState.maxLength"
-        class="error"
-      >
+      </span>
+      <span v-if="validationState.$dirty && !validationState.maxLength">
         {{ $t('error.maxLength', { max: 255 }) }}
-      </div>
-      <div
-        v-if="validationState.$dirty && !validationState.startingSlash"
-        class="error"
-      >
+      </span>
+      <span v-if="validationState.$dirty && !validationState.startingSlash">
         {{ $t('pageErrors.errorStartingSlash') }}
-      </div>
-      <div
+      </span>
+      <span
         v-if="validationState.$dirty && !validationState.validPathCharacters"
-        class="error"
       >
         {{ $t('pageErrors.errorValidPathCharacters') }}
-      </div>
-      <div
-        v-if="validationState.$dirty && !validationState.uniquePathParams"
-        class="error"
-      >
+      </span>
+      <span v-if="validationState.$dirty && !validationState.uniquePathParams">
         {{ $t('pageErrors.errorUniquePathParams') }}
-      </div>
-    </div>
-  </FormElement>
+      </span>
+    </template>
+  </FormGroup>
 </template>
 
 <script>

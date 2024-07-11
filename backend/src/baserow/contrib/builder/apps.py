@@ -216,6 +216,7 @@ class BuilderConfig(AppConfig):
 
         from .data_providers.data_provider_types import (
             CurrentRecordDataProviderType,
+            DataSourceContextDataProviderType,
             DataSourceDataProviderType,
             FormDataProviderType,
             PageParameterDataProviderType,
@@ -224,6 +225,9 @@ class BuilderConfig(AppConfig):
         )
 
         builder_data_provider_type_registry.register(DataSourceDataProviderType())
+        builder_data_provider_type_registry.register(
+            DataSourceContextDataProviderType()
+        )
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
         builder_data_provider_type_registry.register(CurrentRecordDataProviderType())
         builder_data_provider_type_registry.register(FormDataProviderType())
@@ -235,9 +239,21 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateThemeOperationType())
 
         from .theme.registries import theme_config_block_registry
-        from .theme.theme_config_block_types import MainThemeConfigBlockType
+        from .theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+            ColorThemeConfigBlockType,
+            ImageThemeConfigBlockType,
+            LinkThemeConfigBlockType,
+            PageThemeConfigBlockType,
+            TypographyThemeConfigBlockType,
+        )
 
-        theme_config_block_registry.register(MainThemeConfigBlockType())
+        theme_config_block_registry.register(ColorThemeConfigBlockType())
+        theme_config_block_registry.register(TypographyThemeConfigBlockType())
+        theme_config_block_registry.register(ButtonThemeConfigBlockType())
+        theme_config_block_registry.register(LinkThemeConfigBlockType())
+        theme_config_block_registry.register(ImageThemeConfigBlockType())
+        theme_config_block_registry.register(PageThemeConfigBlockType())
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (

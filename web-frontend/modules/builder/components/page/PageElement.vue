@@ -3,16 +3,18 @@
     v-if="elementMode === 'editing' || isVisible"
     class="element__wrapper"
     :class="{
-      'element__wrapper--full-width':
+      'element__wrapper--full-bleed':
         element.style_width === WIDTH_TYPES.FULL.value,
+      'element__wrapper--full-width':
+        element.style_width === WIDTH_TYPES.FULL_WIDTH.value,
       'element__wrapper--medium-width':
         element.style_width === WIDTH_TYPES.MEDIUM.value,
       'element__wrapper--small-width':
         element.style_width === WIDTH_TYPES.SMALL.value,
     }"
-    :style="wrapperStyles"
+    :style="elementStyles"
   >
-    <div class="element__inner-wrapper" :style="innerWrapperStyles">
+    <div class="element__inner-wrapper">
       <component
         :is="component"
         :element="element"
@@ -27,12 +29,22 @@
 </template>
 
 <script>
-import _ from 'lodash'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
-import { BACKGROUND_TYPES, WIDTH_TYPES } from '@baserow/modules/builder/enums'
+import {
+  BACKGROUND_TYPES,
+  WIDTH_TYPES,
+  BACKGROUND_MODES,
+} from '@baserow/modules/builder/enums'
 import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
+import {
+  VISIBILITY_NOT_LOGGED,
+  VISIBILITY_LOGGED_IN,
+  ROLE_TYPE_ALLOW_EXCEPT,
+  ROLE_TYPE_DISALLOW_EXCEPT,
+} from '@baserow/modules/builder/constants'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'PageElement',
@@ -70,123 +82,105 @@ export default {
     children() {
       return this.$store.getters['element/getChildren'](this.page, this.element)
     },
+    ...mapGetters({
+      loggedUser: 'userSourceUser/getUser',
+    }),
     isVisible() {
-      switch (this.element.visibility) {
-        case 'logged-in':
-          return this.$store.getters['userSourceUser/isAuthenticated'](
-            this.builder
-          )
-        case 'not-logged':
-          return !this.$store.getters['userSourceUser/isAuthenticated'](
-            this.builder
-          )
-        default:
+      const isAuthenticated = this.$store.getters[
+        'userSourceUser/isAuthenticated'
+      ](this.builder)
+      const user = this.loggedUser(this.builder)
+      const roles = this.element.roles
+      const roleType = this.element.role_type
+
+      const visibility = this.element.visibility
+      if (visibility === VISIBILITY_LOGGED_IN) {
+        if (!isAuthenticated) {
+          return false
+        }
+
+        if (roleType === ROLE_TYPE_ALLOW_EXCEPT) {
+          return !roles.includes(user.role)
+        } else if (roleType === ROLE_TYPE_DISALLOW_EXCEPT) {
+          return roles.includes(user.role)
+        } else {
           return true
-      }
-    },
-    allowedStyles() {
-      const parentElement = this.$store.getters['element/getElementById'](
-        this.page,
-        this.element.parent_element_id
-      )
-
-      const elementType = this.$registry.get('element', this.element.type)
-      const parentElementType = this.parentElement
-        ? this.$registry.get('element', parentElement?.type)
-        : null
-
-      return !parentElementType
-        ? elementType.styles
-        : _.difference(
-            elementType.styles,
-            parentElementType.childStylesForbidden
-          )
-    },
-
-    /**
-     * Computes an object containing all the style properties that must be set on
-     * the element wrapper.
-     */
-    wrapperStyles() {
-      const styles = {
-        style_background_color: {
-          '--background-color':
-            this.element.style_background === BACKGROUND_TYPES.COLOR.value
-              ? this.resolveColor(
-                  this.element.style_background_color,
-                  this.colorVariables
-                )
-              : 'transparent',
-        },
-        style_border_top: {
-          '--border-top': this.border(
-            this.element.style_border_top_size,
-            this.element.style_border_top_color
-          ),
-        },
-        style_border_bottom: {
-          '--border-bottom': this.border(
-            this.element.style_border_bottom_size,
-            this.element.style_border_bottom_color
-          ),
-        },
-        style_border_left: {
-          '--border-left': this.border(
-            this.element.style_border_left_size,
-            this.element.style_border_left_color
-          ),
-        },
-        style_border_right: {
-          '--border-right': this.border(
-            this.element.style_border_right_size,
-            this.element.style_border_right_color
-          ),
-        },
-      }
-
-      return Object.keys(styles).reduce((acc, key) => {
-        if (this.allowedStyles.includes(key)) {
-          acc = { ...acc, ...styles[key] }
         }
-        return acc
-      }, {})
+      } else if (visibility === VISIBILITY_NOT_LOGGED) {
+        return !isAuthenticated
+      } else {
+        return true
+      }
     },
-
-    /**
-     * Computes an object containing all the style properties that must be set on
-     * the element inner wrapper.
-     */
-    innerWrapperStyles() {
+    elementStyles() {
       const styles = {
-        style_padding_top: {
-          '--padding-top': `${this.element.style_padding_top || 0}px`,
-        },
-        style_padding_bottom: {
-          '--padding-bottom': `${this.element.style_padding_bottom || 0}px`,
-        },
-        style_padding_left: {
-          '--padding-left': `${this.element.style_padding_left || 0}px`,
-        },
-        style_padding_right: {
-          '--padding-right': `${this.element.style_padding_right || 0}px`,
-        },
+        '--element-background-color':
+          this.element.style_background === BACKGROUND_TYPES.COLOR
+            ? this.resolveColor(
+                this.element.style_background_color,
+                this.colorVariables
+              )
+            : 'none',
+
+        '--element-background-image':
+          this.element.style_background_file !== null
+            ? `url(${this.element.style_background_file.url})`
+            : 'none',
+
+        '--element-border-top': this.border(
+          this.element.style_border_top_size,
+          this.element.style_border_top_color
+        ),
+        '--element-margin-top': `${this.element.style_margin_top || 0}px`,
+        '--element-padding-top': `${this.element.style_padding_top || 0}px`,
+        '--element-border-bottom': this.border(
+          this.element.style_border_bottom_size,
+          this.element.style_border_bottom_color
+        ),
+        '--element-margin-bottom': `${this.element.style_margin_bottom || 0}px`,
+        '--element-padding-bottom': `${
+          this.element.style_padding_bottom || 0
+        }px`,
+        '--element-border-left': this.border(
+          this.element.style_border_left_size,
+          this.element.style_border_left_color
+        ),
+        '--element-margin-left': `${this.element.style_margin_left || 0}px`,
+        '--element-padding-left': `${this.element.style_padding_left || 0}px`,
+        '--element-border-right': this.border(
+          this.element.style_border_right_size,
+          this.element.style_border_right_color
+        ),
+        '--element-margin-right': `${this.element.style_margin_right || 0}px`,
+
+        '--element-padding-right': `${this.element.style_padding_right || 0}px`,
       }
 
-      return Object.keys(styles).reduce((acc, key) => {
-        if (this.allowedStyles.includes(key)) {
-          acc = { ...acc, ...styles[key] }
+      if (this.element.style_background_file !== null) {
+        if (this.element.style_background_mode === BACKGROUND_MODES.FILL) {
+          styles['--element-background-size'] = 'cover'
+          styles['--element-background-repeat'] = 'no-repeat'
         }
-        return acc
-      }, {})
+        if (this.element.style_background_mode === BACKGROUND_MODES.TILE) {
+          styles['--element-background-size'] = 'auto'
+          styles['--element-background-repeat'] = 'repeat'
+        }
+        if (this.element.style_background_mode === BACKGROUND_MODES.FIT) {
+          styles['--element-background-size'] = 'contain'
+          styles['--element-background-repeat'] = 'no-repeat'
+        }
+      }
+
+      return styles
     },
   },
   methods: {
     resolveColor,
     border(size, color) {
-      return `solid ${size || 0}px ${this.resolveColor(
-        color,
-        this.colorVariables
-      )}`
+      if (!size) {
+        return 'none'
+      }
+      return `solid ${size}px ${this.resolveColor(color, this.colorVariables)}`
     },
   },
 }

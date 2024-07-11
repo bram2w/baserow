@@ -2,7 +2,7 @@
   <div>
     <div class="control">
       <template v-if="filename === ''">
-        <label class="control__label">{{
+        <label class="control__label control__label--small">{{
           $t('tableJSONImporter.fileLabel')
         }}</label>
         <div class="control__description">
@@ -59,12 +59,12 @@
           </template>
         </div>
         <div v-if="$v.filename.$error" class="error">
-          {{ $t('error.fieldRequired') }}
+          {{ $t('error.requiredField') }}
         </div>
       </div>
     </div>
-    <div v-if="filename !== ''" class="control">
-      <label class="control__label">{{
+    <div v-if="filename !== ''" class="control margin-top-2">
+      <label class="control__label control__label--small">{{
         $t('tableJSONImporter.encodingLabel')
       }}</label>
       <div class="control__elements">

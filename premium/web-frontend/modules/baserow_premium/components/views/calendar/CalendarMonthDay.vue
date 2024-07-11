@@ -34,7 +34,7 @@
         :fields="fields"
         :store-prefix="storePrefix"
         :decorations-by-place="decorationsByPlace"
-        @edit-row="$emit('edit-row', $event)"
+        v-on="$listeners"
       >
       </CalendarCard>
     </div>
@@ -57,7 +57,7 @@
       :parent-width="width"
       :parent-height="height"
       :decorations-by-place="decorationsByPlace"
-      @edit-row="$emit('edit-row', $event)"
+      v-on="$listeners"
     >
     </CalendarMonthDayExpanded>
   </li>
@@ -146,10 +146,13 @@ export default {
     window.removeEventListener('resize', this.updateVisibleRowsCount)
   },
   methods: {
+    getClientHeight() {
+      return this.$refs.calendarMonthDay.clientHeight
+    },
     updateVisibleRowsCount() {
       const itemHeight = 28
       this.width = this.$refs.calendarMonthDay.clientWidth
-      this.height = this.$refs.calendarMonthDay.clientHeight
+      this.height = this.getClientHeight()
       let currentHeightWithItems = 30 + 8
       let count = 0
       while (currentHeightWithItems + itemHeight < this.height - 16 - 8) {

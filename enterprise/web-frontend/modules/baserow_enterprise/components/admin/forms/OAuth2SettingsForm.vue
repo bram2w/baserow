@@ -1,77 +1,80 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <label class="control__label">{{
-        $t('oauthSettingsForm.providerName')
-      }}</label>
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input"
-          :placeholder="$t('oauthSettingsForm.providerNamePlaceholder')"
-          @blur="$v.values.name.$touch()"
-        />
-        <div
-          v-if="$v.values.name.$dirty && !$v.values.name.required"
-          class="error"
-        >
+    <FormGroup
+      small-label
+      required
+      :label="$t('oauthSettingsForm.providerName')"
+      :error="fieldHasErrors('name')"
+      class="margin-bottom-2"
+    >
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        size="large"
+        :error="fieldHasErrors('name')"
+        :placeholder="$t('oauthSettingsForm.providerNamePlaceholder')"
+        @blur="$v.values.name.$touch()"
+      ></FormInput>
+
+      <template v-if="$v.values.name.$dirty && !$v.values.name.required" #error>
+        {{ $t('error.requiredField') }}</template
+      >
+    </FormGroup>
+
+    <FormGroup
+      :error="fieldHasErrors('client_id')"
+      small-label
+      :label="$t('oauthSettingsForm.clientId')"
+      required
+      class="margin-bottom-2"
+    >
+      <FormInput
+        ref="client_id"
+        v-model="values.client_id"
+        size="large"
+        :error="fieldHasErrors('client_id')"
+        :placeholder="$t('oauthSettingsForm.clientIdPlaceholder')"
+        @blur="$v.values.client_id.$touch()"
+      ></FormInput>
+
+      <template
+        v-if="$v.values.client_id.$dirty && !$v.values.client_id.required"
+        #error
+      >
+        {{ $t('error.requiredField') }}
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      :label="$t('oauthSettingsForm.secret')"
+      :error="fieldHasErrors('secret')"
+      class="margin-bottom-2"
+      required
+    >
+      <FormInput
+        ref="secret"
+        v-model="values.secret"
+        size="large"
+        :error="fieldHasErrors('secret')"
+        :placeholder="$t('oauthSettingsForm.secretPlaceholder')"
+        @blur="$v.values.secret.$touch()"
+      ></FormInput>
+
+      <template #error>
+        <span v-if="$v.values.secret.$dirty && !$v.values.secret.required">
           {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement :error="fieldHasErrors('client_id')" class="control">
-      <label class="control__label">{{
-        $t('oauthSettingsForm.clientId')
-      }}</label>
-      <div class="control__elements">
-        <input
-          ref="client_id"
-          v-model="values.client_id"
-          :class="{ 'input--error': fieldHasErrors('client_id') }"
-          type="text"
-          class="input"
-          :placeholder="$t('oauthSettingsForm.clientIdPlaceholder')"
-          @blur="$v.values.client_id.$touch()"
-        />
-        <div
-          v-if="$v.values.client_id.$dirty && !$v.values.client_id.required"
-          class="error"
-        >
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement :error="fieldHasErrors('secret')" class="control">
-      <label class="control__label">{{ $t('oauthSettingsForm.secret') }}</label>
-      <div class="control__elements">
-        <input
-          ref="secret"
-          v-model="values.secret"
-          :class="{ 'input--error': fieldHasErrors('secret') }"
-          type="text"
-          class="input"
-          :placeholder="$t('oauthSettingsForm.secretPlaceholder')"
-          @blur="$v.values.secret.$touch()"
-        />
-        <div
-          v-if="$v.values.secret.$dirty && !$v.values.secret.required"
-          class="error"
-        >
-          {{ $t('error.requiredField') }}
-        </div>
-      </div>
-    </FormElement>
-    <div class="control">
-      <label class="control__label">{{
-        $t('oauthSettingsForm.callbackUrl')
-      }}</label>
-      <div class="control__elements">
-        <code>{{ callbackUrl }}</code>
-      </div>
-    </div>
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      :label="$t('oauthSettingsForm.callbackUrl')"
+      small-label
+      required
+    >
+      <code>{{ callbackUrl }}</code>
+    </FormGroup>
     <slot></slot>
   </form>
 </template>

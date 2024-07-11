@@ -52,9 +52,17 @@ from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
+from baserow.core.formula import resolve_formula
+from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.types import BaserowFormula
-from baserow.core.formula.validator import ensure_array, ensure_boolean, ensure_integer
+from baserow.core.formula.validator import (
+    ensure_array,
+    ensure_boolean,
+    ensure_integer,
+    ensure_string,
+)
 from baserow.core.registry import T
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_files.handler import UserFileHandler
 
 
@@ -161,6 +169,12 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
@@ -183,6 +197,12 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
                     "reset_initial_values_post_submission"
                 ).help_text,
                 required=False,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -224,32 +244,40 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["button_color", "orientation"]
+        return super().allowed_fields + ["orientation"]
 
     @property
     def serializer_field_names(self):
-        return super().serializer_field_names + ["button_color", "orientation"]
+        return super().serializer_field_names + ["orientation"]
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
+
         return {
             **super().serializer_field_overrides,
-            "button_color": serializers.CharField(
-                max_length=20,
-                required=False,
-                default="primary",
-                help_text="Button color.",
-            ),
             "orientation": serializers.JSONField(
                 allow_null=False,
                 default=get_default_table_orientation,
                 help_text=TableElement._meta.get_field("orientation").help_text,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "data_source_id": None,
+            "button_load_more_label": "'test'",
             "orientation": get_default_table_orientation(),
         }
 
@@ -262,11 +290,17 @@ class RepeatElementType(
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["orientation", "items_per_row"]
+        return super().allowed_fields + [
+            "orientation",
+            "items_per_row",
+        ]
 
     @property
     def serializer_field_names(self):
-        return super().serializer_field_names + ["orientation", "items_per_row"]
+        return super().serializer_field_names + [
+            "orientation",
+            "items_per_row",
+        ]
 
     class SerializedDict(
         CollectionElementTypeMixin.SerializedDict,
@@ -275,12 +309,32 @@ class RepeatElementType(
         orientation: str
         items_per_row: dict
 
+    @property
+    def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
+
+        return {
+            **super().serializer_field_overrides,
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
+            ),
+        }
+
     def import_context_addition(self, instance, id_mapping):
         return {"data_source_id": instance.data_source_id}
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {
             "data_source_id": None,
+            "button_load_more_label": "'test'",
             "orientation": RepeatElement.ORIENTATIONS.VERTICAL,
         }
 
@@ -303,6 +357,12 @@ class HeadingElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            TypographyThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -323,6 +383,12 @@ class HeadingElementType(ElementType):
                 required=False,
                 allow_blank=True,
                 help_text="Heading font color.",
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="typography",
+                theme_config_block_type_name=TypographyThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -377,6 +443,12 @@ class TextElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            TypographyThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
@@ -390,6 +462,12 @@ class TextElementType(ElementType):
                 choices=TextElement.TEXT_FORMATS.choices,
                 default=TextElement.TEXT_FORMATS.PLAIN,
                 help_text=TextElement._meta.get_field("format").help_text,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="typography",
+                theme_config_block_type_name=TypographyThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -634,6 +712,13 @@ class LinkElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+            LinkThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = (
@@ -667,8 +752,18 @@ class LinkElementType(ElementType):
                     default="primary",
                     help_text="Button color.",
                 ),
+                "styles": DynamicConfigBlockSerializer(
+                    required=False,
+                    property_name=["button", "link"],
+                    theme_config_block_type_name=[
+                        ButtonThemeConfigBlockType.type,
+                        LinkThemeConfigBlockType.type,
+                    ],
+                    serializer_kwargs={"required": False},
+                ),
             }
         )
+
         return overrides
 
     def get_pytest_params(self, pytest_data_fixture):
@@ -751,6 +846,12 @@ class ImageElementType(ElementType):
     @property
     def serializer_field_overrides(self):
         from baserow.api.user_files.serializers import UserFileSerializer
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ImageThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -767,6 +868,12 @@ class ImageElementType(ElementType):
                 allow_blank=True,
                 default="",
             ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="image",
+                theme_config_block_type_name=ImageThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
+            ),
         }
 
         overrides.update(super().serializer_field_overrides)
@@ -775,7 +882,13 @@ class ImageElementType(ElementType):
     @property
     def request_serializer_field_overrides(self):
         from baserow.api.user_files.serializers import UserFileField
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
         from baserow.contrib.builder.api.validators import image_file_validation
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ImageThemeConfigBlockType,
+        )
 
         overrides = {
             "image_file": UserFileField(
@@ -795,6 +908,13 @@ class ImageElementType(ElementType):
                 allow_null=ImageElement._meta.get_field("style_max_width").null,
                 default=ImageElement._meta.get_field("style_max_width").default,
                 help_text=ImageElement._meta.get_field("style_max_width").help_text,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="image",
+                theme_config_block_type_name=ImageThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
+                request_serializer=True,
             ),
         }
         if super().request_serializer_field_overrides is not None:
@@ -969,7 +1089,9 @@ class InputTextElementType(InputElementType):
             "input_type": "text",
         }
 
-    def is_valid(self, element: InputTextElement, value: Any) -> bool:
+    def is_valid(
+        self, element: InputTextElement, value: Any, dispatch_context: DispatchContext
+    ) -> bool:
         """
         :param element: The element we're trying to use form data in.
         :param value: The form data value, which may be invalid.
@@ -1012,6 +1134,12 @@ class ButtonElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            ButtonThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -1036,6 +1164,12 @@ class ButtonElementType(ElementType):
                 required=False,
                 default="primary",
                 help_text="Button color.",
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="button",
+                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -1116,7 +1250,9 @@ class CheckboxElementType(InputElementType):
             prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
         )
 
-    def is_valid(self, element: CheckboxElement, value: Any) -> bool:
+    def is_valid(
+        self, element: CheckboxElement, value: Any, dispatch_context: DispatchContext
+    ) -> bool:
         if element.required and not value:
             raise FormDataProviderChunkInvalidException(
                 "The value is required for this element."
@@ -1147,6 +1283,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "placeholder",
         "multiple",
         "show_as_dropdown",
+        "option_type",
+        "formula_value",
+        "formula_name",
     ]
     serializer_field_names = [
         "label",
@@ -1156,6 +1295,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "options",
         "multiple",
         "show_as_dropdown",
+        "option_type",
+        "formula_value",
+        "formula_name",
     ]
     request_serializer_field_names = [
         "label",
@@ -1165,6 +1307,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "options",
         "multiple",
         "show_as_dropdown",
+        "option_type",
+        "formula_value",
+        "formula_name",
     ]
 
     class SerializedDict(ElementDict):
@@ -1175,6 +1320,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         options: List
         multiple: bool
         show_as_dropdown: bool
+        option_type: str
+        formula_value: BaserowFormula
+        formula_name: BaserowFormula
 
     @property
     def serializer_field_overrides(self):
@@ -1217,6 +1365,24 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
                 default=True,
                 required=False,
             ),
+            "option_type": serializers.ChoiceField(
+                choices=ChoiceElement.OPTION_TYPE.choices,
+                help_text=ChoiceElement._meta.get_field("option_type").help_text,
+                required=False,
+                default=ChoiceElement.OPTION_TYPE.MANUAL,
+            ),
+            "formula_value": FormulaSerializerField(
+                help_text=ChoiceElement._meta.get_field("formula_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "formula_name": FormulaSerializerField(
+                help_text=ChoiceElement._meta.get_field("formula_name").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
         }
 
         return overrides
@@ -1256,13 +1422,13 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         cache=None,
         **kwargs,
     ) -> Any:
-        if prop_name == "label":
-            return import_formula(value, id_mapping)
-
-        if prop_name == "default_value":
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "placeholder":
+        if prop_name in [
+            "label",
+            "default_value",
+            "placeholder",
+            "formula_value",
+            "formula_name",
+        ]:
             return import_formula(value, id_mapping, **kwargs)
 
         return super().deserialize_property(
@@ -1342,6 +1508,9 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
             "placeholder": "'some placeholder'",
             "multiple": False,
             "show_as_dropdown": True,
+            "option_type": ChoiceElement.OPTION_TYPE.MANUAL,
+            "formula_value": "",
+            "formula_name": "",
         }
 
     def after_create(self, instance: ChoiceElement, values: Dict):
@@ -1360,7 +1529,12 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
                 [ChoiceElementOption(choice=instance, **option) for option in options]
             )
 
-    def is_valid(self, element: ChoiceElement, value: Union[List, str]) -> bool:
+    def is_valid(
+        self,
+        element: ChoiceElement,
+        value: Union[List, str],
+        dispatch_context: DispatchContext,
+    ) -> bool:
         """
         Responsible for validating `ChoiceElement` form data. We handle
         this validation a little differently to ensure that if someone creates
@@ -1372,6 +1546,16 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         """
 
         options = set(element.choiceelementoption_set.values_list("value", flat=True))
+
+        if element.option_type == ChoiceElement.OPTION_TYPE.FORMULAS:
+            options = ensure_array(
+                resolve_formula(
+                    element.formula_value,
+                    formula_runtime_function_registry,
+                    dispatch_context,
+                )
+            )
+            options = [ensure_string(option) for option in options]
 
         if element.multiple:
             try:

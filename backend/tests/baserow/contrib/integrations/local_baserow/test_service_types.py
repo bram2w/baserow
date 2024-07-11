@@ -7,7 +7,6 @@ import pytest
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework.exceptions import ValidationError
-from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
     BooleanField,
     CharField,
@@ -1102,6 +1101,17 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
 
 
 @pytest.mark.django_db
+def test_local_baserow_list_rows_service_import_context_path(data_fixture):
+    local_baserow_list_rows_service = LocalBaserowListRowsUserServiceType()
+
+    assert local_baserow_list_rows_service.import_context_path([], {}) == []
+    assert local_baserow_list_rows_service.import_context_path(["id"], {}) == ["id"]
+    assert local_baserow_list_rows_service.import_context_path(
+        ["field_1", "value"], {"database_fields": {1: 2}}
+    ) == ["field_2", "value"]
+
+
+@pytest.mark.django_db
 def test_local_baserow_table_service_before_dispatch_validation_error(
     data_fixture,
 ):
@@ -1925,6 +1935,120 @@ def test_local_baserow_table_service_type_after_update_table_change_deletes_filt
 
 
 @pytest.mark.django_db
+def test_local_baserow_table_service_type_get_context_data(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Ingredient", "text", {}),
+        ],
+    )
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Category",
+        select_options=[
+            {
+                "value": "Bakery",
+                "color": "red",
+            },
+            {
+                "value": "Grocery",
+                "color": "green",
+            },
+        ],
+    )
+
+    service_type = LocalBaserowGetRowUserServiceType()
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=integration,
+        table=table,
+    )
+
+    context_data = service_type.get_context_data(service)
+
+    # The first field is a text field, so we ignore it when generating the schema
+    assert "field_1" not in context_data
+
+    # The second field should contain all the available select options
+    assert context_data[f"field_{field.id}"] == list(
+        field.select_options.values("id", "color", "value")
+    )
+
+
+@pytest.mark.django_db
+def test_local_baserow_table_service_type_get_context_data_schema(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[("Ingredient", "text", {})],
+    )
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Category",
+        select_options=[
+            {
+                "value": "Bakery",
+                "color": "red",
+            },
+            {
+                "value": "Grocery",
+                "color": "green",
+            },
+        ],
+    )
+
+    service_type = LocalBaserowGetRowUserServiceType()
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=integration,
+        table=table,
+    )
+
+    schema = service_type.get_context_data_schema(service)
+
+    # The first field is a text field, so we ignore it when generating the schema
+    assert "field_1" not in schema["properties"]
+
+    # The second field should have the JSON schema with the available choices
+    assert schema["properties"][f"field_{field.id}"] == {
+        "type": "array",
+        "title": "Category",
+        "default": None,
+        "items": {
+            "type": "object",
+            "properties": {
+                "value": {"type": "string"},
+                "id": {"type": "number"},
+                "color": {"type": "string"},
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_data_without_row_id(
     data_fixture,
 ):
@@ -2248,7 +2372,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
     dispatch_context = BuilderDispatchContext(Mock(), page)
 
     field_mapping = service.field_mappings.create(field=boolean_field, value="'Horse'")
-    with pytest.raises(DRFValidationError) as exc:
+    with pytest.raises(ServiceImproperlyConfigured) as exc:
         service_type.dispatch_data(
             service, {"table": table, field_mapping.id: "Horse"}, dispatch_context
         )

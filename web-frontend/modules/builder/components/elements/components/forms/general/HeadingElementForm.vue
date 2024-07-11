@@ -1,6 +1,19 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormGroup :label="$t('headingElementForm.levelTitle')">
+    <CustomStyle
+      v-if="values.level"
+      v-model="values.styles"
+      style-key="typography"
+      :config-block-types="['typography']"
+      :theme="builder.theme"
+      :extra-args="{ headingLevel: values.level }"
+    />
+    <FormGroup
+      small-label
+      required
+      :label="$t('headingElementForm.levelTitle')"
+      class="margin-bottom-2"
+    >
       <Dropdown v-model="values.level" :show-search="false">
         <DropdownItem
           v-for="level in levels"
@@ -14,49 +27,42 @@
     </FormGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
+      small-label
+      required
       :label="$t('headingElementForm.textTitle')"
       :placeholder="$t('elementForms.textInputPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
     />
-    <FormElement class="control">
-      <HorizontalAlignmentsSelector v-model="values.alignment" />
-    </FormElement>
-    <FontSelector
-      :default-values="defaultValues"
-      :color-variables="headingColorVariables"
-      @values-changed="$emit('values-changed', $event)"
-    ></FontSelector>
   </form>
 </template>
 
 <script>
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
-import headingElement from '@baserow/modules/builder/mixins/headingElement'
-import FontSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/FontSelector'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector.vue'
 import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
+import CustomStyle from '../style/CustomStyle.vue'
 
 export default {
   name: 'HeaderElementForm',
   components: {
-    HorizontalAlignmentsSelector,
-    FontSelector,
     ApplicationBuilderFormulaInputGroup,
+    CustomStyle,
   },
-  mixins: [elementForm, headingElement],
+  mixins: [elementForm],
   data() {
     return {
       values: {
         value: '',
         level: 1,
-        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT,
+        styles: {},
       },
       levels: [...Array(6).keys()].map((level) => ({
         name: this.$t('headingElementForm.headingName', { level: level + 1 }),
         value: level + 1,
       })),
-      allowedValues: ['value', 'level', 'alignment'],
+      allowedValues: ['value', 'level', 'alignment', 'styles'],
     }
   },
 }

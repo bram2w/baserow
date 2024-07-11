@@ -1,0 +1,27 @@
+.theme-config-block-section {
+  display: flex;
+  width: 100%;
+  gap: 28px;
+  margin-bottom: 15px;
+}
+
+.theme-config-block-section__properties {
+  flex: 60% 0 0;
+
+  .theme-config-block--no-preview & {
+    flex: 100% 0 0;
+  }
+}
+
+.theme-config-block-section__preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  max-width: calc(40% - 15px);
+  overflow: hidden;
+
+  .theme-config-block--no-preview & {
+    display: none;
+  }
+}

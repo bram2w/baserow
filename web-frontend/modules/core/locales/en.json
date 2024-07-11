@@ -1,712 +1,720 @@
 {
-    "paginator": {
-        "page": "Page",
-        "of": "of {pages}"
+  "paginator": {
+    "page": "Page",
+    "of": "of {pages}"
+  },
+  "copied": {
+    "label": "Copied!"
+  },
+  "sidebarApplication": {
+    "rename": "Rename",
+    "duplicate": "Duplicate",
+    "viewTrash": "View trash",
+    "delete": "Delete",
+    "snapshots": "Snapshots"
+  },
+  "duplicateApplicationJobType": {
+    "duplicating": "Duplicating",
+    "duplicatedTitle": "Application duplicated"
+  },
+  "InstallTemplateJobType": {
+    "installing": "Installing",
+    "installedTitle": "Template installed"
+  },
+  "sidebar": {
+    "createWorkspace": "Create workspace",
+    "inviteOthers": "Invite others",
+    "members": "Members",
+    "logoff": "Logoff",
+    "errorNoWorkspace": "You don’t have any workspaces.",
+    "admin": "Admin",
+    "dashboard": "Dashboard",
+    "trash": "Trash",
+    "settings": "Settings",
+    "notifications": "Notifications"
+  },
+  "accountForm": {
+    "nameLabel": "Your name",
+    "languageLabel": "Interface language"
+  },
+  "accountSettings": {
+    "title": "Account",
+    "changedTitle": "Changed",
+    "changedDescription": "Your account information has been changed.",
+    "submitButton": "Update account"
+  },
+  "settingsModal": {
+    "title": "Settings"
+  },
+  "notificationPanel": {
+    "title": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "clearAll": "Clear all",
+    "noNotificationTitle": "You don't have any notifications",
+    "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow.",
+    "newNotificationsAvailable": "New notifications available",
+    "refresh": "Refresh"
+  },
+  "clearAllNotificationsConfirmModal": {
+    "title": "Are you sure you want to clear all notifications?",
+    "message": "All the notifications will be permanently deleted and you won't be able to see them again."
+  },
+  "passwordSettings": {
+    "title": "Change password",
+    "changedTitle": "Password changed",
+    "changedDescription": "Your password has been changed. The next time you want to login, you have to use your new password.",
+    "oldPasswordLabel": "Old password",
+    "oldPasswordRequiredError": "Old password is required.",
+    "newPasswordLabel": "New password",
+    "repeatNewPasswordLabel": "Repeat new password",
+    "repeatNewPasswordMatchError": "This field must match your new password field.",
+    "submitButton": "Change password",
+    "errorInvalidOldPasswordTitle": "Invalid password",
+    "errorInvalidOldPasswordMessage": "Could not change your password because your old password is invalid."
+  },
+  "deleteAccountSettings": {
+    "title": "Delete account",
+    "description": "You can schedule the deletion of your account by entering your current password and clicking the button. Your account will be permanently deleted after {days} days. In the meantime, if you log in again, your account deletion will be cancelled.",
+    "workspaceNoticeDescription": "When your account is permanently deleted, all workspaces and associated data for which you are the last active user with Admin permissions will also be deleted. The workspaces shown below are the ones that will be deleted because you are the only admin. To prevent them being deleted you must first give another user admin before deleting your account.",
+    "orphanWorkspaces": "Will also be permanently deleted after the grace time",
+    "orphanWorkspaceMemberCount": "shared with nobody|shared with one user|shared with {count} users",
+    "password": "Password",
+    "passwordConfirm": "Repeat password",
+    "repeatPasswordMatchError": "This field must match the first password field.",
+    "submitButton": "Delete account",
+    "errorInvalidPasswordTitle": "Invalid password",
+    "errorInvalidPasswordMessage": "Could not delete your account because your password is invalid.",
+    "errorUserIsLastAdminTitle": "Last administrator",
+    "errorUserIsLastAdminMessage": "Could not delete your account because your are the last administrator of this Baserow instance.",
+    "accountDeletedSuccessTitle": "Account deletion scheduled",
+    "accountDeletedSuccessMessage": "Your account has been scheduled to be deleted.",
+    "workspaceLoadingError": "Workspaces checking has failed",
+    "workspaceLoadingErrorDescription": "Checking the workspaces to be deleted failed, please refresh the page."
+  },
+  "error": {
+    "alreadyExistsTitle": "User already exists",
+    "alreadyExistsMessage": "A user with the provided e-mail address already exists.",
+    "passwordRequired": "A password is required.",
+    "invalidEmail": "Please enter a valid e-mail address.",
+    "disabledAccountTitle": "Account disabled",
+    "disabledAccountMessage": "This user account has been disabled.",
+    "incorrectCredentialTitle": "Incorrect credentials",
+    "incorrectCredentialMessage": "The provided e-mail address or password is incorrect.",
+    "inputRequired": "Input is required.",
+    "disabledPasswordProviderTitle": "Password authentication is disabled.",
+    "disabledPasswordProviderMessage": "Please use another authentication provider."
+  },
+  "field": {
+    "language": "Language",
+    "emailAddress": "E-mail address",
+    "name": "Your name",
+    "password": "Password",
+    "passwordRepeat": "Repeat password"
+  },
+  "invitationTitle": "Invitation",
+  "invitationMessage": "{invitedBy} has invited you to join {workspace}.",
+  "workspaceForm": {
+    "nameLabel": "Name"
+  },
+  "leaveWorkspaceModal": {
+    "title": "Leave {workspace}",
+    "message": "Are you sure you want to leave the workspace {workspace}? You won't be able to access the related applications anymore and if you want to regain access, one of the admins must invite you again. If you leave the workspace, it will not be deleted. All the other members will still have access to it. It is not possible to leave a workspace if you're the last admin because that will leave it unmaintained.",
+    "leave": "Leave workspace"
+  },
+  "dashboardWorkspace": {
+    "createApplication": "Create new"
+  },
+  "dashboardVerifyEmail": {
+    "title": "Please check your mailbox and click on the link to verify your email.",
+    "resendConfirmationEmail": "Resend confirmation email"
+  },
+  "resendEmailVerification": {
+    "confirmationEmailSentTitle": "Confirmation email sent",
+    "confirmationEmailSentDescription": "The confirmation email has been sent."
+  },
+  "verifyEmailAddress": {
+    "confirmation": "Your email address has been verified.",
+    "goToDashboard": "Go to dashboard",
+    "invalidToken": "Not a valid confirmation token.",
+    "disabledPasswordProvider": "The password authentication provider has been disabled.",
+    "emailMismatchWarning": "Please note that the verified email doesn't belong to the account that you are currently using."
+  },
+  "emailNotVerified": {
+    "title": "Email verification required",
+    "description": "Please check your mailbox and click on the link to verify. Once verified, your account will be activated.",
+    "resend": "Resend confirmation email"
+  },
+  "workspaceInvitation": {
+    "title": "Invitation",
+    "message": "{by} has invited you to join {workspace}.",
+    "reject": "Reject",
+    "accept": "Accept"
+  },
+  "workspaceInviteForm": {
+    "invitationFormTitle": "Invite by email",
+    "optionalMessagePlaceholder": "Optional message",
+    "errorInvalidEmail": "Please enter a valid e-mail address.",
+    "errorTooLongMessage": "Messages are limited to {amount} characters.",
+    "additionalRoles": "Additional roles"
+  },
+  "workspacesContext": {
+    "search": "Search workspaces",
+    "noResults": "No results found",
+    "createWorkspace": "Create workspace"
+  },
+  "workspaceContext": {
+    "renameWorkspace": "Rename workspace",
+    "settings": "Settings",
+    "members": "Members",
+    "auditLog": "Audit log",
+    "viewTrash": "View trash",
+    "leaveWorkspace": "Leave workspace",
+    "deleteWorkspace": "Delete workspace"
+  },
+  "workspaceSettingsModal": {
+    "title": "Workspace Settings"
+  },
+  "workspaceSettingType": {
+    "generativeAI": "Generative AI"
+  },
+  "generativeAIModelType": {
+    "openai": "OpenAI",
+    "openaiApiKeyLabel": "API Key",
+    "openaiApiKeyDescription": "Provide an OpenAI API key if you would like to enable the integration. [Instructions on getting an API key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
+    "openaiOrganization": "Organization (optional)",
+    "openaiModelsLabel": "Enabled Models",
+    "openaiModelsDescription": "Provide a list of comma separated [OpenAI models](https://platform.openai.com/docs/models/continuous-model-upgrades) that can be used in Baserow. (e.g. `gpt-3.5-turbo,gpt-4`)",
+    "ollama": "Ollama",
+    "ollamaHostLabel": "Host",
+    "ollamaHostDescription": "Provide the hostname to your [Ollama](https://ollama.com/) server. This typically runs locally on your own device.",
+    "ollamaModelsLabel": "Enabled Models",
+    "ollamaModelsDescription": "Provide a list of comma separated [Ollama installed models](https://ollama.com/library). Note that the model must be downloaded and installed before it can be used. (e.g. `llama2,mistral`)"
+  },
+  "generativeAIWorkspaceSettings": {
+    "title": "Generative AI settings",
+    "description": "These settings can be used to optionally set generative AI configuration on workspace level. Features like the AI field can be disabled because they lack an API key for one of the supported models. By providing the settings here, you can enable those features. Leaving a value blank defaults back to the global instance settings. Note that everyone in the workspace will share these settings.",
+    "changedTitle": "Settings updated correctly",
+    "changedDescription": "The settings have been updated and they will be now used in this workspace.",
+    "submitButton": "Update settings"
+  },
+  "createWorkspaceModal": {
+    "createNew": "Create new workspace",
+    "defaultName": "Untitled Workspace",
+    "add": "Add workspace",
+    "permissionDeniedTitle": "Permission denied",
+    "permissionDeniedBody": "You do not have the required permission to create a new workspace."
+  },
+  "templateCategories": {
+    "search": "Search templates",
+    "title": "Templates"
+  },
+  "templateHeader": {
+    "use": "Use this template"
+  },
+  "trashSidebar": {
+    "title": "Trash",
+    "unnamedWorkspace": "Unnamed workspace {id}"
+  },
+  "trashContents": {
+    "message": "Restore deleted items from the past {duration}",
+    "empty": "Nothing has been deleted in the past three days.",
+    "emptyButtonTrashed": "Delete {type} permanently",
+    "emptyButtonNotTrashed": "Empty this {type}'s trash",
+    "unnamed": "Unnamed {type} {id}"
+  },
+  "trashEmptyModal": {
+    "titleIsTrashed": "Are you sure you want to permanently delete {name}?",
+    "titleIsNotTrashed": "Are you sure you want to empty the trash of {name}?",
+    "messageIsTrashed": "This will permanently delete it and all of its contents. After which they cannot be recovered.",
+    "messageIsNotTrashed": "This will permanently delete the listed items. After which they cannot be recovered.",
+    "buttonIsTrashed": "Permanently delete",
+    "buttonIsNotTrashed": "Empty"
+  },
+  "trashEntry": {
+    "deletedUser": "A deleted user",
+    "fromParent": "from {parent}",
+    "name": "{user} deleted {type} {title} {parent}",
+    "restore": "Restore",
+    "andMore": "... and {count} more",
+    "unnamed": "Unnamed {type} {id}"
+  },
+  "trashModal": {
+    "emptyTitle": "No workspaces found",
+    "emptyMessage": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
+    "emptyMessageWithoutCreatePermission": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first."
+  },
+  "uploadViaURLUserFileUpload": {
+    "title": "Upload from a URL",
+    "urlLabel": "URL",
+    "urlError": "A valid URL is required."
+  },
+  "userFilesModal": {
+    "title": "Upload from"
+  },
+  "uploadFileUserFileUpload": {
+    "title": "Upload from my device",
+    "drop": "Drop here",
+    "clickOrDrop": "Click or drop your files here",
+    "retry": "Retry"
+  },
+  "uploadFileDropzone": {
+    "drop": "Drop here",
+    "clickOrDrop": "Click or drop your files here",
+    "errorTooManyFilesTitle": "Too many files",
+    "errorTooManyFilesMessage": "You can only upload a single file",
+    "errorWrongFileTypeTitle": "Wrong file type",
+    "errorWrongFileTypeMessage": "You can't upload a file of type {type}"
+  },
+  "createApplicationContext": {
+    "fromTemplate": "From template"
+  },
+  "applicationForm": {
+    "nameLabel": "Name",
+    "namePlaceholder": "Enter the name..."
+  },
+  "connectingToast": {
+    "title": "Reconnecting",
+    "content": "Reconnecting with server."
+  },
+  "failedConnectingToast": {
+    "title": "Failed",
+    "content": "Connection to the server has failed. Please refresh the page.",
+    "action": "Refresh page"
+  },
+  "authorizationErrorToast": {
+    "title": "Authorization error",
+    "content": "It looks like you do not have the permissions to see this resource.",
+    "action": "Refresh page"
+  },
+  "userSessionExpiredToast": {
+    "title": "Session expired",
+    "content": "You were logged out because your authentication token has expired. Please login again."
+  },
+  "userPasswordChangedToast": {
+    "title": "Password changed",
+    "content": "Your password has been changed. Please login again."
+  },
+  "restoreToast": {
+    "restore": "Restore deleted {type}"
+  },
+  "copyingToast": {
+    "title": "Copying...",
+    "content": "Preparing your data"
+  },
+  "PastingToast": {
+    "title": "Pasting...",
+    "content": "Preparing your data"
+  },
+  "clearingToast": {
+    "title": "Clearing...",
+    "content": "Preparing your data"
+  },
+  "undoRedoToast": {
+    "undoingTitle": "Undoing...",
+    "undoingText": "Undoing your action",
+    "undoneTitle": "Undone",
+    "undoneText": "Action is undone",
+    "noMoreUndo": "No more actions to undo",
+    "skippingUndoDueToError": "Undo failed due to unknown error, skipping it.",
+    "redoingTitle": "Redoing...",
+    "redoingText": "Redoing your action",
+    "redoneTitle": "Redone",
+    "redoneText": "Action is redone",
+    "noMoreRedo": "No more actions to redo",
+    "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
+    "failed": "Failed"
+  },
+  "permissionsUpdatedToast": {
+    "title": "Permissions updated",
+    "content": "This might affect what you have access to, please reload the page.",
+    "action": "Reload"
+  },
+  "errorLayout": {
+    "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
+    "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",
+    "backDashboard": "Back to dashboard",
+    "backLogin": "Back to login",
+    "wrong": "Something went wrong",
+    "refresh": "Refresh page"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "alertTitle": "We need your help!",
+    "alertText": "If you find Baserow useful then starring or sharing us is greatly appreciated. By sharing Baserow you are helping us to improve the product and to make it more useful for you.",
+    "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
+    "redditTitle": "'Baserow - An open source no-code database",
+    "noWorkspaceTitle": "No workspaces found",
+    "noWorkspaceText": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
+    "noWorkspaceTextWithoutCreatePermission": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
+    "createWorkspace": "Create workspace",
+    "becomeGithubSponsor": "Become a GitHub sponsor",
+    "starOnGitlab": "Star us on GitLab",
+    "shareOnTwitter": "Tweet about Baserow",
+    "shareOnReddit": "Share on Reddit",
+    "shareOnFacebook": "Share on Facebook",
+    "shareOnLinkedIn": "Share on LinkedIn"
+  },
+  "dashboardSidebar": {
+    "workspaces": "Workspaces",
+    "links": "Links",
+    "knowledgeBase": "Knowledge base",
+    "tutorials": "Tutorials",
+    "userSettings": "User settings",
+    "trash": "Trash",
+    "logoff": "Logoff"
+  },
+  "login": {
+    "title": "Login",
+    "emailPlaceholder": "Enter your email address..",
+    "passwordPlaceholder": "Enter your password..",
+    "forgotPassword": "Forgot password?",
+    "signUpText": "Don't have an account?",
+    "signUp": "Sign Up",
+    "displayPasswordLogin": "Log in using email and password",
+    "redirecting": "Redirecting to authentication provider..."
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "newPassword": "New password",
+    "repeatNewPassword": "Repeat new password",
+    "submit": "Change password",
+    "changed": "Password changed",
+    "errorInvalidLinkTitle": "Invalid link",
+    "errorInvalidLinkMessage": "Could not reset the password because the link is invalid.",
+    "errorLinkExpiredTitle": "Link expired",
+    "errorLinkExpiredMessage": "The password reset link has expired. Please request another one.",
+    "disabled": "Reset Password is disabled",
+    "disabledMessage": "It's not possible to reset the password because it has been disabled."
+  },
+  "signup": {
+    "headTitle": "Create new account",
+    "title": "Sign up",
+    "disabled": "Sign up is disabled",
+    "disabledMessage": "It's not possible to create an account because it has been disabled.",
+    "requireFirstUser": "Welcome to Baserow!",
+    "requireFirstUserMessage": "Please fill the form below to create the admin user.",
+    "emailPlaceholder": "Enter your email address..",
+    "namePlaceholder": "Enter your name..",
+    "passwordPlaceholder": "Enter your password..",
+    "passwordRepeatPlaceholder": "Confirm your password..",
+    "loginText": "Already have an account?",
+    "login": "Login"
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "message": "Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.",
+    "submit": "Send link",
+    "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes.",
+    "disabled": "Forgot password is disabled",
+    "disabledMessage": "It's not possible to reset the password because it has been disabled.",
+    "loginText": "Already have account and password?"
+  },
+  "settings": {
+    "settingsTitle": "Admin settings",
+    "baserowInstanceId": "Instance ID",
+    "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
+    "accountRestrictions": "Account restrictions",
+    "settingAllowResetPasswordName": "Allow resetting password",
+    "settingAllowResetPasswordDescription": "By default, users can request a password reset link.",
+    "settingAllowResetPasswordWarning": "Please note that you could lock yourself out of the system and that access can't be restored if you forget your password.",
+    "settingAllowNewAccountsName": "Allow creating new accounts",
+    "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
+    "settingAllowSignupsViaWorkspaceInvitationsName": "Allow signups via workspace invitations",
+    "settingAllowSignupsViaWorkspaceInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
+    "settingAllowNonStaffCreateWorkspaceOperation": "Allow everyone to create new workspaces",
+    "settingAllowNonStaffCreateWorkspaceOperationDescription": "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
+    "settingAllowNonStaffCreateWorkspaceOperationWarning": "New users will have a workspace automatically created for them where they are an Admin.",
+    "settingTrackWorkspaceUsage": "Track workspace usage",
+    "settingTrackWorkspaceUsageDescription": "Enables a nightly job that counts row and file usage per workspace, displayed on the premium workspace admin page.",
+    "userSettings": "User",
+    "settingUserDeletionGraceDelay": "Delete grace delay",
+    "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
+    "invalidAccountDeletionGraceDelay": "This value is required and must be a positive integer smaller than 32000",
+    "enabled": "enabled",
+    "maintenance": "Maintenance",
+    "emailVerification": "Email verification",
+    "emailVerificationDescription": "Controls whether email addresses have to be verified.",
+    "emailVerificationNoVerification": "No verification",
+    "emailVerificationRecommended": "Recommended",
+    "emailVerificationEnforced": "Enforced"
+  },
+  "formSidebar": {
+    "actions": {
+      "addAll": "Add all",
+      "removeAll": "Remove all",
+      "addField": "Add field"
     },
-    "copied": {
-        "label": "Copied!"
-    },
-    "sidebarApplication": {
-        "rename": "Rename",
-        "duplicate": "Duplicate",
-        "viewTrash": "View trash",
-        "delete": "Delete",
-        "snapshots": "Snapshots"
-    },
-    "duplicateApplicationJobType": {
-        "duplicating": "Duplicating",
-        "duplicatedTitle": "Application duplicated"
-    },
-    "InstallTemplateJobType": {
-        "installing": "Installing",
-        "installedTitle": "Template installed"
-    },
-    "sidebar": {
-        "createWorkspace": "Create workspace",
-        "inviteOthers": "Invite others",
-        "members": "Members",
-        "logoff": "Logoff",
-        "errorNoWorkspace": "You don’t have any workspaces.",
-        "admin": "Admin",
-        "dashboard": "Dashboard",
-        "trash": "Trash",
-        "settings": "Settings",
-        "notifications": "Notifications"
-    },
-    "accountForm": {
-        "nameLabel": "Your name",
-        "languageLabel": "Interface language"
-    },
-    "accountSettings": {
-        "title": "Account",
-        "changedTitle": "Changed",
-        "changedDescription": "Your account information has been changed.",
-        "submitButton": "Update account"
-    },
-    "settingsModal": {
-        "title": "Settings"
-    },
-    "notificationPanel": {
-        "title": "Notifications",
-        "markAllAsRead": "Mark all as read",
-        "clearAll": "Clear all",
-        "noNotificationTitle": "You don't have any notifications",
-        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow.",
-        "newNotificationsAvailable": "New notifications available",
-        "refresh": "Refresh"
-    },
-    "clearAllNotificationsConfirmModal": {
-        "title": "Are you sure you want to clear all notifications?",
-        "message": "All the notifications will be permanently deleted and you won't be able to see them again."
-    },
-    "passwordSettings": {
-        "title": "Change password",
-        "changedTitle": "Password changed",
-        "changedDescription": "Your password has been changed. The next time you want to login, you have to use your new password.",
-        "oldPasswordLabel": "Old password",
-        "oldPasswordRequiredError": "Old password is required.",
-        "newPasswordLabel": "New password",
-        "repeatNewPasswordLabel": "Repeat new password",
-        "repeatNewPasswordMatchError": "This field must match your new password field.",
-        "submitButton": "Change password",
-        "errorInvalidOldPasswordTitle": "Invalid password",
-        "errorInvalidOldPasswordMessage": "Could not change your password because your old password is invalid."
-    },
-    "deleteAccountSettings": {
-        "title": "Delete account",
-        "description": "You can schedule the deletion of your account by entering your current password and clicking the button. Your account will be permanently deleted after {days} days. In the meantime, if you log in again, your account deletion will be cancelled.",
-        "workspaceNoticeDescription": "When your account is permanently deleted, all workspaces and associated data for which you are the last active user with Admin permissions will also be deleted. The workspaces shown below are the ones that will be deleted because you are the only admin. To prevent them being deleted you must first give another user admin before deleting your account.",
-        "orphanWorkspaces": "Will also be permanently deleted after the grace time",
-        "orphanWorkspaceMemberCount": "shared with nobody|shared with one user|shared with {count} users",
-        "password": "Password",
-        "passwordConfirm": "Repeat password",
-        "repeatPasswordMatchError": "This field must match the first password field.",
-        "submitButton": "Delete account",
-        "errorInvalidPasswordTitle": "Invalid password",
-        "errorInvalidPasswordMessage": "Could not delete your account because your password is invalid.",
-        "errorUserIsLastAdminTitle": "Last administrator",
-        "errorUserIsLastAdminMessage": "Could not delete your account because your are the last administrator of this Baserow instance.",
-        "accountDeletedSuccessTitle": "Account deletion scheduled",
-        "accountDeletedSuccessMessage": "Your account has been scheduled to be deleted.",
-        "workspaceLoadingError": "Workspaces checking has failed",
-        "workspaceLoadingErrorDescription": "Checking the workspaces to be deleted failed, please refresh the page."
-    },
-    "error": {
-        "alreadyExistsTitle": "User already exists",
-        "alreadyExistsMessage": "A user with the provided e-mail address already exists.",
-        "passwordRequired": "A password is required.",
-        "invalidEmail": "Please enter a valid e-mail address.",
-        "disabledAccountTitle": "Account disabled",
-        "disabledAccountMessage": "This user account has been disabled.",
-        "incorrectCredentialTitle": "Incorrect credentials",
-        "incorrectCredentialMessage": "The provided e-mail address or password is incorrect.",
-        "inputRequired": "Input is required.",
-        "disabledPasswordProviderTitle": "Password authentication is disabled.",
-        "disabledPasswordProviderMessage": "Please use another authentication provider."
-    },
-    "field": {
-        "language": "Language",
-        "emailAddress": "E-mail address",
-        "name": "Your name",
-        "password": "Password",
-        "passwordRepeat": "Repeat password"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} has invited you to join {workspace}.",
-    "workspaceForm": {
-        "nameLabel": "Name"
-    },
-    "leaveWorkspaceModal": {
-        "title": "Leave {workspace}",
-        "message": "Are you sure you want to leave the workspace {workspace}? You won't be able to access the related applications anymore and if you want to regain access, one of the admins must invite you again. If you leave the workspace, it will not be deleted. All the other members will still have access to it. It is not possible to leave a workspace if you're the last admin because that will leave it unmaintained.",
-        "leave": "Leave workspace"
-    },
-    "dashboardWorkspace": {
-        "createApplication": "Create new"
-    },
-    "dashboardVerifyEmail": {
-        "title": "Please check your mailbox and click on the link to verify your email.",
-        "resendConfirmationEmail": "Resend confirmation email"
+    "notifyUserOnSubmit": "Receive notification on submit",
+    "fieldsDescription": "All the fields are in the form.",
+    "prefillOrHideInfoLink": "Prefill or hide dynamically",
+    "modal": {
+      "title": "Prefill or hide fields dynamically",
+      "descriptionPartOne": "Forms can be prefilled in order to help the user fill in the form faster.",
+      "descriptionPartTwo": "All fields which are available in the form can be prefilled.",
+      "howToHide": {
+        "title": "How to hide a field",
+        "description": "If you want to hide a field dynamically, you can do so via query parameters added to the public from url. These query parameters are prefixed with `hide_` to avoid collision with potential future query parameters."
       },
-    "resendEmailVerification": {
-        "confirmationEmailSentTitle": "Confirmation email sent",
-        "confirmationEmailSentDescription": "The confirmation email has been sent."
-    },
-    "verifyEmailAddress": {
-        "confirmation": "Your email address has been verified.",
-        "goToDashboard": "Go to dashboard",
-        "invalidToken": "Not a valid confirmation token.",
-        "disabledPasswordProvider": "The password authentication provider has been disabled.",
-        "emailMismatchWarning": "Please note that the verified email doesn't belong to the account that you are currently using."
-    },
-    "emailNotVerified": {
-        "title": "Email verification required",
-        "description": "Please check your mailbox and click on the link to verify. Once verified, your account will be activated.",
-        "resend": "Resend confirmation email"
-    },
-    "workspaceInvitation": {
-        "title": "Invitation",
-        "message": "{by} has invited you to join {workspace}.",
-        "reject": "Reject",
-        "accept": "Accept"
-    },
-    "workspaceInviteForm": {
-        "invitationFormTitle": "Invite by email",
-        "optionalMessagePlaceholder": "Optional message",
-        "errorInvalidEmail": "Please enter a valid e-mail address.",
-        "errorTooLongMessage": "Messages are limited to {amount} characters.",
-        "additionalRoles": "Additional roles"
-    },
-    "workspacesContext": {
-        "search": "Search workspaces",
-        "noResults": "No results found",
-        "createWorkspace": "Create workspace"
-    },
-    "workspaceContext": {
-        "renameWorkspace": "Rename workspace",
-        "settings": "Settings",
-        "members": "Members",
-        "auditLog": "Audit log",
-        "viewTrash": "View trash",
-        "leaveWorkspace": "Leave workspace",
-        "deleteWorkspace": "Delete workspace"
-    },
-    "workspaceSettingsModal": {
-        "title": "Workspace Settings"
-    },
-    "workspaceSettingType": {
-        "generativeAI": "Generative AI"
-    },
-    "generativeAIModelType": {
-        "openai": "OpenAI",
-        "openaiApiKeyLabel": "API Key",
-        "openaiApiKeyDescription": "Provide an OpenAI API key if you would like to enable the integration. [Instructions on getting an API key](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).",
-        "openaiOrganization": "Organization (optional)",
-        "openaiModelsLabel": "Enabled Models",
-        "openaiModelsDescription": "Provide a list of comma separated [OpenAI models](https://platform.openai.com/docs/models/continuous-model-upgrades) that can be used in Baserow. (e.g. `gpt-3.5-turbo,gpt-4`)",
-        "ollama": "Ollama",
-        "ollamaHostLabel": "Host",
-        "ollamaHostDescription": "Provide the hostname to your [Ollama](https://ollama.com/) server. This typically runs locally on your own device.",
-        "ollamaModelsLabel": "Enabled Models",
-        "ollamaModelsDescription": "Provide a list of comma separated [Ollama installed models](https://ollama.com/library). Note that the model must be downloaded and installed before it can be used. (e.g. `llama2,mistral`)"
-    },
-    "generativeAIWorkspaceSettings": {
-        "title": "Generative AI settings",
-        "description": "These settings can be used to optionally set generative AI configuration on workspace level. Features like the AI field can be disabled because they lack an API key for one of the supported models. By providing the settings here, you can enable those features. Leaving a value blank defaults back to the global instance settings. Note that everyone in the workspace will share these settings.",
-        "changedTitle": "Settings updated correctly",
-        "changedDescription": "The settings have been updated and they will be now used in this workspace.",
-        "submitButton": "Update settings"
-    },
-    "createWorkspaceModal": {
-        "createNew": "Create new workspace",
-        "defaultName": "Untitled Workspace",
-        "add": "Add workspace",
-        "permissionDeniedTitle": "Permission denied",
-        "permissionDeniedBody": "You do not have the required permission to create a new workspace."
-    },
-    "templateCategories": {
-        "search": "Search templates",
-        "title": "Templates"
-    },
-    "templateHeader": {
-        "use": "Use this template"
-    },
-    "trashSidebar": {
-        "title": "Trash",
-        "unnamedWorkspace": "Unnamed workspace {id}"
-    },
-    "trashContents": {
-        "message": "Restore deleted items from the past {duration}",
-        "empty": "Nothing has been deleted in the past three days.",
-        "emptyButtonTrashed": "Delete {type} permanently",
-        "emptyButtonNotTrashed": "Empty this {type}'s trash",
-        "unnamed": "Unnamed {type} {id}"
-    },
-    "trashEmptyModal": {
-        "titleIsTrashed": "Are you sure you want to permanently delete {name}?",
-        "titleIsNotTrashed": "Are you sure you want to empty the trash of {name}?",
-        "messageIsTrashed": "This will permanently delete it and all of its contents. After which they cannot be recovered.",
-        "messageIsNotTrashed": "This will permanently delete the listed items. After which they cannot be recovered.",
-        "buttonIsTrashed": "Permanently delete",
-        "buttonIsNotTrashed": "Empty"
-    },
-    "trashEntry": {
-        "deletedUser": "A deleted user",
-        "fromParent": "from {parent}",
-        "name": "{user} deleted {type} {title} {parent}",
-        "restore": "Restore",
-        "andMore": "... and {count} more",
-        "unnamed": "Unnamed {type} {id}"
-    },
-    "trashModal": {
-        "emptyTitle": "No workspaces found",
-        "emptyMessage": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
-        "emptyMessageWithoutCreatePermission": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first."
-    },
-    "uploadViaURLUserFileUpload": {
-        "title": "Upload from a URL",
-        "urlLabel": "URL",
-        "urlError": "A valid URL is required."
-    },
-    "userFilesModal": {
-        "title": "Upload from"
-    },
-    "uploadFileUserFileUpload": {
-        "title": "Upload from my device",
-        "drop": "Drop here",
-        "clickOrDrop": "Click or drop your files here",
-        "retry": "Retry"
-    },
-    "uploadFileDropzone": {
-        "drop": "Drop here",
-        "clickOrDrop": "Click or drop your files here",
-        "errorTooManyFilesTitle": "Too many files",
-        "errorTooManyFilesMessage": "You can only upload a single file",
-        "errorWrongFileTypeTitle": "Wrong file type",
-        "errorWrongFileTypeMessage": "You can't upload a file of type {type}"
-    },
-    "createApplicationContext": {
-        "fromTemplate": "From template"
-    },
-    "applicationForm": {
-        "nameLabel": "Name"
-    },
-    "connectingToast": {
-        "title": "Reconnecting",
-        "content": "Reconnecting with server."
-    },
-    "failedConnectingToast": {
-        "title": "Failed",
-        "content": "Connection to the server has failed. Please refresh the page.",
-        "action": "Refresh page"
-    },
-    "authorizationErrorToast": {
-        "title": "Authorization error",
-        "content": "It looks like you do not have the permissions to see this resource.",
-        "action": "Refresh page"
-    },
-    "userSessionExpiredToast": {
-        "title": "Session expired",
-        "content": "You were logged out because your authentication token has expired. Please login again."
-    },
-    "userPasswordChangedToast": {
-        "title": "Password changed",
-        "content": "Your password has been changed. Please login again."
-    },
-    "restoreToast": {
-        "restore": "Restore deleted {type}"
-    },
-    "copyingToast": {
-        "title": "Copying...",
-        "content": "Preparing your data"
-    },
-    "PastingToast": {
-        "title": "Pasting...",
-        "content": "Preparing your data"
-    },
-    "clearingToast": {
-        "title": "Clearing...",
-        "content": "Preparing your data"
-    },
-    "undoRedoToast": {
-        "undoingTitle": "Undoing...",
-        "undoingText": "Undoing your action",
-        "undoneTitle": "Undone",
-        "undoneText": "Action is undone",
-        "noMoreUndo": "No more actions to undo",
-        "skippingUndoDueToError": "Undo failed due to unknown error, skipping it.",
-        "redoingTitle": "Redoing...",
-        "redoingText": "Redoing your action",
-        "redoneTitle": "Redone",
-        "redoneText": "Action is redone",
-        "noMoreRedo": "No more actions to redo",
-        "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
-        "failed": "Failed"
-    },
-    "permissionsUpdatedToast": {
-        "title": "Permissions updated",
-        "content": "This might affect what you have access to, please reload the page.",
-        "action": "Reload"
-    },
-    "errorLayout": {
-        "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
-        "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",
-        "backDashboard": "Back to dashboard",
-        "backLogin": "Back to login",
-        "wrong": "Something went wrong",
-        "refresh": "Refresh page"
-    },
-    "dashboard": {
-        "title": "Dashboard",
-        "alertTitle": "We need your help!",
-        "alertText": "If you find Baserow useful then starring or sharing us is greatly appreciated. By sharing Baserow you are helping us to improve the product and to make it more useful for you.",
-        "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
-        "redditTitle": "'Baserow - An open source no-code database",
-        "noWorkspaceTitle": "No workspaces found",
-        "noWorkspaceText": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
-        "noWorkspaceTextWithoutCreatePermission": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
-        "createWorkspace": "Create workspace",
-        "becomeGithubSponsor": "Become a GitHub sponsor",
-        "starOnGitlab": "Star us on GitLab",
-        "shareOnTwitter": "Tweet about Baserow",
-        "shareOnReddit": "Share on Reddit",
-        "shareOnFacebook": "Share on Facebook",
-        "shareOnLinkedIn": "Share on LinkedIn"
-    },
-    "dashboardSidebar": {
-        "workspaces": "Workspaces",
-        "links": "Links",
-        "knowledgeBase": "Knowledge base",
-        "tutorials": "Tutorials",
-        "userSettings": "User settings",
-        "trash": "Trash",
-        "logoff": "Logoff"
-    },
-    "login": {
-        "title": "Login",
-        "emailPlaceholder": "Enter your email address..",
-        "passwordPlaceholder": "Enter your password..",
-        "forgotPassword": "Forgot password?",
-        "signUpText": "Don't have an account?",
-        "signUp": "Sign Up",
-        "displayPasswordLogin": "Log in using email and password",
-        "redirecting": "Redirecting to authentication provider..."
-    },
-    "resetPassword": {
-        "title": "Reset password",
-        "newPassword": "New password",
-        "repeatNewPassword": "Repeat new password",
-        "submit": "Change password",
-        "changed": "Password changed",
-        "errorInvalidLinkTitle": "Invalid link",
-        "errorInvalidLinkMessage": "Could not reset the password because the link is invalid.",
-        "errorLinkExpiredTitle": "Link expired",
-        "errorLinkExpiredMessage": "The password reset link has expired. Please request another one.",
-        "disabled": "Reset Password is disabled",
-        "disabledMessage": "It's not possible to reset the password because it has been disabled."
-    },
-    "signup": {
-        "headTitle": "Create new account",
-        "title": "Sign up",
-        "disabled": "Sign up is disabled",
-        "disabledMessage": "It's not possible to create an account because it has been disabled.",
-        "requireFirstUser": "Welcome to Baserow!",
-        "requireFirstUserMessage": "Please fill the form below to create the admin user.",
-        "emailPlaceholder": "Enter your email address..",
-        "namePlaceholder": "Enter your name..",
-        "passwordPlaceholder": "Enter your password..",
-        "passwordRepeatPlaceholder": "Confirm your password..",
-        "loginText": "Already have an account?",
-        "login": "Login"
-    },
-    "forgotPassword": {
-        "title": "Forgot password",
-        "message": "Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.",
-        "submit": "Send link",
-        "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes.",
-        "disabled": "Forgot password is disabled",
-        "disabledMessage": "It's not possible to reset the password because it has been disabled.",
-        "loginText": "Already have account and password?"
-    },
-    "settings": {
-        "settingsTitle": "Admin settings",
-        "baserowInstanceId": "Instance ID",
-        "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
-        "accountRestrictions": "Account restrictions",
-        "settingAllowResetPasswordName": "Allow resetting password",
-        "settingAllowResetPasswordDescription": "By default, users can request a password reset link.",
-        "settingAllowResetPasswordWarning": "Please note that you could lock yourself out of the system and that access can't be restored if you forget your password.",
-        "settingAllowNewAccountsName": "Allow creating new accounts",
-        "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
-        "settingAllowSignupsViaWorkspaceInvitationsName": "Allow signups via workspace invitations",
-        "settingAllowSignupsViaWorkspaceInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
-        "settingAllowNonStaffCreateWorkspaceOperation": "Allow everyone to create new workspaces",
-        "settingAllowNonStaffCreateWorkspaceOperationDescription": "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
-        "settingAllowNonStaffCreateWorkspaceOperationWarning": "New users will have a workspace automatically created for them where they are an Admin.",
-        "settingTrackWorkspaceUsage": "Track workspace usage",
-        "settingTrackWorkspaceUsageDescription": "Enables a nightly job that counts row and file usage per workspace, displayed on the premium workspace admin page.",
-        "userSettings": "User",
-        "settingUserDeletionGraceDelay": "Delete grace delay",
-        "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
-        "invalidAccountDeletionGraceDelay": "This value is required and must be a positive integer smaller than 32000",
-        "enabled": "enabled",
-        "maintenance": "Maintenance",
-        "emailVerification": "Email verification",
-        "emailVerificationDescription": "Controls whether email addresses have to be verified.",
-        "emailVerificationNoVerification": "No verification",
-        "emailVerificationRecommended": "Recommended",
-        "emailVerificationEnforced": "Enforced"
-    },
-    "formSidebar": {
-        "actions": {
-            "addAll": "Add all",
-            "removeAll": "Remove all",
-            "addField": "Add field"
+      "howToPrefill": {
+        "title": "How to prefill a form",
+        "description": "If you want to prefill a form with data you can do so via query parameters added to the public form url. These query parameters are prefixed with `prefill` to avoid any collision with potential future query parameters."
+      },
+      "format": {
+        "title": "Format",
+        "description": "The format of the query parameters is as follows:",
+        "codeSnippet": "?prefill_<field_name>=<value>"
+      },
+      "example": {
+        "title": "Example",
+        "description": "In the example below we want to prefill a field called `Name` with the value of `Mike`",
+        "codeSnippet": "?prefill_Name=Mike"
+      },
+      "spaces": {
+        "title": "Spaces",
+        "description": "Spaces in the field name are replaced with `+` to avoid any issues with the query parameter.",
+        "codeSnippet": "?prefill_my+field=Mike"
+      },
+      "multipleValues": {
+        "title": "Multiple values",
+        "description": "If you want to prefill multiple fields you can do so by adding a `,` between the values.",
+        "codeSnippet": "?prefill_multi+select=Mike,John"
+      },
+      "specialFieldTypes": {
+        "title": "Special field types",
+        "description": "Generally the prefill value is the same as the value of the field. But there are some exceptions where the value is translated to a different value.",
+        "ratingField": {
+          "title": "Rating field",
+          "description": "A rating field accepts a number to indicate how many stars should be filled.",
+          "codeSnippet": "?prefill_rating=3"
         },
-        "notifyUserOnSubmit": "Receive notification on submit",
-        "fieldsDescription": "All the fields are in the form.",
-        "prefillOrHideInfoLink": "Prefill or hide dynamically",
-        "modal": {
-            "title": "Prefill or hide fields dynamically",
-            "descriptionPartOne": "Forms can be prefilled in order to help the user fill in the form faster.",
-            "descriptionPartTwo": "All fields which are available in the form can be prefilled.",
-            "howToHide": {
-                "title": "How to hide a field",
-                "description": "If you want to hide a field dynamically, you can do so via query parameters added to the public from url. These query parameters are prefixed with `hide_` to avoid collision with potential future query parameters."
-            },
-            "howToPrefill": {
-                "title": "How to prefill a form",
-                "description": "If you want to prefill a form with data you can do so via query parameters added to the public form url. These query parameters are prefixed with `prefill` to avoid any collision with potential future query parameters."
-            },
-            "format": {
-                "title": "Format",
-                "description": "The format of the query parameters is as follows:",
-                "codeSnippet": "?prefill_<field_name>=<value>"
-            },
-            "example": {
-                "title": "Example",
-                "description": "In the example below we want to prefill a field called `Name` with the value of `Mike`",
-                "codeSnippet": "?prefill_Name=Mike"
-            },
-            "spaces": {
-                "title": "Spaces",
-                "description": "Spaces in the field name are replaced with `+` to avoid any issues with the query parameter.",
-                "codeSnippet": "?prefill_my+field=Mike"
-            },
-            "multipleValues": {
-                "title": "Multiple values",
-                "description": "If you want to prefill multiple fields you can do so by adding a `,` between the values.",
-                "codeSnippet": "?prefill_multi+select=Mike,John"
-            },
-            "specialFieldTypes": {
-                "title": "Special field types",
-                "description": "Generally the prefill value is the same as the value of the field. But there are some exceptions where the value is translated to a different value.",
-                "ratingField": {
-                    "title": "Rating field",
-                    "description": "A rating field accepts a number to indicate how many stars should be filled.",
-                    "codeSnippet": "?prefill_rating=3"
-                },
-                "linkRowField": {
-                    "title": "Link row field",
-                    "description": "A link row field can accept the value that is shown in the select dropdown.",
-                    "codeSnippet": "?prefill_link+row=Mike"
-                },
-                "selectField": {
-                    "title": "Single Select / Multiple Select field",
-                    "description": "A single select field can accept the value that is shown in the select dropdown. So does the Multiple Select field, but it can also accept multiple values.",
-                    "codeSnippet": "?prefill_single+select=Mike"
-                },
-                "dateField": {
-                    "title": "Date field",
-                    "description": "A date field can accept a date in the following formats and will use the date format of the field to parse the date.",
-                    "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
-                }
-            }
+        "linkRowField": {
+          "title": "Link row field",
+          "description": "A link row field can accept the value that is shown in the select dropdown.",
+          "codeSnippet": "?prefill_link+row=Mike"
+        },
+        "selectField": {
+          "title": "Single Select / Multiple Select field",
+          "description": "A single select field can accept the value that is shown in the select dropdown. So does the Multiple Select field, but it can also accept multiple values.",
+          "codeSnippet": "?prefill_single+select=Mike"
+        },
+        "dateField": {
+          "title": "Date field",
+          "description": "A date field can accept a date in the following formats and will use the date format of the field to parse the date.",
+          "codeSnippet": "\n// Standards\nISO_8601\n\n// General formats\n'YYYY-MM-DD',\n'YYYY-MM-DD hh:mm A',\n'YYYY-MM-DD HH:mm',\n\n// EU\n'DD/MM/YYYY', \n'DD/MM/YYYY hh:mm A', \n'DD/MM/YYYY HH:mm'\n\n// US\n'MM/DD/YYYY', \n'MM/DD/YYYY hh:mm A', \n'MM/DD/YYYY HH:mm'"
         }
-    },
-    "job": {
-        "statePending": "Waiting to start...",
-        "stateStarted": "Started...",
-        "stateFinished": "Finished",
-        "stateFailed": "Failed",
-        "errorJobAlreadyRunningTitle": "Already running",
-        "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
-    },
-    "datetime": {
-        "secondsAgo": "Just now | 1 second ago | {n} seconds ago",
-        "minutesAgo": "0 minutes ago | 1 minute ago | {n} minutes ago",
-        "hoursAgo": "0 hours ago | 1 hour ago | {n} hours ago",
-        "daysAgo": "0 days ago | 1 day ago | {n} days ago",
-        "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
-        "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
-    },
-    "crudTableSearch": {
-        "search": "Search"
-    },
-    "membersSettings": {
-        "membersTabTitle": "Members",
-        "invitesTabTitle": "Invites",
-        "membersTable": {
-            "title": "{userAmount} Members in {workspaceName}",
-            "inviteMember": "Invite member",
-            "columns": {
-                "name": "Name",
-                "email": "Email",
-                "role": "Default role",
-                "highestRole": "Highest Role",
-                "highestRoleHelpText": "The highest role this user assigned to them directly or from a team, on anything in this workspace",
-                "teams": "Teams"
-            },
-            "actions": {
-                "copyEmail": "Copy email",
-                "remove": "Remove from workspace"
-            }
-        },
-        "invitesTable": {
-            "title": "{invitesAmount} Pending invites in {workspaceName}",
-            "columns": {
-                "email": "Email",
-                "message": "Message",
-                "role": "Default role"
-            },
-            "actions": {
-                "copyEmail": "Copy email",
-                "remove": "Cancel invite"
-            }
-        },
-        "membersInviteModal": {
-            "title": "Invite workspace members",
-            "submit": "Send invite",
-            "helpIconText": "The selected role will be the users default role in this workspace.",
-            "errors": {
-                "userAlreadyInWorkspace": {
-                    "title": "User is already in the workspace.",
-                    "text": "It is not possible to send an invitation when the user is already a member of the workspace."
-                }
-            }
-        }
-    },
-    "memberSelectionList": {
-        "searchPlaceholder": "Find ...",
-        "selectedAmountLabel": "{count} selected"
-    },
-    "memberAssignmentModalFooter": {
-        "invite": "Invite {count}",
-        "deselectAll": "Deselect all",
-        "selectAll": "Select all"
-    },
-    "removeFromWorkspaceModal": {
-        "title": "Confirm removal from workspace",
-        "confirmation": "Are you sure you want to remove {name} from {workspaceName}? This action cannot be undone.",
-        "remove": "Remove"
-    },
-    "editRoleContext": {
-        "billableRolesLink": "Billable roles documentation",
-        "additionalRoles": "Additional roles"
-    },
-    "highestPaidRoleField": {
-        "billable": "Billable"
-    },
-    "integrationCreateEditModal": {
-        "createTitle": "New integration",
-        "editTitle": "Edit integration",
-        "warningTitle": "Warning"
-    },
-    "integrationEditForm": {
-        "name": "Integration name",
-        "namePlaceholder": "Enter integration name..."
-    },
-    "integrationDropdown": {
-        "addIntegration": "Add new integration",
-        "noIntegrations": "No integrations found.",
-        "selectTypeFirst": "Choose the type first",
-        "integrationPlaceholder": "Select an integration"
-    },
-    "dropdown": {
-        "empty": "No items available"
-    },
-    "richTextEditorMentionsList": {
-        "notFound": "No users found"
-    },
-    "workspaceInvitationAcceptedNotification": {
-        "title": "{sender} has accepted your invitation to join {workspaceName}",
-        "deletedUser": "A deleted user"
-    },
-    "workspaceInvitationRejectedNotification": {
-        "title": "{sender} has rejected your invitation to join {workspaceName}",
-        "deletedUser": "A deleted user"
-    },
-    "workspaceInvitationCreatedNotification": {
-        "title": "{sender} has invited you to join {workspaceName}",
-        "deletedUser": "A deleted user"
-    },
-    "versionUpgradeNotification": {
-        "title": "{version} is here! Check out what's new."
-    },
-    "emailNotifications": {
-        "title": "Email notifications",
-        "label": "Mentions, comments and other notifications",
-        "description": "Configure the frequency in which emails are sent to your inbox.",
-        "instant": "Instant",
-        "daily": "Daily",
-        "weekly": "Weekly",
-        "never": "Never",
-        "submitButton": "Update frequency"
-    },
-    "formulaInputField": {
-        "errorInvalidFormula": "The formula is invalid."
-    },
-    "dataExplorer": {
-        "noMatchingNodesText": "No matching data providers were found.",
-        "noProvidersText": "No data providers were found. To get started you can, for example, add a data source or page parameter."
-    },
-    "richTextEditorBubbleMenu": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "underline": "Underline",
-        "strikethrough": "Strike",
-        "link": "Link",
-        "linkEditPlaceholder": "Link URL...",
-        "linkEditDone": "Done"
-    },
-    "richTextEditorFloatingMenu": {
-        "hierarchy": "Hierarchy",
-        "lists": "Lists",
-        "paragraph": "Paragraph",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "heading3": "Heading 3",
-        "orderedList": "Numbered list",
-        "unorderedList": "Bullet list",
-        "code": "Code",
-        "taskList": "Task list"
-    },
-    "selectAIModelForm": {
-        "AIType": "AI Type",
-        "AIModel": "AI Model",
-        "fileField": "File field"
-    },
-    "onboarding": {
-      "title": "Onboarding",
-      "creating": "Creating your first workspace",
-      "continue": "Continue",
-      "skip": "Skip for now",
-      "cancel": "I don't want help setting up",
-      "failedTitle": "Something went wrong",
-      "failedDescription": "The onboarding did not fully complete, although some parts might have been completed.",
-      "failedTryAgain": "Try again",
-      "failedSkip": "Skip onboarding"
-    },
-    "inviteStep": {
-      "title": "Invite collaborators",
-      "description": "You can always add more later.",
-      "collaboratorsLabel": "Collaborators"
-    },
-    "moreStep": {
-      "title": "Tell us a bit more",
-      "roleOrJob": "Role or job title...",
-      "people": "How many people are in your team?",
-      "country": "Country",
-      "share": "I'm okay with sharing this with the Baserow team"
-    },
-    "teamStep": {
-      "title": "Let's build your first workspace together!",
-      "description": "Which team are you on?",
-      "marketingTeam": "Marketing",
-      "productAndDesignTeam": "Product & Design",
-      "engineeringTeam": "Engineering",
-      "operationsTeam": "Operations",
-      "itAndSupportTeam": "IT & Support",
-      "hrAndLegalTeam": "HR & Legal",
-      "financeTeam": "Finance",
-      "creativeProductionTeam": "Creative Production",
-      "salesAndAccountManagementTeam": "Sales & Account Management",
-      "customerServiceTeam": "Customer Service",
-      "manufacturingTeam": "Manufacturing",
-      "otherPersonalTeam": "Other / Personal"
-    },
-    "workspaceStep": {
-      "title": "Create your workspace",
-      "workspaceLabel": "Workspace name"
+      }
     }
+  },
+  "job": {
+    "statePending": "Waiting to start...",
+    "stateStarted": "Started...",
+    "stateFinished": "Finished",
+    "stateFailed": "Failed",
+    "errorJobAlreadyRunningTitle": "Already running",
+    "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
+  },
+  "datetime": {
+    "secondsAgo": "Just now | 1 second ago | {n} seconds ago",
+    "minutesAgo": "0 minutes ago | 1 minute ago | {n} minutes ago",
+    "hoursAgo": "0 hours ago | 1 hour ago | {n} hours ago",
+    "daysAgo": "0 days ago | 1 day ago | {n} days ago",
+    "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
+    "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
+  },
+  "crudTableSearch": {
+    "search": "Search"
+  },
+  "membersSettings": {
+    "membersTabTitle": "Members",
+    "invitesTabTitle": "Invites",
+    "membersTable": {
+      "title": "{userAmount} Members in {workspaceName}",
+      "inviteMember": "Invite member",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Default role",
+        "highestRole": "Highest Role",
+        "highestRoleHelpText": "The highest role this user assigned to them directly or from a team, on anything in this workspace",
+        "teams": "Teams"
+      },
+      "actions": {
+        "copyEmail": "Copy email",
+        "remove": "Remove from workspace"
+      }
+    },
+    "invitesTable": {
+      "title": "{invitesAmount} Pending invites in {workspaceName}",
+      "columns": {
+        "email": "Email",
+        "message": "Message",
+        "role": "Default role"
+      },
+      "actions": {
+        "copyEmail": "Copy email",
+        "remove": "Cancel invite"
+      }
+    },
+    "membersInviteModal": {
+      "title": "Invite workspace members",
+      "submit": "Send invite",
+      "helpIconText": "The selected role will be the users default role in this workspace.",
+      "errors": {
+        "userAlreadyInWorkspace": {
+          "title": "User is already in the workspace.",
+          "text": "It is not possible to send an invitation when the user is already a member of the workspace."
+        }
+      }
+    }
+  },
+  "memberSelectionList": {
+    "searchPlaceholder": "Find ...",
+    "selectedAmountLabel": "{count} selected"
+  },
+  "memberAssignmentModalFooter": {
+    "invite": "Invite {count}",
+    "deselectAll": "Deselect all",
+    "selectAll": "Select all"
+  },
+  "removeFromWorkspaceModal": {
+    "title": "Confirm removal from workspace",
+    "confirmation": "Are you sure you want to remove {name} from {workspaceName}? This action cannot be undone.",
+    "remove": "Remove"
+  },
+  "editRoleContext": {
+    "billableRolesLink": "Billable roles documentation",
+    "additionalRoles": "Additional roles"
+  },
+  "highestPaidRoleField": {
+    "billable": "Billable"
+  },
+  "integrationCreateEditModal": {
+    "createTitle": "New integration",
+    "editTitle": "Edit integration",
+    "warningTitle": "Warning"
+  },
+  "integrationEditForm": {
+    "name": "Integration name",
+    "namePlaceholder": "Enter integration name..."
+  },
+  "integrationDropdown": {
+    "addIntegration": "Add new integration",
+    "noIntegrations": "No integrations found.",
+    "selectTypeFirst": "Choose the type first",
+    "integrationPlaceholder": "Select an integration"
+  },
+  "dropdown": {
+    "empty": "No items available"
+  },
+  "richTextEditorMentionsList": {
+    "notFound": "No users found"
+  },
+  "workspaceInvitationAcceptedNotification": {
+    "title": "{sender} has accepted your invitation to join {workspaceName}",
+    "deletedUser": "A deleted user"
+  },
+  "workspaceInvitationRejectedNotification": {
+    "title": "{sender} has rejected your invitation to join {workspaceName}",
+    "deletedUser": "A deleted user"
+  },
+  "workspaceInvitationCreatedNotification": {
+    "title": "{sender} has invited you to join {workspaceName}",
+    "deletedUser": "A deleted user"
+  },
+  "versionUpgradeNotification": {
+    "title": "{version} is here! Check out what's new."
+  },
+  "emailNotifications": {
+    "title": "Email notifications",
+    "label": "Mentions, comments and other notifications",
+    "description": "Configure the frequency in which emails are sent to your inbox.",
+    "instant": "Instant",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "never": "Never",
+    "submitButton": "Update frequency"
+  },
+  "formulaInputField": {
+    "errorInvalidFormula": "The formula is invalid."
+  },
+  "dataExplorer": {
+    "noMatchingNodesText": "No matching data providers were found.",
+    "noProvidersText": "No data providers were found. To get started you can, for example, add a data source or page parameter."
+  },
+  "richTextEditorBubbleMenu": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strikethrough": "Strike",
+    "link": "Link",
+    "linkEditPlaceholder": "Link URL...",
+    "linkEditDone": "Done"
+  },
+  "richTextEditorFloatingMenu": {
+    "hierarchy": "Hierarchy",
+    "lists": "Lists",
+    "paragraph": "Paragraph",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "heading3": "Heading 3",
+    "orderedList": "Numbered list",
+    "unorderedList": "Bullet list",
+    "code": "Code",
+    "taskList": "Task list"
+  },
+  "selectAIModelForm": {
+    "AIType": "AI Type",
+    "AIModel": "AI Model",
+    "fileField": "File field"
+  },
+  "onboarding": {
+    "title": "Onboarding",
+    "creating": "Creating your first workspace",
+    "continue": "Continue",
+    "skip": "Skip for now",
+    "cancel": "I don't want help setting up",
+    "failedTitle": "Something went wrong",
+    "failedDescription": "The onboarding did not fully complete, although some parts might have been completed.",
+    "failedTryAgain": "Try again",
+    "failedSkip": "Skip onboarding"
+  },
+  "inviteStep": {
+    "title": "Invite collaborators",
+    "description": "You can always add more later.",
+    "collaboratorsLabel": "Collaborators"
+  },
+  "moreStep": {
+    "title": "Tell us a bit more",
+    "roleOrJob": "Role or job title...",
+    "people": "How many people are in your team?",
+    "country": "Country",
+    "share": "I'm okay with sharing this with the Baserow team"
+  },
+  "teamStep": {
+    "title": "Let's build your first workspace together!",
+    "description": "Which team are you on?",
+    "marketingTeam": "Marketing",
+    "productAndDesignTeam": "Product & Design",
+    "engineeringTeam": "Engineering",
+    "operationsTeam": "Operations",
+    "itAndSupportTeam": "IT & Support",
+    "hrAndLegalTeam": "HR & Legal",
+    "financeTeam": "Finance",
+    "creativeProductionTeam": "Creative Production",
+    "salesAndAccountManagementTeam": "Sales & Account Management",
+    "customerServiceTeam": "Customer Service",
+    "manufacturingTeam": "Manufacturing",
+    "otherPersonalTeam": "Other / Personal"
+  },
+  "workspaceStep": {
+    "title": "Create your workspace",
+    "workspaceLabel": "Workspace name"
+  },
+  "colorInput": {
+    "default": "Default"
+  },
+  "imageInput": {
+    "labelDescription": "Select an image to upload...",
+    "labelButton": "Upload"
+  }
 }

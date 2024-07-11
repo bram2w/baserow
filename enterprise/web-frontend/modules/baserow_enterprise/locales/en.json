@@ -293,7 +293,9 @@
     "emailFieldLabelPlaceholder": "Select a field...",
     "noFields": "No fields",
     "nameFieldLabel": "Select name field",
-    "nameFieldPlaceholder": "Select a field..."
+    "nameFieldPlaceholder": "Select a field...",
+    "roleFieldLabel": "Select role field",
+    "roleFieldPlaceholder": "Select a field..."
   },
   "appAuthProviderType": {
     "localBaserowPassword": "Email/Password"

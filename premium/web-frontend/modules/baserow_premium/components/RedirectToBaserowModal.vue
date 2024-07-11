@@ -38,6 +38,10 @@ export default {
       type: String,
       default: 'large',
     },
+    target: {
+      type: String,
+      required: true,
+    },
   },
   methods: {
     redirect() {

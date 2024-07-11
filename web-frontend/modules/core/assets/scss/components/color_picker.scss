@@ -1,12 +1,12 @@
 .color-picker {
   display: flex;
+  gap: 22px;
 }
 
 .color-picker__space {
   position: relative;
-  flex: 208px 0 0;
-  width: 208px;
-  height: 208px;
+  height: 230px;
+  width: 230px;
   overflow: hidden;
   border: 1px solid $color-neutral-200;
   background-image: linear-gradient(to top, #000, transparent),
@@ -39,8 +39,7 @@
 
 .color-picker__slider {
   position: relative;
-  flex: 18px 0 0;
-  margin-left: 22px;
+  width: 18px;
   overflow: hidden;
   border: 1px solid $color-neutral-200;
 

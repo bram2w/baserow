@@ -14,5 +14,10 @@ describe('colorUtils', () => {
         { name: 'Primary', value: 'primary', color: '#ff000000' },
       ])
     ).toBe('secondary')
+    expect(
+      resolveColor('#00000042', [
+        { name: 'Default', value: '#00000042', color: '#00000042' },
+      ])
+    ).toBe('#00000042')
   })
 })

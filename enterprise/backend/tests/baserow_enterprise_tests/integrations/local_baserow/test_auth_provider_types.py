@@ -41,13 +41,14 @@ def test_create_local_baserow_password_app_auth_provider_w_field(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "password"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "password"],
+            ["test@baserow.io", "Test", "password", ""],
         ],
     )
 
-    email_field, name_field, password_field = fields
+    email_field, name_field, password_field, role_field = fields
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -59,6 +60,7 @@ def test_create_local_baserow_password_app_auth_provider_w_field(
             "table_id": table.id,
             "email_field_id": email_field.id,
             "name_field_id": name_field.id,
+            "role_field_id": role_field.id,
             "auth_providers": [
                 {
                     "type": "local_baserow_password",
@@ -104,13 +106,14 @@ def test_create_local_baserow_password_app_auth_provider_w_wrong_field_type(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "url"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "password"],
+            ["test@baserow.io", "Test", "password", ""],
         ],
     )
 
-    email_field, name_field, password_field = fields
+    email_field, name_field, password_field, role_field = fields
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -122,6 +125,7 @@ def test_create_local_baserow_password_app_auth_provider_w_wrong_field_type(
             "table_id": table.id,
             "email_field_id": email_field.id,
             "name_field_id": name_field.id,
+            "role_field_id": role_field.id,
             "auth_providers": [
                 {
                     "type": "local_baserow_password",
@@ -159,13 +163,14 @@ def test_create_local_baserow_password_app_auth_provider_w_wrong_field_id(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "text"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "password"],
+            ["test@baserow.io", "Test", "password", ""],
         ],
     )
 
-    email_field, name_field, password_field = fields
+    email_field, name_field, password_field, role_field = fields
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -177,6 +182,7 @@ def test_create_local_baserow_password_app_auth_provider_w_wrong_field_id(
             "table_id": table.id,
             "email_field_id": email_field.id,
             "name_field_id": name_field.id,
+            "role_field_id": role_field.id,
             "auth_providers": [
                 {
                     "type": "local_baserow_password",
@@ -242,13 +248,14 @@ def test_local_baserow_password_app_auth_provider_after_user_source_update(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "text"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "super not secret"],
+            ["test@baserow.io", "Test", "super not secret", ""],
         ],
     )
 
-    email_field, name_field, password_field = fields
+    email_field, name_field, password_field, role_field = fields
 
     table2, fields2, rows2 = data_fixture.build_table(
         user=user,
@@ -256,9 +263,10 @@ def test_local_baserow_password_app_auth_provider_after_user_source_update(
             ("Email", "text"),
             ("Name", "text"),
             ("Password", "text"),
+            ("Role", "text"),
         ],
         rows=[
-            ["test@baserow.io", "Test", "super not secret"],
+            ["test@baserow.io", "Test", "super not secret", ""],
         ],
     )
 
@@ -271,6 +279,7 @@ def test_local_baserow_password_app_auth_provider_after_user_source_update(
         table=table,
         email_field=email_field,
         name_field=name_field,
+        role_field=role_field,
     )
 
     app_auth_provider = data_fixture.create_app_auth_provider(

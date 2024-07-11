@@ -15,6 +15,7 @@ export function populateWorkflowAction(workflowAction) {
     _: {
       loading: false,
       dispatching: false,
+      dispatchedById: null,
     },
   }
 }
@@ -63,7 +64,8 @@ const mutations = {
   SET_LOADING(state, { workflowAction, value }) {
     workflowAction._.loading = value
   },
-  SET_DISPATCHING(state, { workflowAction, isDispatching }) {
+  SET_DISPATCHING(state, { workflowAction, dispatchedById, isDispatching }) {
+    workflowAction._.dispatchedById = dispatchedById
     workflowAction._.dispatching = isDispatching
   },
 }
@@ -224,8 +226,15 @@ const actions = {
       throw error
     }
   },
-  setDispatching({ commit }, { workflowAction, isDispatching }) {
-    commit('SET_DISPATCHING', { workflowAction, isDispatching })
+  setDispatching(
+    { commit },
+    { workflowAction, dispatchedById, isDispatching }
+  ) {
+    commit('SET_DISPATCHING', {
+      workflowAction,
+      dispatchedById,
+      isDispatching,
+    })
   },
 }
 
@@ -258,8 +267,11 @@ const getters = {
   getLoading: (state) => (workflowAction) => {
     return workflowAction._?.loading
   },
-  getDispatching: (state) => (workflowAction) => {
-    return workflowAction._?.dispatching
+  getDispatching: (state) => (workflowAction, dispatchedById) => {
+    return (
+      workflowAction._.dispatching &&
+      workflowAction._.dispatchedById === dispatchedById
+    )
   },
 }
 

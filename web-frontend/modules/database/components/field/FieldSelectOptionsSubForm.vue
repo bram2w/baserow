@@ -1,17 +1,18 @@
 <template>
   <div>
     <div v-if="loading" class="loading"></div>
-    <div v-else class="control">
-      <label class="control__label control__label--small">{{
-        $t('fieldSingleSelectSubForm.optionsLabel')
-      }}</label>
-      <div class="control__elements">
-        <FieldSelectOptions
-          ref="selectOptions"
-          v-model="values.select_options"
-        ></FieldSelectOptions>
-      </div>
-    </div>
+
+    <FormGroup
+      v-else
+      small-label
+      required
+      :label="$t('fieldSingleSelectSubForm.optionsLabel')"
+    >
+      <FieldSelectOptions
+        ref="selectOptions"
+        v-model="values.select_options"
+      ></FieldSelectOptions>
+    </FormGroup>
   </div>
 </template>
 

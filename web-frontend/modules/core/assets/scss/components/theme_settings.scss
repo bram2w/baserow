@@ -21,6 +21,14 @@
   padding: 0 20px;
 }
 
+.theme-settings__inputs-wrapper {
+  @include flex-align-items(15px);
+}
+
+.theme-settings__input-font-size {
+  flex: none;
+}
+
 .theme-settings__section-title {
   color: $color-neutral-900;
   font-size: 14px;

@@ -1,60 +1,77 @@
 <template>
   <form @submit.prevent="submit">
-    <FormElement :error="fieldHasErrors('name')" class="control">
-      <label class="control__label">{{ $t('userForm.fullName') }}</label>
-      <div class="control__elements">
-        <input
-          ref="name"
-          v-model="values.name"
-          :class="{ 'input--error': fieldHasErrors('name') }"
-          type="text"
-          class="input"
-          :disabled="loading"
-          @blur="$v.values.name.$touch()"
-        />
-        <div v-if="fieldHasErrors('name')" class="error">
-          {{ $t('userForm.error.invalidName') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement :error="fieldHasErrors('username')" class="control">
-      <label class="control__label">{{ $t('userForm.email') }}</label>
-      <div class="control__elements">
-        <input
-          ref="email"
-          v-model="values.username"
-          :class="{ 'input--error': fieldHasErrors('username') }"
-          type="text"
-          class="input"
-          :disabled="loading"
-          @blur="$v.values.username.$touch()"
-        />
-        <div v-show="fieldHasErrors('username')" class="error">
-          {{ $t('userForm.error.invalidEmail') }}
-        </div>
-        <div v-show="values.username !== user.username" class="warning">
+    <FormGroup
+      small-label
+      :label="$t('userForm.fullName')"
+      required
+      class="margin-bottom-2"
+      :error="fieldHasErrors('name')"
+    >
+      <FormInput
+        ref="name"
+        v-model="values.name"
+        size="large"
+        :error="fieldHasErrors('name')"
+        @blur="$v.values.name.$touch()"
+      >
+      </FormInput>
+      <template #error>{{ $t('userForm.error.invalidName') }}</template>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      :label="$t('userForm.email')"
+      required
+      class="margin-bottom-2"
+      :error="fieldHasErrors('username')"
+    >
+      <FormInput
+        ref="email"
+        v-model="values.username"
+        size="large"
+        :error="fieldHasErrors('username')"
+        @blur="$v.values.username.$touch()"
+      >
+      </FormInput>
+
+      <template #warning>
+        <span v-show="values.username !== user.username">
           {{ $t('userForm.warning.changeEmail') }}
-        </div>
-      </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">{{ $t('userForm.isActive') }}</label>
-      <div class="control__elements">
-        <Checkbox v-model="values.is_active" :disabled="loading"></Checkbox>
-      </div>
-      <div v-show="!values.is_active" class="warning">
-        {{ $t('userForm.warning.inactiveUser') }}
-      </div>
-    </FormElement>
-    <FormElement class="control">
-      <label class="control__label">{{ $t('premium.user.isStaff') }}</label>
-      <div class="control__elements">
-        <Checkbox v-model="values.is_staff" :disabled="loading"></Checkbox>
-      </div>
-      <div v-show="values.is_staff" class="warning">
-        {{ $t('userForm.warning.userStaff') }}
-      </div>
-    </FormElement>
+        </span>
+      </template>
+
+      <template #error>
+        <span v-show="fieldHasErrors('username')">
+          {{ $t('userForm.error.invalidEmail') }}
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup
+      small-label
+      :label="$t('userForm.isActive')"
+      required
+      class="margin-bottom-2"
+    >
+      <Checkbox v-model="values.is_active" :disabled="loading"></Checkbox>
+
+      <template #warning>
+        <span v-show="!values.is_active">
+          {{ $t('userForm.warning.inactiveUser') }}
+        </span>
+      </template>
+    </FormGroup>
+
+    <FormGroup small-label :label="$t('premium.user.isStaff')" required>
+      <Checkbox v-model="values.is_staff" :disabled="loading"></Checkbox>
+
+      <template #warning>
+        <span v-show="!values.is_active">
+          {{ $t('userForm.warning.userStaff') }}
+        </span>
+      </template>
+    </FormGroup>
+
     <div class="actions">
       <slot></slot>
       <div class="align-right">

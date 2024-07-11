@@ -779,10 +779,18 @@
     },
     "selectAIModelForm": {
         "AIType": "Type d'IA",
-        "AIModel": "Modèle d'IA"
+        "AIModel": "Modèle d'IA",
+        "fileField": "Champ de fichier"
     },
     "workspaceStep": {
         "title": "Créez votre Projet",
         "workspaceLabel": "Nom du projet"
+    },
+    "colorInput": {
+        "default": "Défaut"
+    },
+    "imageInput": {
+        "labelDescription": "Sélectionnez une image...",
+        "labelButton": "Envoyer"
     }
 }

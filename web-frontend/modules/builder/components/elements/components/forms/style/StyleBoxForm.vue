@@ -1,64 +1,71 @@
 <template>
-  <form @submit.prevent>
-    <FormGroup :label="label" :error="error">
-      <div
-        v-if="borderIsAllowed || paddingIsAllowed"
-        class="row margin-bottom-2"
-        style="--gap: 6px"
-      >
-        <div v-if="borderIsAllowed" class="col col-4">
-          <div class="margin-bottom-1">
-            {{ $t('styleBoxForm.borderLabel') }}
-          </div>
-          <input
-            v-model="values.border_size"
-            type="number"
-            class="input"
-            :class="{
-              'input--error': error,
-            }"
-            @blur="$v.values.border_size.$touch()"
-          />
-        </div>
-        <div v-if="paddingIsAllowed" class="col col-4">
-          <div class="margin-bottom-1">
-            {{ $t('styleBoxForm.paddingLabel') }}
-          </div>
-          <input
-            v-model="values.padding"
-            type="number"
-            class="input"
-            :class="{
-              'input--error': error,
-            }"
-            @blur="$v.values.padding.$touch()"
-          />
-        </div>
-      </div>
-      <ColorInputGroup
+  <FormSection :title="title">
+    <form @submit.prevent>
+      <FormGroup
         v-if="borderIsAllowed"
-        v-model="values.border_color"
-        label-after
-        class="margin-top-2"
+        horizontal
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.borderColor')"
+      >
+        <ColorInput
+          v-model="values.border_color"
+          small
+          :color-variables="colorVariables"
+        />
+      </FormGroup>
+      <FormGroup
+        v-if="borderIsAllowed"
+        class="margin-bottom-1"
+        small-label
+        required
         :label="$t('styleBoxForm.borderLabel')"
-        :color-variables="colorVariables"
-      />
-    </FormGroup>
-  </form>
+        horizontal
+        :error-message="sizeError"
+      >
+        <PixelValueSelector v-model="values.border_size" />
+      </FormGroup>
+      <FormGroup
+        v-if="paddingIsAllowed"
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.paddingLabel')"
+        horizontal
+        :error-message="paddingError"
+      >
+        <PixelValueSelector v-model="values.padding" />
+      </FormGroup>
+      <FormGroup
+        v-if="marginIsAllowed"
+        class="margin-bottom-1"
+        small-label
+        required
+        :label="$t('styleBoxForm.marginLabel')"
+        horizontal
+        :error-message="marginError"
+      >
+        <PixelValueSelector v-model="actualMargin" />
+      </FormGroup>
+    </form>
+  </FormSection>
 </template>
 
 <script>
 import { required, integer, between } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
-import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
+
+import PixelValueSelector from '@baserow/modules/builder/components/PixelValueSelector'
 
 export default {
   name: 'StyleBoxForm',
+  components: { PixelValueSelector },
   mixins: [form],
   inject: ['builder'],
   props: {
-    label: {
+    title: {
       type: String,
       required: true,
     },
@@ -67,6 +74,11 @@ export default {
       required: true,
     },
     paddingIsAllowed: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    marginIsAllowed: {
       type: Boolean,
       required: false,
       default: () => false,
@@ -80,6 +92,7 @@ export default {
   data() {
     return {
       values: {
+        margin: 0,
         padding: 0,
         border_color: 'border',
         border_size: 0,
@@ -87,15 +100,34 @@ export default {
     }
   },
   computed: {
+    // TODO zdm can be removed when we remove the null value from backend field
+    actualMargin: {
+      get() {
+        return this.values.margin || 0
+      },
+      set(newValue) {
+        this.values.margin = newValue
+      },
+    },
     colorVariables() {
       return themeToColorVariables(this.builder.theme)
     },
-    /**
-     * Returns only one error because we don't have the space to write one error per
-     * field as the style fields are on the same line.
-     */
-    error() {
-      if (this.$v.values.padding.$error || this.$v.values.border_size.$error) {
+    marginError() {
+      if (this.$v.actualMargin.$invalid) {
+        return this.$t('error.minMaxValueField', { min: 0, max: 200 })
+      } else {
+        return ''
+      }
+    },
+    paddingError() {
+      if (this.$v.values.padding.$invalid) {
+        return this.$t('error.minMaxValueField', { min: 0, max: 200 })
+      } else {
+        return ''
+      }
+    },
+    sizeError() {
+      if (this.$v.values.border_size.$invalid) {
         return this.$t('error.minMaxValueField', { min: 0, max: 200 })
       } else {
         return ''
@@ -103,7 +135,6 @@ export default {
     },
   },
   methods: {
-    resolveColor,
     getDefaultValues() {
       return this.value
     },
@@ -124,6 +155,11 @@ export default {
           integer,
           between: between(0, 200),
         },
+      },
+      actualMargin: {
+        required,
+        integer,
+        between: between(0, 200),
       },
     }
   },

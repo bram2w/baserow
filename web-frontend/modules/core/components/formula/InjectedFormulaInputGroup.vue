@@ -3,6 +3,7 @@
     :is="formulaComponent"
     :data-providers-allowed="dataProvidersAllowed || []"
     v-bind="$attrs"
+    class="margin-bottom-2"
     v-on="$listeners"
   />
 </template>

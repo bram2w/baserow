@@ -169,7 +169,7 @@ x-backend-variables: &backend-variables
 
 services:
   backend:
-    image: baserow/backend:1.25.2
+    image: baserow/backend:1.26.0
     restart: unless-stopped
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
@@ -184,7 +184,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.25.2
+    image: baserow/web-frontend:1.26.0
     restart: unless-stopped
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
@@ -198,6 +198,7 @@ services:
       INITIAL_TABLE_DATA_LIMIT:
       DOWNLOAD_FILE_VIA_XHR:
       BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW:
+      BASEROW_DISABLE_SUPPORT:
       HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
       DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
       FEATURE_FLAGS:
@@ -218,7 +219,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.25.2
+    image: baserow/backend:1.26.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -235,7 +236,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.25.2
+    image: baserow/backend:1.26.0
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -252,7 +253,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.25.2
+    image: baserow/backend:1.26.0
     restart: unless-stopped
     command: celery-beat
     environment:

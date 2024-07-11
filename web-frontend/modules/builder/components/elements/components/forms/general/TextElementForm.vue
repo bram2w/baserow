@@ -1,48 +1,65 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <FormGroup
+      :label="$t('textElementForm.textFormatTypeLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.format"
+        type="button"
+        :options="textFormatTypeOptions"
+      >
+      </RadioGroup>
+    </FormGroup>
+
+    <CustomStyle
+      v-model="values.styles"
+      style-key="typography"
+      :config-block-types="['typography']"
+      :theme="builder.theme"
+      :extra-args="{ onlyBody: values.format === TEXT_FORMAT_TYPES.PLAIN }"
+    />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
       :label="$t('textElementForm.textTitle')"
       :placeholder="$t('textElementForm.textPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
-    <FormElement class="control">
-      <HorizontalAlignmentsSelector v-model="values.alignment" />
-    </FormElement>
-    <FormGroup :label="$t('textElementForm.textFormatTypeLabel')">
-      <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.PLAIN">
-        {{ $t('textElementForm.textFormatTypePlain') }}
-      </RadioButton>
-      <RadioButton v-model="values.format" :value="TEXT_FORMAT_TYPES.MARKDOWN">
-        {{ $t('textElementForm.textFormatTypeMarkdown') }}
-      </RadioButton>
-    </FormGroup>
   </form>
 </template>
 
 <script>
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import {
-  HORIZONTAL_ALIGNMENTS,
-  TEXT_FORMAT_TYPES,
-} from '@baserow/modules/builder/enums'
-import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector.vue'
+import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'TextElementForm',
   components: {
-    HorizontalAlignmentsSelector,
     ApplicationBuilderFormulaInputGroup,
+    CustomStyle,
   },
   mixins: [elementForm],
   data() {
     return {
       values: {
         value: '',
-        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
         format: TEXT_FORMAT_TYPES.PLAIN,
+        styles: {},
       },
+      textFormatTypeOptions: [
+        {
+          value: TEXT_FORMAT_TYPES.PLAIN,
+          label: this.$t('textElementForm.textFormatTypePlain'),
+        },
+        {
+          value: TEXT_FORMAT_TYPES.MARKDOWN,
+          label: this.$t('textElementForm.textFormatTypeMarkdown'),
+        },
+      ],
     }
   },
   computed: {

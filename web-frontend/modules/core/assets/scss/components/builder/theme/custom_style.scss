@@ -1,0 +1,20 @@
+.custom-style {
+  position: relative;
+}
+
+.custom-style__button {
+  position: absolute;
+  right: 0;
+  top: -6px;
+}
+
+.custom-style__config-blocks {
+  width: 400px;
+  padding: 20px 20px 5px;
+  overflow-y: scroll;
+  max-height: calc(100vh - 20px);
+}
+
+.custom-style__config-block-title {
+  padding: 0 10px;
+}

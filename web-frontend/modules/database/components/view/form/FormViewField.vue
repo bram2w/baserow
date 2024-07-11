@@ -79,28 +79,24 @@
           @update="updateValue"
         />
         <div class="form-view__field-options">
-          <div
+          <FormGroup
             v-if="Object.keys(fieldComponents).length > 1"
-            class="control control--horizontal-variable"
+            horizontal
+            :label="$t('formViewField.showFieldAs')"
+            required
+            small-label
+            horizontal-variable
+            class="margin-bottom-3"
           >
-            <label class="control__label">
-              {{ $t('formViewField.showFieldAs') }}
-            </label>
-            <div class="control__elements">
-              <RadioButton
-                v-for="(v, key) in fieldComponents"
-                :key="key"
-                :model-value="fieldOptions.field_component"
-                :value="key"
-                :disabled="readOnly"
-                class="margin-right-1"
-                @input="
-                  $emit('updated-field-options', { field_component: $event })
-                "
-                >{{ v.name }}</RadioButton
-              >
-            </div>
-          </div>
+            <RadioGroup
+              type="button"
+              :model-value="fieldOptions.field_component"
+              :options="fieldComponentsOptions"
+              @input="
+                $emit('updated-field-options', { field_component: $event })
+              "
+            ></RadioGroup>
+          </FormGroup>
           <SwitchInput
             class="margin-bottom-1"
             small
@@ -240,6 +236,15 @@ export default {
       )
         ? components[this.fieldOptions.field_component]
         : components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY]
+    },
+    fieldComponentsOptions() {
+      const options = []
+
+      for (const [key, value] of Object.entries(this.fieldComponents)) {
+        options.push({ label: value.name, value: key })
+      }
+
+      return options
     },
   },
   watch: {

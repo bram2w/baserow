@@ -13,8 +13,8 @@ from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
-from baserow.contrib.database.fields.deferred_field_fk_updater import (
-    DeferredFieldFkUpdater,
+from baserow.contrib.database.fields.deferred_foreign_key_updater import (
+    DeferredForeignKeyUpdater,
 )
 from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -958,7 +958,7 @@ def test_import_export_single_select_field(data_fixture):
         field_serialized,
         ImportExportConfig(include_permission_data=True),
         id_mapping,
-        DeferredFieldFkUpdater(),
+        DeferredForeignKeyUpdater(),
     )
 
     assert field_imported.select_options.all().count() == 1

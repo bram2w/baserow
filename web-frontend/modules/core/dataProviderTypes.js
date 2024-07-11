@@ -109,10 +109,21 @@ export class DataProviderType extends Registerable {
   }
 
   /**
+   * Return the schema of the context data provided by this data provider
+   * @param {Object} applicationContext the application context.
+   * @returns {{type: string, properties: object}}
+   */
+  getContextDataSchema(applicationContext) {
+    throw new Error(
+      '.getContextDataSchema() must be set on the dataProviderType.'
+    )
+  }
+
+  /**
    * This function returns an object that can be read by the data explorer to display
    * the data available from each data provider.
    *
-   * Make sure to implement `getDataContent` and `getDataSchema` for every data provider
+   * Make sure to implement `getDataContent`, `getDataSchema` and `getContextDataSchema` for every data provider
    * if they should show data in the data explorer.
    *
    * @param {Object} applicationContext the application context.

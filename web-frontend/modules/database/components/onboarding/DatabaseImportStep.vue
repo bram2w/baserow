@@ -2,39 +2,46 @@
   <div>
     <h1>{{ $t('databaseImportStep.title') }}</h1>
     <p>{{ $t('databaseImportStep.description') }}</p>
-    <FormInput
-      v-model="tableName"
-      :placeholder="$t('databaseImportStep.tableNameLabel') + '...'"
+
+    <FormGroup
       :label="$t('databaseImportStep.tableNameLabel')"
-      large
-      :error="
-        $v.tableName.$dirty && !$v.tableName.required
-          ? $t('error.requiredField')
-          : null
-      "
-      @input="updateValue"
-      @blur="$v.tableName.$touch()"
-    />
-    <div class="control margin-bottom-3">
-      <div class="control__elements">
-        <ul class="choice-items">
-          <li v-for="importerType in importerTypes" :key="importerType.type">
-            <a
-              class="choice-items__link"
-              :class="{ active: importer === importerType.type }"
-              @click="importer = importerType.type"
-            >
-              <i class="choice-items__icon" :class="importerType.iconClass"></i>
-              <span> {{ importerType.getName() }}</span>
-              <i
-                v-if="importer === importerType.type"
-                class="choice-items__icon-active iconoir-check-circle"
-              ></i>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
+      small-label
+      required
+      class="margin-bottom-3"
+    >
+      <FormInput
+        v-model="tableName"
+        :placeholder="$t('databaseImportStep.tableNameLabel') + '...'"
+        size="large"
+        :error="
+          $v.tableName.$dirty && !$v.tableName.required
+            ? $t('error.requiredField')
+            : false
+        "
+        @input="updateValue"
+        @blur="$v.tableName.$touch()"
+      />
+    </FormGroup>
+
+    <FormGroup class="margin-bottom-3">
+      <ul class="choice-items">
+        <li v-for="importerType in importerTypes" :key="importerType.type">
+          <a
+            class="choice-items__link"
+            :class="{ active: importer === importerType.type }"
+            @click="importer = importerType.type"
+          >
+            <i class="choice-items__icon" :class="importerType.iconClass"></i>
+            <span> {{ importerType.getName() }}</span>
+            <i
+              v-if="importer === importerType.type"
+              class="choice-items__icon-active iconoir-check-circle"
+            ></i>
+          </a>
+        </li>
+      </ul>
+    </FormGroup>
+
     <component
       :is="importerComponent"
       ref="importer"

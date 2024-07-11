@@ -1,17 +1,16 @@
 <template>
-  <input
+  <FormInput
     ref="input"
     v-model="formattedValue"
     :placeholder="field.duration_format"
-    type="text"
-    class="input filters__value-input input--small"
-    :class="{ 'input--error': $v.formattedValue.$error }"
+    :error="$v.formattedValue.$error"
     :disabled="disabled"
     @blur="updateFormattedValue(field, copy)"
     @keypress="onKeyPress(field, $event)"
     @keyup="setCopyAndDelayedUpdate($event.target.value)"
     @keydown.enter="setCopyAndDelayedUpdate($event.target.value, true)"
-  />
+  >
+  </FormInput>
 </template>
 
 <script>

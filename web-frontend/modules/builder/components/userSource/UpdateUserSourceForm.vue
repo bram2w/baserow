@@ -1,16 +1,24 @@
 <template>
   <form @submit.prevent="submit">
     <FormRow>
-      <FormInput
-        v-model="$v.values.name.$model"
+      <FormGroup
         :label="$t('updateUserSourceForm.nameFieldLabel')"
-        class="update-user-source-form__name-input"
-        :placeholder="$t('updateUserSourceForm.nameFieldPlaceholder')"
-        :error="getError('name')"
-      />
+        required
+        small-label
+        :error-message="getError('name')"
+      >
+        <FormInput
+          v-model="$v.values.name.$model"
+          size="large"
+          class="update-user-source-form__name-input"
+          :placeholder="$t('updateUserSourceForm.nameFieldPlaceholder')"
+        />
+      </FormGroup>
       <FormGroup
         :label="$t('updateUserSourceForm.integrationFieldLabel')"
-        :error="getError('integration_id')"
+        :error-message="getError('integration_id')"
+        required
+        small-label
       >
         <IntegrationDropdown
           v-model="$v.values.integration_id.$model"
@@ -29,33 +37,42 @@
       @values-changed="emitChange"
     />
     <div v-if="integration">
-      <h4>{{ $t('updateUserSourceForm.authTitle') }}</h4>
-
-      <div v-for="appAuthType in appAuthProviderTypes" :key="appAuthType.type">
-        <Checkbox
-          :checked="hasAtLeastOneOfThisType(appAuthType)"
-          @input="onSelect(appAuthType)"
-        >
-          {{ appAuthType.name }}
-        </Checkbox>
+      <FormGroup
+        :label="$t('updateUserSourceForm.authTitle')"
+        small-label
+        required
+      >
         <div
-          v-for="appAuthProvider in appAuthProviderPerTypes[appAuthType.type]"
-          :key="appAuthProvider.id"
-          class="update-user-source-form__auth-provider-form"
+          v-for="appAuthType in appAuthProviderTypes"
+          :key="appAuthType.type"
         >
-          <component
-            :is="appAuthType.formComponent"
-            v-if="hasAtLeastOneOfThisType(appAuthType)"
-            :integration="integration"
-            :current-user-source="fullValues"
-            :default-values="appAuthProvider"
-            excluded-form
-            @values-changed="updateAuthProvider(appAuthProvider, $event)"
-          />
+          <Checkbox
+            :checked="hasAtLeastOneOfThisType(appAuthType)"
+            @input="onSelect(appAuthType)"
+          >
+            {{ appAuthType.name }}
+          </Checkbox>
+
+          <div
+            v-for="appAuthProvider in appAuthProviderPerTypes[appAuthType.type]"
+            :key="appAuthProvider.id"
+            class="update-user-source-form__auth-provider-form"
+          >
+            <component
+              :is="appAuthType.formComponent"
+              v-if="hasAtLeastOneOfThisType(appAuthType)"
+              :integration="integration"
+              :current-user-source="fullValues"
+              :default-values="appAuthProvider"
+              excluded-form
+              @values-changed="updateAuthProvider(appAuthProvider, $event)"
+            />
+          </div>
         </div>
-      </div>
+      </FormGroup>
+
+      <input type="submit" hidden />
     </div>
-    <input type="submit" hidden />
   </form>
 </template>
 

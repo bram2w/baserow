@@ -14,20 +14,29 @@ class ElementDict(TypedDict):
     parent_element_id: int
     place_in_container: str
     visibility: str
+    role_type: str
+    roles: list
+    styles: dict
     style_border_top_color: str
     style_border_top_size: int
     style_padding_top: int
+    style_margin_top: int
     style_border_bottom_color: str
     style_border_bottom_size: int
     style_padding_bottom: int
+    style_margin_bottom: int
     style_border_left_color: str
     style_border_left_size: int
     style_padding_left: int
+    style_margin_left: int
     style_border_right_color: str
     style_border_right_size: int
     style_padding_right: int
+    style_margin_right: int
     style_background: str
     style_background_color: str
+    style_background_file_id: str
+    style_background_mode: str
     style_width: str
 
 

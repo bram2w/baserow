@@ -7,51 +7,53 @@
       <p>{{ $t('passwordSettings.changedDescription') }}</p>
     </Alert>
     <form v-if="!success" @submit.prevent="changePassword">
-      <div class="control">
-        <label class="control__label">{{
-          $t('passwordSettings.oldPasswordLabel')
-        }}</label>
-        <div class="control__elements">
-          <input
-            v-model="account.oldPassword"
-            :class="{ 'input--error': $v.account.oldPassword.$error }"
-            type="password"
-            class="input"
-            @blur="$v.account.oldPassword.$touch()"
-          />
-          <div v-if="$v.account.oldPassword.$error" class="error">
-            {{ $t('passwordSettings.oldPasswordRequiredError') }}
-          </div>
-        </div>
-      </div>
-      <div class="control">
-        <label class="control__label">{{
-          $t('passwordSettings.newPasswordLabel')
-        }}</label>
-        <div class="control__elements">
-          <PasswordInput
-            v-model="account.newPassword"
-            :validation-state="$v.account.newPassword"
-          />
-        </div>
-      </div>
-      <div class="control">
-        <label class="control__label">{{
-          $t('passwordSettings.repeatNewPasswordLabel')
-        }}</label>
-        <div class="control__elements">
-          <input
-            v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
-            type="password"
-            class="input"
-            @blur="$v.account.passwordConfirm.$touch()"
-          />
-          <div v-if="$v.account.passwordConfirm.$error" class="error">
-            {{ $t('passwordSettings.repeatNewPasswordMatchError') }}
-          </div>
-        </div>
-      </div>
+      <FormGroup
+        :label="$t('passwordSettings.oldPasswordLabel')"
+        small-label
+        required
+        :error="$v.account.oldPassword.$error"
+        class="margin-bottom-2"
+      >
+        <FormInput
+          v-model="account.oldPassword"
+          :error="$v.account.oldPassword.$error"
+          type="password"
+          size="large"
+          @blur="$v.account.oldPassword.$touch()"
+        ></FormInput>
+        <template #error>
+          {{ $t('passwordSettings.oldPasswordRequiredError') }}</template
+        >
+      </FormGroup>
+
+      <PasswordInput
+        v-model="account.newPassword"
+        :validation-state="$v.account.newPassword"
+        :label="$t('passwordSettings.newPasswordLabel')"
+        class="margin-bottom-2"
+      ></PasswordInput>
+
+      <FormGroup
+        :error="$v.account.passwordConfirm.$error"
+        :label="$t('passwordSettings.repeatNewPasswordLabel')"
+        required
+        small-label
+        class="margin-bottom-2"
+      >
+        <FormInput
+          v-model="account.passwordConfirm"
+          :error="$v.account.passwordConfirm.$error"
+          type="password"
+          size="large"
+          @blur="$v.account.passwordConfirm.$touch()"
+        >
+        </FormInput>
+
+        <template #error>
+          {{ $t('passwordSettings.repeatNewPasswordMatchError') }}</template
+        >
+      </FormGroup>
+
       <div class="actions actions--right">
         <Button
           type="primary"

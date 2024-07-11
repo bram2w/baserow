@@ -1,47 +1,47 @@
 <template>
-  <div>
-    <div class="control">
-      <label class="control__label control__label--small">{{
-        $t('fieldType.formula')
-      }}</label>
-      <div class="control__elements">
-        <input
-          ref="formulaInput"
-          :value="formula"
-          type="text"
-          class="input input--small input--monospace"
-          :placeholder="
-            $t('fieldFormulaInitialSubForm.formulaInputPlaceholder')
-          "
-          @click="$emit('open-advanced-context', $refs.formulaInput)"
-          @input="$emit('open-advanced-context', $refs.formulaInput)"
-        />
-        <component
-          :is="component"
-          v-for="(component, index) in additionalInputComponents"
-          :key="index"
-          :database="database"
-          :table="table"
-          @update-formula="$emit('update-formula', $event)"
-        ></component>
-        <div v-if="loading" class="loading"></div>
-        <template v-else>
-          <div v-if="error" class="error formula-field__error">
-            {{ error }}
-          </div>
-          <div class="formula-field__refresh-link">
-            <a
-              v-if="formulaTypeRefreshNeeded"
-              href="#"
-              @click.stop="$emit('refresh-formula-type')"
-            >
-              <i class="iconoir-refresh-double"></i>
-              {{ $t('fieldFormulaInitialSubForm.refreshFormulaOptions') }}
-            </a>
-          </div>
-        </template>
-      </div>
-    </div>
+  <div ref="formulaInput">
+    <FormGroup
+      small-label
+      :label="$t('fieldType.formula')"
+      required
+      :error="!!error"
+      class="margin-bottom-2"
+    >
+      <FormInput
+        :value="formula"
+        monospace
+        :loading="loading"
+        :placeholder="$t('fieldFormulaInitialSubForm.formulaInputPlaceholder')"
+        :focus-on-click="false"
+        @click="$emit('open-advanced-context', $refs.formulaInput)"
+        @input="$emit('open-advanced-context', $refs.formulaInput)"
+      ></FormInput>
+
+      <component
+        :is="component"
+        v-for="(component, index) in additionalInputComponents"
+        :key="index"
+        :database="database"
+        :table="table"
+        @update-formula="$emit('update-formula', $event)"
+      ></component>
+
+      <template v-if="!loading" #error
+        ><div class="formula-field__error">{{ error }}</div></template
+      >
+      <template v-if="!loading">
+        <a
+          v-if="formulaTypeRefreshNeeded"
+          class="formula-field__refresh-link"
+          href="#"
+          @click.stop="$emit('refresh-formula-type')"
+        >
+          <i class="iconoir-refresh-double"></i>
+          {{ $t('fieldFormulaInitialSubForm.refreshFormulaOptions') }}
+        </a>
+      </template>
+    </FormGroup>
+
     <template v-if="showTypeFormattingOptions">
       <FormulaTypeSubForms
         :default-values="defaultValues"

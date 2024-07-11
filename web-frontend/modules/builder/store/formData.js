@@ -1,20 +1,29 @@
 import Vue from 'vue'
+import {
+  getValueAtPath,
+  setValueAtPath,
+} from '@baserow/modules/core/utils/object'
 
 const state = {}
 
+/**
+ * Responsible for setting a form entry at a given path in the form data of a page.
+ * We use lodash's `set` in `setValueAtPath`. A shallow copy of `page.formData` is
+ * returned with the updated value.
+ * @param {Object} page - The page object that holds the form data.
+ * @param {String} uniqueElementId - The unique element id of the form element.
+ * @param {Any} value - The value to set at the path.
+ */
+function setFormEntryAtPath(page, uniqueElementId, value) {
+  page.formData = setValueAtPath({ ...page.formData }, uniqueElementId, value)
+}
+
 const mutations = {
-  SET_FORM_DATA(state, { page, elementId, payload }) {
+  SET_FORM_DATA(state, { page, uniqueElementId, payload }) {
     if (!page.formData) {
       Vue.set(page, 'formData', {})
     }
-
-    // When the payload is being initialized, if it
-    // doesn't have a 'touched' property, we set it to false
-    if (!Object.prototype.hasOwnProperty.call(payload, 'touched')) {
-      payload.touched = false
-    }
-
-    page.formData = { ...page.formData, [elementId]: payload }
+    setFormEntryAtPath(page, uniqueElementId, payload)
   },
   REMOVE_FORM_DATA(state, { page, elementId }) {
     page.formData = Object.fromEntries(
@@ -23,20 +32,20 @@ const mutations = {
       )
     )
   },
-  SET_ELEMENT_TOUCHED(state, { page, elementId, wasTouched }) {
-    page.formData[elementId].touched = wasTouched
+  SET_ELEMENT_TOUCHED(state, { page, uniqueElementId, wasTouched }) {
+    setFormEntryAtPath(page, `${uniqueElementId}.touched`, wasTouched)
   },
 }
 
 const actions = {
-  setFormData({ commit }, { page, elementId, payload }) {
-    commit('SET_FORM_DATA', { page, elementId, payload })
+  setFormData({ commit }, { page, uniqueElementId, payload }) {
+    commit('SET_FORM_DATA', { page, uniqueElementId, payload })
   },
   removeFormData({ commit }, { page, elementId }) {
     commit('REMOVE_FORM_DATA', { page, elementId })
   },
-  setElementTouched({ commit }, { page, elementId, wasTouched }) {
-    commit('SET_ELEMENT_TOUCHED', { page, elementId, wasTouched })
+  setElementTouched({ commit }, { page, uniqueElementId, wasTouched }) {
+    commit('SET_ELEMENT_TOUCHED', { page, uniqueElementId, wasTouched })
   },
 }
 
@@ -44,8 +53,15 @@ const getters = {
   getFormData: (state) => (page) => {
     return page.formData || {}
   },
-  getElementTouched: (state, getters) => (page, elementId) => {
-    return page.formData[elementId].touched
+  getElementFormEntry: (state, getters) => (page, uniqueElementId) => {
+    const formData = getters.getFormData(page)
+    return getValueAtPath(formData, uniqueElementId) || {}
+  },
+  getElementInvalid: (state, getters) => (page, uniqueElementId) => {
+    return !getters.getElementFormEntry(page, uniqueElementId).isValid
+  },
+  getElementTouched: (state, getters) => (page, uniqueElementId) => {
+    return getters.getElementFormEntry(page, uniqueElementId).touched
   },
 }
 

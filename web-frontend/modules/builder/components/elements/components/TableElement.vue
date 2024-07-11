@@ -1,10 +1,5 @@
 <template>
-  <div
-    :style="{
-      '--button-color': resolveColor(element.button_color, colorVariables),
-    }"
-    class="table-element"
-  >
+  <div class="table-element">
     <BaserowTable
       :fields="element.fields"
       :rows="rows"
@@ -17,6 +12,8 @@
           :field="field"
           :application-context-additions="{
             recordIndex: rowIndex,
+            recordIndexPath: [...applicationContext.recordIndexPath, rowIndex],
+            field,
           }"
           v-bind="value"
         />
@@ -30,11 +27,12 @@
     <div class="table-element__footer">
       <ABButton
         v-if="hasMorePage"
+        :style="getStyleOverride('button')"
         :disabled="contentLoading"
         :loading="contentLoading"
         @click="loadMore()"
       >
-        {{ $t('tableElement.showMore') }}
+        {{ resolvedButtonLoadMoreLabel || $t('tableElement.showMore') }}
       </ABButton>
     </div>
   </div>
@@ -103,6 +101,11 @@ export default {
     orientation() {
       const device = this.$store.getters['page/getDeviceTypeSelected']
       return this.element.orientation[device]
+    },
+    resolvedButtonLoadMoreLabel() {
+      return ensureString(
+        this.resolveFormula(this.element.button_load_more_label)
+      )
     },
   },
 

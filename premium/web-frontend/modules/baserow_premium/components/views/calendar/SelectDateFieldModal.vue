@@ -13,7 +13,12 @@
     >
       <div class="actions">
         <div class="align-right">
-          <Button type="primary" :loading="loading" :disabled="loading">
+          <Button
+            type="primary"
+            :loading="loading"
+            :disabled="loading"
+            size="large"
+          >
             {{ $t('selectDateFieldModal.save') }}</Button
           >
         </div>

@@ -258,7 +258,9 @@
   "fieldLinkRowSubForm": {
     "noTable": "You need at least one other table in the same database to link to.",
     "selectTableLabel": "Select a table to link to",
-    "hasRelatedFieldLabel": "Create related field in linked table"
+    "hasRelatedFieldLabel": "Create related field in linked table",
+    "limitToView": "Limit selection to view",
+    "limitToViewDescription": "Note that this is only visual. It's still possible to make relationships outside of the view via the related table or API."
   },
   "fieldSelectOptions": {
     "add": "Add an option"
@@ -630,6 +632,13 @@
   },
   "formViewMeta": {
     "includeRowId": "Use {row_id} to include the newly created row id in the URL."
+  },
+  "formViewMetaControls": {
+    "whenSubmittedLabel": "When the form is submitted",
+    "showMessage": "Show a message",
+    "urlRedirect": "Redirect to URL",
+    "theMessage": "The message",
+    "theURL": "The URL"
   },
   "previewAny": {
     "externalWarning": "Opening your file via an external service exposes your file to their servers."

@@ -3,6 +3,9 @@ export default (client) => {
     fetchAll(applicationId) {
       return client.get(`/application/${applicationId}/user-sources/`)
     },
+    fetchUserRoles(applicationId) {
+      return client.get(`/application/${applicationId}/user-sources/roles/`)
+    },
     create(applicationId, userSourceType, values, beforeId = null) {
       const payload = {
         type: userSourceType,

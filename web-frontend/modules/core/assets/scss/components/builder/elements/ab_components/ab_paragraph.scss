@@ -1,14 +1,12 @@
 .ab-paragraph {
-  font-size: 14px;
+  font-size: var(--body-font-size, 14px);
   margin: 0;
-  color: $black;
-  text-align: left;
+  color: var(--body-text-color, $black);
+  text-align: var(--body-text-alignment, left);
+  font-family: var(--body-font-family, Inter);
 
-  .element--alignment-horizontal-center & {
-    text-align: center;
-  }
-
-  .element--alignment-horizontal-right & {
-    text-align: right;
+  // for markdown text
+  strong {
+    color: var(--body-text-color, $black);
   }
 }

@@ -31,9 +31,12 @@
       <span class="grid-view__description-options">
         <HelpIcon
           v-if="field.description"
-          :tooltip="descriptionText"
-          :tooltip-content-type="'html'"
-          :tooltip-content-classes="'tooltip__content--expandable'"
+          :tooltip="field.description || ''"
+          :tooltip-content-type="'plain'"
+          :tooltip-content-classes="[
+            'tooltip__content--expandable',
+            'tooltip__content--expandable-plain-text',
+          ]"
           :icon="'info-empty'"
         />
 
@@ -313,9 +316,6 @@ export default {
     }
   },
   computed: {
-    descriptionText() {
-      return (this.field.description || '').replaceAll('\n', '<br/>')
-    },
     width() {
       return this.getFieldWidth(this.field.id)
     },

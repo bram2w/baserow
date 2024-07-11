@@ -114,14 +114,16 @@ export default {
       if (el.tooltipOptions.contentIsHtml) {
         el.tooltipContentElement.innerHTML = el.tooltipOptions.value
       } else {
-        el.tooltipContentElement.textContent = el.tooltipOptions.value
+        el.tooltipContentElement.appendChild(
+          document.createTextNode(el.tooltipOptions.value)
+        )
       }
-      // additional css classes for content container
-      const contentClass = ['tooltip__content']
+
+      let contentClasses = ['tooltip__content']
       if (el.tooltipOptions.contentClasses) {
-        contentClass.push(el.tooltipOptions.contentClasses)
+        contentClasses = contentClasses.concat(el.tooltipOptions.contentClasses)
       }
-      el.tooltipContentElement.className = contentClass.join(' ')
+      el.tooltipContentElement.className = contentClasses.join(' ')
 
       el.updatePositionEvent()
       // we just entered, so we don't want any previously set timeout to close

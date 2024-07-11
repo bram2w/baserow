@@ -4,6 +4,7 @@ import pytest
 
 from baserow.contrib.builder.elements.models import (
     ButtonElement,
+    Element,
     HeadingElement,
     LinkElement,
 )
@@ -51,6 +52,8 @@ def test_repeat_element_import_child_with_formula_with_current_record(data_fixtu
                 "items_per_page": 20,
                 "orientation": "vertical",
                 "items_per_row": {"tablet": 2, "desktop": 2, "smartphone": 2},
+                "roles": [],
+                "role_type": Element.ROLE_TYPES.ALLOW_ALL,
             },
             {
                 "id": 24,
@@ -62,6 +65,8 @@ def test_repeat_element_import_child_with_formula_with_current_record(data_fixtu
                 "column_amount": 3,
                 "column_gap": 20,
                 "alignment": "top",
+                "roles": [],
+                "role_type": Element.ROLE_TYPES.ALLOW_ALL,
             },
             {
                 "id": 29,
@@ -74,6 +79,8 @@ def test_repeat_element_import_child_with_formula_with_current_record(data_fixtu
                 "width": "auto",
                 "alignment": "left",
                 "button_color": "primary",
+                "roles": [],
+                "role_type": Element.ROLE_TYPES.ALLOW_ALL,
             },
             {
                 "id": 290,
@@ -83,6 +90,8 @@ def test_repeat_element_import_child_with_formula_with_current_record(data_fixtu
                 "place_in_container": "0",
                 "visibility": "all",
                 "value": "get('current_record.field_424')",
+                "roles": [],
+                "role_type": Element.ROLE_TYPES.ALLOW_ALL,
             },
             {
                 "id": 291,
@@ -96,6 +105,8 @@ def test_repeat_element_import_child_with_formula_with_current_record(data_fixtu
                 "page_parameters": [
                     {"name": "id", "value": "get('current_record.field_424')"}
                 ],
+                "roles": [],
+                "role_type": Element.ROLE_TYPES.ALLOW_ALL,
             },
         ],
         "data_sources": [

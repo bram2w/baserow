@@ -1,43 +1,46 @@
 .ab-heading {
   margin: 0;
-  text-align: left;
-
-  .element--alignment-horizontal-center & {
-    text-align: center;
-  }
-
-  .element--alignment-horizontal-right & {
-    text-align: right;
-  }
 }
 
 .ab-heading--h1 {
   color: var(--heading-h1-color, $black);
   font-size: var(--heading-h1-font-size, 30px);
+  text-align: var(--heading-h1-text-alignment, left);
+  font-family: var(--heading-h1-font-family, Inter);
 }
 
 .ab-heading--h2 {
   color: var(--heading-h2-color, $black);
   font-size: var(--heading-h2-font-size, 26px);
+  text-align: var(--heading-h2-text-alignment, left);
+  font-family: var(--heading-h2-font-family, Inter);
 }
 
 .ab-heading--h3 {
   color: var(--heading-h3-color, $black);
   font-size: var(--heading-h3-font-size, 22px);
+  text-align: var(--heading-h3-text-alignment, left);
+  font-family: var(--heading-h3-font-family, Inter);
 }
 
 .ab-heading--h4 {
   color: var(--heading-h4-color, $black);
   font-size: var(--heading-h4-font-size, 18px);
+  text-align: var(--heading-h4-text-alignment, left);
+  font-family: var(--heading-h4-font-family, Inter);
 }
 
 .ab-heading--h5 {
   color: var(--heading-h5-color, $black);
   font-size: var(--heading-h5-font-size, 14px);
+  text-align: var(--heading-h5-text-alignment, left);
+  font-family: var(--heading-h5-font-family, Inter);
 }
 
 .ab-heading--h6 {
   color: var(--heading-h6-color, $black);
   font-size: var(--heading-h6-font-size, 14px);
+  text-align: var(--heading-h6-text-alignment, left);
+  font-family: var(--heading-h6-font-family, Inter);
   font-style: italic;
 }

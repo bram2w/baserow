@@ -18,6 +18,9 @@ export class Event {
 
   async fire({ workflowActions, applicationContext }) {
     const additionalContext = {}
+    const { element, recordIndexPath } = applicationContext
+    const elementType = this.$registry.get('element', element.type)
+    const dispatchedById = elementType.uniqueElementId(element, recordIndexPath)
     for (let i = 0; i < workflowActions.length; i += 1) {
       const workflowAction = workflowActions[i]
       const workflowActionType = this.$registry.get(
@@ -54,6 +57,7 @@ export class Event {
 
       this.store.dispatch('workflowAction/setDispatching', {
         workflowAction,
+        dispatchedById,
         isDispatching: true,
       })
       try {
@@ -71,6 +75,7 @@ export class Event {
       } finally {
         this.store.dispatch('workflowAction/setDispatching', {
           workflowAction,
+          dispatchedById: null,
           isDispatching: false,
         })
       }

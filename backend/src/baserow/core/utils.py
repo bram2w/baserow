@@ -1042,3 +1042,62 @@ def get_baserow_saas_base_url() -> [str, dict]:
         headers["Host"] = "localhost"
 
     return base_url, headers
+
+
+def hex_to_rgba(hex_color: str) -> tuple:
+    """
+    Convert a hexadecimal color to an RGBA tuple.
+
+    :param hex_color: The color in hexadecimal format.
+
+    :return: The color as an (R, G, B, A) tuple.
+    """
+
+    hex_color = hex_color.lstrip("#")
+
+    if len(hex_color) == 6:
+        hex_color += "ff"  # Add full opacity if alpha is not specified
+
+    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4, 6))
+
+
+def rgba_to_hex(rgba: tuple):
+    """
+    Convert an RGBA tuple to a hexadecimal color.
+
+    Parameters:
+    :param rgba : The color as an (R, G, B, A) tuple.
+
+    :return: The color in hexadecimal format.
+    """
+
+    return "#{:02x}{:02x}{:02x}{:02x}".format(*rgba)
+
+
+def lighten_color(hex_color: str, factor: float):
+    """
+    Lighten a hexadecimal color with alpha by a given factor.
+
+    :param hex_color: The original color in hexadecimal format.
+    :param factor: The factor to lighten the color by. Should be between 0 and 1.
+        A factor of 0 returns the original color, while a factor of 1 returns white.
+
+    :return:  The lightened color in hexadecimal format.
+    """
+
+    # Convert hex color to RGBA
+    rgba = hex_to_rgba(hex_color)
+
+    # Lighten the RGB part of the RGBA color
+    lightened_rgb = tuple(
+        int(channel + (255 - channel) * factor) for channel in rgba[:3]
+    )
+
+    # Keep the alpha channel unchanged
+    alpha = rgba[3]
+
+    # Combine the lightened RGB with the original alpha
+    lightened_rgba = lightened_rgb + (alpha,)
+
+    # Convert the lightened RGBA color back to hex
+    return rgba_to_hex(lightened_rgba)

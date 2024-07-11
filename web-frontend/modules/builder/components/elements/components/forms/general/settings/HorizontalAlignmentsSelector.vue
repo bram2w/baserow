@@ -1,18 +1,17 @@
 <template>
-  <div>
-    <label class="control__label">
-      {{ $t('horizontalAlignmentSelector.alignment') }}
-    </label>
-    <div class="control__elements">
-      <RadioGroup
-        v-model="selected"
-        :options="alignmentValues"
-        type="button"
-        @input="$emit('input', $event)"
-      >
-      </RadioGroup>
-    </div>
-  </div>
+  <FormGroup
+    small-label
+    required
+    :label="$t('horizontalAlignmentSelector.alignment')"
+  >
+    <RadioGroup
+      v-model="selected"
+      :options="alignmentValues"
+      type="button"
+      @input="$emit('input', $event)"
+    >
+    </RadioGroup>
+  </FormGroup>
 </template>
 
 <script>

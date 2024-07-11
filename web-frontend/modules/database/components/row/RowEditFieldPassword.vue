@@ -9,24 +9,27 @@
       </a>
     </div>
     <div v-else>
-      <div class="flex align-items-center">
-        <input
-          ref="input"
-          v-model="copy"
-          type="password"
-          class="input input--small col col-6"
-          :class="{ 'input--error': touched && !valid }"
-          :disabled="readOnly"
-          @keyup.enter="unselect()"
-        />
-        <a @click="unselect()">{{ $t('action.save') }}</a>
-        <a class="color-error" @click="editing = false">{{
-          $t('action.cancel')
-        }}</a>
-      </div>
-    </div>
-    <div v-show="touched && !valid" class="error">
-      {{ error }}
+      <FormGroup required :error="touched && !valid">
+        <div class="flex align-items-center">
+          <FormInput
+            ref="input"
+            v-model="copy"
+            type="password"
+            :error="touched && !valid"
+            :disabled="readOnly"
+            class="col-6"
+            @keyup.enter="unselect()"
+          />
+          <a @click="unselect()">{{ $t('action.save') }}</a>
+          <a class="color-error" @click="editing = false">{{
+            $t('action.cancel')
+          }}</a>
+        </div>
+
+        <template #error>
+          {{ error }}
+        </template>
+      </FormGroup>
     </div>
   </div>
 </template>

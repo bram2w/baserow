@@ -30,7 +30,7 @@ class DataSourceHandler:
         self.service_handler = ServiceHandler()
 
     def get_data_source(
-        self, data_source_id: int, base_queryset: Optional[QuerySet] = None
+        self, data_source_id: int, base_queryset: Optional[QuerySet] = None, cache=None
     ) -> DataSource:
         """
         Returns a data_source instance from the database.
@@ -135,6 +135,61 @@ class DataSourceHandler:
             return data_sources
         else:
             return data_source_queryset.all()
+
+    def get_data_sources_with_cache(
+        self,
+        page: Page,
+        base_queryset: Optional[QuerySet] = None,
+        specific: bool = True,
+    ):
+        """
+        Gets all the specific data_sources of a given page. This version cache the
+        data sources of the page onto the page object to improve perfs.
+
+        :param page: The page that holds the data_source.
+        :param base_queryset: The base queryset to use to build the query.
+        :param specific: If True, return the specific version of the service related
+          to the integration
+        :return: The data_sources of the page.
+        """
+
+        if not hasattr(page, "_data_sources"):
+            data_sources = DataSourceHandler().get_data_sources(
+                page, base_queryset=base_queryset, specific=specific
+            )
+            setattr(page, "_data_sources", data_sources)
+
+        return getattr(page, "_data_sources")
+
+    def get_data_source_with_cache(
+        self,
+        page: Page,
+        data_source_id: int,
+        base_queryset: Optional[QuerySet] = None,
+        specific: bool = True,
+    ) -> DataSource:
+        """
+        Returns a data_source linked to a specific page. This version preload all
+        data sources of the page at the first access and cache them.
+
+        :param page: The page that holds the data_source.
+        :param data_source_id: The ID of the data_source.
+        :param base_queryset: The base queryset to use to build the query.
+        :param specific: If True, return the specific version of the service related
+          to the integration
+        :raises DataSourceDoesNotExist: If the data_source can't be found.
+        :return: The data_source instance.
+        """
+
+        data_sources = self.get_data_sources_with_cache(
+            page, base_queryset=base_queryset, specific=specific
+        )
+
+        for data_source in data_sources:
+            if data_source.id == data_source_id:
+                return data_source
+
+        raise DataSourceDoesNotExist()
 
     def find_unused_data_source_name(self, page: Page, proposed_name: str) -> str:
         """

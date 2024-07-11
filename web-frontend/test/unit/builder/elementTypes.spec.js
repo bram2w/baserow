@@ -309,7 +309,7 @@ describe('elementTypes tests', () => {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, '')).toBe(false)
+      expect(elementType.isValid(element, '', {})).toBe(false)
     })
     test('ChoiceElementType | required | blank option.', () => {
       const elementType = new ChoiceElementType()
@@ -320,7 +320,7 @@ describe('elementTypes tests', () => {
           { id: 2, value: 'uk', name: 'UK' },
         ],
       }
-      expect(elementType.isValid(element, '')).toBe(true)
+      expect(elementType.isValid(element, '', {})).toBe(true)
     })
     test('ChoiceElementType | required | valid value.', () => {
       const elementType = new ChoiceElementType()
@@ -328,7 +328,7 @@ describe('elementTypes tests', () => {
         required: true,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, 'uk')).toBe(true)
+      expect(elementType.isValid(element, 'uk', {})).toBe(true)
     })
     test('ChoiceElementType | not required | no value.', () => {
       const elementType = new ChoiceElementType()
@@ -336,7 +336,7 @@ describe('elementTypes tests', () => {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, '')).toBe(true)
+      expect(elementType.isValid(element, '', {})).toBe(true)
     })
     test('ChoiceElementType | not required | valid value.', () => {
       const elementType = new ChoiceElementType()
@@ -344,7 +344,7 @@ describe('elementTypes tests', () => {
         required: false,
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
-      expect(elementType.isValid(element, 'uk')).toBe(true)
+      expect(elementType.isValid(element, 'uk', {})).toBe(true)
     })
   })
 
@@ -377,33 +377,14 @@ describe('elementTypes tests', () => {
         columnElementType.childElementTypesForbidden.map((el) => el.getType())
       expect(forbiddenChildTypes).toEqual(containerElementTypes)
     })
-    test('RepeatElementType forbids collection elements, form elements and the form container as children.', () => {
+    test('RepeatElementType forbids collection elements as children.', () => {
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
 
-      const collectionElementTypes = Object.values(
+      const expectedForbiddenChildTypes = Object.values(
         testApp.getRegistry().getAll('element')
       )
         .filter((type) => type.isCollectionElement)
         .map((elementType) => elementType.getType())
-
-      const formContainerElementType = testApp
-        .getRegistry()
-        .get('element', 'form_container')
-
-      let expectedForbiddenChildTypes = [formContainerElementType.type]
-
-      expectedForbiddenChildTypes = expectedForbiddenChildTypes.concat(
-        collectionElementTypes
-      )
-
-      const formElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => elementType.isFormElement)
-        .map((elementType) => elementType.getType())
-
-      expectedForbiddenChildTypes =
-        expectedForbiddenChildTypes.concat(formElementTypes)
 
       const forbiddenChildTypes =
         repeatElementType.childElementTypesForbidden.map((el) => el.getType())

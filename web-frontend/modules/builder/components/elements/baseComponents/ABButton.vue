@@ -3,13 +3,13 @@
     class="ab-button"
     :class="{
       [`ab-button--${size}`]: true,
-      [`ab-button--${textAlignment}`]: true,
+      [`ab-button--${textAlignment}`]: textAlignment !== 'center',
       'ab-button--full-width': fullWidth === true,
       'loading-spinner': loading,
     }"
     @click="onClick"
   >
-    <slot></slot>
+    <span><slot></slot></span>
   </button>
 </template>
 

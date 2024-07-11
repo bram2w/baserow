@@ -1,68 +1,82 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-if="values.variant === 'button'"
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+    />
+    <CustomStyle
+      v-else
+      v-model="values.styles"
+      style-key="link"
+      :config-block-types="['link']"
+      :theme="builder.theme"
+    />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
+      class="margin-bottom-2"
       :label="$t('linkElementForm.text')"
+      small-label
+      required
       :placeholder="$t('linkElementForm.textPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
+
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
       @values-changed="emitChange($event)"
     />
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkElementForm.variant') }}
-      </label>
-      <div class="control__elements control__elements--flex">
-        <RadioButton v-model="values.variant" value="link">
-          {{ $t('linkElementForm.variantLink') }} </RadioButton
-        ><RadioButton v-model="values.variant" value="button">
-          {{ $t('linkElementForm.variantButton') }}
-        </RadioButton>
-      </div>
-    </FormElement>
-    <FormElement class="control">
-      <HorizontalAlignmentSelector v-model="values.alignment" />
-    </FormElement>
-    <FormElement v-if="values.variant === 'button'" class="control">
-      <WidthSelector v-model="values.width" />
-    </FormElement>
-    <ColorInputGroup
-      v-if="values.variant === 'button'"
-      v-model="values.button_color"
-      :label="$t('linkElementForm.buttonColor')"
-      :color-variables="colorVariables"
-    />
+    <FormGroup
+      :label="$t('linkElementForm.variant')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.variant"
+        :options="linkElementFormVariantOptions"
+        type="button"
+      >
+      </RadioGroup>
+    </FormGroup>
   </form>
 </template>
 
 <script>
-import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
-import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
+import {
+  HORIZONTAL_ALIGNMENTS,
+  WIDTHS_NEW,
+} from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
 
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
+
 export default {
   name: 'LinkElementForm',
   components: {
-    WidthSelector,
     ApplicationBuilderFormulaInputGroup,
-    HorizontalAlignmentSelector,
     LinkNavigationSelectionForm,
+    CustomStyle,
   },
   mixins: [elementForm],
   data() {
     return {
       values: {
         value: '',
-        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT,
         variant: 'link',
-        width: WIDTHS.AUTO.value,
+        width: WIDTHS_NEW.AUTO,
+        styles: {},
       },
-      allowedValues: ['value', 'alignment', 'variant', 'width'],
+      allowedValues: ['value', 'alignment', 'variant', 'width', 'styles'],
+      linkElementFormVariantOptions: [
+        { value: 'link', label: this.$t('linkElementForm.variantLink') },
+        { value: 'button', label: this.$t('linkElementForm.variantButton') },
+      ],
     }
   },
 }

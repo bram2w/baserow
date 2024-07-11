@@ -5,6 +5,7 @@
       class="local-baserow-user-source-form__table-selector"
       :databases="integration.context_data.databases"
       :display-view-dropdown="false"
+      dropdown-sizes="large"
     />
 
     <p>{{ $t('localBaserowUserSourceForm.description') }}</p>
@@ -12,6 +13,7 @@
       <FormGroup
         :label="$t('localBaserowUserSourceForm.emailFieldLabel')"
         small-label
+        required
       >
         <Dropdown
           v-model="values.email_field_id"
@@ -37,6 +39,7 @@
       <FormGroup
         :label="$t('localBaserowUserSourceForm.nameFieldLabel')"
         small-label
+        required
       >
         <Dropdown
           v-model="values.name_field_id"
@@ -46,6 +49,35 @@
         >
           <DropdownItem
             v-for="field in nameFields"
+            :key="field.id"
+            :name="field.name"
+            :value="field.id"
+            :icon="getIconForType(field.type)"
+          />
+          <template #emptyState>
+            {{ $t('localBaserowUserSourceForm.noFields') }}
+          </template>
+        </Dropdown>
+      </FormGroup>
+
+      <FormGroup
+        :label="$t('localBaserowUserSourceForm.roleFieldLabel')"
+        small-label
+      >
+        <Dropdown
+          v-model="values.role_field_id"
+          fixed-items
+          :disabled="!selectedTable"
+          :placeholder="$t('localBaserowUserSourceForm.roleFieldPlaceholder')"
+        >
+          <DropdownItem
+            key="use-default-role"
+            name="Use Default Role"
+            :value="null"
+            icon="iconoir-user"
+          />
+          <DropdownItem
+            v-for="field in roleFields"
             :key="field.id"
             :name="field.name"
             :value="field.id"
@@ -85,8 +117,14 @@ export default {
         table_id: null,
         email_field_id: null,
         name_field_id: null,
+        role_field_id: null,
       },
-      allowedValues: ['table_id', 'email_field_id', 'name_field_id'],
+      allowedValues: [
+        'table_id',
+        'email_field_id',
+        'name_field_id',
+        'role_field_id',
+      ],
     }
   },
   computed: {
@@ -110,6 +148,7 @@ export default {
         if (this.values.table_id && this.values.table_id !== newValue) {
           this.values.email_field_id = null
           this.values.name_field_id = null
+          this.values.role_field_id = null
         }
         this.values.table_id = newValue
       },
@@ -142,6 +181,11 @@ export default {
     nameFields() {
       return this.fields.filter(({ type }) =>
         this.userSourceType.allowedNameFieldTypes.includes(type)
+      )
+    },
+    roleFields() {
+      return this.fields.filter(({ type }) =>
+        this.userSourceType.allowedRoleFieldTypes.includes(type)
       )
     },
   },

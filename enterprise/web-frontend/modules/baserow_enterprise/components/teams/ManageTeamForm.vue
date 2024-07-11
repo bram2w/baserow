@@ -1,84 +1,85 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="row">
+    <div class="row margin-bottom-2">
       <div class="col col-7">
-        <h3>{{ $t('manageTeamForm.nameTitle') }}</h3>
-        <FormElement :error="fieldHasErrors('name')" class="control">
-          <div class="control__elements">
-            <input
-              ref="name"
-              v-model="values.name"
-              :class="{ 'input--error': fieldHasErrors('name') }"
-              type="text"
-              class="input input--small"
-              @blur="$v.values.name.$touch()"
-            />
-            <div
+        <FormGroup
+          :error="fieldHasErrors('name')"
+          :label="$t('manageTeamForm.nameTitle')"
+          small-label
+          required
+        >
+          <FormInput
+            ref="name"
+            v-model="values.name"
+            :error="fieldHasErrors('name')"
+            @blur="$v.values.name.$touch()"
+          >
+          </FormInput>
+
+          <template #error>
+            <span
               v-if="fieldHasErrors('name') && !$v.values.name.required"
               class="error"
             >
               {{ $t('error.requiredField') }}
-            </div>
-            <div v-if="$v.values.name.$dirty && hasMinMaxError" class="error">
+            </span>
+            <span v-if="$v.values.name.$dirty && hasMinMaxError" class="error">
               {{
                 $t('error.minMaxLength', {
                   max: $v.values.name.$params.maxLength.max,
                   min: $v.values.name.$params.minLength.min,
                 })
               }}
-            </div>
-          </div>
-        </FormElement>
+            </span>
+          </template>
+        </FormGroup>
       </div>
       <div class="col col-5">
-        <div class="manage-team-form__role-title">
-          <h3>
+        <FormGroup small-label required>
+          <template #label>
             {{ $t('manageTeamForm.roleTitle') }}
             <HelpIcon
               class="margin-left-1"
               :tooltip="$t('manageTeamForm.roleHelpText')"
             />
-          </h3>
-        </div>
-        <FormElement class="control">
-          <div class="control__elements">
-            <Dropdown
-              v-model="values.default_role"
-              :show-search="false"
-              :fixed-items="true"
-              small
+          </template>
+
+          <Dropdown
+            v-model="values.default_role"
+            :show-search="false"
+            :fixed-items="true"
+            small
+          >
+            <DropdownItem
+              v-for="role in roles"
+              :key="role.uid"
+              :name="role.name"
+              :value="role.uid"
+              :description="role.description"
             >
-              <DropdownItem
-                v-for="role in roles"
-                :key="role.uid"
-                :name="role.name"
-                :value="role.uid"
-                :description="role.description"
-              >
-                {{ role.name }}
-                <Badge
-                  v-if="role.showIsBillable && role.isBillable"
-                  color="cyan"
-                  size="small"
-                  bold
-                  >{{ $t('common.billable') }}
-                </Badge>
-                <Badge
-                  v-else-if="
-                    role.showIsBillable &&
-                    !role.isBillable &&
-                    atLeastOneBillableRole
-                  "
-                  color="yellow"
-                  size="small"
-                  bold
-                  class="margin-left-1"
-                  >{{ $t('common.free') }}
-                </Badge>
-              </DropdownItem>
-            </Dropdown>
-          </div>
-        </FormElement>
+              {{ role.name }}
+              <Badge
+                v-if="role.showIsBillable && role.isBillable"
+                color="cyan"
+                size="small"
+                bold
+                >{{ $t('common.billable') }}
+              </Badge>
+              <Badge
+                v-else-if="
+                  role.showIsBillable &&
+                  !role.isBillable &&
+                  atLeastOneBillableRole
+                "
+                color="yellow"
+                size="small"
+                bold
+                class="margin-left-1"
+                >{{ $t('common.free') }}
+              </Badge>
+            </DropdownItem>
+          </Dropdown>
+        </FormGroup>
       </div>
     </div>
     <div class="row">

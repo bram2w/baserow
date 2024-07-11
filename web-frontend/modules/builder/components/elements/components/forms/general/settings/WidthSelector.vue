@@ -1,20 +1,12 @@
 <template>
-  <div>
-    <label class="control__label">
-      {{ $t('widthSelector.width') }}
-    </label>
-    <div class="control__elements control__elements--flex">
-      <RadioButton
-        v-for="width in widths"
-        :key="width.value"
-        :value="width.value"
-        :model-value="value"
-        @input="$emit('input', $event)"
-      >
-        {{ $t(width.name) }}
-      </RadioButton>
-    </div>
-  </div>
+  <FormGroup small-label :label="$t('widthSelector.width')" required>
+    <RadioGroup
+      v-model="value"
+      type="button"
+      :options="widthOptions"
+      @input="$emit('input', $event)"
+    ></RadioGroup>
+  </FormGroup>
 </template>
 
 <script>
@@ -32,6 +24,13 @@ export default {
       type: Array,
       required: false,
       default: () => Object.values(WIDTHS),
+    },
+  },
+  computed: {
+    widthOptions() {
+      return this.widths.map((width) => {
+        return { label: this.$t(width.name), value: width.value }
+      })
     },
   },
 }

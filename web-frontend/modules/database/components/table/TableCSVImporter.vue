@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div class="control">
+    <div class="control margin-bottom-3">
       <template v-if="filename === ''">
-        <label class="control__label">{{
+        <label class="control__label control__label--small">{{
           $t('tableCSVImporter.chooseFileLabel')
         }}</label>
         <div class="control__description">
@@ -50,7 +50,7 @@
     <div v-if="filename !== ''" class="row">
       <div class="col col-4">
         <div class="control">
-          <label class="control__label">{{
+          <label class="control__label control__label--small">{{
             $t('tableCSVImporter.columnSeparator')
           }}</label>
           <div class="control__elements">
@@ -78,7 +78,7 @@
       </div>
       <div class="col col-4">
         <div class="control">
-          <label class="control__label">{{
+          <label class="control__label control__label--small">{{
             $t('tableCSVImporter.encoding')
           }}</label>
           <div class="control__elements">
@@ -92,7 +92,7 @@
       </div>
       <div class="col col-4">
         <div class="control">
-          <label class="control__label">{{
+          <label class="control__label control__label--small">{{
             $t('tableCSVImporter.firstRowHeader')
           }}</label>
           <div class="control__elements">

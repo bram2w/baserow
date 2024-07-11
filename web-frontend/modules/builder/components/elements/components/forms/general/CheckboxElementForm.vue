@@ -2,24 +2,29 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.label"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('checkboxElementForm.labelTitle')"
       :placeholder="$t('generalForm.labelPlaceholder')"
       :data-providers-allowed="dataProvidersAllowed"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
+      class="margin-bottom-2"
+      small-label
+      required
       :label="$t('checkboxElementForm.valueTitle')"
       :placeholder="$t('generalForm.valuePlaceholder')"
       :data-providers-allowed="dataProvidersAllowed"
     ></ApplicationBuilderFormulaInputGroup>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('checkboxElementForm.requiredTitle') }}
-      </label>
-      <div class="control__elements">
-        <Checkbox v-model="values.required"></Checkbox>
-      </div>
-    </FormElement>
+    <FormGroup
+      small-label
+      required
+      :label="$t('checkboxElementForm.requiredTitle')"
+    >
+      <Checkbox v-model="values.required"></Checkbox>
+    </FormGroup>
   </form>
 </template>
 
@@ -28,6 +33,7 @@ import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import {
   CurrentRecordDataProviderType,
+  DataSourceContextDataProviderType,
   DataSourceDataProviderType,
   PageParameterDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
@@ -51,6 +57,7 @@ export default {
         CurrentRecordDataProviderType.getType(),
         PageParameterDataProviderType.getType(),
         DataSourceDataProviderType.getType(),
+        DataSourceContextDataProviderType.getType(),
       ]
     },
   },

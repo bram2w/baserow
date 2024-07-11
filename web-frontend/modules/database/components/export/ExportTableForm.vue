@@ -2,24 +2,26 @@
   <form @submit.prevent="submit">
     <div class="row">
       <div class="col col-12">
-        <FormElement class="control">
-          <label class="control__label">{{
-            $t('exportTableForm.viewLabel')
-          }}</label>
-          <div class="control__elements">
-            <ExportTableDropdown
-              v-model="values.view_id"
-              :views="viewsWithExporterTypes"
-              :loading="loading"
-              @input="values.exporter_type = firstExporterType"
-            ></ExportTableDropdown>
-          </div>
-        </FormElement>
+        <FormGroup
+          small-label
+          :label="$t('exportTableForm.viewLabel')"
+          required
+          class="margin-bottom-2"
+        >
+          <ExportTableDropdown
+            v-model="values.view_id"
+            :views="viewsWithExporterTypes"
+            :loading="loading"
+            @input="values.exporter_type = firstExporterType"
+          ></ExportTableDropdown>
+        </FormGroup>
+
         <ExporterTypeChoices
           v-model="values.exporter_type"
           :exporter-types="exporterTypes"
           :loading="loading"
           :database="database"
+          class="margin-bottom-2"
         ></ExporterTypeChoices>
         <div v-if="$v.values.exporter_type.$error" class="error">
           {{ $t('exportTableForm.typeError') }}

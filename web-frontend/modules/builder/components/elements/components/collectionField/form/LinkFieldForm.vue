@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
 
@@ -26,23 +26,7 @@ export default {
     ApplicationBuilderFormulaInputGroup,
     LinkNavigationSelectionForm,
   },
-  mixins: [elementForm],
-  inject: ['page', 'builder'],
-  provide() {
-    return {
-      applicationContext: {
-        builder: this.builder,
-        page: this.page,
-        element: this.element,
-      },
-    }
-  },
-  props: {
-    element: {
-      type: Object,
-      required: true,
-    },
-  },
+  mixins: [collectionFieldForm],
   data() {
     return {
       allowedValues: ['link_name'],

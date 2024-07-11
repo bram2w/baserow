@@ -227,11 +227,20 @@ export function isColorVariable(value) {
   return value.substring(0, 1) !== '#'
 }
 
-export function resolveColor(value, variables) {
-  if (isColorVariable(value)) {
-    const variable = variables.find((v) => v.value === value)
-    if (variable !== undefined) {
-      return variable.color
+export function resolveColor(value, variables, recursively = true) {
+  let varMap = variables
+  if (Array.isArray(varMap)) {
+    varMap = Object.fromEntries(variables.map((v) => [v.value, v]))
+  }
+
+  if (varMap[value]) {
+    if (recursively) {
+      return resolveColor(varMap[value].color, {
+        ...varMap,
+        [value]: undefined,
+      })
+    } else {
+      return varMap[value].color
     }
   }
 

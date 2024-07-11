@@ -59,7 +59,6 @@ class AutoSingleRelatedObjectDescriptor(ReverseOneToOneDescriptor):
     https://github.com/skorokithakis/django-annoying/blob/master/annoying/fields.py
     """
 
-    @atomic
     def __get__(self, instance, instance_type=None):
         model = getattr(self.related, "related_model", self.related.model)
 
@@ -68,15 +67,18 @@ class AutoSingleRelatedObjectDescriptor(ReverseOneToOneDescriptor):
                 instance, instance_type
             )
         except model.DoesNotExist:
-            # Using get_or_create instead() of save() or create() as it better handles
-            # race conditions
-            obj, _ = model.objects.get_or_create(**{self.related.field.name: instance})
+            with atomic():
+                # Using get_or_create instead() of save() or create() as it better
+                # handles race conditions
+                obj, _ = model.objects.get_or_create(
+                    **{self.related.field.name: instance}
+                )
 
-            # Update Django's cache, otherwise first 2 calls to obj.relobj
-            # will return 2 different in-memory objects
-            self.related.set_cached_value(instance, obj)
-            self.related.field.set_cached_value(obj, instance)
-            return obj
+                # Update Django's cache, otherwise first 2 calls to obj.relobj
+                # will return 2 different in-memory objects
+                self.related.set_cached_value(instance, obj)
+                self.related.field.set_cached_value(obj, instance)
+                return obj
 
 
 class AutoOneToOneField(models.OneToOneField):

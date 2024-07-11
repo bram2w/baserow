@@ -11,12 +11,13 @@ from baserow.api.app_auth_providers.serializers import (
 )
 from baserow.api.polymorphic import PolymorphicSerializer
 from baserow.api.services.serializers import PublicServiceSerializer
-from baserow.api.user_files.serializers import UserFileSerializer
+from baserow.api.user_files.serializers import UserFileField, UserFileSerializer
 from baserow.contrib.builder.api.pages.serializers import PathParamSerializer
 from baserow.contrib.builder.api.theme.serializers import (
     CombinedThemeConfigBlocksSerializer,
     serialize_builder_theme,
 )
+from baserow.contrib.builder.api.validators import image_file_validation
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.domains.registries import domain_type_registry
@@ -98,6 +99,12 @@ class PublicElementSerializer(serializers.ModelSerializer):
     def get_type(self, instance):
         return element_type_registry.get_by_model(instance.specific_class).type
 
+    style_background_file = UserFileField(
+        allow_null=True,
+        help_text="The background image file",
+        validators=[image_file_validation],
+    )
+
     class Meta:
         model = Element
         fields = (
@@ -107,21 +114,30 @@ class PublicElementSerializer(serializers.ModelSerializer):
             "parent_element_id",
             "place_in_container",
             "visibility",
+            "styles",
             "style_border_top_color",
             "style_border_top_size",
             "style_padding_top",
+            "style_margin_top",
             "style_border_bottom_color",
             "style_border_bottom_size",
             "style_padding_bottom",
+            "style_margin_bottom",
             "style_border_left_color",
             "style_border_left_size",
             "style_padding_left",
+            "style_margin_left",
             "style_border_right_color",
             "style_border_right_size",
             "style_padding_right",
+            "style_margin_right",
             "style_background",
             "style_background_color",
+            "style_background_file",
+            "style_background_mode",
             "style_width",
+            "role_type",
+            "roles",
         )
         extra_kwargs = {
             "id": {"read_only": True},
@@ -286,6 +302,9 @@ class PublicDataSourceSerializer(PublicServiceSerializer):
         help_text=DataSource._meta.get_field("order").help_text
     )
     type = serializers.SerializerMethodField(help_text="The type of the data source.")
+    context_data = serializers.SerializerMethodField(
+        help_text="The context data of the data source."
+    )
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
@@ -310,11 +329,27 @@ class PublicDataSourceSerializer(PublicServiceSerializer):
     def get_order(self, instance):
         return self.context["data_source"].order
 
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_context_data(self, instance):
+        service_instance = (
+            instance.service if isinstance(instance, DataSource) else instance
+        )
+        if service_instance:
+            return super().get_context_data(service_instance)
+        else:
+            return {}
+
     class Meta(PublicServiceSerializer.Meta):
-        fields = PublicServiceSerializer.Meta.fields + ("name", "page_id", "order")
+        fields = PublicServiceSerializer.Meta.fields + (
+            "name",
+            "page_id",
+            "order",
+            "context_data",
+        )
         extra_kwargs = {
             **PublicServiceSerializer.Meta.extra_kwargs,
             "name": {"read_only": True},
             "page_id": {"read_only": True},
             "order": {"read_only": True, "help_text": "Lowest first."},
+            "context_data": {"read_only": True},
         }
