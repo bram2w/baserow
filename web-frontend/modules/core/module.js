@@ -105,6 +105,7 @@ export default function CoreModule(options) {
       : [],
     BASEROW_FRONTEND_SAME_SITE_COOKIE:
       process.env.BASEROW_FRONTEND_SAME_SITE_COOKIE ?? 'lax',
+    BASEROW_DISABLE_SUPPORT: process.env.BASEROW_DISABLE_SUPPORT ?? '',
   }
 
   this.options.publicRuntimeConfig.BASEROW_EMBEDDED_SHARE_URL =
