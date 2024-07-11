@@ -158,11 +158,12 @@ export const actions = {
    * data.
    */
   async logoff({ commit, getters }, { application, invalidateToken = true }) {
+    unsetToken(this.app, userSourceCookieTokenName)
     if (!getters.isAuthenticated(application)) {
       return
     }
+
     const refreshToken = getters.refreshToken(application)
-    unsetToken(this.app, userSourceCookieTokenName)
     commit('LOGOFF', { application })
 
     if (refreshToken && invalidateToken) {

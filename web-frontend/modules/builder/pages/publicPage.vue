@@ -37,7 +37,16 @@ export default {
       applicationContext: this.applicationContext,
     }
   },
-  async asyncData({ store, params, error, $registry, app, req, route }) {
+  async asyncData({
+    store,
+    params,
+    error,
+    $registry,
+    app,
+    req,
+    route,
+    redirect,
+  }) {
     let mode = 'public'
     const builderId = parseInt(params.builderId, 10)
 
@@ -106,12 +115,18 @@ export default {
           })
         } catch (error) {
           if (error.response?.status === 401) {
-            // We logoff as the token has probably expired
+            // We logoff as the token has probably expired or became invalid
             await store.dispatch('userSourceUser/logoff', {
               application: builder,
             })
+            // Redirect to home page after logout
+            await redirect({
+              name: 'application-builder-page',
+              params: { pathMatch: '/' },
+            })
+          } else {
+            throw error
           }
-          throw error
         }
       }
     }
