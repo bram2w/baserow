@@ -1,5 +1,5 @@
 <template>
-  <div ref="formulaInput">
+  <div>
     <FormGroup
       small-label
       :label="$t('fieldType.formula')"
@@ -8,13 +8,14 @@
       class="margin-bottom-2"
     >
       <FormInput
+        ref="formInput"
         :value="formula"
         monospace
         :loading="loading"
         :placeholder="$t('fieldFormulaInitialSubForm.formulaInputPlaceholder')"
         :focus-on-click="false"
-        @click="$emit('open-advanced-context', $refs.formulaInput)"
-        @input="$emit('open-advanced-context', $refs.formulaInput)"
+        @click="$emit('open-advanced-context', $refs.formInput.$refs.input)"
+        @input="$emit('open-advanced-context', $refs.formInput.$refs.input)"
       ></FormInput>
 
       <component
