@@ -264,6 +264,9 @@ const getters = {
   getUserSourceById: (state) => (application, userSourceId) => {
     return application.user_sources.find(({ id }) => id === userSourceId)
   },
+  getUserSourceByUId: (state) => (application, userSourceUId) => {
+    return application.user_sources.find(({ uid }) => uid === userSourceUId)
+  },
 }
 
 export default {

@@ -130,9 +130,9 @@ export default {
       if (!this.currentUser) {
         await this.actionLogoff({ application: this.builder })
       } else {
-        const userSource = this.$store.getters['userSource/getUserSourceById'](
+        const userSource = this.$store.getters['userSource/getUserSourceByUId'](
           this.builder,
-          this.currentUser.user_source_id
+          this.currentUser.user_source_uid
         )
         await this.actionForceAuthenticate({
           application: this.builder,
@@ -181,7 +181,7 @@ export default {
 
     isSelectedUser(userSource, user) {
       return (
-        this.currentUser?.user_source_id === userSource.id &&
+        this.currentUser?.user_source_uid === userSource.uid &&
         this.currentUser?.id === user.id
       )
     },
