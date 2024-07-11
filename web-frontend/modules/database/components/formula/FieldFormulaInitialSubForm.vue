@@ -12,6 +12,7 @@
         monospace
         :loading="loading"
         :placeholder="$t('fieldFormulaInitialSubForm.formulaInputPlaceholder')"
+        :focus-on-click="false"
         @click="$emit('open-advanced-context', $refs.formulaInput)"
         @input="$emit('open-advanced-context', $refs.formulaInput)"
       ></FormInput>
@@ -25,7 +26,9 @@
         @update-formula="$emit('update-formula', $event)"
       ></component>
 
-      <template v-if="!loading" #error>{{ error }}</template>
+      <template v-if="!loading" #error
+        ><div class="formula-field__error">{{ error }}</div></template
+      >
       <template v-if="!loading">
         <a
           v-if="formulaTypeRefreshNeeded"
