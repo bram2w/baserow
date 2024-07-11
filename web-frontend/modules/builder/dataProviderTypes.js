@@ -707,7 +707,7 @@ export class UserDataProviderType extends DataProviderType {
       ...loggedUser,
     }
 
-    if (context.role.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
+    if (context.role?.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
       const userSourceName = this.app.store.getters[
         'userSource/getUserSourceById'
       ](applicationContext.builder, loggedUser.user_source_id).name
