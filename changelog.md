@@ -1,5 +1,11 @@
 # Changelog
 
+## Released 1.26.1
+
+### Bug fixes
+* [Builder] Fix broken authentication with cookie generated with previous version
+
+
 ## Released 1.26.0
 
 ### New features
