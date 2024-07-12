@@ -61,7 +61,7 @@
         required
         class="margin-bottom-1"
       >
-        <Dropdown v-model="values.style_width">
+        <Dropdown v-model="values.style_width" small>
           <DropdownItem
             v-for="type in Object.values(WIDTH_TYPES)"
             :key="type.value"

@@ -14,7 +14,7 @@
       :label="$t('headingElementForm.levelTitle')"
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.level" :show-search="false">
+      <Dropdown v-model="values.level" :show-search="false" small>
         <DropdownItem
           v-for="level in levels"
           :key="level.value"

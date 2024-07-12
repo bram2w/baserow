@@ -1,7 +1,6 @@
 <template>
   <div class="padding-selector">
     <FormInput
-      small
       :value="value.horizontal"
       type="number"
       remove-number-input-controls
@@ -12,7 +11,6 @@
       @blur="$emit('blur')"
     />
     <FormInput
-      small
       :value="value.vertical"
       type="number"
       remove-number-input-controls

@@ -2,7 +2,6 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.link_name"
-      small
       :label="$t('linkFieldForm.fieldLinkNameLabel')"
       :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"

@@ -39,7 +39,6 @@
         >
           <FormInput
             v-model="values.image_max_width"
-            small
             type="number"
             :min="0"
             :max="100"
@@ -78,7 +77,6 @@
         >
           <FormInput
             v-model="imageMaxHeight"
-            small
             type="number"
             remove-number-input-controls
             :placeholder="$t('imageThemeConfigBlock.maxHeightPlaceholder')"

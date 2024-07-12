@@ -6,7 +6,7 @@
       small-label
       :label="$t('columnElementForm.columnAmountTitle')"
     >
-      <Dropdown v-model="values.column_amount" :show-search="false">
+      <Dropdown v-model="values.column_amount" :show-search="false" small>
         <DropdownItem
           v-for="columnAmount in columnAmounts"
           :key="columnAmount.value"
@@ -27,7 +27,6 @@
     >
       <FormInput
         v-model="values.column_gap"
-        size="large"
         :label="$t('columnElementForm.columnGapTitle')"
         :placeholder="$t('columnElementForm.columnGapPlaceholder')"
         type="number"
