@@ -53,7 +53,6 @@
     >
       <FormInput
         v-model="values.height"
-        size="large"
         type="number"
         :placeholder="$t('iframeElementForm.heightPlaceholder')"
         :to-value="(value) => parseInt(value)"

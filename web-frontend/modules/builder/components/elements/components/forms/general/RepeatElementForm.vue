@@ -6,7 +6,7 @@
       required
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.data_source_id" :show-search="false">
+      <Dropdown v-model="values.data_source_id" :show-search="false" small>
         <DropdownItem
           v-for="dataSource in availableDataSources"
           :key="dataSource.id"
@@ -35,7 +35,6 @@
     >
       <FormInput
         v-model="values.items_per_page"
-        size="large"
         :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
         :to-value="(value) => parseInt(value)"
         class="margin-bottom-2"

@@ -23,7 +23,6 @@
       :placeholder="$t('linkElementForm.textPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
-
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
       @values-changed="emitChange($event)"

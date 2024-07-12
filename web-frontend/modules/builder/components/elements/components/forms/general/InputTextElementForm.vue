@@ -37,7 +37,7 @@
       required
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.validation_type" :show-search="true">
+      <Dropdown v-model="values.validation_type" :show-search="true" small>
         <DropdownItem
           v-for="validationType in validationTypes"
           :key="validationType.name"
@@ -78,7 +78,6 @@
       <FormInput
         v-model="values.rows"
         type="number"
-        size="large"
         :label="$t('inputTextElementForm.rowsTitle')"
         :placeholder="$t('inputTextElementForm.rowsPlaceholder')"
         :to-value="(value) => parseInt(value)"
@@ -97,7 +96,7 @@
       required
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.input_type" :show-search="false">
+      <Dropdown v-model="values.input_type" :show-search="false" small>
         <DropdownItem
           v-for="inputType in inputTypes"
           :key="inputType.name"

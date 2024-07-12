@@ -46,7 +46,6 @@
         :label="$t('linkNavigationSelection.url')"
         :placeholder="$t('linkNavigationSelection.urlPlaceholder')"
         :data-providers-allowed="dataProvidersAllowed"
-        small
       />
     </FormGroup>
     <FormGroup v-if="destinationPage" class="margin-bottom-2" required>
@@ -74,7 +73,6 @@
             horizontal
             :placeholder="$t('linkNavigationSelection.paramPlaceholder')"
             :data-providers-allowed="dataProvidersAllowed"
-            small
           />
         </div>
       </div>

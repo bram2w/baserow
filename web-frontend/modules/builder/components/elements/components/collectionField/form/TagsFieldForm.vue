@@ -2,7 +2,6 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.values"
-      small
       :label="$t('tagsFieldForm.fieldValuesLabel')"
       :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
@@ -12,7 +11,6 @@
       <ApplicationBuilderFormulaInputGroup
         v-if="values.colors_is_formula"
         v-model="values.colors"
-        small
         :label="$t('tagsFieldForm.fieldColorsLabel')"
         :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
         :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"

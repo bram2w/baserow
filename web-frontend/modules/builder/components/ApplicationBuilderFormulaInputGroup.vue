@@ -13,6 +13,7 @@
         ...applicationContextAdditions,
       }
     "
+    :small="small"
     v-on="$listeners"
   >
     <template #after-input>
@@ -53,6 +54,11 @@ export default {
       type: Object,
       required: false,
       default: () => {},
+    },
+    small: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   computed: {

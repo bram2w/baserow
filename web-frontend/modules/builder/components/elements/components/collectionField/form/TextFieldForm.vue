@@ -2,7 +2,6 @@
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
-      small
       :label="$t('textFieldForm.fieldValueLabel')"
       :placeholder="$t('textFieldForm.fieldValuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"

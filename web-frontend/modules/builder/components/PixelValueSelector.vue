@@ -1,6 +1,5 @@
 <template>
   <FormInput
-    small
     :value="value"
     type="number"
     remove-number-input-controls
