@@ -4,6 +4,7 @@
       :label="$t('upsertRowWorkflowActionForm.integrationDropdownLabel')"
       small-label
       required
+      class="margin-bottom-2"
     >
       <IntegrationDropdown
         v-model="values.integration_id"
@@ -12,19 +13,20 @@
         :integration-type="integrationType"
       />
     </FormGroup>
+
     <LocalBaserowTableSelector
       v-if="selectedIntegration"
       v-model="fakeTableId"
       :databases="databases"
       :display-view-dropdown="false"
-      class="margin-top-2"
-    ></LocalBaserowTableSelector>
+    />
 
     <InjectedFormulaInputGroup
       v-if="enableRowId && values.integration_id"
       v-model="values.row_id"
       small
       small-label
+      class="margin-bottom-2"
       :placeholder="$t('upsertRowWorkflowActionForm.rowIdPlaceholder')"
       :label="$t('upsertRowWorkflowActionForm.rowIdLabel')"
     />
