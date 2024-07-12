@@ -43,7 +43,7 @@
             </Tab>
             <Tab
               :title="$t('localBaserowGetRowForm.searchTabTitle')"
-              class="data-source-form__condition-search-tab"
+              class="data-source-form__search-form-tab"
             >
               <InjectedFormulaInputGroup
                 v-model="values.search_query"

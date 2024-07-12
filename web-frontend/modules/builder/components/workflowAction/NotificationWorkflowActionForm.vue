@@ -6,6 +6,7 @@
       small-label
       :placeholder="$t('notificationWorkflowActionForm.titlePlaceholder')"
       :label="$t('notificationWorkflowActionForm.titleLabel')"
+      class="margin-bottom-2"
     />
     <InjectedFormulaInputGroup
       v-model="values.description"
@@ -13,6 +14,7 @@
       small-label
       :placeholder="$t('notificationWorkflowActionForm.descriptionPlaceholder')"
       :label="$t('notificationWorkflowActionForm.descriptionLabel')"
+      class="margin-bottom-2"
     />
   </form>
 </template>

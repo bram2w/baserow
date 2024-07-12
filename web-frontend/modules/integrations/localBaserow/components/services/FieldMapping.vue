@@ -1,5 +1,9 @@
 <template>
-  <InjectedFormulaInputGroup v-model="fieldValue" v-bind="$attrs" />
+  <InjectedFormulaInputGroup
+    v-model="fieldValue"
+    v-bind="$attrs"
+    class="margin-bottom-2"
+  />
 </template>
 
 <script>
