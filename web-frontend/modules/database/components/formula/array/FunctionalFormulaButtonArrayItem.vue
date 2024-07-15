@@ -22,7 +22,7 @@
 <script>
 import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
-  name: 'FunctionalFormulaLinkArrayItem',
+  name: 'FunctionalFormulaButtonArrayItem',
   mixins: [linkURLField],
 }
 </script>

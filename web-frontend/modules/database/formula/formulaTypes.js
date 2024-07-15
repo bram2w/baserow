@@ -41,6 +41,11 @@ import SingleFileArrayModal from '@baserow/modules/database/components/view/grid
 import GridViewSingleFile from '@baserow/modules/database/components/view/grid/fields/GridViewSingleFile.vue'
 import RowEditSingleFileReadOnly from '@baserow/modules/database/components/row/RowEditSingleFileReadOnly.vue'
 import RowCardFieldSingleFile from '@baserow/modules/database/components/card/RowCardFieldSingleFile.vue'
+import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL.vue'
+import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL.vue'
+import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL.vue'
+import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL.vue'
+import FunctionalFormulaURLArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaURLArrayItem.vue'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -893,6 +898,64 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
 
   getCardComponent() {
     return RowCardFieldLinkURL
+  }
+
+  prepareValueForCopy(field, value) {
+    return this.toHumanReadableString(field, value)
+  }
+
+  getCanSortInView(field) {
+    return false
+  }
+
+  canGroupByInView() {
+    return false
+  }
+}
+
+export class BaserowFormulaURLType extends BaserowFormulaTypeDefinition {
+  static getType() {
+    return 'url'
+  }
+
+  getFieldType() {
+    return 'url'
+  }
+
+  getIconClass() {
+    return 'iconoir-link'
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldURL
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldURL
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldURL
+  }
+
+  getSortOrder() {
+    return 10
+  }
+
+  getFunctionalFieldArrayComponent() {
+    return FunctionalFormulaURLArrayItem
+  }
+
+  toHumanReadableString(field, value) {
+    if (value?.label) {
+      return `${value.label} (${value.url})`
+    } else {
+      return value.url
+    }
+  }
+
+  getCardComponent() {
+    return RowCardFieldURL
   }
 
   prepareValueForCopy(field, value) {

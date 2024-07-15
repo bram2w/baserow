@@ -117,6 +117,7 @@ from ..formula.types.formula_types import (
     BaserowFormulaDurationType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
+    BaserowFormulaURLType,
 )
 from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
 from .deferred_foreign_key_updater import DeferredForeignKeyUpdater
@@ -504,6 +505,9 @@ class URLFieldType(CollationSortMixin, TextFieldMatchingRegexFieldType):
     def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
         value = getattr(row, field.db_column)
         return collate_expression(Value(value))
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaURLType(nullable=True)
 
 
 class NumberFieldType(FieldType):

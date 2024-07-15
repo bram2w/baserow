@@ -1803,3 +1803,129 @@ def test_can_filter_in_aggregated_formulas_with_multipleselects(data_fixture):
     assert getattr(row_a1, formula_field.db_column) == 2  # a and b
     assert getattr(row_a2, formula_field.db_column) == 1  # autonr of row_b[2], d
     assert getattr(row_a3, formula_field.db_column) == 1  # autonr of row_b[5], b
+
+
+@pytest.mark.django_db
+def test_formulas_with_lookup_url_field_type(data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        primary=True,
+        name="Primary",
+        table=table,
+    )
+
+    linked_table = data_fixture.create_database_table(
+        user=user, database=table.database
+    )
+
+    linked_table_primary_field = data_fixture.create_text_field(
+        primary=True,
+        name="Primary",
+        table=linked_table,
+    )
+    linked_table_url_field = data_fixture.create_url_field(
+        name="URL",
+        table=linked_table,
+    )
+
+    linked_row_1, linked_row_2 = RowHandler().create_rows(
+        user,
+        linked_table,
+        [
+            {
+                linked_table_primary_field.db_column: "URL #1",
+                linked_table_url_field.db_column: "https://baserow.io/1",
+            },
+            {
+                linked_table_primary_field.db_column: "URL #2",
+                linked_table_url_field.db_column: "https://baserow.io/2",
+            },
+        ],
+    )
+
+    link_field = FieldHandler().create_field(
+        user, table, "link_row", link_row_table=linked_table, name="Link"
+    )
+
+    formula_scenarios = [
+        f"lookup('{link_field.name}', 'URL')",
+        f"join(lookup('{link_field.name}', 'URL'), '')",
+        f"join(lookup('{link_field.name}', 'URL'), 'some-text')",
+        f"concat(lookup('{link_field.name}', 'URL'), '')",
+        f"concat(lookup('{link_field.name}', 'URL'), 'some-text')",
+        f"max(lookup('{link_field.name}', 'URL'))",
+        f"min(lookup('{link_field.name}', 'URL'))",
+        f"count(lookup('{link_field.name}', 'URL'))",
+        f"when_empty(lookup('{link_field.name}', 'URL'), 'some-default')",
+    ]
+
+    fields = [
+        data_fixture.create_formula_field(
+            user=user,
+            table=table,
+            formula=formula,
+        )
+        for formula in formula_scenarios
+    ]
+
+    RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                text_field.db_column: "Row #1",
+                link_field.db_column: [linked_row_1.id],
+            },
+            {
+                text_field.db_column: "Row #2",
+                link_field.db_column: [
+                    linked_row_1.id,
+                    linked_row_2.id,
+                ],
+            },
+            {text_field.db_column: "Row #3", link_field.db_column: []},
+        ],
+    )
+
+    rows = data_fixture.get_rows(fields=[text_field, *fields])
+
+    assert rows == [
+        [
+            "Row #1",
+            [{"id": 1, "value": "https://baserow.io/1"}],
+            "https://baserow.io/1",
+            "https://baserow.io/1",
+            [{"id": 1, "value": "https://baserow.io/1"}],
+            [{"id": 1, "value": "https://baserow.io/1some-text"}],
+            "https://baserow.io/1",
+            "https://baserow.io/1",
+            Decimal("1"),
+            [{"id": 1, "value": "https://baserow.io/1"}],
+        ],
+        [
+            "Row #2",
+            [
+                {"id": 1, "value": "https://baserow.io/1"},
+                {"id": 2, "value": "https://baserow.io/2"},
+            ],
+            "https://baserow.io/1https://baserow.io/2",
+            "https://baserow.io/1some-texthttps://baserow.io/2",
+            [
+                {"id": 1, "value": "https://baserow.io/1"},
+                {"id": 2, "value": "https://baserow.io/2"},
+            ],
+            [
+                {"id": 1, "value": "https://baserow.io/1some-text"},
+                {"id": 2, "value": "https://baserow.io/2some-text"},
+            ],
+            "https://baserow.io/2",
+            "https://baserow.io/1",
+            Decimal("2"),
+            [
+                {"id": 1, "value": "https://baserow.io/1"},
+                {"id": 2, "value": "https://baserow.io/2"},
+            ],
+        ],
+        ["Row #3", [], None, None, [], [], None, None, Decimal("0"), []],
+    ]
