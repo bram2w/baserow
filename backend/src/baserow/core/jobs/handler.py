@@ -27,6 +27,7 @@ class JobHandler:
             """
 
             nonlocal job
+            changed = False
 
             if job.progress_percentage != percentage:
                 job.progress_percentage = percentage
@@ -55,7 +56,6 @@ class JobHandler:
         progress.register_updated_event(progress_updated)
 
         job_type = job_type_registry.get_by_model(job)
-
         return job_type.run(job, progress)
 
     @staticmethod
