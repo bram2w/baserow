@@ -1,6 +1,6 @@
 export default {
   title: 'Baserow',
-  titleTemplate: '%s // Baserow',
+  titleTemplate: '%s | Baserow',
   meta: [
     { charset: 'utf-8' },
     {
