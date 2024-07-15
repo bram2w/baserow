@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GridViewFieldLookup component URL lookup field shows hyperlink when active 1`] = `
+<div
+  class="array-field__item"
+>
+  <div
+    class="array-field__ellipsis"
+    title="baserow.io"
+  >
+    <a
+      class="forced-pointer-events-auto"
+      href="https://baserow.io"
+      rel="nofollow noopener noreferrer"
+      target="_blank"
+    >
+      baserow.io
+    </a>
+  </div>
+</div>
+`;
+
+exports[`GridViewFieldLookup component URL lookup field shows text when inactive 1`] = `
+<div
+  class="array-field__item"
+>
+  <div
+    class="array-field__ellipsis"
+    title="baserow.io"
+  >
+    <u>
+      baserow.io
+    </u>
+  </div>
+</div>
+`;

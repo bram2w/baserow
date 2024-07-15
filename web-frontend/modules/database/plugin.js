@@ -242,6 +242,7 @@ import {
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
   BaserowFormulaFileType,
+  BaserowFormulaURLType,
 } from '@baserow/modules/database/formula/formulaTypes'
 import {
   EmptyCountViewAggregationType,
@@ -706,6 +707,7 @@ export default (context) => {
     'formula_type',
     new BaserowFormulaSingleSelectType(context)
   )
+  app.$registry.register('formula_type', new BaserowFormulaURLType(context))
   app.$registry.register(
     'formula_type',
     new BaserowFormulaMultipleSelectType(context)

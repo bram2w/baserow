@@ -1958,7 +1958,7 @@ class BaserowWhenEmpty(TwoArgumentBaserowFunction):
         arg1: BaserowExpression[BaserowFormulaValidType],
         arg2: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        if arg1.expression_type.type != arg2.expression_type.type:
+        if not isinstance(arg1.expression_type, type(arg2.expression_type)):
             return func_call.with_invalid_type(
                 "both inputs for when_empty must be the same type"
             )

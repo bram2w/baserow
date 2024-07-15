@@ -131,6 +131,11 @@ class BaserowFormulaTextType(
         )
 
 
+class BaserowFormulaURLType(BaserowFormulaTextType, BaserowFormulaValidType):
+    type = "url"
+    baserow_field_type = "url"
+
+
 class BaserowFormulaCharType(BaserowFormulaTextType, BaserowFormulaValidType):
     type = "char"
     baserow_field_type = "text"
@@ -1435,6 +1440,7 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaSingleSelectType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
+    BaserowFormulaURLType,
 ]
 
 BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = list(

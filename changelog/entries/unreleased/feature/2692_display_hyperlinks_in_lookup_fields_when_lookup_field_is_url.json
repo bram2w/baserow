@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Display hyperlinks in lookup fields when lookup field is URLField",
+    "issue_number": 2692,
+    "bullet_points": [],
+    "created_at": "2024-07-02"
+}

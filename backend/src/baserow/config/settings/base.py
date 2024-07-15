@@ -562,6 +562,7 @@ SPECTACULAR_SETTINGS = {
             "formula",
             "count",
             "lookup",
+            "url",
         ],
         "ViewFilterTypesEnum": [
             "equal",
