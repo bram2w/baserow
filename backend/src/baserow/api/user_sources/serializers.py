@@ -57,6 +57,7 @@ class UserSourceSerializer(serializers.ModelSerializer):
         model = UserSource
         fields = (
             "id",
+            "uid",
             "application_id",
             "integration_id",
             "type",
@@ -66,6 +67,7 @@ class UserSourceSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             "id": {"read_only": True},
+            "uid": {"read_only": True},
             "application_id": {"read_only": True},
             "auth_providers": {"read_only": True},
             "integration_id": {"read_only": True},

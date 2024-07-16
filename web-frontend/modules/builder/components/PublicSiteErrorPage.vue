@@ -18,11 +18,16 @@
     <div class="placeholder__action">
       <Button
         type="primary"
-        icon="iconoir-arrow-left"
+        icon="iconoir-home"
         size="large"
-        @click="$router.go(-1)"
+        @click="
+          $router.go({
+            name: 'application-builder-page',
+            params: { pathMatch: '/' },
+          })
+        "
       >
-        {{ $t('action.back') }}
+        {{ $t('action.backToHome') }}
       </Button>
     </div>
   </div>

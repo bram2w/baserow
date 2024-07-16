@@ -183,6 +183,7 @@ class BasePublicUserSourceSerializer(serializers.ModelSerializer):
         model = UserSource
         fields = (
             "id",
+            "uid",
             "type",
             "name",
             "order",
@@ -190,6 +191,7 @@ class BasePublicUserSourceSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             "id": {"read_only": True},
+            "uid": {"read_only": True},
             "auth_providers": {"read_only": True},
             "type": {"read_only": True},
             "name": {"read_only": True},

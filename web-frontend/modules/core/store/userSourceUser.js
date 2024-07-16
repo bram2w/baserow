@@ -23,7 +23,7 @@ const checkApplication = (application) => {
       refreshToken: null,
       tokenUpdatedAt: 0,
       tokenPayload: null,
-      user: { email: '', id: 0, username: '', role: '', user_source_id: 0 },
+      user: { email: '', id: 0, username: '', role: '', user_source_uid: '' },
       authenticated: false,
     })
   }
@@ -134,7 +134,7 @@ export const actions = {
         id: tokenPayload.user_id,
         username: tokenPayload.username,
         email: tokenPayload.email,
-        user_source_id: tokenPayload.user_source_id,
+        user_source_uid: tokenPayload.user_source_uid,
         role: tokenPayload.role,
       },
     })
@@ -228,7 +228,7 @@ export const getters = {
     if (getters.isAuthenticated(application)) {
       return application.userSourceUser.user
     }
-    return { email: '', id: 0, username: '', role: '', user_source_id: 0 }
+    return { email: '', id: 0, username: '', role: '', user_source_uid: '' }
   },
   shouldRefreshToken: (state, getters) => (application) => {
     // the user must be authenticated to refresh the token

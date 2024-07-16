@@ -44,9 +44,9 @@ export default {
       return this.$store.getters['userSourceUser/getUser'](this.builder)
     },
     userSourceName() {
-      return this.$store.getters['userSource/getUserSourceById'](
+      return this.$store.getters['userSource/getUserSourceByUId'](
         this.builder,
-        this.loggedUser.user_source_id
+        this.loggedUser.user_source_uid
       ).name
     },
     userRole() {

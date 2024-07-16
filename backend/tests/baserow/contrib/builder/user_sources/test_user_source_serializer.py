@@ -30,6 +30,7 @@ def test_serializer_has_expected_fields(user_source):
         "name",
         "order",
         "type",
+        "uid",
     ]
 
     serializer = UserSourceSerializer(instance=user_source)
