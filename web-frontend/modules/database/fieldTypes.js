@@ -15,7 +15,14 @@ import {
   isValidEmail,
   isValidURL,
 } from '@baserow/modules/core/utils/string'
-
+import {
+  fieldSupportsFilter,
+  hasEmptyValueFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+} from '@baserow/modules/database/fieldFilterCompatibility'
 import moment from '@baserow/modules/core/moment'
 import guessFormat from 'moment-guess'
 import { Registerable } from '@baserow/modules/core/registry'
@@ -134,6 +141,12 @@ import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
 import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
 import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
+
+import {
+  BaserowFormulaArrayType,
+  BaserowFormulaCharType,
+  BaserowFormulaTextType,
+} from '@baserow/modules/database/formula/formulaTypes'
 
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
@@ -3658,6 +3671,31 @@ export class FormulaFieldType extends FieldType {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.canRepresentFiles(field)
   }
+
+  getHasEmptyValueFilterFunction(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.getHasEmptyValueFilterFunction(field)
+  }
+
+  getHasValueEqualFilterFunction(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.getHasValueEqualFilterFunction(field)
+  }
+
+  getHasValueContainsFilterFunction(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.getHasValueContainsFilterFunction(field)
+  }
+
+  getHasValueContainsWordFilterFunction(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.getHasValueContainsWordFilterFunction(field)
+  }
+
+  getHasValueLengthIsLowerThanFilterFunction(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.getHasValueLengthIsLowerThanFilterFunction(field)
+  }
 }
 
 export class CountFieldType extends FormulaFieldType {
@@ -4202,3 +4240,37 @@ export class PasswordFieldType extends FieldType {
     return RowHistoryFieldPassword
   }
 }
+
+fieldSupportsFilter(FormulaFieldType, hasEmptyValueFilterMixin)
+fieldSupportsFilter(BaserowFormulaArrayType, hasEmptyValueFilterMixin)
+fieldSupportsFilter(BaserowFormulaTextType, hasEmptyValueFilterMixin)
+fieldSupportsFilter(BaserowFormulaCharType, hasEmptyValueFilterMixin)
+
+fieldSupportsFilter(FormulaFieldType, hasValueEqualFilterMixin)
+fieldSupportsFilter(BaserowFormulaArrayType, hasValueEqualFilterMixin)
+fieldSupportsFilter(BaserowFormulaTextType, hasValueEqualFilterMixin)
+fieldSupportsFilter(BaserowFormulaCharType, hasValueEqualFilterMixin)
+
+fieldSupportsFilter(FormulaFieldType, hasValueContainsFilterMixin)
+fieldSupportsFilter(BaserowFormulaArrayType, hasValueContainsFilterMixin)
+fieldSupportsFilter(BaserowFormulaTextType, hasValueContainsFilterMixin)
+fieldSupportsFilter(BaserowFormulaCharType, hasValueContainsFilterMixin)
+
+fieldSupportsFilter(FormulaFieldType, hasValueContainsWordFilterMixin)
+fieldSupportsFilter(BaserowFormulaArrayType, hasValueContainsWordFilterMixin)
+fieldSupportsFilter(BaserowFormulaTextType, hasValueContainsWordFilterMixin)
+fieldSupportsFilter(BaserowFormulaCharType, hasValueContainsWordFilterMixin)
+
+fieldSupportsFilter(FormulaFieldType, hasValueLengthIsLowerThanFilterMixin)
+fieldSupportsFilter(
+  BaserowFormulaArrayType,
+  hasValueLengthIsLowerThanFilterMixin
+)
+fieldSupportsFilter(
+  BaserowFormulaTextType,
+  hasValueLengthIsLowerThanFilterMixin
+)
+fieldSupportsFilter(
+  BaserowFormulaCharType,
+  hasValueLengthIsLowerThanFilterMixin
+)
