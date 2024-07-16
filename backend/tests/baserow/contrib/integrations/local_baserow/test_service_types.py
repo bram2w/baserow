@@ -2092,6 +2092,64 @@ def test_local_baserow_upsert_row_service_dispatch_data_without_row_id(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_disabled_field_mapping_fields(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Name", "text", {}),
+            ("Last name", "text", {}),
+            ("Location", "text", {}),
+        ],
+    )
+
+    name_field = table.field_set.get(name="Name")
+    last_name_field = table.field_set.get(name="Last name")
+    location_field = table.field_set.get(name="Location")
+
+    row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            name_field.id: "Peter",
+            last_name_field.id: "Evans",
+            location_field.id: "Cornwall",
+        },
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        row_id=f"'{row.id}'",
+        integration=integration,
+    )
+    service_type = service.get_type()
+    service.field_mappings.create(field=name_field, value="'Jeff'", enabled=True)
+    service.field_mappings.create(field=last_name_field, value="", enabled=False)
+    service.field_mappings.create(field=location_field, value="", enabled=False)
+
+    fake_request = Mock()
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    service_type.dispatch_data(service, dispatch_values, dispatch_context)
+
+    row.refresh_from_db()
+    assert getattr(row, name_field.db_column) == "Jeff"
+    assert getattr(row, last_name_field.db_column) == "Evans"
+    assert getattr(row, location_field.db_column) == "Cornwall"
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
     data_fixture,
 ):
@@ -2540,7 +2598,9 @@ def test_local_baserow_upsert_row_service_after_update(data_fixture):
         {
             "table_id": table.id,
             "integration_id": integration.id,
-            "field_mappings": [{"field_id": field.id, "value": "'Horse'"}],
+            "field_mappings": [
+                {"field_id": field.id, "value": "'Horse'", "enabled": True}
+            ],
         },
         {},
     )
@@ -2551,7 +2611,7 @@ def test_local_baserow_upsert_row_service_after_update(data_fixture):
             service,
             {
                 "table_id": table.id,
-                "field_mappings": [{"value": "'Bread'"}],
+                "field_mappings": [{"value": "'Bread'", "enabled": True}],
             },
             {},
         )
@@ -2566,7 +2626,9 @@ def test_local_baserow_upsert_row_service_after_update(data_fixture):
         LocalBaserowUpsertRowServiceType().after_update(
             service,
             {
-                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+                "field_mappings": [
+                    {"field_id": field.id, "value": "'Pony'", "enabled": True}
+                ],
             },
             {"table": (table, table2)},
         )

@@ -126,7 +126,9 @@ def test_export_import_upsert_row_workflow_action_type(data_fixture):
             "type": "local_baserow_upsert_row",
             "row_id": "",
             "table_id": table.id,
-            "field_mappings": [{"field_id": field.id, "value": field_mapping.value}],
+            "field_mappings": [
+                {"field_id": field.id, "value": field_mapping.value, "enabled": True}
+            ],
         },
     }
 

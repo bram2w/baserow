@@ -8,6 +8,7 @@
   >
     <FormulaInputField
       :value="value"
+      :disabled="disabled"
       :placeholder="placeholder"
       :data-providers="dataProviders"
       :data-explorer-loading="dataExplorerLoading"
@@ -23,12 +24,18 @@
 
 <script>
 import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
+
 export default {
   components: { FormulaInputField },
   props: {
     value: {
       type: String,
       required: true,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     label: {
       type: String,

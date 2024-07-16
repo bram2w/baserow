@@ -38,4 +38,7 @@ class LocalBaserowTableServiceFieldMappingSerializer(serializers.Serializer):
     field_id = serializers.IntegerField(
         help_text="The primary key of the associated database table field."
     )
+    enabled = serializers.BooleanField(
+        help_text="Indicates whether the field mapping is enabled or not."
+    )
     value = FormulaSerializerField(allow_blank=True)

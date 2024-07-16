@@ -390,7 +390,9 @@ def test_update_create_row_workflow_action(api_client, data_fixture):
                 "table_id": table.id,
                 "type": service_type.type,
                 "integration_id": workflow_action.service.integration_id,
-                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+                "field_mappings": [
+                    {"field_id": field.id, "value": "'Pony'", "enabled": True}
+                ],
             }
         },
         format="json",
@@ -406,7 +408,7 @@ def test_update_create_row_workflow_action(api_client, data_fixture):
     assert response_json["service"]["table_id"] == service.table_id
     assert response_json["service"]["integration_id"] == service.integration_id
     assert response_json["service"]["field_mappings"] == [
-        {"field_id": field.id, "value": "'Pony'"}
+        {"field_id": field.id, "value": "'Pony'", "enabled": True}
     ]
 
 
@@ -487,7 +489,9 @@ def test_update_update_row_workflow_action(api_client, data_fixture):
                 "row_id": first_row.id,
                 "type": service_type.type,
                 "integration_id": workflow_action.service.integration_id,
-                "field_mappings": [{"field_id": field.id, "value": "'Pony'"}],
+                "field_mappings": [
+                    {"field_id": field.id, "value": "'Pony'", "enabled": True}
+                ],
             },
         },
         format="json",
@@ -508,7 +512,7 @@ def test_update_update_row_workflow_action(api_client, data_fixture):
         == workflow_action.service.integration_id
     )
     assert response_json["service"]["field_mappings"] == [
-        {"field_id": field.id, "value": "'Pony'"}
+        {"field_id": field.id, "value": "'Pony'", "enabled": True}
     ]
 
 

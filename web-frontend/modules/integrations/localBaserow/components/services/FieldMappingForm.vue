@@ -5,11 +5,10 @@
       :key="field.id"
       small
       small-label
-      :field="field"
       :label="field.name"
-      :value="getFieldMappingValue(field.id)"
+      :field-mapping="getFieldMapping(field.id)"
       :placeholder="$t('upsertRowWorkflowActionForm.fieldMappingPlaceholder')"
-      @change="updateFieldMapping($event, field.id)"
+      @change="updateFieldMapping(field.id, $event)"
     ></FieldMapping>
   </div>
 </template>
@@ -31,31 +30,31 @@ export default {
     },
   },
   methods: {
-    getFieldMappingValue(fieldId) {
-      const mapping = this.value.find(
-        (fieldMapping) => fieldMapping.field_id === fieldId
+    getFieldMapping(fieldId) {
+      return (
+        this.value.find(
+          (fieldMapping) => fieldMapping.field_id === fieldId
+        ) || { enabled: true, field_id: fieldId, value: '' }
       )
-      return mapping?.value || ''
     },
-    updateFieldMapping(newValue, fieldId) {
-      const event = { field_id: fieldId, value: newValue }
+    updateFieldMapping(fieldId, changes) {
       const existingMapping = this.value.some(
         ({ field_id: existingId }) => existingId === fieldId
       )
       if (existingMapping) {
         const newMapping = this.value.map((fieldMapping) => {
           if (fieldMapping.field_id === fieldId) {
-            return { ...fieldMapping, ...event }
+            return { ...fieldMapping, ...changes }
           }
           return fieldMapping
         })
         this.$emit('input', newMapping)
       } else {
-        // It already exists
         const newMapping = [...this.value]
         newMapping.push({
+          enabled: true,
           field_id: fieldId,
-          ...event,
+          ...changes,
         })
         this.$emit('input', newMapping)
       }
