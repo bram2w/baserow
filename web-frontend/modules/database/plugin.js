@@ -96,6 +96,17 @@ import {
   DateEqualsDayOfMonthViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
+  HasValueEqualViewFilterType,
+  HasEmptyValueViewFilterType,
+  HasNotEmptyValueViewFilterType,
+  HasNotValueEqualViewFilterType,
+  HasValueContainsViewFilterType,
+  HasNotValueContainsViewFilterType,
+  HasValueContainsWordViewFilterType,
+  HasNotValueContainsWordViewFilterType,
+  HasValueLengthIsLowerThanViewFilterType,
+} from '@baserow/modules/database/arrayViewFilters'
+import {
   CSVImporterType,
   PasteImporterType,
   XMLImporterType,
@@ -427,6 +438,36 @@ export default (context) => {
     new DateAfterDaysAgoViewFilterType(context)
   )
   // END
+  app.$registry.register('viewFilter', new HasEmptyValueViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new HasNotEmptyValueViewFilterType(context)
+  )
+  app.$registry.register('viewFilter', new HasValueEqualViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new HasNotValueEqualViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasValueContainsViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasNotValueContainsViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasValueContainsWordViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasNotValueContainsWordViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new HasValueLengthIsLowerThanViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))

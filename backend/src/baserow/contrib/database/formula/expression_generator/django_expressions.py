@@ -116,18 +116,12 @@ class JSONArray(Func):
         )
 
 
-class FileNameContainsExpr(Expression):
-    # fmt: off
-    template = (
-        f"""
-        EXISTS(
-            SELECT attached_files ->> 'visible_name'
-            FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as attached_files
-            WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%(value)s)
-        )
-        """  # nosec B608
-    )
-    # fmt: on
+class BaserowFilterExpression(Expression):
+    """
+    Baserow expression that works with field_name and value
+    to provide expressions for filters. To use, subclass and
+    define the template.
+    """
 
     def __init__(self, field_name: F, value: Value, output_field: Field):
         super().__init__(output_field=output_field)
@@ -159,3 +153,59 @@ class FileNameContainsExpr(Expression):
             "value": sql_value,
         }
         return template % data, params_value
+
+
+class FileNameContainsExpr(BaserowFilterExpression):
+    # fmt: off
+    template = (
+        f"""
+        EXISTS(
+            SELECT attached_files ->> 'visible_name'
+            FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as attached_files
+            WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%(value)s)
+        )
+        """  # nosec B608
+    )
+    # fmt: on
+
+
+class JSONArrayContainsValueExpr(BaserowFilterExpression):
+    # fmt: off
+    template = (
+        f"""
+        EXISTS(
+            SELECT filtered_field ->> 'value'
+            FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as filtered_field
+            WHERE UPPER(filtered_field ->> 'value') LIKE UPPER(%(value)s)
+        )
+        """  # nosec B608
+    )
+    # fmt: on
+
+
+class JSONArrayContainsValueSimilarToExpr(BaserowFilterExpression):
+    # fmt: off
+    template = (
+        f"""
+        EXISTS(
+            SELECT filtered_field ->> 'value'
+            FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as filtered_field
+            WHERE UPPER(filtered_field ->> 'value') SIMILAR TO %(value)s
+        )
+        """  # nosec B608 %(value)s
+    )
+    # fmt: on
+
+
+class JSONArrayContainsValueLengthLowerThanExpr(BaserowFilterExpression):
+    # fmt: off
+    template = (
+        f"""
+        EXISTS(
+            SELECT filtered_field ->> 'value'
+            FROM JSONB_ARRAY_ELEMENTS(%(field_name)s) as filtered_field
+            WHERE LENGTH(filtered_field ->> 'value') < %(value)s
+        )
+        """  # nosec B608 %(value)s
+    )
+    # fmt: on

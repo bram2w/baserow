@@ -666,6 +666,46 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
   canGroupByInView() {
     return false
   }
+
+  getHasEmptyValueFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasEmptyValueFilterFunction(field)
+  }
+
+  getHasValueEqualFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueEqualFilterFunction(field)
+  }
+
+  getHasValueContainsFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueContainsFilterFunction(field)
+  }
+
+  getHasValueContainsWordFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueContainsWordFilterFunction(field)
+  }
+
+  getHasValueLengthIsLowerThanFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueLengthIsLowerThanFilterFunction(field)
+  }
 }
 
 export class BaserowFormulaFileType extends BaserowFormulaTypeDefinition {

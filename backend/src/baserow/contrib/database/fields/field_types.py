@@ -77,6 +77,14 @@ from baserow.contrib.database.api.views.errors import (
 )
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
+from baserow.contrib.database.fields.filter_support import (
+    FilterNotSupportedException,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+)
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
     BaserowExpression,
@@ -149,6 +157,7 @@ from .expressions import extract_jsonb_array_values_to_single_string
 from .field_cache import FieldCache
 from .field_filters import (
     AnnotatedQ,
+    OptionallyAnnotatedQ,
     contains_filter,
     contains_word_filter,
     filename_contains_filter,
@@ -4308,7 +4317,14 @@ class PhoneNumberFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
         return collate_expression(Value(value))
 
 
-class FormulaFieldType(ReadOnlyFieldType):
+class FormulaFieldType(
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+    ReadOnlyFieldType,
+):
     type = "formula"
     model_class = FormulaField
 
@@ -4465,6 +4481,83 @@ class FormulaFieldType(ReadOnlyFieldType):
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
             rich_value=rich_value,
+        )
+
+    def get_in_array_empty_query(self, field_name, model_field, field: FormulaField):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueEmptyFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_empty_query(
+            field_name, model_field, field_instance
+        )
+
+    def get_in_array_is_query(
+        self,
+        field_name: str,
+        value: str,
+        model_field: models.Field,
+        field: FormulaField,
+    ) -> Q | OptionallyAnnotatedQ:
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_is_query(
+            field_name, value, model_field, field_instance
+        )
+
+    def get_in_array_contains_query(
+        self, field_name, value, model_field, field: FormulaField
+    ):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueContainsFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_contains_query(
+            field_name, value, model_field, field_instance
+        )
+
+    def get_in_array_contains_word_query(
+        self, field_name, value, model_field, field: FormulaField
+    ):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueContainsWordFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_contains_word_query(
+            field_name, value, model_field, field_instance
+        )
+
+    def get_in_array_length_is_lower_than_query(
+        self, field_name, value, model_field, field: FormulaField
+    ):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueLengthIsLowerThanFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_length_is_lower_than_query(
+            field_name, value, model_field, field_instance
         )
 
     def contains_query(self, field_name, value, model_field, field: FormulaField):

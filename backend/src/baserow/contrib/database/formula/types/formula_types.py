@@ -20,6 +20,14 @@ from baserow.contrib.database.fields.expressions import (
     json_extract_path,
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
+from baserow.contrib.database.fields.filter_support import (
+    FilterNotSupportedException,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+)
 from baserow.contrib.database.fields.mixins import get_date_time_format
 from baserow.contrib.database.fields.utils.duration import (
     D_H_M_S,
@@ -95,6 +103,11 @@ class BaserowFormulaBaseTextType(BaserowFormulaTypeHasEmptyBaserowExpression):
 
 
 class BaserowFormulaTextType(
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
     BaserowFormulaBaseTextType,
     BaserowFormulaTypeHasEmptyBaserowExpression,
     BaserowFormulaValidType,
@@ -961,7 +974,14 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
         )
 
 
-class BaserowFormulaArrayType(BaserowFormulaValidType):
+class BaserowFormulaArrayType(
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+    BaserowFormulaValidType,
+):
     type = "array"
     user_overridable_formatting_option_fields = [
         "array_formula_type",
@@ -1122,6 +1142,46 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
 
     def contains_query(self, field_name, value, model_field, field):
         return Q()
+
+    def get_in_array_is_query(self, field_name, value, model_field, field):
+        if not isinstance(self.sub_type, HasValueFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_is_query(
+            field_name, value, model_field, field
+        )
+
+    def get_in_array_empty_query(self, field_name, model_field, field):
+        if not isinstance(self.sub_type, HasValueEmptyFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_empty_query(field_name, model_field, field)
+
+    def get_in_array_contains_query(self, field_name, value, model_field, field):
+        if not isinstance(self.sub_type, HasValueContainsFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_contains_query(
+            field_name, value, model_field, field
+        )
+
+    def get_in_array_contains_word_query(self, field_name, value, model_field, field):
+        if not isinstance(self.sub_type, HasValueContainsWordFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_contains_word_query(
+            field_name, value, model_field, field
+        )
+
+    def get_in_array_length_is_lower_than_query(
+        self, field_name, value, model_field, field
+    ):
+        if not isinstance(self.sub_type, HasValueLengthIsLowerThanFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_length_is_lower_than_query(
+            field_name, value, model_field, field
+        )
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         return "p_in = '';"

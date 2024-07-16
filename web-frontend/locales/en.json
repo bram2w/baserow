@@ -174,6 +174,15 @@
     "password": "A write-only field that holds a hashed password. The value will be `null` if not set, or `true` if it has been set. It accepts a string to set it."
   },
   "viewFilter": {
+    "hasEmptyValue": "has empty value",
+    "hasNotEmptyValue": "doesn't have empty value",
+    "hasValueEqual": "has value equal",
+    "hasNotValueEqual": "doesn't have value equal",
+    "hasValueContains": "has value contains",
+    "hasNotValueContains": "doesn't have value contains",
+    "hasValueContainsWord": "has value contains word",
+    "hasNotValueContainsWord": "doesn't have value contains word",
+    "hasValueLengthIsLowerThan": "has value length is lower than",
     "contains": "contains",
     "containsNot": "doesn't contain",
     "containsWord": "contains word",

@@ -49,3 +49,91 @@ export function genericContainsWordFilter(
   filterValue = filterValue.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
   return humanReadableRowValue.match(new RegExp(`\\b${filterValue}\\b`))
 }
+
+export function genericHasEmptyValueFilter(cellValue, filterValue) {
+  if (!Array.isArray(cellValue)) {
+    return false
+  }
+
+  for (let i = 0; i < cellValue.length; i++) {
+    const value = cellValue[i].value
+
+    if (value === '') {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function genericHasValueEqualFilter(cellValue, filterValue) {
+  if (!Array.isArray(cellValue)) {
+    return false
+  }
+
+  for (let i = 0; i < cellValue.length; i++) {
+    const value = cellValue[i].value
+    if (value === filterValue) {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function genericHasValueContainsFilter(cellValue, filterValue) {
+  if (!Array.isArray(cellValue)) {
+    return false
+  }
+
+  filterValue = filterValue.toString().toLowerCase().trim()
+
+  for (let i = 0; i < cellValue.length; i++) {
+    const value = cellValue[i].value.toString().toLowerCase().trim()
+
+    if (value.includes(filterValue)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function genericHasValueContainsWordFilter(cellValue, filterValue) {
+  if (!Array.isArray(cellValue)) {
+    return false
+  }
+
+  filterValue = filterValue.toString().toLowerCase().trim()
+  filterValue = filterValue.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
+
+  for (let i = 0; i < cellValue.length; i++) {
+    if (cellValue[i].value == null) {
+      continue
+    }
+    const value = cellValue[i].value.toString().toLowerCase().trim()
+    if (value.match(new RegExp(`\\b${filterValue}\\b`))) {
+      return true
+    }
+  }
+
+  return false
+}
+
+export function genericHasValueLengthLowerThanFilter(cellValue, filterValue) {
+  if (!Array.isArray(cellValue)) {
+    return false
+  }
+
+  for (let i = 0; i < cellValue.length; i++) {
+    if (cellValue[i].value == null) {
+      continue
+    }
+    const valueLength = cellValue[i].value.toString().length
+    if (valueLength < filterValue) {
+      return true
+    }
+  }
+
+  return false
+}
