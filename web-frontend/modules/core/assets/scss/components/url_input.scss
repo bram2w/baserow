@@ -4,12 +4,13 @@
 
 .url-input__link {
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 17px;
-  line-height: 22px;
+  line-height: 44px;
   bottom: 0;
   max-width: calc(100% - (17px * 2));
   overflow: hidden;
   white-space: nowrap;
-  transform: translateY(-50%);
+  display: flex;
+  vertical-align: center;
 }

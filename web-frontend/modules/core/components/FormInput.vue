@@ -26,6 +26,7 @@
         :id="id"
         ref="input"
         class="form-input__input"
+        :class="{ 'form-input__input--text-invisible': textInvisible }"
         :value="fromValue(value)"
         :disabled="disabled"
         :type="type"
@@ -162,6 +163,11 @@ export default {
       type: Boolean,
       required: false,
       default: true,
+    },
+    textInvisible: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {

@@ -105,6 +105,14 @@
   .form-input--no-controls & {
     @extend %remove-number-input-controls;
   }
+
+  &.form-input__input--text-invisible {
+    color: transparent;
+
+    &::placeholder {
+      color: transparent;
+    }
+  }
 }
 
 .form-input__icon {
