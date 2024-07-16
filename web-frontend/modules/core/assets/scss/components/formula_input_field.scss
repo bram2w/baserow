@@ -16,6 +16,10 @@
   border-color: $color-primary-500;
 }
 
+.formula-input-field--disabled {
+  user-select: none;
+}
+
 .formula-input-field__reset-button {
   width: 100%;
 }

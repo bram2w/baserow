@@ -608,6 +608,10 @@
     "fieldMappingPlaceholder": "Choose a field value",
     "noTableSelectedMessage": "Choose a table to begin configuring your fields."
   },
+  "fieldMappingContext": {
+    "enableField": "Enable field",
+    "disableField": "Disable field"
+  },
   "checkboxElementForm": {
     "labelTitle": "Label",
     "valueTitle": "Default value",

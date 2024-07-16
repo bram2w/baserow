@@ -63,6 +63,11 @@ export default {
       type: String,
       default: '',
     },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     placeholder: {
       type: String,
       default: null,
@@ -104,8 +109,10 @@ export default {
     },
     classes() {
       return {
+        'form-input--disabled': this.disabled,
         'formula-input-field--small': this.small,
-        'formula-input-field--focused': this.isFocused,
+        'formula-input-field--focused': !this.disabled && this.isFocused,
+        'formula-input-field--disabled': this.disabled,
       }
     },
     placeHolderExt() {
@@ -159,6 +166,9 @@ export default {
     },
   },
   watch: {
+    disabled(newValue) {
+      this.editor.setOptions({ editable: !newValue })
+    },
     isFocused(value) {
       if (!value) {
         this.$refs.dataExplorer.hide()
@@ -220,7 +230,7 @@ export default {
     this.content = this.toContent(this.value)
     this.editor = new Editor({
       content: this.htmlContent,
-      editable: true,
+      editable: !this.disabled,
       onUpdate: this.onUpdate,
       onFocus: this.onFocus,
       onBlur: this.onBlur,
@@ -251,7 +261,9 @@ export default {
       this.emitChange()
     },
     onFocus() {
-      this.formulaInputFocused = true
+      // If the input is disabled, we don't want users to be
+      // able to open the data explorer and select nodes.
+      this.formulaInputFocused = !this.disabled
     },
     onBlur() {
       // We have to delay the browser here by just a bit, running the below will make

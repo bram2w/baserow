@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "[Builder] Made it easier for application builder page designers to disable fields in their create/update row actions.",
+    "issue_number": 2620,
+    "bullet_points": [],
+    "created_at": "2024-07-15"
+}

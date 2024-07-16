@@ -1261,7 +1261,10 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
                 bulk_field_mappings.append(
                     LocalBaserowTableServiceFieldMapping(
-                        field=field, service=instance, value=field_mapping["value"]
+                        field=field,
+                        service=instance,
+                        enabled=field_mapping["enabled"],
+                        value=field_mapping["value"],
                     )
                 )
             LocalBaserowTableServiceFieldMapping.objects.bulk_create(
@@ -1286,6 +1289,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 {
                     "field_id": m.field_id,
                     "value": m.value,
+                    "enabled": m.enabled,
                 }
                 for m in service.field_mappings.all()
             ]
@@ -1321,6 +1325,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         if prop_name == "field_mappings":
             return [
                 {
+                    "enabled": item["enabled"],
                     "value": import_formula(item["value"], id_mapping, **kwargs),
                     "field_id": (
                         id_mapping["database_fields"][item["field_id"]]
@@ -1490,7 +1495,9 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         integration = service.integration.specific
 
         field_values = {}
-        field_mappings = service.field_mappings.select_related("field").all()
+        field_mappings = service.field_mappings.select_related("field").filter(
+            enabled=True
+        )
 
         for field_mapping in field_mappings:
             if field_mapping.id not in resolved_values:
