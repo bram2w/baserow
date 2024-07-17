@@ -953,3 +953,175 @@ def test_async_duplicate_field(api_client, data_fixture):
     assert field_set.count() == original_field_count + 2
     for row in response_json["results"]:
         assert row[f"{primary_field.name} 3"] == row[primary_field.name]
+
+
+@pytest.mark.django_db
+def test_change_primary_field_different_table(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+    table_b = data_fixture.create_database_table(user)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_b.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_FIELD_NOT_IN_TABLE"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_type_not_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_password_field(
+        user=user, primary=False, table=table_a
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_is_already_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_1.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_FIELD_IS_ALREADY_PRIMARY"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_no_update_permissions(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_without_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_TABLE_HAS_NO_PRIMARY_FIELD"
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_with_primary(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "id": field_2.id,
+        "table_id": table_a.id,
+        "name": field_2.name,
+        "order": 0,
+        "type": "text",
+        "primary": True,
+        "read_only": False,
+        "description": None,
+        "related_fields": [
+            {
+                "id": field_1.id,
+                "table_id": table_a.id,
+                "name": field_1.name,
+                "order": 0,
+                "type": "text",
+                "primary": False,
+                "read_only": False,
+                "description": None,
+                "text_default": "",
+            }
+        ],
+        "text_default": "",
+    }
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_and_back(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response = api_client.post(
+        reverse(
+            "api:database:fields:change_primary_field", kwargs={"table_id": table_a.id}
+        ),
+        {"new_primary_field_id": field_1.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    field_1.refresh_from_db()
+    field_2.refresh_from_db()
+    assert field_1.primary is True
+    assert field_2.primary is False

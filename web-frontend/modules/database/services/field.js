@@ -46,5 +46,13 @@ export default (client) => {
         config
       )
     },
+    changePrimary(tableId, newPrimaryFieldId) {
+      return client.post(
+        `/database/fields/table/${tableId}/change-primary-field/`,
+        {
+          new_primary_field_id: newPrimaryFieldId,
+        }
+      )
+    },
   }
 }

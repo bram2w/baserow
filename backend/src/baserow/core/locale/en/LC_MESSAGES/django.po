@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-20 07:22+0000\n"
+"POT-Creation-Date: 2024-07-16 13:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -215,16 +215,16 @@ msgstr ""
 msgid "You have %(count)d new notifications - Baserow"
 msgstr ""
 
-#: src/baserow/core/fields.py:112
+#: src/baserow/core/fields.py:114
 #, python-format
 msgid "“%(value)s” value must be a decimal number."
 msgstr ""
 
-#: src/baserow/core/fields.py:114
+#: src/baserow/core/fields.py:116
 msgid "Decimal number"
 msgstr ""
 
-#: src/baserow/core/handler.py:2039 src/baserow/core/user/handler.py:266
+#: src/baserow/core/handler.py:2053 src/baserow/core/user/handler.py:268
 #, python-format
 msgid "%(name)s's workspace"
 msgstr ""
@@ -535,9 +535,4 @@ msgstr ""
 
 #: src/baserow/core/user/emails.py:74
 msgid "Account deletion cancelled - Baserow"
-msgstr ""
-
-#: src/baserow/core/user_sources/user_source_user.py:81
-#, python-format
-msgid "%(user_source_name)s member"
 msgstr ""

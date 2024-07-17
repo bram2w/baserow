@@ -224,6 +224,31 @@ export const actions = {
     return forceUpdate ? await forceUpdateCallback() : forceUpdateCallback
   },
   /**
+   * Promote the provided field to primary field.
+   */
+  async changePrimary(context, { field, forceUpdate = true }) {
+    const { dispatch } = context
+
+    const newField = clone(field)
+    const oldField = clone(field)
+    newField.primary = true
+
+    const { data } = await FieldService(this.$client).changePrimary(
+      field.table_id,
+      field.id
+    )
+    const forceUpdateCallback = async () => {
+      return await dispatch('forceUpdate', {
+        field,
+        oldField,
+        data,
+        relatedFields: data.related_fields,
+      })
+    }
+
+    return forceUpdate ? await forceUpdateCallback() : forceUpdateCallback
+  },
+  /**
    * Forcefully update an existing field without making a request to the backend.
    */
   async forceUpdate(context, { field, oldField, data, relatedFields = [] }) {

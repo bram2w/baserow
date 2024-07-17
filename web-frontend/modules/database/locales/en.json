@@ -279,7 +279,8 @@
     "editField": "Edit field",
     "deleteField": "Delete field",
     "hideField": "Hide field",
-    "showField": "Show field"
+    "showField": "Show field",
+    "changePrimaryField": "Change primary field"
   },
   "fieldForm": {
     "name": "Name",
@@ -753,6 +754,12 @@
     "duplicate": "Duplicate field",
     "cloneData": "Copy data",
     "readOnlyField": "Cell values will be filled automatically."
+  },
+  "changePrimaryFieldModal": {
+    "title": "Change the primary field",
+    "change": "Change",
+    "primaryFieldLabel": "Primary field",
+    "existingPrimary": "\"{name}\" is currently the primary field."
   },
   "snapshotsModal": {
     "title": "snapshots",

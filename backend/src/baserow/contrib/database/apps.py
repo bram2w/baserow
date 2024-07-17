@@ -246,6 +246,7 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(PasswordFieldConverter())
 
         from .fields.actions import (
+            ChangePrimaryFieldActionType,
             CreateFieldActionType,
             DeleteFieldActionType,
             DuplicateFieldActionType,
@@ -256,6 +257,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
         action_type_registry.register(DuplicateFieldActionType())
+        action_type_registry.register(ChangePrimaryFieldActionType())
 
         from .views.view_types import FormViewType, GalleryViewType, GridViewType
 

@@ -450,6 +450,7 @@ export class FieldType extends Registerable {
       name: this.getName(),
       isReadOnly: this.isReadOnly,
       canImport: this.getCanImport(),
+      canBePrimaryField: this.canBePrimaryField,
     }
   }
 
