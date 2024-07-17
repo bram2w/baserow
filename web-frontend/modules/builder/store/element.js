@@ -4,7 +4,8 @@ import ElementService from '@baserow/modules/builder/services/element'
 import PublicBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 import { calculateTempOrder } from '@baserow/modules/core/utils/order'
 
-const populateElement = (element) => {
+const populateElement = (element, registry) => {
+  const elementType = registry.get('element', element.type)
   element._ = {
     contentLoading: false,
     content: [],
@@ -12,6 +13,7 @@ const populateElement = (element) => {
     reset: 0,
     shouldBeFocused: false,
     elementNamespacePath: null,
+    ...elementType.getPopulateStoreProperties(),
   }
 
   return element
@@ -68,11 +70,13 @@ const updateCachedValues = (page) => {
 const mutations = {
   SET_ITEMS(state, { page, elements }) {
     state.selected = null
-    page.elements = elements.map(populateElement)
+    page.elements = elements.map((element) =>
+      populateElement(element, this.$registry)
+    )
     updateCachedValues(page)
   },
   ADD_ITEM(state, { page, element, beforeId = null }) {
-    page.elements.push(populateElement(element))
+    page.elements.push(populateElement(element, this.$registry))
     updateCachedValues(page)
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
@@ -105,6 +109,9 @@ const mutations = {
   },
   _SET_ELEMENT_NAMESPACE_PATH(state, { element, path }) {
     element._.elementNamespacePath = path
+  },
+  SET_REPEAT_ELEMENT_COLLAPSED(state, { element, collapsed }) {
+    element._.collapsed = collapsed
   },
 }
 
@@ -438,6 +445,12 @@ const actions = {
       path: elementNamespacePath,
     })
   },
+  setRepeatElementCollapsed({ commit }, { element, collapsed }) {
+    commit('SET_REPEAT_ELEMENT_COLLAPSED', {
+      element,
+      collapsed,
+    })
+  },
 }
 
 const getters = {
@@ -585,6 +598,9 @@ const getters = {
     }
 
     return null
+  },
+  getRepeatElementCollapsed: (state) => (element) => {
+    return element._.collapsed
   },
 }
 

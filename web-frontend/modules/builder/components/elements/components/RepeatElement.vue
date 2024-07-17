@@ -34,6 +34,7 @@
               <!-- Override the mode so that any children are in public mode -->
               <PageElement
                 v-else
+                v-show="!isCollapsed"
                 :key="`${child.id}_${index}`"
                 :element="child"
                 :force-mode="isEditMode ? 'public' : mode"
@@ -143,6 +144,11 @@ export default {
   },
   computed: {
     ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),
+    isCollapsed() {
+      return this.$store.getters['element/getRepeatElementCollapsed'](
+        this.element
+      )
+    },
     repeatedElementsStyles() {
       // These styles are applied inline as we are unable to provide
       // the CSS rules with the correct `items_per_row` per device. If
