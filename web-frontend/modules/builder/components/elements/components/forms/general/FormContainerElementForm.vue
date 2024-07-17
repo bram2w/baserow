@@ -17,7 +17,7 @@
     />
     <FormGroup
       :label="$t('formContainerElementForm.resetToInitialValuesTitle')"
-      :description="
+      :helper-text="
         $t('formContainerElementForm.resetToInitialValuesDescription')
       "
       small-label

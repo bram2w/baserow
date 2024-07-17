@@ -428,6 +428,15 @@ export class ElementType extends Registerable {
   uniqueElementId(element, recordIndexPath) {
     return [element.id, ...(recordIndexPath || [])].join('.')
   }
+
+  /**
+   * Responsible for optionally extending the element store's
+   * `_` object with per-element type specific properties.
+   * @returns {Object} - An object containing the properties to be added.
+   */
+  getPopulateStoreProperties() {
+    return {}
+  }
 }
 
 const ContainerElementTypeMixin = (Base) =>
@@ -896,6 +905,15 @@ export class RepeatElementType extends ContainerElementTypeMixin(
    */
   isInError({ element, builder }) {
     return element.data_source_id === null
+  }
+
+  /**
+   * Responsible for extending the element store's `populateElement`
+   * `_` object with repeat element specific properties.
+   * @returns {Object} - An object containing the properties to be added.
+   */
+  getPopulateStoreProperties() {
+    return { collapsed: false }
   }
 }
 /**

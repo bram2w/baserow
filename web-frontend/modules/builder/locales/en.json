@@ -509,7 +509,8 @@
     "orientationLabel": "Orientation",
     "orientationVertical": "Vertical",
     "orientationHorizontal": "Horizontal",
-    "buttonLoadMoreLabel": "Show more label"
+    "buttonLoadMoreLabel": "Show more label",
+    "toggleEditorRepetitionsLabel": "Temporarily disable repetitions"
   },
   "currentRecordDataProviderType": {
     "index": "Index",

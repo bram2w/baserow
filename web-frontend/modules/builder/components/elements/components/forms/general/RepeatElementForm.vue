@@ -74,11 +74,11 @@
       :label="$t('repeatElementForm.itemsPerRowLabel')"
       small-label
       required
-      :description="$t('repeatElementForm.itemsPerRowDescription')"
+      :helper-text="$t('repeatElementForm.itemsPerRowDescription')"
     >
       <DeviceSelector
         :device-type-selected="deviceTypeSelected"
-        class="repeat-element__device-selector"
+        class="repeat-element__device-selector margin-bottom-2"
         @selected="actionSetDeviceTypeSelected"
       >
         <template #deviceTypeControl="{ deviceType }">
@@ -91,6 +91,14 @@
           />
         </template>
       </DeviceSelector>
+    </FormGroup>
+    <FormGroup
+      small-label
+      class="margin-bottom-2"
+      :label="$t('repeatElementForm.toggleEditorRepetitionsLabel')"
+    >
+      <Checkbox :checked="isCollapsed" @input="emitToggleRepetitions($event)">
+      </Checkbox>
     </FormGroup>
   </form>
 </template>
@@ -113,6 +121,7 @@ export default {
     ApplicationBuilderFormulaInputGroup,
   },
   mixins: [elementForm, collectionElementForm],
+  inject: ['applicationContext'],
   data() {
     return {
       allowedValues: [
@@ -135,6 +144,10 @@ export default {
   },
   computed: {
     ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),
+    isCollapsed() {
+      const { element } = this.applicationContext
+      return this.$store.getters['element/getRepeatElementCollapsed'](element)
+    },
     deviceTypes() {
       return Object.values(this.$registry.getOrderedList('device'))
     },
@@ -182,6 +195,13 @@ export default {
     ...mapActions({
       actionSetDeviceTypeSelected: 'page/setDeviceTypeSelected',
     }),
+    emitToggleRepetitions(value) {
+      const { element } = this.applicationContext
+      this.$store.dispatch('element/setRepeatElementCollapsed', {
+        element,
+        collapsed: value,
+      })
+    },
     handlePerRowInput(event, deviceTypeType) {
       this.$v.values.items_per_row[deviceTypeType].$touch()
       this.values.items_per_row[deviceTypeType] = parseInt(event)

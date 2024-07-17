@@ -41,7 +41,7 @@ export default {
   },
   computed: {
     resolvedDefaultValue() {
-      return this.resolveFormula(this.element.default_value)
+      return ensureString(this.resolveFormula(this.element.default_value))
     },
     resolvedLabel() {
       return ensureString(this.resolveFormula(this.element.label))
