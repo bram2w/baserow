@@ -1,6 +1,6 @@
 import pytest
 
-from baserow.contrib.database.fields.exceptions import RichTextFieldCannotBePrimaryField
+from baserow.contrib.database.fields.exceptions import IncompatiblePrimaryFieldTypeError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import RichTextFieldMention
@@ -15,7 +15,7 @@ def test_rich_text_field_cannot_be_primary(data_fixture):
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database)
 
-    with pytest.raises(RichTextFieldCannotBePrimaryField):
+    with pytest.raises(IncompatiblePrimaryFieldTypeError):
         FieldHandler().create_field(
             user=user,
             table=table,
@@ -30,12 +30,26 @@ def test_rich_text_field_cannot_be_primary(data_fixture):
         user=user, table=table, type_name="long_text", name="Primary", primary=True
     )
 
-    with pytest.raises(RichTextFieldCannotBePrimaryField):
+    with pytest.raises(IncompatiblePrimaryFieldTypeError):
         FieldHandler().update_field(
             user=user,
             field=primary_field,
             new_type_name="long_text",
             long_text_enable_rich_text=True,
+        )
+
+    rich_text = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="long_text",
+        name="Rich text",
+        primary=False,
+        long_text_enable_rich_text=True,
+    )
+
+    with pytest.raises(IncompatiblePrimaryFieldTypeError):
+        FieldHandler().change_primary_field(
+            user=user, table=table, new_primary_field=rich_text
         )
 
 

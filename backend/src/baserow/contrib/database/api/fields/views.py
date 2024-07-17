@@ -39,12 +39,16 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
     ERROR_FIELD_CIRCULAR_REFERENCE,
     ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FIELD_IS_ALREADY_PRIMARY,
+    ERROR_FIELD_NOT_IN_TABLE,
     ERROR_FIELD_SELF_REFERENCE,
     ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
     ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
+    ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     ERROR_INVALID_BASEROW_FIELD_NAME,
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
     ERROR_RESERVED_BASEROW_FIELD_NAME,
+    ERROR_TABLE_HAS_NO_PRIMARY_FIELD,
 )
 from baserow.contrib.database.api.tables.errors import (
     ERROR_FAILED_TO_LOCK_TABLE_DUE_TO_CONFLICT,
@@ -53,6 +57,7 @@ from baserow.contrib.database.api.tables.errors import (
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.fields.actions import (
+    ChangePrimaryFieldActionType,
     CreateFieldActionType,
     DeleteFieldActionType,
     UpdateFieldActionType,
@@ -67,11 +72,15 @@ from baserow.contrib.database.fields.exceptions import (
     CannotDeletePrimaryField,
     FailedToLockFieldDueToConflict,
     FieldDoesNotExist,
+    FieldIsAlreadyPrimary,
+    FieldNotInTable,
     FieldWithSameNameAlreadyExists,
     IncompatibleFieldTypeForUniqueValues,
+    IncompatiblePrimaryFieldTypeError,
     InvalidBaserowFieldName,
     MaxFieldLimitExceeded,
     ReservedBaserowFieldNameException,
+    TableHasNoPrimaryField,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.job_types import DuplicateFieldJobType
@@ -99,6 +108,7 @@ from baserow.core.jobs.registries import job_type_registry
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .serializers import (
+    ChangePrimaryFieldParamsSerializer,
     CreateFieldSerializer,
     DuplicateFieldParamsSerializer,
     FieldSerializer,
@@ -600,3 +610,79 @@ class AsyncDuplicateFieldView(APIView):
 
         serializer = job_type_registry.get_serializer(job, JobSerializer)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class ChangePrimaryFieldView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The table where to update the primary field in.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table fields"],
+        operation_id="change_primary_field",
+        description=(
+            "Changes the primary field of a table to the one provided in the body "
+            "payload."
+        ),
+        request=ChangePrimaryFieldParamsSerializer,
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                field_type_registry, FieldSerializer
+            ),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_FIELD_IS_ALREADY_PRIMARY",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                    "ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE",
+                    "ERROR_TABLE_HAS_NO_PRIMARY_FIELD",
+                ]
+            ),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            FieldIsAlreadyPrimary: ERROR_FIELD_IS_ALREADY_PRIMARY,
+            FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
+            IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+            TableHasNoPrimaryField: ERROR_TABLE_HAS_NO_PRIMARY_FIELD,
+        }
+    )
+    @validate_body(ChangePrimaryFieldParamsSerializer)
+    def post(self, request: Request, table_id: int, data: Dict[str, Any]) -> Response:
+        """Changes the primary field of the given table."""
+
+        # Get the table for update because we want to prevent other fields being
+        # changed to the primary field.
+        table = TableHandler().get_table_for_update(table_id)
+        new_primary_field = FieldHandler().get_specific_field_for_update(
+            data["new_primary_field_id"]
+        )
+
+        new_primary_field, old_primary_field = action_type_registry.get_by_type(
+            ChangePrimaryFieldActionType
+        ).do(request.user, table, new_primary_field)
+
+        serializer = field_type_registry.get_serializer(
+            new_primary_field,
+            FieldSerializerWithRelatedFields,
+            related_fields=[old_primary_field],
+        )
+        return Response(serializer.data)

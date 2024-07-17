@@ -150,7 +150,6 @@ from .exceptions import (
     InvalidRollupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
-    RichTextFieldCannotBePrimaryField,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .expressions import extract_jsonb_array_values_to_single_string
@@ -429,24 +428,14 @@ class LongTextFieldType(CollationSortMixin, FieldType):
     def check_can_group_by(self, field: Field) -> bool:
         return not field.long_text_enable_rich_text
 
-    def before_create(
-        self, table, primary, allowed_field_values, order, user, field_kwargs
-    ):
-        # Disallow rich text fields from being primary fields as they can be difficult
-        # to render in some email notifications, as linked rows and possibly other
-        # places.
-        if primary and field_kwargs.get("long_text_enable_rich_text", False):
-            raise RichTextFieldCannotBePrimaryField(
-                "A rich text field cannot be the primary field."
+    def can_be_primary_field(self, field_or_values: Union[Field, dict]) -> bool:
+        if isinstance(field_or_values, dict):
+            enable_rich_text = field_or_values.get("long_text_enable_rich_text", False)
+        else:
+            enable_rich_text = getattr(
+                field_or_values, "long_text_enable_rich_text", False
             )
-
-    def before_update(self, from_field, to_field_values, user, field_kwargs):
-        if from_field.primary and to_field_values.get(
-            "long_text_enable_rich_text", False
-        ):
-            raise RichTextFieldCannotBePrimaryField(
-                "A rich text field cannot be the primary field."
-            )
+        return enable_rich_text is False
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -1995,7 +1984,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         ViewNotInTable: ERROR_VIEW_NOT_IN_TABLE,
     }
     _can_order_by = False
-    can_be_primary_field = False
+    _can_be_primary_field = False
     can_get_unique_values = False
     is_many_to_many_field = True
 
@@ -6094,7 +6083,7 @@ class PasswordFieldType(FieldType):
     can_be_in_form_view = True
     keep_data_on_duplication = True
     _can_order_by = False
-    can_be_primary_field = False
+    _can_be_primary_field = False
     can_get_unique_values = False
 
     def get_serializer_field(self, instance, **kwargs):

@@ -42,6 +42,31 @@
           @updated="$refs.context.hide()"
         ></UpdateFieldContext>
       </li>
+      <li
+        v-if="
+          field.primary &&
+          $hasPermission(
+            'database.table.field.update',
+            field,
+            database.workspace.id
+          )
+        "
+        class="context__menu-item"
+      >
+        <a
+          class="context__menu-item-link"
+          @click="$refs.changePrimaryFieldModal.show()"
+        >
+          <i class="context__menu-item-icon iconoir-coins-swap"></i>
+          {{ $t('fieldContext.changePrimaryField') }}
+        </a>
+        <ChangePrimaryFieldModal
+          ref="changePrimaryFieldModal"
+          :all-fields-in-table="allFieldsInTable"
+          :from-field="field"
+          :table="table"
+        ></ChangePrimaryFieldModal>
+      </li>
       <slot></slot>
       <li
         v-if="
@@ -71,10 +96,12 @@
 import context from '@baserow/modules/core/mixins/context'
 import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import ChangePrimaryFieldModal from '@baserow/modules/database/components/field/ChangePrimaryFieldModal.vue'
 
 export default {
   name: 'FieldContext',
   components: {
+    ChangePrimaryFieldModal,
     UpdateFieldContext,
   },
   mixins: [context],

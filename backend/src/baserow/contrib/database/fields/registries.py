@@ -105,7 +105,7 @@ class FieldType(
     _can_order_by = True
     """Indicates whether it is possible to order by this field type."""
 
-    can_be_primary_field = True
+    _can_be_primary_field = True
     """Some field types cannot be the primary field."""
 
     can_have_select_options = False
@@ -1488,6 +1488,18 @@ class FieldType(
             field_cache,
             via_path_to_starting_table,
         )
+
+    def can_be_primary_field(self, field_or_values: Union[Field, dict]) -> bool:
+        """
+        Override this method if this field type can't be primary.
+
+        :param field_or_values: The field object or the values to create/update it.
+            It accepts either because in some cases the field object doesn't exist,
+            but we do need to check if the field can be primary.
+        :return: True if the field can be primary.
+        """
+
+        return self._can_be_primary_field
 
     def check_can_order_by(self, field: Field) -> bool:
         """

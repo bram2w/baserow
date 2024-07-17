@@ -152,3 +152,13 @@ ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR = (
     "must be set to True on the field to convert values with "
     "the utc_offset provided in date_force_timezone_offset.",
 )
+ERROR_FIELD_IS_ALREADY_PRIMARY = (
+    "ERROR_FIELD_IS_ALREADY_PRIMARY",
+    HTTP_400_BAD_REQUEST,
+    "The provided field is already the primary field.",
+)
+ERROR_TABLE_HAS_NO_PRIMARY_FIELD = (
+    "ERROR_TABLE_HAS_NO_PRIMARY_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided table does not have a primary field.",
+)

@@ -73,6 +73,8 @@ from .exceptions import (
     CannotDeletePrimaryField,
     FailedToLockFieldDueToConflict,
     FieldDoesNotExist,
+    FieldIsAlreadyPrimary,
+    FieldNotInTable,
     FieldWithSameNameAlreadyExists,
     IncompatibleFieldTypeForUniqueValues,
     IncompatiblePrimaryFieldTypeError,
@@ -81,6 +83,7 @@ from .exceptions import (
     MaxFieldNameLengthExceeded,
     PrimaryFieldAlreadyExists,
     ReservedBaserowFieldNameException,
+    TableHasNoPrimaryField,
 )
 from .field_cache import FieldCache
 from .models import Field, SelectOption, SpecificFieldForUpdate
@@ -343,6 +346,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
+        if primary and not field_type.can_be_primary_field(field_values):
+            raise IncompatiblePrimaryFieldTypeError(field_type.type)
+
         num_fields = table.field_set.count()
         if (num_fields + 1) > settings.MAX_FIELD_LIMIT:
             raise MaxFieldLimitExceeded(
@@ -494,12 +500,19 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # migrate the field to the new type.
         baserow_field_type_changed = from_field_type.type != to_field_type_name
         field_cache = FieldCache()
+
         if baserow_field_type_changed:
             to_field_type = field_type_registry.get(to_field_type_name)
+        else:
+            to_field_type = from_field_type
 
-            if field.primary and not to_field_type.can_be_primary_field:
-                raise IncompatiblePrimaryFieldTypeError(to_field_type_name)
+        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
+        field_values = extract_allowed(kwargs, allowed_fields)
 
+        if field.primary and not to_field_type.can_be_primary_field(field_values):
+            raise IncompatiblePrimaryFieldTypeError(to_field_type_name)
+
+        if baserow_field_type_changed:
             dependants_broken_due_to_type_change = (
                 from_field_type.get_dependants_which_will_break_when_field_type_changes(
                     field, to_field_type, field_cache
@@ -510,10 +523,6 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         else:
             dependants_broken_due_to_type_change = []
-            to_field_type = from_field_type
-
-        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
-        field_values = extract_allowed(kwargs, allowed_fields)
 
         self._validate_name_and_optionally_rename_if_collision(
             field, field_values, postfix_to_fix_name_collisions
@@ -1241,6 +1250,78 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             res = cursor.fetchall()
 
         return [x[0] for x in res]
+
+    def change_primary_field(
+        self, user: AbstractUser, table: Table, new_primary_field: Field
+    ) -> Tuple[Field, Field]:
+        """
+        Changes the primary field of the given table.
+
+        :param user: The user on whose behalf the duplicated field will be
+            changed.
+        :param table: The table where to change the primary field in.
+        :param new_primary_field: The field that must be changed to the primary field.
+        :raises FieldNotInTable:
+        :raises IncompatiblePrimaryFieldTypeError:
+        :raises FieldIsAlreadyPrimary:
+        :return: The updated field object.
+        """
+
+        if not isinstance(new_primary_field, Field):
+            raise ValueError("The field is not an instance of Field.")
+
+        if type(new_primary_field) is Field:
+            raise ValueError(
+                "The field must be a specific instance of Field and not the base type "
+                "Field itself."
+            )
+
+        workspace = table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            UpdateFieldOperationType.type,
+            workspace=workspace,
+            context=new_primary_field,
+        )
+
+        if new_primary_field.table_id != table.id:
+            raise FieldNotInTable(
+                "The provided new primary field does not belong in the provided table."
+            )
+
+        new_primary_field_type = field_type_registry.get_by_model(new_primary_field)
+        if not new_primary_field_type.can_be_primary_field(new_primary_field):
+            raise IncompatiblePrimaryFieldTypeError(new_primary_field_type.type)
+
+        existing_primary_fields = self.get_fields(
+            table,
+            Field.objects.filter(table=table, primary=True).select_for_update(),
+            specific=True,
+        )
+        existing_primary_field = next(iter(existing_primary_fields), None)
+
+        if existing_primary_field is None:
+            raise TableHasNoPrimaryField("The provided table has no primary field.")
+
+        if existing_primary_field.id == new_primary_field.id:
+            raise FieldIsAlreadyPrimary("The provided field is already primary.")
+
+        existing_primary_field.primary = False
+        existing_primary_field.save()
+
+        old_new_primary_field = deepcopy(new_primary_field)
+        new_primary_field.primary = True
+        new_primary_field.save()
+
+        field_updated.send(
+            self,
+            field=new_primary_field,
+            old_field=old_new_primary_field,
+            related_fields=[existing_primary_field],
+            user=user,
+        )
+
+        return new_primary_field, existing_primary_field
 
     def _validate_name_and_optionally_rename_if_collision(
         self,

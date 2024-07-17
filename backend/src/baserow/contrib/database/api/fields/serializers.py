@@ -308,6 +308,12 @@ class DuplicateFieldParamsSerializer(serializers.Serializer):
     )
 
 
+class ChangePrimaryFieldParamsSerializer(serializers.Serializer):
+    new_primary_field_id = serializers.IntegerField(
+        help_text="The ID of the new primary field."
+    )
+
+
 class ListOrStringField(serializers.ListField):
     """
     A serializer field that accept a List or a CSV string that will be converted to
