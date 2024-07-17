@@ -72,6 +72,7 @@ import SelectRowModal from '@baserow/modules/database/components/row/SelectRowMo
 import ForeignRowEditModal from '@baserow/modules/database/components/row/ForeignRowEditModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils/events'
 
 export default {
   name: 'GridViewFieldLinkRow',
@@ -131,7 +132,31 @@ export default {
       // While the field is selected we want to open the select row toast by pressing
       // the enter key.
       this.$el.keydownEvent = (event) => {
-        if (event.key === 'Enter' && !this.modalOpen) {
+        // If the tab or arrow keys are pressed we don't want to do anything because
+        // the GridViewField component will select the next field.
+        const ignoredKeys = [
+          'Tab',
+          'ArrowLeft',
+          'ArrowUp',
+          'ArrowRight',
+          'ArrowDown',
+        ]
+        if (ignoredKeys.includes(event.key)) {
+          return
+        }
+
+        // If the space bar key is pressed, we don't want to do anything because it
+        // should open the row edit modal.
+        if (event.key === ' ') {
+          return
+        }
+
+        // When the enter key, or any printable character is pressed when not editing
+        // the value we want to show the select row modal.
+        if (
+          !this.modalOpen &&
+          (event.key === 'Enter' || isPrintableUnicodeCharacterKeyPress(event))
+        ) {
           this.showModal()
         }
       }
