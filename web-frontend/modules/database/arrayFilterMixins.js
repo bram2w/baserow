@@ -6,15 +6,6 @@ import {
   genericHasValueLengthLowerThanFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 
-export function fieldSupportsFilter(fieldType, filterMixin) {
-  for (const [key, value] of Object.entries(filterMixin)) {
-    /* eslint no-prototype-builtins: "off" */
-    if (!fieldType.prototype.hasOwnProperty(key)) {
-      fieldType.prototype[key] = value
-    }
-  }
-}
-
 export const hasEmptyValueFilterMixin = {
   getHasEmptyValueFilterFunction(field) {
     return genericHasEmptyValueFilter
