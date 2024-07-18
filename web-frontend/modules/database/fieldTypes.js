@@ -16,17 +16,16 @@ import {
   isValidURL,
 } from '@baserow/modules/core/utils/string'
 import {
-  fieldSupportsFilter,
-  hasEmptyValueFilterMixin,
   hasValueContainsFilterMixin,
   hasValueEqualFilterMixin,
   hasValueContainsWordFilterMixin,
   hasValueLengthIsLowerThanFilterMixin,
-} from '@baserow/modules/database/fieldFilterCompatibility'
+  hasEmptyValueFilterMixin,
+} from '@baserow/modules/database/arrayFilterMixins'
 import moment from '@baserow/modules/core/moment'
 import guessFormat from 'moment-guess'
 import { Registerable } from '@baserow/modules/core/registry'
-
+import { mix } from '@baserow/modules/core/mixins'
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldAutonumberSubForm from '@baserow/modules/database/components/field/FieldAutonumberSubForm'
 import FieldDurationSubForm from '@baserow/modules/database/components/field/FieldDurationSubForm'
@@ -141,12 +140,6 @@ import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
 import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
 import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
-
-import {
-  BaserowFormulaArrayType,
-  BaserowFormulaCharType,
-  BaserowFormulaTextType,
-} from '@baserow/modules/database/formula/formulaTypes'
 
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import {
@@ -3486,7 +3479,14 @@ export class PhoneNumberFieldType extends FieldType {
   }
 }
 
-export class FormulaFieldType extends FieldType {
+export class FormulaFieldType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  FieldType
+) {
   static getType() {
     return 'formula'
   }
@@ -4241,37 +4241,3 @@ export class PasswordFieldType extends FieldType {
     return RowHistoryFieldPassword
   }
 }
-
-fieldSupportsFilter(FormulaFieldType, hasEmptyValueFilterMixin)
-fieldSupportsFilter(BaserowFormulaArrayType, hasEmptyValueFilterMixin)
-fieldSupportsFilter(BaserowFormulaTextType, hasEmptyValueFilterMixin)
-fieldSupportsFilter(BaserowFormulaCharType, hasEmptyValueFilterMixin)
-
-fieldSupportsFilter(FormulaFieldType, hasValueEqualFilterMixin)
-fieldSupportsFilter(BaserowFormulaArrayType, hasValueEqualFilterMixin)
-fieldSupportsFilter(BaserowFormulaTextType, hasValueEqualFilterMixin)
-fieldSupportsFilter(BaserowFormulaCharType, hasValueEqualFilterMixin)
-
-fieldSupportsFilter(FormulaFieldType, hasValueContainsFilterMixin)
-fieldSupportsFilter(BaserowFormulaArrayType, hasValueContainsFilterMixin)
-fieldSupportsFilter(BaserowFormulaTextType, hasValueContainsFilterMixin)
-fieldSupportsFilter(BaserowFormulaCharType, hasValueContainsFilterMixin)
-
-fieldSupportsFilter(FormulaFieldType, hasValueContainsWordFilterMixin)
-fieldSupportsFilter(BaserowFormulaArrayType, hasValueContainsWordFilterMixin)
-fieldSupportsFilter(BaserowFormulaTextType, hasValueContainsWordFilterMixin)
-fieldSupportsFilter(BaserowFormulaCharType, hasValueContainsWordFilterMixin)
-
-fieldSupportsFilter(FormulaFieldType, hasValueLengthIsLowerThanFilterMixin)
-fieldSupportsFilter(
-  BaserowFormulaArrayType,
-  hasValueLengthIsLowerThanFilterMixin
-)
-fieldSupportsFilter(
-  BaserowFormulaTextType,
-  hasValueLengthIsLowerThanFilterMixin
-)
-fieldSupportsFilter(
-  BaserowFormulaCharType,
-  hasValueLengthIsLowerThanFilterMixin
-)

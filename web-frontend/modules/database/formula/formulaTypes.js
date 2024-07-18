@@ -46,6 +46,14 @@ import FunctionalGridViewFieldURL from '@baserow/modules/database/components/vie
 import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL.vue'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL.vue'
 import FunctionalFormulaURLArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaURLArrayItem.vue'
+import { mix } from '@baserow/modules/core/mixins'
+import {
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+} from '@baserow/modules/database/arrayFilterMixins'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -184,7 +192,14 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   }
 }
 
-export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
+export class BaserowFormulaTextType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  BaserowFormulaTypeDefinition
+) {
   static getType() {
     return 'text'
   }
@@ -222,7 +237,14 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
   }
 }
 
-export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
+export class BaserowFormulaCharType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  BaserowFormulaTypeDefinition
+) {
   static getType() {
     return 'char'
   }
@@ -492,7 +514,15 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
     return false
   }
 }
-export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
+
+export class BaserowFormulaArrayType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  BaserowFormulaTypeDefinition
+) {
   static getType() {
     return 'array'
   }
