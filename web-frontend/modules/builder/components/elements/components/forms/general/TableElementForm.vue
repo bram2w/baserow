@@ -40,13 +40,18 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.button_load_more_label"
+
+    <FormGroup
+      small-label
       :label="$t('tableElementForm.buttonLoadMoreLabel')"
-      :placeholder="$t('elementForms.textInputPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       class="margin-bottom-2"
-    />
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.button_load_more_label"
+        :placeholder="$t('elementForms.textInputPlaceholder')"
+      />
+    </FormGroup>
 
     <FormSection class="margin-bottom-2" :title="$t('tableElementForm.fields')">
       <template v-if="values.data_source_id">
@@ -197,7 +202,7 @@
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import {
   getNextAvailableNameInSequence,
   uuid,
@@ -219,7 +224,7 @@ import CustomStyle from '@baserow/modules/builder/components/elements/components
 export default {
   name: 'TableElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     DeviceSelector,
     CustomStyle,
   },

@@ -1,23 +1,31 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.values"
+    <FormGroup
+      small-label
       :label="$t('tagsFieldForm.fieldValuesLabel')"
-      :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-      horizontal
       class="margin-bottom-2"
-    />
+      horizontal
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.values"
+        :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
+      />
+    </FormGroup>
+
     <div>
-      <ApplicationBuilderFormulaInputGroup
+      <FormGroup
         v-if="values.colors_is_formula"
-        v-model="values.colors"
+        small-label
         :label="$t('tagsFieldForm.fieldColorsLabel')"
-        :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
         horizontal
         class="margin-bottom-2"
+        required
       >
+        <InjectedFormulaInput
+          v-model="values.colors"
+          :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
+        />
         <template #after-input>
           <ButtonIcon
             icon="iconoir-color-picker"
@@ -25,7 +33,7 @@
             @click="setColorsToPicker"
           />
         </template>
-      </ApplicationBuilderFormulaInputGroup>
+      </FormGroup>
       <FormGroup
         v-else
         horizontal
@@ -51,12 +59,12 @@
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
 
 export default {
   name: 'TagsField',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { InjectedFormulaInput },
   mixins: [collectionFieldForm],
   data() {
     return {

@@ -50,10 +50,9 @@
       :helper-text="$t('imageElementForm.urlWarning')"
       small-label
     >
-      <ApplicationBuilderFormulaInputGroup
+      <InjectedFormulaInput
         v-model="values.image_url"
         :placeholder="$t('elementForms.urlInputPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       />
     </FormGroup>
     <FormGroup
@@ -63,10 +62,9 @@
       small-label
       required
     >
-      <ApplicationBuilderFormulaInputGroup
+      <InjectedFormulaInput
         v-model="values.alt_text"
         :placeholder="$t('elementForms.textInputPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       />
     </FormGroup>
   </form>
@@ -77,14 +75,14 @@ import { IMAGE_SOURCE_TYPES } from '@baserow/modules/builder/enums'
 import { IMAGE_FILE_TYPES } from '@baserow/modules/core/enums'
 import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'ImageElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     CustomStyle,
     UserFilesModal,
   },

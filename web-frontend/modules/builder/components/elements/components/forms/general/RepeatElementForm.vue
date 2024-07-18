@@ -37,22 +37,26 @@
         v-model="values.items_per_page"
         :placeholder="$t('repeatElementForm.itemsPerPagePlaceholder')"
         :to-value="(value) => parseInt(value)"
-        class="margin-bottom-2"
         type="number"
         @blur="$v.values.items_per_page.$touch()"
-      ></FormInput>
-
-      <CustomStyle
-        v-model="values.styles"
-        style-key="button"
-        :config-block-types="['button']"
-        :theme="builder.theme"
       />
-      <ApplicationBuilderFormulaInputGroup
+    </FormGroup>
+
+    <CustomStyle
+      v-model="values.styles"
+      style-key="button"
+      :config-block-types="['button']"
+      :theme="builder.theme"
+    />
+    <FormGroup
+      small-label
+      :label="$t('repeatElementForm.buttonLoadMoreLabel')"
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
         v-model="values.button_load_more_label"
-        :label="$t('repeatElementForm.buttonLoadMoreLabel')"
         :placeholder="$t('elementForms.textInputPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       />
     </FormGroup>
     <FormGroup
@@ -111,14 +115,14 @@ import collectionElementForm from '@baserow/modules/builder/mixins/collectionEle
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
 import { mapActions, mapGetters } from 'vuex'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   name: 'RepeatElementForm',
   components: {
     DeviceSelector,
     CustomStyle,
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
   },
   mixins: [elementForm, collectionElementForm],
   inject: ['applicationContext'],

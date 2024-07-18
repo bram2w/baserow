@@ -1,6 +1,7 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <FormGroup
+      v-if="values.source_type === IFRAME_SOURCE_TYPES.EMBED"
       :label="$t('iframeElementForm.sourceTypeLabel')"
       small-label
       required
@@ -14,27 +15,33 @@
       </RadioGroup>
     </FormGroup>
 
-    <ApplicationBuilderFormulaInputGroup
+    <FormGroup
       v-if="values.source_type === IFRAME_SOURCE_TYPES.URL"
       key="url"
-      v-model="values.url"
+      small-label
       :label="$t('iframeElementForm.urlLabel')"
-      :placeholder="$t('iframeElementForm.urlPlaceholder')"
-      :help-text="$t('iframeElementForm.urlHelp')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.url"
+        :placeholder="$t('iframeElementForm.urlPlaceholder')"
+      />
+      <template #helper>{{ $t('iframeElementForm.urlHelp') }}</template>
+    </FormGroup>
 
-    <ApplicationBuilderFormulaInputGroup
-      v-if="values.source_type === IFRAME_SOURCE_TYPES.EMBED"
+    <FormGroup
       key="embed"
-      v-model="values.embed"
       :label="$t('iframeElementForm.embedLabel')"
-      :placeholder="$t('iframeElementForm.embedPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      small-label
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.embed"
+        :placeholder="$t('iframeElementForm.embedPlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       :label="$t('iframeElementForm.heightLabel')"
       small-label
@@ -64,12 +71,12 @@
 <script>
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { IFRAME_SOURCE_TYPES } from '@baserow/modules/builder/enums'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
 
 export default {
   name: 'IFrameElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { InjectedFormulaInput },
   mixins: [elementForm],
   data() {
     return {

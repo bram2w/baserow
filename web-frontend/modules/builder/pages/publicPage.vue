@@ -16,7 +16,7 @@ import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
 
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import ApplicationBuilderFormulaInput from '@baserow/modules/builder/components/ApplicationBuilderFormulaInput'
 import _ from 'lodash'
 
 import {
@@ -44,7 +44,7 @@ export default {
       builder: this.builder,
       page: this.page,
       mode: this.mode,
-      formulaComponent: ApplicationBuilderFormulaInputGroup,
+      formulaComponent: ApplicationBuilderFormulaInput,
       applicationContext: this.applicationContext,
     }
   },

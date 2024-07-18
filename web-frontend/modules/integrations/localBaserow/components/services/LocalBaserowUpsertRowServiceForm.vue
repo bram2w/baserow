@@ -20,16 +20,18 @@
       :databases="databases"
       :display-view-dropdown="false"
     />
-
-    <InjectedFormulaInputGroup
+    <FormGroup
       v-if="enableRowId && values.integration_id"
-      v-model="values.row_id"
-      small
       small-label
-      class="margin-bottom-2"
-      :placeholder="$t('upsertRowWorkflowActionForm.rowIdPlaceholder')"
       :label="$t('upsertRowWorkflowActionForm.rowIdLabel')"
-    />
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.row_id"
+        :placeholder="$t('upsertRowWorkflowActionForm.rowIdPlaceholder')"
+      />
+    </FormGroup>
     <p v-if="selectedIntegration && !values.table_id">
       {{ $t('upsertRowWorkflowActionForm.noTableSelectedMessage') }}
     </p>
@@ -46,7 +48,8 @@
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
 import FieldMappingForm from '@baserow/modules/integrations/localBaserow/components/services/FieldMappingForm'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+
 import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import form from '@baserow/modules/core/mixins/form'
 
@@ -56,7 +59,7 @@ export default {
     IntegrationDropdown,
     FieldMappingForm,
     LocalBaserowTableSelector,
-    InjectedFormulaInputGroup,
+    InjectedFormulaInput,
   },
   mixins: [form],
   props: {

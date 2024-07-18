@@ -1,37 +1,34 @@
 <template>
-  <div>
-    <InjectedFormulaInputGroup
+  <FormGroup required class="margin-bottom-2">
+    <InjectedFormulaInput
       v-model="fieldValue"
       :disabled="!fieldMapping.enabled"
       v-bind="$attrs"
-      class="margin-bottom-2"
-    >
-      <template #after-input>
-        <div ref="editFieldMappingOpener">
-          <Button
-            type="secondary"
-            size="regular"
-            icon="iconoir-more-vert"
-            @click="openContext"
-          ></Button>
-        </div>
-        <FieldMappingContext
-          ref="fieldMappingContext"
-          :field-mapping="fieldMapping"
-          @edit="$emit('change', $event)"
-        ></FieldMappingContext>
-      </template>
-    </InjectedFormulaInputGroup>
-  </div>
+    />
+    <template #after-input>
+      <div ref="editFieldMappingOpener">
+        <Button
+          type="secondary"
+          icon="iconoir-more-vert"
+          @click="openContext"
+        />
+      </div>
+      <FieldMappingContext
+        ref="fieldMappingContext"
+        :field-mapping="fieldMapping"
+        @edit="$emit('change', $event)"
+      />
+    </template>
+  </FormGroup>
 </template>
 
 <script>
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import FieldMappingContext from '@baserow/modules/integrations/localBaserow/components/services/FieldMappingContext'
 
 export default {
   name: 'FieldMapping',
-  components: { FieldMappingContext, InjectedFormulaInputGroup },
+  components: { FieldMappingContext, InjectedFormulaInput },
   props: {
     fieldMapping: {
       type: Object,

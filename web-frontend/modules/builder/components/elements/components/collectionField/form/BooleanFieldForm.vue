@@ -1,23 +1,27 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.value"
+    <FormGroup
+      small-label
       :label="$t('textFieldForm.fieldValueLabel')"
-      :placeholder="$t('textFieldForm.fieldValuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      required
       horizontal
       class="margin-bottom-2"
-    />
+    >
+      <InjectedFormulaInput
+        v-model="values.value"
+        :placeholder="$t('textFieldForm.fieldValuePlaceholder')"
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   name: 'BooleanFieldForm',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { InjectedFormulaInput },
   mixins: [collectionFieldForm],
   data() {
     return {

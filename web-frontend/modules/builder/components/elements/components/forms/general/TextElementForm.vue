@@ -21,17 +21,22 @@
       :theme="builder.theme"
       :extra-args="{ onlyBody: values.format === TEXT_FORMAT_TYPES.PLAIN }"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.value"
+    <FormGroup
+      small-label
       :label="$t('textElementForm.textTitle')"
-      :placeholder="$t('textElementForm.textPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-    />
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.value"
+        :placeholder="$t('textElementForm.textPlaceholder')"
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
@@ -39,7 +44,7 @@ import CustomStyle from '@baserow/modules/builder/components/elements/components
 export default {
   name: 'TextElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     CustomStyle,
   },
   mixins: [elementForm],

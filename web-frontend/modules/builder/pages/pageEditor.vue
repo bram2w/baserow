@@ -22,7 +22,7 @@ import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import ApplicationBuilderFormulaInput from '@baserow/modules/builder/components/ApplicationBuilderFormulaInput'
 import _ from 'lodash'
 
 const mode = 'editing'
@@ -36,7 +36,7 @@ export default {
       builder: this.builder,
       page: this.page,
       mode,
-      formulaComponent: ApplicationBuilderFormulaInputGroup,
+      formulaComponent: ApplicationBuilderFormulaInput,
       applicationContext: this.applicationContext,
     }
   },

@@ -1,13 +1,17 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
+    <FormGroup
+      small-label
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('buttonFieldForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-      horizontal
       class="margin-bottom-2"
-    />
+      horizontal
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('buttonFieldForm.labelPlaceholder')"
+      />
+    </FormGroup>
     <Alert>
       {{ $t('buttonFieldForm.infoMessage') }}
     </Alert>
@@ -16,11 +20,11 @@
 
 <script>
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   name: 'ButtonFieldForm',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { InjectedFormulaInput },
   mixins: [collectionFieldForm],
   data() {
     return {

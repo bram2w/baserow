@@ -1,15 +1,18 @@
 <template>
   <div>
-    <FieldMapping
+    <FormGroup
       v-for="field in fields"
       :key="field.id"
-      small
       small-label
       :label="field.name"
-      :field-mapping="getFieldMapping(field.id)"
-      :placeholder="$t('upsertRowWorkflowActionForm.fieldMappingPlaceholder')"
-      @change="updateFieldMapping(field.id, $event)"
-    ></FieldMapping>
+      required
+    >
+      <FieldMapping
+        :field-mapping="getFieldMapping(field.id)"
+        :placeholder="$t('upsertRowWorkflowActionForm.fieldMappingPlaceholder')"
+        @change="updateFieldMapping(field.id, $event)"
+      />
+    </FormGroup>
   </div>
 </template>
 

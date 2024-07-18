@@ -1,7 +1,6 @@
 <template>
-  <FormulaInputGroup
+  <FormulaInputField
     v-bind="$attrs"
-    small-label
     required
     :data-explorer-loading="dataExplorerLoading"
     :data-providers="dataProviders"
@@ -13,22 +12,17 @@
         ...applicationContextAdditions,
       }
     "
-    :small="small"
     v-on="$listeners"
-  >
-    <template #after-input>
-      <slot name="after-input"></slot>
-    </template>
-  </FormulaInputGroup>
+  />
 </template>
 
 <script>
-import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
+import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
 import { DataSourceDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
 
 export default {
-  name: 'ApplicationBuilderFormulaInputGroup',
-  components: { FormulaInputGroup },
+  name: 'ApplicationBuilderFormulaInput',
+  components: { FormulaInputField },
   inject: {
     page: {
       from: 'page',
@@ -55,11 +49,6 @@ export default {
       required: false,
       default: () => {},
     },
-    small: {
-      type: Boolean,
-      required: false,
-      default: true,
-    },
   },
   computed: {
     dataSourceLoading() {
@@ -73,11 +62,6 @@ export default {
         this.$registry.get('builderDataProvider', dataProviderName)
       )
     },
-    dataExplorerLoading() {
-      return this.dataProvidersAllowed.some(
-        (dataProviderName) => this.dataProviderLoadingMap[dataProviderName]
-      )
-    },
     /**
      * This mapping defines which data providers are affected by what loading states.
      * Since not all data providers are always used in every data explorer we
@@ -89,6 +73,11 @@ export default {
         [DataSourceDataProviderType.getType()]:
           this.dataSourceLoading || this.dataSourceContentLoading,
       }
+    },
+    dataExplorerLoading() {
+      return this.dataProvidersAllowed.some(
+        (dataProviderName) => this.dataProviderLoadingMap[dataProviderName]
+      )
     },
   },
 }

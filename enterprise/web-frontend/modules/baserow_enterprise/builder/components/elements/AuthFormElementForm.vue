@@ -27,26 +27,30 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.login_button_label"
+    <FormGroup
+      small-label
       :label="$t('authFormElementForm.loginButtonLabel')"
-      :placeholder="$t('authFormElementForm.loginButtonLabelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       class="margin-bottom-2"
-    />
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.login_button_label"
+        :placeholder="$t('authFormElementForm.loginButtonLabelPlaceholder')"
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   name: 'AuthFormElementForm',
   components: {
     CustomStyle,
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
   },
   mixins: [elementForm],
   inject: ['builder'],
