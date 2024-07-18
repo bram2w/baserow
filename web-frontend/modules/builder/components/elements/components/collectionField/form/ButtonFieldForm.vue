@@ -6,6 +6,7 @@
       :placeholder="$t('buttonFieldForm.labelPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       horizontal
+      class="margin-bottom-2"
     />
     <Alert>
       {{ $t('buttonFieldForm.infoMessage') }}

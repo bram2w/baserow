@@ -378,7 +378,8 @@
     "typography": "Typography",
     "button": "Button",
     "link": "Link",
-    "image": "Image"
+    "image": "Image",
+    "input": "Input"
   },
   "colorThemeConfigBlock": {
     "primaryColor": "Primary",
@@ -433,6 +434,18 @@
     "hoverState": "Hover state",
     "alignment": "Alignment",
     "fontFamily": "Font"
+  },
+  "inputThemeConfigBlock": {
+    "label": "Label",
+    "input": "Input",
+    "backgroundColor": "Background color",
+    "textColor": "Text color",
+    "borderColor": "Border color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Font size"
   },
   "imageThemeConfigBlock": {
     "alignment": "Alignment",
@@ -614,19 +627,9 @@
     "disableField": "Disable field"
   },
   "checkboxElementForm": {
-    "labelTitle": "Label",
+    "labelTitle": "Option name",
     "valueTitle": "Default value",
     "requiredTitle": "Required"
-  },
-  "authFormElementForm": {
-    "userSource": "User source"
-  },
-  "authFormElement": {
-    "email": "Email",
-    "password": "Password",
-    "emailPlaceholder": "Enter your email...",
-    "passwordPlaceholder": "Enter your password...",
-    "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
   },
   "choiceElement": {
     "addOptions": "Add options to begin using this element..."
@@ -686,6 +689,7 @@
     "fit": "Fit"
   },
   "customStyle": {
-    "themeOverrides": "Theme overrides"
+    "themeOverrides": "Theme overrides",
+    "configureThemeOverrides": "Configure theme overrides for this element"
   }
 }

@@ -146,9 +146,9 @@ def load_test_data():
             terms,
             value='"Home"',
             variant="button",
-            alignment="right",
             navigation_type="page",
             navigate_to_page_id=homepage.id,
+            styles={"button": {"button_alignment": "right"}},
         )
 
         # Button for homepage
@@ -157,7 +157,7 @@ def load_test_data():
             homepage,
             value='"See terms"',
             variant="button",
-            alignment="right",
+            styles={"button": {"button_alignment": "right"}},
             navigation_type="page",
             navigate_to_page_id=terms.id,
         )
@@ -167,10 +167,10 @@ def load_test_data():
             homepage,
             value='"Visit Baserow"',
             variant="link",
-            alignment="center",
             navigation_type="custom",
             target="blank",
             navigate_to_url='"https://baserow.io"',
+            styles={"link": {"link_text_alignment": "center"}},
         )
 
     table = Table.objects.get(
@@ -314,9 +314,9 @@ def load_test_data():
             products,
             value='"Home"',
             variant="button",
-            alignment="right",
             navigation_type="page",
             navigate_to_page_id=homepage.id,
+            styles={"button": {"button_alignment": "right"}},
         )
 
         # Button back from detail page
@@ -325,7 +325,6 @@ def load_test_data():
             product_detail,
             value='"Back to list"',
             variant="button",
-            alignment="left",
             navigation_type="page",
             navigate_to_page_id=products.id,
         )
@@ -336,7 +335,6 @@ def load_test_data():
             homepage,
             value='"See product list"',
             variant="button",
-            alignment="left",
             navigation_type="page",
             navigate_to_page_id=products.id,
         )

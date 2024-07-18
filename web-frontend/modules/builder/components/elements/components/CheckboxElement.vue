@@ -1,10 +1,12 @@
 <template>
-  <div>
+  <ABFormGroup
+    :error-message="displayFormDataError ? $t('error.requiredField') : ''"
+    :style="getStyleOverride('input')"
+  >
     <ABCheckbox
       v-model="inputValue"
       :required="element.required"
       :read-only="isEditMode"
-      :error="displayFormDataError"
     >
       {{ resolvedLabel }}
       <span
@@ -13,11 +15,7 @@
         >*</span
       >
     </ABCheckbox>
-    <div v-if="displayFormDataError" class="error">
-      <i class="iconoir-warning-triangle"></i>
-      {{ $t('error.requiredField') }}
-    </div>
-  </div>
+  </ABFormGroup>
 </template>
 
 <script>

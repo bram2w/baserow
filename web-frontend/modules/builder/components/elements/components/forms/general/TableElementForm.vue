@@ -105,6 +105,7 @@
                 small-label
                 horizontal
                 required
+                class="margin-bottom-2"
                 :label="$t('tableElementForm.name')"
                 :error-message="
                   !$v.values.fields.$each[index].name.required
@@ -129,6 +130,7 @@
                 horizontal
                 required
                 :label="$t('tableElementForm.fieldType')"
+                class="margin-bottom-2"
               >
                 <Dropdown
                   :value="field.type"

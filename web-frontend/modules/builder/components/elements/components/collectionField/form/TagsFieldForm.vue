@@ -6,6 +6,7 @@
       :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       horizontal
+      class="margin-bottom-2"
     />
     <div>
       <ApplicationBuilderFormulaInputGroup
@@ -15,6 +16,7 @@
         :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
         :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
         horizontal
+        class="margin-bottom-2"
       >
         <template #after-input>
           <ButtonIcon
@@ -29,6 +31,7 @@
         horizontal
         small-label
         :label="$t('tagsFieldForm.fieldColorsLabel')"
+        class="margin-bottom-2"
       >
         <ColorInput
           v-model="values.colors"

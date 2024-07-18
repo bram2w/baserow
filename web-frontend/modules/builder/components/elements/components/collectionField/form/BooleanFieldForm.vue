@@ -6,6 +6,7 @@
       :placeholder="$t('textFieldForm.fieldValuePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       horizontal
+      class="margin-bottom-2"
     />
   </form>
 </template>

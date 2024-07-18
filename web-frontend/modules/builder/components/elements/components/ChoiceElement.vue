@@ -3,14 +3,12 @@
     :label="labelResolved"
     :required="element.required"
     :error-message="displayFormDataError ? $t('error.requiredField') : ''"
+    :style="getStyleOverride('input')"
   >
     <ABDropdown
       v-if="element.show_as_dropdown"
       v-model="inputValue"
       class="choice-element"
-      :class="{
-        'choice-element--error': displayFormDataError,
-      }"
       :placeholder="
         canHaveOptions ? placeholderResolved : $t('choiceElement.addOptions')
       "

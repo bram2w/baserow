@@ -2,9 +2,9 @@
   <ThemeConfigBlockSection>
     <template #default>
       <FormGroup
-        horizontal
+        horizontal-narrow
         small-label
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         :label="$t('pageThemeConfigBlock.backgroundColor')"
       >
         <ColorInput
@@ -15,18 +15,18 @@
         />
       </FormGroup>
       <FormGroup
-        horizontal
+        horizontal-narrow
         small-label
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         :label="$t('pageThemeConfigBlock.backgroundImage')"
       >
         <ImageInput v-model="values.page_background_file" />
       </FormGroup>
       <FormGroup
         v-if="values.page_background_file"
-        horizontal
+        horizontal-narrow
         small-label
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         :label="$t('pageThemeConfigBlock.backgroundMode')"
       >
         <RadioGroup

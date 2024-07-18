@@ -1,10 +1,10 @@
 <template>
-  <FormSection :title="title">
-    <form @submit.prevent>
+  <form @submit.prevent>
+    <FormSection :title="title" class="margin-bottom-2">
       <FormGroup
         v-if="borderIsAllowed"
-        horizontal
-        class="margin-bottom-1"
+        horizontal-narrow
+        class="margin-bottom-2"
         small-label
         required
         :label="$t('styleBoxForm.borderColor')"
@@ -17,39 +17,39 @@
       </FormGroup>
       <FormGroup
         v-if="borderIsAllowed"
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         small-label
         required
         :label="$t('styleBoxForm.borderLabel')"
-        horizontal
+        horizontal-narrow
         :error-message="sizeError"
       >
         <PixelValueSelector v-model="values.border_size" />
       </FormGroup>
       <FormGroup
         v-if="paddingIsAllowed"
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         small-label
         required
         :label="$t('styleBoxForm.paddingLabel')"
-        horizontal
+        horizontal-narrow
         :error-message="paddingError"
       >
         <PixelValueSelector v-model="values.padding" />
       </FormGroup>
       <FormGroup
         v-if="marginIsAllowed"
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         small-label
         required
         :label="$t('styleBoxForm.marginLabel')"
-        horizontal
+        horizontal-narrow
         :error-message="marginError"
       >
         <PixelValueSelector v-model="actualMargin" />
       </FormGroup>
-    </form>
-  </FormSection>
+    </FormSection>
+  </form>
 </template>
 
 <script>

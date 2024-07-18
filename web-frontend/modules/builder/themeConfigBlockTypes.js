@@ -5,7 +5,11 @@ import ButtonThemeConfigBlock from '@baserow/modules/builder/components/theme/Bu
 import LinkThemeConfigBlock from '@baserow/modules/builder/components/theme/LinkThemeConfigBlock'
 import ImageThemeConfigBlock from '@baserow/modules/builder/components/theme/ImageThemeConfigBlock'
 import PageThemeConfigBlock from '@baserow/modules/builder/components/theme/PageThemeConfigBlock'
-import { resolveColor } from '@baserow/modules/core/utils/colors'
+import InputThemeConfigBlock from '@baserow/modules/builder/components/theme/InputThemeConfigBlock'
+import {
+  resolveColor,
+  colorRecommendation,
+} from '@baserow/modules/core/utils/colors'
 import {
   WIDTHS_NEW,
   HORIZONTAL_ALIGNMENTS,
@@ -120,7 +124,32 @@ export class ColorThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    return {}
+    const style = new ThemeStyle()
+    style.addIfExists(theme, 'primary_color', '--main-primary-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    style.addIfExists(theme, 'secondary_color', '--main-secondary-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    style.addIfExists(theme, 'border_color', '--main-border-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'main_success_color',
+      '--main-success-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'main_warning_color',
+      '--main-warning-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(theme, 'main_error_color', '--main-error-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    return style.toObject()
   }
 
   getColorVariables(theme) {
@@ -537,5 +566,119 @@ export class PageThemeConfigBlockType extends ThemeConfigBlockType {
 
   getOrder() {
     return 15
+  }
+}
+
+export class InputThemeConfigBlockType extends ThemeConfigBlockType {
+  static getType() {
+    return 'input'
+  }
+
+  get label() {
+    return this.app.i18n.t('themeConfigBlockType.input')
+  }
+
+  getCSS(theme, colorVariables, baseTheme = null) {
+    const style = new ThemeStyle()
+    style.addIfExists(theme, 'label_text_color', '--label-text-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      `label_font_family`,
+      `--label-font-family`,
+      (v) => {
+        const fontFamilyType = this.app.$registry.get('fontFamily', v)
+        return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+      }
+    )
+    style.addIfExists(
+      theme,
+      `label_font_size`,
+      `--label-font-size`,
+      (v) => `${Math.min(100, v)}px`
+    )
+
+    style.addIfExists(theme, 'input_text_color', '--input-text-color', (v) =>
+      resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'input_text_color',
+      '--input-text-color-complement',
+      (v) => colorRecommendation(resolveColor(v, colorVariables))
+    )
+    style.addIfExists(
+      theme,
+      `input_font_family`,
+      `--input-font-family`,
+      (v) => {
+        const fontFamilyType = this.app.$registry.get('fontFamily', v)
+        return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+      }
+    )
+    style.addIfExists(
+      theme,
+      `input_font_size`,
+      `--input-font-size`,
+      (v) => `${Math.min(100, v)}px`
+    )
+    style.addIfExists(
+      theme,
+      'input_background_color',
+      '--input-background-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'input_background_color',
+      '--input-background-color-complement',
+      (v) => colorRecommendation(resolveColor(v, colorVariables))
+    )
+    style.addIfExists(
+      theme,
+      'input_border_color',
+      '--input-border-color',
+      (v) => resolveColor(v, colorVariables)
+    )
+    style.addIfExists(
+      theme,
+      'input_border_color',
+      '--input-border-color-complement',
+      (v) => colorRecommendation(resolveColor(v, colorVariables))
+    )
+    style.addIfExists(
+      theme,
+      `input_border_radius`,
+      `--input-border-radius`,
+      (v) => `${v}px`
+    )
+    style.addIfExists(
+      theme,
+      `input_border_size`,
+      `--input-border-size`,
+      (v) => `${v}px`
+    )
+    style.addIfExists(
+      theme,
+      `input_horizontal_padding`,
+      `--input-horizontal-padding`,
+      (v) => `${v}px`
+    )
+    style.addIfExists(
+      theme,
+      `input_vertical_padding`,
+      `--input-vertical-padding`,
+      (v) => `${v}px`
+    )
+    return style.toObject()
+  }
+
+  get component() {
+    return InputThemeConfigBlock
+  }
+
+  getOrder() {
+    return 55
   }
 }

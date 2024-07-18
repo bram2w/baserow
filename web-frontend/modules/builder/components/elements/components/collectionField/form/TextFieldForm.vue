@@ -7,6 +7,7 @@
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       horizontal
       small-label
+      class="margin-bottom-2"
     />
   </form>
 </template>

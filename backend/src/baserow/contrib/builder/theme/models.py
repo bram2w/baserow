@@ -283,3 +283,62 @@ class PageThemeConfigBlock(ThemeConfigBlock):
         max_length=32,
         default=BACKGROUND_IMAGE_MODES.TILE,
     )
+
+
+class InputThemeConfigBlock(ThemeConfigBlock):
+    """
+    Theme for inputs.
+    """
+
+    label_font_family = models.CharField(
+        max_length=250,
+        default="inter",
+        help_text="The font family of the label",
+    )
+    label_text_color = models.CharField(
+        max_length=20,
+        default="#070810FF",
+        blank=True,
+        help_text="The text color of the label",
+    )
+    label_font_size = models.SmallIntegerField(
+        default=13,
+        help_text="The font size of the label",
+    )
+
+    input_font_family = models.CharField(
+        max_length=250,
+        default="inter",
+        help_text="The font family of the input",
+    )
+    input_font_size = models.SmallIntegerField(default=13)
+    input_text_color = models.CharField(
+        max_length=20,
+        default="#070810FF",
+        blank=True,
+        help_text="The text color of the input",
+    )
+    input_background_color = models.CharField(
+        max_length=20,
+        default="#FFFFFFFF",
+        blank=True,
+        help_text="The background color of the input",
+    )
+    input_border_color = models.CharField(
+        max_length=20,
+        default="#000000FF",
+        blank=True,
+        help_text="The color of the input border",
+    )
+    input_border_size = models.SmallIntegerField(
+        default=1, help_text="Input border size"
+    )
+    input_border_radius = models.SmallIntegerField(
+        default=0, help_text="Input border radius"
+    )
+    input_vertical_padding = models.SmallIntegerField(
+        default=8, help_text="Input vertical padding"
+    )
+    input_horizontal_padding = models.SmallIntegerField(
+        default=12, help_text="Input horizontal padding"
+    )

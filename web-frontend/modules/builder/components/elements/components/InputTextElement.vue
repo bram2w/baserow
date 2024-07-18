@@ -1,21 +1,20 @@
 <template>
-  <div>
-    <ABFormGroup
-      :label="resolvedLabel"
-      :error-message="errorMessage"
-      :autocomplete="isEditMode ? 'off' : ''"
-      :required="element.required"
-    >
-      <ABInput
-        v-model="inputValue"
-        :placeholder="resolvedPlaceholder"
-        :multiline="element.is_multiline"
-        :rows="element.rows"
-        :type="element.input_type"
-        @blur="onFormElementTouch"
-      />
-    </ABFormGroup>
-  </div>
+  <ABFormGroup
+    :label="resolvedLabel"
+    :error-message="errorMessage"
+    :autocomplete="isEditMode ? 'off' : ''"
+    :required="element.required"
+    :style="getStyleOverride('input')"
+  >
+    <ABInput
+      v-model="inputValue"
+      :placeholder="resolvedPlaceholder"
+      :multiline="element.is_multiline"
+      :rows="element.rows"
+      :type="element.input_type"
+      @blur="onFormElementTouch"
+    />
+  </ABFormGroup>
 </template>
 
 <script>

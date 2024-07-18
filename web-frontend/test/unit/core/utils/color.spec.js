@@ -1,4 +1,7 @@
-import { resolveColor } from '@baserow/modules/core/utils/colors'
+import {
+  resolveColor,
+  colorRecommendation,
+} from '@baserow/modules/core/utils/colors'
 
 describe('colorUtils', () => {
   test('resolve', () => {
@@ -19,5 +22,14 @@ describe('colorUtils', () => {
         { name: 'Default', value: '#00000042', color: '#00000042' },
       ])
     ).toBe('#00000042')
+  })
+
+  test('colorRecommendation', () => {
+    expect(colorRecommendation('#FFFFFF')).toBe('gray')
+    expect(colorRecommendation('#000000')).toBe('gray')
+    expect(colorRecommendation('#FFFFFFFF')).toBe('gray')
+    expect(colorRecommendation('#000000FF')).toBe('gray')
+    expect(colorRecommendation('#5498db')).toBe('black')
+    expect(colorRecommendation('#2c3e50')).toBe('white')
   })
 })

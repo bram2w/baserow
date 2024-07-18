@@ -10,8 +10,10 @@
     border-style: solid;
     border-width: 0 6px 8px;
     border-color: transparent transparent $color-neutral-800 transparent;
-
-    @include absolute(0, auto, auto, 50%);
+    position: absolute;
+    top: 0;
+    left: var(--tooltip-cursor-position-left, 50%);
+    right: var(--tooltip-cursor-position-right, auto);
   }
 
   &.tooltip--top {

@@ -4,7 +4,6 @@
     :class="{
       'ab-dropdown--floating': !showInput,
       'ab-dropdown--disabled': disabled,
-      'ab-dropdown--small': small,
     }"
     :tabindex="realTabindex"
     @focusin="show()"

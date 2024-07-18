@@ -1,42 +1,10 @@
-.ab-dropdownitem__search-icon {
-  color: $palette-neutral-600;
-  padding: 0 10px;
-  font-size: 16px;
-
-  .ab-dropdownitem__search:focus-within & {
-    color: $palette-blue-500;
-  }
-}
-
-.ab-dropdownitem__search {
-  flex: 0 0;
-  position: relative;
-  border-bottom: 1px solid $palette-neutral-200;
-
-  @include flex-align-items;
-}
-
-.ab-dropdownitem__search-input {
-  display: block;
-  width: 100%;
-  border: none;
-  padding: 0 12px 0 0;
-
-  @include rounded($rounded);
-  @include fixed-height(36px, 12px);
-
-  &::placeholder {
-    color: $palette-neutral-700;
-  }
-}
-
 .ab-dropdownitem__items {
   position: relative;
   list-style: none;
   padding: 0;
   margin: 0;
   min-height: 0;
-  max-height: (4 * 36px) + 20px; // we show max 4 items
+  max-height: calc(8 * 1em); // we show max 4 items
   // note that the value is `scroll` and not `auto` because it depends on the
   // v-auto-overflow-scroll directive.
   overflow-y: scroll;
@@ -49,12 +17,7 @@
     width: 100%;
   }
 
-  // This class can be set if the max-height is managed by a container element.
-  &.ab-dropdownitem__items--no-max-height {
-    max-height: none;
-  }
-
-  ul {
+  .select-items {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -62,10 +25,14 @@
 }
 
 .ab-dropdownitem__items--empty {
-  padding: 20px 10px;
+  padding: 2em 1em;
   white-space: normal;
   text-align: center;
-  color: $palette-neutral-700;
+  color: color-mix(
+    in srgb,
+    var(--input-text-color, $color-neutral-900),
+    var(--input-text-color-complement, gray) 50%
+  );
 }
 
 .ab-dropdownitem__items-loading {
@@ -82,19 +49,13 @@
   }
 }
 
-.ab-dropdownitem__item-label {
-  color: $color-neutral-600;
-  margin: 10px 0 10px 10px;
-  font-size: 14px;
-}
-
 .ab-dropdownitem__item-active-icon {
   text-align: center;
-  color: $palette-neutral-1200;
+  font-size: var(--input-font-size, 13px);
+  color: var(--input-text-color, $color-neutral-900);
   position: absolute;
-  top: 8px;
-  right: 5px;
-  font-size: 17px;
+  top: calc(50% - var(--input-font-size, 13px) / 2);
+  right: var(--input-vertical-padding, 8px);
   display: none;
 
   .ab-dropdownitem__item.disabled &,
@@ -107,8 +68,8 @@
   position: relative;
   margin: 0 4px 3px;
   user-select: none;
-
-  @include rounded($rounded);
+  border-radius: var(--input-border-radius, 0);
+  font-family: var(--input-font-family, Inter);
 
   &:last-child {
     margin-bottom: 0;
@@ -116,11 +77,11 @@
 
   &:hover,
   &.hover {
-    background-color: $palette-neutral-100;
-  }
-
-  &--ab-dropdownitemed {
-    background-color: $palette-neutral-100;
+    background-color: color-mix(
+      in srgb,
+      var(--input-background-color, $palette-neutral-100),
+      var(--input-background-color-complement, white) 10%
+    );
   }
 
   &--indented {
@@ -135,7 +96,11 @@
   }
 
   &.active:not(.ab-dropdownitem__item--loading) {
-    background-color: rgba($palette-neutral-1300, 0.04);
+    background-color: color-mix(
+      in srgb,
+      var(--input-background-color, $palette-neutral-100),
+      var(--input-background-color-complement, white) 20%
+    );
 
     .ab-dropdownitem__item-active-icon {
       display: block;
@@ -160,12 +125,9 @@
 
 .ab-dropdownitem__item-link {
   display: block;
-  color: $palette-neutral-1300;
-  padding: 8px 32px 8px 10px;
-
-  .ab-dropdownitem__item--has-notification & {
-    padding-right: 48px;
-  }
+  padding: var(--input-vertical-padding, 8px)
+    var(--input-horizontal-padding, 12px);
+  color: var(--input-text-color, $color-neutral-900);
 
   &:hover {
     text-decoration: none;
@@ -184,143 +146,16 @@
   display: flex;
   align-items: center;
   font-weight: 500;
-  line-height: 15px;
-  gap: 6px;
+  line-height: 120%;
+  gap: 0.5em;
 
   @extend %ellipsis;
 
   .ab-dropdownitem__item-link:active & {
-    color: $palette-neutral-900;
-  }
-}
-
-.ab-dropdownitem__item-name-text {
-  @extend %ellipsis;
-}
-
-.ab-dropdownitem__item-icon {
-  font-size: 16px;
-
-  .ab-dropdownitem__item.disabled &,
-  .ab-dropdownitem__item-link:active & {
-    color: $palette-neutral-900;
-  }
-}
-
-.ab-dropdownitem__item-image {
-  max-width: 15px;
-  max-height: 15px;
-}
-
-.ab-dropdownitem__item-description {
-  font-size: 12px;
-  color: $palette-neutral-900;
-  white-space: normal;
-  line-height: 18px;
-  font-weight: 400;
-  padding-top: 6px;
-}
-
-.ab-dropdownitem__item-options {
-  display: none;
-  text-align: center;
-  width: 32px;
-  color: $palette-neutral-800;
-  font-size: 17px;
-
-  @include absolute(5px, 0, auto, auto);
-
-  &:hover {
-    color: $palette-neutral-1200;
-  }
-
-  :not(.ab-dropdownitem__item--loading):not(
-      .ab-dropdownitem__item--no-options
-    ):hover
-    > & {
-    display: block;
-  }
-}
-
-.ab-dropdownitem__description {
-  padding-bottom: 14px;
-  text-align: center;
-}
-
-.ab-dropdownitem__footer {
-  flex: 0 0;
-  border-top: 1px solid $palette-neutral-200;
-  padding: 4px 4px 0;
-}
-
-.ab-dropdownitem__footer-button {
-  position: relative;
-  display: block;
-  padding: 0 10px;
-  color: $palette-neutral-1300;
-  user-select: none;
-  border-bottom-left-radius: 2px;
-  border-bottom-right-radius: 2px;
-  margin-bottom: 4px;
-
-  @include rounded($rounded);
-  @include fixed-height(36px, 14px);
-  @include flex-align-items(6px);
-
-  &:hover {
-    background-color: rgba($palette-neutral-1300, 0.04);
-    text-decoration: none;
-  }
-
-  &.button--loading {
-    background-color: $palette-neutral-400;
-  }
-}
-
-.ab-dropdownitem__footer-create {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.ab-dropdownitem__footer-create-link {
-  position: relative;
-  width: 50%;
-  color: $palette-neutral-1300;
-  padding: 0 10px;
-  margin-bottom: 4px;
-  min-width: 0;
-  line-height: 26px;
-  font-size: 13px;
-
-  @include rounded($rounded);
-  @include flex-align-items(4px);
-
-  &:only-child {
-    width: 100%;
-    flex: unset;
-    margin-right: unset !important;
-    padding-left: 6px;
-  }
-
-  &:hover {
-    text-decoration: none;
-  }
-
-  &:not(.ab-dropdownitem__footer-create-link--disabled):hover {
-    text-decoration: none;
-    background-color: rgba($palette-neutral-1300, 0.04);
-  }
-}
-
-.ab-dropdownitem__footer-create-link-icon {
-  color: $palette-neutral-800;
-  font-size: 14px;
-  margin-left: auto;
-
-  .ab-dropdownitem__footer-create-link:not(
-      .ab-dropdownitem__footer-create-link--disabled
-    ):hover
-    & {
-    color: $palette-neutral-1300;
+    color: color-mix(
+      in srgb,
+      var(--input-text-color, $palette-neutral-100),
+      var(--input-text-color-complement, white) 20%
+    );
   }
 }

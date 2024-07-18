@@ -4,7 +4,7 @@
       :value="value.horizontal"
       type="number"
       remove-number-input-controls
-      :to-value="(val) => parseInt(val)"
+      :to-value="(value) => (value ? parseInt(value) : null)"
       class="padding-selector__input"
       icon-right="iconoir-horizontal-split"
       @input="$emit('input', { horizontal: $event, vertical: value.vertical })"
@@ -14,7 +14,7 @@
       :value="value.vertical"
       type="number"
       remove-number-input-controls
-      :to-value="(val) => parseInt(val)"
+      :to-value="(value) => (value ? parseInt(value) : null)"
       class="padding-selector__input"
       icon-right="iconoir-vertical-split"
       @input="

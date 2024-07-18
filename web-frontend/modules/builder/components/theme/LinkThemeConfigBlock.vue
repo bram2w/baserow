@@ -3,10 +3,10 @@
     <ThemeConfigBlockSection>
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('linkThemeConfigBlock.fontFamily')"
         >
           <FontFamilySelector v-model="values.link_font_family" />
@@ -18,10 +18,10 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('linkThemeConfigBlock.alignment')"
         >
           <HorizontalAlignmentsSelector v-model="values.link_text_alignment" />
@@ -37,10 +37,10 @@
     <ThemeConfigBlockSection :title="$t('linkThemeConfigBlock.defaultState')">
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('linkThemeConfigBlock.color')"
         >
           <ColorInput
@@ -64,10 +64,10 @@
     <ThemeConfigBlockSection :title="$t('linkThemeConfigBlock.hoverState')">
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('linkThemeConfigBlock.color')"
         >
           <ColorInput

@@ -3,9 +3,15 @@
     pointer-events: none;
     user-select: none;
   }
+
+  .ab-form-group.ab-form-group--with-label {
+    margin-bottom: 1em;
+  }
 }
 
 .auth-form__footer {
   display: flex;
   flex-direction: column;
+  font-size: var(--label-font-size, 13px);
+  padding-top: 0.5em;
 }

@@ -225,7 +225,9 @@ export default {
     applyColorUpdates(sourceFormat, newColor) {
       this.colors[sourceFormat] = newColor
 
-      for (const [format, convert] of conversionsMap[sourceFormat]) {
+      for (const [format, convert] of Object.entries(
+        conversionsMap[sourceFormat]
+      )) {
         this.colors[format] = convert(this.colors[sourceFormat])
       }
     },

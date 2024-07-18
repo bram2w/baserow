@@ -73,6 +73,7 @@
             horizontal
             :placeholder="$t('linkNavigationSelection.paramPlaceholder')"
             :data-providers-allowed="dataProvidersAllowed"
+            class="margin-bottom-2"
           />
         </div>
       </div>

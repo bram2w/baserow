@@ -1,5 +1,12 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+      :extra-args="{ onlyInput: true }"
+    />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.label"
       class="margin-bottom-2"
@@ -7,7 +14,7 @@
       required
       :label="$t('checkboxElementForm.labelTitle')"
       :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
@@ -16,7 +23,7 @@
       required
       :label="$t('checkboxElementForm.valueTitle')"
       :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
     ></ApplicationBuilderFormulaInputGroup>
     <FormGroup
       small-label
@@ -29,19 +36,14 @@
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
+import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import {
-  CurrentRecordDataProviderType,
-  DataSourceContextDataProviderType,
-  DataSourceDataProviderType,
-  PageParameterDataProviderType,
-} from '@baserow/modules/builder/dataProviderTypes'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'CheckboxElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
+  components: { ApplicationBuilderFormulaInputGroup, CustomStyle },
+  mixins: [elementForm],
   data() {
     return {
       values: {
@@ -50,23 +52,6 @@ export default {
         required: false,
       },
     }
-  },
-  computed: {
-    dataProvidersAllowed() {
-      return [
-        CurrentRecordDataProviderType.getType(),
-        PageParameterDataProviderType.getType(),
-        DataSourceDataProviderType.getType(),
-        DataSourceContextDataProviderType.getType(),
-      ]
-    },
-  },
-  methods: {
-    emitChange(newValues) {
-      if (this.isFormValid()) {
-        form.methods.emitChange.bind(this)(newValues)
-      }
-    },
   },
 }
 </script>

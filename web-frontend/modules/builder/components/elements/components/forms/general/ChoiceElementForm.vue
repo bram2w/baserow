@@ -1,5 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+    />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.label"
       class="margin-bottom-2"
@@ -151,6 +157,7 @@ import {
   CHOICE_OPTION_TYPES,
   DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
 } from '@baserow/modules/builder/enums'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { uuid } from '@baserow/modules/core/utils/string'
 
@@ -158,6 +165,7 @@ export default {
   name: 'ChoiceElementForm',
   components: {
     ApplicationBuilderFormulaInputGroup,
+    CustomStyle,
   },
   mixins: [elementForm],
   props: {
@@ -180,6 +188,7 @@ export default {
         'option_type',
         'formula_name',
         'formula_value',
+        'styles',
       ],
       values: {
         label: '',
@@ -192,6 +201,7 @@ export default {
         option_type: CHOICE_OPTION_TYPES.MANUAL,
         formula_name: '',
         formula_value: '',
+        styles: {},
       },
     }
   },
