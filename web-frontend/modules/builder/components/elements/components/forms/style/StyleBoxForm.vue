@@ -46,7 +46,7 @@
         horizontal-narrow
         :error-message="marginError"
       >
-        <PixelValueSelector v-model="actualMargin" />
+        <PixelValueSelector v-model="values.margin" />
       </FormGroup>
     </FormSection>
   </form>
@@ -100,20 +100,11 @@ export default {
     }
   },
   computed: {
-    // TODO zdm can be removed when we remove the null value from backend field
-    actualMargin: {
-      get() {
-        return this.values.margin || 0
-      },
-      set(newValue) {
-        this.values.margin = newValue
-      },
-    },
     colorVariables() {
       return themeToColorVariables(this.builder.theme)
     },
     marginError() {
-      if (this.$v.actualMargin.$invalid) {
+      if (this.$v.values.margin.$invalid) {
         return this.$t('error.minMaxValueField', { min: 0, max: 200 })
       } else {
         return ''
@@ -155,11 +146,11 @@ export default {
           integer,
           between: between(0, 200),
         },
-      },
-      actualMargin: {
-        required,
-        integer,
-        between: between(0, 200),
+        margin: {
+          required,
+          integer,
+          between: between(0, 200),
+        },
       },
     }
   },

@@ -59,12 +59,6 @@ class ElementVisibilityPermissionManager(PermissionManagerType):
         if isinstance(user, User):
             return True
 
-        # TODO: This is to support zero-downtime migration. This will be
-        #   removed in the next release.
-        #   See: https://gitlab.com/baserow/baserow/-/issues/2724
-        if element.role_type is None:
-            return True
-
         if element.role_type == Element.ROLE_TYPES.ALLOW_ALL:
             return True
         elif element.role_type == Element.ROLE_TYPES.ALLOW_ALL_EXCEPT:

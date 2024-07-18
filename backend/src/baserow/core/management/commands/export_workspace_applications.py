@@ -72,5 +72,5 @@ class Command(BaseCommand):
 
         with open(export_path, "w") as export_buffer:
             json.dump(
-                exported_applications, export_buffer, indent=4 if indent else None
+                exported_applications, export_buffer, indent=2 if indent else None
             )

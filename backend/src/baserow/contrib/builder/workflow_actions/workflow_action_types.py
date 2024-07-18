@@ -95,35 +95,24 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
         return (
             super().serializer_field_names
             + NavigationElementManager.serializer_field_names
-            + ["url"]  # TODO remove in the next release
         )
 
     @property
     def allowed_fields(self):
-        return (
-            super().allowed_fields + NavigationElementManager.allowed_fields + ["url"]
-        )  # TODO remove in the next release
+        return super().allowed_fields + NavigationElementManager.allowed_fields
 
     @property
     def serializer_field_overrides(self):
         return (
             super().serializer_field_overrides
             | NavigationElementManager().get_serializer_field_overrides()
-            | {
-                "url": serializers.CharField(
-                    help_text="The url of the page to open.",
-                    required=False,
-                    allow_blank=True,
-                    default="",
-                )
-            }  # TODO remove in the next release
         )
 
     class SerializedDict(
         BuilderWorkflowActionDict,
         NavigationElementManager.SerializedDict,
     ):
-        url: str  # TODO remove in the next release, replace with "..."
+        ...
 
     def get_pytest_params(self, pytest_data_fixture):
         return NavigationElementManager().get_pytest_params(pytest_data_fixture)
