@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.global.baserow.backendConfigMap }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install, pre-upgrade
+    helm.sh/hook-weight: "2"
+  labels:
+    {{- include "baserow.global.labels" . | nindent 4 }}
+data:
+{{- if .Values.postgresql.enabled }}
+  DATABASE_USER: {{ include "baserow.global.postgresql.username" . | quote }}
+{{- end }}
+{{- if .Values.minio.enabled }}
+  AWS_S3_VERIFY: "false"
+  AWS_ENDPOINT_URL: {{ printf "http://%s:%.f" (include "common.names.fullname" .Subcharts.minio) .Values.minio.service.ports.api }}
+  AWS_STORAGE_BUCKET_NAME: {{ (index .Values.minio.provisioning.buckets 0).name }}
+  AWS_S3_CUSTOM_DOMAIN: {{ .Values.global.baserow.objectsDomain }}/{{ (index .Values.minio.provisioning.buckets 0).name }}
+  AWS_S3_REGION_NAME: "us-east-1"
+{{- end }}
+{{- range $key, $val := .Values.backendConfigMap }}
+  {{ $key }}: {{ $val | quote }}
+{{- end }}

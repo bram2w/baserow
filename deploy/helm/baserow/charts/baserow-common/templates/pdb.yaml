@@ -1,0 +1,19 @@
+{{- if .Values.pdb.create }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "baserow.fullname" . }}
+  namespace: {{ include "baserow.namespace" . }}
+  labels:
+    {{- include "baserow.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.pdb.minAvailable }}
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  {{- end }}
+  {{- if and .Values.pdb.maxUnavailable (not .Values.pdb.minAvailable)}}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable | default 1 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "baserow.selectorLabels" . | nindent 6 }}
+{{- end }}
