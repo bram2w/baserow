@@ -1,0 +1,18 @@
+{{- if .Values.service.create }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "baserow.fullname" . }}
+  namespace: {{ include "baserow.namespace" . }}
+  labels:
+    {{- include "baserow.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "baserow.selectorLabels" . | nindent 4 }}
+{{- end }}

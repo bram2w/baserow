@@ -1,0 +1,56 @@
+{{ if .Values.migration.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "baserow.global.fullname" .}}-migrate
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: post-install, pre-upgrade
+    helm.sh/hook-weight: "5"
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: {{ include "baserow.global.migration.image" . }}
+          args: ["setup"]
+          imagePullPolicy: Always
+          {{ if .Values.migration.extraEnv }}
+          env:
+            {{- range .Values.extraEnv }}
+            {{- if and (.name) (.value) }}
+            - name: {{ .name | quote }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          envFrom:
+            {{ include "baserow.global.migration.envFrom" . | nindent 12 }}
+          {{- if .Values.migration.priorityClassName }}
+          priorityClassName: {{ .Values.migration.priorityClassName }}
+          {{- end -}}
+          {{- with .Values.migration.volumeMounts }}
+          volumeMounts:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+      restartPolicy: Never
+      {{ if .Values.migration.priorityClassName }}
+      priorityClassName: {{ .Values.migration.priorityClassName }}
+      {{- end }}
+      {{- with .Values.migration.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.migration.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.migration.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.migration.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{ end }}

@@ -1,0 +1,292 @@
+## @section Global parameters
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters, serviceAccount, backendConfigMap, backendSecret, frontendConfigMap, envFrom, domain, backendDomain.
+##
+
+## @param global.baserow.imageRegistry Global Docker image registry
+## @param global.baserow.imagePullSecrets Global Docker registry secret names as an array
+## @param global.baserow.image.tag Global Docker image tag
+## @param global.baserow.serviceAccount.shared Set to true to share the service account between all application components.
+## @param global.baserow.serviceAccount.create Set to true to create a service account to share between all application components.
+## @param global.baserow.serviceAccount.name Configure a name for service account to share between all application components.
+## @param global.baserow.serviceAccount.annotations Configure annotations for the shared service account.
+## @param global.baserow.serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount
+## @param global.baserow.backendConfigMap Configure a name for the backend configmap.
+## @param global.baserow.backendSecret Configure a name for the backend secret.
+## @param global.baserow.frontendConfigMap Configure a name for the frontend configmap.
+## @param global.baserow.envFrom Configure secrets or configMaps to be used as environment variables for all components.
+## @param global.baserow.domain Configure the domain for the application.
+##
+global:
+  baserow:
+    imageRegistry: baserow
+    image:
+      tag: 1.26.1
+    imagePullSecrets: []
+    serviceAccount:
+      shared: true
+      create: true
+      name: baserow
+      annotations: {}
+      automountServiceAccountToken: false
+    backendConfigMap: backend-config
+    backendSecret: backend-secret
+    frontendConfigMap: frontend-config
+    envFrom: []
+    domain: cluster.local
+
+## Baserow application image version
+## ref: https://hub.docker.com/r/baserow/baserow/tags/
+## @param image.repository [default: baserow/baserow] Baserow image repository
+## @skip image.tag Baserow image tag (immutable tags are recommended)
+## @param image.pullPolicy Baserow image pull policy
+##
+image:
+  repository: baserow/baserow # Docker image repository
+  tag: 1.26.1 # Docker image tag
+  pullPolicy: IfNotPresent # Image pull policy
+
+## @param workingDir Application container working directory
+##
+workingDir: /baserow-saas
+
+## @param args Application container extra arguments
+##
+args: []
+## @param imagePullSecrets Container image pull secrets
+## Optionally specify an array of imagePullSecrets.
+## Secrets must be manually created in the namespace.
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+## Example:
+## pullSecrets:
+##   - myRegistryKeySecretName
+##
+imagePullSecrets: []
+
+## @param podAnnotations Map of annotations to add to the pods
+##
+podAnnotations: {}
+
+## @param additionalLabels Map of extra labels to add
+##
+additionalLabels: {}
+
+## @param additionalSelectorLabels Map of extra selector labels to add to the deployment
+##
+additionalSelectorLabels: {}
+
+## Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+## @param securityContext.enabled Enable security context
+## @param securityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param securityContext.sysctls Set kernel settings using the sysctl interface
+## @param securityContext.supplementalGroups Set filesystem extra groups
+## @param securityContext.fsGroup Group ID for the pod
+##
+securityContext:
+  enabled: false
+  fsGroupChangePolicy: ""
+  sysctls: ""
+  supplementalGroups: ""
+  fsGroup: ""
+## Container Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+## @param containerSecurityContext.enabled Enabled containers' Security Context
+## @param containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
+## @param containerSecurityContext.runAsUser Set containers' Security Context runAsUser
+## @param containerSecurityContext.runAsGroup Set containers' Security Context runAsGroup
+## @param containerSecurityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+## @param containerSecurityContext.privileged Set container's Security Context privileged
+## @param containerSecurityContext.readOnlyRootFilesystem Set container's Security Context readOnlyRootFilesystem
+## @param containerSecurityContext.allowPrivilegeEscalation Set container's Security Context allowPrivilegeEscalation
+## @param containerSecurityContext.capabilities.drop List of capabilities to be dropped
+## @param containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+##
+containerSecurityContext:
+  enabled: false
+  seLinuxOptions: ""
+  runAsUser: ""
+  runAsGroup: ""
+  runAsNonRoot: ""
+  privileged: false
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: []
+  seccompProfile:
+    type: ""
+
+## @param replicaCount Number of application pods, ignored when enabling autoscaling.
+##
+replicaCount: 1
+
+## @param revisionHistoryLimit Number of old ReplicaSets to retain for rollback
+##
+revisionHistoryLimit: 10
+
+## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## Example:
+## resources:
+##   requests:
+##     cpu: 2
+##     memory: 512Mi
+##   limits:
+##     cpu: 3
+##     memory: 1024Mi
+##
+resources: {}
+
+## Configure extra options for Application containers' liveness, readiness and startup probes
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes
+## @param readinessProbe.enabled Enable readinessProbe on the application container
+## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+## @param readinessProbe.periodSeconds Period seconds for readinessProbe
+## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+## @param readinessProbe.failureThreshold Failure threshold for readinessProbe
+## @param readinessProbe.successThreshold Success threshold for readinessProbe
+## @param readinessProbe.exec.command Defines the command to run in the container to determine if the container is running. The command is simply executed, and if it exits with a status code of 0, the container is considered to be alive and functioning. If the command exits with a non-zero status code, the container is considered to have failed.
+##
+readinessProbe:
+  enabled: false
+  exec:
+    command:
+      - /bin/bash
+      - -c
+      - /baserow/backend/docker/docker-entrypoint.sh backend-healthcheck
+  failureThreshold: 3
+  initialDelaySeconds: 120
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 5
+
+## Configure extra options for Application containers' liveness, readiness and startup probes
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes
+## @param livenessProbe.enabled Enable livenessProbe on the application container
+## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+## @param livenessProbe.periodSeconds Period seconds for livenessProbe
+## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+## @param livenessProbe.failureThreshold Failure threshold for livenessProbe
+## @param livenessProbe.successThreshold Success threshold for livenessProbe
+## @param livenessProbe.exec.command Defines the command to run in the container to determine if the container is running. The command is simply executed, and if it exits with a status code of 0, the container is considered to be alive and functioning. If the command exits with a non-zero status code, the container is considered to have failed.
+##
+livenessProbe:
+  enabled: false
+  exec:
+    command:
+      - /bin/bash
+      - -c
+      - /baserow/backend/docker/docker-entrypoint.sh backend-healthcheck
+  failureThreshold: 3
+  initialDelaySeconds: 120
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 5
+
+## @param priorityClassName Priority Class to use for each pod
+##
+priorityClassName: ""
+
+## @param affinity Affinity for the baserow application pods assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+##
+affinity: {}
+
+## @param nodeSelector Node labels for application pods assignment
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+##
+nodeSelector: {}
+
+## @param tolerations Tolerations for application pods assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## @param extraEnv Extra environment variables to add to the baserow application container
+## see: https://baserow.io/docs/installation%2Fconfiguration#environment-variables
+## For example:
+##  extraEnvVars:
+##  - name: BASEROW_PUBLIC_URL
+##    value: "https://baserow.mydomain.com"
+##
+extraEnv: []
+
+## @param envFrom Extra environments variables to add to the baserow application container from configmaps or secrets.
+## see: https://baserow.io/docs/installation%2Fconfiguration#environment-variables
+## For example:
+##  envFrom:
+##  - configMapRef:
+##      name: myconfigmap
+##  - secretRef:
+##      name: mysecret
+##
+envFrom: []
+
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount for the pod
+  ##
+  create: true
+  ## @param serviceAccount.name The name of the ServiceAccount to use.
+  ## If not set and create is true, a name is generated using the common.names.fullname template
+  ##
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount
+  ## Can be set to false if pods using this serviceAccount do not need to use K8s API
+  ##
+  automountServiceAccountToken: false
+  ## @param serviceAccount.annotations Additional custom annotations for the ServiceAccount
+  ##
+  annotations: {}
+
+## Autoscaling configuration
+## ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+## @param autoscaling.enabled Enable autoscaling for the application
+## @param autoscaling.minReplicas Minimum number of application replicas
+## @param autoscaling.maxReplicas Maximum number of application replicas
+## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+## @param autoscaling.targetMemoryUtilizationPercentage Target Memory utilization percentage
+##
+autoscaling:
+  enabled: false # Whether autoscaling is enabled
+  minReplicas: 2 # Minimum number of replicas
+  maxReplicas: 10 # Maximum number of replicas
+  targetCPUUtilizationPercentage: 80 # Target CPU utilization percentage for autoscaling
+  targetMemoryUtilizationPercentage: 80 # Target memory utilization percentage for autoscaling
+
+## Service configuration
+## ref: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  ## @param service.create Set to true to create a Kubernetes service
+  ##
+  create: true
+  ## @param service.type Kubernetes service type
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  ##
+  type: ClusterIP
+  ## @param service.port Port to expose for the application
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+  ##
+  port: 80 # Service port
+  ## @param service.targetPort Port to expose for the application
+  ## Note: A Service can map any incoming port to a targetPort. By default and for convenience, the targetPort is set to the same value as the port field.
+  ##
+  targetPort: 8000 # Target port
+
+## Pod Disruption Budget configuration
+## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb
+## @param pdb.create Enable/disable a Pod Disruption Budget creation
+## @param pdb.minAvailable Minimum number/percentage of pods that should remain scheduled
+## @param pdb.maxUnavailable Maximum number/percentage of pods that may be made unavailable. Defaults to `1` if both `readReplicas.pdb.minAvailable` and `readReplicas.pdb.maxUnavailable` are empty.
+##
+pdb:
+  create: false
+  minAvailable: 50%
+  maxUnavailable: 50%
+
+## Configuration mount settings
+## @param mountConfiguration.backend Mount backend configmaps and secrets.
+## @param mountConfiguration.frontend Mount frontend configmaps and secrets.
+##
+mountConfiguration:
+  backend: true
+  frontend: false
