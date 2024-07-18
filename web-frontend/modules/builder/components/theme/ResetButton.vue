@@ -2,6 +2,7 @@
   <ButtonIcon
     v-if="propertyModified()"
     v-tooltip="$t('resetButton.reset')"
+    tooltip-position="bottom-left"
     icon="iconoir-erase"
     @click="resetProperty()"
   />

@@ -6,6 +6,7 @@ from .models import (
     ButtonThemeConfigBlock,
     ColorThemeConfigBlock,
     ImageThemeConfigBlock,
+    InputThemeConfigBlock,
     LinkThemeConfigBlock,
     PageThemeConfigBlock,
     ThemeConfigBlock,
@@ -147,3 +148,8 @@ class PageThemeConfigBlockType(ThemeConfigBlockType):
             return None
 
         return value
+
+
+class InputThemeConfigBlockType(ThemeConfigBlockType):
+    type = "input"
+    model_class = InputThemeConfigBlock

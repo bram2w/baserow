@@ -6,6 +6,7 @@
       :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       horizontal
+      class="margin-bottom-2"
     />
     <LinkNavigationSelectionForm
       :default-values="defaultValues"

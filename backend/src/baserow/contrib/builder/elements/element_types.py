@@ -963,6 +963,12 @@ class InputTextElementType(InputElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            InputThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -1006,6 +1012,12 @@ class InputTextElementType(InputElementType):
                 help_text=InputTextElement._meta.get_field("input_type").help_text,
                 required=False,
                 default=INPUT_TEXT_TYPES.TEXT,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="input",
+                theme_config_block_type_name=InputThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -1127,6 +1139,12 @@ class CheckboxElementType(InputElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            InputThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -1146,6 +1164,12 @@ class CheckboxElementType(InputElementType):
                 help_text=CheckboxElement._meta.get_field("required").help_text,
                 default=False,
                 required=False,
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="input",
+                theme_config_block_type_name=InputThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 
@@ -1234,6 +1258,12 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.theme.serializers import (
+            DynamicConfigBlockSerializer,
+        )
+        from baserow.contrib.builder.theme.theme_config_block_types import (
+            InputThemeConfigBlockType,
+        )
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
@@ -1290,6 +1320,12 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
                 required=False,
                 allow_blank=True,
                 default="",
+            ),
+            "styles": DynamicConfigBlockSerializer(
+                required=False,
+                property_name="input",
+                theme_config_block_type_name=InputThemeConfigBlockType.type,
+                serializer_kwargs={"required": False},
             ),
         }
 

@@ -42,18 +42,30 @@ export const focusEnd = (element) => {
 }
 
 /**
+ * Get the closest parent element that matches a predicate function.
+ *
+ * @param {Element} element - The starting element.
+ * @param {Function} predicate - A function that takes an element and returns a boolean.
+ * @returns {Element|null} The matching parent element or null if no match is found.
+ */
+export const getParentMatchingPredicate = (element, predicate) => {
+  while (element !== null && element.nodeType === Node.ELEMENT_NODE) {
+    if (predicate(element)) {
+      return element
+    }
+    element = element.parentElement
+  }
+  return null
+}
+
+/**
  * Finds the closest scrollable parent element of the provided element.
  */
 export const findScrollableParent = (element) => {
-  if (element == null) {
-    return null
-  }
-
-  if (element.scrollHeight > element.clientHeight) {
-    return element
-  } else {
-    return findScrollableParent(element.parentNode)
-  }
+  return getParentMatchingPredicate(
+    element,
+    (element) => element.scrollHeight > element.clientHeight
+  )
 }
 
 /**

@@ -193,10 +193,6 @@ exports[`ChoiceElement as manual dropdown 1`] = `
                     >
                       <!---->
                        
-                      <!---->
-                       
-                      <!---->
-                       
                       <span
                         class="ab-dropdownitem__item-name-text"
                         title="First"
@@ -221,10 +217,6 @@ exports[`ChoiceElement as manual dropdown 1`] = `
                     <div
                       class="ab-dropdownitem__item-name"
                     >
-                      <!---->
-                       
-                      <!---->
-                       
                       <!---->
                        
                       <span

@@ -4,15 +4,43 @@
 
 .custom-style__button {
   position: absolute;
-  right: 0;
+  right: 4px;
   top: -6px;
 }
 
+.custom-style__context {
+  border: none;
+  box-shadow: none;
+}
+
+.custom-style__header {
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  height: 40px;
+  align-items: center;
+  position: relative;
+  border-bottom: 1px solid $color-neutral-200;
+  cursor: pointer;
+}
+
+.custom-style__title-icon {
+  font-size: 16px;
+  position: absolute;
+  left: 16px;
+  top: 12px;
+}
+
+.custom-style__title {
+  flex: 1;
+  text-align: center;
+}
+
 .custom-style__config-blocks {
-  width: 400px;
+  width: 358px;
   padding: 20px 20px 5px;
-  overflow-y: scroll;
-  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  height: calc(100% - 40px);
 }
 
 .custom-style__config-block-title {

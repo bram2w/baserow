@@ -3,11 +3,11 @@
     <ThemeConfigBlockSection>
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
           :label="$t('imageThemeConfigBlock.alignment')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <HorizontalAlignmentsSelector v-model="values.image_alignment" />
 
@@ -19,11 +19,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           :label="$t('imageThemeConfigBlock.maxWidthLabel')"
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :error-message="
             $v.values.image_max_width.$dirty &&
             !$v.values.image_max_width.integer
@@ -59,11 +59,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
           :label="$t('imageThemeConfigBlock.maxHeightLabel')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :error-message="
             $v.values.image_max_height.$dirty &&
             !$v.values.image_max_height.integer
@@ -93,10 +93,10 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('imageThemeConfigBlock.imageConstraintsLabel')"
         >
           <Dropdown

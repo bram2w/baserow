@@ -1,5 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+    />
     <ApplicationBuilderFormulaInputGroup
       v-model="values.label"
       :label="$t('generalForm.labelTitle')"
@@ -114,11 +120,12 @@
 import form from '@baserow/modules/core/mixins/form'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
 
 export default {
   name: 'InputTextElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { ApplicationBuilderFormulaInputGroup, CustomStyle },
   mixins: [elementForm],
   data() {
     return {

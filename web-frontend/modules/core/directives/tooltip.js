@@ -68,16 +68,29 @@ export default {
     el.updatePositionEvent = () => {
       const rect = el.getBoundingClientRect()
       const position = el.getAttribute('tooltip-position') || 'bottom'
+      const rectTooltip = el.tooltipElement.getBoundingClientRect()
 
-      if (position === 'top') {
-        const rectTooltip = el.tooltipElement.getBoundingClientRect()
-        el.tooltipElement.style.top = rect.top - 2 - rectTooltip.height + 'px'
-      } else {
-        el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+      switch (position) {
+        case 'top':
+          el.tooltipElement.style.top = rect.top - 2 - rectTooltip.height + 'px'
+          el.tooltipElement.style.left = rect.left + rect.width / 2 + 'px'
+          break
+        case 'bottom-left':
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left = rect.right - rectTooltip.width + 'px'
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-right',
+            rect.width / 2 - 6 + 'px' // Middle of the main element
+          )
+          el.tooltipElement.style.setProperty(
+            '--tooltip-cursor-position-left',
+            'auto'
+          )
+          break
+        default:
+          el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+          el.tooltipElement.style.left = rect.left + rect.width / 2 + 'px'
       }
-
-      const width = rect.right - rect.left
-      el.tooltipElement.style.left = rect.left + width / 2 + 'px'
     }
     el.removeTimeout = () => {
       if (el.tooltipTimeout) {
@@ -98,9 +111,13 @@ export default {
       if (!el.tooltipElement) {
         el.tooltipElement = document.createElement('div')
 
-        const classes = ['tooltip', 'tooltip--body', 'tooltip--center']
+        const classes = ['tooltip', 'tooltip--body']
         if (position === 'top') {
           classes.push('tooltip--top')
+        }
+
+        if (position === 'top' || position === 'bottom') {
+          classes.push('tooltip--center')
         }
 
         el.tooltipElement.className = classes.join(' ')

@@ -1,13 +1,20 @@
 <template>
   <div class="custom-style">
     <ButtonText
+      v-tooltip="$t('customStyle.configureThemeOverrides')"
       class="custom-style__button"
       icon="baserow-icon-settings"
+      tooltip-position="bottom-left"
       @click="openPanel()"
     />
-    <Context ref="context">
+    <Context ref="context" class="custom-style__context">
+      <div class="custom-style__header" @click="$refs.context.hide()">
+        <i class="custom-style__title-icon iconoir-nav-arrow-left" />
+        <div class="custom-style__title">
+          {{ $t('customStyle.themeOverrides') }}
+        </div>
+      </div>
       <div v-auto-overflow-scroll class="custom-style__config-blocks">
-        <h2>{{ $t('customStyle.themeOverrides') }}</h2>
         <div
           v-for="(themeConfigBlock, index) in themeConfigBlocks"
           :key="themeConfigBlock.getType()"
@@ -37,6 +44,7 @@
 
 <script>
 import ThemeConfigBlock from '@baserow/modules/builder/components/theme/ThemeConfigBlock'
+import { getParentMatchingPredicate } from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'CustomStyle',
@@ -71,7 +79,10 @@ export default {
   },
   methods: {
     openPanel() {
-      this.$refs.context.toggle(this.$el, 'bottom', 'left', -100, -425)
+      const sidePanel = getParentMatchingPredicate(this.$el, (el) =>
+        el.classList.contains('page-editor__side-panel')
+      )
+      this.$refs.context.show(sidePanel, 'over', 'right', 0, 0)
     },
     onValuesChanged(newValues) {
       this.$emit('input', {
