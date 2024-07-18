@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
@@ -71,6 +71,7 @@ from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
+from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import DispatchTypes, ServiceType
@@ -267,7 +268,6 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         files_zip=None,
         storage=None,
         cache=None,
-        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
         """
@@ -293,7 +293,6 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             files_zip=files_zip,
             storage=storage,
             cache=cache,
-            import_formula=import_formula,
             **kwargs,
         )
 
@@ -559,7 +558,6 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         files_zip=None,
         storage=None,
         cache=None,
-        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
         """
@@ -576,7 +574,6 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
             files_zip=files_zip,
             storage=storage,
             cache=cache,
-            import_formula=import_formula,
             **kwargs,
         )
 
@@ -636,10 +633,10 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
 
 
 class LocalBaserowListRowsUserServiceType(
-    LocalBaserowViewServiceType,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
+    LocalBaserowViewServiceType,
 ):
     """
     This service gives access to a list of rows from the same Baserow instance as the
@@ -667,6 +664,7 @@ class LocalBaserowListRowsUserServiceType(
         "sortings",
         "filters",
     ]
+    simple_formula_fields = ["search_query"]
     serializer_field_overrides = {
         "filters": LocalBaserowTableServiceFilterSerializer(
             many=True, source="service_filters", required=False
@@ -774,7 +772,6 @@ class LocalBaserowListRowsUserServiceType(
         files_zip=None,
         storage=None,
         cache=None,
-        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
         """
@@ -788,18 +785,10 @@ class LocalBaserowListRowsUserServiceType(
         :return: the deserialized version for this property.
         """
 
-        if prop_name == "search_query":
-            return import_formula(value, id_mapping, **kwargs)
-
         if prop_name == "filters":
             return [
                 {
                     **f,
-                    "value": (
-                        import_formula(f["value"], id_mapping, **kwargs)
-                        if f["value_is_formula"]
-                        else f["value"]
-                    ),
                     "field_id": (
                         id_mapping["database_fields"][f["field_id"]]
                         if "database_fields" in id_mapping
@@ -816,7 +805,6 @@ class LocalBaserowListRowsUserServiceType(
             files_zip=files_zip,
             storage=storage,
             cache=cache,
-            import_formula=import_formula,
             **kwargs,
         )
 
@@ -905,10 +893,10 @@ class LocalBaserowListRowsUserServiceType(
 
 
 class LocalBaserowGetRowUserServiceType(
-    LocalBaserowViewServiceType,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
+    LocalBaserowViewServiceType,
 ):
     """
     This service gives access to one specific row from a given table from the same
@@ -935,6 +923,8 @@ class LocalBaserowGetRowUserServiceType(
         "search_query",
         "filters",
     ]
+    simple_formula_fields = ["row_id", "search_query"]
+
     serializer_field_overrides = {
         "filters": LocalBaserowTableServiceFilterSerializer(
             many=True, source="service_filters", required=False
@@ -1020,7 +1010,6 @@ class LocalBaserowGetRowUserServiceType(
         files_zip=None,
         storage=None,
         cache=None,
-        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
         """
@@ -1028,18 +1017,10 @@ class LocalBaserowGetRowUserServiceType(
         row_id, search_query & filters formulas.
         """
 
-        if prop_name == "row_id":
-            return import_formula(value, id_mapping, **kwargs)
-
         if prop_name == "filters":
             return [
                 {
                     **f,
-                    "value": (
-                        import_formula(f["value"], id_mapping, **kwargs)
-                        if f["value_is_formula"]
-                        else f["value"]
-                    ),
                     "field_id": (
                         id_mapping["database_fields"][f["field_id"]]
                         if "database_fields" in id_mapping
@@ -1049,9 +1030,6 @@ class LocalBaserowGetRowUserServiceType(
                 for f in value
             ]
 
-        if prop_name == "search_query":
-            return import_formula(value, id_mapping, **kwargs)
-
         return super().deserialize_property(
             prop_name,
             value,
@@ -1059,7 +1037,6 @@ class LocalBaserowGetRowUserServiceType(
             files_zip=files_zip,
             storage=storage,
             cache=cache,
-            import_formula=import_formula,
             **kwargs,
         )
 
@@ -1194,6 +1171,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
     allowed_fields = ["table", "row_id", "integration"]
     serializer_field_names = ["table_id", "row_id", "integration_id", "field_mappings"]
+    simple_formula_fields = ["row_id"]
 
     serializer_field_overrides = {
         "table_id": serializers.IntegerField(
@@ -1271,6 +1249,28 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 bulk_field_mappings
             )
 
+    def formula_generator(
+        self, service: ServiceType
+    ) -> Generator[str | Instance, str, None]:
+        """
+        A generator to iterate over all formulas related to a
+        LocalBaserowTableServiceType.
+
+        The manner in which formula fields are stored will vary for each class
+        that implements LocalBaserowTableServiceType. E.g. a formula might be
+        a direct attribute of the class (e.g. value) or it might be in a
+        related model (e.g. field_mappings).
+        """
+
+        yield from super().formula_generator(service)
+
+        # Return field_mapping formulas
+        for field_mapping in service.field_mappings.all():
+            new_formula = yield field_mapping.value
+            if new_formula is not None:
+                field_mapping.value = new_formula
+                yield field_mapping
+
     def serialize_property(
         self,
         service: LocalBaserowUpsertRow,
@@ -1306,7 +1306,6 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         files_zip=None,
         storage=None,
         cache=None,
-        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
         **kwargs,
     ):
         """
@@ -1318,15 +1317,10 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         :return: the deserialized version for this property.
         """
 
-        # Migrate the row id formula
-        if prop_name == "row_id":
-            return import_formula(value, id_mapping, **kwargs)
-
         if prop_name == "field_mappings":
             return [
                 {
-                    "enabled": item["enabled"],
-                    "value": import_formula(item["value"], id_mapping, **kwargs),
+                    **item,
                     "field_id": (
                         id_mapping["database_fields"][item["field_id"]]
                         if "database_fields" in id_mapping
@@ -1343,7 +1337,6 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
             files_zip=files_zip,
             storage=storage,
             cache=cache,
-            import_formula=import_formula,
             **kwargs,
         )
 

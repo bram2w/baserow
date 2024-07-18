@@ -2,12 +2,16 @@ from baserow.contrib.builder.workflow_actions.models import (
     LocalBaserowCreateRowWorkflowAction,
     LocalBaserowUpdateRowWorkflowAction,
     NotificationWorkflowAction,
+    OpenPageWorkflowAction,
 )
 
 
 class WorkflowActionFixture:
     def create_notification_workflow_action(self, **kwargs):
         return self.create_workflow_action(NotificationWorkflowAction, **kwargs)
+
+    def create_open_page_workflow_action(self, **kwargs):
+        return self.create_workflow_action(OpenPageWorkflowAction, **kwargs)
 
     def create_upsert_row_workflow_action(self, model_class, **kwargs):
         if "service" not in kwargs:

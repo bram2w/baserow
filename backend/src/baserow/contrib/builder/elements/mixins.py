@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Generator, List, Optional, Type
 
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -28,6 +28,7 @@ from baserow.contrib.builder.elements.signals import elements_moved
 from baserow.contrib.builder.elements.types import CollectionElementSubClass
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
+from baserow.core.registry import Instance
 
 
 class ContainerElementTypeMixin:
@@ -273,6 +274,20 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
     class SerializedDict(CollectionElementTypeMixin.SerializedDict):
         fields: List[Dict]
+
+    def formula_generator(
+        self, element: "CollectionElementWithFieldsTypeMixin"
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for LinkCollectionFieldType.
+
+        Some formula fields are in the config JSON field, e.g. page_parameters.
+        """
+
+        yield from super().formula_generator(element)
+
+        for collection_field in element.fields.all():
+            yield from collection_field.get_type().formula_generator(collection_field)
 
     def serialize_property(
         self,

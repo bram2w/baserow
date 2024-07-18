@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict, Generator, Union
 
 from django.contrib.auth.models import AbstractUser
 
@@ -25,6 +25,7 @@ from baserow.contrib.builder.workflow_actions.types import BuilderWorkflowAction
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.types import BaserowFormula
 from baserow.core.integrations.models import Integration
+from baserow.core.registry import Instance
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.core.workflow_actions.models import WorkflowAction
@@ -33,6 +34,7 @@ from baserow.core.workflow_actions.models import WorkflowAction
 class NotificationWorkflowActionType(BuilderWorkflowActionType):
     type = "notification"
     model_class = NotificationWorkflowAction
+    simple_formula_fields = ["title", "description"]
     serializer_field_names = ["title", "description"]
     serializer_field_overrides = {
         "title": FormulaSerializerField(
@@ -60,40 +62,11 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"title": "'hello'", "description": "'there'"}
 
-    def deserialize_property(
-        self,
-        prop_name,
-        value,
-        id_mapping: Dict,
-        files_zip=None,
-        storage=None,
-        cache=None,
-        **kwargs,
-    ) -> Any:
-        """
-        Migrate the formulas.
-        """
-
-        if prop_name == "title":
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "description":
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name,
-            value,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            **kwargs,
-        )
-
 
 class OpenPageWorkflowActionType(BuilderWorkflowActionType):
     type = "open_page"
     model_class = OpenPageWorkflowAction
+    simple_formula_fields = NavigationElementManager.simple_formula_fields
 
     @property
     def serializer_field_names(self):
@@ -133,6 +106,24 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
     def get_pytest_params(self, pytest_data_fixture):
         return NavigationElementManager().get_pytest_params(pytest_data_fixture)
 
+    def formula_generator(
+        self, workflow_action: WorkflowAction
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formulas for the OpenPageWorkflowActionType.
+
+        In addition to formula fields, formulas can also be stored in the
+        page_parameters JSON field.
+        """
+
+        yield from super().formula_generator(workflow_action)
+
+        for index, page_parameter in enumerate(workflow_action.page_parameters):
+            new_formula = yield page_parameter.get("value")
+            if new_formula is not None:
+                workflow_action.page_parameters[index]["value"] = new_formula
+                yield workflow_action
+
     def deserialize_property(
         self,
         prop_name,
@@ -143,16 +134,6 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
         cache=None,
         **kwargs,
     ) -> Any:
-        """
-        Migrate the formulas.
-        """
-
-        if prop_name == "url":  # TODO remove in the next release
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "description":
-            return import_formula(value, id_mapping, **kwargs)
-
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
@@ -313,6 +294,9 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
                 integration,
                 serialized_service,
                 id_mapping,
+                storage=storage,
+                cache=cache,
+                files_zip=files_zip,
                 import_formula=import_formula,
             )
         return super().deserialize_property(
