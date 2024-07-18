@@ -5,10 +5,13 @@ from functools import lru_cache
 from types import FunctionType
 from typing import (
     Any,
+    Callable,
     Dict,
+    Generator,
     Generic,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     TypedDict,
@@ -849,3 +852,61 @@ class APIUrlsRegistryMixin:
         for types in self.registry.values():
             api_urls += types.get_api_urls()
         return api_urls
+
+
+class InstanceWithFormulaMixin:
+    """
+    This mixin provides the formula_generator(), which is a generator that
+    iterates through a given Instance's formulas.
+    """
+
+    simple_formula_fields: List[str] = []
+
+    def formula_generator(
+        self, instance: Instance
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Return a generator that iterates over all formula fields of an Instance.
+        The yielded value will be a formula string.
+
+        If the generator is provided a new formula via the `send()` method, it
+        will be used to update (but not save) the instance's formula field.
+        When `send()` is called, the generator will yield the instance rather
+        than the formula string.
+
+        Since changes to the instance are not saved, the caller should check
+        if the formula has changed, and save the instance if appropriate.
+        """
+
+        for formula_field in self.simple_formula_fields:
+            formula = getattr(instance, formula_field)
+            new_formula = yield formula
+            if new_formula is not None:
+                setattr(instance, formula_field, new_formula)
+                yield instance
+
+    def import_formulas(
+        self,
+        instance: Instance,
+        id_mapping: Dict[str, Any],
+        import_formula: Callable[[str, Dict[str, Any]], str],
+        **kwargs: Dict[str, Any],
+    ) -> Set[Instance]:
+        """
+        Instantiates the formula generator and returns a set of all updated
+        models.
+
+        As with the formula_generator(), this method does not save any updates
+        made to the instance. Instead, it returns a set of all updated model
+        instances. The caller should call `.save()` on the instances to persist
+        any new formulas that were updated in the instances.
+        """
+
+        updated_models: Set[Instance] = set()
+        formula_gen = self.formula_generator(instance)
+        for formula in formula_gen:
+            new_formula = import_formula(formula, id_mapping, **kwargs)
+            if new_formula != formula:
+                updated_models.add(formula_gen.send(new_formula))
+
+        return updated_models

@@ -5,6 +5,7 @@ from tempfile import tempdir
 from unittest.mock import MagicMock
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
 
 import pytest
@@ -17,12 +18,16 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
 from baserow.contrib.builder.elements.element_types import (
+    ButtonElementType,
     CheckboxElementType,
     ChoiceElementType,
+    FormContainerElementType,
     HeadingElementType,
     IFrameElementType,
     ImageElementType,
     InputTextElementType,
+    LinkElementType,
+    TextElementType,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.mixins import (
@@ -30,15 +35,20 @@ from baserow.contrib.builder.elements.mixins import (
     FormElementTypeMixin,
 )
 from baserow.contrib.builder.elements.models import (
+    ButtonElement,
     CheckboxElement,
     ChoiceElement,
     ChoiceElementOption,
+    CollectionField,
     Element,
+    FormContainerElement,
     HeadingElement,
     IFrameElement,
     ImageElement,
     InputTextElement,
     LinkElement,
+    TableElement,
+    TextElement,
 )
 from baserow.contrib.builder.elements.registries import (
     ElementType,
@@ -150,6 +160,144 @@ def test_link_element_path_parameter_does_not_exist_new_page(data_fixture):
 
 
 @pytest.mark.django_db
+def test_link_collection_field_import_export_formula(data_fixture):
+    """
+    Test the import/export of the Link CollectionField.
+    """
+
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+
+    table_element = TableElement.objects.create(
+        order=1,
+        page=page,
+        items_per_page=5,
+        content_type=ContentType.objects.get_for_model(TableElement),
+    )
+    field = CollectionField.objects.create(
+        order=1,
+        name="test1",
+        type="link",
+        config={
+            "link_name": f"get('data_source.{data_source_1.id}.field_1')",
+            "navigate_to_url": f"get('data_source.{data_source_1.id}.field_1')",
+            "navigation_type": "",
+            "navigate_to_page_id": "",
+            "page_parameters": [
+                {
+                    "name": "fooPageParam",
+                    "value": f"get('data_source.{data_source_1.id}.field_1')",
+                },
+            ],
+            "target": "",
+        },
+    )
+    table_element.fields.add(field)
+
+    field_type = table_element.get_type()
+    serialized = field_type.export_serialized(table_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+
+    imported_element = field_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    imported_field = imported_element.fields.all()[0]
+    assert imported_field.config["link_name"] == expected_formula
+    assert imported_field.config["navigate_to_url"] == expected_formula
+    assert imported_field.config["page_parameters"][0]["value"] == expected_formula
+
+
+@pytest.mark.django_db
+def test_link_element_import_export_formula(data_fixture):
+    """Test the import/export of the LinkElement."""
+
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = LinkElementType()
+
+    exported_element = data_fixture.create_builder_element(
+        LinkElement,
+        navigate_to_url=f"get('data_source.{data_source_1.id}.field_1')",
+        value=f"get('data_source.{data_source_1.id}.field_1')",
+        page_parameters=[
+            {
+                "name": "fooPageParam",
+                "value": f"get('data_source.{data_source_1.id}.field_1')",
+            },
+        ],
+    )
+    serialized = element_type.export_serialized(exported_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.navigate_to_url == expected_formula
+    assert imported_element.value == expected_formula
+    assert imported_element.page_parameters == [
+        {
+            "name": "fooPageParam",
+            "value": expected_formula,
+        },
+    ]
+
+
+@pytest.mark.django_db
+def test_form_container_element_import_export_formula(data_fixture):
+    """Test the import/export of the FormContainerElement."""
+
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = FormContainerElementType()
+
+    exported_element = data_fixture.create_builder_element(
+        FormContainerElement,
+        submit_button_label=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.submit_button_label == expected_formula
+
+
+@pytest.mark.django_db
+def test_text_element_import_export_formula(data_fixture):
+    """Test the import/export of the TextElementType."""
+
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = TextElementType()
+
+    exported_text_element = data_fixture.create_builder_element(
+        TextElement,
+        value=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_text_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.value == expected_formula
+
+
+@pytest.mark.django_db
 def test_input_text_element_import_export_formula(data_fixture):
     page = data_fixture.create_builder_page()
     data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
@@ -173,6 +321,82 @@ def test_input_text_element_import_export_formula(data_fixture):
     assert imported_element.label == expected_formula
     assert imported_element.default_value == expected_formula
     assert imported_element.placeholder == expected_formula
+
+
+@pytest.mark.django_db
+def test_image_element_import_export_formula(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = ImageElementType()
+
+    exported_image_element = data_fixture.create_builder_element(
+        ImageElement,
+        image_url=f"get('data_source.{data_source_1.id}.field_1')",
+        alt_text=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_image_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.image_url == expected_formula
+    assert imported_element.alt_text == expected_formula
+
+
+@pytest.mark.django_db
+def test_button_element_import_export_formula(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = ButtonElementType()
+
+    exported_image_element = data_fixture.create_builder_element(
+        ButtonElement,
+        value=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_image_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.value == expected_formula
+
+
+@pytest.mark.django_db
+def test_choice_element_import_export_formula(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = ChoiceElementType()
+
+    exported_choice_element = data_fixture.create_builder_element(
+        ChoiceElement,
+        label=f"get('data_source.{data_source_1.id}.field_1')",
+        default_value=f"get('data_source.{data_source_1.id}.field_1')",
+        placeholder=f"get('data_source.{data_source_1.id}.field_1')",
+        formula_name=f"get('data_source.{data_source_1.id}.field_1')",
+        formula_value=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_choice_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.label == expected_formula
+    assert imported_element.default_value == expected_formula
+    assert imported_element.placeholder == expected_formula
+    assert imported_element.formula_name == expected_formula
+    assert imported_element.formula_value == expected_formula
 
 
 @pytest.mark.django_db

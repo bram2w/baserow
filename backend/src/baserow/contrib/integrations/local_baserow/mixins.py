@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Tuple, Type
+from typing import TYPE_CHECKING, Generator, List, Tuple, Type
 
 from django.db.models import OrderBy, QuerySet
 
@@ -13,6 +13,7 @@ from baserow.contrib.integrations.local_baserow.models import (
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.validator import ensure_string
+from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 
@@ -86,6 +87,26 @@ class LocalBaserowTableServiceFilterableMixin:
             )
 
         return service_filter_builder.apply_to_queryset(queryset)
+
+    def formula_generator(
+        self, service: "LocalBaserowTableServiceFilterableMixin"
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for LocalBaserow Services.
+
+        Some formula fields are in service filters.
+        """
+
+        yield from super().formula_generator(service)
+
+        for service_filter in service.service_filters.all():
+            if service_filter.value_is_formula:
+                # Service types like LocalBaserowGetRow do not have a value attribute.
+                new_formula = yield service_filter.value
+                if new_formula is not None:
+                    # Set the new formula for the Service Filter
+                    service_filter.value = new_formula
+                    yield service_filter
 
 
 class LocalBaserowTableServiceSortableMixin:

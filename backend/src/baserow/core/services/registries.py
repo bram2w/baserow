@@ -1,26 +1,25 @@
 from abc import ABC
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
-from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
-from django.core.files.storage import Storage
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
+from baserow.core.integrations.exceptions import IntegrationDoesNotExist
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
     EasyImportExportMixin,
     Instance,
+    InstanceWithFormulaMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
 )
 from baserow.core.services.dispatch_context import DispatchContext
 
-from ..integrations.exceptions import IntegrationDoesNotExist
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
 
@@ -33,8 +32,9 @@ class DispatchTypes(str, Enum):
 
 
 class ServiceType(
-    ModelInstanceMixin[Service],
+    InstanceWithFormulaMixin,
     EasyImportExportMixin[ServiceSubClass],
+    ModelInstanceMixin[ServiceSubClass],
     CustomFieldsInstanceMixin,
     Instance,
     ABC,
@@ -241,40 +241,6 @@ class ServiceType(
 
         return queryset
 
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        files_zip: Optional[ZipFile] = None,
-        storage: Optional[Storage] = None,
-        cache: Optional[Dict] = None,
-        import_formula: Callable[[str, Dict[str, Any]], str] = None,
-        **kwargs,
-    ) -> Any:
-        """
-        This hooks allow to customize the deserialization of a property.
-
-        :param prop_name: the name of the property being transformed.
-        :param value: the value of this property.
-        :param id_mapping: the id mapping dict.
-        :param import_formula: the import formula function.
-        :return: the deserialized version for this property.
-        """
-
-        if import_formula is None:
-            raise ValueError("Missing import formula function.")
-
-        return super().deserialize_property(
-            prop_name,
-            value,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            **kwargs,
-        )
-
     def import_path(self, path, id_mapping, **kwargs):
         """
         Allows to hook into the path import resolution.
@@ -294,6 +260,33 @@ class ServiceType(
         """
 
         return path
+
+    def import_serialized(
+        self,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        import_formula: Callable[[str, Dict[str, Any]], str] = None,
+        **kwargs,
+    ):
+        if import_formula is None:
+            raise ValueError("Missing import formula function.")
+
+        created_instance = super().import_serialized(
+            parent,
+            serialized_values,
+            id_mapping,
+            import_formula=import_formula,
+            **kwargs,
+        )
+
+        updated_models = self.import_formulas(
+            created_instance, id_mapping, import_formula, **kwargs
+        )
+
+        [m.save() for m in updated_models]
+
+        return created_instance
 
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)

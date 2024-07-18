@@ -1,9 +1,7 @@
 import abc
-from typing import Any, Dict, List, Optional, TypedDict, Union
-from zipfile import ZipFile
+from typing import Any, Dict, Generator, List, Optional, TypedDict, Union
 
 from django.core.exceptions import ValidationError
-from django.core.files.storage import Storage
 from django.core.validators import validate_email
 from django.db.models import IntegerField, QuerySet
 from django.db.models.functions import Cast
@@ -48,7 +46,6 @@ from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
 )
-from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
@@ -61,7 +58,7 @@ from baserow.core.formula.validator import (
     ensure_integer,
     ensure_string,
 )
-from baserow.core.registry import T
+from baserow.core.registry import Instance, T
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_files.handler import UserFileHandler
 
@@ -155,6 +152,7 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
         "button_color",
         "reset_initial_values_post_submission",
     ]
+    simple_formula_fields = ["submit_button_label"]
 
     class SerializedDict(ElementDict):
         button_color: str
@@ -215,23 +213,6 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
                 child_types_allowed.append(element_type.type)
 
         return child_types_allowed
-
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in ["submit_button_label"]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
 
 
 class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
@@ -348,6 +329,7 @@ class HeadingElementType(ElementType):
     model_class = HeadingElement
     serializer_field_names = ["value", "level", "font_color", "alignment"]
     allowed_fields = ["value", "level", "font_color", "alignment"]
+    simple_formula_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
@@ -397,23 +379,6 @@ class HeadingElementType(ElementType):
     def get_pytest_params(self, pytest_data_fixture):
         return {"value": "'Corporis perspiciatis'", "level": 2, "alignment": "left"}
 
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in ["value"]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
-
 
 class TextElementType(ElementType):
     """
@@ -424,6 +389,7 @@ class TextElementType(ElementType):
     model_class = TextElement
     serializer_field_names = ["value", "alignment", "format"]
     allowed_fields = ["value", "alignment", "format"]
+    simple_formula_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
@@ -471,23 +437,6 @@ class TextElementType(ElementType):
             ),
         }
 
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in ["value"]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
-
 
 class NavigationElementManager:
     """
@@ -511,6 +460,7 @@ class NavigationElementManager:
         "page_parameters",
         "target",
     ]
+    simple_formula_fields = ["navigate_to_url"]
 
     class SerializedDict(TypedDict):
         navigation_type: str
@@ -528,18 +478,6 @@ class NavigationElementManager:
     ) -> Any:
         if prop_name == "navigate_to_page_id" and value:
             return id_mapping["builder_pages"][value]
-
-        if prop_name == "navigate_to_url":
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "page_parameters":
-            return [
-                {
-                    **p,
-                    "value": import_formula(p["value"], id_mapping, **kwargs),
-                }
-                for p in value
-            ]
 
         return value
 
@@ -649,6 +587,7 @@ class LinkElementType(ElementType):
     type = "link"
     model_class = LinkElement
     PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP = {"text": str, "numeric": int}
+    simple_formula_fields = NavigationElementManager.simple_formula_fields + ["value"]
 
     @property
     def serializer_field_names(self):
@@ -685,6 +624,24 @@ class LinkElementType(ElementType):
         alignment: str
         button_color: str
 
+    def formula_generator(
+        self, element: Element
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that returns formula fields for the LinkElementType.
+
+        Unlike other Element types, this one has its formula fields in the
+        page_parameters JSON field.
+        """
+
+        yield from super().formula_generator(element)
+
+        for index, data in enumerate(element.page_parameters):
+            new_formula = yield data["value"]
+            if new_formula is not None:
+                element.page_parameters[index]["value"] = new_formula
+                yield element
+
     def deserialize_property(
         self,
         prop_name: str,
@@ -695,9 +652,6 @@ class LinkElementType(ElementType):
         cache=None,
         **kwargs,
     ) -> Any:
-        if prop_name == "value":
-            return import_formula(value, id_mapping, **kwargs)
-
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
@@ -820,6 +774,7 @@ class ImageElementType(ElementType):
         "style_max_width",
         "style_max_height",
     ]
+    simple_formula_fields = ["image_url", "alt_text"]
 
     class SerializedDict(ElementDict):
         image_source_type: str
@@ -948,12 +903,6 @@ class ImageElementType(ElementType):
         cache=None,
         **kwargs,
     ) -> Any:
-        if prop_name == "image_url":
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "alt_text":
-            return import_formula(value, id_mapping, **kwargs)
-
         if prop_name == "image_file_id":
             user_file = UserFileHandler().import_user_file(
                 value, files_zip=files_zip, storage=storage
@@ -1000,6 +949,7 @@ class InputTextElementType(InputElementType):
         "rows",
         "input_type",
     ]
+    simple_formula_fields = ["label", "default_value", "placeholder"]
 
     class SerializedDict(ElementDict):
         label: BaserowFormula
@@ -1061,23 +1011,6 @@ class InputTextElementType(InputElementType):
 
         return overrides
 
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in ["label", "default_value", "placeholder"]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
-
     def get_pytest_params(self, pytest_data_fixture):
         return {
             "label": "",
@@ -1125,6 +1058,7 @@ class ButtonElementType(ElementType):
     model_class = ButtonElement
     allowed_fields = ["value", "alignment", "width", "button_color"]
     serializer_field_names = ["value", "alignment", "width", "button_color"]
+    simple_formula_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
@@ -1178,29 +1112,13 @@ class ButtonElementType(ElementType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"value": "'Some value'"}
 
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name == "value":
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
-
 
 class CheckboxElementType(InputElementType):
     type = "checkbox"
     model_class = CheckboxElement
     allowed_fields = ["label", "default_value", "required"]
     serializer_field_names = ["label", "default_value", "required"]
+    simple_formula_fields = ["label", "default_value"]
 
     class SerializedDict(ElementDict):
         label: BaserowFormula
@@ -1232,23 +1150,6 @@ class CheckboxElementType(InputElementType):
         }
 
         return overrides
-
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in ["label", "default_value"]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
 
     def is_valid(
         self, element: CheckboxElement, value: Any, dispatch_context: DispatchContext
@@ -1308,6 +1209,13 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "multiple",
         "show_as_dropdown",
         "option_type",
+        "formula_value",
+        "formula_name",
+    ]
+    simple_formula_fields = [
+        "label",
+        "default_value",
+        "placeholder",
         "formula_value",
         "formula_name",
     ]
@@ -1410,35 +1318,6 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
 
         return super().serialize_property(
             element, prop_name, files_zip=files_zip, storage=storage, cache=cache
-        )
-
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        files_zip=None,
-        storage=None,
-        cache=None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in [
-            "label",
-            "default_value",
-            "placeholder",
-            "formula_value",
-            "formula_name",
-        ]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name,
-            value,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            **kwargs,
         )
 
     def import_serialized(
@@ -1595,6 +1474,7 @@ class IFrameElementType(ElementType):
     model_class = IFrameElement
     allowed_fields = ["source_type", "url", "embed", "height"]
     serializer_field_names = ["source_type", "url", "embed", "height"]
+    simple_formula_fields = ["url", "embed"]
 
     class SerializedDict(ElementDict):
         source_type: str
@@ -1635,23 +1515,6 @@ class IFrameElementType(ElementType):
         }
 
         return overrides
-
-    def deserialize_property(
-        self,
-        prop_name: BaserowFormula,
-        value: Any,
-        id_mapping: Dict[BaserowFormula, Any],
-        files_zip: ZipFile | None = None,
-        storage: Storage | None = None,
-        cache: Dict | None = None,
-        **kwargs,
-    ) -> Any:
-        if prop_name in ["url", "embed"]:
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, files_zip, storage, cache, **kwargs
-        )
 
     def get_pytest_params(self, pytest_data_fixture):
         return {

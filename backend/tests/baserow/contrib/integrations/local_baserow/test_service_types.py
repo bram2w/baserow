@@ -221,6 +221,185 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
 
 
 @pytest.mark.django_db
+def test_import_formula_local_baserow_list_rows_user_service_type(data_fixture):
+    """
+    Ensure that formulas are imported correctly when importing the
+    LocalBaserowListRowsUserServiceType service type.
+    """
+
+    user = data_fixture.create_user()
+    path_params = [
+        {"name": "id", "type": "numeric"},
+        {"name": "filter", "type": "text"},
+    ]
+    page = data_fixture.create_builder_page(
+        user=user,
+        path="/page/:id/:filter/",
+        path_params=path_params,
+    )
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+        ],
+    )
+    text_field = fields[0]
+    view = data_fixture.create_grid_view(user)
+    service_type = service_type_registry.get("local_baserow_list_rows")
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        table=table, page=page
+    )
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        view=view,
+        table=view.table,
+        search_query=f"get('data_source.{data_source.id}.0.{text_field.db_column}')",
+        filter_type="Or",
+    )
+
+    data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=text_field,
+        value=f"get('data_source.{data_source.id}.0.{text_field.db_column}')",
+        value_is_formula=True,
+        order=0,
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=text_field,
+        value=f"fooValue",
+        value_is_formula=False,
+        order=1,
+    )
+
+    exported = service_type.export_serialized(service)
+
+    duplicated_page = PageService().duplicate_page(user, page)
+    data_source2 = duplicated_page.datasource_set.first()
+    id_mapping = {"builder_data_sources": {data_source.id: data_source2.id}}
+
+    from baserow.contrib.builder.formula_importer import import_formula
+
+    imported_service = service_type.import_serialized(
+        integration, exported, id_mapping, import_formula=import_formula
+    )
+    assert (
+        imported_service.search_query
+        == f"get('data_source.{data_source2.id}.0.{text_field.db_column}')"
+    )
+
+    imported_service_filter_0 = imported_service.service_filters.get(order=0)
+    assert (
+        imported_service_filter_0.value
+        == f"get('data_source.{data_source2.id}.0.{text_field.db_column}')"
+    )
+    assert imported_service_filter_0.value_is_formula is True
+
+    imported_service_filter_1 = imported_service.service_filters.get(order=1)
+    assert imported_service_filter_1.value == "fooValue"
+    assert imported_service_filter_1.value_is_formula is False
+
+
+@pytest.mark.django_db
+def test_import_formula_local_baserow_get_row_user_service_type(data_fixture):
+    """
+    Ensure that formulas are imported correctly when importing the
+    LocalBaserowGetRowUserServiceType service type.
+
+    The LocalBaserowGetRowUserServiceType::import_path() only supports 2 path
+    parts, as opposed to LocalBaserowListRowsUserServiceType::import_path()
+    which supports 3.
+
+    This means that this service type doesn't currently support Data Sources.
+    Despite that, we are testing for the Data Source ID having been imported
+    correctly, because this ensures that dynamic aspect of formula import is
+    working.
+    """
+
+    user = data_fixture.create_user()
+    path_params = [
+        {"name": "id", "type": "numeric"},
+        {"name": "filter", "type": "text"},
+    ]
+    page = data_fixture.create_builder_page(
+        user=user,
+        path="/page/:id/:filter/",
+        path_params=path_params,
+    )
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+        ],
+    )
+    text_field = fields[0]
+    view = data_fixture.create_grid_view(user)
+    service_type = service_type_registry.get("local_baserow_get_row")
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        table=table, page=page
+    )
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration,
+        view=view,
+        table=table,
+        row_id=f"get('data_source.{data_source.id}')",
+        search_query=f"get('data_source.{data_source.id}')",
+        filter_type="Or",
+    )
+
+    data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=text_field,
+        value=f"get('data_source.{data_source.id}')",
+        value_is_formula=True,
+        order=0,
+    )
+
+    data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=text_field,
+        value="FooServiceFilter",
+        value_is_formula=False,
+        order=1,
+    )
+
+    exported = service_type.export_serialized(service)
+
+    duplicated_page = PageService().duplicate_page(user, page)
+    data_source2 = duplicated_page.datasource_set.first()
+    id_mapping = {}
+    id_mapping = {"builder_data_sources": {data_source.id: data_source2.id}}
+
+    from baserow.contrib.builder.formula_importer import import_formula
+
+    imported_service = service_type.import_serialized(
+        integration, exported, id_mapping, import_formula=import_formula
+    )
+
+    # See the docstring to understand why these formulas looks truncated.
+    assert imported_service.search_query == f"get('data_source.{data_source2.id}')"
+    assert imported_service.row_id == f"get('data_source.{data_source2.id}')"
+
+    imported_service_filter = imported_service.service_filters.get(order=0)
+    assert imported_service_filter.value == f"get('data_source.{data_source2.id}')"
+
+    imported_service_filter = imported_service.service_filters.get(order=1)
+    assert imported_service_filter.value == "FooServiceFilter"
+
+
+@pytest.mark.django_db
 def test_update_local_baserow_list_rows_service(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
@@ -2545,7 +2724,9 @@ def test_export_import_local_baserow_upsert_row_service(
         table=table,
         row_id=f"get('data_source.{data_source.id}.{field.db_column}')",
     )
-    upsert_row_service.field_mappings.create(field=field, value=f"'Horse'")
+    upsert_row_service.field_mappings.create(
+        field=field, value=f"get('data_source.{data_source.id}.{field.db_column}')"
+    )
 
     data_fixture.create_local_baserow_create_row_workflow_action(
         page=page, element=element, event=EventTypes.CLICK, service=upsert_row_service
@@ -2574,6 +2755,10 @@ def test_export_import_local_baserow_upsert_row_service(
     imported_field_mapping = imported_upsert_row_service.field_mappings.get()
 
     assert imported_field_mapping.field == imported_field
+    assert (
+        imported_field_mapping.value
+        == f"get('data_source.{imported_data_source.id}.{imported_field.db_column}')"
+    )
     assert (
         imported_upsert_row_service.row_id
         == f"get('data_source.{imported_data_source.id}.{imported_field.db_column}')"

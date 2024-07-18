@@ -9,6 +9,7 @@ import pytest
 from baserow.contrib.builder.elements.collection_field_types import (
     BooleanCollectionFieldType,
 )
+from baserow.contrib.builder.pages.service import PageService
 from baserow.core.formula.serializers import FormulaSerializerField
 
 MODULE_PATH = "baserow.contrib.builder.elements.collection_field_types"
@@ -18,19 +19,16 @@ def test_class_properties_are_set():
     """
     Test that the properties of the class are correctly set.
 
-    Ensure the type, allowed_fields, and serializer_field_names properties
-    are set to the correct values.
+    Ensure the type, allowed_fields, serializer_field_names, and
+    simple_formula_fields properties are set to the correct values.
     """
-
-    expected_type = "boolean"
-    expected_allowed_fields = ["value"]
-    expected_serializer_field_names = ["value"]
 
     bool_field_type = BooleanCollectionFieldType()
 
-    assert bool_field_type.type == expected_type
-    assert bool_field_type.allowed_fields == expected_allowed_fields
-    assert bool_field_type.serializer_field_names == expected_serializer_field_names
+    assert bool_field_type.type == "boolean"
+    assert bool_field_type.allowed_fields == ["value"]
+    assert bool_field_type.serializer_field_names == ["value"]
+    assert bool_field_type.simple_formula_fields == ["value"]
 
 
 def test_serializer_field_overrides_returns_expected_value():
@@ -48,38 +46,60 @@ def test_serializer_field_overrides_returns_expected_value():
     assert field.help_text == "The boolean value."
 
 
-@patch(f"{MODULE_PATH}.CollectionFieldType.deserialize_property")
-@patch(f"{MODULE_PATH}.import_formula")
-def test_deserialize_property_returns_value_from_import_formula(
-    mock_import_formula, mock_super_deserialize
-):
+@pytest.mark.django_db
+def test_import_export_boolean_collection_field_type(data_fixture):
     """
-    Ensure the deserialize_property() method uses import_formula() if the
-    prop_name is 'value' and a data_source_id is provided.
+    Ensure that the BooleanCollectionField's formulas are exported correctly
+    with the updated Data Sources.
     """
 
-    mock_value = "foo"
-    mock_import_formula.return_value = mock_value
-    prop_name = "value"
-    value = "foo"
-    id_mapping = {}
-    data_source_id = 1
-
-    result = BooleanCollectionFieldType().deserialize_property(
-        prop_name, value, id_mapping, {}, data_source_id=data_source_id
+    user, _ = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("Is Active", "boolean"),
+        ],
+        rows=[
+            ["Foo", True],
+        ],
+    )
+    _, bool_field = fields
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        table=table, page=page
+    )
+    table_element = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "User Is Active",
+                "type": "boolean",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.0.{bool_field.db_column}')"
+                },
+            },
+        ],
     )
 
-    assert result == mock_value
-    mock_import_formula.assert_called_once_with(
-        value,
-        id_mapping,
-        data_source_id=data_source_id,
+    duplicated_page = PageService().duplicate_page(user, page)
+    data_source2 = duplicated_page.datasource_set.first()
+
+    id_mapping = {"builder_data_sources": {data_source.id: data_source2.id}}
+
+    exported = table_element.get_type().export_serialized(table_element)
+    imported_table_element = table_element.get_type().import_serialized(
+        page, exported, id_mapping
     )
-    mock_super_deserialize.assert_not_called()
+
+    imported_bool_field = imported_table_element.fields.get(name="User Is Active")
+    assert imported_bool_field.config == {
+        "value": f"get('data_source.{data_source2.id}.0.{bool_field.db_column}')"
+    }
 
 
 @patch(f"{MODULE_PATH}.CollectionFieldType.deserialize_property")
-@patch(f"{MODULE_PATH}.import_formula")
 @pytest.mark.parametrize(
     "prop_name,data_source_id",
     [
@@ -92,7 +112,6 @@ def test_deserialize_property_returns_value_from_import_formula(
     ],
 )
 def test_deserialize_property_returns_value_from_super_method(
-    mock_import_formula,
     mock_super_deserialize,
     prop_name,
     data_source_id,
@@ -100,10 +119,6 @@ def test_deserialize_property_returns_value_from_super_method(
     """
     Ensure that the value is returned by calling the parent class's
     deserialize_property() method.
-
-    If the prop_name is "value" *and* the data_source_id is not empty, the
-    import_formula() is called. All other combinations should cause the
-    super method to be called instead.
     """
 
     mock_value = "'foo'"
@@ -120,7 +135,6 @@ def test_deserialize_property_returns_value_from_super_method(
     )
 
     assert result == mock_value
-    mock_import_formula.assert_not_called()
     mock_super_deserialize.assert_called_once_with(
         prop_name,
         value,
