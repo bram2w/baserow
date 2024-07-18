@@ -13,13 +13,18 @@
       </div>
       <div class="row">
         <div class="col col-6">
-          <InjectedFormulaInputGroup
-            v-model="values.row_id"
-            small
+          <FormGroup
+            small-label
             :label="$t('localBaserowGetRowForm.rowFieldLabel')"
-            :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
-            :help-text="$t('localBaserowGetRowForm.rowFieldHelpText')"
-          />
+          >
+            <InjectedFormulaInput
+              v-model="values.row_id"
+              :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
+            />
+            <template #helper>
+              {{ $t('localBaserowGetRowForm.rowFieldHelpText') }}
+            </template>
+          </FormGroup>
         </div>
       </div>
       <div class="row">
@@ -45,13 +50,14 @@
               :title="$t('localBaserowGetRowForm.searchTabTitle')"
               class="data-source-form__search-form-tab"
             >
-              <InjectedFormulaInputGroup
-                v-model="values.search_query"
-                small
-                :placeholder="
-                  $t('localBaserowGetRowForm.searchFieldPlaceHolder')
-                "
-              />
+              <FormGroup>
+                <InjectedFormulaInput
+                  v-model="values.search_query"
+                  :placeholder="
+                    $t('localBaserowGetRowForm.searchFieldPlaceHolder')
+                  "
+                />
+              </FormGroup>
             </Tab>
           </Tabs>
         </div>
@@ -62,22 +68,18 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
 import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
 import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   components: {
-    InjectedFormulaInputGroup,
+    InjectedFormulaInput,
     LocalBaserowTableSelector,
     LocalBaserowTableServiceConditionalForm,
   },
   mixins: [form],
   inject: ['page'],
-  provide() {
-    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
-  },
   props: {
     builder: {
       type: Object,

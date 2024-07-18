@@ -7,24 +7,29 @@
       :theme="builder.theme"
       :extra-args="{ onlyInput: true }"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
-      class="margin-bottom-2"
+    <FormGroup
       small-label
-      required
       :label="$t('checkboxElementForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
       class="margin-bottom-2"
-      small-label
       required
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+
+    <FormGroup
+      small-label
       :label="$t('checkboxElementForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       small-label
       required
@@ -36,14 +41,14 @@
 </template>
 
 <script>
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'CheckboxElementForm',
-  components: { ApplicationBuilderFormulaInputGroup, CustomStyle },
-  mixins: [elementForm],
+  components: { InjectedFormulaInput, CustomStyle },
+  mixins: [formElementForm],
   data() {
     return {
       values: {

@@ -14,15 +14,17 @@
       :config-block-types="['link']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.value"
-      class="margin-bottom-2"
-      :label="$t('linkElementForm.text')"
+    <FormGroup
       small-label
+      :label="$t('linkElementForm.text')"
+      class="margin-bottom-2"
       required
-      :placeholder="$t('linkElementForm.textPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-    />
+    >
+      <InjectedFormulaInput
+        v-model="values.value"
+        :placeholder="$t('linkElementForm.textPlaceholder')"
+      />
+    </FormGroup>
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
       @values-changed="emitChange($event)"
@@ -48,7 +50,7 @@ import {
   HORIZONTAL_ALIGNMENTS,
   WIDTHS_NEW,
 } from '@baserow/modules/builder/enums'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
 
@@ -57,7 +59,7 @@ import CustomStyle from '@baserow/modules/builder/components/elements/components
 export default {
   name: 'LinkElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     LinkNavigationSelectionForm,
     CustomStyle,
   },

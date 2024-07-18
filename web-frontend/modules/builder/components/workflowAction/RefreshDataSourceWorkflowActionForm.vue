@@ -1,6 +1,11 @@
 <template>
   <form @submit.prevent>
-    <FormGroup :label="$t('tableElementForm.dataSource')" small-label required>
+    <FormGroup
+      :label="$t('tableElementForm.dataSource')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
       <div class="control__elements">
         <Dropdown v-model="values.data_source_id" :show-search="false" small>
           <DropdownItem

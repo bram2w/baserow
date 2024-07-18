@@ -6,27 +6,29 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.value"
-      class="margin-bottom-2"
+    <FormGroup
       small-label
-      required
       :label="$t('buttonElementForm.valueLabel')"
-      :placeholder="$t('buttonElementForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-    />
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.value"
+        :placeholder="$t('buttonElementForm.valuePlaceholder')"
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 
 export default {
   name: 'ButtonElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     CustomStyle,
   },
   mixins: [elementForm],

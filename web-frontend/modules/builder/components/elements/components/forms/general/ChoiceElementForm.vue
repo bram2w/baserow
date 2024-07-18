@@ -6,33 +6,39 @@
       :config-block-types="['input']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
-      class="margin-bottom-2"
+    <FormGroup
       small-label
-      required
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
       class="margin-bottom-2"
-      small-label
       required
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
+      small-label
       :label="$t('generalForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.placeholder"
       class="margin-bottom-2"
-      small-label
       required
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
+      small-label
       :label="$t('generalForm.placeholderTitle')"
-      :placeholder="$t('generalForm.placeholderPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-    ></ApplicationBuilderFormulaInputGroup>
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.placeholder"
+        :placeholder="$t('generalForm.placeholderPlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       :label="$t('generalForm.requiredTitle')"
       class="margin-bottom-2"
@@ -131,43 +137,45 @@
       </ButtonText>
     </template>
     <template v-else-if="values.option_type === CHOICE_OPTION_TYPES.FORMULAS">
-      <ApplicationBuilderFormulaInputGroup
-        v-model="values.formula_value"
-        class="margin-bottom-2"
+      <FormGroup
+        small-label
         :label="$t('choiceOptionSelector.value')"
-        :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-      />
-      <ApplicationBuilderFormulaInputGroup
-        v-model="values.formula_name"
         class="margin-bottom-2"
+        required
+      >
+        <InjectedFormulaInput
+          v-model="values.formula_value"
+          :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
+        />
+      </FormGroup>
+      <FormGroup
+        small-label
         :label="$t('choiceOptionSelector.name')"
-        :placeholder="$t('choiceOptionSelector.namePlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
-      />
-      <!-- temporary fix to show the context menu -->
-      <br />
+        class="margin-bottom-2"
+      >
+        <InjectedFormulaInput
+          v-model="values.formula_name"
+          :placeholder="$t('choiceOptionSelector.namePlaceholder')"
+        />
+      </FormGroup>
     </template>
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import {
-  CHOICE_OPTION_TYPES,
-  DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
-} from '@baserow/modules/builder/enums'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
+import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
 import { uuid } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'ChoiceElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     CustomStyle,
   },
-  mixins: [elementForm],
+  mixins: [formElementForm],
   props: {
     loading: {
       type: Boolean,
@@ -207,8 +215,6 @@ export default {
   },
   computed: {
     CHOICE_OPTION_TYPES: () => CHOICE_OPTION_TYPES,
-    DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS: () =>
-      DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS,
     element() {
       return this.$store.getters['element/getElementById'](
         this.page,

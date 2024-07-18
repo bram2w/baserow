@@ -6,28 +6,39 @@
       :config-block-types="['input']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
+    <FormGroup
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       :label="$t('generalForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.placeholder"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       :label="$t('generalForm.placeholderTitle')"
-      :placeholder="$t('generalForm.placeholderPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.placeholder"
+        :placeholder="$t('generalForm.placeholderPlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       :label="$t('generalForm.requiredTitle')"
       small-label
@@ -118,15 +129,15 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
 
 export default {
   name: 'InputTextElementForm',
-  components: { ApplicationBuilderFormulaInputGroup, CustomStyle },
-  mixins: [elementForm],
+  components: { InjectedFormulaInput, CustomStyle },
+  mixins: [formElementForm],
   data() {
     return {
       values: {

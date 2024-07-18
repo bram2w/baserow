@@ -13,7 +13,7 @@
 
 <script>
 export default {
-  name: 'InjectedFormulaInputGroup',
+  name: 'InjectedFormulaInput',
   inject: ['formulaComponent', 'dataProvidersAllowed'],
 }
 </script>

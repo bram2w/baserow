@@ -2,7 +2,6 @@
   <form @submit.prevent="submit">
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
-      :data-providers-allowed="dataProvidersAllowed"
       @values-changed="emitChange($event)"
     />
   </form>
@@ -16,6 +15,5 @@ export default {
   name: 'OpenPageWorkflowActionForm',
   components: { LinkNavigationSelectionForm },
   mixins: [form],
-  inject: ['dataProvidersAllowed'],
 }
 </script>
