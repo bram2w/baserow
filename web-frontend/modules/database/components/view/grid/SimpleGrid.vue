@@ -38,7 +38,10 @@
           :class="{
             'simple-grid__row--hover':
               showHoveredRow && currentHoveredRow === row.id,
-            'simple-grid__row--selected': selectedRows.includes(row.id),
+            'simple-grid__row--disabled':
+              !multiple && selectedRows.includes(row.id),
+            'simple-grid__row--checked':
+              multiple && selectedRows.includes(row.id),
           }"
           @click="$emit('row-click', row)"
           @mouseover="currentHoveredRow = row.id"
@@ -49,6 +52,15 @@
             class="simple-grid__cell simple-grid__cell--first"
           >
             {{ row.id }}
+            <div
+              v-if="multiple"
+              v-show="
+                currentHoveredRow === row.id || selectedRows.includes(row.id)
+              "
+              class="simple-grid__cell-checkbox"
+            >
+              <Checkbox :checked="selectedRows.includes(row.id)"></Checkbox>
+            </div>
           </div>
           <div
             v-for="field in fixedFields"
@@ -61,7 +73,9 @@
         <div
           v-if="canAddRow"
           class="simple-grid__row"
-          :class="{ 'simple-grid__row--hover': showHoveredRow && addRowHover }"
+          :class="{
+            'simple-grid__row--hover': showHoveredRow && addRowHover,
+          }"
           @mouseover="addRowHover = true"
           @mouseleave="addRowHover = false"
           @click="$emit('add-row')"
@@ -106,7 +120,10 @@
               :class="{
                 'simple-grid__row--hover':
                   showHoveredRow && currentHoveredRow === row.id,
-                'simple-grid__row--selected': selectedRows.includes(row.id),
+                'simple-grid__row--disabled':
+                  !multiple && selectedRows.includes(row.id),
+                'simple-grid__row--checked':
+                  multiple && selectedRows.includes(row.id),
               }"
               @click="$emit('row-click', row)"
               @mouseover="currentHoveredRow = row.id"
@@ -191,6 +208,11 @@ export default {
       default: false,
     },
     border: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    multiple: {
       type: Boolean,
       required: false,
       default: false,
