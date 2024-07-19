@@ -10,8 +10,8 @@ To install the chart with the release name `my-baserow` run the following comman
 
 From repo
 ```bash
-helm repo add baserow https://gitlab.com/baserow/baserow-charts
-helm install my-baserow baserow/baserow --namespace baserow --create-namespace --values config.yaml
+helm repo add baserow-chart https://baserow.gitlab.io/baserow-chart
+helm install my-baserow baserow-chart/baserow --namespace baserow --create-namespace --values config.yaml
 ```
 
 From source code

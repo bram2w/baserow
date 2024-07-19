@@ -1,5 +1,52 @@
 # Install with Helm
 
+## Official Helm chart
+
+The official Helm chart of Baserow, maintained by us, can be found here
+https://artifacthub.io/packages/helm/baserow-chart/baserow. By default, it includes
+everything you need like PostgreSQL, Redis, MinIO for S3, and Caddy for automatic SSL
+certificates. Here you can also documentation for all the configuration possibilities
+like using an external PostgreSQL server, how to setup Caddy with various Cloud
+providers, add environment variables, and more.
+
+### Installation
+
+Create a `config.yaml` file with the minimum configuration that defines the domains
+you would like it to run on.
+
+```
+global:
+  baserow:
+    domain: "your-baserow-domain.com"
+    backendDomain: "api.your-baserow-domain.com"
+    objectsDomain: "objects.your-baserow-domain.com"
+```
+
+To install the chart with the release name `my-baserow` run the following commands:
+
+```
+helm repo add baserow-chart https://baserow.gitlab.io/baserow-chart
+helm install my-baserow baserow-chart/baserow --namespace baserow --create-namespace --values config.yaml
+```
+
+### Upgrading
+
+You can change the Baserow version you're running by updating your `config.yaml`
+file directly.
+
+```
+global:
+  baserow:
+    image: 1.26.1
+```
+
+Or use the latest Helm chart default. Then run the following command to upgrade your
+installation.
+
+```
+helm upgrade my-baserow baserow-chart/baserow --namespace baserow --values config.yaml
+```
+
 ## Community Maintained Helm Chart
 
 Find the community
