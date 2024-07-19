@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Allow selecting multiple relationships in the row select modal of the link row field.",
+  "issue_number": 2267,
+  "bullet_points": [],
+  "created_at": "2024-07-17"
+}

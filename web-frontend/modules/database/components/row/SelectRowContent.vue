@@ -28,6 +28,7 @@
         :with-footer="true"
         :show-hovered-row="true"
         :selected-rows="selectedRows"
+        :multiple="multiple"
         :show-row-id="true"
         @add-row="$refs.rowCreateModal.show()"
         @row-click="select($event)"
@@ -98,6 +99,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    multiple: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {
@@ -296,11 +302,14 @@ export default {
      * Called when the user selects a row.
      */
     select(row) {
-      if (this.selectedRows.includes(row.id)) {
+      const exists = this.selectedRows.includes(row.id)
+
+      // In multiple mode it's also possible to unselect.
+      if (!this.multiple && exists) {
         return
       }
 
-      this.$emit('selected', {
+      this.$emit(exists ? 'unselected' : 'selected', {
         row,
         primary: this.primary,
         fields: this.fields,

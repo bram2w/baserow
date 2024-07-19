@@ -10,7 +10,9 @@
       :table-id="tableId"
       :view-id="viewId"
       :value="value"
+      :multiple="multiple"
       @selected="selected"
+      @unselected="unselected"
       @hide="hide"
     ></SelectRowContent>
   </Modal>
@@ -40,14 +42,25 @@ export default {
       required: false,
       default: () => [],
     },
+    multiple: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   methods: {
     /**
      * Hide the modal when a row has been selected.
      */
     selected(...args) {
-      this.hide()
+      if (!this.multiple) {
+        this.hide()
+      }
       this.$emit('selected', ...args)
+    },
+    unselected(...args) {
+      console.log('unselected')
+      this.$emit('unselected', ...args)
     },
   },
 }

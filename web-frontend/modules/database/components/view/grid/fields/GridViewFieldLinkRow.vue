@@ -46,7 +46,9 @@
       :table-id="field.link_row_table_id"
       :view-id="field.link_row_limit_selection_view_id"
       :value="value"
+      :multiple="true"
       @selected="addValue(value, $event)"
+      @unselected="removeValue({}, value, $event.row.id)"
       @hidden="hideModal"
     ></SelectRowModal>
     <ForeignRowEditModal
