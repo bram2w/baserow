@@ -33,6 +33,22 @@ def long_text_field_factory(data_fixture, table, user):
     return data_fixture.create_long_text_field(name="target", user=user, table=table)
 
 
+def url_field_factory(data_fixture, table, user):
+    return data_fixture.create_url_field(name="target", user=user, table=table)
+
+
+def email_field_factory(data_fixture, table, user):
+    return data_fixture.create_email_field(name="target", user=user, table=table)
+
+
+def phone_number_field_factory(data_fixture, table, user):
+    return data_fixture.create_phone_number_field(name="target", user=user, table=table)
+
+
+def uuid_field_factory(data_fixture, table, user):
+    return data_fixture.create_uuid_field(name="target", user=user, table=table)
+
+
 def setup(data_fixture, target_field_factory):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
@@ -70,7 +86,14 @@ def setup(data_fixture, target_field_factory):
 
 
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_empty_value_filter_text_field_types(data_fixture, target_field_factory):
@@ -122,8 +145,58 @@ def test_has_empty_value_filter_text_field_types(data_fixture, target_field_fact
     assert row_1.id in ids
 
 
+@pytest.mark.django_db
+def test_has_empty_value_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_1 = test_setup.other_table_model.objects.create()
+    other_row_2 = test_setup.other_table_model.objects.create()
+    other_row_3 = test_setup.other_table_model.objects.create()
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [
+                other_row_1.id,
+                other_row_3.id,
+            ]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": []},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_2.id]},
+    )
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_empty_value",
+        value="",
+    )
+
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_not_empty_value_filter_text_field_types(
@@ -178,8 +251,58 @@ def test_has_not_empty_value_filter_text_field_types(
     assert row_3.id in ids
 
 
+@pytest.mark.django_db
+def test_has_not_empty_value_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_1 = test_setup.other_table_model.objects.create()
+    other_row_2 = test_setup.other_table_model.objects.create()
+    other_row_3 = test_setup.other_table_model.objects.create()
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [
+                other_row_1.id,
+                other_row_3.id,
+            ]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": []},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_2.id]},
+    )
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_not_empty_value",
+        value="",
+    )
+
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_value_equal_filter_text_field_types(data_fixture, target_field_factory):
@@ -265,8 +388,104 @@ def test_has_value_equal_filter_text_field_types(data_fixture, target_field_fact
     assert len(ids) == 3
 
 
+@pytest.mark.django_db
+def test_has_value_equal_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_A = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    other_row_B = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "188e1076-6c88-4bcc-893a-d0903c4169db"
+        }
+    )
+    other_row_C = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+        }
+    )
+    other_row_a = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_A.id, other_row_B.id]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_a.id]},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_B.id, other_row_a.id]
+        },
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_value_equal",
+        value="77545ce8-cbc0-4748-ba17-668b099a1ef8",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "77545CE8-cbc0-4748-ba17-668b099a1ef8"  # upper case
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_not_value_equal_filter_text_field_types(
@@ -348,8 +567,104 @@ def test_has_not_value_equal_filter_text_field_types(
     assert len(ids) == 3
 
 
+@pytest.mark.django_db
+def test_has_not_value_equal_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_A = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    other_row_B = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "188e1076-6c88-4bcc-893a-d0903c4169db"
+        }
+    )
+    other_row_C = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+        }
+    )
+    other_row_a = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_A.id, other_row_B.id]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_a.id]},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_B.id, other_row_a.id]
+        },
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_not_value_equal",
+        value="77545ce8-cbc0-4748-ba17-668b099a1ef8",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "77545CE8-cbc0-4748-ba17-668b099a1ef8"  # upper case
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_value_contains_filter_text_field_types(data_fixture, target_field_factory):
@@ -424,8 +739,116 @@ def test_has_value_contains_filter_text_field_types(data_fixture, target_field_f
     assert len(ids) == 4
 
 
+@pytest.mark.django_db
+def test_has_value_contains_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_A = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    other_row_B = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "188e1076-6c88-4bcc-893a-d0903c4169db"
+        }
+    )
+    other_row_C = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+        }
+    )
+    other_row_a = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_A.id, other_row_B.id]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_a.id]},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_B.id, other_row_a.id]
+        },
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_value_contains",
+        value="b099a1",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "B099a1"  # upper case
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "69db"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "xxx"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_not_value_contains_filter_text_field_types(
@@ -502,8 +925,115 @@ def test_has_not_value_contains_filter_text_field_types(
     assert len(ids) == 4
 
 
+@pytest.mark.django_db
+def test_has_not_value_contains_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_A = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    other_row_B = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "188e1076-6c88-4bcc-893a-d0903c4169db"
+        }
+    )
+    other_row_C = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+        }
+    )
+    other_row_a = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_A.id, other_row_B.id]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_a.id]},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_B.id, other_row_a.id]
+        },
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_not_value_contains",
+        value="b099a1",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "B099a1"  # upper case
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "69db"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 1
+    assert row_2.id in ids
+
+    view_filter.value = "xxx"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_value_contains_word_filter_text_field_types(
@@ -582,8 +1112,114 @@ def test_has_value_contains_word_filter_text_field_types(
     assert len(ids) == 4
 
 
+@pytest.mark.django_db
+def test_has_value_contains_word_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_A = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545ce8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    other_row_B = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "188e1076-6c88-4bcc-893a-d0903c4169db"
+        }
+    )
+    other_row_C = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+        }
+    )
+    other_row_a = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_A.id, other_row_B.id]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_a.id]},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_B.id, other_row_a.id]
+        },
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_value_contains_word",
+        value="77545CE8",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "77545ce8"  # lower case
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "69db"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "xxx"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_not_value_contains_word_filter_text_field_types(
@@ -662,8 +1298,114 @@ def test_has_not_value_contains_word_filter_text_field_types(
     assert len(ids) == 4
 
 
+@pytest.mark.django_db
+def test_has_not_value_contains_word_filter_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+
+    other_row_A = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545ce8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    other_row_B = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "188e1076-6c88-4bcc-893a-d0903c4169db"
+        }
+    )
+    other_row_C = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "720a3d55-6aac-4d86-a0ce-6049001a4f64"
+        }
+    )
+    other_row_a = test_setup.other_table_model.objects.create(
+        **{
+            f"field_{test_setup.target_field.id}": "77545CE8-cbc0-4748-ba17-668b099a1ef8"
+        }
+    )
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_A.id, other_row_B.id]
+        },
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_a.id]},
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_B.id, other_row_a.id]
+        },
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_not_value_contains_word",
+        value="77545CE8",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "77545ce8"  # lower case
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
+
+    view_filter.value = "69db"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = "xxx"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+
+
 @pytest.mark.parametrize(
-    "target_field_factory", [text_field_factory, long_text_field_factory]
+    "target_field_factory",
+    [
+        text_field_factory,
+        long_text_field_factory,
+        email_field_factory,
+        phone_number_field_factory,
+        url_field_factory,
+    ],
 )
 @pytest.mark.django_db
 def test_has_value_length_is_lower_than_text_field_types(
@@ -742,6 +1484,72 @@ def test_has_value_length_is_lower_than_text_field_types(
     assert row_1.id in ids
     assert row_2.id in ids
     assert row_3.id in ids
+
+    view_filter.value = ""
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 4
+
+
+@pytest.mark.django_db
+def test_has_value_length_is_lower_than_uuid_field_types(data_fixture):
+    test_setup = setup(data_fixture, uuid_field_factory)
+    other_row_1 = test_setup.other_table_model.objects.create()
+    other_row_2 = test_setup.other_table_model.objects.create()
+    row_1 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_1.id]},
+    )
+    row_2 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={
+            f"field_{test_setup.link_row_field.id}": [other_row_1.id, other_row_2.id]
+        },
+    )
+    row_3 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": [other_row_2.id]},
+    )
+    row_4 = test_setup.row_handler.create_row(
+        user=test_setup.user,
+        table=test_setup.table,
+        values={f"field_{test_setup.link_row_field.id}": []},
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=test_setup.grid_view,
+        field=test_setup.lookup_field,
+        type="has_value_length_is_lower_than",
+        value="37",
+    )
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "36"
+    view_filter.save()
+    ids = [
+        r.id
+        for r in test_setup.view_handler.apply_filters(
+            test_setup.grid_view, test_setup.model.objects.all()
+        ).all()
+    ]
+    assert len(ids) == 0
 
     view_filter.value = ""
     view_filter.save()
