@@ -14,7 +14,11 @@ export class HasEmptyValueViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -33,7 +37,11 @@ export class HasNotEmptyValueViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -56,7 +64,11 @@ export class HasValueEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -79,7 +91,11 @@ export class HasNotValueEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -102,7 +118,11 @@ export class HasValueContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -125,7 +145,11 @@ export class HasNotValueContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -148,7 +172,11 @@ export class HasValueContainsWordViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -171,7 +199,11 @@ export class HasNotValueContainsWordViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {
@@ -198,7 +230,11 @@ export class HasValueLengthIsLowerThanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return [FormulaFieldType.compatibleWithFormulaTypes('array(text)')]
+    return [
+      FormulaFieldType.compatibleWithFormulaTypes('array(text)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(char)'),
+      FormulaFieldType.compatibleWithFormulaTypes('array(url)'),
+    ]
   }
 
   matches(cellValue, filterValue, field, fieldType) {

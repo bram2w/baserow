@@ -10,6 +10,10 @@ from baserow.contrib.database.fields.filter_support import (
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import BaserowFormulaTextType
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaCharType,
+    BaserowFormulaURLType,
+)
 
 from .registries import ViewFilterType
 from .view_filters import NotViewFilterTypeMixin
@@ -25,6 +29,8 @@ class HasEmptyValueViewFilterType(ViewFilterType):
     compatible_field_types = [
         FormulaFieldType.compatible_with_formula_types(
             FormulaFieldType.array_of(BaserowFormulaTextType.type),
+            FormulaFieldType.array_of(BaserowFormulaCharType.type),
+            FormulaFieldType.array_of(BaserowFormulaURLType.type),
         ),
     ]
 
@@ -56,6 +62,8 @@ class HasValueEqualViewFilterType(ViewFilterType):
     compatible_field_types = [
         FormulaFieldType.compatible_with_formula_types(
             FormulaFieldType.array_of(BaserowFormulaTextType.type),
+            FormulaFieldType.array_of(BaserowFormulaCharType.type),
+            FormulaFieldType.array_of(BaserowFormulaURLType.type),
         ),
     ]
 
@@ -89,6 +97,8 @@ class HasValueContainsViewFilterType(ViewFilterType):
     compatible_field_types = [
         FormulaFieldType.compatible_with_formula_types(
             FormulaFieldType.array_of(BaserowFormulaTextType.type),
+            FormulaFieldType.array_of(BaserowFormulaCharType.type),
+            FormulaFieldType.array_of(BaserowFormulaURLType.type),
         ),
     ]
 
@@ -122,6 +132,8 @@ class HasValueContainsWordViewFilterType(ViewFilterType):
     compatible_field_types = [
         FormulaFieldType.compatible_with_formula_types(
             FormulaFieldType.array_of(BaserowFormulaTextType.type),
+            FormulaFieldType.array_of(BaserowFormulaCharType.type),
+            FormulaFieldType.array_of(BaserowFormulaURLType.type),
         ),
     ]
 
@@ -155,6 +167,8 @@ class HasValueLengthIsLowerThanViewFilterType(ViewFilterType):
     compatible_field_types = [
         FormulaFieldType.compatible_with_formula_types(
             FormulaFieldType.array_of(BaserowFormulaTextType.type),
+            FormulaFieldType.array_of(BaserowFormulaCharType.type),
+            FormulaFieldType.array_of(BaserowFormulaURLType.type),
         ),
     ]
 

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Extend array filters to support lookups of URL, email, phone number, and UUID fields",
+    "issue_number": 2819,
+    "bullet_points": [],
+    "created_at": "2024-07-18"
+}

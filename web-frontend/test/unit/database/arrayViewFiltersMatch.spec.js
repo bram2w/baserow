@@ -52,6 +52,16 @@ describe('Text-based array view filters', () => {
       formula_type: 'array',
       array_formula_type: 'text',
     },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'char',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'url',
+    },
   ]
 
   describe.each(hasValueEqualSupportedFields)(
@@ -128,6 +138,16 @@ describe('Text-based array view filters', () => {
       TestFieldType: FormulaFieldType,
       formula_type: 'array',
       array_formula_type: 'text',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'char',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'url',
     },
   ]
 
@@ -211,6 +231,16 @@ describe('Text-based array view filters', () => {
       formula_type: 'array',
       array_formula_type: 'text',
     },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'char',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'url',
+    },
   ]
 
   describe.each(hasValueContainsWordSupportedFields)(
@@ -283,6 +313,16 @@ describe('Text-based array view filters', () => {
       TestFieldType: FormulaFieldType,
       formula_type: 'array',
       array_formula_type: 'text',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'char',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'url',
     },
   ]
 
@@ -360,6 +400,16 @@ describe('Text-based array view filters', () => {
       TestFieldType: FormulaFieldType,
       formula_type: 'array',
       array_formula_type: 'text',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'char',
+    },
+    {
+      TestFieldType: FormulaFieldType,
+      formula_type: 'array',
+      array_formula_type: 'url',
     },
   ]
 
