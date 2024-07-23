@@ -276,7 +276,11 @@ export const registerRealtimeEvents = (realtime) => {
     const view = store.getters['view/get'](data.view.id)
     if (view !== undefined) {
       const oldView = clone(view)
-      store.dispatch('view/forceUpdate', { view, values: data.view })
+      store.dispatch('view/forceUpdate', {
+        view,
+        values: data.view,
+        repopulate: true,
+      })
 
       if (view.id === store.getters['view/getSelectedId']) {
         const viewType = app.$registry.get('view', view.type)

@@ -92,4 +92,20 @@ export default class MockPremiumServer extends MockServer {
       .onPatch(`/database/view/${viewId}/premium`, expectedContents)
       .reply(200, expectedContents)
   }
+
+  expectCalendarViewUpdate(viewId, expectedContents) {
+    this.mock
+      .onPatch(`/database/views/${viewId}/`, { ical_public: true })
+      .reply((config) => {
+        return [200, expectedContents]
+      })
+  }
+
+  expectCalendarRefreshShareURLUpdate(viewId, expectedContents) {
+    this.mock
+      .onPost(`/database/views/calendar/${viewId}/ical_slug_rotate/`)
+      .reply((config) => {
+        return [200, expectedContents]
+      })
+  }
 }

@@ -58,7 +58,7 @@ from .exceptions import (
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
-    from baserow.contrib.database.table.models import Table
+    from baserow.contrib.database.table.models import FieldObject, Table
     from baserow.contrib.database.views.models import FormView, View
 
 
@@ -481,7 +481,7 @@ class ViewType(
 
     def get_visible_fields_and_model(
         self, view: "View"
-    ) -> Tuple[List["Field"], django_models.Model]:
+    ) -> Tuple[List["FieldObject"], django_models.Model]:
         """
         Returns the field objects for the provided view. Depending on the view type this
         will only return the visible or appropriate fields as different view types can

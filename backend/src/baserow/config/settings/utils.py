@@ -116,6 +116,13 @@ def str_to_bool(s: str) -> bool:
     return s.lower().strip() in ("y", "yes", "t", "true", "on", "1")
 
 
+def try_int(s: str | int | None, default: Any = None) -> int | None:
+    try:
+        return int(s)
+    except (TypeError, ValueError):
+        return default
+
+
 def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
     """
     Parses a crontab from an environment variable if present or instead uses the

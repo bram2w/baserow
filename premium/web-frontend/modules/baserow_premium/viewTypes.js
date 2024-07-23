@@ -10,6 +10,8 @@ import CalendarViewHeader from '@baserow_premium/components/views/calendar/Calen
 import PremiumModal from '@baserow_premium/components/PremiumModal'
 import PremiumFeatures from '@baserow_premium/features'
 import { isAdhocFiltering } from '@baserow/modules/database/utils/view'
+import CalendarCreateIcalSharedViewLink from '@baserow_premium/components/views/calendar/CalendarCreateIcalSharedViewLink'
+import CalendarSharingIcalSlugSection from '@baserow_premium/components/views/calendar/CalendarSharingIcalSlugSection'
 
 class PremiumViewType extends ViewType {
   getDeactivatedText() {
@@ -22,6 +24,10 @@ class PremiumViewType extends ViewType {
 
   isDeactivated(workspaceId) {
     return !this.app.$hasFeature(PremiumFeatures.PREMIUM, workspaceId)
+  }
+
+  getAdditionalShareLinkOptions() {
+    return []
   }
 }
 
@@ -449,5 +455,33 @@ export class CalendarViewType extends PremiumViewType {
         { root: true }
       )
     }
+  }
+
+  getAdditionalCreateShareLinkOptions() {
+    return [CalendarCreateIcalSharedViewLink]
+  }
+
+  getAdditionalDisableSharedLinkOptions() {
+    return [CalendarCreateIcalSharedViewLink]
+  }
+
+  getAdditionalSharingSections() {
+    return [CalendarSharingIcalSlugSection]
+  }
+
+  getSharedViewText() {
+    return this.app.i18n.t('calendarViewType.sharedViewText')
+  }
+
+  isShared(view) {
+    return !!view.public || !!view.ical_public
+  }
+
+  populate(view) {
+    Object.assign(view, {
+      createShareViewText: this.getSharedViewText(),
+    })
+
+    return view
   }
 }

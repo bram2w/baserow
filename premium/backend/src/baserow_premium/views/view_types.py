@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Set
 from zipfile import ZipFile
 
+from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import Storage
 from django.db.models import Q
 from django.urls import include, path
@@ -14,6 +15,7 @@ from baserow_premium.api.views.kanban.errors import (
 from baserow_premium.api.views.kanban.serializers import (
     KanbanViewFieldOptionsSerializer,
 )
+from rest_framework.fields import BooleanField, CharField
 from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.contrib.database.api.fields.errors import (
@@ -273,15 +275,39 @@ class CalendarViewType(ViewType):
     model_class = CalendarView
     field_options_model_class = CalendarViewFieldOptions
     field_options_serializer_class = CalendarViewFieldOptionsSerializer
-    allowed_fields = ["date_field"]
+    allowed_fields = [
+        "date_field",
+        "ical_public",
+    ]
     field_options_allowed_fields = ["hidden", "order"]
-    serializer_field_names = ["date_field"]
+
+    # We don't expose CalendarView.ical_slug directly only through ical_feed_url
+    # property. When the user wants to change ical feed publicity status, the frontend
+    # needs to send ical_public flag only.
+    serializer_field_names = [
+        "date_field",
+        "ical_feed_url",
+        "ical_public",
+    ]
     serializer_field_overrides = {
         "date_field": PrimaryKeyRelatedField(
             queryset=Field.objects.all(),
             required=False,
             default=None,
             allow_null=True,
+        ),
+        "ical_feed_url": CharField(
+            read_only=True,
+            help_text="Read-only field with ICal feed endpoint. "
+            "Note: this url will not be active if "
+            "ical_public value is set to False.",
+        ),
+        "ical_public": BooleanField(
+            allow_null=True,
+            default=None,
+            help_text="A flag to show if ical feed is exposed. "
+            "Set this field to True when modifying "
+            "this resource to enable ICal feed url.",
         ),
     }
     api_exceptions_map = {
@@ -298,6 +324,14 @@ class CalendarViewType(ViewType):
         return [
             path("calendar/", include(api_urls, namespace=self.type)),
         ]
+
+    def before_view_create(self, values: dict, table: "Table", user: "AbstractUser"):
+        if values.get("ical_public"):
+            values["ical_slug"] = View.create_new_slug()
+
+    def before_view_update(self, values: dict, table: "Table", user: "AbstractUser"):
+        if values.get("ical_public") and not table.ical_slug:
+            table.ical_slug = View.create_new_slug()
 
     def prepare_values(self, values, table, user):
         """

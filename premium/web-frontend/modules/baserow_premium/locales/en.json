@@ -195,6 +195,13 @@
         "tryAgain": "Try again",
         "new": "New"
     },
+  "calendarViewType": {
+    "sharedViewText": "Allow anyone to see the data in this view or sync events to your external calendar.",
+    "sharedViewEnableSyncToExternalCalendar": "Sync to an external calendar",
+    "sharedViewDisableSyncToExternalCalendar": "Disable external sync",
+    "sharedViewDescription": "Paste this link into your calendar application",
+    "sharedViewTitle": "Sync to an external calendar"
+  },
     "calendarViewHeader": {
         "displayBy": "Display by",
         "displayedBy": "Displayed by “{fieldName}” field",

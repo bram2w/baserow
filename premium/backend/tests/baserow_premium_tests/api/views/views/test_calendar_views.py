@@ -1,4 +1,6 @@
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
+from functools import partial
+from unittest import mock
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
@@ -10,6 +12,8 @@ from django.utils import timezone as django_timezone
 import pytest
 from baserow_premium.views.models import CalendarView, CalendarViewFieldOptions
 from freezegun import freeze_time
+from icalendar import Calendar
+from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -275,13 +279,11 @@ def test_list_all_rows(api_client, premium_data_fixture):
     ]
     model = table.get_model()
 
-    for datetime in datetimes:
+    for dt in datetimes:
         model.objects.create(
             **{
                 f"field_{date_field.id}": (
-                    datetime.replace(tzinfo=timezone.utc)
-                    if datetime is not None
-                    else None
+                    dt.replace(tzinfo=timezone.utc) if dt is not None else None
                 ),
             }
         )
@@ -362,13 +364,11 @@ def test_list_all_rows_limit_offset(api_client, premium_data_fixture):
     ]
     model = table.get_model()
 
-    for datetime in datetimes:
+    for dt in datetimes:
         for i in range(5):
             model.objects.create(
                 **{
-                    f"field_{date_field.id}": datetime.replace(
-                        hour=i, tzinfo=timezone.utc
-                    ),
+                    f"field_{date_field.id}": dt.replace(hour=i, tzinfo=timezone.utc),
                 }
             )
 
@@ -951,6 +951,10 @@ def test_get_public_calendar_view_with_single_select_and_cover(
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
+    assert calendar_view.ical_public is False
+    assert calendar_view.ical_slug is None
+    assert calendar_view.ical_feed_url is None
+
     assert response_json == {
         "fields": [
             {
@@ -995,6 +999,8 @@ def test_get_public_calendar_view_with_single_select_and_cover(
             "type": "calendar",
             "date_field": date_field.id,
             "show_logo": True,
+            "ical_public": False,
+            "ical_feed_url": calendar_view.ical_feed_url,
         },
     }
 
@@ -1276,3 +1282,442 @@ def test_search_calendar_with_empty_term(api_client, premium_data_fixture):
     )
 
     assert total_results == 5
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_view_ical_feed_sharing(
+    premium_data_fixture, api_client, data_fixture
+):
+    """
+    Test ical feed sharing
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    regular_user = data_fixture.create_user()
+    regular_token = data_fixture.generate_token(user=regular_user)
+    table = premium_data_fixture.create_database_table(user=user)
+    date_field = premium_data_fixture.create_date_field(table=table)
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        date_field=date_field,
+    )
+
+    assert not calendar_view.ical_public
+    assert not calendar_view.ical_feed_url
+    req_post = partial(
+        api_client.post, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    req_patch = partial(
+        api_client.patch, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    # step 1: make ical feed public
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+
+    assert resp.status_code == HTTP_200_OK
+
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_slug
+    assert resp.data.get("ical_feed_url") == calendar_view.ical_feed_url
+    assert resp.data.get("ical_public")
+
+    # step 2: disable the view
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": False},
+    )
+
+    assert resp.status_code == HTTP_200_OK
+
+    calendar_view.refresh_from_db()
+    # slug stays the same
+    assert calendar_view.ical_slug
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_public is False
+    assert resp.data.get("ical_feed_url") == calendar_view.ical_feed_url
+    assert resp.data.get("ical_public") is False
+
+    # step 3: reenable ical feed
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+
+    assert resp.status_code == HTTP_200_OK
+
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    feed_url = calendar_view.ical_feed_url
+
+    # step 4: rotate ical slug
+    resp: Response = req_post(
+        reverse(
+            "api:database:views:calendar:ical_slug_rotate",
+            kwargs={"view_id": calendar_view.id},
+        ),
+        {},
+    )
+
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_feed_url != feed_url
+    feed_url = calendar_view.ical_feed_url
+    assert resp.data.get("ical_feed_url") == calendar_view.ical_feed_url
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_view_ical_feed_contents(
+    premium_data_fixture, api_client, data_fixture
+):
+    """
+    Basic ical feed functionality test
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    table = premium_data_fixture.create_database_table(user=user)
+    field_title = data_fixture.create_text_field(table=table, user=user)
+    field_description = data_fixture.create_text_field(table=table, user=user)
+    field_extra = data_fixture.create_text_field(table=table, user=user)
+    field_num = data_fixture.create_number_field(table=table, user=user)
+
+    date_field = premium_data_fixture.create_date_field(table=table)
+
+    all_fields = [field_title, field_description, field_extra, field_num, date_field]
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        date_field=date_field,
+    )
+    tmodel = table.get_model()
+    NUM_EVENTS = 20
+
+    def make_values(num):
+        curr = 0
+        field_names = [f"field_{f.id}" for f in all_fields]
+        start = datetime.now()
+        while curr < num:
+            values = [
+                f"title {curr}",
+                f"description {curr}",
+                f"extra {curr}",
+                curr,
+                start + timedelta(days=1, hours=curr),
+            ]
+            curr += 1
+            row = dict(zip(field_names, values))
+            tmodel.objects.create(**row)
+
+    make_values(NUM_EVENTS)
+
+    assert not calendar_view.ical_public
+    assert not calendar_view.ical_feed_url
+    req_get = partial(api_client.get, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    req_patch = partial(
+        api_client.patch, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    # make ical feed public
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+
+    assert resp.status_code == HTTP_200_OK
+
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_slug
+    assert resp.data.get("ical_feed_url") == calendar_view.ical_feed_url
+
+    visible_a = {f.id: {"hidden": True} for f in all_fields}
+    visible_a.update(
+        {
+            field_num.id: {"hidden": False, "order": 1},
+            field_extra.id: {"hidden": False, "order": 2},
+        }
+    )
+    resp = req_patch(
+        reverse(
+            "api:database:views:field_options", kwargs={"view_id": calendar_view.id}
+        ),
+        {"field_options": visible_a},
+    )
+    assert resp.status_code == HTTP_200_OK, resp.content
+
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.ical_slug},
+        )
+    )
+    assert resp.status_code == HTTP_200_OK
+    assert resp.headers.get("content-type") == "text/calendar", resp.headers
+    assert resp.content
+    # parse generated feed
+    feed = Calendar.from_ical(resp.content)
+    assert feed
+    assert feed.get("PRODID") == "Baserow / baserow.io"
+    evsummary = [ev.get("description") for ev in feed.walk("VEVENT")]
+    assert len(evsummary) == NUM_EVENTS
+    assert evsummary[0] == "0 - extra 0"
+    assert evsummary[1] == "1 - extra 1"
+
+    visible_a.update(
+        {
+            field_num.id: {"hidden": False, "order": 2},
+            field_extra.id: {"hidden": False, "order": 1},
+        }
+    )
+    resp = req_patch(
+        reverse(
+            "api:database:views:field_options", kwargs={"view_id": calendar_view.id}
+        ),
+        {"field_options": visible_a},
+    )
+    assert resp.status_code == HTTP_200_OK, resp.content
+
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.ical_slug},
+        )
+    )
+
+    assert resp.status_code == HTTP_200_OK
+    assert resp.headers.get("content-type") == "text/calendar", resp.headers
+    assert resp.content
+    # parse generated feed
+    feed = Calendar.from_ical(resp.content)
+    assert feed
+    assert feed.get("PRODID") == "Baserow / baserow.io"
+    evsummary = [ev.get("description") for ev in feed.walk("VEVENT")]
+    assert len(evsummary) == NUM_EVENTS
+    assert evsummary[1] == "extra 1 - 1"
+
+    with override_settings(BASEROW_ICAL_VIEW_MAX_EVENTS=5):
+        resp = req_get(
+            reverse(
+                "api:database:views:calendar:calendar_ical_feed",
+                kwargs={"ical_slug": calendar_view.ical_slug},
+            )
+        )
+        assert resp.status_code == HTTP_200_OK
+        assert resp.headers.get("content-type") == "text/calendar", resp.headers
+        assert resp.content
+        # parse generated feed
+        feed = Calendar.from_ical(resp.content)
+        assert feed
+        assert feed.get("PRODID") == "Baserow / baserow.io"
+        evsummary = [ev.get("description") for ev in feed.walk("VEVENT")]
+        assert len(evsummary) == 5
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_view_ical_feed_invalid_references(
+    premium_data_fixture, api_client, data_fixture
+):
+    """
+    Test if calendar is not accessible using invalid reference values
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    regular_user = data_fixture.create_user()
+    regular_token = data_fixture.generate_token(regular_user)
+    table = premium_data_fixture.create_database_table(user=user)
+    date_field = premium_data_fixture.create_date_field(table=table)
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        date_field=date_field,
+        ical_public=False,
+        ical_slug=View.create_new_slug(),
+    )
+
+    req_get = partial(api_client.get, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    req_patch = partial(
+        api_client.patch, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    req_post = partial(
+        api_client.post, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.ical_slug},
+        )
+    )
+    assert resp.status_code == HTTP_404_NOT_FOUND
+
+    # make ical feed public
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+
+    assert resp.status_code == HTTP_200_OK
+    assert resp.data["ical_feed_url"]
+    assert resp.data["ical_public"]
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_slug
+    assert resp.data.get("ical_feed_url") == calendar_view.ical_feed_url
+    feed_url = calendar_view.ical_feed_url
+
+    # check feed url availability
+    resp = req_get(feed_url)
+    assert resp.status_code == HTTP_200_OK
+    assert resp.headers["Content-Type"] == "text/calendar"
+
+    # few possible invalid urls
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": "phony"},
+        )
+    )
+    assert resp.status_code == HTTP_404_NOT_FOUND
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.id},
+        )
+    )
+    assert resp.status_code == HTTP_404_NOT_FOUND
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.slug},
+        )
+    )
+    assert resp.status_code == HTTP_404_NOT_FOUND
+
+    # rather won't happen, but a view can be non-shareable
+    with mock.patch(
+        "baserow_premium.views.view_types.CalendarViewType.can_share", False
+    ):
+        resp: Response = req_post(
+            reverse(
+                "api:database:views:calendar:ical_slug_rotate",
+                kwargs={"view_id": calendar_view.id},
+            ),
+            {},
+        )
+        assert resp.status_code == HTTP_400_BAD_REQUEST
+        assert resp.data["error"] == "ERROR_CANNOT_SHARE_VIEW_TYPE"
+
+    # sanity check - the view should remain
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_feed_url == feed_url
+
+    # invalid user check
+    resp: Response = req_post(
+        reverse(
+            "api:database:views:calendar:ical_slug_rotate",
+            kwargs={"view_id": calendar_view.id},
+        ),
+        {},
+        HTTP_AUTHORIZATION=f"JWT {regular_token}",
+    )
+
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+    assert resp.data["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_view_ical_no_date_field(
+    premium_data_fixture, api_client, data_fixture
+):
+    """
+    Test if calendar is not accessible using invalid reference values
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    regular_user = data_fixture.create_user()
+    regular_token = data_fixture.generate_token(regular_user)
+    table = premium_data_fixture.create_database_table(user=user)
+    date_field = premium_data_fixture.create_date_field(table=table)
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        ical_public=False,
+        ical_slug=View.create_new_slug(),
+    )
+    assert not calendar_view.date_field
+
+    req_get = partial(api_client.get, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    req_patch = partial(
+        api_client.patch, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    req_post = partial(
+        api_client.post, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.ical_slug},
+        )
+    )
+    assert resp.status_code == HTTP_404_NOT_FOUND
+
+    # make ical feed public
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+
+    assert resp.status_code == HTTP_200_OK
+    assert resp.data["ical_feed_url"]
+    assert resp.data["ical_public"]
+    calendar_view.refresh_from_db()
+    assert calendar_view.ical_public
+    assert calendar_view.ical_feed_url
+    assert calendar_view.ical_slug
+    assert resp.data.get("ical_feed_url") == calendar_view.ical_feed_url
+    feed_url = calendar_view.ical_feed_url
+
+    # check feed url availability
+    resp = req_get(feed_url)
+    assert resp.status_code == HTTP_400_BAD_REQUEST
+
+    assert resp.data["error"] == "ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD"

@@ -14,7 +14,10 @@ from baserow.core.datetime import get_timezones
 class CalendarViewFieldOptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CalendarViewFieldOptions
-        fields = ("hidden", "order")
+        fields = (
+            "hidden",
+            "order",
+        )
 
 
 class ListCalendarRowsQueryParamsSerializer(serializers.Serializer):
