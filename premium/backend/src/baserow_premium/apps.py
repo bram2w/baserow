@@ -45,6 +45,7 @@ class BaserowPremiumConfig(AppConfig):
 
         from .export.exporter_types import JSONTableExporter, XMLTableExporter
         from .plugins import PremiumPlugin
+        from .views.actions import RotateCalendarIcalSlugActionType
         from .views.decorator_types import (
             BackgroundColorDecoratorType,
             LeftBorderColorDecoratorType,
@@ -97,6 +98,7 @@ class BaserowPremiumConfig(AppConfig):
         action_type_registry.register(CreateRowCommentActionType())
         action_type_registry.register(DeleteRowCommentActionType())
         action_type_registry.register(UpdateRowCommentActionType())
+        action_type_registry.register(RotateCalendarIcalSlugActionType())
 
         from .row_comments.operations import (
             CreateRowCommentsOperationType,

@@ -31,13 +31,20 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import ViewService from '@baserow/modules/database/services/view'
 
 export default {
   name: 'ViewRotateSlugModal',
   mixins: [modal, error],
   props: {
     view: {
+      type: Object,
+      required: true,
+    },
+    /**
+     * Service to call to rotate the slug.
+     * It should have .rotateSlug(viewId) method.
+     */
+    service: {
       type: Object,
       required: true,
     },
@@ -58,9 +65,7 @@ export default {
       this.loading = true
 
       try {
-        const { data } = await ViewService(this.$client).rotateSlug(
-          this.view.id
-        )
+        const { data } = await this.service.rotateSlug(this.view.id)
         await this.$store.dispatch('view/forceUpdate', {
           view: this.view,
           values: data,

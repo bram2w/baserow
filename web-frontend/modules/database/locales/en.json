@@ -479,16 +479,19 @@
     "add": "Add {view}"
   },
   "shareViewLink": {
+    "shareViewText": "Private shareable link allows anyone to see the data in this view.",
     "shareView": "Share {viewTypeSharingLinkName}",
-    "shareViewTitle": "Create a private shareable link to the {viewTypeSharingLinkName}",
+    "shareViewLinkTitle": "Create a private link",
+    "shareViewTitle": "You have not yet shared the view",
     "sharedViewTitle": "This {viewTypeSharingLinkName} is currently shared via a private link",
     "sharedViewDescription": "People who have the link can see the {viewTypeSharingLinkName}.",
-    "disableLink": "disable shared link",
+    "disableLink": "Disable shared link",
     "generateNewUrl": "generate new url",
     "copyURL": "copy URL",
     "EnablePassword": "Restrict access with a password",
     "DisablePassword": "Access is password-protected",
-    "ChangePassword": "Change"
+    "ChangePassword": "Change",
+    "notSharedYetText": "Allow anyone to see the data in this view or sync events to your external calendar."
   },
   "viewGroupByContext": {
     "noGroupByTitle": "You have not yet created any groupings",

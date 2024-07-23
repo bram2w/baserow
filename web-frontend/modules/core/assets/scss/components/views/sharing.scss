@@ -1,13 +1,62 @@
-.view-sharing__create-link {
+/**
+ layout changes for shared links (smaller padding)
+ for not-yet shared use `share` naming
+ for shared use `shared` naming
+ */
+
+.view-sharing {
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+
+  &--scrollable {
+    overflow-y: scroll;
+  }
+}
+
+.view-sharing__create-link-container {
+  display: flex;
+  align-items: center;
+}
+
+.view-sharing__loading-icon {
   display: block;
-  line-height: 56px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0 20px;
-  color: $color-neutral-900;
+  width: 16px;
+  height: 16px;
+  border: 2px;
+  margin-left: 4px;
+  margin-right: 16px;
+  top: -2px;
+  position: relative;
 
   @include rounded($rounded-md);
-  @include flex-align-items(20px);
+
+  &::before {
+    content: '';
+    z-index: 1;
+
+    @include loading(14px);
+  }
+}
+
+.view-sharing__create-link {
+  display: flex;
+  column-gap: 8px;
+  justify-items: center;
+  line-height: 36px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 12px;
+  margin-top: 36px;
+  margin-right: 12px;
+  color: $palette-neutral-1200;
+  border: solid 1px $palette-neutral-400;
+
+  @include rounded($rounded-md);
+
+  &:last-child {
+    margin-right: 0;
+  }
 
   &:hover {
     text-decoration: none;
@@ -24,53 +73,110 @@
   }
 }
 
+/** icons */
 .view-sharing__create-link-icon {
-  color: $color-warning-500;
-  font-size: 20px;
+  color: $palette-neutral-900;
+  font-size: 16px;
 
   .view-sharing__create-link--disabled & {
     color: $color-neutral-500;
   }
 }
 
+.view-sharing__share-link-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-sharing__share-link {
+  padding: 48px 80px;
+  text-align: center;
+  box-sizing: content-box;
+  min-width: 460px;
+}
+
 .view-sharing__shared-link {
-  padding: 25px;
+  padding: 20px;
+  text-align: left;
+  box-sizing: content-box;
+  max-width: 624px;
+  color: $palette-neutral-900;
+  border-top: solid 1px $palette-neutral-200;
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.view-sharing__share-link-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: $palette-neutral-1200;
+}
+
+.view-sharing__share-link-description {
+  font-size: 12px;
+  font-weight: normal;
+  margin-top: 16px;
+  color: $palette-neutral-900;
 }
 
 .view-sharing__shared-link-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  margin-bottom: 8px;
+  color: $palette-neutral-1200;
 }
 
 .view-sharing__shared-link-description {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  margin-bottom: 8px;
+}
+
+.view-sharing__share-link-content {
+  display: flex;
   margin-bottom: 15px;
 }
 
 .view-sharing__shared-link-content {
   display: flex;
-  margin-bottom: 15px;
+  align-items: center;
 }
 
 .view-sharing__shared-link-box {
-  background-color: $color-neutral-100;
+  background-color: $palette-neutral-100;
   line-height: 32px;
   padding: 0 8px;
   font-family: monospace;
   font-size: 10px;
-  min-width: 0;
+  width: 516px;
+  border: solid 1px $palette-neutral-400;
+  overscroll-behavior: none;
+  margin: 8px 0;
+  height: 32px;
 
+  @include scrollable-overflow;
   @include rounded($rounded);
+
+  &.view-sharing__shared-link-box--short {
+    width: 484px;
+  }
 }
 
 .view-sharing__shared-link-action {
   position: relative;
   width: 32px;
-  margin-left: 8px;
+  height: 32px;
+  vertical-align: center;
+  margin-left: 4px;
   line-height: 32px;
-  color: $color-neutral-900;
   font-size: 14px;
   text-align: center;
+  color: $palette-neutral-900;
 
   @include rounded($rounded);
 
@@ -94,7 +200,6 @@
   }
 
   &.view-sharing__shared-link-action--disabled {
-    color: $color-neutral-900;
     background-color: transparent;
 
     &:hover {
@@ -105,21 +210,26 @@
 
 .view-sharing__shared-link-foot {
   display: flex;
-  justify-content: space-between;
+  justify-content: left;
+  gap: 20px;
+  padding: 16px;
+  line-height: 20px;
+  border-top: solid 1px $palette-neutral-200;
 }
 
 .view-sharing__shared-link-disable {
-  @include flex-align-items(4px);
+  @include flex-align-items(8px);
 
-  color: $color-error-500;
+  color: $palette-neutral-900;
 }
 
 .view-sharing__shared-link-options {
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin-top: 14px;
 }
 
 .view-sharing__option {
+  margin-top: 14px;
+
   @include flex-align-items(4px);
 
   &--disabled {
@@ -143,6 +253,5 @@ p.box__description {
 
   &:hover {
     text-decoration: none;
-    color: $color-neutral-900;
   }
 }

@@ -641,16 +641,19 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
     def get_view(
         self,
-        view_id: int,
+        view_id: int | str,
         view_model: Optional[Type[View]] = None,
         base_queryset: Optional[QuerySet] = None,
         table_id: Optional[int] = None,
+        pk_field: str = "pk",
     ) -> View:
         """
         Selects a view and checks if the user has access to that view.
         If everything is fine the view is returned.
 
-        :param view_id: The identifier of the view that must be returned.
+        :param view_id: The identifier of the view that must be returned. By default
+            it's primary key value, but `pk_field` param allows to query by another
+            unique field.
         :param view_model: If provided that models objects are used to select the
             view. This can for example be useful when you want to select a GridView or
             other child of the View model.
@@ -659,6 +662,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             if this is used the `view_model` parameter doesn't work anymore.
         :params table_id: The table id of the view. This is used to check if the
             view is in the table. If not provided the view is not checked.
+        :param pk_field: name of unique field to query for `view_id` value.
+            `'pk'` by default,
         :raises ViewDoesNotExist: When the view with the provided id does not exist.
         :return: the view instance.
         """
@@ -671,7 +676,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         try:
             view = base_queryset.select_related("table__database__workspace").get(
-                pk=view_id
+                **{pk_field: view_id}
             )
         except View.DoesNotExist as exc:
             raise ViewDoesNotExist(
@@ -2959,7 +2964,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         return queryset.aggregate(**aggregation_dict)
 
-    def rotate_view_slug(self, user: AbstractUser, view: View) -> View:
+    def rotate_view_slug(
+        self, user: AbstractUser, view: View, slug_field: str = "slug"
+    ) -> View:
         """
         Rotates the slug of the provided view.
 
@@ -2969,9 +2976,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         new_slug = View.create_new_slug()
-        return self.update_view_slug(user, view, new_slug)
+        return self.update_view_slug(user, view, new_slug, slug_field)
 
-    def update_view_slug(self, user: AbstractUser, view: View, slug: str) -> View:
+    def update_view_slug(
+        self, user: AbstractUser, view: View, slug: str, slug_field: str = "slug"
+    ) -> View:
         """
         Updates the slug of the provided view.
 
@@ -2993,7 +3002,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
         old_view = deepcopy(view)
 
-        view.slug = slug
+        setattr(view, slug_field, slug)
         view.save()
 
         view_updated.send(self, view=view, user=user, old_view=old_view)

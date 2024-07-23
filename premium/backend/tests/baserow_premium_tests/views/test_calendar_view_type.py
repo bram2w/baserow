@@ -1,24 +1,32 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from functools import partial
 from io import BytesIO
+from urllib.parse import urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 from zoneinfo import ZoneInfo
 
 from django.core.files.storage import FileSystemStorage
+from django.urls import reverse
 from django.utils import timezone as django_timezone
 
 import pytest
+from baserow_premium.ical_utils import build_calendar
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
 from baserow_premium.views.handler import (
     generate_per_day_intervals,
     get_rows_grouped_by_date_field,
     to_midnight,
 )
-from baserow_premium.views.models import CalendarViewFieldOptions
+from baserow_premium.views.models import CalendarView, CalendarViewFieldOptions
+from icalendar import Calendar
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.action.scopes import ViewActionScopeType
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.views.actions import UpdateViewActionType
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
@@ -942,3 +950,308 @@ def test_calendar_view_hierarchy(premium_data_fixture):
     calendar_view_field_options = calendar_view.get_field_options()[0]
     assert calendar_view_field_options.get_parent() == calendar_view
     assert calendar_view_field_options.get_root() == workspace
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_view_ical_feed_timestamps(
+    premium_data_fixture, api_client, data_fixture
+):
+    """
+    Test ical feed with calendar with datetime field
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    table = premium_data_fixture.create_database_table(user=user)
+    field_title = data_fixture.create_text_field(table=table, user=user)
+    field_description = data_fixture.create_text_field(table=table, user=user)
+    field_extra = data_fixture.create_text_field(table=table, user=user)
+    field_num = data_fixture.create_number_field(table=table, user=user)
+    date_field = premium_data_fixture.create_date_field(
+        table=table,
+        date_include_time=True,
+    )
+    all_fields = [field_title, field_description, field_extra, field_num, date_field]
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        date_field=date_field,
+    )
+    tmodel = table.get_model()
+    NUM_EVENTS = 5
+
+    amsterdam = ZoneInfo("Europe/Amsterdam")
+    start = datetime.now(tz=amsterdam).replace(microsecond=0)
+
+    def make_values(num):
+        curr = 0
+        field_names = [f"field_{f.id}" for f in all_fields]
+
+        while curr < num:
+            values = [
+                f"title {curr}",
+                f"description {curr}",
+                f"extra {curr}",
+                curr,
+                start + timedelta(days=1, hours=curr),
+            ]
+            curr += 1
+            row = dict(zip(field_names, values))
+            tmodel.objects.create(**row)
+
+    make_values(NUM_EVENTS)
+
+    assert not calendar_view.ical_public
+    assert not calendar_view.ical_feed_url
+    req_get = partial(api_client.get, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    req_patch = partial(
+        api_client.patch, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    # make ical feed public
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+    assert resp.status_code == HTTP_200_OK
+    assert resp.data["ical_feed_url"]
+    calendar_view.refresh_from_db()
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.ical_slug},
+        )
+    )
+
+    assert resp.status_code == HTTP_200_OK
+    assert resp.headers.get("content-type") == "text/calendar", resp.headers
+    assert resp.content
+    # parse generated feed
+    feed = Calendar.from_ical(resp.content)
+    assert feed
+    assert feed.get("PRODID") == "Baserow / baserow.io"
+    evstart = [ev.get("DTSTART") for ev in feed.walk("VEVENT")]
+
+    assert len(evstart) == NUM_EVENTS
+    for idx, elm in enumerate(evstart):
+        # elm.dt is tz-aware, but tz will be +00:00
+        assert elm.dt.utcoffset() == timedelta(0), elm.dt.utcoffset()
+        assert elm.dt - (start + timedelta(days=1, hours=idx)) == timedelta(0)
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_view_ical_feed_dates(premium_data_fixture, api_client, data_fixture):
+    """
+    Test ical feed with calendar with date field
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    table = premium_data_fixture.create_database_table(user=user)
+    field_title = data_fixture.create_text_field(table=table, user=user)
+    field_description = data_fixture.create_text_field(table=table, user=user)
+    field_extra = data_fixture.create_text_field(table=table, user=user)
+    field_num = data_fixture.create_number_field(table=table, user=user)
+    date_field = premium_data_fixture.create_date_field(
+        table=table,
+        date_include_time=False,
+    )
+    all_fields = [field_title, field_description, field_extra, field_num, date_field]
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        date_field=date_field,
+    )
+    tmodel = table.get_model()
+    NUM_EVENTS = 5
+
+    start = date.today()
+
+    def make_values(num):
+        curr = 0
+        field_names = [f"field_{f.id}" for f in all_fields]
+
+        while curr < num:
+            values = [
+                f"title {curr}",
+                f"description {curr}",
+                f"extra {curr}",
+                curr,
+                start + timedelta(days=1 + curr),
+            ]
+            curr += 1
+            row = dict(zip(field_names, values))
+            tmodel.objects.create(**row)
+
+    make_values(NUM_EVENTS)
+
+    assert not calendar_view.ical_public
+    assert not calendar_view.ical_feed_url
+    req_get = partial(api_client.get, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    req_patch = partial(
+        api_client.patch, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    # make ical feed public
+    resp: Response = req_patch(
+        reverse("api:database:views:item", kwargs={"view_id": calendar_view.id}),
+        {"ical_public": True},
+    )
+    assert resp.status_code == HTTP_200_OK
+    assert resp.data["ical_feed_url"]
+    calendar_view.refresh_from_db()
+    resp = req_get(
+        reverse(
+            "api:database:views:calendar:calendar_ical_feed",
+            kwargs={"ical_slug": calendar_view.ical_slug},
+        )
+    )
+
+    assert resp.status_code == HTTP_200_OK
+    assert resp.headers.get("content-type") == "text/calendar", resp.headers
+    assert resp.content
+    # parse generated feed
+    feed = Calendar.from_ical(resp.content)
+    assert feed
+    assert feed.get("PRODID") == "Baserow / baserow.io"
+    evstart = [ev.get("DTSTART") for ev in feed.walk("VEVENT")]
+
+    assert len(evstart) == NUM_EVENTS
+    for idx, elm in enumerate(evstart):
+        # elm.dt is a date
+        assert isinstance(elm.dt, date)
+        assert elm.dt == start + timedelta(days=1 + idx)
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_ical_utils_queries(
+    premium_data_fixture, data_fixture, django_assert_num_queries
+):
+    """
+    Test For ical utils queries issued.
+    """
+
+    workspace = premium_data_fixture.create_workspace(name="Workspace 1")
+    user, token = premium_data_fixture.create_user_and_token(workspace=workspace)
+    table = premium_data_fixture.create_database_table(user=user)
+    field_title = data_fixture.create_text_field(table=table, user=user)
+    field_description = data_fixture.create_long_text_field(table=table, user=user)
+    field_extra = data_fixture.create_rating_field(table=table, user=user)
+    field_num = data_fixture.create_number_field(table=table, user=user)
+    field_num_2 = data_fixture.create_number_field(table=table, user=user)
+    field_num_3 = data_fixture.create_number_field(table=table, user=user)
+    field_bool = data_fixture.create_boolean_field(table=table, user=user)
+    field_duration = data_fixture.create_duration_field(table=table, user=user)
+    field_ai = premium_data_fixture.create_ai_field(table=table, user=user)
+
+    date_field = premium_data_fixture.create_date_field(
+        table=table,
+        date_include_time=False,
+    )
+
+    all_fields = [
+        field_title,
+        field_description,
+        field_extra,
+        field_num,
+        date_field,
+        field_num_2,
+        field_num_3,
+        field_bool,
+        field_duration,
+        field_ai,
+    ]
+
+    view_handler = ViewHandler()
+
+    calendar_view: CalendarView = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="calendar",
+        date_field=date_field,
+    )
+    tmodel = table.get_model()
+    NUM_EVENTS = 5
+
+    def make_values(num, for_model, for_fields):
+        fill_table_rows(num, table)
+
+    make_values(NUM_EVENTS, tmodel, all_fields)
+    calendar_view.date_field_id = None
+    all_items_query = tmodel.objects.all().order_by("id")
+
+    with django_assert_num_queries(0):
+        with pytest.raises(CalendarViewHasNoDateField) as err:
+            build_calendar(all_items_query, calendar_view)
+
+    view_handler.update_field_options(
+        view=calendar_view,
+        field_options={f.id: {"hidden": True} for f in all_fields},
+    )
+    view_handler.update_field_options(
+        view=calendar_view,
+        field_options={
+            field_title.id: {"hidden": False},
+            field_num.id: {"hidden": False},
+            field_duration.id: {"hidden": False},
+        },
+    )
+
+    calendar_view.refresh_from_db()
+    assert all_items_query.count() == NUM_EVENTS
+    # 8 fields in total:
+    # - 2 for resolve calendar_view.date_field.specific
+    # - 1 for resolve calendar_view.table
+    # - 1 for a visible fields list for this calendarview
+    # - 1 for long text field related fields
+    # - 1 for numberfield related fields
+    # - 1 for durationfield related fields
+    # - 1 for all_items_query
+    with django_assert_num_queries(8) as ctx:
+        cal = build_calendar(all_items_query, calendar_view)
+
+    assert len(list(cal.walk("VEVENT"))) == len(all_items_query)
+    for idx, evt in enumerate(cal.walk("VEVENT")):
+        assert evt.get("uid")
+        uid_url = urlparse(evt.get("uid"))
+        assert uid_url.netloc
+        assert uid_url.path == (
+            f"/database/{table.database_id}/table/{table.id}/{calendar_view.id}/row/{idx+1}"
+        )
+        assert evt.get("summary")
+
+    view_handler.update_field_options(
+        view=calendar_view,
+        field_options={
+            field_title.id: {"hidden": False},
+            field_num.id: {"hidden": False},
+            field_extra.id: {"hidden": False},
+            field_description.id: {"hidden": False},
+            field_duration.id: {"hidden": False},
+        },
+    )
+
+    calendar_view.refresh_from_db()
+    # 10 queries:
+    # - 2 for resolve calendar_view.date_field.specific
+    # - 1 for resolve calendar_view.table
+    # - 1 for a visible fields list for this calendarview
+    # - 1 for long text field related fields
+    # - 1 for text field
+    # - 1 for rating field
+    # - 1 for numberfield related fields
+    # - 1 for durationfield related fields
+    # - 1 for all_items_query
+    with django_assert_num_queries(10) as ctx:
+        cal = build_calendar(all_items_query.all(), calendar_view)

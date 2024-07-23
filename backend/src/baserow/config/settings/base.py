@@ -24,6 +24,7 @@ from baserow.config.settings.utils import (
     read_file,
     set_settings_from_env_if_present,
     str_to_bool,
+    try_int,
 )
 from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.throttling_types import RateLimit
@@ -959,6 +960,13 @@ INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT = int(
         "BASEROW_INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT", MAX_FIELD_LIMIT
     )
 )
+
+
+# set max events to be returned by every ICal feed. Empty value means no limit.
+BASEROW_ICAL_VIEW_MAX_EVENTS = try_int(
+    os.getenv("BASEROW_ICAL_VIEW_MAX_EVENTS", None), None
+)
+
 
 # If you change this default please also update the default for the web-frontend found
 # in web-frontend/modules/core/module.js:55

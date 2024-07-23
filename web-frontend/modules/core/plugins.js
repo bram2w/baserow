@@ -103,7 +103,7 @@ export class BaserowPlugin extends Registerable {
     return null
   }
 
-  /*
+  /**
    * Every registered plugin can display multiple additional public share link options
    * which will be visible on the share public view context.
    */
