@@ -813,7 +813,8 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
 
   getEvents(element) {
     return (element.fields || [])
-      .map(({ type, name, uid }) => {
+      .map((field) => {
+        const { type, name, uid } = field
         const collectionFieldType = this.app.$registry.get(
           'collectionField',
           type
@@ -823,6 +824,7 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
             ...this.app,
             namePrefix: uid,
             labelSuffix: `- ${name}`,
+            applicationContextAdditions: { collectionField: field },
           })
         })
       })
