@@ -165,20 +165,18 @@ class LocalBaserowServiceType(ServiceType):
                 mapping = OPENAPI_TYPE_MAPPING.get(field)
                 if isinstance(mapping, dict):
                     base_type = mapping.get("type", None)
+
         elif issubclass(serializer_field.__class__, Serializer):
             properties = {}
-            for name, child_serializer in serializer_field.get_fields().items():
-                # In order to keep the parent serializer context in the next
-                # recursive function calls, we need to bind the child serializer
-                # to its parent. Otherwise, the child serializer will be almost
-                # empty with no relevant metadata.
-                child_serializer.bind(name, serializer_field)
-                properties[name] = {
-                    "title": name,
-                    **self.guess_json_type_from_response_serialize_field(
-                        child_serializer
-                    ),
-                }
+            for name, child_serializer in serializer_field.fields.items():
+                guessed_type = self.guess_json_type_from_response_serialize_field(
+                    child_serializer
+                )
+                if guessed_type["type"] is not None:
+                    properties[name] = {
+                        "title": name,
+                        **guessed_type,
+                    }
 
             return {"type": "object", "properties": properties}
         else:

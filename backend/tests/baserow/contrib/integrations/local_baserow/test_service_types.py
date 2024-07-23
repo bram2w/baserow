@@ -1659,7 +1659,6 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
                 "type": "object",
                 "properties": {
                     "url": {"title": "url", "type": "string"},
-                    "thumbnails": {"title": "thumbnails", "type": None},
                     "visible_name": {"title": "visible_name", "type": "string"},
                     "name": {"title": "name", "type": "string"},
                     "size": {"title": "size", "type": "number"},
@@ -1855,7 +1854,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
                 "type": "object",
                 "properties": {
                     "id": {"title": "id", "type": "number"},
-                    "ids": {"title": "ids", "type": None},
+                    "value": {"title": "value", "type": "string"},
                 },
             },
         },
