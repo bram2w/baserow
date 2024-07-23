@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Clear workspace_id after each test",
+    "issue_number": 2815,
+    "bullet_points": [],
+    "created_at": "2024-07-22"
+}

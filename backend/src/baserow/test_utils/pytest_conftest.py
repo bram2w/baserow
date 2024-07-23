@@ -24,6 +24,7 @@ from sqlparse import format
 
 from baserow.compat.api.conf import GROUP_DEPRECATION
 from baserow.contrib.database.application_types import DatabaseApplicationType
+from baserow.core.context import clear_current_workspace_id
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
@@ -705,3 +706,11 @@ def mutable_generative_ai_model_type_registry():
     before = generative_ai_model_type_registry.registry.copy()
     yield generative_ai_model_type_registry
     generative_ai_model_type_registry.registry = before
+
+
+@pytest.fixture(autouse=True)
+def run_clear_current_workspace_id_after_test():
+    """Clear workspace_id stored in local context after each test."""
+
+    yield
+    clear_current_workspace_id()
