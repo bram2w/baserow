@@ -44,7 +44,7 @@ User = get_user_model()
 
 class UsersAdminView(AdminListingView):
     serializer_class = UserAdminResponseSerializer
-    search_fields = ["username"]
+    search_fields = ["id", "username", "first_name"]
     sort_field_mapping = {
         "id": "id",
         "is_active": "is_active",
