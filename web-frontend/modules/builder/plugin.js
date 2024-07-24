@@ -101,6 +101,7 @@ import {
   UpdateRowWorkflowActionType,
   LogoutWorkflowActionType,
   RefreshDataSourceWorkflowActionType,
+  DeleteRowWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
@@ -320,6 +321,10 @@ export default (context) => {
   app.$registry.register(
     'workflowAction',
     new UpdateRowWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new DeleteRowWorkflowActionType(context)
   )
 
   app.$registry.register(

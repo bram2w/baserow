@@ -534,6 +534,7 @@
     "openPageLabel": "Open Page",
     "createRowLabel": "Create Row",
     "updateRowLabel": "Update Row",
+    "deleteRowLabel": "Delete Row",
     "logoutLabel": "Logout",
     "refreshDataSourceLabel": "Refresh data source"
   },
@@ -615,10 +616,12 @@
     "defaultTitle": "Data loading error",
     "defaultMessage": "An error occurred while loading data for the page."
   },
-  "upsertRowWorkflowActionForm": {
+  "localBaserowServiceForm": {
     "integrationDropdownLabel": "Integration",
     "rowIdLabel": "Row ID",
-    "rowIdPlaceholder": "Select a row ID",
+    "rowIdPlaceholder": "Select a row ID"
+  },
+  "upsertRowWorkflowActionForm": {
     "fieldMappingPlaceholder": "Choose a field value",
     "noTableSelectedMessage": "Choose a table to begin configuring your fields."
   },
