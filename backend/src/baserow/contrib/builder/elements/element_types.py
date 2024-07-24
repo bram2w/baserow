@@ -21,7 +21,6 @@ from baserow.contrib.builder.elements.mixins import (
 )
 from baserow.contrib.builder.elements.models import (
     INPUT_TEXT_TYPES,
-    WIDTHS,
     ButtonElement,
     CheckboxElement,
     ChoiceElement,
@@ -30,7 +29,6 @@ from baserow.contrib.builder.elements.models import (
     Element,
     FormContainerElement,
     HeadingElement,
-    HorizontalAlignments,
     IFrameElement,
     ImageElement,
     InputTextElement,
@@ -144,18 +142,15 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
     model_class = FormContainerElement
     allowed_fields = [
         "submit_button_label",
-        "button_color",
         "reset_initial_values_post_submission",
     ]
     serializer_field_names = [
         "submit_button_label",
-        "button_color",
         "reset_initial_values_post_submission",
     ]
     simple_formula_fields = ["submit_button_label"]
 
     class SerializedDict(ElementDict):
-        button_color: str
         submit_button_label: BaserowFormula
         reset_initial_values_post_submission: bool
 
@@ -183,12 +178,6 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
                 required=False,
                 allow_blank=True,
                 default="",
-            ),
-            "button_color": serializers.CharField(
-                max_length=20,
-                required=False,
-                default="primary",
-                help_text="Button color.",
             ),
             "reset_initial_values_post_submission": serializers.BooleanField(
                 help_text=FormContainerElement._meta.get_field(
@@ -220,7 +209,6 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
     model_class = TableElement
 
     class SerializedDict(CollectionElementWithFieldsTypeMixin.SerializedDict):
-        button_color: str
         orientation: dict
 
     @property
@@ -327,15 +315,13 @@ class HeadingElementType(ElementType):
 
     type = "heading"
     model_class = HeadingElement
-    serializer_field_names = ["value", "level", "font_color", "alignment"]
-    allowed_fields = ["value", "level", "font_color", "alignment"]
+    serializer_field_names = ["value", "level"]
+    allowed_fields = ["value", "level"]
     simple_formula_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
-        font_color: str
         level: int
-        alignment: str
 
     @property
     def serializer_field_overrides(self):
@@ -360,12 +346,6 @@ class HeadingElementType(ElementType):
                 max_value=6,
                 default=1,
             ),
-            "font_color": serializers.CharField(
-                max_length=20,
-                required=False,
-                allow_blank=True,
-                help_text="Heading font color.",
-            ),
             "styles": DynamicConfigBlockSerializer(
                 required=False,
                 property_name="typography",
@@ -377,7 +357,7 @@ class HeadingElementType(ElementType):
         return overrides
 
     def get_pytest_params(self, pytest_data_fixture):
-        return {"value": "'Corporis perspiciatis'", "level": 2, "alignment": "left"}
+        return {"value": "'Corporis perspiciatis'", "level": 2}
 
 
 class TextElementType(ElementType):
@@ -387,13 +367,12 @@ class TextElementType(ElementType):
 
     type = "text"
     model_class = TextElement
-    serializer_field_names = ["value", "alignment", "format"]
-    allowed_fields = ["value", "alignment", "format"]
+    serializer_field_names = ["value", "format"]
+    allowed_fields = ["value", "format"]
     simple_formula_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
-        alignment: str
         format: str
 
     def get_pytest_params(self, pytest_data_fixture):
@@ -403,7 +382,6 @@ class TextElementType(ElementType):
             "Maxime qui nam consequatur. "
             "Asperiores corporis perspiciatis nam harum veritatis. "
             "Impedit qui maxime aut illo quod ea molestias.'",
-            "alignment": "left",
             "format": TextElement.TEXT_FORMATS.PLAIN,
         }
 
@@ -597,9 +575,6 @@ class LinkElementType(ElementType):
             + [
                 "value",
                 "variant",
-                "width",
-                "alignment",
-                "button_color",
             ]
         )
 
@@ -611,18 +586,12 @@ class LinkElementType(ElementType):
             + [
                 "value",
                 "variant",
-                "width",
-                "alignment",
-                "button_color",
             ]
         )
 
     class SerializedDict(ElementDict, NavigationElementManager.SerializedDict):
         value: BaserowFormula
         variant: str
-        width: str
-        alignment: str
-        button_color: str
 
     def formula_generator(
         self, element: Element
@@ -690,22 +659,6 @@ class LinkElementType(ElementType):
                     help_text=LinkElement._meta.get_field("variant").help_text,
                     required=False,
                 ),
-                "width": serializers.ChoiceField(
-                    choices=WIDTHS.choices,
-                    help_text=LinkElement._meta.get_field("width").help_text,
-                    required=False,
-                ),
-                "alignment": serializers.ChoiceField(
-                    choices=HorizontalAlignments.choices,
-                    help_text=LinkElement._meta.get_field("alignment").help_text,
-                    required=False,
-                ),
-                "button_color": serializers.CharField(
-                    max_length=20,
-                    required=False,
-                    default="primary",
-                    help_text="Button color.",
-                ),
                 "styles": DynamicConfigBlockSerializer(
                     required=False,
                     property_name=["button", "link"],
@@ -724,8 +677,6 @@ class LinkElementType(ElementType):
         return NavigationElementManager().get_pytest_params(pytest_data_fixture) | {
             "value": "'test'",
             "variant": "link",
-            "width": "auto",
-            "alignment": "center",
         }
 
     def prepare_value_for_db(
@@ -749,30 +700,18 @@ class ImageElementType(ElementType):
         "image_file",
         "image_url",
         "alt_text",
-        "alignment",
-        "style_image_constraint",
-        "style_max_width",
-        "style_max_height",
     ]
     request_serializer_field_names = [
         "image_source_type",
         "image_file",
         "image_url",
         "alt_text",
-        "alignment",
-        "style_image_constraint",
-        "style_max_width",
-        "style_max_height",
     ]
     allowed_fields = [
         "image_source_type",
         "image_file",
         "image_url",
         "alt_text",
-        "alignment",
-        "style_image_constraint",
-        "style_max_width",
-        "style_max_height",
     ]
     simple_formula_fields = ["image_url", "alt_text"]
 
@@ -781,10 +720,6 @@ class ImageElementType(ElementType):
         image_file_id: int
         image_url: BaserowFormula
         alt_text: BaserowFormula
-        alignment: str
-        style_image_constraint: str
-        style_max_width: Optional[int]
-        style_max_height: Optional[int]
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
@@ -792,10 +727,6 @@ class ImageElementType(ElementType):
             "image_file_id": None,
             "image_url": "'https://test.com/image.png'",
             "alt_text": "'some alt text'",
-            "alignment": HorizontalAlignments.LEFT,
-            "style_image_constraint": "",
-            "style_max_width": None,
-            "style_max_height": None,
         }
 
     @property
@@ -852,17 +783,6 @@ class ImageElementType(ElementType):
                 default=None,
                 help_text="The image file",
                 validators=[image_file_validation],
-            ),
-            "alignment": serializers.ChoiceField(
-                choices=HorizontalAlignments.choices,
-                help_text=ImageElement._meta.get_field("alignment").help_text,
-                required=False,
-            ),
-            "style_max_width": serializers.IntegerField(
-                required=False,
-                allow_null=ImageElement._meta.get_field("style_max_width").null,
-                default=ImageElement._meta.get_field("style_max_width").default,
-                help_text=ImageElement._meta.get_field("style_max_width").help_text,
             ),
             "styles": DynamicConfigBlockSerializer(
                 required=False,
@@ -1068,15 +988,12 @@ class InputTextElementType(InputElementType):
 class ButtonElementType(ElementType):
     type = "button"
     model_class = ButtonElement
-    allowed_fields = ["value", "alignment", "width", "button_color"]
-    serializer_field_names = ["value", "alignment", "width", "button_color"]
+    allowed_fields = ["value"]
+    serializer_field_names = ["value"]
     simple_formula_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
-        width: str
-        alignment: str
-        button_color: str
 
     @property
     def serializer_field_overrides(self):
@@ -1094,22 +1011,6 @@ class ButtonElementType(ElementType):
                 required=False,
                 allow_blank=True,
                 default="",
-            ),
-            "width": serializers.ChoiceField(
-                choices=WIDTHS.choices,
-                help_text=ButtonElement._meta.get_field("width").help_text,
-                required=False,
-            ),
-            "alignment": serializers.ChoiceField(
-                choices=HorizontalAlignments.choices,
-                help_text=ButtonElement._meta.get_field("alignment").help_text,
-                required=False,
-            ),
-            "button_color": serializers.CharField(
-                max_length=20,
-                required=False,
-                default="primary",
-                help_text="Button color.",
             ),
             "styles": DynamicConfigBlockSerializer(
                 required=False,

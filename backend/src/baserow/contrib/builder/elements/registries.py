@@ -165,9 +165,7 @@ class ElementType(
             cache.setdefault("existing_roles", {})[page.builder.id] = existing_roles
 
         serialized_values["roles"] = self.sanitize_element_roles(
-            # TODO: `or []` check should be removed in the next release.
-            #   See: https://gitlab.com/baserow/baserow/-/issues/2724
-            serialized_values.get("roles") or [],
+            serialized_values.get("roles", []),
             existing_roles,
             id_mapping.get("user_sources", {}),
         )
@@ -293,6 +291,21 @@ class ElementType(
             if user_file:
                 return user_file.id
             return None
+
+        # Compat with old exported JSONs
+        # Can be removed in January 2025
+        if prop_name == "style_background_mode":
+            return value or "fill"
+
+        # Compat with old exported JSONs
+        # Can be removed in January 2025
+        if prop_name in [
+            "style_margin_bottom",
+            "style_margin_top",
+            "style_margin_left",
+            "style_margin_right",
+        ]:
+            return value or 0
 
         return value
 

@@ -978,35 +978,3 @@ def test_auth_user_can_view_element_returns_true(
     result = perm_manager.auth_user_can_view_element(user_source_user, element)
 
     assert result is True
-
-
-@pytest.mark.django_db
-def test_auth_user_can_view_element_returns_true_if_role_type_is_none(
-    ab_builder_user_page,
-    data_fixture,
-):
-    """
-    Test the auth_user_can_view_element(). Ensure that if the role_type is None, it
-    is treated the same as the default, which is ALLOW_ALL.
-
-    This is a temporary solution to support zero downtime. This should be
-    removed in an upcoming release.
-
-    See: https://gitlab.com/baserow/baserow/-/issues/2724
-    """
-
-    _, _, public_page = ab_builder_user_page
-
-    # Create an element with a role and role_type
-    element = data_fixture.create_builder_button_element(
-        page=public_page,
-        # The visibility value doesn't really matter for testing this method
-        visibility=Element.VISIBILITY_TYPES.LOGGED_IN,
-        roles=[],
-        role_type=None,
-    )
-    perm_manager = ElementVisibilityPermissionManager()
-
-    result = perm_manager.auth_user_can_view_element(AnonymousUser(), element)
-
-    assert result is True
