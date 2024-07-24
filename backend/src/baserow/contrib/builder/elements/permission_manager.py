@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.builder.elements.operations import ListElementsPageOperationType
 from baserow.contrib.builder.workflow_actions.operations import (
@@ -13,6 +13,13 @@ from baserow.core.user_sources.subjects import UserSourceUserSubjectType
 from .models import Element
 
 User = get_user_model()
+
+
+# For now there can be up to three levels of nested elements.
+# E.g. a RepeatElement might contain a ColumnElement, which might contain a
+# HeadingElement.
+# However, later this number could be dynamic depending on the page itself.
+MAX_ELEMENT_NESTING_DEPTH = 3
 
 
 class ElementVisibilityPermissionManager(PermissionManagerType):
@@ -104,6 +111,96 @@ class ElementVisibilityPermissionManager(PermissionManagerType):
 
         return result
 
+    def exclude_elements_with_role(
+        self,
+        queryset: QuerySet,
+        role_type: Element.ROLE_TYPES,
+        role: str,
+        prefix: str = "",
+    ) -> QuerySet:
+        """
+        Update the queryset by excluding all Elements that match a particular
+        role_type *and* role.
+
+        The prefix is to support Elements that are a child of a different
+        Instance, e.g. when a BuilderWorkflowAction queryset is passed in,
+        we want to filter against the Element foreign key, not the action
+        itself.
+
+        The queryset exclusion logic is repeated to support the maximum level
+        of element nesting.
+        """
+
+        query = Q()
+        for level in range(MAX_ELEMENT_NESTING_DEPTH):
+            path = prefix + "parent_element__" * level
+            query |= Q(**{f"{path}role_type": role_type}) & Q(
+                **{f"{path}roles__contains": role}
+            )
+
+        queryset = queryset.exclude(query)
+
+        return queryset
+
+    def exclude_elements_without_role(
+        self,
+        queryset: QuerySet,
+        role_type: Element.VISIBILITY_TYPES,
+        role: str,
+        prefix: str = "",
+    ) -> QuerySet:
+        """
+        Update the queryset by excluding all Elements that match a particular
+        role_type but *not* the role.
+
+        The prefix is to support Elements that are a child of a different
+        Instance, e.g. when a BuilderWorkflowAction queryset is passed in,
+        we want to filter against the Element foreign key, not the action
+        itself.
+
+        The queryset exclusion logic is repeated to support the maximum level
+        of element nesting.
+        """
+
+        query = Q()
+        for level in range(MAX_ELEMENT_NESTING_DEPTH):
+            path = prefix + "parent_element__" * level
+            query |= Q(**{f"{path}role_type": role_type}) & ~Q(
+                **{f"{path}roles__contains": role}
+            )
+
+        queryset = queryset.exclude(query)
+
+        return queryset
+
+    def exclude_elements_with_visibility(
+        self,
+        queryset: QuerySet,
+        visibility_type: Element.VISIBILITY_TYPES,
+        prefix: str = "",
+    ) -> QuerySet:
+        """
+        Update the queryset by excluding all Elements that match a particular
+        visibility_type.
+
+        The prefix is to support Elements that are a child of a different
+        Instance, e.g. when a BuilderWorkflowAction instance is passed in
+        we want to filter against its element foreign key, not the action
+        itself.
+
+        The queryset exclusion logic is repeated to support the maximum level
+        of element nesting.
+        """
+
+        query = Q()
+        for level in range(MAX_ELEMENT_NESTING_DEPTH):
+            path = prefix + "parent_element__" * level
+            query |= Q(**{f"{path}visibility": visibility_type})
+
+        queryset = queryset.exclude(query)
+
+        return queryset
+
     def filter_queryset(
         self,
         actor,
@@ -118,40 +215,44 @@ class ElementVisibilityPermissionManager(PermissionManagerType):
 
         if operation_name == ListElementsPageOperationType.type:
             if getattr(actor, "is_authenticated", False):
-                queryset = (
-                    queryset.exclude(visibility=Element.VISIBILITY_TYPES.NOT_LOGGED)
-                    .exclude(
-                        Q(role_type=Element.ROLE_TYPES.ALLOW_ALL_EXCEPT)
-                        & Q(roles__contains=actor.role)
-                    )
-                    .exclude(
-                        Q(role_type=Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT)
-                        & ~Q(roles__contains=actor.role)
-                    )
+                queryset = self.exclude_elements_with_visibility(
+                    queryset, Element.VISIBILITY_TYPES.NOT_LOGGED
                 )
-                return queryset
-            else:
-                return queryset.exclude(visibility=Element.VISIBILITY_TYPES.LOGGED_IN)
+                queryset = self.exclude_elements_with_role(
+                    queryset, Element.ROLE_TYPES.ALLOW_ALL_EXCEPT, actor.role
+                )
+                queryset = self.exclude_elements_without_role(
+                    queryset, Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT, actor.role
+                )
 
-        elif operation_name == ListBuilderWorkflowActionsPageOperationType.type:
-            if getattr(actor, "is_authenticated", False):
-                queryset = (
-                    queryset.exclude(
-                        element__visibility=Element.VISIBILITY_TYPES.NOT_LOGGED
-                    )
-                    .exclude(
-                        Q(element__role_type=Element.ROLE_TYPES.ALLOW_ALL_EXCEPT)
-                        & Q(element__roles__contains=actor.role)
-                    )
-                    .exclude(
-                        Q(element__role_type=Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT)
-                        & ~Q(element__roles__contains=actor.role)
-                    )
-                )
                 return queryset
             else:
-                return queryset.exclude(
-                    element__visibility=Element.VISIBILITY_TYPES.LOGGED_IN
+                return self.exclude_elements_with_visibility(
+                    queryset, Element.VISIBILITY_TYPES.LOGGED_IN
+                )
+        elif operation_name == ListBuilderWorkflowActionsPageOperationType.type:
+            prefix = "element__"
+            if getattr(actor, "is_authenticated", False):
+                queryset = self.exclude_elements_with_visibility(
+                    queryset, Element.VISIBILITY_TYPES.NOT_LOGGED, prefix=prefix
+                )
+                queryset = self.exclude_elements_with_role(
+                    queryset,
+                    Element.ROLE_TYPES.ALLOW_ALL_EXCEPT,
+                    actor.role,
+                    prefix=prefix,
+                )
+                queryset = self.exclude_elements_without_role(
+                    queryset,
+                    Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT,
+                    actor.role,
+                    prefix=prefix,
+                )
+
+                return queryset
+            else:
+                return self.exclude_elements_with_visibility(
+                    queryset, Element.VISIBILITY_TYPES.LOGGED_IN, prefix=prefix
                 )
 
         return queryset

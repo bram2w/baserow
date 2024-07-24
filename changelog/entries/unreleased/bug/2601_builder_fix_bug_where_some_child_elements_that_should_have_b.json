@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix bug where some child elements that should have been excluded by the Permission Manager were being returned in the queryset.",
+    "issue_number": 2601,
+    "bullet_points": [],
+    "created_at": "2024-07-19"
+}
