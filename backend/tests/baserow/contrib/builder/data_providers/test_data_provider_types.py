@@ -25,31 +25,10 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
 from baserow.core.utils import MirrorDict
-
-
-class FakeDispatchContext(DispatchContext):
-    def __init__():
-        super().__init__()
-
-    def range(self, service):
-        return [0, 100]
-
-    def __getitem__(self, key: str):
-        if key == "test":
-            return 2
-        if key == "test1":
-            return 1
-        if key == "test2":
-            return ""
-        if key == "test999":
-            return "999"
-
-        return super().__getitem__(key)
 
 
 def test_page_parameter_data_provider_get_data_chunk():

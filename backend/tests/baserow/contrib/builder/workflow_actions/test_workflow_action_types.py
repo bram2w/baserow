@@ -9,11 +9,12 @@ from baserow.contrib.builder.workflow_actions.registries import (
     builder_workflow_action_type_registry,
 )
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
-    CreateRowWorkflowActionType,
+    DeleteRowWorkflowActionType,
     NotificationWorkflowActionType,
     OpenPageWorkflowActionType,
     RefreshDataSourceWorkflowAction,
     UpsertRowWorkflowActionType,
+    service_backed_workflow_actions,
 )
 from baserow.core.utils import MirrorDict
 from baserow.core.workflow_actions.registries import WorkflowActionType
@@ -28,10 +29,6 @@ def pytest_generate_tests(metafunc):
                 for e in builder_workflow_action_type_registry.get_all()
             ],
         )
-
-
-def fake_import_formula(formula, id_mapping):
-    return formula
 
 
 @pytest.mark.django_db
@@ -82,7 +79,10 @@ def test_import_workflow_action(data_fixture, workflow_action_type: WorkflowActi
     assert workflow_action.id != 9999
     assert isinstance(workflow_action, workflow_action_type.model_class)
 
-    if not issubclass(workflow_action_type.__class__, UpsertRowWorkflowActionType):
+    if not issubclass(
+        workflow_action_type.__class__,
+        (UpsertRowWorkflowActionType, DeleteRowWorkflowActionType),
+    ):
         for key, value in pytest_params.items():
             assert getattr(workflow_action, key) == value
 
@@ -173,7 +173,12 @@ def test_export_import_upsert_row_workflow_action_type(data_fixture):
 
 
 @pytest.mark.django_db
-def test_upsert_row_workflow_action_prepare_values_with_instance(
+@pytest.mark.parametrize(
+    "builder_workflow_service_type",
+    service_backed_workflow_actions(),
+)
+def test_builder_workflow_service_type_prepare_values_with_instance(
+    builder_workflow_service_type,
     data_fixture,
 ):
     user, token = data_fixture.create_user_and_token()
@@ -185,8 +190,12 @@ def test_upsert_row_workflow_action_prepare_values_with_instance(
     )
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
-    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
-        page=page, element=element, event=EventTypes.CLICK, user=user
+    workflow_action = data_fixture.create_builder_workflow_service_action(
+        builder_workflow_service_type.model_class,
+        page=page,
+        element=element,
+        event=EventTypes.CLICK,
+        user=user,
     )
     service = workflow_action.service.specific
     service.table = table
@@ -194,7 +203,7 @@ def test_upsert_row_workflow_action_prepare_values_with_instance(
     field = data_fixture.create_text_field(table=table)
     model = table.get_model()
     row2 = model.objects.create(**{f"field_{field.id}": "Cheese"})
-    CreateRowWorkflowActionType().prepare_values(
+    builder_workflow_service_type.prepare_values(
         {
             "service": {
                 "row_id": row2.id,

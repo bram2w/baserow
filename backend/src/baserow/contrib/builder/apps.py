@@ -260,6 +260,7 @@ class BuilderConfig(AppConfig):
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
             CreateRowWorkflowActionType,
+            DeleteRowWorkflowActionType,
             LogoutWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
@@ -271,6 +272,7 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
         builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(DeleteRowWorkflowActionType())
         builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
         builder_workflow_action_type_registry.register(
             RefreshDataSourceWorkflowAction()

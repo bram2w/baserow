@@ -90,6 +90,14 @@ class LocalBaserowUpsertRow(LocalBaserowTableService):
     row_id = FormulaField()
 
 
+class LocalBaserowDeleteRow(LocalBaserowTableService):
+    """
+    A model for the local baserow delete row service configuration data.
+    """
+
+    row_id = FormulaField()
+
+
 class LocalBaserowTableServiceRefinementManager(models.Manager):
     """
     Manager for the `LocalBaserowTableService` filter and sort models.

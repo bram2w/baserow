@@ -399,4 +399,6 @@ class DispatchBuilderWorkflowActionView(APIView):
             request.user, workflow_action, dispatch_context  # type: ignore
         )
 
-        return Response(response)
+        if not isinstance(response, Response):
+            response = Response(response)
+        return response

@@ -12,6 +12,7 @@ from baserow.contrib.builder.elements.element_types import NavigationElementMana
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import (
     LocalBaserowCreateRowWorkflowAction,
+    LocalBaserowDeleteRowWorkflowAction,
     LocalBaserowUpdateRowWorkflowAction,
     LogoutWorkflowAction,
     NotificationWorkflowAction,
@@ -20,8 +21,13 @@ from baserow.contrib.builder.workflow_actions.models import (
 )
 from baserow.contrib.builder.workflow_actions.registries import (
     BuilderWorkflowActionType,
+    builder_workflow_action_type_registry,
 )
 from baserow.contrib.builder.workflow_actions.types import BuilderWorkflowActionDict
+from baserow.contrib.integrations.local_baserow.service_types import (
+    LocalBaserowDeleteRowServiceType,
+    LocalBaserowUpsertRowServiceType,
+)
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.types import BaserowFormula
 from baserow.core.integrations.models import Integration
@@ -29,6 +35,22 @@ from baserow.core.registry import Instance
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.core.workflow_actions.models import WorkflowAction
+
+
+def service_backed_workflow_actions():
+    """
+    Responsible for returning all workflow action types which are backed by a service.
+    We do this by checking if the workflow action type is a subclass of the base
+    `BuilderWorkflowServiceActionType` class.
+
+    :return: A list of workflow action types backed by a service.
+    """
+
+    return [
+        workflow_action_type
+        for workflow_action_type in builder_workflow_action_type_registry.get_all()
+        if issubclass(workflow_action_type.__class__, BuilderWorkflowServiceActionType)
+    ]
 
 
 class NotificationWorkflowActionType(BuilderWorkflowActionType):
@@ -207,13 +229,21 @@ class RefreshDataSourceWorkflowAction(BuilderWorkflowActionType):
 
 
 class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
+    service_type = None  # Must be implemented by subclasses.
     serializer_field_names = ["service"]
-    serializer_field_overrides = {
-        "service": serializers.SerializerMethodField(
-            help_text="The Service this workflow action is dispatched by.",
-            source="service",
-        ),
+    request_serializer_field_overrides = {
+        "service": PolymorphicServiceRequestSerializer(
+            default=None,
+            required=False,
+            help_text="The service which this workflow action is associated with.",
+        )
     }
+    serializer_field_overrides = {
+        "service": PolymorphicServiceSerializer(
+            help_text="The service which this workflow action is associated with."
+        )
+    }
+    request_serializer_field_names = ["service"]
 
     class SerializedDict(BuilderWorkflowActionDict):
         service: Dict
@@ -221,10 +251,6 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
     @property
     def allowed_fields(self):
         return super().allowed_fields + ["service"]
-
-    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, int]:
-        service = pytest_data_fixture.create_local_baserow_upsert_row_service()
-        return {"service": service}
 
     def get_pytest_params_serialized(
         self, pytest_params: Dict[str, Any]
@@ -309,27 +335,6 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
             **kwargs,
         )
 
-
-class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
-    type = "upsert_row"
-    request_serializer_field_overrides = {
-        "service": PolymorphicServiceRequestSerializer(
-            default=None,
-            required=False,
-            help_text="The service which this workflow action is associated with.",
-        )
-    }
-    serializer_field_overrides = {
-        "service": PolymorphicServiceSerializer(
-            help_text="The service which this workflow action is associated with."
-        )
-    }
-    request_serializer_field_names = ["service"]
-
-    @property
-    def allowed_fields(self):
-        return super().allowed_fields + ["service"]
-
     def prepare_values(
         self,
         values: Dict[str, Any],
@@ -339,16 +344,16 @@ class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
         ] = None,
     ):
         """
-        Responsible for preparing the upsert row workflow action. By default, the
-        only step is to pass any `service` data into the upsert row service.
+        Responsible for preparing the service based workflow action. By default,
+        the only step is to pass any `service` data into the service.
 
         :param values: The full workflow action values to prepare.
         :param user: The user on whose behalf the change is made.
-        :param instance: A create or update row workflow action instance.
+        :param instance: A `BuilderWorkflowServiceAction` subclass instance.
         :return: The modified workflow action values, prepared.
         """
 
-        service_type = service_type_registry.get("local_baserow_upsert_row")
+        service_type = service_type_registry.get(self.service_type)
 
         if not instance:
             # If we haven't received a workflow action instance, we're preparing
@@ -373,6 +378,15 @@ class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
         return super().prepare_values(values, user, instance)
 
 
+class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
+    type = "upsert_row"
+    service_type = LocalBaserowUpsertRowServiceType.type
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, int]:
+        service = pytest_data_fixture.create_local_baserow_upsert_row_service()
+        return {"service": service}
+
+
 class CreateRowWorkflowActionType(UpsertRowWorkflowActionType):
     type = "create_row"
     model_class = LocalBaserowCreateRowWorkflowAction
@@ -381,3 +395,13 @@ class CreateRowWorkflowActionType(UpsertRowWorkflowActionType):
 class UpdateRowWorkflowActionType(UpsertRowWorkflowActionType):
     type = "update_row"
     model_class = LocalBaserowUpdateRowWorkflowAction
+
+
+class DeleteRowWorkflowActionType(BuilderWorkflowServiceActionType):
+    type = "delete_row"
+    model_class = LocalBaserowDeleteRowWorkflowAction
+    service_type = LocalBaserowDeleteRowServiceType.type
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, int]:
+        service = pytest_data_fixture.create_local_baserow_delete_row_service()
+        return {"service": service}

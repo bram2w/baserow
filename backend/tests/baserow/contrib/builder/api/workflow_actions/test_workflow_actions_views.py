@@ -19,6 +19,7 @@ from baserow.contrib.builder.workflow_actions.handler import (
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     CreateRowWorkflowActionType,
+    DeleteRowWorkflowActionType,
     NotificationWorkflowActionType,
     UpdateRowWorkflowActionType,
 )
@@ -656,3 +657,86 @@ def test_dispatch_workflow_action_with_invalid_form_data(
         "detail": "The workflow_action configuration is incorrect: "
         f"Path error in formula for field {field.name}({field.id})",
     }
+
+
+@pytest.mark.django_db
+def test_create_delete_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_type = DeleteRowWorkflowActionType.type
+
+    url = reverse("api:builder:workflow_action:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {
+            "type": workflow_action_type,
+            "event": "click",
+            "element_id": element.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == workflow_action_type
+    assert response_json["element_id"] == element.id
+
+    workflow_action = DeleteRowWorkflowActionType.model_class.objects.get(
+        pk=response_json["id"]
+    )
+    assert response_json["service"] == {
+        "id": workflow_action.service_id,
+        "integration_id": None,
+        "row_id": "",
+        "type": DeleteRowWorkflowActionType.service_type,
+        "schema": None,
+        "table_id": None,
+        "context_data": None,
+        "context_data_schema": None,
+    }
+
+
+@pytest.mark.django_db
+def test_update_delete_row_workflow_action(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    page = data_fixture.create_builder_page(builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_delete_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK
+    )
+    service = workflow_action.service
+    service_type = service.get_type()
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.patch(
+        url,
+        {
+            "service": {
+                "row_id": "123",
+                "table_id": table.id,
+                "type": service_type.type,
+                "integration_id": workflow_action.service.integration_id,
+            },
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    service.refresh_from_db()
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["id"] == workflow_action.id
+    assert response_json["element_id"] == workflow_action.element_id
+    assert response_json["service"]["row_id"] == service.row_id
+    assert response_json["service"]["table_id"] == service.table_id
+    assert response_json["service"]["integration_id"] == service.integration_id
