@@ -97,3 +97,7 @@ class LocalBaserowCreateRowWorkflowAction(BuilderWorkflowServiceAction):
 
 class LocalBaserowUpdateRowWorkflowAction(BuilderWorkflowServiceAction):
     ...
+
+
+class LocalBaserowDeleteRowWorkflowAction(BuilderWorkflowServiceAction):
+    ...

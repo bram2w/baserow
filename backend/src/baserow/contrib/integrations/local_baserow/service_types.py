@@ -20,6 +20,7 @@ from rest_framework.fields import (
     TimeField,
     UUIDField,
 )
+from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer, Serializer
 
 from baserow.contrib.builder.data_providers.exceptions import (
@@ -47,8 +48,6 @@ from baserow.contrib.database.table.service import TableService
 from baserow.contrib.database.views.service import ViewService
 from baserow.contrib.integrations.local_baserow.api.serializers import (
     LocalBaserowTableServiceFieldMappingSerializer,
-    LocalBaserowTableServiceFilterSerializer,
-    LocalBaserowTableServiceSortSerializer,
 )
 from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
@@ -57,8 +56,10 @@ from baserow.contrib.integrations.local_baserow.mixins import (
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceSortableMixin,
+    LocalBaserowTableServiceSpecificRowMixin,
 )
 from baserow.contrib.integrations.local_baserow.models import (
+    LocalBaserowDeleteRow,
     LocalBaserowGetRow,
     LocalBaserowListRows,
     LocalBaserowTableServiceFieldMapping,
@@ -66,10 +67,8 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceSort,
     LocalBaserowUpsertRow,
 )
-from baserow.core.formula import BaserowFormula, resolve_formula
+from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
-from baserow.core.formula.serializers import FormulaSerializerField
-from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
 from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
@@ -190,6 +189,31 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     The `ServiceType` for `LocalBaserowTableService` subclasses.
     """
 
+    allowed_fields = ["table", "integration"]
+    serializer_field_names = ["table_id", "integration_id"]
+    serializer_field_overrides = {
+        "table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow table we want the data for.",
+        ),
+        "integration_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow integration we want the data for.",
+        ),
+    }
+
+    class SerializedDict(ServiceDict):
+        table_id: int
+
+    def enhance_queryset(self, queryset):
+        return queryset.select_related(
+            "table",
+            "table__database",
+            "table__database__workspace",
+        ).prefetch_related("table__field_set")
+
     def resolve_service_formulas(
         self,
         service: ServiceSubClass,
@@ -219,45 +243,6 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return resolved_values
 
-    def serialize_property(
-        self,
-        service: ServiceSubClass,
-        prop_name: str,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        """
-        Responsible for serializing the `filters` and `sortings` properties.
-
-        :param service: The LocalBaserowListRows service.
-        :param prop_name: The property name we're serializing.
-        :return: Any
-        """
-
-        if prop_name == "filters":
-            return [
-                {
-                    "field_id": f.field_id,
-                    "type": f.type,
-                    "value": f.value,
-                    "value_is_formula": f.value_is_formula,
-                }
-                for f in service.service_filters.all()
-            ]
-        if prop_name == "sortings":
-            return [
-                {
-                    "field_id": s.field_id,
-                    "order_by": s.order_by,
-                }
-                for s in service.service_sorts.all()
-            ]
-
-        return super().serialize_property(
-            service, prop_name, files_zip=files_zip, storage=storage, cache=cache
-        )
-
     def deserialize_property(
         self,
         prop_name: str,
@@ -269,7 +254,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         **kwargs,
     ):
         """
-        Get the view, table and field IDs from the mapping if they exists.
+        Get the table and field IDs from the mapping if they exist.
         """
 
         if prop_name == "table_id" and "database_tables" in id_mapping:
@@ -302,11 +287,10 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         storage=None,
         cache=None,
         **kwargs,
-    ):
+    ) -> ServiceSubClass:
         """
         Responsible for creating the `filters` and `sortings`.
 
-        :param page: The Page we're importing a data source for.
         :param serialized_values: The serialized values we'll use to import.
         :param id_mapping: The id_mapping dictionary.
         :return: A Service.
@@ -548,6 +532,41 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
     The `ServiceType` for `LocalBaserowViewService` subclasses.
     """
 
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + ["view"]
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + ["view_id"]
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            "view_id": serializers.IntegerField(
+                required=False,
+                allow_null=True,
+                help_text="The id of the Baserow view we want the data for.",
+            ),
+        }
+
+    class SerializedDict(LocalBaserowTableServiceType.SerializedDict):
+        view_id: int
+
+    def enhance_queryset(self, queryset):
+        return (
+            super()
+            .enhance_queryset(queryset)
+            .select_related("view")
+            .prefetch_related(
+                "view__viewfilter_set",
+                "view__filter_groups",
+                "view__viewsort_set",
+                "view__viewgroupby_set",
+            )
+        )
+
     def deserialize_property(
         self,
         prop_name: str,
@@ -648,64 +667,45 @@ class LocalBaserowListRowsUserServiceType(
     returns_list = True
     dispatch_type = DispatchTypes.DISPATCH_DATA_SOURCE
 
-    allowed_fields = [
-        "search_query",
-        "table",
-        "view",
-        "filter_type",
-    ]
-    serializer_field_names = [
-        "table_id",
-        "view_id",
-        "filter_type",
-        "search_query",
-        "sortings",
-        "filters",
-    ]
-    simple_formula_fields = ["search_query"]
-    serializer_field_overrides = {
-        "filters": LocalBaserowTableServiceFilterSerializer(
-            many=True, source="service_filters", required=False
-        ),
-        "sortings": LocalBaserowTableServiceSortSerializer(
-            many=True, source="service_sorts", required=False
-        ),
-    }
-    request_serializer_field_overrides = {
-        "table_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow table we want the data for.",
-        ),
-        "view_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow view we want the data for.",
-        ),
-        "search_query": FormulaSerializerField(
-            required=False,
-            allow_blank=True,
-            help_text="Any search queries to apply to the "
-            "service when it is dispatched.",
-        ),
-    } | serializer_field_overrides
-
-    class SerializedDict(ServiceDict):
-        table_id: int
-        view_id: int
-        search_query: str
-        filter_type: str
-        filters: List[Dict]
-        sortings: List[Dict]
-
-    def enhance_queryset(self, queryset):
-        return queryset.select_related("view", "table").prefetch_related(
-            "view__viewfilter_set",
-            "view__filter_groups",
-            "view__viewsort_set",
-            "table__field_set",
-            "view__viewgroupby_set",
+    @property
+    def simple_formula_fields(self):
+        return (
+            super().simple_formula_fields
+            + LocalBaserowTableServiceSearchableMixin.mixin_simple_formula_fields
         )
+
+    @property
+    def allowed_fields(self):
+        return (
+            super().allowed_fields
+            + LocalBaserowTableServiceFilterableMixin.mixin_allowed_fields
+            + LocalBaserowTableServiceSearchableMixin.mixin_allowed_fields
+        )
+
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + LocalBaserowTableServiceSortableMixin.mixin_serializer_field_names
+            + LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_names
+            + LocalBaserowTableServiceSearchableMixin.mixin_serializer_field_names
+        )
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            **LocalBaserowTableServiceSortableMixin.mixin_serializer_field_overrides,
+            **LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_overrides,
+        }
+
+    class SerializedDict(
+        LocalBaserowViewServiceType.SerializedDict,
+        LocalBaserowTableServiceSortableMixin.SerializedDict,
+        LocalBaserowTableServiceSearchableMixin.SerializedDict,
+        LocalBaserowTableServiceFilterableMixin.SerializedDict,
+    ):
+        pass
 
     def import_path(self, path, id_mapping):
         """
@@ -762,6 +762,32 @@ class LocalBaserowListRowsUserServiceType(
 
         return [f"field_{field_id}", *rest]
 
+    def serialize_property(
+        self,
+        service: ServiceSubClass,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
+        """
+        Responsible for serializing the `filters` and `sortings` properties.
+
+        :param service: The LocalBaserowListRows service.
+        :param prop_name: The property name we're serializing.
+        :return: Any
+        """
+
+        if prop_name == "filters":
+            return self.serialize_filters(service)
+
+        if prop_name == "sortings":
+            return self.serialize_sortings(service)
+
+        return super().serialize_property(
+            service, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
+
     def deserialize_property(
         self,
         prop_name: str,
@@ -773,28 +799,16 @@ class LocalBaserowListRowsUserServiceType(
         **kwargs,
     ):
         """
-        Responsible for deserializing the `search_query` and `filters` property
-        by importing its formula.
+        Responsible for deserializing the `filters` property.
 
         :param prop_name: the name of the property being transformed.
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
-        :param import_formula: the import formula function.
         :return: the deserialized version for this property.
         """
 
         if prop_name == "filters":
-            return [
-                {
-                    **f,
-                    "field_id": (
-                        id_mapping["database_fields"][f["field_id"]]
-                        if "database_fields" in id_mapping
-                        else f["field_id"]
-                    ),
-                }
-                for f in value
-            ]
+            return self.deserialize_filters(value, id_mapping)
 
         return super().deserialize_property(
             prop_name,
@@ -894,6 +908,7 @@ class LocalBaserowGetRowUserServiceType(
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
+    LocalBaserowTableServiceSpecificRowMixin,
     LocalBaserowViewServiceType,
 ):
     """
@@ -906,64 +921,47 @@ class LocalBaserowGetRowUserServiceType(
     model_class = LocalBaserowGetRow
     dispatch_type = DispatchTypes.DISPATCH_DATA_SOURCE
 
-    allowed_fields = [
-        "row_id",
-        "search_query",
-        "table",
-        "view",
-        "filter_type",
-    ]
-    serializer_field_names = [
-        "row_id",
-        "table_id",
-        "view_id",
-        "filter_type",
-        "search_query",
-        "filters",
-    ]
-    simple_formula_fields = ["row_id", "search_query"]
-
-    serializer_field_overrides = {
-        "filters": LocalBaserowTableServiceFilterSerializer(
-            many=True, source="service_filters", required=False
-        ),
-    }
-    request_serializer_field_overrides = {
-        "row_id": FormulaSerializerField(
-            required=False,
-            allow_blank=True,
-            help_text="A formula for defining the intended row.",
-        ),
-        "table_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow table we want the data for.",
-        ),
-        "view_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow view we want the data for.",
-        ),
-        "search_query": FormulaSerializerField(
-            required=False,
-            allow_blank=True,
-            help_text="Any search queries to apply to the "
-            "service when it is dispatched.",
-        ),
-    } | serializer_field_overrides
-
-    class SerializedDict(ServiceDict):
-        table_id: int
-        view_id: int
-        filter_type: str
-        filters: List[Dict]
-        row_id: BaserowFormula
-        search_query: BaserowFormula
-
-    def enhance_queryset(self, queryset):
-        return queryset.select_related(
-            "table", "table__database", "table__database__workspace", "view"
+    @property
+    def simple_formula_fields(self):
+        return (
+            super().simple_formula_fields
+            + LocalBaserowTableServiceSearchableMixin.mixin_simple_formula_fields
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_simple_formula_fields
         )
+
+    @property
+    def allowed_fields(self):
+        return (
+            super().allowed_fields
+            + LocalBaserowTableServiceFilterableMixin.mixin_allowed_fields
+            + LocalBaserowTableServiceSearchableMixin.mixin_allowed_fields
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_allowed_fields
+        )
+
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_names
+            + LocalBaserowTableServiceSearchableMixin.mixin_serializer_field_names
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_names
+        )
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            **LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_overrides,
+            **LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_overrides,
+        }
+
+    class SerializedDict(
+        LocalBaserowViewServiceType.SerializedDict,
+        LocalBaserowTableServiceSearchableMixin.SerializedDict,
+        LocalBaserowTableServiceFilterableMixin.SerializedDict,
+        LocalBaserowTableServiceSpecificRowMixin.SerializedDict,
+    ):
+        pass
 
     def import_path(self, path, id_mapping):
         """
@@ -1000,6 +998,29 @@ class LocalBaserowGetRowUserServiceType(
 
         return self.import_path(path, id_mapping)
 
+    def serialize_property(
+        self,
+        service: ServiceSubClass,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
+        """
+        Responsible for serializing the `filters`.
+
+        :param service: The LocalBaserowListRows service.
+        :param prop_name: The property name we're serializing.
+        :return: Any
+        """
+
+        if prop_name == "filters":
+            return self.serialize_filters(service)
+
+        return super().serialize_property(
+            service, prop_name, files_zip=files_zip, storage=storage, cache=cache
+        )
+
     def deserialize_property(
         self,
         prop_name: str,
@@ -1016,17 +1037,7 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         if prop_name == "filters":
-            return [
-                {
-                    **f,
-                    "field_id": (
-                        id_mapping["database_fields"][f["field_id"]]
-                        if "database_fields" in id_mapping
-                        else f["field_id"]
-                    ),
-                }
-                for f in value
-            ]
+            return self.deserialize_filters(value, id_mapping)
 
         return super().deserialize_property(
             prop_name,
@@ -1070,31 +1081,7 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
-
-        # Ignore validation for empty formulas
-        if not service.row_id:
-            return resolved_values
-
-        try:
-            dispatch_context.reset_call_stack()
-            resolved_values["row_id"] = ensure_integer(
-                resolve_formula(
-                    service.row_id,
-                    formula_runtime_function_registry,
-                    dispatch_context,
-                )
-            )
-        except ValidationError as exc:
-            raise ServiceImproperlyConfigured(
-                "The result of the `row_id` formula must be an integer or convertible "
-                "to an integer."
-            ) from exc
-        except Exception as exc:
-            raise ServiceImproperlyConfigured(
-                f"The `row_id` formula can't be resolved: {exc}"
-            ) from exc
-
-        return resolved_values
+        return self.resolve_row_id(resolved_values, service, dispatch_context)
 
     def dispatch_data(
         self,
@@ -1155,7 +1142,9 @@ class LocalBaserowGetRowUserServiceType(
             raise DoesNotExist()
 
 
-class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
+class LocalBaserowUpsertRowServiceType(
+    LocalBaserowTableServiceType, LocalBaserowTableServiceSpecificRowMixin
+):
     """
     A `LocalBaserow` service type which will create or update rows in
     the service's target table when it is used in conjunction with
@@ -1167,36 +1156,44 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
     model_class = LocalBaserowUpsertRow
     dispatch_type = DispatchTypes.DISPATCH_WORKFLOW_ACTION
 
-    allowed_fields = ["table", "row_id", "integration"]
-    serializer_field_names = ["table_id", "row_id", "integration_id", "field_mappings"]
-    simple_formula_fields = ["row_id"]
+    @property
+    def allowed_fields(self):
+        return (
+            super().allowed_fields
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_allowed_fields
+        )
 
-    serializer_field_overrides = {
-        "table_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow table we want the data for.",
-        ),
-        "integration_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow integration we want the data for.",
-        ),
-        "row_id": FormulaSerializerField(
-            required=False,
-            allow_blank=True,
-            help_text="A formula for defining the intended row.",
-        ),
-        "field_mappings": LocalBaserowTableServiceFieldMappingSerializer(
-            many=True,
-            required=False,
-            help_text="The field mapping associated with this service.",
-        ),
-    }
+    @property
+    def simple_formula_fields(self):
+        return (
+            super().simple_formula_fields
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_simple_formula_fields
+        )
 
-    class SerializedDict(ServiceDict):
-        row_id: BaserowFormula
-        table_id: int
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + ["field_mappings"]
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_names
+        )
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            "field_mappings": LocalBaserowTableServiceFieldMappingSerializer(
+                many=True,
+                required=False,
+                help_text="The field mapping associated with this service.",
+            ),
+            **LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_overrides,
+        }
+
+    class SerializedDict(
+        LocalBaserowTableServiceType.SerializedDict,
+        LocalBaserowTableServiceSpecificRowMixin.SerializedDict,
+    ):
         field_mappings: List[Dict]
 
     def after_update(
@@ -1380,7 +1377,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         return service
 
     def enhance_queryset(self, queryset):
-        return queryset.select_related("table").prefetch_related("field_mappings")
+        return super().enhance_queryset(queryset).prefetch_related("field_mappings")
 
     def dispatch_transform(
         self,
@@ -1402,7 +1399,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
     def resolve_service_formulas(
         self,
-        service: ServiceSubClass,
+        service: LocalBaserowUpsertRow,
         dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
         """
@@ -1414,6 +1411,10 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         """
 
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
+        resolved_values = self.resolve_row_id(
+            resolved_values, service, dispatch_context
+        )
+
         field_mappings = service.field_mappings.select_related("field").all()
         for field_mapping in field_mappings:
             dispatch_context.reset_call_stack()
@@ -1436,33 +1437,6 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                 )
                 raise ServiceImproperlyConfigured(message) from e
 
-        if not service.row_id:
-            # We've received no `row_id` as we're creating a new row.
-            resolved_values["row_id"] = service.row_id
-            return resolved_values
-
-        try:
-            dispatch_context.reset_call_stack()
-            resolved_values["row_id"] = ensure_integer(
-                resolve_formula(
-                    service.row_id,
-                    formula_runtime_function_registry,
-                    dispatch_context,
-                )
-            )
-        except ValidationError:
-            raise ServiceImproperlyConfigured(
-                "The result of the `row_id` formula must be an integer or convertible "
-                "to an integer."
-            )
-        except DataProviderChunkInvalidException as e:
-            message = f"Formula for row {service.row_id} could not be resolved."
-            raise ServiceImproperlyConfigured(message) from e
-        except Exception as e:
-            raise ServiceImproperlyConfigured(
-                f"The `row_id` formula can't be resolved: {e}"
-            )
-
         return resolved_values
 
     def dispatch_data(
@@ -1484,6 +1458,7 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
         table = resolved_values["table"]
         integration = service.integration.specific
+        row_id: Optional[int] = resolved_values.get("row_id", None)
 
         field_values = {}
         field_mappings = service.field_mappings.select_related("field").filter(
@@ -1527,18 +1502,18 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
                     f"field `{field.name} ({field.db_column})`: {exc.message}"
                 ) from exc
 
-        if resolved_values["row_id"]:
+        if row_id:
             try:
                 row = RowHandler().update_row_by_id(
                     integration.authorized_user,
                     table,
-                    row_id=resolved_values["row_id"],
+                    row_id=row_id,
                     values=field_values,
                     values_already_prepared=True,
                 )
             except RowDoesNotExist as exc:
                 raise ServiceImproperlyConfigured(
-                    f"The row with id {resolved_values['row_id']} does not exist."
+                    f"The row with id {row_id} does not exist."
                 ) from exc
         else:
             row = RowHandler().create_row(
@@ -1584,3 +1559,112 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         """
 
         return self.import_path(path, id_mapping)
+
+
+class LocalBaserowDeleteRowServiceType(
+    LocalBaserowTableServiceType, LocalBaserowTableServiceSpecificRowMixin
+):
+    integration_type = LocalBaserowIntegrationType.type
+    type = "local_baserow_delete_row"
+    model_class = LocalBaserowDeleteRow
+    dispatch_type = DispatchTypes.DISPATCH_WORKFLOW_ACTION
+
+    @property
+    def simple_formula_fields(self):
+        return (
+            super().simple_formula_fields
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_simple_formula_fields
+        )
+
+    @property
+    def allowed_fields(self):
+        return (
+            super().allowed_fields
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_allowed_fields
+        )
+
+    @property
+    def serializer_field_names(self):
+        return (
+            super().serializer_field_names
+            + LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_names
+        )
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            **super().serializer_field_overrides,
+            **LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_overrides,
+        }
+
+    class SerializedDict(
+        LocalBaserowTableServiceType.SerializedDict,
+        LocalBaserowTableServiceSpecificRowMixin.SerializedDict,
+    ):
+        pass
+
+    def resolve_service_formulas(
+        self,
+        service: LocalBaserowDeleteRow,
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
+        """
+        :param service: A `LocalBaserowTableService` instance.
+        :param dispatch_context: The dispatch_context instance used to
+            resolve formulas (if any).
+        :raises ServiceImproperlyConfigured: When we try and dispatch a service that
+            has no `Table` associated with it.
+        """
+
+        resolved_values = super().resolve_service_formulas(service, dispatch_context)
+        return self.resolve_row_id(resolved_values, service, dispatch_context)
+
+    def dispatch_transform(
+        self,
+        dispatch_data: Dict[str, Any],
+    ) -> Response:
+        """
+        The delete row action's `dispatch_data` will contain an empty
+        `data` dictionary. When we get to this method and wish to transform
+        the data, we can simply return a 204 response.
+
+        :param dispatch_data: The `dispatch_data` result.
+        :return: A 204 response.
+        """
+
+        return Response(status=204)
+
+    def dispatch_data(
+        self,
+        service: LocalBaserowDeleteRow,
+        resolved_values: Dict[str, Any],
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
+        """
+        Responsible for deleting a specific row if a row ID has been provided,
+        in this `LocalBaserowDeleteRow` service's table.
+
+        :param service: the local baserow delete row service.
+        :param resolved_values: If the service has any formulas, this dictionary will
+            contain their resolved values.
+        :param dispatch_context: the context used for formula resolution.
+        :return: A dictionary with empty `data`.
+        """
+
+        table = resolved_values["table"]
+        integration = service.integration.specific
+        row_id: Optional[int] = resolved_values.get("row_id", None)
+
+        if row_id:
+            try:
+                RowHandler().delete_row_by_id(
+                    integration.authorized_user,
+                    table,
+                    row_id,
+                )
+            except RowDoesNotExist as exc:
+                raise ServiceImproperlyConfigured(
+                    f"The row with id {row_id} does not exist."
+                ) from exc
+
+        return {"data": {}, "baserow_table_model": table.get_model()}
