@@ -23,6 +23,7 @@ import Button from '@baserow/modules/core/components/Button'
                     'warning',
                     'error',
                     'success',
+                    'blank',
                 ],
             },
             defaultValue: 'success',
@@ -46,7 +47,13 @@ import Button from '@baserow/modules/core/components/Button'
                 type: 'boolean',
                 options: [true, false],
             },
-            defaultValue: false,
+            defaultValue: true,
+        },
+        width: {
+            control: {
+                type: 'number',
+            },
+            defaultValue: null,
         },
     }}
 />
@@ -54,7 +61,8 @@ import Button from '@baserow/modules/core/components/Button'
 # Alert
 
 An alert is a component that is used to display a message to the user.
-The type defined the color scheme of the alert and the icon that is displayed.
+The type defines the color scheme of the alert and the icon that is displayed.
+The `blank` type can be used to display an alert without an icon.
 It can be displayed at the bottom or top right of the page.
 
 export const Template = (args, { argTypes }) => ({
@@ -62,6 +70,7 @@ export const Template = (args, { argTypes }) => ({
     props: Object.keys(argTypes),
     template: `
     <Alert @close="close()" v-bind="$props">
+     <template v-if="${'image' in args}" v-slot:image>${args.image}</template>
         <template v-if="${'title' in args}" v-slot:title>${
         args.title
     }</template>
@@ -99,7 +108,7 @@ export const designConfig = {
             type: 'info-neutral',
             title: 'We’ve just released a new feature',
             actions:
-                '<Button type="ghost" size="small">View</Button><button class="alert__actions-button-text alert__actions-button-text--normal">Dismiss</button>',
+                '<Button type="secondary" size="small">View</Button><button class="alert__actions-button-text alert__actions-button-text--normal">Dismiss</button>',
         }}
         parameters={{
             design: config(designConfig),
@@ -142,6 +151,22 @@ export const designConfig = {
             title: 'Successfully updated profile',
             actions:
                 '<Button type="success" size="small">View</Button><button class="alert__actions-button-text alert__actions-button-text--loading">View changes</button>',
+        }}
+        parameters={{
+            design: config(designConfig),
+        }}
+    >
+        {Template.bind({})}
+    </Story>
+    <Story
+        name="Blank with image"
+        args={{
+            type: 'blank',
+            image: '<img src="https://picsum.photos/394/119" srcset="https://picsum.photos/792/238 2x" />',
+            title: 'Successfully updated profile',
+            actions:
+                '<ButtonIcon icon="baserow-icon-twitter"></ButtonIcon><ButtonIcon icon="baserow-icon-reddit"></ButtonIcon><ButtonIcon icon="baserow-icon-facebook"></ButtonIcon><ButtonIcon icon="baserow-icon-linkedin"></ButtonIcon>',
+            width: 396,
         }}
         parameters={{
             design: config(designConfig),

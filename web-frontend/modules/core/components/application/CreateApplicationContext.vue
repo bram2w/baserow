@@ -2,6 +2,7 @@
   <Context
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
+    class="create-application-context"
     @shown="fetchRolesAndPermissions"
   >
     <div
@@ -16,17 +17,30 @@
       >
         <a
           :ref="'createApplicationModalToggle' + type"
-          class="context__menu-item-link"
+          class="context__menu-item-link context__menu-item-link--with-desc"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
           @click="toggleCreateApplicationModal(type)"
         >
-          <i
-            class="context__menu-item-icon"
-            :class="applicationType.iconClass"
-          ></i>
-          {{ applicationType.getName() }}
+          <span class="context__menu-item-title">
+            <i
+              class="context__menu-item-icon"
+              :class="applicationType.iconClass"
+            ></i>
+            {{ applicationType.getName()
+            }}<Badge
+              v-if="applicationType.isBeta()"
+              color="cyan"
+              size="small"
+              >{{ $t('common.beta') }}</Badge
+            ></span
+          >
+          <div
+            class="context__menu-item-description context__menu-item-description--offset"
+          >
+            {{ applicationType.getDescription() }}
+          </div>
         </a>
         <CreateApplicationModal
           :ref="'createApplicationModal' + type"
@@ -37,14 +51,21 @@
       </li>
       <li class="context__menu-item">
         <a
-          class="context__menu-item-link"
+          class="context__menu-item-link context__menu-item-link--with-desc"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
           @click="openTemplateModal()"
         >
-          <i class="context__menu-item-icon iconoir-page"></i>
-          {{ $t('createApplicationContext.fromTemplate') }}
+          <span class="context__menu-item-title">
+            <i class="context__menu-item-icon iconoir-page"></i>
+            {{ $t('createApplicationContext.fromTemplate') }}</span
+          >
+          <div
+            class="context__menu-item-description context__menu-item-description--offset"
+          >
+            {{ $t('createApplicationContext.fromTemplateDesc') }}
+          </div>
         </a>
         <TemplateModal
           ref="templateModal"

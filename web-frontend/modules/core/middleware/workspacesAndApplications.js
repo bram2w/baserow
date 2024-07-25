@@ -22,9 +22,17 @@ export default async function WorkspacesAndApplications({
     if (!store.getters['workspace/isLoaded']) {
       await store.dispatch('workspace/fetchAll')
 
-      // If the user only has one workspace we then that one must be selected.
       const workspaces = store.getters['workspace/getAll']
-      if (store.getters['workspace/getAll'].length === 1) {
+      const workspaceExists =
+        workspaces.find((w) => w.id === workspaceId) !== undefined
+      if (!workspaceExists) {
+        workspaceId = null
+      }
+
+      // If no workspace was remembered, or the remembered workspace doesn't exist, we
+      // automatically select the first one if it
+      // exists.
+      if (!workspaceExists && store.getters['workspace/getAll'].length > 0) {
         workspaceId = workspaces[0].id
       }
 

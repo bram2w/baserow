@@ -57,6 +57,10 @@ export default {
         await this.$store.dispatch('workspace/select', workspace)
         this.loading = false
         this.$emit('created', workspace)
+        await this.$router.push({
+          name: 'workspace',
+          params: { workspaceId: workspace.id },
+        })
         this.hide()
       } catch (error) {
         this.loading = false

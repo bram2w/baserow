@@ -151,6 +151,9 @@ def test_workspace_restored(mock_broadcast_to_users, data_fixture):
     expected_database_json = {
         "id": database.id,
         "name": database.name,
+        "created_on": database.created_on.isoformat(timespec="microseconds").replace(
+            "+00:00", "Z"
+        ),
         "order": 0,
         "type": "database",
         "group": {

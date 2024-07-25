@@ -63,23 +63,6 @@
       </Context>
       <div class="sidebar__nav">
         <ul class="tree">
-          <li
-            class="tree__item"
-            :class="{
-              active: $route.matched.some(({ name }) => name === 'dashboard'),
-            }"
-          >
-            <div class="tree__action sidebar__action">
-              <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
-                <i class="tree__icon iconoir-dashboard-dots"></i>
-                <span class="tree__link-text">
-                  <span class="sidebar__item-name">{{
-                    $t('sidebar.dashboard')
-                  }}</span>
-                </span>
-              </nuxt-link>
-            </div>
-          </li>
           <component
             :is="component"
             v-for="(component, index) in sidebarMainMenuComponents"
@@ -179,6 +162,32 @@
                 ></WorkspaceContext>
               </div>
             </li>
+            <nuxt-link
+              v-slot="{ href, navigate, isExactActive }"
+              :to="{
+                name: 'workspace',
+                params: {
+                  workspaceId: selectedWorkspace.id,
+                },
+              }"
+            >
+              <li
+                data-highlight="members"
+                class="tree__item"
+                :class="{ active: isExactActive }"
+              >
+                <div class="tree__action">
+                  <a :href="href" class="tree__link" @click="navigate">
+                    <i
+                      class="tree__icon tree__icon--type iconoir-home-alt-slim-horiz"
+                    ></i>
+                    <span class="tree__link-text">{{
+                      $t('sidebar.home')
+                    }}</span>
+                  </a>
+                </div>
+              </li>
+            </nuxt-link>
             <li class="tree__item">
               <div class="tree__action tree__action--has-counter">
                 <a

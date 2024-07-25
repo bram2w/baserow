@@ -215,6 +215,7 @@ export default function CoreModule(options) {
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/papa.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/ensureRender.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/posthog.js') })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/router.js') })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.

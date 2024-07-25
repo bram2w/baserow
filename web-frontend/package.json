@@ -108,6 +108,7 @@
     "@nuxtjs/eslint-config": "12.0.0",
     "@nuxtjs/storybook": "^4.3.2",
     "@nuxtjs/stylelint-module": "^4.2.2",
+    "@nuxtjs/svg": "^0.4.1",
     "@storybook/addon-coverage": "^0.0.8",
     "@storybook/test-runner": "^0.11.0",
     "@vue/test-utils": "1.3.4",

@@ -8,8 +8,8 @@
         :selected="selected"
       ></APIDocsSelectDatabaseWorkspace>
     </template>
-    <p v-else>
-      {{ $t('apiDocsSelectDatabase') }}
+    <p v-else class="margin-bottom-3">
+      {{ $t('apiDocsSelectDatabase.needOneDatabase') }}
     </p>
   </div>
 </template>

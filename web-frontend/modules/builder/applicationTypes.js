@@ -4,6 +4,7 @@ import SidebarComponentBuilder from '@baserow/modules/builder/components/sidebar
 import { populatePage } from '@baserow/modules/builder/store/page'
 import PageTemplate from '@baserow/modules/builder/components/page/PageTemplate'
 import PageTemplateSidebar from '@baserow/modules/builder/components/page/PageTemplateSidebar'
+import ApplicationContext from '@baserow/modules/builder/components/application/ApplicationContext'
 
 export class BuilderApplicationType extends ApplicationType {
   static getType() {
@@ -17,6 +18,11 @@ export class BuilderApplicationType extends ApplicationType {
   getName() {
     const { i18n } = this.app
     return i18n.t('applicationType.builder')
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.builderDesc')
   }
 
   getDefaultName() {
@@ -34,6 +40,10 @@ export class BuilderApplicationType extends ApplicationType {
 
   getSidebarComponent() {
     return SidebarComponentBuilder
+  }
+
+  getApplicationContextComponent() {
+    return ApplicationContext
   }
 
   getTemplateSidebarComponent() {
@@ -108,5 +118,9 @@ export class BuilderApplicationType extends ApplicationType {
 
   prepareForStoreUpdate(application, data) {
     return data
+  }
+
+  isBeta() {
+    return true
   }
 }

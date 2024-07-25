@@ -6,23 +6,6 @@
       :application="application"
       @selected="selected"
     >
-      <template #context>
-        <li
-          v-if="
-            $hasPermission(
-              'application.update',
-              application,
-              application.workspace.id
-            )
-          "
-          class="context__menu-item"
-        >
-          <a class="context__menu-item-link" @click="settingsClicked">
-            <i class="context__menu-item-icon iconoir-settings"></i>
-            {{ $t('sidebarComponentBuilder.settings') }}
-          </a>
-        </li>
-      </template>
       <template v-if="isAppSelected(application)" #body>
         <ul class="tree__subs">
           <SidebarItemBuilder
@@ -74,7 +57,6 @@
         ></CreatePageModal>
       </template>
     </SidebarApplication>
-    <BuilderSettingsModal ref="builderSettingsModal" :builder="application" />
   </div>
 </template>
 
@@ -129,10 +111,6 @@ export default {
       } catch (error) {
         notifyIf(error, 'workspace')
       }
-    },
-    settingsClicked() {
-      this.$refs.sidebarApplication.$refs.context.hide()
-      this.$refs.builderSettingsModal.show()
     },
     orderPages(order, oldOrder) {
       try {

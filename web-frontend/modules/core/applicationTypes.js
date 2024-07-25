@@ -24,6 +24,14 @@ export class ApplicationType extends Registerable {
   }
 
   /**
+   * Small description of the application type, shown in the create new application
+   * context menu.
+   */
+  getDescription() {
+    return null
+  }
+
+  /**
    * A human readable default name for new applications of this type.
    */
   getDefaultName() {
@@ -182,5 +190,12 @@ export class ApplicationType extends Registerable {
    */
   isVisible(application, context) {
     return true
+  }
+
+  /**
+   * Adds a visual `beta` label indicator when creating a new one.
+   */
+  isBeta() {
+    return false
   }
 }

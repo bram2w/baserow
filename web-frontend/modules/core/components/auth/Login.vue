@@ -69,7 +69,6 @@ import {
   isRelativeUrl,
   addQueryParamsToRedirectUrl,
 } from '@baserow/modules/core/utils/url'
-import VueRouter from 'vue-router'
 
 export default {
   components: {
@@ -155,24 +154,11 @@ export default {
   methods: {
     async success() {
       if (this.redirectOnSuccess) {
-        try {
-          const original = this.computedOriginal
-          if (original && isRelativeUrl(original)) {
-            await this.$nuxt.$router.push(original)
-          } else {
-            await this.$nuxt.$router.push({ name: 'dashboard' })
-          }
-        } catch (error) {
-          // When redirecting to the `database-table`, it can happen that it redirects
-          // to another view. For some reason, this is causing the router throw an
-          // error. In our case, it's perfectly fine, so we're suppressing this error
-          // here. More information:
-          // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
-          // error-redirected-from-login-to-via-a
-          const { isNavigationFailure, NavigationFailureType } = VueRouter
-          if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
-            throw error
-          }
+        const original = this.computedOriginal
+        if (original && isRelativeUrl(original)) {
+          await this.$nuxt.$router.push(original)
+        } else {
+          await this.$nuxt.$router.push({ name: 'dashboard' })
         }
       }
     },

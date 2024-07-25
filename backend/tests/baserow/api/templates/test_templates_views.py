@@ -52,6 +52,7 @@ def test_list_templates(api_client, data_fixture):
     assert len(response_json[0]["templates"]) == 1
     assert response_json[0]["templates"][0]["id"] == template_1.id
     assert response_json[0]["templates"][0]["name"] == template_1.name
+    assert response_json[0]["templates"][0]["slug"] == template_1.slug
     assert response_json[0]["templates"][0]["icon"] == template_1.icon
     assert response_json[0]["templates"][0]["keywords"] == "test1,test2"
     assert response_json[0]["templates"][0]["workspace_id"] == template_1.workspace_id

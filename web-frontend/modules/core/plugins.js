@@ -44,7 +44,7 @@ export class BaserowPlugin extends Registerable {
    * Every registered plugin can display a component in the links section of the
    * dashboard sidebar.
    */
-  getDashboardSidebarLinksComponent() {
+  getDashboardResourceLinksComponent() {
     return null
   }
 
@@ -52,15 +52,11 @@ export class BaserowPlugin extends Registerable {
    * Every registered plugin can display a component in the `DashboardWorkspace`
    * component directly after the workspace name.
    */
-  getDashboardWorkspaceExtraComponent() {
+  getDashboardWorkspacePlanBadge() {
     return null
   }
 
-  /*
-   * Every registered plugin can display a component in the `DashboardWorkspace`
-   * component directly below the workspace name.
-   */
-  getDashboardWorkspaceComponent() {
+  getDashboardWorkspaceRowUsageComponent() {
     return null
   }
 

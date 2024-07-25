@@ -74,6 +74,10 @@
   font-weight: 400;
 }
 
+.context__menu-item-description--offset {
+  padding-left: 27px;
+}
+
 .context__menu-item-link {
   position: relative;
   color: $palette-neutral-1300;
@@ -163,7 +167,7 @@
 }
 
 .context__menu-item-title {
-  @include flex-align-items(4px);
+  @include flex-align-items(10px);
 }
 
 .context__form {

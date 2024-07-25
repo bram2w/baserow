@@ -33,6 +33,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "type",
             "group",  # GroupDeprecation
             "workspace",
+            "created_on",
         )
         extra_kwargs = {"id": {"read_only": True}}
 
