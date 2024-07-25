@@ -55,7 +55,7 @@ export default {
     WorkspaceInvitation,
   },
   layout: 'app',
-  async asyncData({ store, redirect }) {
+  async asyncData({ query, store, redirect }) {
     const selectedWorkspace = store.getters['workspace/getSelected']
     const allWorkspaces = store.getters['workspace/getAll']
 
@@ -66,6 +66,7 @@ export default {
         params: {
           workspaceId: selectedWorkspace.id,
         },
+        query,
       })
     }
 
@@ -77,6 +78,7 @@ export default {
         params: {
           workspaceId: allWorkspaces[0].id,
         },
+        query,
       })
     }
 
