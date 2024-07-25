@@ -10,6 +10,7 @@
         class="select-row-modal__search-input"
         @input="doSearch(visibleSearch, false)"
         @keydown.enter="doSearch(visibleSearch, true)"
+        @keydown.up.down="$refs.search.blur()"
       />
     </div>
     <div

@@ -59,7 +59,6 @@ export default {
       this.$emit('selected', ...args)
     },
     unselected(...args) {
-      console.log('unselected')
       this.$emit('unselected', ...args)
     },
   },
