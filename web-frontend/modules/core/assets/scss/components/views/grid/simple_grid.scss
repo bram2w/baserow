@@ -145,6 +145,13 @@
   }
 }
 
+.simple-grid__row--hover.simple-grid__row--checked {
+  .simple-grid__cell,
+  .grid-view__cell {
+    background-color: darken($color-primary-100, 1%);
+  }
+}
+
 .simple-grid__right-wrapper-footer {
   position: absolute;
   background: #fafafa;
