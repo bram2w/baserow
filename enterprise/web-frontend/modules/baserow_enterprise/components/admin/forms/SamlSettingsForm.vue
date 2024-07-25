@@ -84,7 +84,7 @@
     <FormGroup
       small-label
       required
-      :label="$t('samlSettingsForm.relayStateUrl')"
+      :label="$t('samlSettingsForm.acsUrl')"
       class="margin-bottom-2"
     >
       <code>{{ getAcsUrl() }}</code>
