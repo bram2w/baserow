@@ -42,6 +42,11 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/dashboard.vue'),
   },
   {
+    name: 'workspace',
+    path: '/workspace/:workspaceId',
+    component: path.resolve(__dirname, 'pages/workspace.vue'),
+  },
+  {
     name: 'group-invitation',
     path: '/group-invitation/:token',
     component: path.resolve(__dirname, 'pages/workspaceInvitation.vue'),
@@ -73,7 +78,7 @@ export const routes = [
   },
   {
     name: 'settings',
-    path: '/settings/:workspaceId',
+    path: '/workspace/:workspaceId/settings',
     component: path.resolve(__dirname, 'pages/settings.vue'),
     children: [
       {

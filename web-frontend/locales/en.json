@@ -7,7 +7,8 @@
     "free": "Free",
     "comingSoon": "Coming soon...",
     "billable": "Billable",
-    "all": "All"
+    "all": "All",
+    "beta": "Beta"
   },
   "action": {
     "upload": "Upload",
@@ -48,8 +49,10 @@
   "applicationType": {
     "database": "Database",
     "databaseDefaultName": "Untitled Database",
+    "databaseDesc": "Create an organized collection of structured data.",
     "builder": "Application",
     "builderDefaultName": "Untitled Application",
+    "builderDesc": "Easily build websites, web apps and portals without code.",
     "cantSelectTableTitle": "Couldn't select the database.",
     "cantSelectTableDescription": "The database couldn't be selected because it doesn't have any tables. Use the sidebar to create one.",
     "cantSelectPageTitle": "Couldn't select the application.",

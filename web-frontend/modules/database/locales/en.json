@@ -742,8 +742,9 @@
   "viewDecoratorContext": {
     "addDecorator": "Add decorator"
   },
-  "databaseDashboardSidebarLinks": {
-    "apiDocumentation": "API documentation"
+  "databaseDashboardResourceLinks": {
+    "title": "API documentation",
+    "description": "Learn more about our code"
   },
   "formViewField": {
     "required": "required",

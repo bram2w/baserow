@@ -8,7 +8,7 @@
           :selected-workspace="selectedWorkspace"
           :applications="applications"
           :user="user"
-          @selected-workspace="$store.dispatch('workspace/select', $event)"
+          @selected-workspace="selectedWorkspaceEvent"
         ></Sidebar>
       </div>
       <div class="layout__col-2">
@@ -127,6 +127,13 @@ export default {
         }
       }
       keyboardShortcutsToPriorityEventBus(event, this.$priorityBus)
+    },
+    selectedWorkspaceEvent(workspace) {
+      this.$store.dispatch('workspace/select', workspace)
+      this.$router.push({
+        name: 'workspace',
+        params: { workspaceId: workspace.id },
+      })
     },
   },
 }

@@ -254,6 +254,9 @@ def test_get_airtable_import_job(data_fixture, api_client):
         "database": {
             "id": airtable_job_1.database.id,
             "name": airtable_job_1.database.name,
+            "created_on": airtable_job_1.database.created_on.isoformat(
+                timespec="microseconds"
+            ).replace("+00:00", "Z"),
             "order": 0,
             "type": "database",
             "group": {  # GroupDeprecation

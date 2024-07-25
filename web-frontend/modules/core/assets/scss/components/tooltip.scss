@@ -39,14 +39,14 @@
 }
 
 .tooltip__content {
-  background-color: $color-neutral-800;
+  background-color: $palette-neutral-1200;
   color: $white;
   padding: 0 8px;
   text-align: center;
   white-space: nowrap;
 
   @include fixed-height(26px, 12px);
-  @include rounded($rounded);
+  @include rounded($rounded-md);
 
   &--expandable {
     padding: 12px;

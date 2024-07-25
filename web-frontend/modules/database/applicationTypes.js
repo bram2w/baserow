@@ -1,4 +1,3 @@
-import VueRouter from 'vue-router'
 import { ApplicationType } from '@baserow/modules/core/applicationTypes'
 import Sidebar from '@baserow/modules/database/components/sidebar/Sidebar'
 import TemplateSidebar from '@baserow/modules/database/components/sidebar/TemplateSidebar'
@@ -6,6 +5,7 @@ import TableTemplate from '@baserow/modules/database/components/table/TableTempl
 import { populateTable } from '@baserow/modules/database/store/table'
 import GridViewRowExpandButton from '@baserow/modules/database/components/view/grid/GridViewRowExpandButton'
 import DatabaseForm from '@baserow/modules/database/components/form/DatabaseForm'
+import ApplicationContext from '@baserow/modules/database/components/application/ApplicationContext'
 
 export class DatabaseApplicationType extends ApplicationType {
   static getType() {
@@ -30,6 +30,11 @@ export class DatabaseApplicationType extends ApplicationType {
     return i18n.t('applicationType.database')
   }
 
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.databaseDesc')
+  }
+
   getDefaultName() {
     const { i18n } = this.app
     return i18n.t('applicationType.databaseDefaultName')
@@ -37,6 +42,10 @@ export class DatabaseApplicationType extends ApplicationType {
 
   getSidebarComponent() {
     return Sidebar
+  }
+
+  getApplicationContextComponent() {
+    return ApplicationContext
   }
 
   getTemplateSidebarComponent() {
@@ -96,26 +105,13 @@ export class DatabaseApplicationType extends ApplicationType {
       .sort((a, b) => a.order - b.order)
 
     if (tables.length > 0) {
-      try {
-        await $router.push({
-          name: 'database-table',
-          params: {
-            databaseId: application.id,
-            tableId: tables[0].id,
-          },
-        })
-      } catch (error) {
-        // When redirecting to the `database-table`, it can happen that it redirects
-        // to another view. For some reason, this is causing the router throw an
-        // error. In our case, it's perfectly fine, so we're suppressing this error
-        // here. More information:
-        // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
-        // error-redirected-from-login-to-via-a
-        const { isNavigationFailure, NavigationFailureType } = VueRouter
-        if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
-          throw error
-        }
-      }
+      await $router.push({
+        name: 'database-table',
+        params: {
+          databaseId: application.id,
+          tableId: tables[0].id,
+        },
+      })
       return true
     } else {
       $store.dispatch('toast/error', {
