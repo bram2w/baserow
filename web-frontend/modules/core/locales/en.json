@@ -647,7 +647,7 @@
     "errorInvalidFormula": "The formula is invalid."
   },
   "dataExplorer": {
-    "noMatchingNodesText": "No matching data providers were found.",
+    "noMatchingNodesText": "No matching results were found.",
     "noProvidersText": "No data providers were found. To get started you can, for example, add a data source or page parameter."
   },
   "richTextEditorBubbleMenu": {
@@ -718,5 +718,15 @@
   "workspaceStep": {
     "title": "Create your workspace",
     "workspaceLabel": "Workspace name"
+  },
+  "colorInput": {
+    "default": "Default"
+  },
+  "imageInput": {
+    "labelDescription": "Select an image to upload...",
+    "labelButton": "Upload"
+  },
+  "dataExplorerNode": {
+    "showMore": "Show more repetitions"
   }
 }

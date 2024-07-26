@@ -80,15 +80,27 @@ const mutations = {
     updateCachedValues(page)
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
+    let updateCached = false
     page.elements.forEach((element) => {
       if (element.id === elementToUpdate.id) {
+        if (
+          (values.order !== undefined && values.order !== element.order) ||
+          (values.place_in_container !== undefined &&
+            values.place_in_container !== element.place_in_container)
+        ) {
+          updateCached = true
+        }
         Object.assign(element, values)
       }
     })
     if (state.selected?.id === elementToUpdate.id) {
       Object.assign(state.selected, values)
     }
-    updateCachedValues(page)
+    if (updateCached) {
+      // We need to update cached values only if order or place of an element has
+      // changed or if an element has been added or removed.
+      updateCachedValues(page)
+    }
   },
   DELETE_ITEM(state, { page, elementId }) {
     const index = page.elements.findIndex((element) => element.id === elementId)
