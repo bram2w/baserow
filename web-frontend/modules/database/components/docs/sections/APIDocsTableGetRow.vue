@@ -23,7 +23,10 @@
       </h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="user_field_names" :optional="true" type="any">
-          <MarkdownIt :content="$t('apiDocs.userFieldNamesDescription')" />
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocs.userFieldNamesDescription')"
+          />
         </APIDocsParameter>
       </ul>
     </div>
