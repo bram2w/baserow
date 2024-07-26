@@ -1,5 +1,11 @@
 <template>
   <form class="table-element-form" @submit.prevent @keydown.enter.prevent>
+    <CustomStyle
+      v-model="values.styles"
+      style-key="table"
+      :config-block-types="['table']"
+      :theme="builder.theme"
+    />
     <FormGroup
       class="margin-bottom-2"
       small-label

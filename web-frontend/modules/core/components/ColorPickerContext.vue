@@ -164,6 +164,13 @@ export default {
   },
   methods: {
     setColorFromPicker(value) {
+      if (this.selectedVariable) {
+        // If we come from a variable before we reset the alpha channel to 1 otherwise
+        // You could think something doesn't work.
+        const rgba = convertHexToRgb(value)
+        rgba.a = 1
+        value = convertRgbToHex(rgba)
+      }
       this.colorUpdated(value)
       this.$emit(
         'input',

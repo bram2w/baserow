@@ -46,6 +46,9 @@ from baserow.contrib.builder.elements.registries import (
 )
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.theme.theme_config_block_types import (
+    TableThemeConfigBlockType,
+)
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
@@ -237,8 +240,11 @@ class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
             ),
             "styles": DynamicConfigBlockSerializer(
                 required=False,
-                property_name="button",
-                theme_config_block_type_name=ButtonThemeConfigBlockType.type,
+                property_name=["button", "table"],
+                theme_config_block_type_name=[
+                    ButtonThemeConfigBlockType.type,
+                    TableThemeConfigBlockType.type,
+                ],
                 serializer_kwargs={"required": False},
             ),
         }

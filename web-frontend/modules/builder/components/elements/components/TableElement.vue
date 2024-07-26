@@ -4,6 +4,8 @@
       :fields="element.fields"
       :rows="rows"
       :orientation="orientation"
+      class="ab-table"
+      :style="getStyleOverride('table')"
     >
       <template #cell-content="{ rowIndex, field, value }">
         <component

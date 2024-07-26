@@ -1,0 +1,81 @@
+.ab-table {
+  border: var(--table-border-size, 1px) solid var(--table-border-color, $black);
+  text-align: var(--table-cell-alignment, left);
+  font-size: var(--body-font-size, 13px);
+  border-radius: var(--table-border-radius, 0);
+  background-color: var(--table-cell-background-color, $palette-neutral-200);
+
+  .baserow-table__header-cell,
+  .baserow-table__cell {
+    padding: var(--table-cell-vertical-padding, 10px)
+      var(--table-cell-horizontal-padding, 20px);
+  }
+
+  .baserow-table__cell {
+    font-size: var(--body-font-size, 13px);
+    color: var(--body-text-color, $color-neutral-900);
+    font-family: var(--body-font-family, Inter);
+    text-align: var(--table-cell-alignment, left);
+  }
+
+  .baserow-table__header-cell {
+    font-weight: 600;
+    background-color: var(
+      --table-header-background-color,
+      $palette-neutral-200
+    );
+    font-size: var(--table-header-font-size, 13px);
+    color: var(--table-header-text-color, $color-neutral-900);
+    font-family: var(--table-header-font-family, Inter);
+    text-align: var(--table-header-text-alignment, left);
+  }
+
+  & .baserow-table__row:not(:last-child) .baserow-table__separator {
+    border-bottom: var(--table-horizontal-separator-size, 1px) solid
+      var(--table-horizontal-separator-color, $black);
+  }
+
+  .baserow-table--vertical {
+    .baserow-table__header-cell {
+      border-right: var(--table-vertical-separator-size, 1px) solid
+        var(--table-vertical-separator-color, $black);
+    }
+
+    tbody.baserow-table__row:nth-child(even) {
+      background-color: var(
+        --table-cell-alternate-background-color,
+        transparent
+      );
+    }
+  }
+
+  .baserow-table--horizontal {
+    .baserow-table__header-cell,
+    .baserow-table__cell {
+      border-bottom: var(--table-horizontal-separator-size, 1px) solid
+        var(--table-horizontal-separator-color, $black);
+      border-right: var(--table-vertical-separator-size, 1px) solid
+        var(--table-vertical-separator-color, $black);
+    }
+
+    .baserow-table__row {
+      .baserow-table__cell:last-child,
+      .baserow-table__header-cell:last-child {
+        border-right: none;
+      }
+    }
+
+    .baserow-table__row:last-child {
+      .baserow-table__cell {
+        border-bottom: none;
+      }
+    }
+
+    tbody .baserow-table__row:nth-child(even) {
+      background-color: var(
+        --table-cell-alternate-background-color,
+        transparent
+      );
+    }
+  }
+}

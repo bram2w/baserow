@@ -246,6 +246,7 @@ class BuilderConfig(AppConfig):
             InputThemeConfigBlockType,
             LinkThemeConfigBlockType,
             PageThemeConfigBlockType,
+            TableThemeConfigBlockType,
             TypographyThemeConfigBlockType,
         )
 
@@ -256,6 +257,7 @@ class BuilderConfig(AppConfig):
         theme_config_block_registry.register(ImageThemeConfigBlockType())
         theme_config_block_registry.register(PageThemeConfigBlockType())
         theme_config_block_registry.register(InputThemeConfigBlockType())
+        theme_config_block_registry.register(TableThemeConfigBlockType())
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (

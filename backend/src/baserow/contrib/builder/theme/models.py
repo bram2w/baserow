@@ -329,3 +329,98 @@ class InputThemeConfigBlock(ThemeConfigBlock):
     input_horizontal_padding = models.SmallIntegerField(
         default=12, help_text="Input horizontal padding"
     )
+
+
+class TableThemeConfigBlock(ThemeConfigBlock):
+    """
+    Theme for tables.
+    """
+
+    # Table styles
+    table_border_color = models.CharField(
+        max_length=20,
+        default="#000000FF",
+        blank=True,
+        help_text="The color of the table border",
+    )
+    table_border_size = models.SmallIntegerField(
+        default=1, help_text="Table border size"
+    )
+    table_border_radius = models.SmallIntegerField(
+        default=0, help_text="Table border radius"
+    )
+
+    # Header styles
+    table_header_background_color = models.CharField(
+        max_length=20,
+        default="#edededff",
+        blank=True,
+        help_text="The background color of the table header cells",
+    )
+    table_header_text_color = models.CharField(
+        max_length=20,
+        default="#000000ff",
+        blank=True,
+        help_text="The text color of the table header cells",
+    )
+    table_header_font_size = models.SmallIntegerField(
+        default=13,
+        help_text="The font size of the header cells",
+    )
+    table_header_font_family = models.CharField(
+        max_length=250,
+        default="inter",
+        help_text="The font family of the table header cells",
+    )
+    table_header_text_alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
+
+    # Cell styles
+    table_cell_background_color = models.CharField(
+        max_length=20,
+        default="transparent",
+        blank=True,
+        help_text="The background color of the table cells",
+    )
+
+    table_cell_alternate_background_color = models.CharField(
+        max_length=20,
+        default="transparent",
+        blank=True,
+        help_text="The alternate background color of the table cells",
+    )
+    table_cell_alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
+    table_cell_vertical_padding = models.SmallIntegerField(
+        default=10, help_text="Table cell vertical padding"
+    )
+    table_cell_horizontal_padding = models.SmallIntegerField(
+        default=20, help_text="Table cell horizontal padding"
+    )
+
+    # Separator styles
+    table_vertical_separator_color = models.CharField(
+        max_length=20,
+        default="#000000FF",
+        blank=True,
+        help_text="The color of the table vertical separator",
+    )
+    table_vertical_separator_size = models.SmallIntegerField(
+        default=0, help_text="Table vertical separator size"
+    )
+
+    table_horizontal_separator_color = models.CharField(
+        max_length=20,
+        default="#000000FF",
+        blank=True,
+        help_text="The color of the table horizontal separator",
+    )
+    table_horizontal_separator_size = models.SmallIntegerField(
+        default=1, help_text="Table horizontal separator size"
+    )
