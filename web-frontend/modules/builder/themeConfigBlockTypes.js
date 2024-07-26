@@ -6,6 +6,7 @@ import LinkThemeConfigBlock from '@baserow/modules/builder/components/theme/Link
 import ImageThemeConfigBlock from '@baserow/modules/builder/components/theme/ImageThemeConfigBlock'
 import PageThemeConfigBlock from '@baserow/modules/builder/components/theme/PageThemeConfigBlock'
 import InputThemeConfigBlock from '@baserow/modules/builder/components/theme/InputThemeConfigBlock'
+import TableThemeConfigBlock from '@baserow/modules/builder/components/theme/TableThemeConfigBlock'
 import {
   resolveColor,
   colorRecommendation,
@@ -21,14 +22,50 @@ import get from 'lodash/get'
  * Helper class to construct easily style objects.
  */
 export class ThemeStyle {
-  constructor() {
+  constructor({ colorVariables = {}, $registry }) {
     this.style = {}
+    this.colorVariables = colorVariables
+    this.$registry = $registry
   }
 
   addIfExists(theme, propName, styleName, transform = (v) => v) {
+    if (!styleName) {
+      styleName = `--${propName.replace(/_/g, '-')}`
+    }
     if (Object.prototype.hasOwnProperty.call(theme, propName)) {
       this.style[styleName] = transform(theme[propName])
     }
+  }
+
+  addColorIfExists(theme, propName, styleName) {
+    return this.addIfExists(theme, propName, styleName, (v) =>
+      resolveColor(v, this.colorVariables)
+    )
+  }
+
+  addColorRecommendationIfExists(theme, propName, styleName) {
+    return this.addIfExists(
+      theme,
+      propName,
+      styleName,
+      (v) => (v) => colorRecommendation(resolveColor(v, this.colorVariables))
+    )
+  }
+
+  addFontFamilyIfExists(theme, propName, styleName) {
+    return this.addIfExists(theme, propName, styleName, (v) => {
+      const fontFamilyType = this.$registry.get('fontFamily', v)
+      return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
+    })
+  }
+
+  addPixelValueIfExists(theme, propName, styleName) {
+    return this.addIfExists(
+      theme,
+      propName,
+      styleName,
+      (v) => `${Math.min(100, v)}px`
+    )
   }
 
   toObject() {
@@ -124,7 +161,10 @@ export class ColorThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
     style.addIfExists(theme, 'primary_color', '--main-primary-color', (v) =>
       resolveColor(v, colorVariables)
     )
@@ -155,6 +195,11 @@ export class ColorThemeConfigBlockType extends ThemeConfigBlockType {
   getColorVariables(theme) {
     const { i18n } = this.app
     return [
+      {
+        name: i18n.t('colorThemeConfigBlockType.transparent'),
+        value: 'transparent',
+        color: '#00000000',
+      },
       {
         name: i18n.t('colorThemeConfigBlockType.primary'),
         value: 'primary',
@@ -207,15 +252,17 @@ export class TypographyThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
     Array.from([1, 2, 3, 4, 5, 6]).forEach((level) => {
-      style.addIfExists(
+      style.addPixelValueIfExists(
         theme,
         `heading_${level}_font_size`,
-        `--heading-h${level}-font-size`,
-        (v) => `${Math.min(100, v)}px`
+        `--heading-h${level}-font-size`
       )
-      style.addIfExists(
+      style.addColorIfExists(
         theme,
         `heading_${level}_text_color`,
         `--heading-h${level}-color`,
@@ -224,38 +271,18 @@ export class TypographyThemeConfigBlockType extends ThemeConfigBlockType {
       style.addIfExists(
         theme,
         `heading_${level}_text_alignment`,
-        `--heading-h${level}-text-alignment`,
-        (v) => v
+        `--heading-h${level}-text-alignment`
       )
-      style.addIfExists(
+      style.addFontFamilyIfExists(
         theme,
         `heading_${level}_font_family`,
-        `--heading-h${level}-font-family`,
-        (v) => {
-          const fontFamilyType = this.app.$registry.get('fontFamily', v)
-          return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
-        }
+        `--heading-h${level}-font-family`
       )
     })
-    style.addIfExists(
-      theme,
-      `body_font_size`,
-      `--body-font-size`,
-      (v) => `${Math.min(100, v)}px`
-    )
-    style.addIfExists(theme, `body_text_color`, `--body-text-color`, (v) =>
-      resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      `body_text_alignment`,
-      `--body-text-alignment`,
-      (v) => v
-    )
-    style.addIfExists(theme, `body_font_family`, `--body-font-family`, (v) => {
-      const fontFamilyType = this.app.$registry.get('fontFamily', v)
-      return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
-    })
+    style.addPixelValueIfExists(theme, `body_font_size`)
+    style.addColorIfExists(theme, `body_text_color`)
+    style.addIfExists(theme, `body_text_alignment`)
+    style.addFontFamilyIfExists(theme, `body_font_family`)
     return style.toObject()
   }
 
@@ -278,53 +305,24 @@ export class ButtonThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
-    style.addIfExists(
-      theme,
-      'button_background_color',
-      '--button-background-color',
-      (v) => resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      'button_hover_background_color',
-      '--button-hover-background-color',
-      (v) => resolveColor(v, colorVariables)
-    )
-    style.addIfExists(theme, 'button_text_color', '--button-text-color', (v) =>
-      resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      'button_hover_text_color',
-      '--button-hover-text-color',
-      (v) => resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      'button_border_color',
-      '--button-border-color',
-      (v) => resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      'button_hover_border_color',
-      '--button-hover-border-color',
-      (v) => resolveColor(v, colorVariables)
-    )
-    style.addIfExists(theme, 'button_width', '--button-width', (v) =>
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
+    style.addColorIfExists(theme, 'button_background_color')
+    style.addColorIfExists(theme, 'button_hover_background_color')
+    style.addColorIfExists(theme, 'button_text_color')
+    style.addColorIfExists(theme, 'button_hover_text_color')
+    style.addColorIfExists(theme, 'button_border_color')
+    style.addColorIfExists(theme, 'button_hover_border_color')
+    style.addIfExists(theme, 'button_width', null, (v) =>
       v === WIDTHS_NEW.FULL ? '100%' : 'auto'
     )
-    style.addIfExists(
-      theme,
-      'button_text_alignment',
-      '--button-text-alignment',
-      (v) => v
-    )
+    style.addIfExists(theme, 'button_text_alignment')
     style.addIfExists(
       theme,
       'button_alignment',
-      '--button-alignment',
+      null,
       (v) =>
         ({
           [HORIZONTAL_ALIGNMENTS.LEFT]: 'flex-start',
@@ -332,51 +330,12 @@ export class ButtonThemeConfigBlockType extends ThemeConfigBlockType {
           [HORIZONTAL_ALIGNMENTS.RIGHT]: 'flex-end',
         }[v])
     )
-    style.addIfExists(
-      theme,
-      'button_font_alignment',
-      '--button-text-alignment',
-      (v) => v
-    )
-    style.addIfExists(
-      theme,
-      `button_font_family`,
-      `--button-font-family`,
-      (v) => {
-        const fontFamilyType = this.app.$registry.get('fontFamily', v)
-        return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
-      }
-    )
-    style.addIfExists(
-      theme,
-      `button_font_size`,
-      `--button-font-size`,
-      (v) => `${Math.min(100, v)}px`
-    )
-    style.addIfExists(
-      theme,
-      `button_border_radius`,
-      `--button-border-radius`,
-      (v) => `${v}px`
-    )
-    style.addIfExists(
-      theme,
-      `button_border_size`,
-      `--button-border-size`,
-      (v) => `${v}px`
-    )
-    style.addIfExists(
-      theme,
-      `button_horizontal_padding`,
-      `--button-horizontal-padding`,
-      (v) => `${v}px`
-    )
-    style.addIfExists(
-      theme,
-      `button_vertical_padding`,
-      `--button-vertical-padding`,
-      (v) => `${v}px`
-    )
+    style.addFontFamilyIfExists(theme, `button_font_family`)
+    style.addPixelValueIfExists(theme, `button_font_size`)
+    style.addPixelValueIfExists(theme, `button_border_radius`)
+    style.addPixelValueIfExists(theme, `button_border_size`)
+    style.addPixelValueIfExists(theme, `button_horizontal_padding`)
+    style.addPixelValueIfExists(theme, `button_vertical_padding`)
     return style.toObject()
   }
 
@@ -399,16 +358,12 @@ export class LinkThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
-    style.addIfExists(theme, 'link_text_color', '--link-text-color', (v) =>
-      resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      'link_hover_text_color',
-      '--link-hover-text-color',
-      (v) => resolveColor(v, colorVariables)
-    )
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
+    style.addColorIfExists(theme, 'link_text_color')
+    style.addColorIfExists(theme, 'link_hover_text_color')
     style.addIfExists(
       theme,
       'link_text_alignment',
@@ -446,7 +401,10 @@ export class ImageThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
     style.addIfExists(
       theme,
       'image_alignment',
@@ -532,13 +490,11 @@ export class PageThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
-    style.addIfExists(
-      theme,
-      'page_background_color',
-      '--page-background-color',
-      (v) => resolveColor(v, colorVariables)
-    )
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
+    style.addColorIfExists(theme, 'page_background_color')
     style.addIfExists(
       theme,
       'page_background_file',
@@ -579,98 +535,40 @@ export class InputThemeConfigBlockType extends ThemeConfigBlockType {
   }
 
   getCSS(theme, colorVariables, baseTheme = null) {
-    const style = new ThemeStyle()
-    style.addIfExists(theme, 'label_text_color', '--label-text-color', (v) =>
-      resolveColor(v, colorVariables)
-    )
-    style.addIfExists(
-      theme,
-      `label_font_family`,
-      `--label-font-family`,
-      (v) => {
-        const fontFamilyType = this.app.$registry.get('fontFamily', v)
-        return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
-      }
-    )
-    style.addIfExists(
-      theme,
-      `label_font_size`,
-      `--label-font-size`,
-      (v) => `${Math.min(100, v)}px`
-    )
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
 
-    style.addIfExists(theme, 'input_text_color', '--input-text-color', (v) =>
-      resolveColor(v, colorVariables)
-    )
+    style.addColorIfExists(theme, 'label_text_color')
+    style.addFontFamilyIfExists(theme, `label_font_family`)
+    style.addPixelValueIfExists(theme, `label_font_size`)
+
+    style.addColorIfExists(theme, 'input_text_color')
     style.addIfExists(
       theme,
       'input_text_color',
       '--input-text-color-complement',
       (v) => colorRecommendation(resolveColor(v, colorVariables))
     )
-    style.addIfExists(
-      theme,
-      `input_font_family`,
-      `--input-font-family`,
-      (v) => {
-        const fontFamilyType = this.app.$registry.get('fontFamily', v)
-        return `"${fontFamilyType.name}","${fontFamilyType.safeFont}"`
-      }
-    )
-    style.addIfExists(
-      theme,
-      `input_font_size`,
-      `--input-font-size`,
-      (v) => `${Math.min(100, v)}px`
-    )
-    style.addIfExists(
+    style.addFontFamilyIfExists(theme, `input_font_family`)
+    style.addPixelValueIfExists(theme, `input_font_size`)
+    style.addColorIfExists(theme, 'input_background_color')
+    style.addColorRecommendationIfExists(
       theme,
       'input_background_color',
-      '--input-background-color',
-      (v) => resolveColor(v, colorVariables)
+      '--input-background-color-complement'
     )
-    style.addIfExists(
-      theme,
-      'input_background_color',
-      '--input-background-color-complement',
-      (v) => colorRecommendation(resolveColor(v, colorVariables))
-    )
-    style.addIfExists(
+    style.addColorIfExists(theme, 'input_border_color')
+    style.addColorRecommendationIfExists(
       theme,
       'input_border_color',
-      '--input-border-color',
-      (v) => resolveColor(v, colorVariables)
+      '--input-border-color-complement'
     )
-    style.addIfExists(
-      theme,
-      'input_border_color',
-      '--input-border-color-complement',
-      (v) => colorRecommendation(resolveColor(v, colorVariables))
-    )
-    style.addIfExists(
-      theme,
-      `input_border_radius`,
-      `--input-border-radius`,
-      (v) => `${v}px`
-    )
-    style.addIfExists(
-      theme,
-      `input_border_size`,
-      `--input-border-size`,
-      (v) => `${v}px`
-    )
-    style.addIfExists(
-      theme,
-      `input_horizontal_padding`,
-      `--input-horizontal-padding`,
-      (v) => `${v}px`
-    )
-    style.addIfExists(
-      theme,
-      `input_vertical_padding`,
-      `--input-vertical-padding`,
-      (v) => `${v}px`
-    )
+    style.addPixelValueIfExists(theme, `input_border_radius`)
+    style.addPixelValueIfExists(theme, `input_border_size`)
+    style.addPixelValueIfExists(theme, `input_horizontal_padding`)
+    style.addPixelValueIfExists(theme, `input_vertical_padding`)
     return style.toObject()
   }
 
@@ -680,5 +578,55 @@ export class InputThemeConfigBlockType extends ThemeConfigBlockType {
 
   getOrder() {
     return 55
+  }
+}
+
+export class TableThemeConfigBlockType extends ThemeConfigBlockType {
+  static getType() {
+    return 'table'
+  }
+
+  get label() {
+    return this.app.i18n.t('themeConfigBlockType.table')
+  }
+
+  getCSS(theme, colorVariables, baseTheme = null) {
+    const style = new ThemeStyle({
+      colorVariables,
+      $registry: this.app.$registry,
+    })
+    style.addColorIfExists(theme, 'table_border_color')
+    style.addPixelValueIfExists(theme, `table_border_size`)
+    style.addPixelValueIfExists(theme, `table_border_radius`)
+
+    style.addColorIfExists(theme, 'table_header_background_color')
+    style.addColorIfExists(theme, 'table_header_text_color')
+    style.addPixelValueIfExists(theme, `table_header_font_size`)
+    style.addFontFamilyIfExists(theme, `table_header_font_family`)
+    style.addIfExists(theme, `table_header_text_alignment`)
+
+    style.addColorIfExists(theme, 'table_cell_background_color')
+    style.addColorIfExists(theme, 'table_cell_alternate_background_color')
+    style.addColorIfExists(theme, 'table_cell_text_color')
+    style.addFontFamilyIfExists(theme, `table_cell_font_family`)
+    style.addPixelValueIfExists(theme, `table_cell_font_size`)
+    style.addIfExists(theme, `table_cell_alignment`)
+    style.addPixelValueIfExists(theme, `table_cell_vertical_padding`)
+    style.addPixelValueIfExists(theme, `table_cell_horizontal_padding`)
+
+    style.addColorIfExists(theme, 'table_vertical_separator_color')
+    style.addPixelValueIfExists(theme, `table_vertical_separator_size`)
+    style.addColorIfExists(theme, 'table_horizontal_separator_color')
+    style.addPixelValueIfExists(theme, `table_horizontal_separator_size`)
+
+    return style.toObject()
+  }
+
+  get component() {
+    return TableThemeConfigBlock
+  }
+
+  getOrder() {
+    return 65
   }
 }

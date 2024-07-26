@@ -57,7 +57,6 @@ import Expandable from '@baserow/modules/core/components/Expandable.vue'
 import RadioButton from '@baserow/modules/core/components/RadioButton'
 import Thumbnail from '@baserow/modules/core/components/Thumbnail'
 import ColorInput from '@baserow/modules/core/components/ColorInput'
-import ColorInputGroup from '@baserow/modules/core/components/ColorInputGroup'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 
 function setupVue(Vue) {
@@ -101,7 +100,6 @@ function setupVue(Vue) {
   Vue.component('FormGroup', FormGroup)
   Vue.component('FormRow', FormRow)
   Vue.component('ColorInput', ColorInput)
-  Vue.component('ColorInputGroup', ColorInputGroup)
   Vue.component('ImageInput', ImageInput)
   Vue.component('SelectSearch', SelectSearch)
   Vue.component('Logo', Logo)

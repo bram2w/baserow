@@ -93,6 +93,7 @@ import {
   ImageThemeConfigBlockType,
   PageThemeConfigBlockType,
   InputThemeConfigBlockType,
+  TableThemeConfigBlockType,
 } from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
   CreateRowWorkflowActionType,
@@ -296,6 +297,10 @@ export default (context) => {
   app.$registry.register(
     'themeConfigBlock',
     new InputThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new TableThemeConfigBlockType(context)
   )
 
   app.$registry.register(

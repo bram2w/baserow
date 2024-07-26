@@ -335,44 +335,17 @@ export default {
     },
   },
   validations: {
-    values: {
-      label_font_size: {
-        required,
-        integer,
-        minValue: minValue(minMax.label_font_size.min),
-        maxValue: maxValue(minMax.label_font_size.max),
-      },
-      input_font_size: {
-        required,
-        integer,
-        minValue: minValue(minMax.input_font_size.min),
-        maxValue: maxValue(minMax.input_font_size.max),
-      },
-      input_border_radius: {
-        required,
-        integer,
-        minValue: minValue(minMax.input_border_radius.min),
-        maxValue: maxValue(minMax.input_border_radius.max),
-      },
-      input_border_size: {
-        required,
-        integer,
-        minValue: minValue(minMax.input_border_size.min),
-        maxValue: maxValue(minMax.input_border_size.max),
-      },
-      input_horizontal_padding: {
-        required,
-        integer,
-        minValue: minValue(minMax.input_horizontal_padding.min),
-        maxValue: maxValue(minMax.input_horizontal_padding.max),
-      },
-      input_vertical_padding: {
-        required,
-        integer,
-        minValue: minValue(minMax.input_vertical_padding.min),
-        maxValue: maxValue(minMax.input_vertical_padding.max),
-      },
-    },
+    values: Object.fromEntries(
+      Object.entries(minMax).map(([key, limits]) => [
+        key,
+        {
+          required,
+          integer,
+          minValue: minValue(limits.min),
+          maxValue: maxValue(limits.max),
+        },
+      ])
+    ),
   },
 }
 </script>

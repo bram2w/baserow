@@ -30,19 +30,22 @@
                 :field="field"
                 :row-index="index"
               >
-                {{ value }}
+                {{ row[field.name] }}
               </slot>
             </td>
           </tr>
         </tbody>
       </template>
       <template v-else>
-        <tbody v-if="rows.length">
-          <template v-for="(row, rowIndex) in rows">
+        <template v-if="rows.length">
+          <tbody
+            v-for="(row, rowIndex) in rows"
+            :key="row.__id__"
+            class="baserow-table__row"
+          >
             <tr
               v-for="(field, fieldIndex) in fields"
               :key="`${row.__id__}_${field.id}`"
-              class="baserow-table__row"
             >
               <th
                 class="baserow-table__header-cell"
@@ -68,8 +71,8 @@
                 </slot>
               </td>
             </tr>
-          </template>
-        </tbody>
+          </tbody>
+        </template>
       </template>
       <tbody v-if="!rows.length">
         <tr>

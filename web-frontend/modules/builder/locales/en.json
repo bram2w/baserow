@@ -379,7 +379,8 @@
     "button": "Button",
     "link": "Link",
     "image": "Image",
-    "input": "Input"
+    "input": "Input",
+    "table": "Table"
   },
   "colorThemeConfigBlock": {
     "primaryColor": "Primary",
@@ -395,6 +396,7 @@
     "backgroundMode": "Background mode"
   },
   "colorThemeConfigBlockType": {
+    "transparent": "Transparent",
     "primary": "Primary",
     "secondary": "Secondary",
     "border": "Border",
@@ -459,6 +461,27 @@
     "imageConstraintCoverDisabled": "Unavailable with empty max height.",
     "imageConstraintContain": "Contain",
     "imageConstraintContainDisabled": "Unavailable with a max height."
+  },
+  "tableThemeConfigBlock": {
+    "borderColor": "Border color",
+    "backgroundAlternateColor": "Alternate color",
+    "backgroundColor": "Background color",
+    "textColor": "Text color",
+    "borderSize": "Border size",
+    "borderRadius": "Border radius",
+    "padding": "Padding",
+    "fontFamily": "Font",
+    "size": "Size",
+    "fontSize": "Font size",
+    "table": "Table",
+    "header": "Header",
+    "alignment": "Alignment",
+    "cells": "Cells",
+    "separators": "Separators",
+    "verticalSeparatorColor": "Vertical color",
+    "verticalSeparatorSize": "Vertical size",
+    "horizontalSeparatorColor": "Horizontal color",
+    "horizontalSeparatorSize": "Horizontal size"
   },
   "buttonElementForm": {
     "valueLabel": "Button text",
