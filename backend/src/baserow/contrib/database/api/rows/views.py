@@ -47,7 +47,10 @@ from baserow.contrib.database.api.rows.serializers import GetRowAdjacentSerializ
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
-from baserow.contrib.database.api.utils import get_include_exclude_fields
+from baserow.contrib.database.api.utils import (
+    extract_user_field_names_from_params,
+    get_include_exclude_fields,
+)
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
@@ -259,9 +262,11 @@ class RowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided the returned json "
-                    "will use the user specified field names instead of internal "
-                    "Baserow field names (field_123 etc). "
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause the returned JSON to use the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             OpenApiParameter(
@@ -418,9 +423,11 @@ class RowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided this endpoint will "
-                    "expect and return the user specified field names instead of "
-                    "internal Baserow field names (field_123 etc)."
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause this endpoint to expect and return the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -490,7 +497,8 @@ class RowsView(APIView):
             context=table,
         )
 
-        user_field_names = "user_field_names" in request.GET
+        user_field_names = extract_user_field_names_from_params(request.GET)
+
         model = table.get_model()
 
         validation_serializer = get_row_serializer_class(
@@ -658,9 +666,11 @@ class RowView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided the returned json "
-                    "will use the user specified field names instead of internal "
-                    "Baserow field names (field_123 etc). "
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause the returned JSON to use the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
         ],
@@ -707,7 +717,7 @@ class RowView(APIView):
         table = TableHandler().get_table(table_id)
 
         TokenHandler().check_table_permissions(request, "read", table, False)
-        user_field_names = "user_field_names" in request.GET
+        user_field_names = extract_user_field_names_from_params(request.GET)
         model = table.get_model()
         row = RowHandler().get_row(request.user, table, row_id, model)
         serializer_class = get_row_serializer_class(
@@ -736,9 +746,11 @@ class RowView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided this endpoint will "
-                    "expect and return the user specified field names instead of "
-                    "internal Baserow field names (field_123 etc)."
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause this endpoint to expect and return the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -802,7 +814,7 @@ class RowView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "update", table, False)
 
-        user_field_names = "user_field_names" in request.GET
+        user_field_names = extract_user_field_names_from_params(request.GET)
         field_ids, field_names = None, None
 
         if user_field_names:
@@ -923,9 +935,11 @@ class RowMoveView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided the returned json "
-                    "will use the user specified field names instead of internal "
-                    "Baserow field names (field_123 etc). "
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause the returned JSON to use the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -967,7 +981,7 @@ class RowMoveView(APIView):
 
         TokenHandler().check_table_permissions(request, "update", table, False)
 
-        user_field_names = "user_field_names" in request.GET
+        user_field_names = extract_user_field_names_from_params(request.GET)
 
         model = table.get_model()
 
@@ -1015,9 +1029,11 @@ class BatchRowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided this endpoint will "
-                    "expect and return the user specified field names instead of "
-                    "internal Baserow field names (field_123 etc)."
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause this endpoint to expect and return the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -1083,7 +1099,7 @@ class BatchRowsView(APIView):
         TokenHandler().check_table_permissions(request, "create", table, False)
         model = table.get_model()
 
-        user_field_names = "user_field_names" in request.GET
+        user_field_names = extract_user_field_names_from_params(request.GET)
         before_id = query_params.get("before")
         before_row = (
             RowHandler().get_row(request.user, table, before_id, model)
@@ -1130,9 +1146,11 @@ class BatchRowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided this endpoint will "
-                    "expect and return the user specified field names instead of "
-                    "internal Baserow field names (field_123 etc)."
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause this endpoint to expect and return the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
@@ -1198,7 +1216,7 @@ class BatchRowsView(APIView):
         TokenHandler().check_table_permissions(request, "update", table, False)
         model = table.get_model()
 
-        user_field_names = "user_field_names" in request.GET
+        user_field_names = extract_user_field_names_from_params(request.GET)
 
         row_validation_serializer = get_row_serializer_class(
             model,
@@ -1326,9 +1344,11 @@ class RowAdjacentView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
                 description=(
-                    "A flag query parameter which if provided the returned json "
-                    "will use the user specified field names instead of internal "
-                    "Baserow field names (field_123 etc). "
+                    "A flag query parameter that, if provided with one of the "
+                    "following values: `y`, `yes`, `true`, `t`, `on`, `1`, or an "
+                    "empty value, will cause the returned JSON to use the "
+                    "user-specified field names instead of the internal Baserow "
+                    "field names (e.g., field_123)."
                 ),
             ),
             OpenApiParameter(

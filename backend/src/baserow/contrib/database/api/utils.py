@@ -1,3 +1,4 @@
+from baserow.config.settings.utils import str_to_bool
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.core.utils import split_comma_separated_string
@@ -115,3 +116,20 @@ def extract_field_ids_from_string(value):
 
     ids = [get_field_id_from_field_key(v, False) for v in value.split(",")]
     return [_id for _id in ids if _id is not None]
+
+
+def extract_user_field_names_from_params(query_params):
+    """
+    Extracts the user_field_names parameter from the query_params and returns
+    boolean value
+    """
+
+    value = query_params.get("user_field_names", False)
+
+    if value is False:
+        return False
+
+    if value is None or value == "":
+        return True
+
+    return str_to_bool(value)

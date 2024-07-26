@@ -11,6 +11,7 @@ from pyinstrument import Profiler
 
 from baserow.contrib.database.api.utils import (
     extract_field_ids_from_string,
+    extract_user_field_names_from_params,
     get_include_exclude_fields,
 )
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
@@ -37,6 +38,14 @@ def test_extract_field_ids_from_string():
     assert extract_field_ids_from_string("field_1,field_2") == [1, 2]
     assert extract_field_ids_from_string("field_22,test_8,999") == [22, 8, 999]
     assert extract_field_ids_from_string("is,1,one") == [1]
+
+
+def test_extract_user_field_names_from_params():
+    assert extract_user_field_names_from_params({}) is False
+    assert extract_user_field_names_from_params({"user_field_names": None}) is True
+    assert extract_user_field_names_from_params({"user_field_names": ""}) is True
+    assert extract_user_field_names_from_params({"user_field_names": "true"}) is True
+    assert extract_user_field_names_from_params({"user_field_names": "false"}) is False
 
 
 @pytest.mark.django_db
