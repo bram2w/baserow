@@ -515,24 +515,10 @@ export class FormDataProviderType extends DataProviderType {
     )
     return Object.fromEntries(
       accessibleFormElements.map((element) => {
-        let formEntry = {}
-        if (recordIndexPath !== undefined) {
-          const uniqueElementId = this.app.$registry
-            .get('element', element.type)
-            .uniqueElementId(element, recordIndexPath)
-          formEntry = getValueAtPath(formData, uniqueElementId)
-        } else {
-          // When `getDataContent` is called by `getNodes`, we won't have
-          // access to `recordIndexPath`, so we need to find the first *array*
-          // in the form data that corresponds to the element.
-          function _findActualValue(currentValue) {
-            if (Array.isArray(currentValue)) {
-              return _findActualValue(currentValue[0])
-            }
-            return currentValue
-          }
-          formEntry = _findActualValue(formData[element.id])
-        }
+        const uniqueElementId = this.app.$registry
+          .get('element', element.type)
+          .uniqueElementId(element, recordIndexPath)
+        const formEntry = getValueAtPath(formData, uniqueElementId)
         return [element.id, formEntry?.value]
       })
     )

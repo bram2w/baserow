@@ -1,6 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import { getIconForType } from '@baserow/modules/core/utils/icon'
-import _ from 'lodash'
 
 /**
  * A data provider gets data from the application context and populate the context for
@@ -130,19 +129,13 @@ export class DataProviderType extends Registerable {
    * @returns {{identifier: string, name: string, nodes: []}}
    */
   getNodes(applicationContext) {
-    const content = this.getDataContent(applicationContext)
     const schema = this.getDataSchema(applicationContext)
 
     if (schema === null) {
       return {}
     }
 
-    const result = this._toNode(
-      applicationContext,
-      [this.type],
-      content,
-      schema
-    )
+    const result = this._toNode(applicationContext, [this.type], schema)
     return result
   }
 
@@ -150,11 +143,10 @@ export class DataProviderType extends Registerable {
    * Recursive method to deeply compute the node tree for this data providers.
    * @param {Object} applicationContext the application context.
    * @param {Array<String>} pathParts the path to get to the current node.
-   * @param {*} content the current node content.
    * @param {$schema: string} schema the current node schema.
    * @returns {{identifier: string, name: string, nodes: []}}
    */
-  _toNode(applicationContext, pathParts, content, schema) {
+  _toNode(applicationContext, pathParts, schema) {
     const identifier = pathParts.at(-1)
     const name = this.getPathTitle(applicationContext, pathParts)
     const order = schema?.order || null
@@ -170,44 +162,16 @@ export class DataProviderType extends Registerable {
     }
 
     if (schema.type === 'array') {
-      // When the current node is an array we append a new node to its children
-      // that represents the "whole" array.
-      // This is translated to '*' in the resulting formula and '[All]' in the
-      // data explorer name.
-      // The 'head' object contains all keys of the schema assigned to null
-      let fakeContent = null
-      if (schema.items.type === 'object') {
-        fakeContent = _.mapValues(schema.items.properties, () => null)
-        fakeContent = {}
-      }
-      if (schema.items.type === 'array') {
-        fakeContent = []
-      }
-
-      const head = {
-        ...this._toNode(
-          applicationContext,
-          [...pathParts, '*'],
-          fakeContent,
-          schema.items
-        ),
-        name: `[${this.app.i18n.t('common.all')}]`,
-      }
       return {
         name,
         identifier,
         icon: this.getIconForNode(schema),
-        nodes: [
-          head,
-          ...(content || []).map((item, index) =>
-            this._toNode(
-              applicationContext,
-              [...pathParts, `${index}`],
-              item,
-              schema.items
-            )
-          ),
-        ],
+        type: 'array',
+        nodes: this._toNode(
+          applicationContext,
+          [...pathParts, null],
+          schema.items
+        ).nodes,
       }
     }
 
@@ -222,7 +186,6 @@ export class DataProviderType extends Registerable {
             this._toNode(
               applicationContext,
               [...pathParts, identifier],
-              (content || {})[identifier],
               subSchema
             )
         ),
@@ -234,7 +197,6 @@ export class DataProviderType extends Registerable {
       order,
       type: schema.type,
       icon: this.getIconForNode(schema),
-      value: content,
       identifier,
     }
   }

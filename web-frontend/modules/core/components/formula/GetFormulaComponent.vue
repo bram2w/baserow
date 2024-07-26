@@ -41,9 +41,6 @@ export default {
   },
   mixins: [formulaComponent],
   inject: ['applicationContext', 'dataProviders'],
-  data() {
-    return { nodes: [], pathParts: [] }
-  },
   computed: {
     availableData() {
       return Object.values(this.dataProviders).map((dataProvider) =>
@@ -68,10 +65,10 @@ export default {
         (dataProvider) => dataProvider.type === pathParts[0]
       )
     },
-  },
-  mounted() {
-    if (this.dataProviderType) {
-      this.nodes = [this.dataProviderType.getNodes(this.applicationContext)]
+    nodes() {
+      return [this.dataProviderType.getNodes(this.applicationContext)]
+    },
+    pathParts() {
       const translatedPathPart = this.rawPathParts.map((_, index) =>
         this.dataProviderType.getPathTitle(
           this.applicationContext,
@@ -80,8 +77,8 @@ export default {
       )
 
       translatedPathPart[0] = this.dataProviderType.name
-      this.pathParts = translatedPathPart
-    }
+      return translatedPathPart
+    },
   },
   methods: {
     findNode(nodes, path) {
@@ -98,7 +95,16 @@ export default {
       }
 
       if (rest.length > 0) {
-        return this.findNode(nodeFound.nodes, rest)
+        if (nodeFound.type === 'array') {
+          const [index, ...afterIndex] = rest
+          // Check that the index is what is expected
+          if (!(index === '*' || /^\d+$/.test(index))) {
+            return null
+          }
+          return this.findNode(nodeFound.nodes, afterIndex)
+        } else {
+          return this.findNode(nodeFound.nodes, rest)
+        }
       }
 
       return nodeFound
