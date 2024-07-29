@@ -707,24 +707,27 @@ class GeneratedModelAppsProxy:
         global ones.
         """
 
-        model_name = model._meta.model_name.lower()
-        if not hasattr(model, "_generated_table_model"):
-            # it must be an auto created intermediary m2m model, so use a list of
-            # baserow models we can later use to resolve the pending operations.
-            if not hasattr(self, "baserow_models"):
-                self.baserow_models = model._meta.auto_created.baserow_models
+        # Use the RLock defined in the apps registry to prevent any thead from
+        # accessing the apps registry concurrently because it's not thread safe.
+        with self._lock:
+            model_name = model._meta.model_name.lower()
+            if not hasattr(model, "_generated_table_model"):
+                # it must be an auto created intermediary m2m model, so use a list of
+                # baserow models we can later use to resolve the pending operations.
+                if not hasattr(self, "baserow_models"):
+                    self.baserow_models = model._meta.auto_created.baserow_models
 
-        self.baserow_models[model_name] = model
-        self.do_all_pending_operations()
-        self._clear_baserow_models_cache()
+            self.baserow_models[model_name] = model
+            self.do_all_pending_operations()
+            self._clear_baserow_models_cache()
 
-        # The `all_models` is a defaultdict, and will therefore have a residual empty
-        # key in with the app label because the app label is uniquely generated. This
-        # will make sure it's cleared.
-        try:
-            del apps.all_models[self.baserow_app_label]
-        except KeyError:
-            pass
+            # The `all_models` is a defaultdict, and will therefore have a residual
+            # empty key in with the app label because the app label is uniquely
+            # generated. This will make sure it's cleared.
+            try:
+                del apps.all_models[self.baserow_app_label]
+            except KeyError:
+                pass
 
     def _clear_baserow_models_cache(self):
         for model in self.baserow_models.values():
