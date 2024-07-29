@@ -93,38 +93,79 @@
         {{ $t('choiceOptionSelector.formulas') }}
       </RadioButton>
     </FormGroup>
-    <template v-if="values.option_type === CHOICE_OPTION_TYPES.MANUAL">
-      <div class="row" style="--gap: 6px">
-        <label class="col col-5 control__label control__label--small">
-          {{ $t('choiceOptionSelector.value') }}
-        </label>
-        <label class="col col-7 control__label control__label--small">
-          {{ $t('choiceOptionSelector.name') }}
-        </label>
-      </div>
-      <div
-        v-for="option in values.options"
-        :key="option.id"
-        style="--gap: 6px"
-        class="row margin-bottom-1"
-      >
-        <div class="col col-5">
-          <FormInput
-            :value="option.value"
-            :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
-            @input="optionUpdated(option, { value: $event })"
-          />
+    <template v-if="values.options.length">
+      <template v-if="values.option_type === CHOICE_OPTION_TYPES.MANUAL">
+        <div class="row" style="--gap: 6px">
+          <label class="col col-5 control__label control__label--small">
+            {{ $t('choiceOptionSelector.name') }}
+          </label>
+          <label class="col col-7 control__label control__label--small">
+            {{ $t('choiceOptionSelector.value') }}
+          </label>
         </div>
-        <div class="col col-5">
-          <FormInput
-            :value="option.name"
+        <div
+          v-for="option in values.options"
+          :key="option.id"
+          style="--gap: 6px"
+          class="row margin-bottom-1"
+        >
+          <div class="col col-5">
+            <FormInput
+              :value="option.name"
+              :placeholder="$t('choiceOptionSelector.namePlaceholder')"
+              @input="optionUpdated(option, { name: $event })"
+            />
+          </div>
+          <div class="col col-5">
+            <FormInput
+              :value="option.value"
+              :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
+              @input="optionUpdated(option, { value: $event })"
+            />
+          </div>
+          <div class="col col-2">
+            <ButtonIcon icon="iconoir-bin" @click="deleteOption(option)" />
+          </div>
+        </div>
+        <ButtonText
+          type="secondary"
+          size="small"
+          icon="iconoir-plus"
+          :loading="loading"
+          @click="createOption"
+        >
+          {{ $t('choiceOptionSelector.addOption') }}
+        </ButtonText>
+      </template>
+      <template v-else-if="values.option_type === CHOICE_OPTION_TYPES.FORMULAS">
+        <FormGroup
+          small-label
+          :label="$t('choiceOptionSelector.name')"
+          class="margin-bottom-2"
+        >
+          <InjectedFormulaInput
+            v-model="values.formula_name"
             :placeholder="$t('choiceOptionSelector.namePlaceholder')"
-            @input="optionUpdated(option, { name: $event })"
           />
-        </div>
-        <div class="col col-2">
-          <ButtonIcon icon="iconoir-bin" @click="deleteOption(option)" />
-        </div>
+        </FormGroup>
+        <FormGroup
+          small-label
+          :label="$t('choiceOptionSelector.value')"
+          class="margin-bottom-2"
+          required
+        >
+          <InjectedFormulaInput
+            v-model="values.formula_value"
+            :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
+          />
+        </FormGroup>
+      </template>
+    </template>
+    <template v-else>
+      <div class="row" style="--gap: 6px">
+        <label class="col control__label control__label--small">
+          {{ $t('choiceOptionSelector.addOptionDescription') }}
+        </label>
       </div>
       <ButtonText
         type="secondary"
@@ -136,33 +177,12 @@
         {{ $t('choiceOptionSelector.addOption') }}
       </ButtonText>
     </template>
-    <template v-else-if="values.option_type === CHOICE_OPTION_TYPES.FORMULAS">
-      <FormGroup
-        small-label
-        :label="$t('choiceOptionSelector.value')"
-        class="margin-bottom-2"
-        required
-      >
-        <InjectedFormulaInput
-          v-model="values.formula_value"
-          :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
-        />
-      </FormGroup>
-      <FormGroup
-        small-label
-        :label="$t('choiceOptionSelector.name')"
-        class="margin-bottom-2"
-      >
-        <InjectedFormulaInput
-          v-model="values.formula_name"
-          :placeholder="$t('choiceOptionSelector.namePlaceholder')"
-        />
-      </FormGroup>
-    </template>
   </form>
 </template>
 
 <script>
+import debounce from 'lodash/debounce'
+
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
 import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
@@ -250,13 +270,20 @@ export default {
     },
   },
   methods: {
-    optionUpdated({ id }, changes) {
+    optionUpdated: debounce(function ({ id }, changes) {
       const index = this.values.options.findIndex((option) => option.id === id)
+
+      // If the name changes, automatically populate the value with the name.
+      // This should only occur if the value is blank.
+      if (!changes?.value && !this.values.options[index].value.length) {
+        changes.value = changes.name
+      }
+
       this.$set(this.values.options, index, {
         ...this.values.options[index],
         ...changes,
       })
-    },
+    }, 400),
     createOption() {
       this.values.options.push({ name: '', value: '', id: uuid() })
     },
