@@ -508,6 +508,9 @@
     "checkbox": "Checkbox",
     "radio": "Radio"
   },
+  "dropdown": {
+    "empty": "No options available"
+  },
   "tableElementForm": {
     "dataSource": "Data source",
     "fields": "Fields",
@@ -621,9 +624,10 @@
     "label": "Options",
     "value": "Option values",
     "valuePlaceholder": "Enter value",
-    "name": "Option display names",
+    "name": "Option names",
     "namePlaceholder": "Enter name",
     "addOption": "add option",
+    "addOptionDescription": "Click 'add option' to add options to your dropdown",
     "optionType": "Options type",
     "manual": "Manual",
     "dataSource": "Data source",
