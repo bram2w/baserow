@@ -4,13 +4,13 @@
       <template v-if="orientation === TABLE_ORIENTATION.HORIZONTAL">
         <thead>
           <tr class="baserow-table__row">
-            <th
-              v-for="field in fields"
-              :key="field.__id__"
-              class="baserow-table__header-cell"
-            >
-              <slot name="field-name" :field="field">{{ field.name }}</slot>
-            </th>
+            <template v-for="field in fields">
+              <slot name="field-name" :field="field">
+                <th :key="field.__id__" class="baserow-table__header-cell">
+                  {{ field.name }}
+                </th>
+              </slot>
+            </template>
           </tr>
         </thead>
         <tbody v-if="rows.length">
@@ -19,20 +19,18 @@
             :key="row.__id__"
             class="baserow-table__row"
           >
-            <td
-              v-for="field in fields"
-              :key="field.id"
-              class="baserow-table__cell"
-            >
+            <template v-for="field in fields">
               <slot
                 name="cell-content"
                 :value="row[field.name]"
                 :field="field"
                 :row-index="index"
               >
-                {{ row[field.name] }}
+                <td :key="field.id" class="baserow-table__cell">
+                  {{ row[field.name] }}
+                </td>
               </slot>
-            </td>
+            </template>
           </tr>
         </tbody>
       </template>
@@ -47,29 +45,27 @@
               v-for="(field, fieldIndex) in fields"
               :key="`${row.__id__}_${field.id}`"
             >
-              <th
-                class="baserow-table__header-cell"
-                :class="{
-                  'baserow-table__separator': fieldIndex === fields.length - 1,
-                }"
+              <slot name="field-name" :field="field">
+                <th :key="field.__id__" class="baserow-table__header-cell">
+                  {{ field.name }}
+                </th>
+              </slot>
+              <slot
+                name="cell-content"
+                :value="row[field.name]"
+                :field="field"
+                :row-index="rowIndex"
               >
-                {{ field.name }}
-              </th>
-              <td
-                class="baserow-table__cell"
-                :class="{
-                  'baserow-table__separator': fieldIndex === fields.length - 1,
-                }"
-              >
-                <slot
-                  name="cell-content"
-                  :value="row[field.name]"
-                  :field="field"
-                  :row-index="rowIndex"
+                <td
+                  class="baserow-table__cell"
+                  :class="{
+                    'baserow-table__separator':
+                      fieldIndex === fields.length - 1,
+                  }"
                 >
                   {{ value }}
-                </slot>
-              </td>
+                </td>
+              </slot>
             </tr>
           </tbody>
         </template>
@@ -104,9 +100,6 @@ export default {
       type: String,
       default: TABLE_ORIENTATION.HORIZONTAL,
     },
-  },
-  data() {
-    return {}
   },
   computed: {
     TABLE_ORIENTATION() {

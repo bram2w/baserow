@@ -8,5 +8,9 @@ export default {
       type: Object,
       required: true,
     },
+    baseTheme: {
+      type: Object,
+      required: true,
+    },
   },
 }

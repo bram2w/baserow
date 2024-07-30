@@ -20,6 +20,7 @@
           </template>
         </FormGroup>
         <FormGroup
+          v-if="!extraArgs?.noAlignment"
           horizontal-narrow
           small-label
           class="margin-bottom-2"

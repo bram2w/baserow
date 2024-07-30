@@ -97,7 +97,7 @@ export default {
           return renderer.renderToken(tokens, idx, options)
         },
         paragraph_open: (tokens, idx, options, env, renderer) => {
-          tokens[idx].attrJoin('class', 'ab-paragraph')
+          tokens[idx].attrJoin('class', 'ab-text')
           return renderer.renderToken(tokens, idx, options)
         },
         table_open: (tokens, idx, options, env, renderer) => {

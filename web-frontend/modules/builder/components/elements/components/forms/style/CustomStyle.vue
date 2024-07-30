@@ -1,6 +1,15 @@
 <template>
-  <div class="custom-style">
+  <div class="custom-style" :class="`custom-style--${variant}`">
     <ButtonText
+      v-if="variant === 'float'"
+      v-tooltip="$t('customStyle.configureThemeOverrides')"
+      class="custom-style__button"
+      icon="baserow-icon-settings"
+      tooltip-position="bottom-left"
+      @click="openPanel()"
+    />
+    <ButtonIcon
+      v-else
       v-tooltip="$t('customStyle.configureThemeOverrides')"
       class="custom-style__button"
       icon="baserow-icon-settings"
@@ -14,30 +23,29 @@
           {{ $t('customStyle.themeOverrides') }}
         </div>
       </div>
-      <div v-auto-overflow-scroll class="custom-style__config-blocks">
-        <div
-          v-for="(themeConfigBlock, index) in themeConfigBlocks"
+      <Tabs class="custom-style__config-blocks">
+        <Tab
+          v-for="themeConfigBlock in themeConfigBlocks"
           :key="themeConfigBlock.getType()"
+          :title="themeConfigBlock.label"
           class="custom-style__config-block"
         >
-          <h2
-            v-if="themeConfigBlocks.length > 1"
-            class="custom-style__config-block-title"
+          <div
+            v-auto-overflow-scroll
+            class="custom-style__config-block-content"
           >
-            {{ themeConfigBlock.label }}
-          </h2>
-          <ThemeConfigBlock
-            ref="configBlocks"
-            :theme="theme"
-            :default-values="value?.[styleKey]"
-            :preview="false"
-            :theme-config-block-type="themeConfigBlock"
-            :class="{ 'margin-top-3': index >= 1 }"
-            :extra-args="extraArgs"
-            @values-changed="onValuesChanged($event)"
-          />
-        </div>
-      </div>
+            <ThemeConfigBlock
+              ref="configBlocks"
+              :theme="theme"
+              :default-values="value?.[styleKey]"
+              :preview="false"
+              :theme-config-block-type="themeConfigBlock"
+              :extra-args="extraArgs"
+              @values-changed="onValuesChanged($event)"
+            />
+          </div>
+        </Tab>
+      </Tabs>
     </Context>
   </div>
 </template>
@@ -54,6 +62,14 @@ export default {
       type: Object,
       required: false,
       default: () => {},
+    },
+    variant: {
+      required: false,
+      type: String,
+      default: 'float',
+      validator: function (value) {
+        return ['float', 'normal'].includes(value)
+      },
     },
     theme: { type: Object, required: true },
     configBlockTypes: {

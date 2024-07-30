@@ -283,6 +283,7 @@ export class TypographyThemeConfigBlockType extends ThemeConfigBlockType {
     style.addColorIfExists(theme, `body_text_color`)
     style.addIfExists(theme, `body_text_alignment`)
     style.addFontFamilyIfExists(theme, `body_font_family`)
+
     return style.toObject()
   }
 
@@ -606,11 +607,31 @@ export class TableThemeConfigBlockType extends ThemeConfigBlockType {
     style.addIfExists(theme, `table_header_text_alignment`)
 
     style.addColorIfExists(theme, 'table_cell_background_color')
-    style.addColorIfExists(theme, 'table_cell_alternate_background_color')
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        theme,
+        'table_cell_alternate_background_color'
+      ) &&
+      theme.table_cell_alternate_background_color !== 'transparent'
+    ) {
+      // We want to set the alternate color only if defined
+      style.addColorIfExists(theme, 'table_cell_alternate_background_color')
+    }
     style.addColorIfExists(theme, 'table_cell_text_color')
     style.addFontFamilyIfExists(theme, `table_cell_font_family`)
     style.addPixelValueIfExists(theme, `table_cell_font_size`)
-    style.addIfExists(theme, `table_cell_alignment`)
+    style.addIfExists(
+      theme,
+      'table_cell_alignment',
+      null,
+      (v) =>
+        ({
+          [HORIZONTAL_ALIGNMENTS.LEFT]: 'flex-start',
+          [HORIZONTAL_ALIGNMENTS.CENTER]: 'center',
+          [HORIZONTAL_ALIGNMENTS.RIGHT]: 'flex-end',
+        }[v])
+    )
     style.addPixelValueIfExists(theme, `table_cell_vertical_padding`)
     style.addPixelValueIfExists(theme, `table_cell_horizontal_padding`)
 

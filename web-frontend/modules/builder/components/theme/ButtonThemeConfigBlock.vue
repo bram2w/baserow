@@ -18,7 +18,7 @@
           </template>
         </FormGroup>
         <FormGroup
-          v-if="values.button_width === 'auto'"
+          v-if="values.button_width === 'auto' && !extraArgs?.noAlignment"
           horizontal-narrow
           small-label
           required
@@ -34,7 +34,7 @@
           </template>
         </FormGroup>
         <FormGroup
-          v-else
+          v-if="values.button_width === 'full'"
           horizontal-narrow
           small-label
           required

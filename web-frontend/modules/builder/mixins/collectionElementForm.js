@@ -1,6 +1,8 @@
 import { mapGetters } from 'vuex'
+import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
 
 export default {
+  mixins: [applicationContextMixin],
   computed: {
     dataSources() {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)

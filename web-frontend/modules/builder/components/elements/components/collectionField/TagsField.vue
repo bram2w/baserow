@@ -1,23 +1,21 @@
 <template>
-  <div class="ab-tag-group">
-    <div
+  <div class="tag-field">
+    <ABTag
       v-for="(tag, index) in tags"
       :key="`${index}-${tag.value}`"
-      class="ab-tag"
-      :style="`background-color: ${resolveColor(tag.color, colorVariables)}`"
+      :color="resolveColor(tag.color, colorVariables)"
     >
       {{ tag.value }}
-    </div>
+    </ABTag>
   </div>
 </template>
 
 <script>
-import { resolveColor } from '@baserow/modules/core/utils/colors'
-import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
+import collectionField from '@baserow/modules/builder/mixins/collectionField'
 
 export default {
   name: 'TagsField',
-  inject: ['builder'],
+  mixins: [collectionField],
   props: {
     tags: {
       type: Array,
@@ -25,11 +23,5 @@ export default {
       default: () => [],
     },
   },
-  computed: {
-    colorVariables() {
-      return themeToColorVariables(this.builder.theme)
-    },
-  },
-  methods: { resolveColor },
 }
 </script>

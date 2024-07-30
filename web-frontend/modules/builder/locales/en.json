@@ -383,6 +383,7 @@
     "table": "Table"
   },
   "colorThemeConfigBlock": {
+    "transparent": "Transparent",
     "primaryColor": "Primary",
     "secondaryColor": "Secondary",
     "borderColor": "Border",
@@ -464,7 +465,7 @@
   },
   "tableThemeConfigBlock": {
     "borderColor": "Border color",
-    "backgroundAlternateColor": "Alternate color",
+    "backgroundAlternateColor": "Even rows color",
     "backgroundColor": "Background color",
     "textColor": "Text color",
     "borderSize": "Border size",
@@ -531,8 +532,10 @@
     "buttonLoadMoreLabel": "Show more label"
   },
   "tableElement": {
-    "empty": "No items have been found.",
     "showMore": "Show more"
+  },
+  "abTable": {
+    "empty": "No items have been found."
   },
   "repeatElement": {
     "empty": "No items have been found.",

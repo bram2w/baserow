@@ -11,7 +11,7 @@
   border-radius: var(--button-border-radius, 4px);
   width: var(--button-width, auto);
   text-align: var(--button-text-alignment, center);
-  align-self: var(--button-alignment, flex-start);
+  align-self: var(--force-self-alignment, var(--button-alignment, initial));
   font-family: var(--button-font-family, Inter);
   padding: var(--button-vertical-padding, 4px)
     var(--button-horizontal-padding, 12px);

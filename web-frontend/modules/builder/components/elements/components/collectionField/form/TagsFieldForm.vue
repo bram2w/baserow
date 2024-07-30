@@ -11,6 +11,16 @@
         v-model="values.values"
         :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
       />
+      <template #after-input>
+        <CustomStyle
+          v-model="values.styles"
+          style-key="cell"
+          :config-block-types="['table', 'typography']"
+          :theme="baseTheme"
+          :extra-args="{ onlyCell: true, onlyBody: true, noAlignment: true }"
+          variant="normal"
+        />
+      </template>
     </FormGroup>
 
     <div>
@@ -61,18 +71,20 @@
 <script>
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'TagsField',
-  components: { InjectedFormulaInput },
+  components: { InjectedFormulaInput, CustomStyle },
   mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['values', 'colors', 'colors_is_formula'],
+      allowedValues: ['values', 'colors', 'colors_is_formula', 'styles'],
       values: {
         values: '',
         colors: '#acc8f8',
         colors_is_formula: false,
+        styles: {},
       },
     }
   },

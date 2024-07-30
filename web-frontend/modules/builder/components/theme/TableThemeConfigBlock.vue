@@ -1,6 +1,9 @@
 <template>
   <div>
-    <ThemeConfigBlockSection :title="$t('tableThemeConfigBlock.table')">
+    <ThemeConfigBlockSection
+      v-if="!onlyCell"
+      :title="$t('tableThemeConfigBlock.table')"
+    >
       <template #default>
         <FormGroup
           horizontal-narrow
@@ -54,12 +57,14 @@
         </FormGroup>
       </template>
       <template #preview>
-        <BaserowTable :fields="fields" :rows="rows" class="ab-table">
-        </BaserowTable>
+        <ABTable :fields="fields" :rows="rows" />
       </template>
     </ThemeConfigBlockSection>
 
-    <ThemeConfigBlockSection :title="$t('tableThemeConfigBlock.header')">
+    <ThemeConfigBlockSection
+      v-if="!onlyCell"
+      :title="$t('tableThemeConfigBlock.header')"
+    >
       <template #default>
         <FormGroup
           horizontal-narrow
@@ -148,8 +153,7 @@
         </FormGroup>
       </template>
       <template #preview>
-        <BaserowTable :fields="fields" :rows="rows" class="ab-table">
-        </BaserowTable>
+        <ABTable :fields="fields" :rows="rows" />
       </template>
     </ThemeConfigBlockSection>
 
@@ -232,11 +236,13 @@
         </FormGroup>
       </template>
       <template #preview>
-        <BaserowTable :fields="fields" :rows="rows" class="ab-table">
-        </BaserowTable>
+        <ABTable :fields="fields" :rows="rows" />
       </template>
     </ThemeConfigBlockSection>
-    <ThemeConfigBlockSection :title="$t('tableThemeConfigBlock.separators')">
+    <ThemeConfigBlockSection
+      v-if="!onlyCell"
+      :title="$t('tableThemeConfigBlock.separators')"
+    >
       <template #default>
         <FormGroup
           horizontal-narrow
@@ -310,8 +316,7 @@
         </FormGroup>
       </template>
       <template #preview>
-        <BaserowTable :fields="fields" :rows="rows" class="ab-table">
-        </BaserowTable>
+        <ABTable :fields="fields" :rows="rows" />
       </template>
     </ThemeConfigBlockSection>
   </div>
@@ -396,6 +401,9 @@ export default {
         this.values.table_cell_vertical_padding = newValue.vertical
         this.values.table_cell_horizontal_padding = newValue.horizontal
       },
+    },
+    onlyCell() {
+      return this.extraArgs?.onlyCell
     },
   },
   methods: {

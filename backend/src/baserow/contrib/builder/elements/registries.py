@@ -368,6 +368,7 @@ class CollectionFieldType(
             "uid": str(instance.uid),
             "name": instance.name,
             "type": instance.type,
+            "styles": instance.styles,
             "config": serialized_config,
         }
 
@@ -440,6 +441,7 @@ class CollectionFieldType(
             "uid": serialized_values.get("uid", RandomUUID()),
             "config": deserialized_config,
             "type": serialized_values["type"],
+            "styles": serialized_values.get("styles", {}),
             "name": serialized_values["name"],
         }
 

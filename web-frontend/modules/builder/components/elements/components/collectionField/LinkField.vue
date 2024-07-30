@@ -1,15 +1,15 @@
 <template>
-  <div class="link-field">
-    <ABLink variant="button" :url="url" :target="target">
-      {{ realLinkName }}
-    </ABLink>
-  </div>
+  <ABLink variant="button" :url="url" :target="target">
+    {{ realLinkName }}
+  </ABLink>
 </template>
 
 <script>
+import collectionField from '@baserow/modules/builder/mixins/collectionField'
+
 export default {
   name: 'LinkField',
-  inject: ['mode', 'builder'],
+  mixins: [collectionField],
   props: {
     url: {
       type: String,

@@ -8,22 +8,14 @@
 </template>
 
 <script>
-import element from '@baserow/modules/builder/mixins/element'
+import collectionField from '@baserow/modules/builder/mixins/collectionField'
 
 export default {
   name: 'ButtonField',
-  mixins: [element],
+  mixins: [collectionField],
   props: {
-    element: {
-      type: Object,
-      required: true,
-    },
     label: {
       type: String,
-      required: true,
-    },
-    field: {
-      type: Object,
       required: true,
     },
   },
