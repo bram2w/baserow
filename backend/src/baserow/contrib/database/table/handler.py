@@ -870,7 +870,6 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         )
         progress.increment(by=export_progress)
 
-        print(id_mapping)
         imported_tables = database_type.import_tables_serialized(
             database,
             [exported_table],

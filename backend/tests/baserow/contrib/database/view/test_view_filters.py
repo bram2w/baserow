@@ -7542,3 +7542,24 @@ def test_date_equal_multi_step_operator_view_filter_type(
     view_filter.save()
 
     apply_filters_and_assert()
+
+
+@pytest.mark.django_db
+def test_duplicate_table_with_two_nested_filter_groups(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_text_field(table=table)
+
+    group_1 = data_fixture.create_view_filter_group(user=user, view=view)
+    group_2 = data_fixture.create_view_filter_group(
+        user=user, view=view, parent_group=group_1
+    )
+    data_fixture.create_view_filter(user=user, view=view, group=group_2)
+
+    duplicated_table = TableHandler().duplicate_table(user, table)
+    duplicates_view = duplicated_table.view_set.first()
+    filter_groups = duplicates_view.filter_groups.all()
+    assert len(filter_groups) == 2
+    assert filter_groups[0].parent_group is None
+    assert filter_groups[1].parent_group_id == filter_groups[0].id

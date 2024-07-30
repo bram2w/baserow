@@ -395,6 +395,10 @@ class ViewType(
                 filter_group_copy = filter_group.copy()
                 filter_group_id = filter_group_copy.pop("id")
                 filter_group_copy["view_id"] = view.id
+                if filter_group_copy["parent_group"]:
+                    filter_group_copy["parent_group_id"] = id_mapping[
+                        "database_view_filter_groups"
+                    ][filter_group_copy.pop("parent_group")]
                 filter_group_object = ViewFilterGroup.objects.create(
                     view=view, **filter_group_copy
                 )
