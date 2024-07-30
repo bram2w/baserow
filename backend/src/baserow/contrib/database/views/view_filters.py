@@ -1106,6 +1106,20 @@ class SingleSelectIsAnyOfViewFilterType(ViewFilterType):
 
         return Q(**{f"{field_name}_id__in": option_ids})
 
+    def set_import_serialized_value(self, value, id_mapping):
+        splitted = value.split(",")
+        new_values = []
+        for value in splitted:
+            try:
+                int_value = int(value)
+            except ValueError:
+                return ""
+
+            new_id = str(id_mapping["database_field_select_options"].get(int_value, ""))
+            new_values.append(new_id)
+
+        return ",".join(new_values)
+
 
 class SingleSelectIsNoneOfViewFilterType(
     NotViewFilterTypeMixin, SingleSelectIsAnyOfViewFilterType

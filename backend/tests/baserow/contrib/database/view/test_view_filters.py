@@ -14,7 +14,9 @@ from pytest_unordered import unordered
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import ViewFilter
 from baserow.contrib.database.views.registries import (
     ViewFilterType,
     view_filter_type_registry,
@@ -6769,6 +6771,35 @@ def test_single_select_is_one_of_filter_type(data_fixture):
     # all the rows with an option are selected
     assert len(ids) == 4
     assert set(ids) == set([o.id for o in rows[:4]])
+
+
+@pytest.mark.django_db
+def test_duplicate_table_single_select_is_one_of(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_single_select_field(table=table)
+    option_1 = data_fixture.create_select_option(field=field, value="AAA", color="blue")
+    option_2 = data_fixture.create_select_option(field=field, value="BBB", color="red")
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=field,
+        type="single_select_is_any_of",
+        value=f"{option_1.id},{option_2.id}",
+    )
+
+    duplicated_table = TableHandler().duplicate_table(user, table)
+    duplicated_view = duplicated_table.view_set.first()
+    duplicated_field = duplicated_table.field_set.first().specific
+    duplicated_options = duplicated_field.select_options.all()
+    duplicated_filter = ViewFilter.objects.filter(view=duplicated_view).first()
+
+    assert (
+        duplicated_filter.value
+        == f"{duplicated_options[0].id},{duplicated_options[1].id}"
+    )
+    assert duplicated_filter.value != f"{option_1.id},{option_2.id}"
 
 
 @pytest.mark.django_db
