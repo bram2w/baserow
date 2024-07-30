@@ -17,6 +17,7 @@ import {
 import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
+import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -50,6 +51,15 @@ export class CollectionFieldType extends Registerable {
    */
   isInError({ field, builder }) {
     return false
+  }
+
+  getStyleOverride({ colorVariables, field, theme }) {
+    return ThemeConfigBlockType.getAllStyles(
+      this.app.$registry.getOrderedList('themeConfigBlock'),
+      field.styles?.cell || {},
+      colorVariables,
+      theme
+    )
   }
 }
 

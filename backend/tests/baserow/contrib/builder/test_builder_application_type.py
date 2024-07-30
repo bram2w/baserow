@@ -459,6 +459,7 @@ def test_builder_application_export(data_fixture):
                                 "type": f.type,
                                 "config": f.config,
                                 "uid": str(f.uid),
+                                "styles": {},
                             }
                             for f in element4.fields.all()
                         ],
@@ -855,18 +856,21 @@ def test_builder_application_export(data_fixture):
                                 "uid": "447cbec7-c422-42eb-bd50-204b53453330",
                                 "name": "Field 1",
                                 "type": "text",
+                                "styles": {},
                                 "config": {"value": "get('test1')"},
                             },
                             {
                                 "uid": "44446a1c-841f-47ba-b1df-e902cc50c6ed",
                                 "name": "Field 2",
                                 "type": "text",
+                                "styles": {},
                                 "config": {"value": "get('test2')"},
                             },
                             {
                                 "uid": "960aef1f-a894-4003-8cf2-36da3b9c798b",
                                 "name": "Field 3",
                                 "type": "text",
+                                "styles": {},
                                 "config": {"value": "get('test3')"},
                             },
                         ],
@@ -1111,12 +1115,14 @@ IMPORT_REFERENCE = {
                         {
                             "name": "F 1",
                             "type": "text",
+                            "styles": {},
                             "config": {"value": "get('current_record.field_25')"},
                             "uid": str(uuid.uuid4()),
                         },
                         {
                             "name": "F 2",
                             "type": "link",
+                            "styles": {},
                             "uid": str(uuid.uuid4()),
                             "config": {
                                 "page_parameters": [],

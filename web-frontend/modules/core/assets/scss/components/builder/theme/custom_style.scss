@@ -2,10 +2,12 @@
   position: relative;
 }
 
-.custom-style__button {
-  position: absolute;
-  right: 4px;
-  top: -6px;
+.custom-style--float {
+  .custom-style__button {
+    position: absolute;
+    right: 4px;
+    top: -6px;
+  }
 }
 
 .custom-style__context {
@@ -20,7 +22,7 @@
   height: 40px;
   align-items: center;
   position: relative;
-  border-bottom: 1px solid $color-neutral-200;
+  border-bottom: 1px solid $color-neutral-100;
   cursor: pointer;
 }
 
@@ -37,12 +39,24 @@
 }
 
 .custom-style__config-blocks {
-  width: 358px;
-  padding: 20px 20px 5px;
-  overflow-y: auto;
+  // 100% - top bar height
   height: calc(100% - 40px);
+  overflow: hidden;
 }
 
 .custom-style__config-block-title {
   padding: 0 10px;
+}
+
+.custom-style__config-block {
+  // Width of sidebar - 2 x padding - left border
+  width: calc(400px - 40px - 1px);
+  overflow-y: auto;
+
+  // 100% - tab header height
+  height: calc(100% - 40px);
+}
+
+.custom-style__context .tabs__header {
+  background-color: $color-neutral-50;
 }

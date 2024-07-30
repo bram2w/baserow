@@ -1,5 +1,5 @@
 <template>
-  <p class="ab-paragraph">
+  <p class="ab-text">
     <slot />
   </p>
 </template>

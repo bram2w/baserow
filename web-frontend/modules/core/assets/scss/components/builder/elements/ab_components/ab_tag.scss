@@ -1,14 +1,13 @@
-.ab-tag-group {
-  overflow: hidden;
-  display: flex;
-  flex-flow: row;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  gap: 8px;
-}
-
 .ab-tag {
-  @include select-option-style(inline-flex, true);
+  @extend %ellipsis;
 
+  overflow: hidden;
+  display: inline-block;
   max-width: 140px;
+  font-size: var(--body-font-size, 14px);
+  color: var(--body-text-color, $black);
+  font-family: var(--body-font-family, Inter);
+  background-color: var(--tag-background-color, transparent);
+  border-radius: 1em;
+  padding: 0.4em 0.5em;
 }

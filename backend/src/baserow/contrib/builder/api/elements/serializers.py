@@ -258,7 +258,7 @@ class CollectionFieldSerializer(serializers.ModelSerializer):
     object.
     """
 
-    default_allowed_fields = ["name", "type", "id", "uid"]
+    default_allowed_fields = ["name", "type", "id", "uid", "styles"]
 
     config = serializers.DictField(
         required=False,

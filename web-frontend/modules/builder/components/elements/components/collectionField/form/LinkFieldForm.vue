@@ -11,6 +11,16 @@
         v-model="values.link_name"
         :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
       />
+      <template #after-input>
+        <CustomStyle
+          v-model="values.styles"
+          style-key="cell"
+          :config-block-types="['table', 'button']"
+          :theme="baseTheme"
+          :extra-args="{ onlyCell: true, noAlignment: true }"
+          variant="normal"
+        />
+      </template>
     </FormGroup>
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
@@ -22,20 +32,23 @@
 <script>
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
 
 export default {
   name: 'TextField',
   components: {
     InjectedFormulaInput,
+    CustomStyle,
     LinkNavigationSelectionForm,
   },
   mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['link_name'],
+      allowedValues: ['link_name', 'styles'],
       values: {
         link_name: '',
+        styles: {},
       },
     }
   },

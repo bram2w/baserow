@@ -87,7 +87,13 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
         {key: value for key, value in f.items() if key not in ["id"]}
         for f in response.json()["fields"]
     ] == [
-        {"name": "Name", "type": "text", "value": "get('test1')", "uid": uuids[0]},
+        {
+            "name": "Name",
+            "type": "text",
+            "value": "get('test1')",
+            "uid": uuids[0],
+            "styles": {},
+        },
         {
             "name": "Color",
             "type": "link",
@@ -95,9 +101,16 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
             "navigate_to_url": "get('test2')",
             "link_name": "get('test3')",
             "target": "self",
+            "styles": {},
             "uid": uuids[1],
         },
-        {"name": "Question", "type": "text", "value": "get('test3')", "uid": uuids[2]},
+        {
+            "name": "Question",
+            "type": "text",
+            "value": "get('test3')",
+            "uid": uuids[2],
+            "styles": {},
+        },
     ]
 
 

@@ -3,8 +3,9 @@
     <CustomStyle
       v-model="values.styles"
       style-key="table"
-      :config-block-types="['table']"
+      :config-block-types="['table', 'typography']"
       :theme="builder.theme"
+      :extra-args="{ onlyBody: true, noAlignment: true }"
     />
     <FormGroup
       class="margin-bottom-2"
@@ -46,7 +47,6 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-
     <FormGroup
       small-label
       :label="$t('tableElementForm.buttonLoadMoreLabel')"
@@ -161,6 +161,7 @@
                 :is="collectionTypes[field.type].formComponent"
                 :element="element"
                 :default-values="field"
+                :base-theme="collectionFieldBaseTheme"
                 :application-context-additions="{
                   collectionField: field,
                 }"
@@ -266,6 +267,9 @@ export default {
     },
     collectionTypes() {
       return this.$registry.getAll('collectionField')
+    },
+    collectionFieldBaseTheme() {
+      return { ...this.builder.theme, ...this.values.styles?.table }
     },
     errorMessageItemsPerPage() {
       return this.$v.values.items_per_page.$dirty &&

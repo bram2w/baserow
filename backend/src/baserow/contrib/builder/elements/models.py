@@ -698,6 +698,12 @@ class CollectionField(models.Model):
         help_text="The configuration of the field.",
     )
 
+    styles = models.JSONField(
+        default=dict,
+        help_text="The theme overrides for this field",
+        null=True,  # TODO zdm remove me after 1.27
+    )
+
     def get_type(self):
         """Returns the type for this model instance"""
 
