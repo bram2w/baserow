@@ -26,6 +26,7 @@
       :application-context="applicationContext"
       @node-selected="dataExplorerItemSelected"
       @node-unselected="unSelectNode()"
+      @mousedown.native="onDataExplorerMouseDown"
     />
   </div>
 </template>
@@ -100,6 +101,7 @@ export default {
       dataNodeSelected: null,
       valueUpdateTimeout: null,
       isFocused: false,
+      ignoreNextBlur: false,
     }
   },
   computed: {
@@ -233,6 +235,7 @@ export default {
       editable: !this.disabled,
       onUpdate: this.onUpdate,
       onFocus: this.onFocus,
+      onBlur: this.onBlur,
       extensions: this.extensions,
       parseOptions: {
         preserveWhitespace: 'full',
@@ -281,6 +284,18 @@ export default {
           }
         }
       )
+    },
+    onDataExplorerMouseDown() {
+      // If we click in the data explorer we don't want to close it.
+      this.ignoreNextBlur = true
+    },
+    onBlur() {
+      if (this.ignoreNextBlur) {
+        // Last click was in the data explorer context, we keep the focus.
+        this.ignoreNextBlur = false
+      } else {
+        this.isFocused = false
+      }
     },
     toContent(formula) {
       if (!formula) {
