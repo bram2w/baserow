@@ -243,7 +243,8 @@
         "editField": "Veld bewerken",
         "deleteField": "Veld verwijderen",
         "hideField": "Veld verbergen",
-        "showField": "Toon veld"
+        "showField": "Toon veld",
+        "changePrimaryField": "Primair veld wijzigen"
     },
     "fieldForm": {
         "name": "Naam",
@@ -427,7 +428,10 @@
         "copyURL": "URL kopiëren",
         "ChangePassword": "Verander",
         "EnablePassword": "Toegang beperken met een wachtwoord",
-        "DisablePassword": "Toegang is beveiligd met een wachtwoord"
+        "DisablePassword": "Toegang is beveiligd met een wachtwoord",
+        "shareViewText": "Met een privé-deelbare link kan iedereen de gegevens in deze weergave bekijken.",
+        "shareViewLinkTitle": "Een privé link maken",
+        "notSharedYetText": "Laat iedereen de gegevens in deze weergave zien of sync gebeurtenissen met je externe agenda."
     },
     "viewSortContext": {
         "noSortTitle": "Je hebt nog geen sortering",
@@ -906,5 +910,22 @@
     "ViewFilterTypeDateUpgradeToMultiStep": {
         "migrateButtonText": "Migreren naar meerstaps datumfilter",
         "migrateButtonTooltip": "Nieuw filter beschikbaar. Klik om te upgraden. Het werkt hetzelfde."
+    },
+    "formViewMetaControls": {
+        "whenSubmittedLabel": "Wanneer het formulier is verzonden",
+        "showMessage": "Een bericht weergeven",
+        "theURL": "De URL",
+        "theMessage": "Het bericht",
+        "urlRedirect": "Doorverwijzen naar URL"
+    },
+    "databaseDashboardResourceLinks": {
+        "title": "API-documentatie",
+        "description": "Leer meer over onze code"
+    },
+    "changePrimaryFieldModal": {
+        "title": "Wijzig het primaire veld",
+        "change": "Wijzig",
+        "primaryFieldLabel": "Primair veld",
+        "existingPrimary": "\"{name}\" is momenteel het primaire veld."
     }
 }

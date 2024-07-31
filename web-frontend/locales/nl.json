@@ -9,7 +9,8 @@
         "table": "Tabel",
         "link": "Link",
         "billable": "Factureerbaar",
-        "all": "Alle"
+        "all": "Alle",
+        "beta": "Beta"
     },
     "action": {
         "upload": "Uploaden",
@@ -40,7 +41,8 @@
         "copyToClipboard": "Naar klembord kopiëren",
         "reset": "Reset",
         "logout": "Uitloggen",
-        "set": "Stel in"
+        "set": "Stel in",
+        "backToHome": "Terug naar home"
     },
     "adminType": {
         "settings": "Instellingen",
@@ -54,7 +56,11 @@
         "builder": "Applicatie",
         "builderDefaultName": "Naamloze applicatie",
         "cantSelectPageTitle": "Kan de applicatie niet selecteren.",
-        "cantSelectPageDescription": "De applicatiebouwer kon niet worden geselecteerd omdat het geen pagina's heeft. Gebruik de zijbalk om er een te maken."
+        "cantSelectPageDescription": "De applicatiebouwer kon niet worden geselecteerd omdat het geen pagina's heeft. Gebruik de zijbalk om er een te maken.",
+        "databaseDesc": "Maak een georganiseerde verzameling van gestructureerde gegevens.",
+        "databases": "Databases",
+        "builders": "Applicaties",
+        "builderDesc": "Bouw eenvoudig websites, webapps en portals zonder code."
     },
     "settingType": {
         "account": "Account",
@@ -82,7 +88,8 @@
         "maxValueField": "Het veld moet kleiner zijn dan of gelijk aan {max}.",
         "minMaxValueField": "De veldwaarde moet tussen {min} en {max} liggen.",
         "invalidNumber": "Het veld moet een getal zijn.",
-        "email": "Het veld moet een e-mail zijn."
+        "email": "Het veld moet een e-mail zijn.",
+        "invalidURL": "Voer een geldige URL in."
     },
     "permission": {
         "admin": "Beheerder",
@@ -240,7 +247,16 @@
         "nrYearsFromNow": "jaren vanaf nu",
         "isBefore": "is voor",
         "isOnOrBefore": "is op of voor",
-        "isOnOrAfter": "is op of na"
+        "isOnOrAfter": "is op of na",
+        "hasValueEqual": "heeft gelijke waarde",
+        "hasNotValueEqual": "heeft niet dezelfde waarde",
+        "hasNotValueContains": "heeft geen waarde bevat",
+        "hasValueContainsWord": "heeft waarde bevat woord",
+        "hasNotValueContainsWord": "heeft geen waarde bevat woord",
+        "hasValueContains": "heeft waarde bevat",
+        "hasNotEmptyValue": "heeft geen lege waarde",
+        "hasEmptyValue": "heeft lege waarde",
+        "hasValueLengthIsLowerThan": "heeft waarde lengte is lager dan"
     },
     "viewType": {
         "grid": "Raster",
@@ -363,7 +379,11 @@
         "outputParserDescription": "Het model reageerde met een onjuiste uitvoer. Probeer het opnieuw.",
         "generateAIPromptDescription": "Er was iets mis met de samengestelde prompt.",
         "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Max aantal uitnodigingen bereikt",
-        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Je hebt het maximale aantal uitnodigingen voor deze werkruimte bereikt. Laat genodigden de uitnodiging accepteren of annuleer bestaande uitnodigingen om door te gaan."
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Je hebt het maximale aantal uitnodigingen voor deze werkruimte bereikt. Laat genodigden de uitnodiging accepteren of annuleer bestaande uitnodigingen om door te gaan.",
+        "incompatiblePrimaryFieldTypeDescription": "Het gekozen veld kan niet het primaire veld zijn omdat het onverenigbaar is.",
+        "fieldIsAlreadyPrimaryDescription": "Het gekozen nieuwe primaire veld is al het primaire veld.",
+        "fieldIsAlreadyPrimaryTitle": "Veld is al primair",
+        "incompatiblePrimaryFieldTypeTitle": "Veld is niet compatibel"
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",

@@ -24,9 +24,16 @@
         "admin": "Admin",
         "dashboard": "Tablero",
         "trash": "Papelera",
-        "settings": "Ajustes",
+        "settings": "Mi configuración",
         "members": "Miembros",
-        "notifications": "Notificaciones"
+        "notifications": "Notificaciones",
+        "licenses": "Licencias",
+        "addNewWorkspace": "Añadir un nuevo espacio de trabajo",
+        "adminTools": "Herramientas de administración",
+        "home": "Inicio",
+        "adminSettings": "Configuración administrativa",
+        "general": "General",
+        "people": "Personas"
     },
     "accountForm": {
         "nameLabel": "Tu nombre",
@@ -39,7 +46,7 @@
         "submitButton": "Actualizar cuenta"
     },
     "settingsModal": {
-        "title": "Ajustes"
+        "title": "Mi configuración"
     },
     "passwordSettings": {
         "title": "Cambia la contraseña",
@@ -213,7 +220,7 @@
     "dashboard": {
         "title": "Tablero",
         "alertTitle": "¡Necesitamos tu ayuda!",
-        "alertText": "Si considera que Baserow es útil, le agradeceríamos que nos haga participes o compartiera. Al compartir Baserow, nos ayuda a mejorar el producto y hacerlo más útil para usted.",
+        "alertText": "Al compartir Baserow, nos está ayudando a mejorar el producto y a hacerlo más útil para ti.",
         "tweetContent": "¡Eche un vistazo a @baserow, una herramienta de base de datos sin código de código abierto y una alternativa a Airtable!",
         "redditTitle": "'Baserow: una base de datos sin código de código abierto",
         "noWorkspaceTitle": "No se encontraron grupos",
@@ -225,7 +232,20 @@
         "shareOnReddit": "Compartir en Reddit",
         "shareOnFacebook": "Compartir en Facebook",
         "shareOnLinkedIn": "Compartir en LinkedIn",
-        "noWorkspaceTextWithoutCreatePermission": "No eres miembro de ningún grupo. Las aplicaciones como las bases de datos pertenecen a un grupo, así que para crearlas tendrás que ser invitado primero a un grupo por un administrador."
+        "noWorkspaceTextWithoutCreatePermission": "No eres miembro de ningún grupo. Las aplicaciones como las bases de datos pertenecen a un grupo, así que para crearlas tendrás que ser invitado primero a un grupo por un administrador.",
+        "knowledgeBaseMessage": "Encuentre respuestas a todas sus preguntas",
+        "tutorials": "Tutoriales",
+        "tutorialsMessage": "Descubre el potencial de Baserow",
+        "noWorkspaceDescription": "Empieza por crear un nuevo espacio de trabajo",
+        "resources": "Recursos",
+        "apiDocumentation": "Documentación API",
+        "apiDocumentationMessage": "Más información sobre nuestro código",
+        "suggestedTemplates": "Plantillas sugeridas",
+        "knowledgeBase": "Base de conocimientos",
+        "emptyWorkspace": "Este espacio de trabajo está vacío",
+        "emptyWorkspaceMessage": "Empieza por crear una nueva base de datos o aplicación.",
+        "addNew": "Añadir nuevo...",
+        "noWorkspace": "Sin espacio de trabajo"
     },
     "login": {
         "title": "Acceso",
@@ -659,7 +679,7 @@
     },
     "dataExplorer": {
         "emptyText": "No hay datos",
-        "noMatchingNodesText": "No se han encontrado proveedores de datos coincidentes.",
+        "noMatchingNodesText": "No se han encontrado resultados coincidentes.",
         "noProvidersText": "No se han encontrado proveedores de datos. Para empezar puedes, por ejemplo, añadir una fuente de datos o un parámetro de página."
     },
     "formulaInputField": {
@@ -792,5 +812,14 @@
     "imageInput": {
         "labelButton": "Subir",
         "labelDescription": "Selecciona una imagen para subir..."
+    },
+    "dashboardApplication": {
+        "createdAt": "creado"
+    },
+    "templateCard": {
+        "viewMore": "Ver más"
+    },
+    "dataExplorerNode": {
+        "showMore": "Mostrar más repeticiones"
     }
 }

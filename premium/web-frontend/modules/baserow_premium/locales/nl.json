@@ -395,5 +395,12 @@
     "formulaFieldAI": {
         "generateWithAI": "Genereer met AI",
         "featureName": "Genereer formule met AI"
+    },
+    "calendarViewType": {
+        "sharedViewText": "Laat iedereen de gegevens in deze weergave zien of synchroniseer gebeurtenissen met je externe agenda.",
+        "sharedViewEnableSyncToExternalCalendar": "Synchroniseren met een externe agenda",
+        "sharedViewDisableSyncToExternalCalendar": "Externe sync uitschakelen",
+        "sharedViewDescription": "Plak deze link in uw kalendertoepassing",
+        "sharedViewTitle": "Sync met een externe agenda"
     }
 }

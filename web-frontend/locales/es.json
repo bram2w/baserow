@@ -9,7 +9,8 @@
         "link": "Enlace",
         "table": "Tabla",
         "billable": "Facturable",
-        "all": "Todos"
+        "all": "Todos",
+        "beta": "Beta"
     },
     "action": {
         "upload": "Subir",
@@ -17,7 +18,7 @@
         "backToLogin": "Atrás para iniciar sesión",
         "signUp": "Inscribirse",
         "signIn": "Iniciar sesión",
-        "createNew": "Crear nuevo",
+        "createNew": "Añadir nuevo...",
         "create": "Crear",
         "edit": "Editar",
         "change": "Cambiar",
@@ -40,7 +41,8 @@
         "copyToClipboard": "Copiar al portapapeles",
         "reset": "Restablecer",
         "logout": "Cerrar la sesión",
-        "set": "Establecer"
+        "set": "Establecer",
+        "backToHome": "Volver al inicio"
     },
     "adminType": {
         "settings": "Ajustes",
@@ -54,7 +56,11 @@
         "builder": "Aplicación",
         "builderDefaultName": "Aplicación sin título",
         "cantSelectPageTitle": "No se pudo seleccionar la aplicación.",
-        "cantSelectPageDescription": "No se ha podido seleccionar al creador de las aplicaciones porque no tiene ninguna página. Utilice la barra lateral para crear una."
+        "cantSelectPageDescription": "No se ha podido seleccionar al creador de las aplicaciones porque no tiene ninguna página. Utilice la barra lateral para crear una.",
+        "databaseDesc": "Crear una colección organizada de datos estructurados.",
+        "builders": "Aplicaciones",
+        "databases": "Bases de datos",
+        "builderDesc": "Crea fácilmente sitios web, aplicaciones web y portales sin código."
     },
     "settingType": {
         "account": "Cuenta",
@@ -82,7 +88,8 @@
         "maxValueField": "El campo debe ser menor o igual que {máximo}.",
         "minMaxValueField": "El valor del campo debe estar comprendido entre {min} y {max}.",
         "invalidNumber": "El campo debe ser un número.",
-        "email": "El campo debe ser un correo electrónico."
+        "email": "El campo debe ser un correo electrónico.",
+        "invalidURL": "Por favor, introduce una URL válida."
     },
     "permission": {
         "admin": "Admin",
@@ -363,7 +370,11 @@
         "generateAIPromptTitle": "Error de pregunta",
         "generateAIPromptDescription": "Algo iba mal con el indicador construido.",
         "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Número máximo de invitaciones pendientes alcanzado",
-        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Has alcanzado el número máximo de invitaciones pendientes para este espacio de trabajo. Deja que los invitados acepten la invitación o cancela las existentes para continuar."
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Has alcanzado el número máximo de invitaciones pendientes para este espacio de trabajo. Deja que los invitados acepten la invitación o cancela las existentes para continuar.",
+        "fieldIsAlreadyPrimaryTitle": "El campo ya es primario",
+        "incompatiblePrimaryFieldTypeTitle": "El campo no es compatible",
+        "fieldIsAlreadyPrimaryDescription": "El nuevo campo primario elegido ya es el campo primario.",
+        "incompatiblePrimaryFieldTypeDescription": "El campo elegido no puede ser el campo primario porque es incompatible."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -388,7 +399,7 @@
         "queryParameters": "Parámetros de consulta",
         "pathParameters": "Parámetros de ruta",
         "requestBodySchema": "Solicitar esquema de cuerpo",
-        "userFieldNamesDescription": "Cuando se proporciona cualquier valor para el parámetro GET `user_field_names`, los nombres de campo devueltos por este extremo serán los nombres reales de los campos.\n\n Si no se proporciona el parámetro GET `user_field_names`, todos los nombres de campo devueltos serán `field_` seguidos de la identificación del campo. Por ejemplo, `field_1` se refiere al campo con una identificación de `1`.",
+        "userFieldNamesDescription": "Cuando se proporciona cualquier valor para el parámetro GET `user_field_names`, los nombres de campo devueltos por este extremo serán los nombres reales de los campos.\n\nSi no se proporciona el parámetro GET `user_field_names`, todos los nombres de campo devueltos serán `field_` seguidos de la identificación del campo. Por ejemplo, `field_1` se refiere al campo con una identificación de `1`.",
         "createRows": "Crear filas",
         "updateRows": "Actualizar filas",
         "deleteRows": "Borrar filas",

@@ -4,7 +4,7 @@
     },
     "sidebarComponentBuilder": {
         "settings": "Configuración",
-        "createPage": "Crear página"
+        "createPage": "Nueva página"
     },
     "builderSettingsModal": {
         "title": "Aplicación"
@@ -259,7 +259,8 @@
         "notificationLabel": "Mostrar notificación",
         "openPageLabel": "Abrir página",
         "logoutLabel": "Cerrar sesión",
-        "refreshDataSourceLabel": "Refrescar fuente de datos"
+        "refreshDataSourceLabel": "Refrescar fuente de datos",
+        "deleteRowLabel": "Borrar fila"
     },
     "widthTypes": {
         "full": "Anchura completa",
@@ -500,7 +501,7 @@
         "label": "Opciones"
     },
     "checkboxElementForm": {
-        "labelTitle": "Etiqueta",
+        "labelTitle": "Nombre de la opción",
         "valueTitle": "Valor por defecto",
         "requiredTitle": "Requerido"
     },
@@ -610,7 +611,8 @@
         "itemsPerPagePlaceholder": "Introduce el valor...",
         "itemsPerRowDescription": "Número de columnas por fila y tipo de dispositivo.",
         "orientationVertical": "Vertical",
-        "buttonLoadMoreLabel": "Mostrar más etiqueta"
+        "buttonLoadMoreLabel": "Mostrar más etiqueta",
+        "toggleEditorRepetitionsLabel": "Desactivar temporalmente las repeticiones"
     },
     "tagsFieldForm": {
         "fieldValuesLabel": "Valores",
@@ -642,7 +644,9 @@
         "link": "Enlace",
         "page": "Página",
         "typography": "Tipografía",
-        "image": "Imagen"
+        "image": "Imagen",
+        "input": "Entrada",
+        "table": "Tabla"
     },
     "colorThemeConfigBlock": {
         "secondaryColor": "Secundario",
@@ -650,7 +654,8 @@
         "successColor": "Éxito",
         "warningColor": "Aviso",
         "errorColor": "Error",
-        "primaryColor": "Principal"
+        "primaryColor": "Principal",
+        "transparent": "Transparente"
     },
     "pageThemeConfigBlock": {
         "backgroundColor": "Color de fondo",
@@ -663,7 +668,8 @@
         "success": "Éxito",
         "warning": "Aviso",
         "error": "Error",
-        "border": "Borde"
+        "border": "Borde",
+        "transparent": "Transparente"
     },
     "typographyThemeConfigBlock": {
         "headingLabel": "Encabezamiento {i} (h{i})",
@@ -728,7 +734,8 @@
         "dataSource": "Fuente de datos",
         "formulas": "Fórmulas",
         "label": "Opciones",
-        "addOption": "añadir opción"
+        "addOption": "añadir opción",
+        "addOptionDescription": "Haz clic en «añadir opción» para añadir opciones a tu desplegable"
     },
     "choiceElement": {
         "addOptions": "Añadir opciones para empezar a utilizar este elemento..."
@@ -739,9 +746,58 @@
         "fill": "Llenar"
     },
     "customStyle": {
-        "themeOverrides": "Anulación de temas"
+        "themeOverrides": "Anulación de temas",
+        "configureThemeOverrides": "Configurar las modificaciones del tema para este elemento"
     },
     "resetButton": {
         "reset": "Restablecer el valor predeterminado del tema"
+    },
+    "inputThemeConfigBlock": {
+        "textColor": "Color del texto",
+        "borderColor": "Color del borde",
+        "borderSize": "Tamaño del borde",
+        "borderRadius": "Radio del borde",
+        "padding": "Acolchado",
+        "fontFamily": "Fuente",
+        "size": "Tamaño de letra",
+        "label": "Etiqueta",
+        "input": "Entrada",
+        "backgroundColor": "Color de fondo"
+    },
+    "tableThemeConfigBlock": {
+        "borderColor": "Color del borde",
+        "backgroundColor": "Color de fondo",
+        "textColor": "Color del texto",
+        "padding": "Acolchado",
+        "fontFamily": "Fuente",
+        "size": "Tamaño",
+        "fontSize": "Tamaño de letra",
+        "table": "Tabla",
+        "header": "Cabecera",
+        "borderRadius": "Radio del borde",
+        "separators": "Separadores",
+        "verticalSeparatorColor": "Color vertical",
+        "borderSize": "Tamaño del borde",
+        "backgroundAlternateColor": "Color de las filas pares",
+        "alignment": "Alineación",
+        "cells": "Células",
+        "verticalSeparatorSize": "Tamaño vertical",
+        "horizontalSeparatorColor": "Color horizontal",
+        "horizontalSeparatorSize": "Tamaño horizontal"
+    },
+    "abTable": {
+        "empty": "No se ha encontrado ningún artículo."
+    },
+    "localBaserowServiceForm": {
+        "integrationDropdownLabel": "Integración",
+        "rowIdLabel": "ID de fila",
+        "rowIdPlaceholder": "Seleccione un ID de fila"
+    },
+    "fieldMappingContext": {
+        "enableField": "Habilitar campo",
+        "disableField": "Desactivar campo"
+    },
+    "dropdown": {
+        "empty": "No hay opciones disponibles"
     }
 }

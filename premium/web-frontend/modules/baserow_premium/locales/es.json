@@ -10,7 +10,7 @@
             "dashboard": "Tablero",
             "users": "Usuarios",
             "workspaces": "Grupos",
-            "licenses": "Licencias"
+            "licenses": "Gestionar licencias"
         },
         "viewType": {
             "kanban": "tabla kanban",
@@ -371,7 +371,8 @@
         "prompt": "Pregunta",
         "premiumFeature": "El campo de IA es una función premium",
         "emptyFileField": "Ninguno",
-        "fileFieldHelp": "El primer archivo compatible del campo se utilizará como base de conocimientos para la consulta. El archivo tiene que ser un archivo de texto con la extensión de archivo compatible como .txt, .md, .pdf, .docx."
+        "fileFieldHelp": "El primer archivo compatible del campo se utilizará como base de conocimientos para la consulta. El archivo tiene que ser un archivo de texto con la extensión de archivo compatible como .txt, .md, .pdf, .docx.",
+        "promptPlaceholder": "¿Qué es Baserow?"
     },
     "rowEditFieldAI": {
         "generate": "Generar",
@@ -395,5 +396,8 @@
     "formulaFieldAI": {
         "generateWithAI": "Generar con IA",
         "featureName": "Generar fórmulas con IA"
+    },
+    "calendarViewType": {
+        "sharedViewText": "Permite que cualquiera vea los datos de esta vista o sincroniza los eventos con tu calendario externo."
     }
 }
