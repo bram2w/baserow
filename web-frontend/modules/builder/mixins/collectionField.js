@@ -1,10 +1,11 @@
+import element from '@baserow/modules/builder/mixins/element'
 import { resolveColor } from '@baserow/modules/core/utils/colors'
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
 import applicationContextMixin from '@baserow/modules/builder/mixins/applicationContext'
 
 export default {
   inject: ['workspace', 'builder', 'page', 'mode'],
-  mixins: [applicationContextMixin],
+  mixins: [element, applicationContextMixin],
   props: {
     element: {
       type: Object,
