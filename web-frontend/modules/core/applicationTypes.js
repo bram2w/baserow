@@ -190,9 +190,17 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * Indicates whether the application is visible in the create new application contact.
+   * Indicates whether the given application is visible in the sidebar or dashboard view
    */
-  isVisible(application, context) {
+  isVisible(application) {
+    return true
+  }
+
+  /**
+   * Indicates whether the application can be created with the create new application
+   * context.
+   */
+  canBeCreated() {
     return true
   }
 
@@ -201,5 +209,9 @@ export class ApplicationType extends Registerable {
    */
   isBeta() {
     return false
+  }
+
+  getOrder() {
+    return 50
   }
 }

@@ -11,17 +11,17 @@
     ></div>
     <ul v-else class="context__menu">
       <li
-        v-for="(applicationType, type) in applications"
-        :key="type"
+        v-for="applicationType in applicationTypes"
+        :key="applicationType.getType()"
         class="context__menu-item"
       >
         <a
-          :ref="'createApplicationModalToggle' + type"
+          :ref="'createApplicationModalToggle' + applicationType.getType()"
           class="context__menu-item-link context__menu-item-link--with-desc"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
-          @click="toggleCreateApplicationModal(type)"
+          @click="toggleCreateApplicationModal(applicationType.getType())"
         >
           <span class="context__menu-item-title">
             <i
@@ -43,7 +43,7 @@
           </div>
         </a>
         <CreateApplicationModal
-          :ref="'createApplicationModal' + type"
+          :ref="'createApplicationModal' + applicationType.getType()"
           :application-type="applicationType"
           :workspace="workspace"
           @created="hide"
@@ -95,12 +95,11 @@ export default {
     },
   },
   computed: {
-    applications() {
-      const applications = this.$registry.getAll('application')
-      return Object.fromEntries(
-        Object.entries(applications).filter(([type, application]) =>
-          application.isVisible(applications, this)
-        )
+    applicationTypes() {
+      const applicationTypes = this.$registry.getOrderedList('application')
+
+      return applicationTypes.filter((applicationType) =>
+        applicationType.canBeCreated()
       )
     },
     canCreateCreateApplication() {

@@ -128,4 +128,18 @@ export class BuilderApplicationType extends ApplicationType {
   isBeta() {
     return true
   }
+
+  isVisible(application) {
+    // We don't want to show a builder application the user doesn't
+    // have the permission to list pages.
+    return this.app.$hasPermission(
+      'builder.list_pages',
+      application,
+      application.workspace.id
+    )
+  }
+
+  getOrder() {
+    return 70
+  }
 }

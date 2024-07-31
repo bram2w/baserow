@@ -128,7 +128,8 @@ export default {
             .filter((application) => {
               return (
                 application.workspace.id === this.selectedWorkspace.id &&
-                application.type === applicationType.getType()
+                application.type === applicationType.getType() &&
+                applicationType.isVisible(application)
               )
             })
             .sort((a, b) => a.order - b.order),

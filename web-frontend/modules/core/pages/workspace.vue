@@ -147,17 +147,20 @@
             v-if="orderedApplicationsInSelectedWorkspace.length"
             class="dashboard__applications"
           >
-            <li
+            <template
               v-for="application in orderedApplicationsInSelectedWorkspace"
-              :key="application.id"
             >
-              <DashboardApplication
-                :application="application"
-                :workspace="selectedWorkspace"
-                @click="selectApplication(application)"
-              />
-              <div class="dashboard__application-separator"></div>
-            </li>
+              <li
+                v-if="getApplicationType(application).isVisible(application)"
+                :key="application.id"
+              >
+                <DashboardApplication
+                  :application="application"
+                  :workspace="selectedWorkspace"
+                  @click="selectApplication(application)"
+                />
+                <div class="dashboard__application-separator"></div></li
+            ></template>
           </ul>
           <div v-else class="dashboard__no-application">
             <img
@@ -352,6 +355,9 @@ export default {
     },
   },
   methods: {
+    getApplicationType(application) {
+      return this.$registry.get('application', application.type)
+    },
     selectApplication(application) {
       const type = this.$registry.get('application', application.type)
       type.select(application, this)
