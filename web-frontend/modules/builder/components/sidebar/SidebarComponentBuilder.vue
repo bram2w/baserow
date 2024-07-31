@@ -14,8 +14,6 @@
             v-sortable="{
               id: page.id,
               update: orderPages,
-              marginLeft: 34,
-              marginRight: 10,
               marginTop: -1.5,
               enabled: $hasPermission(
                 'builder.order_pages',
@@ -26,15 +24,6 @@
             :builder="application"
             :page="page"
           ></SidebarItemBuilder>
-        </ul>
-        <ul v-if="pendingJobs.length" class="tree__subs">
-          <component
-            :is="getPendingJobComponent(job)"
-            v-for="job in pendingJobs"
-            :key="job.id"
-            :job="job"
-          >
-          </component>
         </ul>
         <a
           v-if="
@@ -47,7 +36,7 @@
           class="tree__sub-add"
           @click="$refs.createPageModal.show()"
         >
-          <i class="iconoir-plus"></i>
+          <i class="tree__sub-add-icon iconoir-plus"></i>
           {{ $t('sidebarComponentBuilder.createPage') }}
         </a>
         <CreatePageModal
@@ -62,7 +51,6 @@
 
 <script>
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
-import BuilderSettingsModal from '@baserow/modules/builder/components/settings/BuilderSettingsModal'
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItemBuilder from '@baserow/modules/builder/components/sidebar/SidebarItemBuilder'
@@ -73,7 +61,6 @@ export default {
   components: {
     CreatePageModal,
     SidebarItemBuilder,
-    BuilderSettingsModal,
     SidebarApplication,
   },
   props: {
@@ -89,19 +76,11 @@ export default {
   computed: {
     ...mapGetters({
       isAppSelected: 'application/isSelected',
-      allJobs: 'job/getAll',
     }),
     orderedPages() {
       return this.application.pages
         .map((page) => page)
         .sort((a, b) => a.order - b.order)
-    },
-    pendingJobs() {
-      return this.allJobs.filter((job) =>
-        this.$registry
-          .get('job', job.type)
-          .isJobPartOfApplication(job, this.application)
-      )
     },
   },
   methods: {
@@ -122,9 +101,6 @@ export default {
       } catch (error) {
         notifyIf(error, 'page')
       }
-    },
-    getPendingJobComponent(job) {
-      return this.$registry.get('job', job.type).getSidebarComponent()
     },
   },
 }

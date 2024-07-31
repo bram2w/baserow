@@ -28,8 +28,6 @@
           v-sortable="{
             id: table.id,
             update: orderTables,
-            marginLeft: 34,
-            marginRight: 10,
             marginTop: -1.5,
             enabled: $hasPermission(
               'database.order_tables',
@@ -40,15 +38,6 @@
           :database="application"
           :table="table"
         ></SidebarItem>
-      </ul>
-      <ul v-if="pendingJobs.length" class="tree__subs">
-        <component
-          :is="getPendingJobComponent(job)"
-          v-for="job in pendingJobs"
-          :key="job.id"
-          :job="job"
-        >
-        </component>
       </ul>
       <a
         v-if="
@@ -61,7 +50,7 @@
         class="tree__sub-add"
         @click="$refs.importFileModal.show()"
       >
-        <i class="iconoir-plus"></i>
+        <i class="tree__sub-add-icon iconoir-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>
       <ImportFileModal ref="importFileModal" :database="application" />
@@ -73,7 +62,6 @@
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
-import SidebarItemPendingJob from '@baserow/modules/core/components/sidebar/SidebarItemPendingJob'
 import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 
@@ -82,7 +70,6 @@ export default {
   components: {
     SidebarApplication,
     SidebarItem,
-    SidebarItemPendingJob,
     ImportFileModal,
   },
   props: {
@@ -100,13 +87,6 @@ export default {
       return this.application.tables
         .map((table) => table)
         .sort((a, b) => a.order - b.order)
-    },
-    pendingJobs() {
-      return this.$store.getters['job/getAll'].filter((job) =>
-        this.$registry
-          .get('job', job.type)
-          .isJobPartOfApplication(job, this.application)
-      )
     },
     ...mapGetters({ isAppSelected: 'application/isSelected' }),
   },
@@ -128,9 +108,6 @@ export default {
       } catch (error) {
         notifyIf(error, 'table')
       }
-    },
-    getPendingJobComponent(job) {
-      return this.$registry.get('job', job.type).getSidebarComponent()
     },
   },
 }

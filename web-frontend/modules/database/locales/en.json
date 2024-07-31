@@ -63,7 +63,7 @@
   },
   "sidebar": {
     "viewAPI": "View API Docs",
-    "createTable": "Create table"
+    "createTable": "New table"
   },
   "sidebarItem": {
     "exportTable": "Export table",

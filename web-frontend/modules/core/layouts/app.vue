@@ -1,13 +1,12 @@
 <template>
   <div>
     <Toasts></Toasts>
-    <div :class="{ 'layout--collapsed': isCollapsed }" class="layout">
+    <div class="layout">
       <div class="layout__col-1">
         <Sidebar
           :workspaces="workspaces"
           :selected-workspace="selectedWorkspace"
           :applications="applications"
-          :user="user"
           @selected-workspace="selectedWorkspaceEvent"
         ></Sidebar>
       </div>
@@ -59,8 +58,6 @@ export default {
     }),
     ...mapGetters({
       applications: 'application/getAll',
-      isCollapsed: 'sidebar/isCollapsed',
-      user: 'auth/getUserObject',
     }),
   },
   created() {

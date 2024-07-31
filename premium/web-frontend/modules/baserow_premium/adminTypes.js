@@ -18,7 +18,7 @@ export class DashboardType extends PremiumAdminType {
   }
 
   getIconClass() {
-    return 'iconoir-candlestick-chart'
+    return 'iconoir-home-simple'
   }
 
   getName() {
@@ -49,6 +49,11 @@ export class UsersAdminType extends PremiumAdminType {
     return i18n.t('premium.adminType.users')
   }
 
+  getCategory() {
+    const { i18n } = this.app
+    return i18n.t('sidebar.people')
+  }
+
   getRouteName() {
     return 'admin-users'
   }
@@ -64,12 +69,17 @@ export class WorkspacesAdminType extends PremiumAdminType {
   }
 
   getIconClass() {
-    return 'iconoir-book-stack'
+    return 'baserow-icon-groups'
   }
 
   getName() {
     const { i18n } = this.app
     return i18n.t('premium.adminType.workspaces')
+  }
+
+  getCategory() {
+    const { i18n } = this.app
+    return i18n.t('sidebar.people')
   }
 
   getRouteName() {
@@ -93,6 +103,11 @@ export class LicensesAdminType extends AdminType {
   getName() {
     const { i18n } = this.app
     return i18n.t('premium.adminType.licenses')
+  }
+
+  getCategory() {
+    const { i18n } = this.app
+    return i18n.t('sidebar.licenses')
   }
 
   getRouteName() {

@@ -21,14 +21,14 @@ export class BaserowPlugin extends Registerable {
    * Every registered plugin can have a component that's rendered at the top of the
    * left sidebar.
    */
-  getSidebarTopComponent() {
+  getImpersonateComponent() {
     return null
   }
 
-  /*
-   * Every registered plugin can display an item in the main sidebar menu.
+  /**
+   * Every registered plugin can have a component displaying a badge with the highest license type
    */
-  getSidebarMainMenuComponent() {
+  getHighestLicenseTypeBadge() {
     return null
   }
 

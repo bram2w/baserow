@@ -30,6 +30,11 @@ export class DatabaseApplicationType extends ApplicationType {
     return i18n.t('applicationType.database')
   }
 
+  getNamePlural() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.databases')
+  }
+
   getDescription() {
     const { i18n } = this.app
     return i18n.t('applicationType.databaseDesc')

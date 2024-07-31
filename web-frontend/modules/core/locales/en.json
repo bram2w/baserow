@@ -23,15 +23,21 @@
   },
   "sidebar": {
     "createWorkspace": "Create workspace",
+    "addNewWorkspace": "Add new workspace",
     "inviteOthers": "Invite others",
     "members": "Members",
-    "logoff": "Logoff",
+    "logoff": "Log out",
     "errorNoWorkspace": "You don’t have any workspaces.",
-    "admin": "Admin",
+    "adminTools": "Admin tools",
     "home": "Home",
+    "dashboard": "Dashboard",
     "trash": "Trash",
-    "settings": "Settings",
-    "notifications": "Notifications"
+    "settings": "My settings",
+    "notifications": "Notifications",
+    "adminSettings": "Admin settings",
+    "general": "General",
+    "people": "People",
+    "licenses": "Licenses"
   },
   "accountForm": {
     "nameLabel": "Your name",
@@ -44,7 +50,7 @@
     "submitButton": "Update account"
   },
   "settingsModal": {
-    "title": "Settings"
+    "title": "My settings"
   },
   "notificationPanel": {
     "title": "Notifications",
@@ -156,11 +162,6 @@
     "errorInvalidEmail": "Please enter a valid e-mail address.",
     "errorTooLongMessage": "Messages are limited to {amount} characters.",
     "additionalRoles": "Additional roles"
-  },
-  "workspacesContext": {
-    "search": "Search workspaces",
-    "noResults": "No results found",
-    "createWorkspace": "Create workspace"
   },
   "workspaceContext": {
     "renameWorkspace": "Rename workspace",

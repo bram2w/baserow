@@ -16,7 +16,7 @@
   },
   "sidebarComponentBuilder": {
     "settings": "Settings",
-    "createPage": "Create page"
+    "createPage": "New page"
   },
   "builderSettingsModal": {
     "title": "Application"

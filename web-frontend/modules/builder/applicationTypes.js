@@ -12,12 +12,17 @@ export class BuilderApplicationType extends ApplicationType {
   }
 
   getIconClass() {
-    return 'iconoir-apple-imac-2021'
+    return 'baserow-icon-application'
   }
 
   getName() {
     const { i18n } = this.app
     return i18n.t('applicationType.builder')
+  }
+
+  getNamePlural() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.builders')
   }
 
   getDescription() {

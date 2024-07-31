@@ -45,7 +45,7 @@
 
             <a
               v-if="collapsibleRightSidebar"
-              class="sidebar__collapse"
+              class="modal__collapse"
               @click="collapseSidebar"
             >
               <i
