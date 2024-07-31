@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] improve performance when editing default value of input element inside repeat element",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2024-07-26"
+}
