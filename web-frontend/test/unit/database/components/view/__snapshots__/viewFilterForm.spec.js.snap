@@ -1208,7 +1208,7 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
      
     <div>
       <div
-        class="switch switch--small"
+        class="switch switch--small switch--color-green"
       >
         <div
           class="switch__label"
@@ -1726,7 +1726,7 @@ exports[`ViewFilterForm match snapshots Test rating filter 1`] = `
      
     <div>
       <div
-        class="switch switch--small"
+        class="switch switch--small switch--color-green"
       >
         <div
           class="switch__label"
@@ -2244,7 +2244,7 @@ exports[`ViewFilterForm match snapshots Test rating filter 2`] = `
      
     <div>
       <div
-        class="switch switch--small"
+        class="switch switch--small switch--color-green"
       >
         <div
           class="switch__label"

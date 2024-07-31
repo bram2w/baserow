@@ -32,6 +32,14 @@ export default {
       required: false,
       default: false,
     },
+    color: {
+      type: String,
+      required: false,
+      validator: function (value) {
+        return ['green', 'neutral'].includes(value)
+      },
+      default: 'green',
+    },
   },
   computed: {
     hasSlot() {
@@ -43,6 +51,7 @@ export default {
         'switch--disabled': this.disabled,
         'switch--active': this.value,
         'switch--indeterminate': this.value !== true && this.value !== false,
+        [`switch--color-${this.color}`]: true,
       }
     },
   },

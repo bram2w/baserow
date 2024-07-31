@@ -14,15 +14,8 @@
     content: '';
     width: 40px;
     height: 24px;
-    background-color: $palette-neutral-400;
 
     @include rounded($rounded-xl);
-  }
-
-  &:hover {
-    &::before {
-      background-color: $palette-neutral-500;
-    }
   }
 
   &::after {
@@ -38,32 +31,12 @@
   }
 
   &.switch--active {
-    &::before {
-      background-color: $palette-green-500;
-    }
-
-    &:not(.switch--disabled):hover {
-      &::before {
-        background-color: $palette-green-800;
-      }
-    }
-
     &::after {
       left: 17px;
     }
   }
 
   &.switch--indeterminate {
-    &::before {
-      background-color: $palette-yellow-500;
-    }
-
-    &:not(.switch--disabled):hover {
-      &::before {
-        background-color: $palette-yellow-800;
-      }
-    }
-
     &::after {
       left: 10px;
     }
@@ -71,10 +44,6 @@
 
   &.switch--disabled {
     cursor: not-allowed;
-
-    &::before {
-      background-color: $palette-neutral-400;
-    }
 
     &::after {
       box-shadow: none;
@@ -103,6 +72,28 @@
       left: 6px;
     }
   }
+}
+
+.switch--color-green {
+  @include switch-color(
+    $palette-green-500,
+    $palette-green-800,
+    $palette-yellow-500,
+    $palette-yellow-800,
+    $palette-neutral-400,
+    $palette-neutral-500
+  );
+}
+
+.switch--color-neutral {
+  @include switch-color(
+    $palette-neutral-1200,
+    $palette-neutral-1300,
+    $palette-neutral-800,
+    $palette-neutral-900,
+    $palette-neutral-400,
+    $palette-neutral-500
+  );
 }
 
 .switch__label {

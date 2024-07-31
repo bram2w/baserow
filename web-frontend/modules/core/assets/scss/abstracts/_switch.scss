@@ -1,0 +1,48 @@
+@mixin switch-color(
+  $active-color,
+  $active-hover-color,
+  $indeterminate-color,
+  $indeterminate-hover-color,
+  $disabled-color,
+  $disabled-hover-color
+) {
+  &::before {
+    background-color: $disabled-color;
+  }
+
+  &:hover {
+    &::before {
+      background-color: $disabled-hover-color;
+    }
+  }
+
+  &.switch--active {
+    &::before {
+      background-color: $active-color;
+    }
+
+    &:not(.switch--disabled):hover {
+      &::before {
+        background-color: $active-hover-color;
+      }
+    }
+  }
+
+  &.switch--indeterminate {
+    &::before {
+      background-color: $indeterminate-color;
+    }
+
+    &:not(.switch--disabled):hover {
+      &::before {
+        background-color: $indeterminate-hover-color;
+      }
+    }
+  }
+
+  &.switch--disabled {
+    &::before {
+      background-color: $disabled-color;
+    }
+  }
+}
