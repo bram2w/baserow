@@ -331,7 +331,6 @@ import FontFamilySelector from '@baserow/modules/builder/components/FontFamilySe
 import PixelValueSelector from '@baserow/modules/builder/components/PixelValueSelector'
 import PaddingSelector from '@baserow/modules/builder/components/PaddingSelector'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
-import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
 
 const minMax = {
   table_border_size: {
@@ -369,7 +368,6 @@ export default {
   components: {
     ThemeConfigBlockSection,
     ResetButton,
-    BaserowTable,
     HorizontalAlignmentsSelector,
     FontFamilySelector,
     PixelValueSelector,
