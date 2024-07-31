@@ -45,8 +45,8 @@ helm ls --all-namespaces
 4. Install Baserow using Helm
 
 ```bash
-helm repo add christianknell https://christianknell.github.io/helm-charts
+helm repo add christianhuth https://charts.christianhuth.de
 helm repo update
-helm install 1.5.3 christianknell/baserow
+helm install my-baserow christianhuth/baserow
 # Finally follow the printed instructions.
 ```
