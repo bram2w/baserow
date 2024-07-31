@@ -13,13 +13,13 @@
         class="tree__link"
         @click.prevent="$refs.enterpriseModal.show()"
       >
-        <i class="tree__icon tree__icon--type iconoir-lock"></i>
+        <i class="tree__icon iconoir-lock"></i>
         <span class="tree__link-text">{{
           $t('chatwootSupportSidebarWorkspace.directSupport')
         }}</span>
       </a>
       <a v-else class="tree__link" @click="open">
-        <i class="tree__icon tree__icon--type iconoir-chat-bubble-question"></i>
+        <i class="tree__icon iconoir-chat-bubble-question"></i>
         <span class="tree__link-text">{{
           $t('chatwootSupportSidebarWorkspace.directSupport')
         }}</span>

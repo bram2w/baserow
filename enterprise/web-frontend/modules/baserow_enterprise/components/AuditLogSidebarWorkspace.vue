@@ -1,46 +1,48 @@
 <template>
-  <li
+  <nuxt-link
     v-if="hasPermission"
-    class="tree__item"
-    :class="{
-      'tree__item--loading': loading,
-      'tree__action--deactivated': deactivated,
-      active: $route.matched.some(({ name }) => name === 'workspace-audit-log'),
+    v-slot="{ href, navigate, isExactActive }"
+    :to="{
+      name: 'workspace-audit-log',
+      params: {
+        workspaceId: workspace.id,
+      },
     }"
   >
-    <div class="tree__action">
-      <a
-        v-if="deactivated"
-        href="#"
-        class="tree__link"
-        @click.prevent="$refs.enterpriseModal.show()"
-      >
-        <i class="tree__icon tree__icon--type iconoir-lock"></i>
-        <span class="tree__link-text">{{
-          $t('auditLogSidebarWorkspace.title')
-        }}</span>
-      </a>
-      <nuxt-link
-        v-else
-        :event="!hasPermission ? null : 'click'"
-        class="tree__link"
-        :to="{
-          name: 'workspace-audit-log',
-          params: { workspaceId: workspace.id },
-        }"
-      >
-        <i class="tree__icon tree__icon--type baserow-icon-history"></i>
-        <span class="tree__link-text">{{
-          $t('auditLogSidebarWorkspace.title')
-        }}</span>
-      </nuxt-link>
-    </div>
-    <EnterpriseModal
-      ref="enterpriseModal"
-      :workspace="workspace"
-      :name="$t('auditLogSidebarWorkspace.title')"
-    ></EnterpriseModal>
-  </li>
+    <li
+      class="tree__item"
+      :class="{
+        'tree__item--loading': loading,
+        'tree__action--deactivated': deactivated,
+        active: isExactActive,
+      }"
+    >
+      <div class="tree__action">
+        <a
+          v-if="deactivated"
+          href="#"
+          class="tree__link"
+          @click.prevent="$refs.enterpriseModal.show()"
+        >
+          <i class="tree__icon iconoir-lock"></i>
+          <span class="tree__link-text">{{
+            $t('auditLogSidebarWorkspace.title')
+          }}</span>
+        </a>
+        <a v-else :href="href" class="tree__link" @click="navigate">
+          <i class="tree__icon baserow-icon-history"></i>
+          <span class="tree__link-text">{{
+            $t('auditLogSidebarWorkspace.title')
+          }}</span>
+        </a>
+      </div>
+      <EnterpriseModal
+        ref="enterpriseModal"
+        :workspace="workspace"
+        :name="$t('auditLogSidebarWorkspace.title')"
+      ></EnterpriseModal>
+    </li>
+  </nuxt-link>
 </template>
 
 <script>

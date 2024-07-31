@@ -1,5 +1,5 @@
 <template>
-  <div class="premium-top-sidebar">
+  <div class="sidebar__impersonate">
     <div v-if="impersonating" class="impersonate-warning">
       {{ $t('premiumTopSidebar.impersonateDescription') }}
       <div>
@@ -16,18 +16,6 @@
         >
       </div>
     </div>
-
-    <Badge
-      v-if="
-        highestLicenseType && highestLicenseType.showInTopSidebarWhenActive()
-      "
-      v-tooltip="highestLicenseType.getTopSidebarTooltip()"
-      :color="highestLicenseType.getLicenseBadgeColor()"
-      class="instance-wide-license"
-      bold
-    >
-      {{ highestLicenseType.getName() }}</Badge
-    >
   </div>
 </template>
 
@@ -35,7 +23,7 @@
 import { mapGetters } from 'vuex'
 
 export default {
-  name: 'PremiumTopSidebar',
+  name: 'Impersonate',
   data() {
     return {
       loading: false,
@@ -45,9 +33,6 @@ export default {
     ...mapGetters({
       impersonating: 'impersonating/getImpersonating',
     }),
-    highestLicenseType() {
-      return this.$highestLicenseType()
-    },
   },
   methods: {
     resolveAdminUsersHref() {

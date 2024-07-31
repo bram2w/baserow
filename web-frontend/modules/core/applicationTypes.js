@@ -23,6 +23,10 @@ export class ApplicationType extends Registerable {
     return null
   }
 
+  getNamePlural() {
+    return null
+  }
+
   /**
    * Small description of the application type, shown in the create new application
    * context menu.

@@ -84,7 +84,7 @@
   padding: 8px 10px;
   user-select: none;
 
-  @include rounded($rounded);
+  @include rounded($rounded-md);
   @include flex-align-items(6px);
 
   &.disabled {
@@ -98,7 +98,7 @@
   }
 
   &:hover {
-    background-color: rgba($palette-neutral-1300, 0.04);
+    background-color: $palette-neutral-100;
     text-decoration: none;
 
     &.disabled {

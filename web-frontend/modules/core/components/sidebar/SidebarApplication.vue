@@ -2,7 +2,6 @@
   <li
     class="tree__item"
     :class="{
-      active: application._.selected,
       'tree__item--loading': application._.loading,
     }"
   >
@@ -13,10 +12,7 @@
         :title="application.name"
         @click="$emit('selected', application)"
       >
-        <i
-          class="tree__icon tree__icon--type"
-          :class="application._.type.iconClass"
-        ></i>
+        <i class="tree__icon" :class="application._.type.iconClass"></i>
         <span class="tree__link-text">
           <template v-if="application.name === ''">&nbsp;</template>
           <Editable

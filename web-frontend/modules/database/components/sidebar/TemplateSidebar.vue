@@ -2,16 +2,12 @@
   <li
     class="tree__item"
     :class="{
-      active: application._.selected,
       'tree__item--loading': application._.loading,
     }"
   >
     <div class="tree__action">
       <a class="tree__link" @click="$emit('selected', application)">
-        <i
-          class="tree__icon tree__icon--type"
-          :class="application._.type.iconClass"
-        ></i>
+        <i class="tree__icon" :class="application._.type.iconClass"></i>
         <span class="tree__link-text">{{ application.name }}</span>
       </a>
     </div>
