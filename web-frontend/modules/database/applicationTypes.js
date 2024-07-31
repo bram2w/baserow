@@ -154,4 +154,8 @@ export class DatabaseApplicationType extends ApplicationType {
   getApplicationFormComponent() {
     return DatabaseForm
   }
+
+  getOrder() {
+    return 20
+  }
 }

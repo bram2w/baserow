@@ -264,11 +264,6 @@ default_roles[settings.BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED].append(
 default_roles[VIEWER_ROLE_UID].extend(
     default_roles[NO_ACCESS_ROLE_UID]
     + [
-        ReadPageOperationType,
-        ListPagesBuilderOperationType,
-        OrderPagesBuilderOperationType,
-        ListDomainsBuilderOperationType,
-        OrderDomainsBuilderOperationType,
         ReadWorkspaceOperationType,
         ReadTeamOperationType,
         ListTeamsOperationType,
@@ -326,8 +321,6 @@ default_roles[EDITOR_ROLE_UID].extend(
         RestoreDatabaseRowOperationType,
         ListTeamSubjectsOperationType,
         ReadTeamSubjectOperationType,
-        UpdateBuilderWorkflowActionOperationType,
-        OrderBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(
@@ -431,6 +424,13 @@ default_roles[BUILDER_ROLE_UID].extend(
         OrderUserSourcesOperationType,
         AuthenticateUserSourceOperationType,
         LoginUserSourceOperationType,
+        ReadPageOperationType,
+        ListPagesBuilderOperationType,
+        OrderPagesBuilderOperationType,
+        ListDomainsBuilderOperationType,
+        OrderDomainsBuilderOperationType,
+        UpdateBuilderWorkflowActionOperationType,
+        OrderBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(
