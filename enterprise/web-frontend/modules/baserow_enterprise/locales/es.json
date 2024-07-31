@@ -323,5 +323,15 @@
         "premium": "Premium",
         "enterprise": "Enterprise",
         "viewPricing": "Ver los precios"
+    },
+    "authFormElementForm": {
+        "loginButtonLabelPlaceholder": "Introduce la etiqueta..."
+    },
+    "authFormElement": {
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "emailPlaceholder": "Introduce tu correo electrónico...",
+        "passwordPlaceholder": "Introduce tu contraseña...",
+        "selectOrConfigureUserSourceFirst": "Elige un origen de usuario para empezar a utilizar este elemento de inicio de sesión."
     }
 }

@@ -26,7 +26,14 @@
         "trash": "Prullenbak",
         "settings": "Instellingen",
         "members": "Leden",
-        "notifications": "Meldingen"
+        "notifications": "Meldingen",
+        "general": "Algemeen",
+        "home": "Home",
+        "people": "Gebruikers",
+        "addNewWorkspace": "Nieuwe werkruimte toevoegen",
+        "adminTools": "Beheerprogramma's",
+        "adminSettings": "Beheerdersinstellingen",
+        "licenses": "Licenties"
     },
     "accountForm": {
         "nameLabel": "Je naam",
@@ -185,7 +192,10 @@
         "retry": "Opnieuw proberen"
     },
     "createApplicationContext": {
-        "fromTemplate": "Van sjabloon"
+        "fromTemplate": "Van sjabloon",
+        "table": "Tabel",
+        "tableDesc": "Maak een nieuwe plaats om gegevens in je database te beheren.",
+        "fromTemplateDesc": "Begin snel met een van onze aanbevolen templates"
     },
     "applicationForm": {
         "nameLabel": "Naam",
@@ -226,7 +236,20 @@
         "shareOnReddit": "Deel op Reddit",
         "shareOnFacebook": "Deel op Facebook",
         "shareOnLinkedIn": "Deel op LinkedIn",
-        "noWorkspaceTextWithoutCreatePermission": "Je bent geen lid van een werkruimte. Toepassingen zoals databases horen bij een werkruimte, dus om ze aan te maken moet je eerst door een beheerder bij een werkruimte worden uitgenodigd."
+        "noWorkspaceTextWithoutCreatePermission": "Je bent geen lid van een werkruimte. Toepassingen zoals databases horen bij een werkruimte, dus om ze aan te maken moet je eerst door een beheerder bij een werkruimte worden uitgenodigd.",
+        "apiDocumentation": "API-documentatie",
+        "apiDocumentationMessage": "Meer informatie over onze code",
+        "emptyWorkspace": "Deze werkruimte is leeg",
+        "noWorkspaceDescription": "Begin met het maken van een nieuwe werkruimte",
+        "suggestedTemplates": "Voorgestelde templates",
+        "resources": "Bronnen",
+        "knowledgeBase": "Kennisbank",
+        "knowledgeBaseMessage": "Vind antwoorden op al je vragen",
+        "tutorials": "Tutorials",
+        "tutorialsMessage": "Ontdek het potentieel van Baserow",
+        "emptyWorkspaceMessage": "Begin met het maken van een nieuwe database of applicatie.",
+        "addNew": "Nieuwe toevoegen...",
+        "noWorkspace": "Geen werkruimte"
     },
     "login": {
         "title": "Inloggen",
@@ -793,5 +816,14 @@
     },
     "colorInput": {
         "default": "Standaard"
+    },
+    "dashboardApplication": {
+        "createdAt": "gemaakt"
+    },
+    "templateCard": {
+        "viewMore": "Meer bekijken"
+    },
+    "dataExplorerNode": {
+        "showMore": "Meer herhalingen tonen"
     }
 }

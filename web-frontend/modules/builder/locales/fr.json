@@ -1,7 +1,7 @@
 {
     "sidebarComponentBuilder": {
         "settings": "Paramètres",
-        "createPage": "Créer une page"
+        "createPage": "Nouvelle page"
     },
     "createPageModal": {
         "header": "Créer une page",
@@ -427,7 +427,8 @@
         "updateRowLabel": "Mise à jour de ligne",
         "createRowLabel": "Création de ligne",
         "logoutLabel": "Déconnexion",
-        "refreshDataSourceLabel": "Actualiser une source de données"
+        "refreshDataSourceLabel": "Actualiser une source de données",
+        "deleteRowLabel": "Supprimer une ligne"
     },
     "getFormulaComponent": {
         "errorTooltip": "Référence invalide"
@@ -553,7 +554,7 @@
         "name": "Nom"
     },
     "checkboxElementForm": {
-        "labelTitle": "Label",
+        "labelTitle": "Libéllé de l'option",
         "valueTitle": "Valeur par défaut",
         "requiredTitle": "Obligatoire"
     },
@@ -634,7 +635,8 @@
         "itemsPerRowDescription": "Nombre de colonnes par ligne et type d'appareil.",
         "orientationVertical": "Verticale",
         "orientationHorizontal": "Horizontale",
-        "buttonLoadMoreLabel": "Libellé « afficher plus »"
+        "buttonLoadMoreLabel": "Libellé « afficher plus »",
+        "toggleEditorRepetitionsLabel": "Désactiver temporairement les répétitions"
     },
     "userDataProviderType": {
         "isAuthenticated": "Est authentifié",
@@ -662,7 +664,9 @@
         "typography": "Typographie",
         "button": "Bouton",
         "link": "Lien",
-        "image": "Image"
+        "image": "Image",
+        "input": "Champs de saisie",
+        "table": "Table"
     },
     "colorThemeConfigBlock": {
         "primaryColor": "Primaire",
@@ -670,7 +674,8 @@
         "borderColor": "Bordure",
         "successColor": "Succès",
         "warningColor": "Avertissement",
-        "errorColor": "Erreur"
+        "errorColor": "Erreur",
+        "transparent": "Transparent"
     },
     "pageThemeConfigBlock": {
         "backgroundColor": "Couleur d'arrière-plan",
@@ -683,7 +688,8 @@
         "success": "Succès",
         "warning": "Avertissement",
         "border": "Bordure",
-        "error": "Erreur"
+        "error": "Erreur",
+        "transparent": "Transparent"
     },
     "typographyThemeConfigBlock": {
         "headingValue": "Titre <h{i}>",
@@ -742,13 +748,14 @@
         "label": "Options",
         "value": "Valeurs des options",
         "valuePlaceholder": "Saisir la valeur",
-        "name": "Libellé des options",
+        "name": "Libellés des options",
         "namePlaceholder": "Saisir le nom",
         "addOption": "ajouter une option",
         "optionType": "Type d'options",
         "manual": "Manuelle",
         "dataSource": "Source de données",
-        "formulas": "Formules"
+        "formulas": "Formules",
+        "addOptionDescription": "Cliquez sur \"ajouter une option\" pour ajouter des options à votre liste de choix"
     },
     "choiceElement": {
         "addOptions": "Ajouter des options pour utiliser cet élément..."
@@ -762,6 +769,55 @@
         "fit": "Contenir"
     },
     "customStyle": {
-        "themeOverrides": "Style spécifique"
+        "themeOverrides": "Style spécifique",
+        "configureThemeOverrides": "Définir les exceptions au thème pour cet élément"
+    },
+    "inputThemeConfigBlock": {
+        "label": "Libéllé",
+        "input": "Champs de saisie",
+        "backgroundColor": "Couleur de fond",
+        "textColor": "Couleur du texte",
+        "borderSize": "Épaisseur de la bordure",
+        "borderRadius": "Rayon de l'arrondi",
+        "padding": "Espacement",
+        "fontFamily": "Police",
+        "size": "Taille de la police",
+        "borderColor": "Couleur de bordure"
+    },
+    "tableThemeConfigBlock": {
+        "borderColor": "Couleur de bordure",
+        "backgroundAlternateColor": "Couleur des rangs pairs",
+        "backgroundColor": "Couleur de fond",
+        "textColor": "Couleur du texte",
+        "borderSize": "Épaisseur de la bordure",
+        "borderRadius": "Rayon de l'arrondi",
+        "padding": "Espacement",
+        "fontFamily": "Police",
+        "size": "Épaisseur",
+        "fontSize": "Taille de la police",
+        "table": "Table",
+        "header": "En-tête",
+        "alignment": "Alignement",
+        "cells": "Cellules",
+        "separators": "Séparateurs",
+        "verticalSeparatorColor": "Couleur verticale",
+        "verticalSeparatorSize": "Taille verticale",
+        "horizontalSeparatorColor": "Couleur horizontale",
+        "horizontalSeparatorSize": "Taille horizontale"
+    },
+    "localBaserowServiceForm": {
+        "integrationDropdownLabel": "Intégration",
+        "rowIdPlaceholder": "Saisir l'ID d'une ligne",
+        "rowIdLabel": "ID de ligne"
+    },
+    "fieldMappingContext": {
+        "enableField": "Activer le champ",
+        "disableField": "Désactiver le champ"
+    },
+    "dropdown": {
+        "empty": "Aucune option disponible"
+    },
+    "abTable": {
+        "empty": "Aucun résultat n'a été trouvée."
     }
 }

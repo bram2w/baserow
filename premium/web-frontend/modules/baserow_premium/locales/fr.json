@@ -10,7 +10,7 @@
             "dashboard": "Statistiques",
             "users": "Utilisateurs",
             "workspaces": "Projets",
-            "licenses": "Licences"
+            "licenses": "Gérer les licences"
         },
         "viewType": {
             "kanban": "Kanban",
@@ -374,7 +374,8 @@
         "prompt": "Prompt",
         "premiumFeature": "Le champ IA est une fonctionnalité premium",
         "emptyFileField": "Aucun(e)",
-        "fileFieldHelp": "Le premier fichier compatible dans le champ sera utilisé comme base de connaissances pour l'invite. Le fichier doit être un fichier texte avec une extension supportée comme .txt, .md, .pdf, .docx."
+        "fileFieldHelp": "Le premier fichier compatible dans le champ sera utilisé comme base de connaissances pour l'invite. Le fichier doit être un fichier texte avec une extension supportée comme .txt, .md, .pdf, .docx.",
+        "promptPlaceholder": "Qu'est-ce que Baserow ?"
     },
     "rowEditFieldAI": {
         "createRowBefore": "La valeur du champ IA peut être générée après la création de la ligne.",
@@ -394,5 +395,12 @@
     "formulaFieldAI": {
         "generateWithAI": "Générer à l'aide de l'IA",
         "featureName": "Générer une formule à l'aide de l'IA"
+    },
+    "calendarViewType": {
+        "sharedViewEnableSyncToExternalCalendar": "Synchronisation avec un calendrier externe",
+        "sharedViewDisableSyncToExternalCalendar": "Désactiver la synchronisation externe",
+        "sharedViewDescription": "Copier-Coller ce lien dans votre application de calendrier",
+        "sharedViewTitle": "Synchronisation vers un calendrier externe",
+        "sharedViewText": "Permettre à quiconque de consulter les données de cette vue ou synchroniser les événements avec un calendrier externe."
     }
 }

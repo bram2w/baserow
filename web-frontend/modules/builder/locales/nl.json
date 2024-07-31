@@ -387,7 +387,8 @@
         "notificationLabel": "Melding tonen",
         "openPageLabel": "Pagina openen",
         "logoutLabel": "Uitloggen",
-        "refreshDataSourceLabel": "Gegevensbron verversen"
+        "refreshDataSourceLabel": "Gegevensbron verversen",
+        "deleteRowLabel": "Verwijder Rij"
     },
     "widthTypes": {
         "full": "Volledige breedte",
@@ -627,7 +628,8 @@
         "itemsPerPage": "Items per pagina",
         "itemsPerPagePlaceholder": "Waarde invoeren...",
         "itemsPerRowLabel": "Items per rij",
-        "buttonLoadMoreLabel": "Toon meer label"
+        "buttonLoadMoreLabel": "Toon meer label",
+        "toggleEditorRepetitionsLabel": "Herhalingen tijdelijk uitschakelen"
     },
     "userDataProviderType": {
         "isAuthenticated": "Is ingelogd",
@@ -660,7 +662,9 @@
         "typography": "Typografie",
         "link": "Link",
         "button": "Knop",
-        "image": "Afbeelding"
+        "image": "Afbeelding",
+        "input": "Invoer",
+        "table": "Tabel"
     },
     "buttonThemeConfigBlock": {
         "defaultState": "Standaard staat",
@@ -716,7 +720,8 @@
         "optionType": "Opties type",
         "label": "Opties",
         "value": "Optiewaarden",
-        "valuePlaceholder": "Waarde invoeren"
+        "valuePlaceholder": "Waarde invoeren",
+        "addOptionDescription": "Klik op 'optie toevoegen' om opties toe te voegen aan je vervolgkeuzelijst"
     },
     "choiceElement": {
         "addOptions": "Opties toevoegen om dit element te gaan gebruiken..."
@@ -727,7 +732,8 @@
         "fit": "Pas"
     },
     "customStyle": {
-        "themeOverrides": "Thema overschrijvingen"
+        "themeOverrides": "Thema overschrijvingen",
+        "configureThemeOverrides": "Thema-overschrijvingen voor dit element configureren"
     },
     "colorThemeConfigBlock": {
         "errorColor": "Fout",
@@ -735,7 +741,8 @@
         "secondaryColor": "Secundair",
         "borderColor": "Border",
         "warningColor": "Waarschuwing",
-        "primaryColor": "Primair"
+        "primaryColor": "Primair",
+        "transparent": "Transparant"
     },
     "colorThemeConfigBlockType": {
         "secondary": "Secundair",
@@ -743,7 +750,8 @@
         "warning": "Waarschuwing",
         "error": "Fout",
         "primary": "Primair",
-        "border": "Border"
+        "border": "Border",
+        "transparent": "Transparant"
     },
     "pageThemeConfigBlock": {
         "backgroundColor": "Achtergrond kleur",
@@ -761,5 +769,53 @@
     },
     "resetButton": {
         "reset": "Terugzetten naar standaard themawaarde"
+    },
+    "inputThemeConfigBlock": {
+        "label": "Label",
+        "input": "Invoer",
+        "backgroundColor": "Achtergrond kleur",
+        "textColor": "Kleur tekst",
+        "borderColor": "Kleur rand",
+        "borderSize": "Randgrootte",
+        "borderRadius": "Randradius",
+        "padding": "Opvulling",
+        "fontFamily": "Lettertype",
+        "size": "Lettergrootte"
+    },
+    "tableThemeConfigBlock": {
+        "borderColor": "Kleur rand",
+        "backgroundAlternateColor": "Even rij kleur",
+        "textColor": "Kleur tekst",
+        "borderSize": "Randgrootte",
+        "fontSize": "Lettergrootte",
+        "table": "Tabel",
+        "header": "Kop",
+        "alignment": "Uitlijning",
+        "cells": "Cellen",
+        "separators": "Scheiders",
+        "verticalSeparatorColor": "Verticale kleur",
+        "verticalSeparatorSize": "Verticale grootte",
+        "horizontalSeparatorColor": "Horizontale kleur",
+        "horizontalSeparatorSize": "Horizontale grootte",
+        "borderRadius": "Randradius",
+        "padding": "Opvulling",
+        "size": "Grootte",
+        "backgroundColor": "Achtergrond kleur",
+        "fontFamily": "Lettertype"
+    },
+    "dropdown": {
+        "empty": "Geen opties beschikbaar"
+    },
+    "abTable": {
+        "empty": "Er zijn geen items gevonden."
+    },
+    "localBaserowServiceForm": {
+        "rowIdPlaceholder": "Selecteer een rij ID",
+        "rowIdLabel": "Rij ID",
+        "integrationDropdownLabel": "Integratie"
+    },
+    "fieldMappingContext": {
+        "enableField": "Veld inschakelen",
+        "disableField": "Veld uitschakelen"
     }
 }

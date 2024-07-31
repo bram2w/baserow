@@ -9,7 +9,8 @@
         "link": "Lien",
         "table": "Table",
         "all": "Tous",
-        "billable": "Facturable"
+        "billable": "Facturable",
+        "beta": "Bêta"
     },
     "action": {
         "upload": "Envoyer",
@@ -17,7 +18,7 @@
         "backToLogin": "Retour à l'identification",
         "signUp": "Créer un compte",
         "signIn": "S'identifier",
-        "createNew": "Nouveau",
+        "createNew": "Ajouter...",
         "create": "Créer",
         "edit": "Modifier",
         "change": "Changer",
@@ -40,7 +41,8 @@
         "copyToClipboard": "Copier dans le presse-papier",
         "reset": "Réinitialiser",
         "logout": "Déconnexion",
-        "set": "Définir"
+        "set": "Définir",
+        "backToHome": "Retour à l'accueil"
     },
     "adminType": {
         "settings": "Paramètres",
@@ -54,7 +56,11 @@
         "builder": "Application",
         "builderDefaultName": "Application sans titre",
         "cantSelectPageTitle": "Impossible de sélectionner l'application",
-        "cantSelectPageDescription": "Le générateur d'application ne peut pas être sélectionné car il n'y a aucune page. Créez-en une depuis le menu latéral."
+        "cantSelectPageDescription": "Le générateur d'application ne peut pas être sélectionné car il n'y a aucune page. Créez-en une depuis le menu latéral.",
+        "databases": "Bases de données",
+        "databaseDesc": "Créer une collection organisée de données structurées.",
+        "builderDesc": "Créez facilement des sites web, des applications web et des portails sans code.",
+        "builders": "Applications"
     },
     "settingType": {
         "account": "Informations personnelles",
@@ -82,7 +88,8 @@
         "maxValueField": "Le champ doit être inférieur ou égal à {max}.",
         "minMaxValueField": "La valeur du champ doit être comprise entre {min} et {max}.",
         "invalidNumber": "Le champ doit être un nombre.",
-        "email": "La valeur doit être un email."
+        "email": "La valeur doit être un email.",
+        "invalidURL": "Veuillez saisir une URL valide."
     },
     "permission": {
         "admin": "Admin",
@@ -240,7 +247,16 @@
         "isAfter": "est après",
         "isOnOrBefore": "est au plus tard",
         "isOnOrAfter": "est au plus tôt",
-        "isWithin": "est compris entre"
+        "isWithin": "est compris entre",
+        "hasValueEqual": "a une valeur égale à",
+        "hasNotValueEqual": "n'a pas de valeur égale à",
+        "hasValueContains": "a une valeur contenant",
+        "hasNotValueContains": "n'a pas de valeur contenant",
+        "hasEmptyValue": "a une valeur vide",
+        "hasNotEmptyValue": "n'a pas de valeur vide",
+        "hasValueContainsWord": "a une valeur contenant le mot",
+        "hasValueLengthIsLowerThan": "a une longueur de valeur inférieure à",
+        "hasNotValueContainsWord": "n'a pas de valeur contenant le mot"
     },
     "viewType": {
         "grid": "Tableau",
@@ -363,7 +379,11 @@
         "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Nombre maximum d'invitations en attente atteint",
         "outputParserTitle": "Sortie erronée",
         "outputParserDescription": "Le modèle a répondu de manière incorrecte. Veuillez réessayer.",
-        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Vous avez atteint le nombre maximum d'invitations en attente pour cet espace de travail. Veuillez laisser les invités accepter l'invitation ou annuler les invitations existantes pour continuer."
+        "maxNumberOfPendingWorkspaceInvitesReachedDescription": "Vous avez atteint le nombre maximum d'invitations en attente pour cet espace de travail. Veuillez laisser les invités accepter l'invitation ou annuler les invitations existantes pour continuer.",
+        "fieldIsAlreadyPrimaryTitle": "Le champ est déjà primaire",
+        "fieldIsAlreadyPrimaryDescription": "Le champ choisi est déjà le champ primaire.",
+        "incompatiblePrimaryFieldTypeTitle": "Le champ n'est pas compatible",
+        "incompatiblePrimaryFieldTypeDescription": "Le champ choisi ne peut pas être le champ primaire car il est incompatible."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -388,7 +408,7 @@
         "queryParameters": "Paramètres de requête",
         "pathParameters": "Paramètres d'URL",
         "requestBodySchema": "Schéma du corps de la requête",
-        "userFieldNamesDescription": "Quand une valeur est définie pour le paramètre GET `user_field_names`, les noms de champs retournés par ce point d'accès seront les noms définis par l'utilisateur.\n\nSi le paramètre `user_field_names` n'est pas fourni, alors le nom des champs sera `field_` suivi par l'identifiant du champ. Par example `field_1` fait référence au champ avec l'identifiant `1`.",
+        "userFieldNamesDescription": "Quand valeur définie pour le paramètre GET `user_field_names` est l'une des suivantes `y`, `yes`, `true`, `t`, `on`, `1`, ou `\"\"`, les noms de champs retournés par ce point d'accès seront les noms définis par l'utilisateur.\n\nSi le paramètre `user_field_names` n'est pas fourni, ou s'il ne correspond à aucune des valeurs ci-dessus, alors le nom des champs sera `field_` suivi par l'identifiant du champ. Par exemple `field_1` fait référence au champ dont l'identifiant est `1`.",
         "createRows": "Créer des rangées",
         "updateRows": "Mettre à jour les rangées",
         "deleteRows": "Supprimer des rangées",

@@ -323,5 +323,17 @@
         "premium": "Premium",
         "enterprise": "Enterprise",
         "viewPricing": "Bekijk prijzen"
+    },
+    "authFormElement": {
+        "emailPlaceholder": "Voer uw e-mailadres in...",
+        "passwordPlaceholder": "Voer je wachtwoord in...",
+        "selectOrConfigureUserSourceFirst": "Kies een gebruikersbron om dit aanmeldingselement te gaan gebruiken.",
+        "email": "E-mail",
+        "password": "Wachtwoord"
+    },
+    "authFormElementForm": {
+        "loginButtonLabelPlaceholder": "Voer het label in...",
+        "userSource": "Gebruiker bron",
+        "loginButtonLabel": "Aanmeldknop label"
     }
 }

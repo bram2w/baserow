@@ -26,7 +26,14 @@
         "trash": "Corbeille",
         "settings": "Mon compte",
         "members": "Membres",
-        "notifications": "Notifications"
+        "notifications": "Notifications",
+        "licenses": "Licences",
+        "addNewWorkspace": "Ajouter un nouveau projet",
+        "home": "Accueil",
+        "adminTools": "Administration",
+        "adminSettings": "Paramètres",
+        "general": "Général",
+        "people": "Utilisateurs"
     },
     "accountForm": {
         "nameLabel": "Votre nom",
@@ -185,10 +192,14 @@
         "retry": "Recommencer"
     },
     "createApplicationContext": {
-        "fromTemplate": "À partir d'un modèle"
+        "fromTemplate": "À partir d'un modèle",
+        "fromTemplateDesc": "Démarrer rapidement avec l'un de nos modèles recommandés",
+        "tableDesc": "Créez un nouvel espace pour gérer des données dans votre base.",
+        "table": "Table"
     },
     "applicationForm": {
-        "nameLabel": "Nom"
+        "nameLabel": "Nom",
+        "namePlaceholder": "Saisir un nom..."
     },
     "connectingNotification": {
         "title": "Reconnexion en cours",
@@ -213,7 +224,7 @@
     "dashboard": {
         "title": "Statistiques",
         "alertTitle": "Soutenez-nous !",
-        "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à rajouter une étoile sur Gitlab et à partager l'information avec vos relations. En partageant Baserow vous nous aidez à l'améliorer et à le rendre encore plus utile pour vous.",
+        "alertText": "En partageant Baserow, vous nous aidez à améliorer le produit et à le rendre plus utile pour vous.",
         "tweetContent": "Découvrez @baserow, une base de données no-code libre, une alternative à Airtable !",
         "redditTitle": "Baserow - Une base de données no-code libre",
         "noWorkspaceTitle": "Aucun projet",
@@ -225,7 +236,20 @@
         "shareOnReddit": "Partager sur Reddit",
         "shareOnFacebook": "Partager sur Facebook",
         "shareOnLinkedIn": "Partager sur LinkedIn",
-        "noWorkspaceTextWithoutCreatePermission": "Vous n'êtes membre d'aucun projet. Les applications comme les bases de données doivent appartenir à un projet. Pour les créer, vous devez donc d'abord être invité à un projet par un administrateur."
+        "noWorkspaceTextWithoutCreatePermission": "Vous n'êtes membre d'aucun projet. Les applications comme les bases de données doivent appartenir à un projet. Pour les créer, vous devez donc d'abord être invité à un projet par un administrateur.",
+        "suggestedTemplates": "Modèles suggérés",
+        "resources": "Ressources",
+        "knowledgeBase": "Base de connaissances",
+        "knowledgeBaseMessage": "Trouvez les réponses à toutes vos questions",
+        "tutorials": "Tutoriels",
+        "tutorialsMessage": "Découvrez le potentiel de Baserow",
+        "apiDocumentation": "Documentation de l'API",
+        "apiDocumentationMessage": "En savoir plus sur notre code",
+        "emptyWorkspace": "Ce projet est vide",
+        "emptyWorkspaceMessage": "Pour commencer, créez une nouvelle base de données ou une nouvelle application.",
+        "addNew": "Ajouter...",
+        "noWorkspace": "Aucun projet",
+        "noWorkspaceDescription": "Pour commencer, créez un nouveau projet"
     },
     "login": {
         "title": "Identification",
@@ -626,7 +650,7 @@
         "deletedUser": "Un utilisateur supprimé"
     },
     "dropdown": {
-        "empty": "Aucune entrée disponible"
+        "empty": "Aucune option disponible"
     },
     "styleSidePanel": {
         "paddingTop": "Espacement haut",
@@ -655,7 +679,7 @@
     },
     "dataExplorer": {
         "emptyText": "Aucune donnée disponible",
-        "noMatchingNodesText": "Aucune donnée n'a été trouvé.",
+        "noMatchingNodesText": "Aucun résultat n'a été trouvé.",
         "noProvidersText": "Aucun fournisseur de données n'a été trouvé. Pour commencer, vous pouvez, par exemple, ajouter une source de données ou un paramètre de page."
     },
     "formulaInputField": {
@@ -792,5 +816,14 @@
     "imageInput": {
         "labelDescription": "Sélectionnez une image...",
         "labelButton": "Envoyer"
+    },
+    "dataExplorerNode": {
+        "showMore": "Afficher plus de répétitions"
+    },
+    "dashboardApplication": {
+        "createdAt": "créé(e)"
+    },
+    "templateCard": {
+        "viewMore": "Voir plus"
     }
 }
