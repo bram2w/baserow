@@ -40,6 +40,13 @@ export class BaserowPlugin extends Registerable {
     return null
   }
 
+  /**
+   * Every registered plugin can display additional items in the user context menu.
+   */
+  getUserContextComponents() {
+    return null
+  }
+
   /*
    * Every registered plugin can display a component in the links section of the
    * dashboard sidebar.
