@@ -85,7 +85,7 @@
         "
       >
         <i class="sidebar__new-icon iconoir-plus"></i>
-        {{ $t('action.createNew') }}
+        {{ $t('action.createNew') }}...
       </a>
     </div>
     <CreateApplicationContext
