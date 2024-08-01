@@ -83,6 +83,13 @@
           <SettingsModal ref="settingsModal"></SettingsModal>
         </li>
 
+        <component
+          :is="component"
+          v-for="(component, index) in sidebarUserContextComponents"
+          :key="'sidebarUserContextComponent' + index"
+          @hide="hide()"
+        ></component>
+
         <li
           class="context__menu-item context__menu-item--with-separator margin-bottom-0"
         >
@@ -141,6 +148,13 @@ export default {
       return Object.values(this.adminTypes)
         .slice()
         .sort((a, b) => a.getOrder() - b.getOrder())
+    },
+    sidebarUserContextComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .flatMap((plugin) =>
+          plugin.getUserContextComponents(this.selectedWorkspace)
+        )
+        .filter((component) => component !== null)
     },
     ...mapGetters({
       isStaff: 'auth/isStaff',

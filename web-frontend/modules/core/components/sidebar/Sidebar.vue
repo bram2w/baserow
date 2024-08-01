@@ -135,13 +135,13 @@ export default {
   created() {
     // Checks whether the rendered page is an admin page. If so, switch the left sidebar
     // navigation to the admin.
-    // this.showAdmin = Object.values(this.$registry.getAll('admin')).some(
-    //   (adminType) => {
-    //     return this.$route.matched.some(
-    //       ({ name }) => name === adminType.routeName
-    //     )
-    //   }
-    // )
+    this.showAdmin = Object.values(this.$registry.getAll('admin')).some(
+      (adminType) => {
+        return this.$route.matched.some(
+          ({ name }) => name === adminType.routeName
+        )
+      }
+    )
   },
   methods: {
     setShowAdmin(value) {
