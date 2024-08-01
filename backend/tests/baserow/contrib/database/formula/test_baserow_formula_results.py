@@ -410,6 +410,25 @@ VALID_FORMULA_TESTS = [
     ("split_part('John, Jane, Matthew', ', ', 3.5)", "Matthew"),
     ("split_part('John, Jane, Matthew', ', ', 4.5)", ""),
     ("split_part('John, Jane, Matthew', ', ', 9999)", ""),
+    ("tourl('baserow.io')", "baserow.io"),
+    ("tourl('baserow.io/subpage')", "baserow.io/subpage"),
+    ("tourl('baserow.io/subpage/?query=true')", "baserow.io/subpage/?query=true"),
+    (
+        "tourl(concat('baserow.io', '/subpage/?query=true'))",
+        "baserow.io/subpage/?query=true",
+    ),
+    ("tourl(lower('BASEROW.io'))", "baserow.io"),
+    ("tourl(replace('base-ow.io', '-', 'r'))", "baserow.io"),
+    ("tourl('localhost')", "localhost"),
+    ("tourl('skype://call-me')", "skype://call-me"),
+    ("tourl('https://baserow.io:3000')", "https://baserow.io:3000"),
+    ("tourl('ftp://baserow.io/some/path')", "ftp://baserow.io/some/path"),
+    ("tourl('https://baserow.io:3000invalid')", ""),
+    ("tourl('https://baserow.iohttps://baserow.io')", ""),
+    (
+        "tourl('https://user:password@www.baserow.io:8080/path/to/resource?search=query&filter=active#section2')",
+        "https://user:password@www.baserow.io:8080/path/to/resource?search=query&filter=active#section2",
+    ),
 ]
 
 
@@ -1104,6 +1123,11 @@ INVALID_FORMULA_TESTS = [
         "second(today())",
         "ERROR_WITH_FORMULA",
         "Error with formula: cannot extract seconds from a date without time.",
+    ),
+    (
+        "tourl(1)",
+        "ERROR_WITH_FORMULA",
+        "Error with formula: argument number 1 given to function tourl was of type number but the only usable type for this argument is text.",
     ),
 ]
 

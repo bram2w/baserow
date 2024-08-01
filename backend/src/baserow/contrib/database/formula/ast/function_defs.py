@@ -114,6 +114,7 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaSingleFileType,
     BaserowFormulaSingleSelectType,
     BaserowFormulaTextType,
+    BaserowFormulaURLType,
     BaserowJSONBObjectBaseType,
     calculate_number_type,
     literal,
@@ -254,6 +255,7 @@ def register_formula_functions(registry):
     registry.register(BaserowIsImage())
     registry.register(BaserowArrayAggNoNesting())
     registry.register(BaserowGetFileCount())
+    registry.register(BaserowToURL())
 
 
 class BaserowUpper(OneArgumentBaserowFunction):
@@ -3221,3 +3223,19 @@ class BaserowBcToNull(OneArgumentBaserowFunction):
             ),
             default=arg,
         )
+
+
+class BaserowToURL(OneArgumentBaserowFunction):
+    type = "tourl"
+    arg_type = [BaserowFormulaTextType]
+    try_coerce_nullable_args_to_not_null = False
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaURLType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(arg, function="try_cast_to_url", output_field=fields.CharField())
