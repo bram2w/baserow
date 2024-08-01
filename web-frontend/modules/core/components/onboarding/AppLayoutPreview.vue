@@ -75,6 +75,7 @@ export default {
       const workspace = populateWorkspace({
         id: 0,
         name: this.data[WorkspaceOnboardingType.getType()]?.name || '',
+        users: [],
       })
       workspace._.is_onboarding = true
       return workspace
