@@ -3,7 +3,6 @@
   display: flex;
   flex-direction: column;
   margin: 20px 0;
-  z-index: $z-index-toasts;
   width: var(--alert-width, auto);
 
   @include rounded($rounded-md);
