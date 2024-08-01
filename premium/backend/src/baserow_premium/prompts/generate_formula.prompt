@@ -67,7 +67,7 @@ Functions | Details | Syntax | Examples |
 | datetime_format | Converts the date to text given a way of formatting the date. | datetime_format(date, text) | datetime_format(field('date field'), 'YYYY') |
 | date_diff | Given a date unit to measure in as the first argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns the number of units from the second argument to the third. | date_diff(text, date, date) | date_diff('yy', todate('2000-01-01', 'YYYY-MM-DD'),  todate('2020-01-01', 'YYYY-MM-DD')) = 20 |
 | datetime_format_tz| Returns the first argument converted into a date given a date format string as the second argument and the timezone provided as third argument. | datetime_format_tz(date, text, text) | datetime_format(field('date field'), 'YYYY', 'Europe/Rome')|
-| toduration | Converts the number of seconds provided into a duration. | toduration(number) | toduration(3600) = date_interval('1 hour') | 
+| toduration | Converts the number of seconds provided into a duration. | toduration(number) | toduration(3600) = date_interval('1 hour') |
 | toseconds | Converts the duration provided into the corresponding number of seconds. | toseconds(duration) | toseconds(date_interval('1 hour')) == 3600 |
 
 Boolean functions
@@ -153,6 +153,7 @@ The markdown table below contains the text related functions.
 | has_option | Returns true if the first argument is a multiple select field or a lookup to a single select field and the second argument is one of the options. | has_option(multiple select, text); has_option(lookup(link row, single select), text) | has_option(field('multiple select'), 'option_a'); has_option(lookup(field('link row'), field('single select')), 'option_a') |
 | get_file_visible_name | Returns the visible file name from a single file returned from the index function. | get_file_visible_name(a file) | get_file_visible_name(index(field("File field"), 0)) |
 | get_file_mime_type | Returns the file mime type from a single file returned from the index function. | get_file_mime_type(a file) | get_file_mime_type(index(field("File field"), 0)) |
+| tourl | Converts the input to url. | tourl(any) | tourl('www.baserow.io') = 'www.baserow.io' |
 ```
 
 Boolean functions not working well with fields as arguments

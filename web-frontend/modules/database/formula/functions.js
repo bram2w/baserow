@@ -2581,3 +2581,26 @@ export class BaserowIndex extends BaserowFunctionDefinition {
     return 'special'
   }
 }
+
+export class BaserowToUrl extends BaserowFunctionDefinition {
+  static getType() {
+    return 'tourl'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getToUrlDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['to_url(any)']
+  }
+
+  getExamples() {
+    return ['to_url("www.baserow.io")']
+  }
+
+  getFormulaType() {
+    return 'url'
+  }
+}

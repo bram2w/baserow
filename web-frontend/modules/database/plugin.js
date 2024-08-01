@@ -236,6 +236,7 @@ import {
   BaserowGetFileVisibleName,
   BaserowIndex,
   BaserowGetFileCount,
+  BaserowToUrl,
 } from '@baserow/modules/database/formula/functions'
 import {
   BaserowFormulaArrayType,
@@ -726,6 +727,7 @@ export default (context) => {
 
   app.$registry.register('formula_function', new BaserowGetFileCount(context))
   app.$registry.register('formula_function', new BaserowIndex(context))
+  app.$registry.register('formula_function', new BaserowToUrl(context))
 
   // Formula Types
   app.$registry.register('formula_type', new BaserowFormulaTextType(context))
