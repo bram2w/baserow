@@ -39,6 +39,15 @@
           :table="table"
         ></SidebarItem>
       </ul>
+      <ul v-if="pendingJobs.length" class="tree__subs">
+        <component
+          :is="getPendingJobComponent(job)"
+          v-for="job in pendingJobs"
+          :key="job.id"
+          :job="job"
+        >
+        </component>
+      </ul>
       <a
         v-if="
           $hasPermission(
@@ -88,6 +97,13 @@ export default {
         .map((table) => table)
         .sort((a, b) => a.order - b.order)
     },
+    pendingJobs() {
+      return this.$store.getters['job/getAll'].filter((job) =>
+        this.$registry
+          .get('job', job.type)
+          .isJobPartOfApplication(job, this.application)
+      )
+    },
     ...mapGetters({ isAppSelected: 'application/isSelected' }),
   },
   methods: {
@@ -108,6 +124,9 @@ export default {
       } catch (error) {
         notifyIf(error, 'table')
       }
+    },
+    getPendingJobComponent(job) {
+      return this.$registry.get('job', job.type).getSidebarComponent()
     },
   },
 }
