@@ -10,7 +10,8 @@
         :key="workspace.id"
         class="select__item"
         :class="{
-          'select__item--loading': workspace._.loading,
+          'select__item--loading':
+            workspace._.loading || workspace._.additionalLoading,
           active: workspace.id === selectedWorkspace.id,
         }"
       >
@@ -18,10 +19,7 @@
           v-if="workspace.id === selectedWorkspace.id"
           class="sidebar__workspace-active-icon iconoir-check"
         ></i>
-        <a
-          class="select__item-link"
-          @click=";[$emit('selected-workspace', workspace), hide()]"
-        >
+        <a class="select__item-link" @click="selectWorkspace(workspace)">
           <div class="select__item-name">
             <Avatar
               class="dashboard__user-workspace-avatar"
@@ -185,6 +183,17 @@ export default {
     },
     hasUnreadNotifications(workspaceId) {
       return this.$store.getters['notification/workspaceHasUnread'](workspaceId)
+    },
+    async selectWorkspace(workspace) {
+      if (workspace._.selected) {
+        return
+      }
+      await this.$store.dispatch('workspace/select', workspace)
+      await this.$router.push({
+        name: 'workspace',
+        params: { workspaceId: workspace.id },
+      })
+      this.hide()
     },
   },
 }
