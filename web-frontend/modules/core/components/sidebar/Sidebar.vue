@@ -48,7 +48,6 @@
         ref="workspacesContext"
         :workspaces="workspaces"
         :selected-workspace="selectedWorkspace"
-        @selected-workspace="$emit('selected-workspace', $event)"
         @toggle-admin="setShowAdmin($event)"
       ></SidebarUserContext>
 
@@ -66,7 +65,6 @@
       <SidebarWithoutWorkspace
         v-if="!hasSelectedWorkspace"
         :workspaces="workspaces"
-        @selected-workspace="$emit('selected-workspace', $event)"
       ></SidebarWithoutWorkspace>
     </template>
     <SidebarFoot></SidebarFoot>
