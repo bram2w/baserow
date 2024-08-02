@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar">
+  <div class="sidebar" :class="{ 'sidebar--collapsed': collapsed }">
     <component
       :is="component"
       v-for="(component, index) in impersonateComponent"
@@ -10,11 +10,11 @@
         <a href="#" class="sidebar__back" @click="setShowAdmin(false)">
           <i class="sidebar__back-icon iconoir-nav-arrow-left"></i>
         </a>
-        <div class="sidebar__title">
+        <div v-show="!collapsed" class="sidebar__title">
           {{ $t('sidebar.adminSettings') }}
         </div>
       </div>
-      <SidebarAdmin></SidebarAdmin>
+      <SidebarAdmin v-show="!collapsed"></SidebarAdmin>
     </template>
     <template v-if="!showAdmin">
       <a
@@ -33,14 +33,18 @@
         <Avatar
           :initials="selectedWorkspace.name || name | nameAbbreviation"
         ></Avatar>
-        <span class="sidebar__workspaces-selector-selected-workspace">{{
-          selectedWorkspace.name || name
-        }}</span>
         <span
+          v-show="!collapsed"
+          class="sidebar__workspaces-selector-selected-workspace"
+          >{{ selectedWorkspace.name || name }}</span
+        >
+        <span
+          v-show="!collapsed"
           v-if="unreadNotificationsInOtherWorkspaces"
           class="sidebar__unread-notifications-icon"
         ></span>
         <i
+          v-show="!collapsed"
           class="sidebar__workspaces-selector-icon baserow-icon-up-down-arrows"
         ></i>
       </a>
@@ -52,17 +56,20 @@
       ></SidebarUserContext>
 
       <SidebarMenu
+        v-show="!collapsed"
         v-if="hasSelectedWorkspace"
         :selected-workspace="selectedWorkspace"
       ></SidebarMenu>
 
       <SidebarWithWorkspace
+        v-show="!collapsed"
         v-if="hasSelectedWorkspace"
         :applications="applications"
         :selected-workspace="selectedWorkspace"
       ></SidebarWithWorkspace>
 
       <SidebarWithoutWorkspace
+        v-show="!collapsed"
         v-if="!hasSelectedWorkspace"
         :workspaces="workspaces"
       ></SidebarWithoutWorkspace>
@@ -104,6 +111,11 @@ export default {
     selectedWorkspace: {
       type: Object,
       required: true,
+    },
+    collapsed: {
+      type: Boolean,
+      required: false,
+      default: () => false,
     },
   },
   data() {

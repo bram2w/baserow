@@ -4,11 +4,21 @@
 
 <script>
 export default {
-  name: 'GridViewWidthHandle',
+  name: 'HorizontalResize',
   props: {
     width: {
       type: Number,
       required: true,
+    },
+    min: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    max: {
+      type: [Number, null],
+      required: false,
+      default: null,
     },
   },
   data() {
@@ -35,7 +45,10 @@ export default {
     move(event) {
       event.preventDefault()
       const difference = event.clientX - this.mouseStart
-      const newWidth = Math.max(this.startWidth + difference, 100)
+      let newWidth = Math.max(this.startWidth + difference, this.min)
+      if (this.max) {
+        newWidth = Math.min(newWidth, this.max)
+      }
 
       this.$emit('move', newWidth)
     },

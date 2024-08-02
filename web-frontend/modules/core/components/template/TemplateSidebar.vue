@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar">
+  <div class="sidebar" :class="{ 'sidebar--collapsed': collapsed }">
     <div
       v-show="!collapsed"
       class="sidebar__section sidebar__section--scrollable"
@@ -21,10 +21,7 @@
       </div>
     </div>
     <div class="sidebar__section sidebar__section--bottom">
-      <div
-        class="sidebar__foot"
-        :class="{ 'sidebar__foot--collapsed': collapsed }"
-      >
+      <div class="sidebar__foot">
         <div class="sidebar__logo">
           <Logo height="14" alt="Baserow logo" />
         </div>
