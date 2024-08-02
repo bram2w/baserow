@@ -50,6 +50,10 @@
   &:hover {
     text-decoration: none;
   }
+
+  .sidebar--collapsed & {
+    justify-content: center;
+  }
 }
 
 .sidebar__workspaces-selector-selected-workspace {
@@ -143,17 +147,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 
-  &.sidebar__foot--collapsed {
+  .sidebar--collapsed & {
+    height: auto;
     padding-left: 0;
     padding-right: 0;
     justify-content: center;
+    flex-direction: column-reverse;
   }
 }
 
 .sidebar__foot-links {
   display: flex;
   gap: 16px;
+  margin-top: -4px;
+
+  .sidebar--collapsed & {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
 }
 
 .sidebar__foot-link {
@@ -228,6 +243,11 @@
   height: 51px;
   color: $palette-neutral-1200;
   font-weight: 500;
+
+  .sidebar--collapsed & {
+    justify-content: center;
+    padding: 0;
+  }
 }
 
 .sidebar__back {
@@ -252,8 +272,11 @@
 }
 
 .sidebar__logo {
-  .sidebar__foot--collapsed & {
-    display: none;
+  .sidebar--collapsed & {
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+    padding-left: 2px;
   }
 }
 

@@ -45,13 +45,6 @@
 
   @include rounded($rounded);
 
-  .layout--collapsed & {
-    height: 32px;
-    justify-content: center;
-
-    @include flex-align-items;
-  }
-
   &.tree__action--disabled {
     opacity: 0.6;
     cursor: not-allowed;

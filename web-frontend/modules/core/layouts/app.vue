@@ -2,16 +2,25 @@
   <div>
     <Toasts></Toasts>
     <div class="layout">
-      <div class="layout__col-1">
+      <div class="layout__col-1" :style="{ width: col1Width + 'px' }">
         <Sidebar
           :workspaces="workspaces"
           :selected-workspace="selectedWorkspace"
           :applications="applications"
+          :collapsed="isCollapsed"
         ></Sidebar>
       </div>
-      <div class="layout__col-2">
+      <div class="layout__col-2" :style="{ left: col1Width + 'px' }">
         <nuxt />
       </div>
+      <HorizontalResize
+        class="layout__resize"
+        :width="col1Width"
+        :style="{ left: col1Width - 2 + 'px' }"
+        :min="52"
+        :max="300"
+        @move="resizeCol1($event)"
+      ></HorizontalResize>
       <component
         :is="component"
         v-for="(component, index) in appLayoutComponents"
@@ -27,6 +36,7 @@ import { mapGetters, mapState } from 'vuex'
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
+import HorizontalResize from '@baserow/modules/core/components/HorizontalResize'
 import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstants'
 import {
   isOsSpecificModifierPressed,
@@ -37,6 +47,7 @@ export default {
   components: {
     Toasts,
     Sidebar,
+    HorizontalResize,
   },
   mixins: [undoRedo],
   middleware: [
@@ -45,11 +56,19 @@ export default {
     'workspacesAndApplications',
     'pendingJobs',
   ],
+  data() {
+    return {
+      col1Width: 240,
+    }
+  },
   computed: {
     appLayoutComponents() {
       return Object.values(this.$registry.getAll('plugin'))
         .map((plugin) => plugin.getAppLayoutComponent())
         .filter((component) => component !== null)
+    },
+    isCollapsed() {
+      return this.col1Width < 170
     },
     ...mapState({
       workspaces: (state) => state.workspace.items,
@@ -123,6 +142,9 @@ export default {
         }
       }
       keyboardShortcutsToPriorityEventBus(event, this.$priorityBus)
+    },
+    resizeCol1(event) {
+      this.col1Width = event
     },
   },
 }

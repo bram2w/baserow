@@ -64,21 +64,23 @@
       class="grid-view__divider"
       :style="{ left: leftWidth + 'px' }"
     ></div>
-    <GridViewWidthHandle
+    <HorizontalResize
       v-if="primaryFieldIsSticky"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :width="leftFieldsWidth"
+      :min="100"
       @move="moveFieldWidth(leftFields[0], $event)"
       @update="
         updateFieldWidth(leftFields[0], view, database, readOnly, $event)
       "
-    ></GridViewWidthHandle>
-    <GridViewWidthHandle
+    ></HorizontalResize>
+    <HorizontalResize
       v-else-if="viewHasGroupBys && leftFields.length === 0"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :width="activeGroupBys[activeGroupBys.length - 1].width"
+      :min="100"
       @move="
         moveGroupWidth(activeGroupBys[activeGroupBys.length - 1], view, $event)
       "
@@ -91,7 +93,7 @@
           $event
         )
       "
-    ></GridViewWidthHandle>
+    ></HorizontalResize>
     <GridViewSection
       ref="right"
       class="grid-view__right"
@@ -354,7 +356,7 @@ import ResizeObserver from 'resize-observer-polyfill'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
-import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
+import HorizontalResize from '@baserow/modules/core/components/HorizontalResize'
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
@@ -375,9 +377,9 @@ import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 export default {
   name: 'GridView',
   components: {
+    HorizontalResize,
     GridViewRowsAddContext,
     GridViewSection,
-    GridViewWidthHandle,
     GridViewRowDragging,
     RowEditModal,
   },
