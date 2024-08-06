@@ -10,16 +10,21 @@ export default {
       type: Array,
       required: true,
     },
+    firstComponentClass: { type: String, required: false, default: null },
   },
   render(h, context) {
-    const rec = ([first, ...rest]) => {
+    const rec = ([first, ...rest], firstComponentClass = null) => {
       if (first) {
-        return h(first.component, { props: first.props }, rec(rest))
+        return h(
+          first.component,
+          { props: first.props, class: firstComponentClass },
+          rec(rest)
+        )
       } else {
         return context.slots().default
       }
     }
 
-    return rec(context.props.components)
+    return rec(context.props.components, context.props.firstComponentClass)
   },
 }

@@ -1,5 +1,9 @@
 <template functional>
-  <div :class="props.value ? `background-color--${props.value}` : ''">
+  <div
+    :class="
+      props.value ? `${data.class || ''} background-color--${props.value}` : ''
+    "
+  >
     <slot />
   </div>
 </template>
