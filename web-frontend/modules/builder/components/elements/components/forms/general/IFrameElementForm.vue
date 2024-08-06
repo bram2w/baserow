@@ -1,7 +1,6 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <FormGroup
-      v-if="values.source_type === IFRAME_SOURCE_TYPES.EMBED"
       :label="$t('iframeElementForm.sourceTypeLabel')"
       small-label
       required
@@ -31,6 +30,7 @@
     </FormGroup>
 
     <FormGroup
+      v-if="values.source_type === IFRAME_SOURCE_TYPES.EMBED"
       key="embed"
       :label="$t('iframeElementForm.embedLabel')"
       small-label
