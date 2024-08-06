@@ -6,6 +6,7 @@
         props: comp.propsFn(row),
       }))
     "
+    first-component-class="grid-view__row-background-wrapper"
   >
     <div
       class="grid-view__row"
