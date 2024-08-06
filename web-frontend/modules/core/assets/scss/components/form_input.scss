@@ -83,6 +83,10 @@
     padding-left: 8px;
   }
 
+  .form-input--icon-right & {
+    padding-right: 8px;
+  }
+
   .form-input--disabled & {
     cursor: not-allowed;
     background-color: $palette-neutral-100;
