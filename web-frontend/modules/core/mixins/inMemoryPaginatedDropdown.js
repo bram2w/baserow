@@ -1,4 +1,5 @@
 import paginatedDropdown from '@baserow/modules/core/mixins/paginatedDropdown'
+import dropdown from '@baserow/modules/core/mixins/dropdown'
 
 export default {
   name: 'inMemoryPaginatedDropdown',
@@ -16,6 +17,12 @@ export default {
     },
     search() {
       this.fetch(this.page, this.query)
+    },
+    hide() {
+      // Call the dropdown `hide` method because it resets the search. We're
+      // deliberately not inheriting the `paginatedDropdown` method because that one
+      // doesn't reset the search because then another reset is made.
+      return dropdown.methods.hide.call(this)
     },
   },
 }
