@@ -74,14 +74,18 @@ const actions = {
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]
         }
 
-        const {
-          data: { results, has_next_page: hasNextPage },
-        } = await DataSourceService(this.app.$client).dispatch(
+        const response = await DataSourceService(this.app.$client).dispatch(
           dataSource.id,
           dispatchContext,
           { range: rangeToFetch }
         )
 
+        const results = serviceType.returnsList
+          ? response.data.results
+          : [response.data]
+
+        const hasNextPage =
+          serviceType.returnsList && response.data.has_next_page
         if (replace) {
           commit('CLEAR_CONTENT', {
             element,
