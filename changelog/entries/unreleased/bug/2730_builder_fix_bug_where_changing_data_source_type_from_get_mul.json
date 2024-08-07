@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix bug where changing Data Source type from 'Get multiple rows' to 'Get single row' could sometimes cause problems with exporting and duplicating the application.",
+    "issue_number": 2730,
+    "bullet_points": [],
+    "created_at": "2024-07-29"
+}

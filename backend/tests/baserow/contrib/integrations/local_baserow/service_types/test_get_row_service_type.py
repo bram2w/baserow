@@ -587,3 +587,69 @@ def test_import_formula_local_baserow_get_row_user_service_type(data_fixture):
 
     imported_service_filter = imported_service.service_filters.get(order=1)
     assert imported_service_filter.value == "FooServiceFilter"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "path,database_fields,expected",
+    [
+        # The first list item is a valid field ID, but since there are no
+        # database field mappings, the same path is returned.
+        (
+            ["field_123"],
+            {},
+            ["field_123"],
+        ),
+        # The first list item is a valid field ID, but since there are no
+        # matching database field mappings, the same path is returned.
+        (
+            ["field_123"],
+            {456: 789},
+            ["field_123"],
+        ),
+        # The first list item is a valid field ID and matches a database field
+        # mapping, as such the updated path is returned.
+        (
+            ["field_123"],
+            {123: 456},
+            ["field_456"],
+        ),
+        # Ensure the updated field along with the unchanged remaining parts of
+        # the path are returned.
+        (
+            ["field_123", "foo", "bar"],
+            {123: 456},
+            ["field_456", "foo", "bar"],
+        ),
+        # If the first list item is not a valid field, ensure the path
+        # is returned without any changes.
+        #
+        # The first list item is an integer, thus isn't a valid field.
+        (
+            [0, "field_123"],
+            {123: 456},
+            [0, "field_123"],
+        ),
+        # The first list item is "xfield_123", which doesn't start with
+        # "field_", and thus isn't a valid field.
+        (
+            ["xfield_123"],
+            {123: 456},
+            ["xfield_123"],
+        ),
+    ],
+)
+def test_local_baserow_get_row_user_service_type_import_path(
+    path, database_fields, expected
+):
+    """
+    Ensure the LocalBaserowGetRowUserServiceType::import_path() correctly
+    updates the field_id's in the path.
+    """
+
+    service_type = LocalBaserowGetRowUserServiceType()
+    id_mapping = {"database_fields": database_fields}
+
+    result = service_type.import_path(path, id_mapping)
+
+    assert result == expected

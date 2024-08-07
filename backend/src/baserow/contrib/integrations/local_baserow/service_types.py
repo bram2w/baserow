@@ -724,6 +724,18 @@ class LocalBaserowListRowsUserServiceType(
         if field_dbname == "id":
             return path
 
+        # If the field_dbname starts with anything other than "field_", it
+        # implies that the path is not a valid one for this service type.
+        #
+        # E.g. if the Page Designer changes a Data Source service type from
+        # List Rows to Get Row, any Element using the Data Source will have
+        # an invalid formula. E.g. instead of ["field_5165"], the path would
+        # be [0, "field_5165"].
+        #
+        # When this is the case, do not attempt to import the formula.
+        if not str(field_dbname).startswith("field_"):
+            return path
+
         original_field_id = int(field_dbname[6:])
 
         # Here if the mapping is not found, let's keep the current field Id.
@@ -977,7 +989,16 @@ class LocalBaserowGetRowUserServiceType(
             # can currently import properly, so we return the path as is.
             return path
 
-        if field_dbname == "id":
+        # If the field_dbname starts with anything other than "field_", it
+        # implies that the path is not a valid one for this service type.
+        #
+        # E.g. if the Page Designer changes a Data Source service type from
+        # List Rows to Get Row, any Element using the Data Source will have
+        # an invalid formula. E.g. instead of ["field_5165"], the path would
+        # be [0, "field_5165"].
+        #
+        # When this is the case, do not attempt to import the formula.
+        if not str(field_dbname).startswith("field_"):
             return path
 
         original_field_id = int(field_dbname[6:])
