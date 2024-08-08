@@ -432,6 +432,7 @@ class LocalBaserowUserSourceType(UserSourceType):
             user_source.email_field_id is not None
             and user_source.name_field_id is not None
             and user_source.table_id is not None
+            and user_source.integration_id is not None
         )
 
     def gen_uid(self, user_source):
