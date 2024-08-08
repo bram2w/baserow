@@ -1206,7 +1206,8 @@ def test_local_baserow_user_source_authentication_is_configured(
         email_field_id=1,
         name_field_id=2,
         table_id=3,
-        role_field_id=4
+        role_field_id=4,
+        integration_id=5
     )) is True
     # Missing email field.
     # fmt: off
@@ -1231,6 +1232,15 @@ def test_local_baserow_user_source_authentication_is_configured(
         name_field_id=2,
         table_id=None,
         role_field_id=4,
+    )) is False
+    # Missing integration field.
+    # fmt: off
+    assert user_source_type.is_configured(LocalBaserowUserSource(
+        email_field_id=1,
+        name_field_id=2,
+        table_id=3,
+        role_field_id=4,
+        integration_id=None,
     )) is False
 
 
