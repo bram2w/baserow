@@ -38,7 +38,7 @@
           <Paginator
             :total-pages="totalPages"
             :page="page"
-            @change-page="fetch"
+            @change-page="fetch($event, true)"
           ></Paginator>
         </template>
       </SimpleGrid>
@@ -258,7 +258,7 @@ export default {
       const search = () => {
         this.search = query
         this.totalPages = 0
-        return this.fetch(1)
+        return this.fetch(1, false)
       }
       if (this.searchDebounce) {
         this.searchDebounce.cancel()
@@ -275,7 +275,11 @@ export default {
      * Fetches the rows of a given page and adds them to the state. If a search query
      * has been stored in the state then that will be remembered.
      */
-    async fetch(page) {
+    async fetch(page, startLoading = true) {
+      if (startLoading) {
+        this.loading = true
+      }
+
       try {
         const { data } = await RowService(this.$client).fetchAll({
           tableId: this.tableId,
