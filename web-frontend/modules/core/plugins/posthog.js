@@ -30,7 +30,11 @@ export default function ({ app: { router, $config, store } }, inject) {
       // Check if the user identification on every page route because they could
       // have changed accounts. This keeps the Posthog code isolated from the
       // authenticated system.
-      if (isAuthenticated && userId !== posthog.get_distinct_id()) {
+      if (
+        isAuthenticated &&
+        userId &&
+        userId.toString() !== posthog.get_distinct_id()
+      ) {
         posthog.identify(userId, { user_email: userEmail })
       }
 
