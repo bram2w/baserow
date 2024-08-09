@@ -25,6 +25,19 @@
             </a>
           </div>
         </div>
+        <div class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.baserowVersion') }}
+            </div>
+            <div class="admin-settings__description">
+              {{ $t('settings.baserowVersionDescription') }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            {{ baserowVersion }}
+          </div>
+        </div>
       </div>
       <div class="admin-settings__group">
         <h2 class="admin-settings__group-title">
@@ -262,6 +275,9 @@ export default {
     }),
     EMAIL_VERIFICATION_OPTIONS() {
       return EMAIL_VERIFICATION_OPTIONS
+    },
+    baserowVersion() {
+      return this.$baserowVersion
     },
   },
   watch: {

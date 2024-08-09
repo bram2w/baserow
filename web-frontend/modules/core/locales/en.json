@@ -423,6 +423,8 @@
     "settingsTitle": "Admin settings",
     "baserowInstanceId": "Instance ID",
     "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
+    "baserowVersion": "Baserow version",
+    "baserowVersionDescription": "The version number of this instance.",
     "accountRestrictions": "Account restrictions",
     "settingAllowResetPasswordName": "Allow resetting password",
     "settingAllowResetPasswordDescription": "By default, users can request a password reset link.",
