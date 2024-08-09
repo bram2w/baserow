@@ -111,6 +111,14 @@ import LongTextField from '@baserow_enterprise/components/crudTable/fields/LongT
 import AuditLogExportModal from '@baserow_enterprise/components/admin/modals/AuditLogExportModal'
 import EnterpriseFeatures from '@baserow_enterprise/features'
 
+function initFilters(workspaceId = null) {
+  const filters = {}
+  if (workspaceId !== null) {
+    filters.workspace_id = workspaceId
+  }
+  return filters
+}
+
 export default {
   name: 'AuditLog',
   components: {
@@ -153,9 +161,9 @@ export default {
     return { workspaceId }
   },
   data() {
-    const filters = {}
     const params = this.$route.params
     const workspaceId = params.workspaceId ? parseInt(params.workspaceId) : null
+    const filters = initFilters(workspaceId)
 
     const columns = [
       new CrudTableColumn(
@@ -183,8 +191,6 @@ export default {
           '15'
         )
       )
-    } else {
-      filters.workspace_id = workspaceId
     }
 
     columns.push(
@@ -284,9 +290,10 @@ export default {
       ]) {
         this.$refs[filterRef]?.clear()
       }
-      this.filters = {}
+      this.filters = initFilters(this.workspaceId)
     },
     setFilter(key, value) {
+      // Remove or add the filter reactively.
       if (value == null) {
         if (this.filters[key] !== undefined) {
           this.filters = _.pickBy(this.filters, (v, k) => {
