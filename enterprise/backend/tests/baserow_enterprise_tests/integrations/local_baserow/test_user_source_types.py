@@ -990,7 +990,7 @@ def test_local_baserow_user_source_get_user(
 
 
 @pytest.mark.django_db
-def test_local_baserow_user_source_get_user_not_configured(
+def test_local_baserow_user_source_get_user_misconfigured(
     data_fixture,
 ):
     data = populate_local_baserow_test_data(data_fixture)
@@ -998,12 +998,27 @@ def test_local_baserow_user_source_get_user_not_configured(
     user_source = data["user_source"]
     user_source_type = user_source.get_type()
 
-    UserModel = data["user_table"].get_model()
+    user_table = data["user_table"]
+    UserModel = user_table.get_model()
 
     first_user = UserModel.objects.first()
 
+    name_field = user_source.name_field
+
+    # `is_configured` will be False if the name_field is None
     user_source.name_field = None
     user_source.save()
+
+    with pytest.raises(UserNotFound):
+        user_source_type.get_user(user_source, user_id=first_user.id)
+
+    # Re-add the name field, so we can verify that `get_user_model`
+    # will raise `UserNotFound` (from `UserSourceImproperlyConfigured`)
+    # if the table has been trashed.
+    user_source.name_field = name_field
+    user_source.save()
+    user_table.trashed = True
+    user_table.save()
 
     with pytest.raises(UserNotFound):
         user_source_type.get_user(user_source, user_id=first_user.id)
@@ -1194,6 +1209,33 @@ def test_local_baserow_user_source_authentication_list_users_not_configured(
     result = user_source_type.list_users(user_source)
 
     assert len(result) == 0
+
+
+@pytest.mark.django_db
+def test_local_baserow_user_source_authentication_list_users_get_user_model_misconfiguration(
+    data_fixture,
+):
+    data = populate_local_baserow_test_data(data_fixture)
+    table = data["user_table"]
+    table.trashed = True
+    table.save()
+
+    user_source = data["user_source"]
+    user_source_type = user_source.get_type()
+    result = user_source_type.list_users(user_source)
+
+    assert len(result) == 0
+
+
+def test_local_baserow_user_source_get_user_model_with_trashed_table(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_local_baserow_integration(user=user)
+    trashed_table = data_fixture.create_database_table(user=user, trashed=True)
+    with pytest.raises(UserSourceImproperlyConfigured) as exc:
+        LocalBaserowUserSourceType().get_user_model(
+            LocalBaserowUserSource(table=trashed_table, integration=integration)
+        )
+    assert exc.value.args[0] == "The table doesn't exist."
 
 
 def test_local_baserow_user_source_authentication_is_configured(

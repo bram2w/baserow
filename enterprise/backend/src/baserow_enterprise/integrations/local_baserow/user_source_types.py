@@ -408,8 +408,14 @@ class LocalBaserowUserSourceType(UserSourceType):
         )
 
     def get_user_model(self, user_source):
-        # Use table handler to exclude trashed table
-        table = TableHandler().get_table(user_source.table_id)
+        try:
+            # Use table handler to exclude trashed table
+            table = TableHandler().get_table(user_source.table_id)
+        except TableDoesNotExist as exc:
+            # As we CASCADE when a table is deleted, the table shouldn't
+            # exist only if it's trashed and not yet deleted.
+            raise UserSourceImproperlyConfigured("The table doesn't exist.") from exc
+
         integration = user_source.integration.specific
 
         model = table.get_model()
@@ -471,7 +477,12 @@ class LocalBaserowUserSourceType(UserSourceType):
         if not self.is_configured(user_source):
             return []
 
-        UserModel = self.get_user_model(user_source)
+        try:
+            UserModel = self.get_user_model(user_source)
+        except UserSourceImproperlyConfigured:
+            # The associated table has been trashed, we
+            # have no generated table model to use.
+            return []
 
         queryset = UserModel.objects.all()
 
@@ -537,7 +548,10 @@ class LocalBaserowUserSourceType(UserSourceType):
         Returns a user from the selected table.
         """
 
-        UserModel = self.get_user_model(user_source)
+        try:
+            UserModel = self.get_user_model(user_source)
+        except UserSourceImproperlyConfigured as exc:
+            raise UserNotFound() from exc
 
         user = None
 
