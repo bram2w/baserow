@@ -270,7 +270,7 @@ backend-test-group-1:
     - PYTEST_EXTRA_ARGS=$([[ "$RUN_MORNING_TESTS" = "true" ]] && echo '--run-once-per-day-in-ci' || echo "")
     - |
       docker run \
-        -e PYTEST_SPLITS=5 \
+        -e PYTEST_SPLITS=10 \
         -e PYTEST_SPLIT_GROUP=$PYTEST_SPLIT_GROUP \
         --name=baserow_backend_test_container \
         --network=host \
@@ -308,6 +308,31 @@ backend-test-group-5:
   extends: backend-test-group-1
   variables:
     PYTEST_SPLIT_GROUP: 5
+
+backend-test-group-6:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 6
+
+backend-test-group-7:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 7
+
+backend-test-group-8:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 8
+
+backend-test-group-9:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 9
+
+backend-test-group-10:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 10
 
 # Collects together all the separate backend coverage databases from previous jobs and
 # combines them to generate a single report for gitlab to use. GitLab itself does not
