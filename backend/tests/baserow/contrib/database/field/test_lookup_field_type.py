@@ -7,13 +7,11 @@ import pytest
 from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
-from baserow.contrib.database.fields.deferred_foreign_key_updater import (
-    DeferredForeignKeyUpdater,
-)
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.formula import (
     BaserowFormulaArrayType,
     BaserowFormulaInvalidType,
@@ -804,7 +802,9 @@ def test_can_modify_row_containing_lookup(
         name="long",
         table=table,
     )
-    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    table2_primary_field = data_fixture.create_text_field(
+        name="primaryfield", table=table2, primary=True
+    )
     looked_up_field = data_fixture.create_date_field(
         name="lookupfield",
         table=table2,
@@ -820,20 +820,28 @@ def test_can_modify_row_containing_lookup(
         link_row_table=table2,
     )
 
-    table2_model = table2.get_model(attribute_names=True)
-    a = table2_model.objects.create(
-        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
-    )
-    b = table2_model.objects.create(
-        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    a, b = RowHandler().create_rows(
+        user,
+        table2,
+        [
+            {
+                looked_up_field.db_column: f"2021-02-01",
+                table2_primary_field.db_column: "primary a",
+            },
+            {
+                looked_up_field.db_column: f"2022-02-03",
+                table2_primary_field.db_column: "primary b",
+            },
+        ],
     )
 
-    table_model = table.get_model(attribute_names=True)
-
-    table_row = table_model.objects.create()
-    table_row.linkrowfield.add(a.id)
-    table_row.linkrowfield.add(b.id)
-    table_row.save()
+    table_row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{linkrowfield.id}": [a.id, b.id],
+        },
+    )
 
     lookup_field = FieldHandler().create_field(
         user,
@@ -1309,7 +1317,9 @@ def test_deleting_table_with_dependants_works(
     table_primary_field = data_fixture.create_text_field(
         name="p", table=table, primary=True
     )
-    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    table2_primary_field = data_fixture.create_text_field(
+        name="primaryfield", table=table2, primary=True
+    )
     looked_up_field = data_fixture.create_date_field(
         name="lookupfield",
         table=table2,
@@ -1331,20 +1341,27 @@ def test_deleting_table_with_dependants_works(
         formula=f"field('{linkrowfield.link_row_related_field.name}')",
     )
 
-    table2_model = table2.get_model(attribute_names=True)
-    a = table2_model.objects.create(
-        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
-    )
-    b = table2_model.objects.create(
-        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    table2_model = table2.get_model()
+    a, b = RowHandler().create_rows(
+        user,
+        table2,
+        rows_values=[
+            {
+                looked_up_field.db_column: "2021-02-01",
+                table2_primary_field.db_column: "primary a",
+            },
+            {
+                looked_up_field.db_column: "2022-02-03",
+                table2_primary_field.db_column: "primary b",
+            },
+        ],
+        model=table2_model,
     )
 
-    table_model = table.get_model(attribute_names=True)
-
-    table_row = table_model.objects.create()
-    table_row.linkrowfield.add(a.id)
-    table_row.linkrowfield.add(b.id)
-    table_row.save()
+    table_model = table.get_model()
+    table_row = RowHandler().create_row(
+        user, table, {linkrowfield.db_column: [a.id, b.id]}, model=table_model
+    )
 
     lookup_field = FieldHandler().create_field(
         user,
@@ -1432,9 +1449,7 @@ def test_deleting_table_with_dependants_works(
     }
 
     response = api_client.patch(
-        reverse(
-            "api:trash:restore",
-        ),
+        reverse("api:trash:restore"),
         {
             "trash_item_type": "table",
             "trash_item_id": table2.id,
@@ -1789,30 +1804,34 @@ def test_can_modify_row_containing_lookup_diamond_dep(
     data_fixture, api_client, django_assert_num_queries
 ):
     user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    table2 = data_fixture.create_database_table(user=user, database=table.database)
-    table3 = data_fixture.create_database_table(user=user, database=table.database)
-    table_primary_field = data_fixture.create_text_field(
-        name="primaryfield", table=table, primary=True
+    table1 = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table1.database)
+    table3 = data_fixture.create_database_table(user=user, database=table1.database)
+    primary_table1 = data_fixture.create_text_field(
+        name="primaryfield", table=table1, primary=True
     )
-    data_fixture.create_text_field(name="primaryfield", table=table3, primary=True)
-    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    primary_table2 = data_fixture.create_text_field(
+        name="primaryfield", table=table2, primary=True
+    )
+    primary_table3 = data_fixture.create_text_field(
+        name="primaryfield", table=table3, primary=True
+    )
 
-    FieldHandler().create_field(
+    table2_link_to_table1 = FieldHandler().create_field(
         user,
         table2,
         "link_row",
         name="linkrowfield",
-        link_row_table=table,
+        link_row_table=table1,
     )
-    FieldHandler().create_field(
+    table3_link_to_table2_a = FieldHandler().create_field(
         user,
         table3,
         "link_row",
         name="a",
         link_row_table=table2,
     )
-    FieldHandler().create_field(
+    table3_link_to_table2_b = FieldHandler().create_field(
         user,
         table3,
         "link_row",
@@ -1820,27 +1839,38 @@ def test_can_modify_row_containing_lookup_diamond_dep(
         link_row_table=table2,
     )
 
-    table2_model = table2.get_model(attribute_names=True)
-    table2_row1 = table2_model.objects.create(primaryfield="table2_row1", order=0)
-    table2_row2 = table2_model.objects.create(primaryfield="table2_row2", order=1)
+    starting_row = RowHandler().create_row(
+        user, table1, {primary_table1.db_column: "table1_primary_row_1"}
+    )
+    table2_row1, table2_row2 = RowHandler().create_rows(
+        user,
+        table2,
+        [
+            {
+                primary_table2.db_column: "table2_row1",
+                table2_link_to_table1.db_column: [starting_row.id],
+            },
+            {
+                primary_table2.db_column: "table2_row2",
+                table2_link_to_table1.db_column: [starting_row.id],
+            },
+        ],
+    )
 
-    table_model = table.get_model(attribute_names=True)
-
-    starting_row = table_model.objects.create(primaryfield="table1_primary_row_1")
-    table2_row1.linkrowfield.add(starting_row.id)
-    table2_row1.save()
-    table2_row2.linkrowfield.add(starting_row.id)
-    table2_row2.save()
-
-    table3_model = table3.get_model(attribute_names=True)
-    table3_row_1 = table3_model.objects.create(primaryfield="table3_row_1")
-    table3_row_2 = table3_model.objects.create(primaryfield="table3_row_2")
-
-    table3_row_1.a.add(table2_row1.id)
-    table3_row_1.save()
-
-    table3_row_2.b.add(table2_row2.id)
-    table3_row_2.save()
+    table3_row1, table3_row2 = RowHandler().create_rows(
+        user,
+        table3,
+        [
+            {
+                primary_table3.db_column: "table3_row1",
+                table3_link_to_table2_a.db_column: [table2_row1.id],
+            },
+            {
+                primary_table3.db_column: "table3_row2",
+                table3_link_to_table2_b.db_column: [table2_row2.id],
+            },
+        ],
+    )
 
     FieldHandler().create_field(
         user,
@@ -1874,7 +1904,7 @@ def test_can_modify_row_containing_lookup_diamond_dep(
                     {"id": starting_row.id, "value": "table1_primary_row_1"}
                 ],
                 "middle_lookup": "table1_primary_row_1",
-                "order": "0.00000000000000000000",
+                "order": "1.00000000000000000000",
             },
             {
                 "id": table2_row2.id,
@@ -1882,7 +1912,7 @@ def test_can_modify_row_containing_lookup_diamond_dep(
                     {"id": starting_row.id, "value": "table1_primary_row_1"}
                 ],
                 "middle_lookup": "table1_primary_row_1",
-                "order": "1.00000000000000000000",
+                "order": "2.00000000000000000000",
             },
         ],
     }
@@ -1898,7 +1928,7 @@ def test_can_modify_row_containing_lookup_diamond_dep(
         "previous": None,
         "results": [
             {
-                "a": [{"id": 1, "value": "table2_row1"}],
+                "a": [{"id": table2_row1.id, "value": "table2_row1"}],
                 "b": [],
                 "final_lookup": "table1_primary_row_1",
                 "id": 1,
@@ -1906,20 +1936,20 @@ def test_can_modify_row_containing_lookup_diamond_dep(
             },
             {
                 "a": [],
-                "b": [{"id": 2, "value": "table2_row2"}],
+                "b": [{"id": table2_row2.id, "value": "table2_row2"}],
                 "final_lookup": "table1_primary_row_1",
                 "id": 2,
-                "order": "1.00000000000000000000",
+                "order": "2.00000000000000000000",
             },
         ],
     }
     response = api_client.patch(
         reverse(
             "api:database:rows:item",
-            kwargs={"table_id": table.id, "row_id": starting_row.id},
+            kwargs={"table_id": table1.id, "row_id": starting_row.id},
         ),
         {
-            f"field_{table_primary_field.id}": "changed",
+            primary_table1.db_column: "changed",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1940,15 +1970,15 @@ def test_can_modify_row_containing_lookup_diamond_dep(
                 "a": [{"id": table2_row1.id, "value": "table2_row1"}],
                 "b": [],
                 "final_lookup": "changed",
-                "id": table3_row_1.id,
+                "id": table3_row1.id,
                 "order": "1.00000000000000000000",
             },
             {
                 "a": [],
                 "b": [{"id": table2_row2.id, "value": "table2_row2"}],
                 "final_lookup": "changed",
-                "id": table3_row_2.id,
-                "order": "1.00000000000000000000",
+                "id": table3_row2.id,
+                "order": "2.00000000000000000000",
             },
         ],
     }

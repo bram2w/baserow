@@ -78,7 +78,24 @@ class NumOfArgsBetween(ArgCountSpecifier):
             return self.min_count < num_args < self.max_count
 
 
-class ZeroArgumentBaserowFunction(BaserowFunctionDefinition):
+class ToDjangoExpressionGivenArgsMixin:
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        expr = WrappedExpressionWithMetadata.from_args(
+            self.to_django_expression(*[arg.expression for arg in args]), args
+        )
+        if self.aggregate:
+            return aggregate_wrapper(expr, context.model)
+        else:
+            return expr
+
+
+class ZeroArgumentBaserowFunction(
+    ToDjangoExpressionGivenArgsMixin, BaserowFunctionDefinition
+):
     """
     A helper sub type of a BaserowFunctionDefinition that lets the
     user talk specifically about a func with no arguments when implementing. Without
@@ -139,22 +156,13 @@ class ZeroArgumentBaserowFunction(BaserowFunctionDefinition):
     ) -> BaserowExpression[BaserowFormulaType]:
         return self.type_function(func_call)
 
-    def to_django_expression_given_args(
-        self,
-        args: List["WrappedExpressionWithMetadata"],
-        context: BaserowExpressionContext,
-    ) -> "WrappedExpressionWithMetadata":
-        expr = WrappedExpressionWithMetadata(self.to_django_expression())
-        if self.aggregate:
-            return aggregate_wrapper(expr, context.model)
-        else:
-            return expr
-
     def __call__(self) -> BaserowFunctionCall[BaserowFormulaType]:
         return self.call_and_type_with_args([])
 
 
-class OneArgumentBaserowFunction(BaserowFunctionDefinition):
+class OneArgumentBaserowFunction(
+    ToDjangoExpressionGivenArgsMixin, BaserowFunctionDefinition
+):
     """
     A helper sub type of a BaserowFunctionDefinition that lets the
     user talk specifically about the single argument in a one arg func when implementing
@@ -238,20 +246,6 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
 
         return self.type_function(func_call, arg)
 
-    def to_django_expression_given_args(
-        self,
-        args: List["WrappedExpressionWithMetadata"],
-        context: BaserowExpressionContext,
-    ) -> "WrappedExpressionWithMetadata":
-        expr = WrappedExpressionWithMetadata.from_args(
-            self.to_django_expression(args[0].expression), args
-        )
-
-        if self.aggregate:
-            return aggregate_wrapper(expr, context.model)
-        else:
-            return expr
-
     def __call__(
         self, arg: BaserowExpression[BaserowFormulaType]
     ) -> BaserowFunctionCall[BaserowFormulaType]:
@@ -334,9 +328,10 @@ def construct_aggregate_wrapper_queryset(
 
     aggregate_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
+    qs = model.objects_and_trash.annotate(**pre_annotations)
+
     return (
-        model.objects_and_trash.annotate(**pre_annotations)
-        .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
+        qs.filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .values("id")
         .annotate(**{result_key: expr_with_metadata.expression})
         .filter(aggregate_filters)
@@ -345,7 +340,9 @@ def construct_aggregate_wrapper_queryset(
     )
 
 
-class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
+class TwoArgumentBaserowFunction(
+    ToDjangoExpressionGivenArgsMixin, BaserowFunctionDefinition
+):
     """
     A helper sub type of a BaserowFunctionDefinition that lets the
     user talk specifically about the two arguments in a two arg func when implementing.
@@ -445,19 +442,6 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
     ) -> BaserowExpression[BaserowFormulaType]:
         return self.type_function(func_call, args[0], args[1])
 
-    def to_django_expression_given_args(
-        self,
-        args: List["WrappedExpressionWithMetadata"],
-        context: BaserowExpressionContext,
-    ) -> "WrappedExpressionWithMetadata":
-        expr = WrappedExpressionWithMetadata.from_args(
-            self.to_django_expression(args[0].expression, args[1].expression), args
-        )
-        if self.aggregate:
-            return aggregate_wrapper(expr, context.model)
-        else:
-            return expr
-
     def __call__(
         self,
         arg1: BaserowExpression[BaserowFormulaType],
@@ -466,7 +450,9 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
         return self.call_and_type_with_args([arg1, arg2])
 
 
-class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
+class ThreeArgumentBaserowFunction(
+    ToDjangoExpressionGivenArgsMixin, BaserowFunctionDefinition
+):
     @property
     def arg_types(self) -> BaserowArgumentTypeChecker:
         return [self.arg1_type, self.arg2_type, self.arg3_type]
@@ -575,22 +561,6 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
     ) -> BaserowExpression[BaserowFormulaType]:
         return self.type_function(func_call, args[0], args[1], args[2])
 
-    def to_django_expression_given_args(
-        self,
-        args: List["WrappedExpressionWithMetadata"],
-        context: BaserowExpressionContext,
-    ) -> "WrappedExpressionWithMetadata":
-        expr = WrappedExpressionWithMetadata.from_args(
-            self.to_django_expression(
-                args[0].expression, args[1].expression, args[2].expression
-            ),
-            args,
-        )
-        if self.aggregate:
-            return aggregate_wrapper(expr, context.model)
-        else:
-            return expr
-
     def __call__(
         self,
         arg1: BaserowExpression[BaserowFormulaType],
@@ -598,3 +568,10 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
         arg3: BaserowExpression[BaserowFormulaType],
     ) -> BaserowFunctionCall[BaserowFormulaType]:
         return self.call_and_type_with_args([arg1, arg2, arg3])
+
+
+class CollapseManyBaserowFunction:
+    """
+    Just a helper class to make it easier to define a function that collapses a
+    list of arguments into an array of elements.
+    """

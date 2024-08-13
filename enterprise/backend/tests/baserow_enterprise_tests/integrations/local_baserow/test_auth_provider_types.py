@@ -105,7 +105,7 @@ def test_create_local_baserow_password_app_auth_provider_w_wrong_field_type(
         columns=[
             ("Email", "text"),
             ("Name", "text"),
-            ("Password", "url"),
+            ("Password", "text"),
             ("Role", "text"),
         ],
         rows=[

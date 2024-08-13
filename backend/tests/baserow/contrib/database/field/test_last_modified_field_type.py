@@ -22,7 +22,9 @@ def test_last_modified_field_type(data_fixture):
     row_handler = RowHandler()
     time_to_freeze = "2021-08-10 12:00"
 
-    data_fixture.create_text_field(table=table, name="text_field", primary=True)
+    text_field = data_fixture.create_text_field(
+        table=table, name="text_field", primary=True
+    )
 
     last_modified_field_date = field_handler.create_field(
         user=user,
@@ -41,30 +43,30 @@ def test_last_modified_field_type(data_fixture):
     assert last_modified_field_datetime.date_include_time is True
     assert len(LastModifiedField.objects.all()) == 2
 
-    model = table.get_model(attribute_names=True)
+    model = table.get_model()
 
     # trying to create a row with values for the last_modified_field
     # set will result in a ValidationError
     with pytest.raises(ValidationError):
         row_handler.create_row(
-            user=user, table=table, values={last_modified_field_date.id: "2021-08-09"}
+            user=user,
+            table=table,
+            values={last_modified_field_date.db_column: "2021-08-09"},
         )
 
     with pytest.raises(ValidationError):
         row_handler.create_row(
             user=user,
             table=table,
-            values={last_modified_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+            values={
+                last_modified_field_datetime.db_column: "2021-08-09T14:14:33.574356Z"
+            },
         )
 
     with freeze_time(time_to_freeze):
         row = row_handler.create_row(user=user, table=table, values={}, model=model)
-    assert row.last_date is not None
-    assert row.last_date == row.updated_on
-    assert row.last_datetime is not None
-    row_last_modified_2 = row.last_datetime
-    row_updated_on = row.updated_on
-    assert row_last_modified_2 == row_updated_on
+    assert getattr(row, last_modified_field_date.db_column) == row.updated_on
+    assert getattr(row, last_modified_field_datetime.db_column) == row.updated_on
 
     # Trying to update the last_modified field will raise error
     with pytest.raises(ValidationError):
@@ -80,29 +82,34 @@ def test_last_modified_field_type(data_fixture):
             user=user,
             table=table,
             row_id=row.id,
-            values={last_modified_field_datetime.id: "2021-08-09T14:14:33.574356Z"},
+            values={
+                last_modified_field_datetime.db_column: "2021-08-09T14:14:33.574356Z"
+            },
         )
 
     # Updating the text field will updated
     # the last_modified datetime field.
-    row_last_datetime_before_update = row.last_datetime
+    row_last_datetime_before_update = getattr(
+        row, last_modified_field_datetime.db_column
+    )
     with freeze_time(time_to_freeze):
         row_handler.update_row_by_id(
             user=user,
             table=table,
             row_id=row.id,
             values={
-                "text_field": "Hello Test",
+                text_field.db_column: "Hello Test",
             },
             model=model,
         )
 
     row.refresh_from_db()
 
-    assert row.last_datetime >= row_last_datetime_before_update
-    assert row.last_datetime == row.updated_on
+    last_datetime = getattr(row, last_modified_field_datetime.db_column)
+    assert last_datetime >= row_last_datetime_before_update
+    assert last_datetime == row.updated_on
 
-    row_last_modified_2_before_alter = row.last_datetime
+    row_last_modified_2_before_alter = last_datetime
 
     # changing the field from LastModified to Datetime should persist the date
     with freeze_time(time_to_freeze):
@@ -115,7 +122,10 @@ def test_last_modified_field_type(data_fixture):
 
     assert len(LastModifiedField.objects.all()) == 1
     row.refresh_from_db()
-    assert row.last_datetime == row_last_modified_2_before_alter
+    assert (
+        getattr(row, last_modified_field_datetime.db_column)
+        == row_last_modified_2_before_alter
+    )
 
     # changing the field from LastModified with Datetime to Text Field should persist
     # the datetime as string
@@ -130,7 +140,9 @@ def test_last_modified_field_type(data_fixture):
     assert len(LastModifiedField.objects.all()) == 2
 
     row.refresh_from_db()
-    row_last_modified_2_before_alter = row.last_datetime
+    row_last_modified_2_before_alter = getattr(
+        row, last_modified_field_datetime.db_column
+    )
 
     field_handler.update_field(
         user=user,
@@ -139,9 +151,8 @@ def test_last_modified_field_type(data_fixture):
     )
     row.refresh_from_db()
     assert len(LastModifiedField.objects.all()) == 1
-    assert row.last_datetime == row_last_modified_2_before_alter.strftime(
-        "%d/%m/%Y %H:%M"
-    )
+    last_datetime = getattr(row, last_modified_field_datetime.db_column)
+    assert last_datetime == row_last_modified_2_before_alter.strftime("%d/%m/%Y %H:%M")
 
     # deleting the fields
     field_handler.delete_field(user=user, field=last_modified_field_date)

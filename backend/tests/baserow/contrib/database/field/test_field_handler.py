@@ -1422,7 +1422,7 @@ def test_can_convert_formula_to_numeric_field(data_fixture):
     model = table.get_model()
 
     field_name = f"field_{existing_formula_field.id}"
-    row = model.objects.create()
+    row = RowHandler().create_row(user=user, table=table, model=model)
     assert getattr(row, field_name) == "1"
 
     handler = FieldHandler()

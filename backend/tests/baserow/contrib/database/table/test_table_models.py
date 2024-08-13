@@ -11,6 +11,7 @@ from django.test.utils import override_settings
 
 import pytest
 from cachalot.settings import cachalot_settings
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
@@ -599,7 +600,9 @@ def test_order_by_fields_string_queryset(data_fixture):
 
 @pytest.mark.django_db
 def test_order_by_fields_string_queryset_with_user_field_names(data_fixture):
+    user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
+        user=user,
         columns=[
             ("Name", "text"),
             ("My Color", "text"),
@@ -875,16 +878,16 @@ def test_table_model_fields_requiring_refresh_on_insert(data_fixture):
     model = table.get_model()
     assert model.fields_requiring_refresh_after_insert() == []
 
-    data_fixture.create_formula_field(
+    formula_text = data_fixture.create_formula_field(
         table=table, name="Formula", formula="'a'", formula_type="text"
     )
     model_with_normal_formula_field = table.get_model()
     fields_from_normal_formula_model = (
         model_with_normal_formula_field.fields_requiring_refresh_after_insert()
     )
-    assert fields_from_normal_formula_model == []
+    assert fields_from_normal_formula_model == [formula_text.db_column]
 
-    field_needing_refresh = data_fixture.create_formula_field(
+    formula_row_id = data_fixture.create_formula_field(
         table=table,
         name="Formula2",
         formula="row_id()",
@@ -895,9 +898,8 @@ def test_table_model_fields_requiring_refresh_on_insert(data_fixture):
     fields_from_model_with_row_id_formula = (
         model_with_normal_formula_field.fields_requiring_refresh_after_insert()
     )
-    assert len(fields_from_model_with_row_id_formula) == 1
-    assert (
-        fields_from_model_with_row_id_formula[0] == f"field_{field_needing_refresh.id}"
+    assert fields_from_model_with_row_id_formula == unordered(
+        formula_row_id.db_column, formula_text.db_column
     )
 
 

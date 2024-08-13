@@ -1441,10 +1441,10 @@ def test_formula_returns_zeros_instead_of_null_if_output_is_decimal(
 def test_reference_to_null_number_field_acts_as_zero(
     data_fixture,
 ):
-    number_field = data_fixture.create_number_field()
-    formula_field = data_fixture.create_formula_field(
-        table=number_field.table, formula="1"
-    )
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(table=table)
+    formula_field = data_fixture.create_formula_field(table=table, formula="1")
 
     formula_field.formula = f"field('{number_field.name}') + 1"
     formula_field.save(recalculate=True)
@@ -1453,8 +1453,7 @@ def test_reference_to_null_number_field_acts_as_zero(
         formula_field.internal_formula
         == f"error_to_nan(add(when_empty(field('{number_field.db_column}'),0),1))"
     )
-    model = number_field.table.get_model()
-    row = model.objects.create(**{f"{number_field.db_column}": None})
+    row = RowHandler().create_row(user, table, {f"{number_field.db_column}": None})
     assert getattr(row, formula_field.db_column) == 1
 
 
@@ -1952,4 +1951,47 @@ def test_formulas_with_lookup_url_field_type(data_fixture):
             ],
         ],
         ["Row #3", [], None, None, [], [], None, None, Decimal("0"), []],
+    ]
+
+
+@pytest.mark.django_db
+def test_lookup_arrays(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    table_b_primary_field = table_b.field_set.get(primary=True)
+    row_b1, row_b2 = data_fixture.create_rows_in_table(
+        table=table_b,
+        rows=[["b1"], ["b2"]],
+        fields=[table_b_primary_field],
+    )
+    (row_a1,) = RowHandler().create_rows(
+        user, table_a, [{link_field.db_column: [row_b1.id, row_b2.id]}]
+    )
+    lookup_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "formula",
+        name="lookup",
+        formula=f"lookup('{link_field.name}', '{table_b_primary_field.name}')",
+    )
+
+    join_lookup_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "formula",
+        name="join_lookup",
+        formula="join(field('lookup'), ',')",
+    )
+
+    table_a_model = table_a.get_model()
+    rows = table_a_model.objects.all()
+    assert rows.count() == 1
+    assert list(rows.values(lookup_field.db_column, join_lookup_field.db_column)) == [
+        {
+            lookup_field.db_column: [
+                {"id": row_b1.id, "value": "b1"},
+                {"id": row_b2.id, "value": "b2"},
+            ],
+            join_lookup_field.db_column: "b1,b2",
+        }
     ]

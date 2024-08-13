@@ -1,5 +1,6 @@
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table, TableUsage
 
 
@@ -39,7 +40,11 @@ class TableFixtures:
         return table
 
     def build_table(self, columns, rows, **kwargs):
-        table = self.create_database_table(**kwargs)
+        user = kwargs.pop("user", None)
+        if user is None:
+            user = self.create_user()
+
+        table = self.create_database_table(user=user, **kwargs)
         fields = []
         for index, (name, field_type) in enumerate(columns):
             kwargs = {}
@@ -51,15 +56,20 @@ class TableFixtures:
                     name=name, table=table, order=index, **kwargs
                 )
             )
-
-        model = table.get_model()
-
-        created_rows = []
-        for row in rows:
-            kwargs = {}
-            for index, field in enumerate(fields):
-                kwargs[f"field_{field.id}"] = row[index]
-            created_rows.append(model.objects.create(**kwargs))
+        if rows:
+            created_rows = RowHandler().force_create_rows(
+                user=user,
+                table=table,
+                rows_values=[
+                    {
+                        f"field_{field.id}": row[index]
+                        for index, field in enumerate(fields)
+                    }
+                    for row in rows
+                ],
+            )
+        else:
+            created_rows = []
 
         return table, fields, created_rows
 

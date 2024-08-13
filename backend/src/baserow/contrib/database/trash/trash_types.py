@@ -5,7 +5,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import connection
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
@@ -13,6 +12,7 @@ from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import (
     GeneratedTableModel,
@@ -165,7 +165,6 @@ class TableTrashableItemType(TrashableItemType):
                 allow_deleting_primary=True,
             )
 
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
         update_collector.send_additional_field_updated_signals()
 
         super().trash(table_to_trash, requesting_user, trash_entry)
@@ -288,39 +287,24 @@ class RowTrashableItemType(TrashableItemType):
         super().restore(trashed_item, trash_entry)
 
         table = self.get_parent(trashed_item)
-
         model = table.get_model()
+        rows_to_restore = [trashed_item]
 
-        field_cache = FieldCache()
-        update_collector = FieldUpdateCollector(
-            table, starting_row_ids=[trashed_item.id]
-        )
         updated_fields = [f["field"] for f in model._field_objects.values()]
-        field_ids = [field.id for field in updated_fields]
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id, field_ids, field_cache, associated_relations_changed=True
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_created(
-                dependant_field,
-                trashed_item,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
+
+        _, dependant_fields = RowHandler().update_dependencies_of_rows_created(
+            model, rows_to_restore
+        )
 
         ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
+        rows_to_return = list(
+            model.objects.all().enhance_by_fields().filter(id=trashed_item.id)
+        )
         rows_created.send(
             self,
-            rows=[trashed_item],
+            rows=rows_to_return,
             table=table,
             model=model,
             before=None,
@@ -418,47 +402,34 @@ class RowsTrashableItemType(TrashableItemType):
 
     def restore(self, trashed_item, trash_entry: TrashEntry):
         table = self._get_table(trashed_item.table_id)
-        table_model = self._get_table_model(trashed_item.table_id)
-        rows_to_restore_queryset = table_model.objects_and_trash.filter(
+        model = self._get_table_model(trashed_item.table_id)
+        rows_to_restore_queryset = model.objects_and_trash.filter(
             id__in=trashed_item.row_ids
         )
         rows_to_restore_queryset.update(trashed=False)
         rows_to_restore = rows_to_restore_queryset.enhance_by_fields()
         trashed_item.delete()
 
-        field_cache = FieldCache()
-        update_collector = FieldUpdateCollector(
-            table, starting_row_ids=trashed_item.row_ids
-        )
-        updated_fields = [f["field"] for f in table_model._field_objects.values()]
-        field_ids = [field.id for field in updated_fields]
+        updated_fields = [f["field"] for f in model._field_objects.values()]
         dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id, field_ids, field_cache, associated_relations_changed=True
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_created(
-                dependant_field,
-                rows_to_restore,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
+        _, dependant_fields = RowHandler().update_dependencies_of_rows_created(
+            model, rows_to_restore
+        )
 
         ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         if len(rows_to_restore) < 50:
+            rows_to_return = list(
+                model.objects.all()
+                .enhance_by_fields()
+                .filter(id__in=[row.id for row in rows_to_restore])
+            )
             rows_created.send(
                 self,
-                rows=rows_to_restore,
+                rows=rows_to_return,
                 table=table,
-                model=table_model,
+                model=model,
                 before=None,
                 user=None,
             )

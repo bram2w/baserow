@@ -21,6 +21,7 @@ from baserow.core.user_sources.registries import (
     user_source_type_registry,
 )
 from baserow.core.utils import MirrorDict, Progress
+from baserow.test_utils.helpers import AnyStr
 from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
 from baserow_enterprise.integrations.local_baserow.user_source_types import (
     LocalBaserowUserSourceType,
@@ -192,7 +193,7 @@ def test_create_local_baserow_user_source_wrong_field_type(api_client, data_fixt
 
     integration = data_fixture.create_local_baserow_integration(application=application)
 
-    table, fields, rows = data_fixture.build_table(
+    table, fields, _ = data_fixture.build_table(
         user=user,
         database=database,
         columns=[
@@ -201,7 +202,7 @@ def test_create_local_baserow_user_source_wrong_field_type(api_client, data_fixt
             ("Email", "text"),
         ],
         rows=[
-            [2, "Test", "test"],
+            [2, "https://baserow.io", "test"],
         ],
     )
 
@@ -955,7 +956,7 @@ def test_public_dispatch_data_source_with_ab_user_using_user_source(
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "id": 2,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }

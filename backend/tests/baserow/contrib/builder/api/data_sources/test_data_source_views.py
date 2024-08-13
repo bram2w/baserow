@@ -11,6 +11,7 @@ from rest_framework.status import (
 
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.core.services.models import Service
+from baserow.test_utils.helpers import AnyStr
 
 
 @pytest.mark.django_db
@@ -652,7 +653,7 @@ def test_dispatch_data_source(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "id": 2,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
@@ -743,7 +744,7 @@ def test_dispatch_data_source_using_formula(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "id": 2,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
@@ -952,19 +953,19 @@ def test_dispatch_data_sources(api_client, data_fixture):
             fields[1].db_column: "Orange",
             fields[0].db_column: "Audi",
             "id": rows[1].id,
-            "order": "1.00000000000000000000",
+            "order": AnyStr(),
         },
         str(data_source1.id): {
             fields[1].db_column: "Green",
             fields[0].db_column: "2Cv",
             "id": rows[2].id,
-            "order": "1.00000000000000000000",
+            "order": AnyStr(),
         },
         str(data_source2.id): {
             fields[1].db_column: "Dark",
             fields[0].db_column: "Tesla",
             "id": rows[3].id,
-            "order": "1.00000000000000000000",
+            "order": AnyStr(),
         },
         str(data_source3.id): {
             "_error": "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",

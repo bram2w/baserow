@@ -495,10 +495,7 @@ class DeleteFieldActionType(UndoableActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         field = FieldHandler().get_field(params.field_id)
-        FieldHandler().delete_field(
-            user,
-            field,
-        )
+        FieldHandler().delete_field(user, field)
 
 
 class DuplicateFieldActionType(UndoableActionType):
@@ -577,7 +574,9 @@ class DuplicateFieldActionType(UndoableActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
-        FieldHandler().delete_field(user, FieldHandler().get_field(params.field_id))
+        handler = FieldHandler()
+        field = handler.get_field(params.field_id)
+        handler.delete_field(user, field)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):

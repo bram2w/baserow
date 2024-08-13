@@ -367,7 +367,7 @@ def test_update_statements_only_update_rows_where_values_change(data_fixture):
     row_3 = table_model.objects.create(**{f"field_{text_field.id}": "b"})
 
     def execute_update_statement(update_statement):
-        update_collector = FieldUpdateCollector(table)
+        update_collector = FieldUpdateCollector(table, update_changes_only=True)
         field_cache = FieldCache()
         via_path_to_starting_table = []
 
@@ -402,3 +402,86 @@ def test_update_statements_only_update_rows_where_values_change(data_fixture):
     # Only row_4 and row_5 should be updated, the others already have the value "a"
     assert execute_update_statement(func_update_statement) == 2
     assert_all_rows_have_value("a")
+
+
+@pytest.mark.django_db
+def test_apply_updates_returns_only_last_updated_fields_but_update_collector_track_all_changes(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table_1 = data_fixture.create_database_table(database=database)
+    t1_field1 = data_fixture.create_text_field(name="f1", table=table_1)
+    t1_field2 = data_fixture.create_text_field(name="f2", table=table_1)
+    t1_model = table_1.get_model(attribute_names=True)
+    t1_row = t1_model.objects.create(f1="starting value 1", f2="starting value 2")
+
+    # Setup another table with a field referencing field_1
+    table_2 = data_fixture.create_database_table(database=database)
+    t2_link_t1 = data_fixture.create_link_row_field(
+        table=table_2, link_row_table=table_1, name="link_t2"
+    )
+    t2_field1 = data_fixture.create_text_field(name="f1", table=table_2)
+    t2_model = table_2.get_model(attribute_names=True)
+    t2_row = t2_model.objects.create(f1="starting value t2")
+
+    # Setup another table with a field referencing field_2
+    table_3 = data_fixture.create_database_table(database=database)
+    t3_link_t1 = data_fixture.create_link_row_field(
+        table=table_3, link_row_table=table_1, name="link_t3"
+    )
+    t3_field1 = data_fixture.create_text_field(name="f1", table=table_3)
+    t3_model = table_3.get_model(attribute_names=True)
+    t3_row = t3_model.objects.create(f1="starting value t3")
+
+    # First call to apply_updates_and_get_updated_fields to update table_1 and table_2
+    update_collector = FieldUpdateCollector(table_1)
+    field_cache = FieldCache()
+    update_collector.add_field_with_pending_update_statement(
+        t1_field1, Value("other 1")
+    )
+    update_collector.add_field_with_pending_update_statement(
+        t2_field1, Value("other 1"), via_path_to_starting_table=[t2_link_t1]
+    )
+    updated_fields_in_table = update_collector.apply_updates_and_get_updated_fields(
+        field_cache
+    )
+
+    assert updated_fields_in_table == [t1_field1]
+    t1_row.refresh_from_db()
+    assert t1_row.f1 == "other 1"
+    assert t1_row.f2 == "starting value 2"
+    t2_row.refresh_from_db()
+    assert t2_row.f1 == "other 1"
+    t3_row.refresh_from_db()
+    assert t3_row.f1 == "starting value t3"
+
+    # Second call to apply_updates_and_get_updated_fields to update table_1 and table_3
+    update_collector.add_field_with_pending_update_statement(
+        t1_field2, Value("other 2")
+    )
+    update_collector.add_field_with_pending_update_statement(
+        t3_field1, Value("other 2"), via_path_to_starting_table=[t3_link_t1]
+    )
+    updated_fields_in_table = update_collector.apply_updates_and_get_updated_fields(
+        field_cache
+    )
+
+    assert updated_fields_in_table == [t1_field2]
+    t1_row.refresh_from_db()
+    assert t1_row.f1 == "other 1"
+    assert t1_row.f2 == "other 2"
+    t2_row.refresh_from_db()
+    assert t2_row.f1 == "other 1"
+    t3_row.refresh_from_db()
+    assert t3_row.f1 == "other 2"
+
+    # Despite the multiple calls to apply_updates_and_get_updated_fields, the update
+    # collector should have tracked all changes and can send the signals for all of them
+    with patch("baserow.contrib.database.table.signals.table_updated.send") as mock:
+        update_collector.send_force_refresh_signals_for_all_updated_tables()
+
+        assert mock.call_count == 3
+        assert mock.call_args_list[0][1]["table"].id == table_1.id
+        assert mock.call_args_list[1][1]["table"].id == table_2.id
+        assert mock.call_args_list[2][1]["table"].id == table_3.id

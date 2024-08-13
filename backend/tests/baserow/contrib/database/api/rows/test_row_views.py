@@ -10,6 +10,7 @@ from django.test.utils import CaptureQueriesContext
 
 import pytest
 from freezegun import freeze_time
+from pytest_unordered import unordered
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -30,6 +31,7 @@ from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.test_utils.helpers import (
     AnyInt,
+    AnyStr,
     assert_undo_redo_actions_are_valid,
     setup_interesting_test_table,
 )
@@ -941,11 +943,13 @@ def test_list_rows_join_lookup(api_client, data_fixture, user_field_names):
         },
         "formula_multipleselect": {
             "blank": [],
-            "row": [
-                {"color": "yellow", "id": AnyInt(), "value": "D"},
-                {"color": "orange", "id": AnyInt(), "value": "C"},
-                {"color": "green", "id": AnyInt(), "value": "E"},
-            ],
+            "row": unordered(
+                [
+                    {"color": "yellow", "id": AnyInt(), "value": "D"},
+                    {"color": "orange", "id": AnyInt(), "value": "C"},
+                    {"color": "green", "id": AnyInt(), "value": "E"},
+                ]
+            ),
         },
         "count": {
             "blank": "0",
@@ -972,8 +976,8 @@ def test_list_rows_join_lookup(api_client, data_fixture, user_field_names):
             ],
         },
         "uuid": {
-            "blank": "00000000-0000-4000-8000-000000000002",
-            "row": "00000000-0000-4000-8000-000000000003",
+            "blank": "00000000-0000-4000-8000-000000000001",
+            "row": "00000000-0000-4000-8000-000000000002",
         },
         "autonumber": {
             "blank": 1,
@@ -1029,7 +1033,7 @@ def test_list_rows_join_lookup(api_client, data_fixture, user_field_names):
                     {"id": linked_row.id, "value": "text", **looked_up_fields_row},
                 ],
                 "id": row.id,
-                "order": "1.00000000000000000000",
+                "order": AnyStr(),
             },
         ],
     }
@@ -1138,7 +1142,7 @@ def test_list_rows_join_lookup_field_to_same_table(data_fixture, api_client):
                     },
                 ],
                 "id": table_row.id,
-                "order": "1.00000000000000000000",
+                "order": AnyStr(),
             },
         ],
     }
@@ -1219,7 +1223,7 @@ def test_list_rows_join_lookup_multiple_link_row_fields(data_fixture, api_client
                     },
                 ],
                 "id": table_row.id,
-                "order": "1.00000000000000000000",
+                "order": AnyStr(),
             },
         ],
     }

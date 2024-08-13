@@ -10,7 +10,7 @@ from django.db.models.fields.related_descriptors import (
 from django.utils.functional import cached_property
 
 from baserow.contrib.database.fields.utils.duration import duration_value_to_timedelta
-from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
+from baserow.contrib.database.formula import BaserowExpression
 from baserow.core.fields import SyncedDateTimeField
 
 
@@ -173,12 +173,12 @@ class BaserowExpressionField(models.Field):
     # as there is no default and no way of knowing what the expression evaluates to
     db_returning = True
     requires_refresh_after_update = True
+    requires_refresh_after_insert = True
 
     def __init__(
         self,
         expression: Optional[BaserowExpression],
         expression_field: Field,
-        requires_refresh_after_insert: bool,
         *args,
         **kwargs,
     ):
@@ -190,7 +190,6 @@ class BaserowExpressionField(models.Field):
 
         self.expression = expression
         self.expression_field = expression_field
-        self.requires_refresh_after_insert = requires_refresh_after_insert
 
         # Add all the various lookups for the underlying Django field so specific
         # filters work on a field of this type. E.g. if expression_field is a DateField
@@ -260,25 +259,9 @@ class BaserowExpressionField(models.Field):
         return self.expression_field.select_format(compiler, sql, params)
 
     def pre_save(self, model_instance, add):
-        if self.expression is None:
-            return Value(None)
-        else:
-            if add:
-                return FormulaHandler.baserow_expression_to_insert_django_expression(
-                    self.expression, model_instance
-                )
-            else:
-                return (
-                    FormulaHandler.baserow_expression_to_row_update_django_expression(
-                        self.expression, model_instance
-                    )
-                )
-
-    @property
-    def valid_for_bulk_update(self):
-        # When the expression is None we are in the error state and so shouldn't be
-        # included in any BULK UPDATE statement.
-        return self.expression is not None
+        # Let the Field dependency handler to calculate the value of the expression in
+        # the correct order.
+        return Value(None)
 
 
 class SerialField(models.IntegerField):

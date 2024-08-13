@@ -12,6 +12,7 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.services.registries import service_type_registry
+from baserow.test_utils.helpers import AnyStr
 
 
 @pytest.mark.django_db
@@ -166,7 +167,7 @@ def test_dispatch_data_source(data_fixture):
 
     assert result == {
         "id": rows[1].id,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
@@ -228,14 +229,14 @@ def test_dispatch_data_sources(data_fixture):
 
     assert result[data_source.id] == {
         "id": rows[1].id,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
 
     assert result[data_source2.id] == {
         "id": rows[2].id,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Volkswagen",
         fields[1].db_column: "White",
     }

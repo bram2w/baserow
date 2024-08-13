@@ -41,7 +41,7 @@
           >{{ $t('fieldLinkRowSubForm.limitToView') }}
           <HelpIcon
             :tooltip="$t('fieldLinkRowSubForm.limitToViewDescription')"
-            :tooltip-content-classes="'tooltip__content--expandable'"
+            :tooltip-content-classes="['tooltip__content--expandable']"
           ></HelpIcon
         ></Checkbox>
       </div>

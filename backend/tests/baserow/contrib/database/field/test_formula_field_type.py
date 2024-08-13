@@ -41,13 +41,13 @@ from baserow.contrib.database.views.registries import view_filter_type_registry
 
 @pytest.mark.django_db
 def test_creating_a_model_with_formula_field_immediately_populates_it(data_fixture):
-    table = data_fixture.create_database_table()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
     formula_field = data_fixture.create_formula_field(
         table=table, formula="'test'", formula_type="text"
     )
     formula_field_name = f"field_{formula_field.id}"
-    model = table.get_model()
-    row = model.objects.create()
+    row = RowHandler().create_row(user=user, table=table)
 
     assert getattr(row, formula_field_name) == "test"
 
@@ -58,14 +58,13 @@ def test_adding_a_formula_field_to_an_existing_table_populates_it_for_all_rows(
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    before_model = table.get_model()
-    existing_row = before_model.objects.create()
+    existing_row = RowHandler().create_row(user, table)
     formula_field = FieldHandler().create_field(
         user, table, "formula", name="formula", formula="'test'"
     )
     formula_field_name = f"field_{formula_field.id}"
     model = table.get_model()
-    row = model.objects.create()
+    row = RowHandler().create_row(user, table, {}, model=model)
 
     assert getattr(row, formula_field_name) == "test"
     assert getattr(model.objects.get(id=existing_row.id), formula_field_name) == "test"
@@ -75,13 +74,13 @@ def test_adding_a_formula_field_to_an_existing_table_populates_it_for_all_rows(
 def test_cant_change_the_value_of_a_formula_field_directly(data_fixture):
     table = data_fixture.create_database_table()
     data_fixture.create_formula_field(
-        name="formula", table=table, formula="'test'", formula_type="text"
+        name="formula", table=table, formula="''", formula_type="text"
     )
     data_fixture.create_text_field(name="text", table=table)
     model = table.get_model(attribute_names=True)
 
     row = model.objects.create(formula="not test")
-    assert row.formula == "test"
+    assert row.formula is None
 
     row.text = "update other field"
     row.save()
@@ -89,57 +88,7 @@ def test_cant_change_the_value_of_a_formula_field_directly(data_fixture):
     row.formula = "not test"
     row.save()
     row.refresh_from_db()
-    assert row.formula == "test"
-
-
-@pytest.mark.django_db
-def test_get_set_export_serialized_value_formula_field(data_fixture):
-    table = data_fixture.create_database_table()
-    formula_field = data_fixture.create_formula_field(
-        table=table, formula="'test'", formula_type="text"
-    )
-    formula_field_name = f"field_{formula_field.id}"
-    formula_field_type = field_type_registry.get_by_model(formula_field)
-
-    model = table.get_model()
-    row_1 = model.objects.create()
-    row_2 = model.objects.create()
-
-    old_row_1_value = getattr(row_1, formula_field_name)
-    old_row_2_value = getattr(row_2, formula_field_name)
-
-    assert old_row_1_value == "test"
-    assert old_row_2_value == "test"
-
-    formula_field_type.set_import_serialized_value(
-        row_1,
-        formula_field_name,
-        formula_field_type.get_export_serialized_value(
-            row_1, formula_field_name, {}, None, None
-        ),
-        {},
-        None,
-        None,
-    )
-    formula_field_type.set_import_serialized_value(
-        row_2,
-        formula_field_name,
-        formula_field_type.get_export_serialized_value(
-            row_2, formula_field_name, {}, None, None
-        ),
-        {},
-        None,
-        None,
-    )
-
-    row_1.save()
-    row_2.save()
-
-    row_1.refresh_from_db()
-    row_2.refresh_from_db()
-
-    assert old_row_1_value == getattr(row_1, formula_field_name)
-    assert old_row_2_value == getattr(row_2, formula_field_name)
+    assert row.formula is None
 
 
 @pytest.mark.django_db
@@ -863,7 +812,7 @@ def test_all_functions_are_registered():
 
 
 @pytest.mark.django_db
-def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
+def test_row_dependency_update_functions_do_one_row_updates_for_same_table(
     data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
@@ -879,7 +828,7 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
         formula="field('a')",
     )
     table_model = table.get_model()
-    row = table_model.objects.create()
+    row = RowHandler().create_row(user, table, model=table_model)
     formula_field_type = FormulaFieldType()
     update_collector = FieldUpdateCollector(table)
     field_cache = FieldCache()
@@ -904,7 +853,7 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
         formula_field, row, update_collector, field_cache, []
     )
     # Does one update to update the last_system_or_user_row_update_on column
-    with django_assert_num_queries(0):
+    with django_assert_num_queries(1):
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
 
@@ -1135,16 +1084,27 @@ def test_inserting_a_row_with_lookup_field_immediately_populates_it_with_empty_l
     user = data_fixture.create_user()
     table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 
+    primary_a_field = table_a.field_set.get(primary=True)
+    primary_b_field = table_b.field_set.get(primary=True)
     target_field = data_fixture.create_text_field(name="target", table=table_b)
-    table_a_model = table_a.get_model(attribute_names=True)
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_1 = table_b_model.objects.create(primary="1", target="target 1")
-    row_2 = table_b_model.objects.create(primary="2", target="target 2")
-
-    row_a = table_a_model.objects.create(primary="a")
-    row_a.link.add(row_1.id)
-    row_a.link.add(row_2.id)
-    row_a.save()
+    row_1, row_2 = RowHandler().create_rows(
+        user,
+        table_b,
+        rows_values=[
+            {primary_b_field.db_column: "1", target_field.db_column: "target 1"},
+            {primary_b_field.db_column: "2", target_field.db_column: "target 2"},
+        ],
+    )
+    RowHandler().create_rows(
+        user,
+        table_a,
+        rows_values=[
+            {
+                primary_a_field.db_column: "a",
+                link_field.db_column: [row_1.id, row_2.id],
+            }
+        ],
+    )
 
     lookup = FieldHandler().create_field(
         user,
@@ -1154,9 +1114,7 @@ def test_inserting_a_row_with_lookup_field_immediately_populates_it_with_empty_l
         through_field_name="link",
         target_field_name="target",
     )
-    model_with_lookup = table_a.get_model()
-    inserted_row = model_with_lookup.objects.create()
-    inserted_row.refresh_from_db()
+    inserted_row = RowHandler().create_row(user, table_a)
     default_empty_value_for_lookup = getattr(inserted_row, f"field_{lookup.id}")
     assert default_empty_value_for_lookup is not None
     assert default_empty_value_for_lookup == []

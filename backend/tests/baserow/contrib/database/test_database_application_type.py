@@ -9,6 +9,7 @@ from freezegun import freeze_time
 
 from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.fields.models import FormulaField, TextField
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
@@ -37,16 +38,19 @@ def test_import_export_database(data_fixture):
     view = data_fixture.create_grid_view(table=table)
     data_fixture.create_view_filter(view=view, field=text_field, value="Test")
     data_fixture.create_view_sort(view=view, field=text_field)
-    model = table.get_model()
-    row = model.objects.create(
-        **{f"field_{text_field.id}": "Test", "last_modified_by": workspace_user.user}
-    )
-    model.objects.create(**{f"field_{text_field.id}": "Test 2"})
-    model.objects.filter(id=row.id).update(
-        created_on=datetime(2021, 1, 1, 12, 30, tzinfo=timezone.utc),
-        updated_on=datetime(2021, 1, 2, 13, 30, tzinfo=timezone.utc),
-    )
-    row.refresh_from_db()
+
+    with freeze_time("2021-01-01 12:30"):
+        row, _ = RowHandler().force_create_rows(
+            user,
+            table,
+            [{f"field_{text_field.id}": "Test"}, {f"field_{text_field.id}": "Test 2"}],
+        )
+
+    with freeze_time("2021-01-02 13:30"):
+        res = RowHandler().force_update_rows(
+            user, table, [{"id": row.id, f"field_{text_field.id}": "Test"}]
+        )
+        row = res.updated_rows[0]
 
     database_type = application_type_registry.get("database")
     config = ImportExportConfig(include_permission_data=True)

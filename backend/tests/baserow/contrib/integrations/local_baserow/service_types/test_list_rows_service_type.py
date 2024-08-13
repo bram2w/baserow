@@ -19,6 +19,7 @@ from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.core.utils import MirrorDict
+from baserow.test_utils.helpers import AnyStr
 from baserow.test_utils.pytest_conftest import FakeDispatchContext, fake_import_formula
 
 
@@ -235,13 +236,13 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
             "id": rows[0].id,
             fields[0].db_column: "BMW",
             fields[1].db_column: "Blue",
-            "order": "1.00000000000000000000",
+            "order": AnyStr(),
         },
         {
             "id": rows[1].id,
             fields[0].db_column: "Audi",
             fields[1].db_column: "Orange",
-            "order": "1.00000000000000000000",
+            "order": AnyStr(),
         },
     ]
     assert result["has_next_page"] is False

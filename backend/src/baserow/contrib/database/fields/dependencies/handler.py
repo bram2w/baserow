@@ -1,14 +1,19 @@
-from typing import Iterable, List, Optional, Tuple
+from collections import defaultdict
+from graphlib import CycleError, TopologicalSorter
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.database.fields.dependencies.dependency_rebuilder import (
     break_dependencies_for_field,
     rebuild_field_dependencies,
     update_fields_with_broken_references,
+)
+from baserow.contrib.database.fields.dependencies.exceptions import (
+    CircularFieldDependencyError,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
@@ -68,27 +73,27 @@ class FieldDependencyHandler:
         break_dependencies_for_field(field)
 
     @classmethod
-    def get_all_dependent_fields_with_type(
+    def _get_all_dependent_fields(
         cls,
         table_id: int,
         field_ids: Iterable[int],
         field_cache: FieldCache,
         associated_relations_changed: bool,
-    ) -> FieldDependants:
+    ) -> Tuple[QuerySet[FieldDependency], Dict[int, Field]]:
         """
-        Fetches field dependants recursive, and fetches the specific types in a query
-        efficient and performant manner.
+        # Recursively fetches field dependants and retrieves specific field types in a
+        query-efficient and performant manner.
 
         :param table_id: The table that the provided field_ids are all part of.
         :param field_ids: The field ids for which we need to find the dependent fields,
             they must all be in the same table as specified by the table_id param.
-        :param field_cache: A field cache used to find and store the specific object
-            of the dependant.
-        :param associated_relations_changed: If true any relations associated
-           with any provided field ids will be treated as having changed also and
-           dependants on the relations themselves will be additionally returned.
-        :return: A list containing the dependant fields, their field type and the
-            path to starting table.
+        :field_cache: A field cache used to find and store the specific object of the
+            dependant.
+        :param associated_relations_changed: If true any relations associated with any
+           provided field ids will be treated as having changed also and dependants on
+           the relations themselves will be additionally returned.
+        :return: A tuple containing the queryset of the dependencies and a dictionary of
+            the specific fields.
         """
 
         if len(field_ids) == 0:
@@ -119,9 +124,10 @@ class FieldDependencyHandler:
         # Raw query that traverses through the dependencies, and will find the
         # dependants of the provided fields ids recursively.
         raw_query = f"""
-            WITH RECURSIVE traverse(id, via_ids, depth) AS (
+            WITH RECURSIVE traverse(id, dependency_ids, via_ids, depth) AS (
                 SELECT
                     first.dependant_id,
+                    first.dependency_id::text,
                     /*
                     We only want to add via's to the path which are valid joins
                     required to get from the dependant cell to the dependency. The
@@ -157,6 +163,7 @@ class FieldDependencyHandler:
                 UNION
                 SELECT DISTINCT
                     dependant_id,
+                    coalesce(concat_ws('|', dependency_ids::text, dependency_id::text), ''),
                     coalesce(concat_ws('|', via_ids::text, via_id::text), ''),
                     traverse.depth + 1
                 FROM traverse
@@ -169,19 +176,24 @@ class FieldDependencyHandler:
             )
             SELECT
                 traverse.id,
+                STRING_AGG(traverse.dependency_ids, '|') AS dependency_ids,
                 traverse.via_ids,
-                field.content_type_id
+                field.content_type_id,
+                field.name,
+                field.table_id,
+                MAX(depth) as depth
             FROM traverse
             LEFT OUTER JOIN {field_table} as field
                 ON traverse.id = field.id
             WHERE depth <= %(max_depth)s
-            GROUP BY traverse.id, traverse.via_ids, field.content_type_id
+            GROUP BY traverse.id, traverse.via_ids, field.content_type_id, field.name, field.table_id
             ORDER BY MAX(depth) ASC, id ASC
         """  # nosec b608
 
         queryset = FieldDependency.objects.raw(raw_query, query_parameters)
         link_row_field_content_type = ContentType.objects.get_for_model(LinkRowField)
-        fields_to_fetch = []
+        fields_to_fetch = set()
+        fields_in_cache = {}
 
         # Unpacks the dependant field id, the link row via fields, and adds them to the
         # `fields_to_fetch` list, so that we can later query efficiently fetch the
@@ -194,16 +206,35 @@ class FieldDependencyHandler:
             else:
                 dependency.via_ids = []
 
-            field = Field(id=dependency.id, content_type_id=dependency.content_type_id)
+            if dependency.dependency_ids:
+                dependency.dependency_ids = [
+                    int(v) for v in dependency.dependency_ids.split("|") if v
+                ]
+            else:
+                dependency.dependency_ids = []
+
+            field = Field(
+                id=dependency.id,
+                content_type_id=dependency.content_type_id,
+                table_id=dependency.table_id,
+                name=dependency.name,
+            )
+
             if field not in fields_to_fetch:
-                fields_to_fetch.append(field)
+                cached_field = field_cache.lookup_specific(
+                    field, fetch_if_missing=False
+                )
+                if cached_field is not None:
+                    fields_in_cache[cached_field.id] = cached_field
+                else:
+                    fields_to_fetch.add(field)
 
             for via_id in dependency.via_ids:
                 link_row_field = Field(
                     id=via_id, content_type_id=link_row_field_content_type.id
                 )
                 if link_row_field not in fields_to_fetch:
-                    fields_to_fetch.append(link_row_field)
+                    fields_to_fetch.add(link_row_field)
 
         # This hook is called for every unique field type in the specific_iterator of
         # the fields. The `table` and `link_row_table` references are later needed,
@@ -222,17 +253,255 @@ class FieldDependencyHandler:
 
         # Creates an object of specific field types, so that we don't have to execute
         # unnecessary queries later on.
-        specific_fields = {
-            field.id: field
-            for field in specific_iterator(
-                fields_to_fetch,
-                base_model=Field,
-                per_content_type_queryset_hook=queryset_hook,
+        specific_fields = {}
+        if fields_to_fetch:
+            specific_fields = {
+                field.id: field
+                for field in specific_iterator(
+                    fields_to_fetch,
+                    base_model=Field,
+                    per_content_type_queryset_hook=queryset_hook,
+                )
+            }
+
+        return queryset, {**specific_fields, **fields_in_cache}
+
+    @classmethod
+    def group_dependencies_by_level(
+        cls, dependencies: Dict[int | str, Set[int | str]]
+    ) -> List[List[int | str]]:
+        """
+        Groups the given dependencies into levels based on their dependency order using
+        a topological sort. This method organizes items (identified by integers or
+        strings) into levels where each level contains items that do not depend on each
+        other and can be processed concurrently. An item at level N can only be
+        processed after all items in levels 0 to N-1 have been processed, ensuring that
+        dependencies are respected. The `dependencies` parameter is a dictionary where
+        each key is an item and its value is a set of items that it depends on. The
+        method returns a list of lists, where each sublist represents a level in the
+        dependency hierarchy.
+
+        Example: >>> dependencies = {
+        ...     'A': set(),
+        ...     'B': {'A'},
+        ...     'C': {'B'},
+        ...     'D': {'B'},
+        ...     'E': {'C', 'D'}
+        ... }
+        >>> cls.group_dependencies_by_level(dependencies)
+        ...     [['A'], ['B'], ['C', 'D'], ['E']]
+
+        In this example, 'A' has no dependencies and is placed at the first level. 'B'
+        depends on 'A' and is placed at the next level. Both 'C' and 'D' depend on 'B'
+        but not on each other, so they are grouped together in the third level. Finally,
+        'E' depends on both 'C' and 'D' and is placed in the fourth level.
+
+        :param dependencies: A dictionary mapping each item to a set of items it
+            depends on.
+        :return: A list of lists, where each sublist contains items that can be
+            processed at the same level.
+        :raises CircularFieldDependencyError: If the dependencies contain a cycle,
+            a CircularFieldDependencyError is raised.
+        """
+
+        ts = TopologicalSorter(dependencies)
+
+        try:
+            ts.prepare()
+        except CycleError:
+            raise CircularFieldDependencyError()
+
+        levels = []
+
+        while ts.is_active():
+            ready_nodes = ts.get_ready()
+            level = [node for node in ready_nodes]
+            ts.done(*ready_nodes)
+            levels.append(level)
+
+        return levels
+
+    @classmethod
+    def group_all_dependent_fields_by_level_from_fields(
+        cls,
+        fields: Iterable[Field],
+        field_cache: FieldCache,
+        associated_relations_changed: bool,
+    ) -> List[List[Tuple[int, Field]]]:
+        """
+        Given a list of fields, even from different tables, this method will return a
+        list of lists where each list contains the fields than can be updated at the
+        same time. The dependants are grouped by their level, so all formulas can be
+        updated in the correct order updating one level at a time as they are returned.
+        Every tuple in the list contains the id of the starting table of the dependency
+        (used to identify the proper update collector) and the field instance to update.
+
+        :param fields: A list of fields for which we need to find the dependent fields.
+        :param field_cache: A field cache used to find and store the specific object of
+            the dependant.
+        :param associated_relations_changed: If true any relations associated with any
+            provided field ids will be treated as having changed also and dependants on
+            the relations themselves will be additionally returned.
+        :return: An iterable of lists where each list represents all the fields that can
+            be updated together.
+        """
+
+        tables = defaultdict(set)
+        for field in fields:
+            tables[field.table_id].add(field.id)
+
+        dependencies = defaultdict(set)
+
+        # Contains a map between the field id and the information needed to update it.
+        dependency_map = defaultdict(list)
+
+        for starting_table_id, field_ids in tables.items():
+            if len(field_ids) == 0:
+                continue
+
+            dependencies_queryset, specific_fields = cls._get_all_dependent_fields(
+                starting_table_id, field_ids, field_cache, associated_relations_changed
             )
-        }
+
+            for dependency in dependencies_queryset:
+                dependant_field = specific_fields[dependency.id]
+                if field_cache.lookup_specific(dependant_field) is None:
+                    # If somehow the dependant is trashed it will be None. We can't
+                    # really trigger any updates for it so ignore it.
+                    continue
+
+                dependency_map[dependant_field.id].append(
+                    (starting_table_id, dependant_field)
+                )
+                dependencies[dependant_field.id] = set(dependency.dependency_ids)
+
+        dependencies_gouped_by_level = cls.group_dependencies_by_level(dependencies)
+
+        # For every dependency, return the starting table id and the field instance.
+        dependent_fields_by_level = []
+        for group_of_depdencies in dependencies_gouped_by_level:
+            level = []
+            for field_id in group_of_depdencies:
+                if field_id in dependency_map:
+                    level.extend(dependency_map[field_id])
+            if level:
+                dependent_fields_by_level.append(level)
+
+        return dependent_fields_by_level
+
+    @classmethod
+    def group_all_dependent_fields_by_level(
+        cls,
+        table_id: int,
+        field_ids: Iterable[int],
+        field_cache: FieldCache,
+        associated_relations_changed: bool,
+    ) -> List[FieldDependants]:
+        """
+        Recursively fetches field dependants, and fetches the specific types in a query
+        efficient and performant manner. The dependants are grouped by their depth,
+        so all formulas can be updated in the correct order.
+
+        :param table_id: The table that the provided field_ids are all part of.
+        :param field_ids: The field ids for which we need to find the dependent fields,
+            they must all be in the same table as specified by the table_id param.
+        :param field_cache: A field cache used to find and store the specific object
+            of the dependant.
+        :param associated_relations_changed: If true any relations associated
+           with any provided field ids will be treated as having changed also and
+           dependants on the relations themselves will be additionally returned.
+        :return: A list for every depth containing the dependant fields, their field
+            type and the path to starting table.
+        """
+
+        if len(field_ids) == 0:
+            return []
+
+        dependencies_queryset, specific_fields = cls._get_all_dependent_fields(
+            table_id, field_ids, field_cache, associated_relations_changed
+        )
+
+        dependencies = defaultdict(set)
+        # Contains a map between the field id and the information needed to update it.
+        dependency_map = defaultdict(list)
+
+        for dependency in dependencies_queryset:
+            dependant_field = specific_fields[dependency.id]
+            if field_cache.lookup_specific(dependant_field) is None:
+                # If somehow the dependant is trashed it will be None. We can't really
+                # trigger any updates for it so ignore it.
+                continue
+
+            # The first raw query has constructed a path of link row fields that lead
+            # back to the original table so that we can later efficiently update the
+            # correct rows.
+            #
+            # We only want to add via's to the path which are valid joins required to
+            # get from the dependant cell to the dependency. The queryset can return
+            # dependencies with via's for dependants in the same row, which don't need
+            # a join, so we filter those out here.
+            via_path_to_starting_table = [
+                field_cache.lookup_specific(specific_fields[via_id])
+                for via_id in dependency.via_ids
+            ] or None
+            dependant_field_type = field_type_registry.get_by_model(dependant_field)
+
+            dependency_map[dependant_field.id].append(
+                (
+                    dependant_field,
+                    dependant_field_type,
+                    via_path_to_starting_table,
+                )
+            )
+
+            dependencies[dependant_field.id] = set(dependency.dependency_ids)
+
+        dependencies_gouped_by_level = cls.group_dependencies_by_level(dependencies)
+
+        dependent_fields_by_level = []
+        for group_of_depdencies in dependencies_gouped_by_level:
+            level = []
+            for field_id in group_of_depdencies:
+                if field_id in dependency_map:
+                    level.extend(dependency_map[field_id])
+            if level:
+                dependent_fields_by_level.append(level)
+
+        return dependent_fields_by_level
+
+    @classmethod
+    def get_all_dependent_fields_with_type(
+        cls,
+        table_id: int,
+        field_ids: Iterable[int],
+        field_cache: FieldCache,
+        associated_relations_changed: bool,
+    ) -> FieldDependants:
+        """
+        Fetches field dependants recursive, and fetches the specific types in a query
+        efficient and performant manner.
+
+        :param table_id: The table that the provided field_ids are all part of.
+        :param field_ids: The field ids for which we need to find the dependent fields,
+            they must all be in the same table as specified by the table_id param.
+        :param field_cache: A field cache used to find and store the specific object
+            of the dependant.
+        :param associated_relations_changed: If true any relations associated
+           with any provided field ids will be treated as having changed also and
+           dependants on the relations themselves will be additionally returned.
+        :return: A list containing the dependant fields, their field type and the
+            path to starting table.
+        """
+
+        if len(field_ids) == 0:
+            return []
+
+        dependencies, specific_fields = cls._get_all_dependent_fields(
+            table_id, field_ids, field_cache, associated_relations_changed
+        )
 
         result: FieldDependants = []
-        for dependency in queryset:
+        for dependency in dependencies:
             dependant = specific_fields[dependency.id]
             dependant_field = field_cache.lookup_specific(dependant)
             if dependant_field is None:
