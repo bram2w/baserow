@@ -43,7 +43,6 @@
   color: $white;
   padding: 0 8px;
   text-align: center;
-  white-space: nowrap;
 
   @include fixed-height(26px, 12px);
   @include rounded($rounded-md);
@@ -51,14 +50,12 @@
   &--expandable {
     padding: 12px;
     text-align: left;
-    white-space: nowrap;
     max-height: 320px;
     line-height: 20px;
     font-size: 12px;
     overflow: auto;
     height: auto;
     max-width: 320px;
-    text-wrap: wrap;
 
     @include rounded($rounded);
 
