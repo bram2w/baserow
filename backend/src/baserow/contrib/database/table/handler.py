@@ -1,15 +1,17 @@
 import traceback
+from datetime import datetime, timezone
 from typing import Any, Dict, List, NewType, Optional, Tuple, cast
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import DatabaseError, transaction
-from django.db.models import F, Q, QuerySet, Sum
+from django.db import DatabaseError, IntegrityError, connection, transaction
+from django.db.models import Q, QuerySet, Sum
 from django.db.models.functions import Coalesce, Now
 from django.utils import translation
 from django.utils.translation import gettext as _
 
 from opentelemetry import trace
+from psycopg2 import sql
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
@@ -87,7 +89,7 @@ class TableUsageHandler:
         ).aggregate(tot_MB=Coalesce(Sum("size"), 0) / USAGE_UNIT_MB)["tot_MB"]
 
     @classmethod
-    def mark_table_for_usage_update(cls, table_id: int, row_count: int = None):
+    def mark_table_for_usage_update(cls, table_id: int, row_count: int = 0):
         """
         Updates or creates a table usage log entry. This function can be called when an
         operation change the table row_count or the storage usage to create or update an
@@ -95,22 +97,38 @@ class TableUsageHandler:
 
         :param table_id: The id of the table that needs to be updated.
         :param row_count: This represents the change in row count for the table
-            identified by 'table_id'. A value of 0 indicates that it might be expensive
-            to calculate the delta and ensure to creates an entry to recount table rows
-            correctly at the first occurrence. relevant task. If None, only the storage
-            usage changed but since we don't have an easy way to store the delta, the
-            entry will ensure the storage usage will be recalculated at next task run.
+            identified by 'table_id'.
         """
 
-        defaults = {"row_count": row_count}
-
-        with transaction.atomic():
-            obj, created = TableUsageUpdate.objects.select_for_update().get_or_create(
-                defaults, table_id=table_id
+        try:
+            query = sql.SQL(
+                """
+            INSERT INTO {table_usage_update_table} (table_id, row_count, timestamp)
+            VALUES ({table_id}, {row_count}, {timestamp})
+            ON CONFLICT ON CONSTRAINT {table_usage_key} DO UPDATE
+            SET row_count = COALESCE({table_usage_update_table}.row_count, 0)
+            + COALESCE(EXCLUDED.row_count, 0), timestamp = EXCLUDED.timestamp;
+            """
+            ).format(
+                table_usage_update_table=sql.Identifier(
+                    TableUsageUpdate._meta.db_table
+                ),
+                table_id=sql.Literal(table_id),
+                row_count=sql.Literal(row_count),
+                timestamp=sql.Literal(datetime.now(tz=timezone.utc)),
+                table_usage_key=sql.SQL(
+                    f"{TableUsageUpdate._meta.db_table}_table_id_key"
+                ),
             )
-            if not created and row_count:
-                obj.row_count = Coalesce(F("row_count"), 0) + row_count
-                obj.save(update_fields=["row_count", "timestamp"])
+
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+
+        except IntegrityError as integrity_exc:
+            if f"violates foreign key constraint" in str(integrity_exc):
+                # we can safely ignore the exception and don't try to
+                # update usage for non existing tables
+                pass
 
     @classmethod
     def create_tables_usage_for_new_database(cls, database_id: int):
