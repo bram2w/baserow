@@ -43,6 +43,7 @@ def test_allow_if_template_permission_manager(data_fixture):
     workspace_1 = data_fixture.create_workspace()
     application_1 = data_fixture.create_database_application(workspace=workspace_1)
     table_1, (field_1,), (row_1,) = data_fixture.build_table(
+        user=buser,
         database=application_1,
         columns=[
             ("Name", "number"),
@@ -67,6 +68,7 @@ def test_allow_if_template_permission_manager(data_fixture):
     data_fixture.create_template(workspace=workspace_2)
     application_2 = data_fixture.create_database_application(workspace=workspace_2)
     table_2, (field_2,), (row_2,) = data_fixture.build_table(
+        user=buser,
         database=application_2,
         columns=[
             ("Name", "number"),
@@ -214,6 +216,7 @@ def test_allow_if_template_permission_manager_filter_queryset(data_fixture):
     workspace_1 = data_fixture.create_workspace()
     application_1 = data_fixture.create_database_application(workspace=workspace_1)
     table_1, (field_1,), (row_1,) = data_fixture.build_table(
+        user=user,
         database=application_1,
         columns=[
             ("Name", "number"),
@@ -238,6 +241,7 @@ def test_allow_if_template_permission_manager_filter_queryset(data_fixture):
     data_fixture.create_template(workspace=workspace_2)
     application_2 = data_fixture.create_database_application(workspace=workspace_2)
     table_2, (field_2,), (row_2,) = data_fixture.build_table(
+        user=user,
         database=application_2,
         columns=[
             ("Name", "number"),

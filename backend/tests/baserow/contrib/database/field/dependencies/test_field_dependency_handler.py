@@ -3,7 +3,9 @@ from django.contrib.contenttypes.models import ContentType
 import pytest
 from pytest_unordered import unordered
 
+from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.fields.dependencies.exceptions import (
+    CircularFieldDependencyError,
     SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
@@ -12,6 +14,7 @@ from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.core.registries import ImportExportConfig
 
 
 @pytest.mark.django_db
@@ -306,11 +309,7 @@ def test_get_all_dependant_fields_with_type(data_fixture):
     expected_text_field_2_dependants = [
         (text_field_2_dependency_1, text_field_type, None),
         (other_table_field, text_field_type, [link_field_to_table]),
-        (
-            text_field_2_dependency_3,
-            text_field_type,
-            None,
-        ),
+        (text_field_2_dependency_3, text_field_type, None),
         (text_field_1_and_2_dependency_1, text_field_type, None),
         (text_field_2_dependency_1_dependency_1, text_field_type, None),
     ]
@@ -339,15 +338,36 @@ def test_get_all_dependant_fields_with_type(data_fixture):
         (text_field_1_dependency_2_dependency_1, text_field_type, None),
         (text_field_2_dependency_1, text_field_type, None),
         (other_table_field, text_field_type, [link_field_to_table]),
-        (
-            text_field_2_dependency_3,
-            text_field_type,
-            None,
-        ),
+        (text_field_2_dependency_3, text_field_type, None),
         (text_field_1_and_2_dependency_1, text_field_type, None),
         (text_field_2_dependency_1_dependency_1, text_field_type, None),
     ]
     assert results == unordered(expected_text_field_1_2_3_dependants)
+
+    results = FieldDependencyHandler.group_all_dependent_fields_by_level(
+        table.id,
+        field_ids=[text_field_1.id, text_field_2.id, text_field_3.id],
+        field_cache=field_cache,
+        associated_relations_changed=True,
+    )
+    expexted_results_by_depth = (
+        [
+            (text_field_1_dependency_1, text_field_type, None),
+            (text_field_1_dependency_2, text_field_type, None),
+            (text_field_2_dependency_1, text_field_type, None),
+            (other_table_field, text_field_type, [link_field_to_table]),
+            (text_field_2_dependency_3, text_field_type, None),
+            (text_field_1_and_2_dependency_1, text_field_type, None),
+        ],
+        [
+            (text_field_1_dependency_1_dependency_1, text_field_type, None),
+            (text_field_1_dependency_2_dependency_1, text_field_type, None),
+            (text_field_2_dependency_1_dependency_1, text_field_type, None),
+        ],
+    )
+
+    for i, layer in enumerate(results):
+        assert layer == unordered(expexted_results_by_depth[i])
 
 
 @pytest.mark.django_db
@@ -616,3 +636,185 @@ def test_get_dependant_fields_with_type_via_field_num_queries(
         str(dependant_field.table.id)
         str(path_to_starting_table[0].table.id)
         str(path_to_starting_table[0].link_row_table.id)
+
+
+@pytest.mark.django_db
+def test_dependency_handler_group_dependencies_by_level(data_fixture):
+    # fmt: off
+    dependencies = dependencies = {
+        'A': set(),      # No dependencies
+        'B': {'A'},      # Depends on A
+        'C': {'B'},      # Depends on B
+        'D': {'B'},      # Depends on B
+        'E': {'C', 'D'}  # Depends on C and D
+    }
+    # fmt: on
+
+    levels = FieldDependencyHandler.group_dependencies_by_level(dependencies)
+
+    # fmt: off
+    assert list(levels) == [
+        ['A'],
+        ['B'],
+        ['C', 'D'],
+        ['E']
+    ]
+    # fmt: on
+
+
+@pytest.mark.django_db
+def test_dependency_handler_group_dependencies_by_level_circular_dep_error(
+    data_fixture,
+):
+    # fmt: off
+    dependencies = dependencies = {
+        'A': {'B'},      # Depends on B
+        'B': {'A'},      # Depends on A
+    }
+    # fmt: on
+
+    with pytest.raises(CircularFieldDependencyError):
+        FieldDependencyHandler.group_dependencies_by_level(dependencies)
+
+
+EXPORTED_TABLES_WITH_DEPENDENCIES_EXAMPLE = [
+    {
+        "id": 600,
+        "name": "t1",
+        "order": 1,
+        "fields": [
+            {
+                "id": 5736,
+                "type": "text",
+                "name": "name",
+                "order": 0,
+                "primary": True,
+                "text_default": "",
+            },
+            {
+                "id": 5737,
+                "type": "formula",
+                "name": "formula",
+                "order": 1,
+                "primary": False,
+                "nullable": True,
+                "formula": "field('text')",
+                "formula_type": "text",
+            },
+            {
+                "id": 5738,
+                "type": "text",
+                "name": "text",
+                "order": 2,
+                "primary": False,
+                "text_default": "",
+            },
+            {
+                "id": 5742,
+                "type": "link_row",
+                "name": "t2",
+                "order": 3,
+                "primary": False,
+                "link_row_table_id": 601,
+                "link_row_related_field_id": 5741,
+                "has_related_field": True,
+            },
+        ],
+        "views": [],
+        "rows": [
+            {
+                "id": 1,
+                "order": 1,
+                "field_5736": "t1",
+                "field_5737": "A",
+                "field_5738": "A",
+                "field_5742": [1],
+            },
+        ],
+    },
+    {
+        "id": 601,
+        "name": "t2",
+        "order": 2,
+        "fields": [
+            {
+                "id": 5739,
+                "type": "text",
+                "name": "name",
+                "order": 0,
+                "primary": True,
+                "text_default": "",
+            },
+            {
+                "id": 5740,
+                "type": "formula",
+                "name": "lookup",
+                "order": 1,
+                "primary": False,
+                "nullable": True,
+                "formula": "lookup('link', 'text')",
+                "formula_type": "array",
+                "array_formula_type": "text",
+            },
+            {
+                "id": 5741,
+                "type": "link_row",
+                "name": "link",
+                "order": 2,
+                "primary": False,
+                "link_row_table_id": 600,
+                "link_row_related_field_id": 5742,
+                "has_related_field": True,
+            },
+            {
+                "id": 5743,
+                "type": "lookup",
+                "name": "lookup2",
+                "order": 1,
+                "primary": False,
+                "nullable": True,
+                "through_field_id": 5741,
+                "through_field_name": "link",
+                "target_field_id": 5737,
+                "target_field_name": "formula",
+            },
+        ],
+        "views": [],
+        "rows": [
+            {
+                "id": 1,
+                "order": 1,
+                "field_5739": "t2",
+                "field_5740": ["A"],
+                "field_5741": [1],
+                "field_5742": "t1",
+            },
+        ],
+    },
+]
+
+
+@pytest.mark.django_db
+def test_can_import_database_with_formula_dependencies(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    id_mapping = {}
+    tables = DatabaseApplicationType().import_tables_serialized(
+        database,
+        EXPORTED_TABLES_WITH_DEPENDENCIES_EXAMPLE,
+        id_mapping,
+        ImportExportConfig(include_permission_data=False),
+    )
+    assert len(tables) == 2
+
+    # Verify formulas are imported correctly and rows have correct values
+    t1 = tables[0].get_model(attribute_names=True)
+    r1 = t1.objects.get(pk=1)
+
+    assert r1.formula == "A"
+
+    t2 = tables[1].get_model(attribute_names=True)
+    r2 = t2.objects.get(pk=1)
+
+    assert r2.lookup == [{"id": 1, "value": "A"}]
+    assert r2.lookup2 == [{"id": 1, "value": "A"}]

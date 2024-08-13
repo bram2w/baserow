@@ -582,8 +582,10 @@ def test_recalculate_formulas_according_to_version(
     assert not broken_reference_formula.requires_refresh_after_insert
 
     dependant_formula.refresh_from_db()
-    assert dependant_formula.internal_formula == "error_to_nan(row_id())"
-    assert dependant_formula.requires_refresh_after_insert
+    assert (
+        dependant_formula.internal_formula
+        == f"error_to_nan(field('{formula_that_needs_refresh.db_column}'))"
+    )
 
     upto_date_formula_depending_on_old_version.refresh_from_db()
     assert (
@@ -592,9 +594,8 @@ def test_recalculate_formulas_according_to_version(
     )
     assert (
         upto_date_formula_depending_on_old_version.internal_formula
-        == "error_to_nan(row_id())"
+        == f"error_to_nan(field('{dependant_formula.db_column}'))"
     )
-    assert upto_date_formula_depending_on_old_version.requires_refresh_after_insert
 
 
 @pytest.mark.django_db

@@ -3,7 +3,8 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connection, models
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from freezegun import freeze_time
@@ -1446,3 +1447,217 @@ def test_recalculate_row_orders(send_mock, data_fixture):
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["table"].id == table.id
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.rows_created.send")
+@patch("baserow.contrib.database.views.handler.ViewHandler.field_value_updated")
+@patch(
+    "baserow.contrib.database.search.handler.SearchHandler.field_value_updated_or_created"
+)
+def test_formula_referencing_fields_add_additional_queries_on_rows_created(
+    mock1, mock2, mock3, data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(table=table, name="Name", primary=True)
+    model = table.get_model()
+
+    # The first time the dependency handler is making an additional for this statement
+    # in the FieldDependencyHandler:
+    # link_row_field_content_type = ContentType.objects.get_for_model(LinkRowField)
+    # so let's create a row first to avoid counting that query
+    RowHandler().force_create_rows(user=user, table=table, rows_values=[{}])
+
+    with CaptureQueriesContext(connection) as captured:
+        RowHandler().force_create_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    f"field_{name_field.id}": "Giulia",
+                }
+            ],
+            model=model,
+        )
+
+    f1 = data_fixture.create_formula_field(
+        table=table,
+        name="F1",
+        formula="field('Name') + '-a'",
+    )
+    model = table.get_model()
+
+    # An UPDATE query to set the formula field value + 1 query due
+    # to FormulaFieldType.after_rows_created
+    with django_assert_num_queries(len(captured.captured_queries) + 2):
+        (r,) = RowHandler().force_create_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    f"field_{name_field.id}": "Giulietta",
+                }
+            ],
+            model=model,
+        )
+    assert getattr(r, f"field_{f1.id}") == "Giulietta-a"
+
+    # A second formula referencing the same field should set the value
+    # in the same UPDATE query
+    f2 = data_fixture.create_formula_field(
+        table=table,
+        name="F2",
+        formula="field('Name') + '-b'",
+    )
+    model = table.get_model()
+
+    with django_assert_num_queries(len(captured.captured_queries) + 2):
+        (r,) = RowHandler().force_create_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    f"field_{name_field.id}": "Stelvio",
+                }
+            ],
+            model=model,
+        )
+    assert getattr(r, f"field_{f1.id}") == "Stelvio-a"
+    assert getattr(r, f"field_{f2.id}") == "Stelvio-b"
+
+    # But a formula referencing another formula requires an additional query
+    # because it needs the result of the first formula to calculate the second
+    f3 = data_fixture.create_formula_field(
+        table=table,
+        name="F3",
+        formula="field('F1') + '-c'",
+    )
+    model = table.get_model()
+
+    # Now a second UPDATE query is needed, so that F3 can use the result
+    # of F1 to correctly calculate its value
+    with django_assert_num_queries(len(captured.captured_queries) + 3):
+        (r,) = RowHandler().force_create_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    f"field_{name_field.id}": "Tonale",
+                }
+            ],
+            model=model,
+        )
+    assert getattr(r, f"field_{f1.id}") == "Tonale-a"
+    assert getattr(r, f"field_{f2.id}") == "Tonale-b"
+    assert getattr(r, f"field_{f3.id}") == "Tonale-a-c"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.rows_updated.send")
+@patch("baserow.contrib.database.views.handler.ViewHandler.field_value_updated")
+@patch(
+    "baserow.contrib.database.search.handler.SearchHandler.field_value_updated_or_created"
+)
+def test_formula_referencing_fields_add_additional_queries_on_rows_updated(
+    mock1, mock2, mock3, data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(table=table, name="Name", primary=True)
+    model = table.get_model()
+
+    # The first time the dependency handler is making an additional for this statement
+    # in the FieldDependencyHandler:
+    # link_row_field_content_type = ContentType.objects.get_for_model(LinkRowField)
+    # so let's create a row first to avoid counting that query
+    (r,) = RowHandler().force_create_rows(user=user, table=table, rows_values=[{}])
+
+    with CaptureQueriesContext(connection) as captured:
+        RowHandler().force_update_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    "id": r.id,
+                    f"field_{name_field.id}": "Giulia",
+                }
+            ],
+            model=model,
+        )
+
+    f1 = data_fixture.create_formula_field(
+        table=table,
+        name="F1",
+        formula="field('Name') + '-a'",
+    )
+    model = table.get_model()
+
+    # An UPDATE query to set the formula field value
+    with django_assert_num_queries(len(captured.captured_queries) + 1):
+        res = RowHandler().force_update_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    "id": r.id,
+                    f"field_{name_field.id}": "Giulietta",
+                }
+            ],
+            model=model,
+        )
+        (r,) = res.updated_rows
+    assert getattr(r, f"field_{f1.id}") == "Giulietta-a"
+
+    # A second formula referencing the same field should set the value
+    # in the same UPDATE query
+    f2 = data_fixture.create_formula_field(
+        table=table,
+        name="F2",
+        formula="field('Name') + '-b'",
+    )
+    model = table.get_model()
+
+    with django_assert_num_queries(len(captured.captured_queries) + 1):
+        res = RowHandler().force_update_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    "id": r.id,
+                    f"field_{name_field.id}": "Stelvio",
+                }
+            ],
+            model=model,
+        )
+        (r,) = res.updated_rows
+    assert getattr(r, f"field_{f1.id}") == "Stelvio-a"
+    assert getattr(r, f"field_{f2.id}") == "Stelvio-b"
+
+    # But a formula referencing another formula requires an additional query
+    # because it needs the result of the first formula to calculate the second
+    f3 = data_fixture.create_formula_field(
+        table=table,
+        name="F3",
+        formula="field('F1') + '-c'",
+    )
+    model = table.get_model()
+
+    # Now a second UPDATE query is needed, so that F3 can use the result
+    # of F1 to correctly calculate its value
+    with django_assert_num_queries(len(captured.captured_queries) + 2):
+        res = RowHandler().force_update_rows(
+            user=user,
+            table=table,
+            rows_values=[
+                {
+                    "id": r.id,
+                    f"field_{name_field.id}": "Tonale",
+                }
+            ],
+            model=model,
+        )
+        (r,) = res.updated_rows
+    assert getattr(r, f"field_{f1.id}") == "Tonale-a"
+    assert getattr(r, f"field_{f2.id}") == "Tonale-b"
+    assert getattr(r, f"field_{f3.id}") == "Tonale-a-c"

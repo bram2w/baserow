@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Set, Tuple, Union
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
@@ -43,7 +43,6 @@ from baserow.core.registry import (
     Registry,
 )
 
-from .deferred_foreign_key_updater import DeferredForeignKeyUpdater
 from .exceptions import (
     FieldTypeAlreadyRegistered,
     FieldTypeDoesNotExist,
@@ -51,6 +50,7 @@ from .exceptions import (
 )
 from .fields import DurationFieldUsingPostgresFormatting
 from .models import Field, LinkRowField, SelectOption
+from .utils import DeferredForeignKeyUpdater
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.dependencies.handler import FieldDependants
@@ -930,6 +930,12 @@ class FieldType(
         if "database_field_select_options" not in id_mapping:
             id_mapping["database_field_select_options"] = {}
 
+        if "database_field_names" not in id_mapping:
+            id_mapping["database_field_names"] = {}
+
+        if table.id not in id_mapping["database_field_names"]:
+            id_mapping["database_field_names"][table.id] = {}
+
         serialized_copy = serialized_values.copy()
         field_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
@@ -947,6 +953,10 @@ class FieldType(
         field.save()
 
         id_mapping["database_fields"][field_id] = field.id
+        # Add the field name to the id mapping so that we can easily find the field
+        # id based on the table id and field name later if any other field references
+        # this field.
+        id_mapping["database_field_names"][table.id][field.name] = field
 
         if self.can_have_select_options:
             for select_option in select_options:
@@ -976,18 +986,12 @@ class FieldType(
         :param id_mapping:
         """
 
-        from baserow.contrib.database.fields.dependencies.handler import (
-            FieldDependencyHandler,
-        )
-
-        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
-
     def after_rows_imported(
         self,
         field: Field,
-        update_collector: "FieldUpdateCollector",
-        field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        update_collector: Optional["FieldUpdateCollector"] = None,
+        field_cache: Optional["FieldCache"] = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         """
         Called on fields in dependency order after all of its rows have been inserted
@@ -1001,15 +1005,6 @@ class FieldType(
         :param update_collector: Any row update statements should be registered into
             this collector.
         """
-
-        for (
-            dependant_field,
-            dependant_field_type,
-            dependency_path,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.after_rows_imported(
-                dependant_field, update_collector, field_cache, dependency_path
-            )
 
     def after_rows_created(
         self,
@@ -1215,30 +1210,61 @@ class FieldType(
 
     def run_periodic_update(
         self,
-        field: Field,
+        fields: List[Field],
         update_collector: "Optional[FieldUpdateCollector]" = None,
         field_cache: "Optional[FieldCache]" = None,
         via_path_to_starting_table: Optional[List[LinkRowField]] = None,
-        all_updated_fields: Optional[List[Field]] = None,
+        already_updated_fields: Optional[List[Field]] = None,
     ):
         """
         This method is called periodically for all the fields of the same type
         that need to be periodically updated. It should be possible to call this method
         recursively for all the fields that depend on the field passed as argument.
 
-        :param field: The field that needs to be updated.
+        :param fields: The list of fields that need to be updated.
         :param update_collector: Any update statements should be passed to this
             collector so they are run correctly at the right time. You should not be
             manually updating field values yourself in this method.
         :param field_cache: A field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the row was created.
-        :param all_updated_fields: A list of fields that have already been updated
+        :param already_updated_fields: A list of fields that have already been updated
             before. That can happen because it was a dependency of another field for
             example.
         """
 
-        return all_updated_fields
+        return already_updated_fields
+
+    def get_field_depdendencies_before_import_serialized(
+        self,
+        serialized_field: Dict[str, Any],
+        serialized_fields_map: Dict[int, Dict[str, Any]],
+        primary_table_fields_map: Dict[int, int],
+    ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
+        """
+        Returns a list of field dependencies that must be imported before this field. If
+        the depenndency is a field in the same table, the field name is returned. If the
+        dependency is a field in a different table, a tuple of the link row field name
+        and the field name is returned.
+
+        :param serialized_field: The serialized field that is being imported.
+        :return: A list of field name dependencies that must be imported before this
+            field.
+        """
+
+        return None
+
+    def valid_for_bulk_update(self, field: Field) -> bool:
+        """
+        Returns whether the field is valid for bulk updating. Fields that need to be
+        updated in a specific order or have dependencies on other fields should return
+        False.
+
+        :param field: The field instance to check.
+        :return: True if the field is valid for bulk updating, False otherwise.
+        """
+
+        return True
 
     def restore_failed(self, field_instance, restore_exception):
         """
@@ -1395,7 +1421,7 @@ class FieldType(
         created_field: Field,
         update_collector: "FieldUpdateCollector",
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         """
         Called when a field is created which the field parameter depends on.
@@ -1432,7 +1458,7 @@ class FieldType(
         updated_old_field: Field,
         update_collector: "FieldUpdateCollector",
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         """
         Called when a field is updated which the field parameter depends on.
@@ -1470,7 +1496,7 @@ class FieldType(
         deleted_field: Field,
         update_collector: "FieldUpdateCollector",
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         """
         Called when a field is deleted which the field parameter depends on.

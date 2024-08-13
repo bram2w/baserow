@@ -6,9 +6,6 @@ from django.test.utils import override_settings
 import pytest
 from faker import Faker
 
-from baserow.contrib.database.fields.deferred_foreign_key_updater import (
-    DeferredForeignKeyUpdater,
-)
 from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
@@ -18,6 +15,7 @@ from baserow.contrib.database.fields.models import (
     URLField,
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -632,7 +630,7 @@ def test_human_readable_values(data_fixture):
         "formula_text": "test FORMULA",
         "formula_link_url_only": "https://google.com",
         "formula_link_with_label": "label (https://google.com)",
-        "formula_multipleselect": "D, C, E",
+        "formula_multipleselect": "C, D, E",
         "lookup": "linked_row_1, linked_row_2, ",
         "autonumber": "2",
         "duration_rollup_sum": "0:04",

@@ -1,5 +1,5 @@
 import typing
-from typing import Dict, Optional, Set, Type
+from typing import Dict, Optional, Set, Tuple, Type
 
 from django.db.models import Expression, Model
 
@@ -7,9 +7,11 @@ from opentelemetry import trace
 
 from baserow.contrib.database.fields.dependencies.types import FieldDependencies
 from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.formula.ast.function import CollapseManyBaserowFunction
 from baserow.contrib.database.formula.ast.tree import (
     BaserowExpression,
     BaserowFieldReference,
+    BaserowFunctionCall,
     BaserowFunctionDefinition,
 )
 from baserow.contrib.database.formula.expression_generator.generator import (
@@ -21,6 +23,7 @@ from baserow.contrib.database.formula.migrations.migrations import (
     BASEROW_FORMULA_VERSION,
 )
 from baserow.contrib.database.formula.parser.ast_mapper import (
+    BaserowFieldReferenceVisitor,
     raw_formula_to_untyped_expression,
 )
 from baserow.contrib.database.formula.parser.update_field_names import (
@@ -60,7 +63,7 @@ def _needs_periodic_update(expression: BaserowExpression):
 def _expression_requires_refresh_after_insert(expression: BaserowExpression):
     """
     WARNING: This function is directly used by migration code. Please ensure
-    backwards compatability when adding fields etc.
+    backwards compatibility when adding fields etc.
 
     Some baserow expressions cannot be computed in a single INSERT xx INTO yy statement.
     For example expressions which reference the rows id. This function calculates if
@@ -81,6 +84,16 @@ def _expression_requires_refresh_after_insert(expression: BaserowExpression):
         FunctionsUsedVisitor()
     )
     return any(f.requires_refresh_after_insert for f in functions_used)
+
+
+def _has_lookup_expressions(expression):
+    expr = expression
+    if expr.is_wrapper:
+        expr = expr.args[0]
+
+    return isinstance(expr, BaserowFunctionCall) and isinstance(
+        expr.function_def, CollapseManyBaserowFunction
+    )
 
 
 class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
@@ -348,6 +361,9 @@ class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
         formula_field.version = BASEROW_FORMULA_VERSION
 
         formula_field.needs_periodic_update = _needs_periodic_update(expression)
+        formula_field.expand_formula_when_referenced = _has_lookup_expressions(
+            expression
+        )
         expression_type.persist_onto_formula_field(formula_field)
         formula_field.requires_refresh_after_insert = refresh_after_insert
         return expression
@@ -366,6 +382,18 @@ class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         return get_parse_tree_for_formula(formula)
+
+    @classmethod
+    def get_dependencies_field_names(cls, formula: str) -> Set[Tuple[str, str]]:
+        """
+        Given a formula string this function returns a set of field names that the
+        formula depends on. This is useful for finding out which fields a formula
+        references so that multiple formula fields can be created in the right order.
+        """
+
+        tree = get_parse_tree_for_formula(formula)
+        dependency_field_names = tree.accept(BaserowFieldReferenceVisitor()) or set()
+        return dependency_field_names
 
     @classmethod
     def recalculate_formula_and_get_update_expression(

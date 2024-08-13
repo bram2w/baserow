@@ -40,11 +40,15 @@ def test_run_periodic_fields_updates(data_fixture):
     with freeze_time("2023-02-27 9:55"):
         workspace = data_fixture.create_workspace(user=user)
         table_model, formula_field = create_table_with_row_in_workspace(workspace)
-        row = table_model.objects.create()
+        row = RowHandler().create_row(
+            user=user, table=table_model.baserow_table, model=table_model
+        )
 
         workspace_2 = data_fixture.create_workspace(user=user)
         table_model_2, formula_field_2 = create_table_with_row_in_workspace(workspace_2)
-        row_2 = table_model_2.objects.create()
+        row_2 = RowHandler().create_row(
+            user=user, table=table_model_2.baserow_table, model=table_model_2
+        )
 
     assert getattr(row, f"field_{formula_field.id}") == datetime(
         2023, 2, 27, 9, 55, 0, tzinfo=timezone.utc
@@ -77,7 +81,8 @@ def test_run_periodic_fields_updates(data_fixture):
 
 @pytest.mark.django_db
 def test_run_periodic_field_type_update_per_workspace(data_fixture):
-    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
 
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
@@ -86,8 +91,7 @@ def test_run_periodic_field_type_update_per_workspace(data_fixture):
             table=table, formula="now()", date_include_time=True
         )
 
-    table_model = table.get_model()
-    row = table_model.objects.create()
+    row = RowHandler().create_row(user=user, table=table)
 
     assert getattr(row, f"field_{field.id}") == datetime(
         2023, 2, 27, 10, 0, 0, tzinfo=timezone.utc
@@ -104,7 +108,8 @@ def test_run_periodic_field_type_update_per_workspace(data_fixture):
 
 @pytest.mark.django_db
 def test_run_field_type_updates_dependant_fields(data_fixture):
-    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
 
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
@@ -116,11 +121,11 @@ def test_run_field_type_updates_dependant_fields(data_fixture):
             table=table, formula=f"field('{field.name}')", date_include_time=True
         )
         dependant_2 = data_fixture.create_formula_field(
-            table=table, formula=f"field('{field.name}')", date_include_time=True
+            table=table, formula=f"field('{dependant.name}')", date_include_time=True
         )
 
     table_model = table.get_model()
-    row = table_model.objects.create()
+    row = RowHandler().create_row(user=user, table=table, model=table_model)
 
     assert getattr(row, f"field_{field.id}") == datetime(
         2023, 2, 27, 10, 15, 0, tzinfo=timezone.utc
@@ -221,7 +226,9 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
     table_model, working_other_formula = create_table_with_now_in_workspace(
         second_updated_workspace
     )
-    row = table_model.objects.create()
+    row = RowHandler().create_row(
+        user=user, table=table_model.baserow_table, model=table_model
+    )
 
     a_day_ago = django_timezone.now() - django_timezone.timedelta(days=1)
     first_updated_workspace = data_fixture.create_workspace(user=user)
@@ -230,7 +237,9 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
     table_model_2, broken_first_formula = create_table_with_now_in_workspace(
         first_updated_workspace
     )
-    row_2 = table_model_2.objects.create()
+    row_2 = RowHandler().create_row(
+        user=user, table=table_model_2.baserow_table, model=table_model_2
+    )
     broken_first_formula.internal_formula = "broken"
     broken_first_formula.save(recalculate=False)
 
@@ -281,7 +290,7 @@ def test_all_formula_that_needs_updates_are_periodically_updated(data_fixture):
             date_include_time=True,
         )
 
-        assert FormulaFieldType().get_fields_needing_periodic_update().count() == 3
+        assert FormulaFieldType().get_fields_needing_periodic_update().count() == 2
 
 
 @pytest.mark.django_db
@@ -299,8 +308,7 @@ def test_run_periodic_field_type_doesnt_update_trashed_table(data_fixture):
             table=table, formula="now()", date_include_time=True
         )
 
-    table_model = table.get_model()
-    row = table_model.objects.create()
+    row = RowHandler().create_row(user=user, table=table)
 
     assert getattr(row, f"field_{field.id}") == original_datetime
 
@@ -330,8 +338,7 @@ def test_run_periodic_field_type_doesnt_update_trashed_database(data_fixture):
             table=table, formula="now()", date_include_time=True
         )
 
-    table_model = table.get_model()
-    row = table_model.objects.create()
+    row = RowHandler().create_row(user=user, table=table)
 
     assert getattr(row, f"field_{field.id}") == original_datetime
 
@@ -361,8 +368,7 @@ def test_run_periodic_field_type_doesnt_update_trashed_workspace(data_fixture):
             table=table, formula="now()", date_include_time=True
         )
 
-    table_model = table.get_model()
-    row = table_model.objects.create()
+    row = RowHandler().create_row(user=user, table=table)
 
     assert getattr(row, f"field_{field.id}") == original_datetime
 

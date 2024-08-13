@@ -30,6 +30,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.test_utils.helpers import (
     AnyInt,
+    AnyStr,
     is_dict_subset,
     setup_interesting_test_table,
 )
@@ -1225,13 +1226,13 @@ def test_search_calendar_rows(api_client, premium_data_fixture):
             "results": [
                 {
                     "id": AnyInt(),
-                    "order": "1.00000000000000000000",
+                    "order": AnyStr(),
                     description_field.db_column: "Lunch with client",
                     date_field.db_column: "2023-01-02",
                 },
                 {
                     "id": AnyInt(),
-                    "order": "1.00000000000000000000",
+                    "order": AnyStr(),
                     description_field.db_column: "Meeting with client",
                     date_field.db_column: "2023-01-02",
                 },

@@ -71,13 +71,16 @@ class FieldCache:
         else:
             return None
 
-    def lookup_specific(self, non_specific_field):
+    def lookup_specific(self, non_specific_field, fetch_if_missing=True):
         try:
             return self._cached_field_by_name_per_table[non_specific_field.table_id][
                 non_specific_field.name
             ]
         except KeyError:
-            return self.cache_field(non_specific_field)
+            if fetch_if_missing:
+                return self.cache_field(non_specific_field)
+            else:
+                return None
 
     def lookup_by_name(self, table, field_name: str):
         try:

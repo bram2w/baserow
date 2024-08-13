@@ -10,9 +10,6 @@ import pytest
 from faker import Faker
 from pytest_unordered import unordered
 
-from baserow.contrib.database.fields.deferred_foreign_key_updater import (
-    DeferredForeignKeyUpdater,
-)
 from baserow.contrib.database.fields.exceptions import (
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     AllProvidedValuesMustBeIntegersOrStrings,
@@ -30,6 +27,7 @@ from baserow.contrib.database.fields.models import (
     SingleSelectField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler

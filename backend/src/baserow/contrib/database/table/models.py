@@ -1233,7 +1233,11 @@ class Table(
         # trashed field attributes then model.objects.create will fail as the
         # trashed columns will be given null values by django triggering not null
         # constraints in the database.
-        fields_query = self.field_set(manager="objects_and_trash").all()
+        fields_query = (
+            self.field_set(manager="objects_and_trash")
+            .select_related("table", "content_type")
+            .all()
+        )
 
         # If the field ids are provided we must only fetch the fields of which the
         # ids are in that list.

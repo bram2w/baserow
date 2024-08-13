@@ -105,7 +105,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "duration_rollup_sum": "0:00",
     "duration_rollup_avg": "0:00",
     "lookup": [],
-    "uuid": "00000000-0000-4000-8000-000000000002",
+    "uuid": "00000000-0000-4000-8000-000000000001",
     "autonumber": 1,
     "password": "",
     "ai": ""
@@ -211,8 +211,8 @@ def test_can_export_every_interesting_different_field_to_json(
         "url": "https://google.com"
     },
     "formula_multipleselect": [
-        "D",
         "C",
+        "D",
         "E"
     ],
     "count": 3,
@@ -224,7 +224,7 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_2",
         ""
     ],
-    "uuid": "00000000-0000-4000-8000-000000000003",
+    "uuid": "00000000-0000-4000-8000-000000000002",
     "autonumber": 2,
     "password": true,
     "ai": "I'm an AI."
@@ -376,7 +376,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <duration-rollup-sum>0:00</duration-rollup-sum>
       <duration-rollup-avg>0:00</duration-rollup-avg>
       <lookup/>
-      <uuid>00000000-0000-4000-8000-000000000002</uuid>
+      <uuid>00000000-0000-4000-8000-000000000001</uuid>
       <autonumber>1</autonumber>
       <password/>
       <ai/>
@@ -482,8 +482,8 @@ def test_can_export_every_interesting_different_field_to_xml(
          <url>https://google.com</url>
       </formula-link-url-only>
       <formula-multipleselect>
-            <item>D</item>
             <item>C</item>
+            <item>D</item>
             <item>E</item>
       </formula-multipleselect>
       <count>3</count>
@@ -495,7 +495,7 @@ def test_can_export_every_interesting_different_field_to_xml(
          <item>linked_row_2</item>
          <item/>
       </lookup>
-      <uuid>00000000-0000-4000-8000-000000000003</uuid>
+      <uuid>00000000-0000-4000-8000-000000000002</uuid>
       <autonumber>2</autonumber>
       <password>true</password>
       <ai>I'm an AI.</ai>

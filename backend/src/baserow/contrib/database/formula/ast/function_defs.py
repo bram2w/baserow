@@ -58,6 +58,7 @@ from django.db.models.functions.datetime import TimezoneMixin
 from baserow.contrib.database.fields.models import NUMBER_MAX_DECIMAL_PLACES
 from baserow.contrib.database.formula.ast.function import (
     BaserowFunctionDefinition,
+    CollapseManyBaserowFunction,
     NumOfArgsBetween,
     NumOfArgsGreaterThan,
     OneArgumentBaserowFunction,
@@ -2177,7 +2178,7 @@ def aggregate_multiple_selects_options(
     )
 
 
-class BaserowArrayAgg(OneArgumentBaserowFunction):
+class BaserowArrayAgg(OneArgumentBaserowFunction, CollapseManyBaserowFunction):
     type = "array_agg"
     arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
     aggregate = True
@@ -2200,7 +2201,7 @@ class BaserowArrayAgg(OneArgumentBaserowFunction):
         return array_agg_expression(args, context, nest_in_value=True)
 
 
-class BaserowArrayAggNoNesting(BaserowArrayAgg):
+class BaserowArrayAggNoNesting(BaserowArrayAgg, CollapseManyBaserowFunction):
     type = "array_agg_no_nesting"
 
     def to_django_expression(self, arg: Expression) -> Expression:
@@ -2214,7 +2215,9 @@ class BaserowArrayAggNoNesting(BaserowArrayAgg):
         return array_agg_expression(args, context, nest_in_value=False)
 
 
-class BaserowMultipleSelectOptionsAgg(OneArgumentBaserowFunction):
+class BaserowMultipleSelectOptionsAgg(
+    OneArgumentBaserowFunction, CollapseManyBaserowFunction
+):
     type = "multiple_select_options_agg"
     arg_type = [MustBeManyExprChecker(BaserowFormulaMultipleSelectType)]
     aggregate = True
@@ -2238,7 +2241,7 @@ class BaserowMultipleSelectOptionsAgg(OneArgumentBaserowFunction):
         return super().to_django_expression_given_args([expr], context)
 
 
-class Baserow2dArrayAgg(OneArgumentBaserowFunction):
+class Baserow2dArrayAgg(OneArgumentBaserowFunction, CollapseManyBaserowFunction):
     type = "array_agg_unnesting"
     arg_type = [MustBeManyExprChecker(BaserowFormulaArrayType)]
     aggregate = True

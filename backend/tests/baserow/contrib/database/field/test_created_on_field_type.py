@@ -249,7 +249,7 @@ def test_created_on_field_adjacent_row(data_fixture):
 
 
 @pytest.mark.django_db
-def test_created_on_and_update_on_values_are_consinstent_when_a_row_is_created_or_edited(
+def test_created_on_and_update_on_values_are_consistent_when_a_row_is_created_or_edited(
     data_fixture,
 ):
     user = data_fixture.create_user()

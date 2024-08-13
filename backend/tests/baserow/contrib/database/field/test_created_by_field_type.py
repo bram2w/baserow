@@ -4,11 +4,9 @@ from django.core.exceptions import ValidationError
 
 import pytest
 
-from baserow.contrib.database.fields.deferred_foreign_key_updater import (
-    DeferredForeignKeyUpdater,
-)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler

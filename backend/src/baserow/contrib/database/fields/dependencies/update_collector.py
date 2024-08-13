@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List, NamedTuple, Optional, Set, Tuple, cast
+from typing import Dict, List, Optional, Set, Tuple, cast
 
 from django.db.models import Expression, Q, Value
 
@@ -22,6 +22,7 @@ class PathBasedUpdateStatementCollector:
         table: Table,
         connection_here: Optional[LinkRowField],
         connection_is_broken: bool,
+        update_changes_only: bool = False,
     ):
         """
         Collects updates statements for a particular table and then can execute them
@@ -31,6 +32,11 @@ class PathBasedUpdateStatementCollector:
         :param table: The table this collector is holding updates for.
         :param connection_here: The link row field that was used to connect this
             collector to its parent collector, if it has one.
+        :param connection_is_broken: If True then this collector is for a table which
+            has had its connection to the starting table broken, so all fields in the
+            table need to be updated.
+        :param update_changes_only: If True then only rows which have had their
+            values changed will be updated, otherwise all rows will be updated.
         """
 
         self.update_statements: Dict[str, Expression] = {}
@@ -38,6 +44,7 @@ class PathBasedUpdateStatementCollector:
         self.sub_paths: Dict[str, PathBasedUpdateStatementCollector] = {}
         self.connection_here: Optional[LinkRowField] = connection_here
         self.connection_is_broken = connection_is_broken
+        self.update_changes_only = update_changes_only
 
     def add_update_statement(
         self,
@@ -181,20 +188,30 @@ class PathBasedUpdateStatementCollector:
         updated_rows = 0
         if self.update_statements:
             annotations, filters = {}, Q()
-            for field, expr in self.update_statements.items():
-                if expr is None or not field.startswith("field_"):
-                    continue
 
-                annotated_field = f"{field}_expr"
-                annotations[annotated_field] = expr
-                # Because the expression can evaluate to null and because of how the
-                # comparison with null should be handle in SQL
-                # (https://www.postgresql.org/docs/15/functions-comparison.html), we
-                # need to properly filter rows to correctly update only the ones that
-                # need to be updated.
-                filters |= Q(
-                    **{f"{field}__isnull": False, f"{annotated_field}__isnull": True}
-                ) | ~Q(**{field: expr})
+            # If we are only updating changes, we need to filter out rows that don't
+            # need to be updated. Because of how postgres works, this could save a lot
+            # of disk space and IO, at the cost of a more complex query and a longer
+            # execution time, but if we're updating an entire field or only certain
+            # rows, it's better to skip this optimization.
+            if self.update_changes_only:
+                for field, expr in self.update_statements.items():
+                    if expr is None or not field.startswith("field_"):
+                        continue
+
+                    annotated_field = f"{field}_expr"
+                    annotations[annotated_field] = expr
+                    # Because the expression can evaluate to null and because of how the
+                    # comparison with null should be handle in SQL
+                    # (https://www.postgresql.org/docs/15/functions-comparison.html), we
+                    # need to properly filter rows to correctly update only the ones
+                    # that need to be updated.
+                    filters |= Q(
+                        **{
+                            f"{field}__isnull": False,
+                            f"{annotated_field}__isnull": True,
+                        }
+                    ) | ~Q(**{field: expr})
 
             updated_rows = (
                 qs.annotate(**annotations)
@@ -247,9 +264,23 @@ class PathBasedUpdateStatementCollector:
         return filters
 
 
-class UpdatedField(NamedTuple):
-    field: Field
-    send_field_update_signal: bool = True
+class FieldUpdatesTracker(defaultdict):
+    """
+    Utility class to track which fields have been updated and whether a field_updated
+    signal should be sent for them.
+    """
+
+    def __init__(self):
+        super().__init__(dict)
+
+    def add_field(self, field: Field, send_field_updated_signal: bool = True):
+        self[field.table][field] = send_field_updated_signal
+
+    def tables(self):
+        return self.keys()
+
+    def fields(self, table):
+        return self[table].keys()
 
 
 class FieldUpdateCollector:
@@ -265,25 +296,42 @@ class FieldUpdateCollector:
         starting_table: Table,
         starting_row_ids: StartingRowIdsType = None,
         deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]] = None,
+        update_changes_only: bool = False,
     ):
         """
-
         :param starting_table: The table where the triggering field update begins.
-        :param starting_row_ids: If the update starts from specific rows in the
-            starting table set this and all update statements executed by this collector
-            will only update rows which join back to these starting rows.
+        :param starting_row_ids: If the update starts from specific rows in the starting
+            table set this and all update statements executed by this collector will
+            only update rows which join back to these starting rows.
+        :param deleted_m2m_rels_per_link_field: A dictionary per link field of rows in
+            the table it links to which have had their connections removed. This is used
+            to ensure that rows which have had their connections removed are still
+            updated when the starting row ids are set.
+        :param update_changes_only: If True then only rows which have had their values
+            changed will be updated, otherwise the update statement will update all the
+            rows in the table. Because of how Postgres works, this could save a lot of
+            disk space and IO, at the cost of a more complex query and a longer
+            execution time.
         """
 
-        self._updated_fields_per_table: Dict[
-            int, Dict[int, UpdatedField]
-        ] = defaultdict(dict)
-        self._updated_tables = {}
+        # Track the fields which have been updated since last call to apply_updates
+        self._pending_field_updates = FieldUpdatesTracker()
+        # Track all fields which have been updated in this collector
+        self._all_field_updates = FieldUpdatesTracker()
+
         self._starting_row_ids = starting_row_ids
         self._starting_table = starting_table
         self._deleted_m2m_rels_per_link_field = deleted_m2m_rels_per_link_field
+        self.update_changes_only = update_changes_only
 
-        self._update_statement_collector = PathBasedUpdateStatementCollector(
-            self._starting_table, connection_here=None, connection_is_broken=False
+        self._update_statement_collector = self._init_update_statement_collector()
+
+    def _init_update_statement_collector(self):
+        return PathBasedUpdateStatementCollector(
+            self._starting_table,
+            connection_here=None,
+            connection_is_broken=False,
+            update_changes_only=self.update_changes_only,
         )
 
     def add_field_with_pending_update_statement(
@@ -307,10 +355,9 @@ class FieldUpdateCollector:
             starting rows via this path are updated.
         """
 
-        # noinspection PyTypeChecker
-        self._updated_fields_per_table[field.table_id][field.id] = UpdatedField(field)
-        if field.table_id not in self._updated_tables:
-            self._updated_tables[field.table_id] = field.table
+        self._all_field_updates.add_field(field)
+        self._pending_field_updates.add_field(field)
+
         self._update_statement_collector.add_update_statement(
             field, update_statement, via_path_to_starting_table
         )
@@ -337,12 +384,8 @@ class FieldUpdateCollector:
             for this field at the end.
         """
 
-        # noinspection PyTypeChecker
-        self._updated_fields_per_table[field.table_id][field.id] = UpdatedField(
-            field, send_field_updated_signal
-        )
-        if field.table_id not in self._updated_tables:
-            self._updated_tables[field.table_id] = field.table
+        self._all_field_updates.add_field(field, send_field_updated_signal)
+
         self._update_statement_collector.mark_field_as_changed(
             field, via_path_to_starting_table
         )
@@ -353,11 +396,12 @@ class FieldUpdateCollector:
         update queries as possible and return the number of updated rows.
         """
 
-        return self._update_statement_collector.execute_all(
+        updated_rows_count = self._update_statement_collector.execute_all(
             field_cache,
             self._starting_row_ids,
             deleted_m2m_rels_per_link_field=self._deleted_m2m_rels_per_link_field,
         )
+        return updated_rows_count
 
     def apply_updates_and_get_updated_fields(
         self, field_cache: FieldCache, skip_search_updates=False
@@ -368,10 +412,9 @@ class FieldUpdateCollector:
         :return: The list of all fields which have been updated in the starting table.
         """
 
-        self.apply_updates(field_cache)
-
-        if not skip_search_updates:
-            for table in self._updated_tables.values():
+        updated_rows_count = self.apply_updates(field_cache)
+        if updated_rows_count > 0 and not skip_search_updates:
+            for table in self._pending_field_updates.tables():
                 if not self._starting_table or table.id != self._starting_table.id:
                     if self._starting_row_ids is not None:
                         # The cascade was only for some specific rows and not the
@@ -382,10 +425,17 @@ class FieldUpdateCollector:
                     else:
                         # The cascade was for the entire field
                         SearchHandler.entire_field_values_changed_or_created(
-                            table, self._for_table(table)
+                            table, self._get_updated_fields_in_table(table)
                         )
 
-        return self._for_table(self._starting_table)
+        updated_fields = self._get_updated_fields_in_table(self._starting_table)
+
+        # Reset the pending field updates so next time apply_updates is called it
+        # will only send signals for the newly updated fields.
+        self._pending_field_updates = FieldUpdatesTracker()
+        self._update_statement_collector = self._init_update_statement_collector()
+
+        return updated_fields
 
     def send_additional_field_updated_signals(self):
         """
@@ -409,22 +459,23 @@ class FieldUpdateCollector:
                 )
 
     def send_force_refresh_signals_for_all_updated_tables(self):
-        for table in self._updated_tables.values():
+        for table in self._all_field_updates.tables():
             table_updated.send(self, table=table, user=None, force_table_refresh=True)
 
     def _get_updated_fields_to_send_signals_for_per_table(
         self,
     ) -> List[Tuple[Field, List[Field]]]:
         result = []
-        for fields_dict in self._updated_fields_per_table.values():
+
+        for table in self._all_field_updates.tables():
             fields = [
-                f.field for f in fields_dict.values() if f.send_field_update_signal
+                field
+                for field in self._all_field_updates.fields(table)
+                if self._all_field_updates[table][field]
             ]
             if fields:
                 result.append((fields[0], fields[1:]))
         return result
 
-    def _for_table(self, table) -> List[Field]:
-        return [
-            f.field for f in self._updated_fields_per_table.get(table.id, {}).values()
-        ]
+    def _get_updated_fields_in_table(self, table) -> List[Field]:
+        return [field for field in self._pending_field_updates.fields(table)]

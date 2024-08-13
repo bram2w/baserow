@@ -344,14 +344,14 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                 },
                 "formula_multipleselect": [
                     {
-                        "color": "yellow",
-                        "id": SelectOption.objects.get(value="D").id,
-                        "value": "D",
-                    },
-                    {
                         "color": "orange",
                         "id": SelectOption.objects.get(value="C").id,
                         "value": "C",
+                    },
+                    {
+                        "color": "yellow",
+                        "id": SelectOption.objects.get(value="D").id,
+                        "value": "D",
                     },
                     {
                         "color": "green",
@@ -374,7 +374,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "label": "label",
                     "url": "https://google.com",
                 },
-                "uuid": "00000000-0000-4000-8000-000000000003",
+                "uuid": "00000000-0000-4000-8000-000000000002",
                 "autonumber": 2,
                 "password": True,
                 "ai": "I'm an AI.",

@@ -1543,3 +1543,32 @@ def test_can_perm_delete_application_which_links_to_self(data_fixture):
         table_a.get_database_table_name() not in connection.introspection.table_names()
     )
     assert TrashEntry.objects.count() == 0
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.rows_created.send")
+def test_trash_and_restore_rows_in_batch_will_restore_formula_fields(
+    send_mock, data_fixture
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(database=database)
+    name = data_fixture.create_text_field(table=table, name="Name")
+    f_name = FieldHandler().create_field(
+        user, table, "formula", name="f1", formula="field('Name')"
+    )
+    f_f_name = FieldHandler().create_field(
+        user, table, "formula", name="f2", formula="field('f1')"
+    )
+
+    with patch("baserow.contrib.database.rows.signals.rows_created.send"):
+        row = RowHandler().create_row(user, table, values={name.db_column: "John"})
+
+    TrashHandler.trash(user, database.workspace, database, row)
+
+    TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
+
+    send_mock.assert_called_once()
+    restored_row = send_mock.call_args[1]["rows"][0]
+    assert getattr(restored_row, f_name.db_column) == "John"
+    assert getattr(restored_row, f_f_name.db_column) == "John"

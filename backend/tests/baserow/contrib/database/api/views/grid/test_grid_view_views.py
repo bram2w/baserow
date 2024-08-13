@@ -1855,8 +1855,7 @@ def test_can_get_aggregation_if_result_is_nan(api_client, data_fixture):
     # This formula will resolve  as NaN for every row
     formula_field = data_fixture.create_formula_field(table=table, formula="1 / 0")
 
-    model = table.get_model()
-    model.objects.create()
+    RowHandler().create_row(user, table)
 
     ViewHandler().update_field_options(
         view=grid_view,
@@ -2762,14 +2761,14 @@ def test_public_view_aggregations_adhoc_filtering_invalid_advanced_filters(
 
 @pytest.mark.django_db
 def test_can_get_public_aggregation_if_result_is_nan(api_client, data_fixture):
-    table = data_fixture.create_database_table()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table, public=True, slug="abc")
 
     # This formula will resolve  as NaN for every row
     formula_field = data_fixture.create_formula_field(table=table, formula="1 / 0")
 
-    model = table.get_model()
-    model.objects.create()
+    RowHandler().create_row(user=user, table=table, values={})
 
     ViewHandler().update_field_options(
         view=grid_view,

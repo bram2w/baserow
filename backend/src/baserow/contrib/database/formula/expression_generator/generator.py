@@ -423,13 +423,13 @@ class BaserowExpressionToDjangoExpressionGenerator(
                 output_field=model_field,
             )
 
-    def _wrap_in_subquery(self, select_option_extractor, db_column):
+    def _wrap_in_subquery(self, subquery_expression, db_column):
         filters = {f"{db_column}__isnull": False}
 
         return ExpressionWrapper(
             Subquery(
                 self.model.objects.filter(id=OuterRef("id"), **filters).values(
-                    result=select_option_extractor
+                    result=subquery_expression
                 )
             ),
             output_field=JSONField(),

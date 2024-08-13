@@ -92,32 +92,33 @@ def test_equal_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "Test",
-            f"field_{long_text_field.id}": "Long",
-            f"field_{integer_field.id}": 10,
-            f"field_{decimal_field.id}": 20.20,
-            f"field_{boolean_field.id}": True,
-        }
-    )
-    row_2 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{integer_field.id}": None,
-            f"field_{decimal_field.id}": None,
-            f"field_{boolean_field.id}": False,
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "NOT",
-            f"field_{long_text_field.id}": "NOT2",
-            f"field_{integer_field.id}": 99,
-            f"field_{decimal_field.id}": 99.99,
-            f"field_{boolean_field.id}": False,
-        }
+    row, row_2, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "Test",
+                f"field_{long_text_field.id}": "Long",
+                f"field_{integer_field.id}": 10,
+                f"field_{decimal_field.id}": 20.20,
+                f"field_{boolean_field.id}": True,
+            },
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{integer_field.id}": None,
+                f"field_{decimal_field.id}": None,
+                f"field_{boolean_field.id}": False,
+            },
+            {
+                f"field_{text_field.id}": "NOT",
+                f"field_{long_text_field.id}": "NOT2",
+                f"field_{integer_field.id}": 99,
+                f"field_{decimal_field.id}": 99.99,
+                f"field_{boolean_field.id}": False,
+            },
+        ],
+        model=model,
     )
 
     view_filter = data_fixture.create_view_filter(
@@ -227,32 +228,33 @@ def test_not_equal_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "Test",
-            f"field_{long_text_field.id}": "Long",
-            f"field_{integer_field.id}": 10,
-            f"field_{decimal_field.id}": 20.20,
-            f"field_{boolean_field.id}": True,
-        }
-    )
-    row_2 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{integer_field.id}": None,
-            f"field_{decimal_field.id}": None,
-            f"field_{boolean_field.id}": False,
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "NOT",
-            f"field_{long_text_field.id}": "NOT2",
-            f"field_{integer_field.id}": 99,
-            f"field_{decimal_field.id}": 99.99,
-            f"field_{boolean_field.id}": False,
-        }
+    row, row_2, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "Test",
+                f"field_{long_text_field.id}": "Long",
+                f"field_{integer_field.id}": 10,
+                f"field_{decimal_field.id}": 20.20,
+                f"field_{boolean_field.id}": True,
+            },
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{integer_field.id}": None,
+                f"field_{decimal_field.id}": None,
+                f"field_{boolean_field.id}": False,
+            },
+            {
+                f"field_{text_field.id}": "NOT",
+                f"field_{long_text_field.id}": "NOT2",
+                f"field_{integer_field.id}": 99,
+                f"field_{decimal_field.id}": 99.99,
+                f"field_{boolean_field.id}": False,
+            },
+        ],
+        model=model,
     )
 
     view_filter = data_fixture.create_view_filter(
@@ -395,36 +397,37 @@ def test_contains_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "My name is John Doe.",
-            f"field_{long_text_field.id}": "Long text that is not empty.",
-            f"field_{date_field.id}": "2020-02-01 01:23",
-            f"field_{number_field.id}": "98989898",
-            f"field_{single_select_field.id}": option_a,
-        }
+    row, _, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "My name is John Doe.",
+                f"field_{long_text_field.id}": "Long text that is not empty.",
+                f"field_{date_field.id}": "2020-02-01 01:23",
+                f"field_{number_field.id}": "98989898",
+                f"field_{single_select_field.id}": option_a,
+                f"field_{multiple_select_field.id}": [option_c.id, option_d.id],
+            },
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{date_field.id}": None,
+                f"field_{number_field.id}": None,
+                f"field_{single_select_field.id}": None,
+            },
+            {
+                f"field_{text_field.id}": "This is a test field.",
+                f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+                "contains.\n A multiline approach.",
+                f"field_{date_field.id}": "0001-01-02 00:12",
+                f"field_{number_field.id}": "10000",
+                f"field_{single_select_field.id}": option_b,
+                f"field_{multiple_select_field.id}": [option_c.id],
+            },
+        ],
+        model=model,
     )
-    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
-    model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{date_field.id}": None,
-            f"field_{number_field.id}": None,
-            f"field_{single_select_field.id}": None,
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "This is a test field.",
-            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
-            "contains.\n A multiline approach.",
-            f"field_{date_field.id}": "0001-01-01 00:12",
-            f"field_{number_field.id}": "10000",
-            f"field_{single_select_field.id}": option_b,
-        }
-    )
-    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains", value="john"
@@ -603,38 +606,37 @@ def test_contains_not_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "My name is John Doe.",
-            f"field_{long_text_field.id}": "Long text that is not empty.",
-            f"field_{date_field.id}": "2020-02-01 01:23",
-            f"field_{number_field.id}": "98989898",
-            f"field_{single_select_field.id}": option_a,
-        }
+    row, row_2, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "My name is John Doe.",
+                f"field_{long_text_field.id}": "Long text that is not empty.",
+                f"field_{date_field.id}": "2020-02-01 01:23",
+                f"field_{number_field.id}": "98989898",
+                f"field_{single_select_field.id}": option_a,
+                f"field_{multiple_select_field.id}": [option_c.id, option_d.id],
+            },
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{date_field.id}": None,
+                f"field_{number_field.id}": None,
+                f"field_{single_select_field.id}": None,
+            },
+            {
+                f"field_{text_field.id}": "This is a test field.",
+                f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+                "contains.\n A multiline approach.",
+                f"field_{date_field.id}": "0001-01-02 00:12",
+                f"field_{number_field.id}": "10000",
+                f"field_{single_select_field.id}": option_b,
+                f"field_{multiple_select_field.id}": [option_d.id],
+            },
+        ],
+        model=model,
     )
-    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
-
-    row_2 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{date_field.id}": None,
-            f"field_{number_field.id}": None,
-            f"field_{single_select_field.id}": None,
-        }
-    )
-
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "This is a test field.",
-            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
-            "contains.\n A multiline approach.",
-            f"field_{date_field.id}": "0001-01-01 00:12",
-            f"field_{number_field.id}": "10000",
-            f"field_{single_select_field.id}": option_b,
-        }
-    )
-    getattr(row_3, f"field_{multiple_select_field.id}").set([option_d.id])
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains_not", value="john"
@@ -819,36 +821,37 @@ def test_contains_word_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "My name is John Doe.",
-            f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
-            f"field_{url_field.id}": "https://www.example.com",
-            f"field_{email_field.id}": "test.user@example.com",
-            f"field_{single_select_field.id}": option_a,
-        }
+    row, row_2, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "My name is John Doe.",
+                f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
+                f"field_{url_field.id}": "https://www.example.com",
+                f"field_{email_field.id}": "test.user@example.com",
+                f"field_{single_select_field.id}": option_a,
+                f"field_{multiple_select_field.id}": [option_c.id, option_d.id],
+            },
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{url_field.id}": "",
+                f"field_{email_field.id}": "",
+                f"field_{single_select_field.id}": None,
+            },
+            {
+                f"field_{text_field.id}": "This is a test field with the word Johny.",
+                f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+                "contains.\n A multiline approach.",
+                f"field_{url_field.id}": "https://www.examplewebsite.com",
+                f"field_{email_field.id}": "test.user@examplewebsite.com",
+                f"field_{single_select_field.id}": option_b,
+                f"field_{multiple_select_field.id}": [option_c.id],
+            },
+        ],
+        model=model,
     )
-    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
-    model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{url_field.id}": "",
-            f"field_{email_field.id}": "",
-            f"field_{single_select_field.id}": None,
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "This is a test field with the word Johny.",
-            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
-            "contains.\n A multiline approach.",
-            f"field_{url_field.id}": "https://www.examplewebsite.com",
-            f"field_{email_field.id}": "test.user@examplewebsite.com",
-            f"field_{single_select_field.id}": option_b,
-        }
-    )
-    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains_word", value="John"
@@ -1011,36 +1014,37 @@ def test_doesnt_contain_word_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "My name is John Doe.",
-            f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
-            f"field_{url_field.id}": "https://www.example.com",
-            f"field_{email_field.id}": "test.user@example.com",
-            f"field_{single_select_field.id}": option_a,
-        }
+    row, row_2, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "My name is John Doe.",
+                f"field_{long_text_field.id}": "Long text that is not empty, but also not multilined.",
+                f"field_{url_field.id}": "https://www.example.com",
+                f"field_{email_field.id}": "test.user@example.com",
+                f"field_{single_select_field.id}": option_a,
+                f"field_{multiple_select_field.id}": [option_c.id, option_d.id],
+            },
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{url_field.id}": "",
+                f"field_{email_field.id}": "",
+                f"field_{single_select_field.id}": None,
+            },
+            {
+                f"field_{text_field.id}": "This is a test field with the word Johny.",
+                f"field_{long_text_field.id}": "This text is a bit longer, but it also "
+                "contains.\n A multiline approach.",
+                f"field_{url_field.id}": "https://www.examplewebsite.com",
+                f"field_{email_field.id}": "test.user@examplewebsite.com",
+                f"field_{single_select_field.id}": option_b,
+                f"field_{multiple_select_field.id}": [option_c.id],
+            },
+        ],
+        model=model,
     )
-    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
-    model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{url_field.id}": "",
-            f"field_{email_field.id}": "",
-            f"field_{single_select_field.id}": None,
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "This is a test field with the word Johny.",
-            f"field_{long_text_field.id}": "This text is a bit longer, but it also "
-            "contains.\n A multiline approach.",
-            f"field_{url_field.id}": "https://www.examplewebsite.com",
-            f"field_{email_field.id}": "test.user@examplewebsite.com",
-            f"field_{single_select_field.id}": option_b,
-        }
-    )
-    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="doesnt_contain_word", value="John"
@@ -3382,61 +3386,75 @@ def test_empty_filter_type(data_fixture):
         type_name="link_row",
         link_row_table=tmp_table,
     )
-    tmp_row = tmp_table.get_model().objects.create(**{f"field_{tmp_field.id}": "Test"})
+    file_a = data_fixture.create_user_file(
+        original_name=f"a.txt",
+        unique=f"hashed",
+        sha256_hash="name",
+    )
+    file_b = data_fixture.create_user_file(
+        original_name=f"b.txt",
+        unique=f"other",
+        sha256_hash="name",
+    )
+
+    tmp_row = RowHandler().create_row(
+        user, tmp_table, {f"field_{tmp_field.id}": "Test"}
+    )
 
     handler = ViewHandler()
     model = table.get_model()
 
-    row = model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{integer_field.id}": None,
-            f"field_{decimal_field.id}": None,
-            f"field_{date_field.id}": None,
-            f"field_{date_time_field.id}": None,
-            f"field_{boolean_field.id}": False,
-            f"field_{file_field.id}": [],
-            f"field_{single_select_field.id}_id": None,
-        }
+    row, row_2, row_3 = RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{integer_field.id}": None,
+                f"field_{decimal_field.id}": None,
+                f"field_{date_field.id}": None,
+                f"field_{date_time_field.id}": None,
+                f"field_{boolean_field.id}": False,
+                f"field_{file_field.id}": [],
+                f"field_{single_select_field.id}_id": None,
+            },
+            {
+                f"field_{text_field.id}": "Value",
+                f"field_{long_text_field.id}": "Value",
+                f"field_{integer_field.id}": 10,
+                f"field_{decimal_field.id}": 1022,
+                f"field_{date_field.id}": date(2020, 6, 17),
+                f"field_{date_time_field.id}": datetime(
+                    2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
+                ),
+                f"field_{boolean_field.id}": True,
+                f"field_{file_field.id}": [{"name": file_a.name}],
+                f"field_{single_select_field.id}_id": option_1.id,
+                f"field_{link_row_field.id}": [tmp_row.id],
+                f"field_{multiple_select_field.id}": [option_2.id],
+            },
+            {
+                f"field_{text_field.id}": "other value",
+                f"field_{long_text_field.id}": " ",
+                f"field_{integer_field.id}": 0,
+                f"field_{decimal_field.id}": 0.00,
+                f"field_{date_field.id}": date(1970, 1, 1),
+                f"field_{date_time_field.id}": datetime(
+                    1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc
+                ),
+                f"field_{boolean_field.id}": True,
+                f"field_{file_field.id}": [
+                    {"name": file_a.name},
+                    {"name": file_b.name},
+                ],
+                f"field_{single_select_field.id}_id": option_1.id,
+                f"field_{link_row_field.id}": [tmp_row.id],
+                f"field_{multiple_select_field.id}": [option_2.id, option_3.id],
+            },
+        ],
+        model=model,
     )
-    row_2 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "Value",
-            f"field_{long_text_field.id}": "Value",
-            f"field_{integer_field.id}": 10,
-            f"field_{decimal_field.id}": 1022,
-            f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": datetime(
-                2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
-            ),
-            f"field_{boolean_field.id}": True,
-            f"field_{file_field.id}": [{"name": "test_file.png"}],
-            f"field_{single_select_field.id}_id": option_1.id,
-        }
-    )
-    getattr(row_2, f"field_{link_row_field.id}").add(tmp_row.id)
-    getattr(row_2, f"field_{multiple_select_field.id}").add(option_2.id)
-    row_3 = model.objects.create(
-        **{
-            f"field_{text_field.id}": " ",
-            f"field_{long_text_field.id}": " ",
-            f"field_{integer_field.id}": 0,
-            f"field_{decimal_field.id}": 0.00,
-            f"field_{date_field.id}": date(1970, 1, 1),
-            f"field_{date_time_field.id}": datetime(
-                1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc
-            ),
-            f"field_{boolean_field.id}": True,
-            f"field_{file_field.id}": [
-                {"name": "test_file.png"},
-                {"name": "another_file.jpg"},
-            ],
-            f"field_{single_select_field.id}_id": option_1.id,
-        }
-    )
-    getattr(row_3, f"field_{link_row_field.id}").add(tmp_row.id)
-    getattr(row_3, f"field_{multiple_select_field.id}").add(option_2.id, option_3.id)
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="empty", value=""
@@ -3513,6 +3531,11 @@ def test_not_empty_filter_type(data_fixture):
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
     file_field = data_fixture.create_file_field(table=table)
+    file_a = data_fixture.create_user_file(
+        original_name=f"a.txt",
+        unique=f"hashed",
+        sha256_hash="name",
+    )
     single_select_field = data_fixture.create_single_select_field(table=table)
     option_1 = data_fixture.create_select_option(field=single_select_field)
     populated_formula_field = data_fixture.create_formula_field(
@@ -3540,37 +3563,39 @@ def test_not_empty_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    model.objects.create(
-        **{
-            f"field_{text_field.id}": "",
-            f"field_{long_text_field.id}": "",
-            f"field_{integer_field.id}": None,
-            f"field_{decimal_field.id}": None,
-            f"field_{date_field.id}": None,
-            f"field_{date_time_field.id}": None,
-            f"field_{boolean_field.id}": False,
-            f"field_{file_field.id}": [],
-            f"field_{single_select_field.id}": None,
-        }
+    _, row_2 = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{text_field.id}": "",
+                f"field_{long_text_field.id}": "",
+                f"field_{integer_field.id}": None,
+                f"field_{decimal_field.id}": None,
+                f"field_{date_field.id}": None,
+                f"field_{date_time_field.id}": None,
+                f"field_{boolean_field.id}": False,
+                f"field_{file_field.id}": [],
+                f"field_{single_select_field.id}": None,
+            },
+            {
+                f"field_{text_field.id}": "Value",
+                f"field_{long_text_field.id}": "Value",
+                f"field_{integer_field.id}": 10,
+                f"field_{decimal_field.id}": 1022,
+                f"field_{date_field.id}": date(2020, 6, 17),
+                f"field_{date_time_field.id}": datetime(
+                    2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
+                ),
+                f"field_{boolean_field.id}": True,
+                f"field_{file_field.id}": [{"name": file_a.name}],
+                f"field_{single_select_field.id}_id": option_1.id,
+                f"field_{link_row_field.id}": [tmp_row.id],
+                f"field_{multiple_select_field.id}": [option_2.id, option_3.id],
+            },
+        ],
+        model=model,
     )
-    row_2 = model.objects.create(
-        **{
-            f"field_{text_field.id}": "Value",
-            f"field_{long_text_field.id}": "Value",
-            f"field_{integer_field.id}": 10,
-            f"field_{decimal_field.id}": 1022,
-            f"field_{date_field.id}": date(2020, 6, 17),
-            f"field_{date_time_field.id}": datetime(
-                2020, 6, 17, 1, 30, 0, tzinfo=timezone.utc
-            ),
-            f"field_{boolean_field.id}": True,
-            f"field_{file_field.id}": [{"name": "test_file.png"}],
-            f"field_{single_select_field.id}_id": option_1.id,
-        }
-    )
-    getattr(row_2, f"field_{link_row_field.id}").add(tmp_row.id)
-    getattr(row_2, f"field_{multiple_select_field.id}").add(option_2.id)
-    getattr(row_2, f"field_{multiple_select_field.id}").add(option_3.id)
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="not_empty", value=""
