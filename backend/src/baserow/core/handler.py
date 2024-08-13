@@ -1554,12 +1554,12 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         users_applications = CoreHandler().filter_queryset(
             user,
-            OrderApplicationsOperationType.type,
+            ReadApplicationOperationType.type,
             all_applications,
             workspace=workspace,
         )
 
-        users_application_ids = users_applications.values_list("id", flat=True)
+        users_application_ids = list(users_applications.values_list("id", flat=True))
 
         # Check that all ordered ids can be ordered by the user
         for application_id in order:
