@@ -1,4 +1,7 @@
+from typing import Tuple
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
@@ -23,7 +26,7 @@ class UserFixtures:
     def generate_refresh_token(self, user):
         return str(RefreshToken.for_user(user))
 
-    def create_user(self, **kwargs):
+    def create_user(self, **kwargs) -> AbstractUser:
         profile_data = {}
 
         if "email" not in kwargs:
@@ -73,7 +76,7 @@ class UserFixtures:
 
         return user
 
-    def create_user_and_token(self, **kwargs):
+    def create_user_and_token(self, **kwargs) -> Tuple[AbstractUser, str]:
         user = self.create_user(**kwargs)
         token = self.generate_token(user)
         return user, token

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Join additional fields of a relationship via the API without creating a lookup field",
+    "issue_number": 2460,
+    "bullet_points": [],
+    "created_at": "2024-08-06"
+}

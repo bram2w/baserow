@@ -134,6 +134,11 @@ ERROR_INVALID_LOOKUP_TARGET_FIELD = (
     "The provided target field does not exist or is in a different table to the table"
     " linked to by the through field.",
 )
+ERROR_INCOMPATIBLE_FIELD_TYPE = (
+    "ERROR_INCOMPATIBLE_FIELD_TYPE",
+    HTTP_400_BAD_REQUEST,
+    "The field type is not compatible with the action.",
+)
 ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES = (
     "ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES",
     HTTP_400_BAD_REQUEST,
