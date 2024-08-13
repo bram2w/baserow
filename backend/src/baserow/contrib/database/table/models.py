@@ -160,7 +160,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         with cachalot_enabled():
             return super().count()
 
-    def enhance_by_fields(self):
+    def enhance_by_fields(self, **kwargs):
         """
         Enhances the queryset based on the `enhance_queryset_in_bulk` for each unique
         field type used in the table. This one will eventually call the
@@ -177,7 +177,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
             field_type = field_object["type"]
             by_type[field_type].append(field_object)
         for field_type, field_objects in by_type.items():
-            self = field_type.enhance_queryset_in_bulk(self, field_objects)
+            self = field_type.enhance_queryset_in_bulk(self, field_objects, **kwargs)
         return self
 
     def search_all_fields(
@@ -590,6 +590,17 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
 
         try:
             return next(filter(lambda f: f["name"] == field_name, field_objects))
+        except StopIteration:
+            raise ValueError(f"Field {field_name} not found.")
+
+    @classmethod
+    def get_field_object_by_user_field_name(
+        cls, field_name: str, include_trash: bool = False
+    ):
+        field_objects = cls.get_field_objects(include_trash)
+
+        try:
+            return next(filter(lambda f: f["field"].name == field_name, field_objects))
         except StopIteration:
             raise ValueError(f"Field {field_name} not found.")
 

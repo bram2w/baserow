@@ -11,3 +11,9 @@ ERROR_ROW_IDS_NOT_UNIQUE = (
     HTTP_400_BAD_REQUEST,
     "The provided row ids {e.ids} are not unique.",
 )
+
+ERROR_INVALID_JOIN_PARAMETER = (
+    "ERROR_INVALID_JOIN_PARAMETER",
+    HTTP_400_BAD_REQUEST,
+    "The provided __join query parameter wasn't used correctly.",
+)

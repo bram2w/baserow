@@ -154,6 +154,15 @@ class Field(
     def db_column(self):
         return f"field_{self.id}"
 
+    def get_field_ref(self, user_field_names: bool = False) -> str:
+        """
+        Generates a reference (name or user field name) for a field.
+
+        :param user_field_names: Whether user field names are used.
+        """
+
+        return self.name if user_field_names else self.db_column
+
     @property
     def tsv_db_column(self):
         return get_tsv_vector_field_name(self.id)

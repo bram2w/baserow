@@ -116,6 +116,16 @@
             :content="$t('apiDocsTableListRows.viewId')"
           />
         </APIDocsParameter>
+        <APIDocsParameter
+          name="{link_row_field}__join"
+          :optional="true"
+          type="string"
+        >
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocsTableListRows.join')"
+          />
+        </APIDocsParameter>
       </ul>
     </div>
     <div class="api-docs__right">

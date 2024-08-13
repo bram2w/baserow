@@ -1,9 +1,12 @@
 import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from urllib.parse import quote
 
+from django.db import connection
 from django.shortcuts import reverse
 from django.test import override_settings
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from freezegun import freeze_time
@@ -16,6 +19,7 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.handler import RowHandler
@@ -693,6 +697,845 @@ def test_list_rows_filter_filters_query_param_with_user_field_names(
     assert response_json["count"] == 1
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == row_3.id
+
+
+@pytest.mark.parametrize("user_field_names", [False, True])
+@pytest.mark.django_db
+def test_list_rows_join_lookup(api_client, data_fixture, user_field_names):
+    user, token = data_fixture.create_user_and_token(email="test@example.com")
+    table = data_fixture.create_database_table(user=user)
+    (
+        linked_table,
+        _,
+        linked_row,
+        linked_blank_row,
+        context,
+    ) = setup_interesting_test_table(data_fixture, user=user)
+    link_row_field = data_fixture.create_link_row_field(
+        table=table,
+        link_row_table=linked_table,
+    )
+    row = RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{link_row_field.id}": [linked_row.id, linked_blank_row.id]},
+    )
+    linked_table_model = linked_table.get_model()
+
+    def get_field_ref(user_field_name: str) -> str:
+        field_obj = linked_table_model.get_field_object_by_user_field_name(
+            user_field_name
+        )
+        return (
+            field_obj["field"].name
+            if user_field_names
+            else f"field_{field_obj['field'].id}"
+        )
+
+    expected_results_by_field_name = {
+        "text": {"blank": None, "row": "text"},
+        "long_text": {"blank": None, "row": "long_text"},
+        "url": {"blank": "", "row": "https://www.google.com"},
+        "email": {"blank": "", "row": "test@example.com"},
+        "negative_int": {"blank": None, "row": "-1"},
+        "positive_int": {"blank": None, "row": "1"},
+        "negative_decimal": {"blank": None, "row": "-1.2"},
+        "positive_decimal": {"blank": None, "row": "1.2"},
+        "rating": {"blank": 0, "row": 3},
+        "boolean": {"blank": False, "row": True},
+        "datetime_us": {
+            "blank": None,
+            "row": "2020-02-01T01:23:00Z",
+        },
+        "date_us": {
+            "blank": None,
+            "row": "2020-02-01",
+        },
+        "datetime_eu": {
+            "blank": None,
+            "row": "2020-02-01T01:23:00Z",
+        },
+        "date_eu": {
+            "blank": None,
+            "row": "2020-02-01",
+        },
+        "datetime_eu_tzone_visible": {
+            "blank": None,
+            "row": "2020-02-01T01:23:00Z",
+        },
+        "datetime_eu_tzone_hidden": {
+            "blank": None,
+            "row": "2020-02-01T01:23:00Z",
+        },
+        "last_modified_datetime_us": {
+            "blank": linked_blank_row.updated_on.isoformat().replace("+00:00", "Z"),
+            "row": linked_row.updated_on.isoformat().replace("+00:00", "Z"),
+        },
+        "last_modified_date_us": {
+            "blank": linked_blank_row.updated_on.strftime("%Y-%m-%d"),
+            "row": linked_row.updated_on.strftime("%Y-%m-%d"),
+        },
+        "last_modified_datetime_eu": {
+            "blank": linked_blank_row.updated_on.isoformat().replace("+00:00", "Z"),
+            "row": linked_row.updated_on.isoformat().replace("+00:00", "Z"),
+        },
+        "last_modified_date_eu": {
+            "blank": linked_blank_row.updated_on.strftime("%Y-%m-%d"),
+            "row": linked_row.updated_on.strftime("%Y-%m-%d"),
+        },
+        "last_modified_datetime_eu_tzone": {
+            "blank": linked_blank_row.updated_on.isoformat().replace("+00:00", "Z"),
+            "row": linked_row.updated_on.isoformat().replace("+00:00", "Z"),
+        },
+        "created_on_datetime_us": {
+            "blank": linked_blank_row.created_on.isoformat().replace("+00:00", "Z"),
+            "row": linked_row.created_on.isoformat().replace("+00:00", "Z"),
+        },
+        "created_on_date_us": {
+            "blank": linked_blank_row.created_on.strftime("%Y-%m-%d"),
+            "row": linked_row.created_on.strftime("%Y-%m-%d"),
+        },
+        "created_on_datetime_eu": {
+            "blank": linked_blank_row.created_on.isoformat().replace("+00:00", "Z"),
+            "row": linked_row.created_on.isoformat().replace("+00:00", "Z"),
+        },
+        "created_on_date_eu": {
+            "blank": linked_blank_row.created_on.strftime("%Y-%m-%d"),
+            "row": linked_row.created_on.strftime("%Y-%m-%d"),
+        },
+        "created_on_datetime_eu_tzone": {
+            "blank": linked_blank_row.created_on.isoformat().replace("+00:00", "Z"),
+            "row": linked_row.created_on.isoformat().replace("+00:00", "Z"),
+        },
+        "last_modified_by": {
+            "blank": {"id": user.id, "name": user.first_name},
+            "row": {"id": user.id, "name": user.first_name},
+        },
+        "created_by": {
+            "blank": {"id": user.id, "name": user.first_name},
+            "row": {"id": user.id, "name": user.first_name},
+        },
+        "duration_hm": {
+            "blank": None,
+            "row": 3660.0,
+        },
+        "duration_hms": {
+            "blank": None,
+            "row": 3666.0,
+        },
+        "duration_hms_s": {
+            "blank": None,
+            "row": 3666.6,
+        },
+        "duration_hms_ss": {
+            "blank": None,
+            "row": 3666.66,
+        },
+        "duration_hms_sss": {
+            "blank": None,
+            "row": 3666.666,
+        },
+        "duration_dh": {
+            "blank": None,
+            "row": 90000.0,
+        },
+        "duration_dhm": {
+            "blank": None,
+            "row": 90060.0,
+        },
+        "duration_dhms": {
+            "blank": None,
+            "row": 90066.0,
+        },
+        "file": {
+            "blank": [],
+            "row": [
+                {
+                    "image_height": None,
+                    "image_width": None,
+                    "is_image": False,
+                    "mime_type": "text/plain",
+                    "name": "hashed_name.txt",
+                    "size": 100,
+                    "thumbnails": None,
+                    "uploaded_at": "2020-02-01T01:23:00+00:00",
+                    "url": "http://localhost:8000/media/user_files/hashed_name.txt",
+                    "visible_name": "a.txt",
+                },
+                {
+                    "image_height": None,
+                    "image_width": None,
+                    "is_image": False,
+                    "mime_type": "text/plain",
+                    "name": "other_name.txt",
+                    "size": 100,
+                    "thumbnails": None,
+                    "uploaded_at": "2020-02-01T01:23:00+00:00",
+                    "url": "http://localhost:8000/media/user_files/other_name.txt",
+                    "visible_name": "b.txt",
+                },
+            ],
+        },
+        "single_select": {
+            "blank": None,
+            "row": {"color": "red", "id": AnyInt(), "value": "A"},
+        },
+        "multiple_select": {
+            "blank": [],
+            "row": [
+                {"color": "yellow", "id": AnyInt(), "value": "D"},
+                {"color": "orange", "id": AnyInt(), "value": "C"},
+                {"color": "green", "id": AnyInt(), "value": "E"},
+            ],
+        },
+        "multiple_collaborators": {
+            "blank": [],
+            "row": [
+                {"id": AnyInt(), "name": context["user2"].first_name},
+                {"id": AnyInt(), "name": context["user3"].first_name},
+            ],
+        },
+        "phone_number": {
+            "blank": "",
+            "row": "+4412345678",
+        },
+        "formula_text": {
+            "blank": "test FORMULA",
+            "row": "test FORMULA",
+        },
+        "formula_int": {
+            "blank": "1",
+            "row": "1",
+        },
+        "formula_bool": {
+            "blank": True,
+            "row": True,
+        },
+        "formula_decimal": {
+            "blank": "33.3333333333",
+            "row": "33.3333333333",
+        },
+        "formula_dateinterval": {
+            "blank": 86400.0,
+            "row": 86400.0,
+        },
+        "formula_date": {
+            "blank": "2020-01-01",
+            "row": "2020-01-01",
+        },
+        "formula_singleselect": {
+            "blank": None,
+            "row": {"color": "red", "id": AnyInt(), "value": "A"},
+        },
+        "formula_email": {
+            "blank": "",
+            "row": "test@example.com",
+        },
+        "formula_link_with_label": {
+            "blank": {"label": "label", "url": "https://google.com"},
+            "row": {"label": "label", "url": "https://google.com"},
+        },
+        "formula_link_url_only": {
+            "blank": {"label": None, "url": "https://google.com"},
+            "row": {"label": None, "url": "https://google.com"},
+        },
+        "formula_multipleselect": {
+            "blank": [],
+            "row": [
+                {"color": "yellow", "id": AnyInt(), "value": "D"},
+                {"color": "orange", "id": AnyInt(), "value": "C"},
+                {"color": "green", "id": AnyInt(), "value": "E"},
+            ],
+        },
+        "count": {
+            "blank": "0",
+            "row": "3",
+        },
+        "rollup": {
+            "blank": "0.000",
+            "row": "-122.222",
+        },
+        "duration_rollup_sum": {
+            "blank": 0.0,
+            "row": 240.0,
+        },
+        "duration_rollup_avg": {
+            "blank": 0.0,
+            "row": 120.0,
+        },
+        "lookup": {
+            "blank": [],
+            "row": [
+                {"id": AnyInt(), "value": "linked_row_1"},
+                {"id": AnyInt(), "value": "linked_row_2"},
+                {"id": AnyInt(), "value": ""},
+            ],
+        },
+        "uuid": {
+            "blank": "00000000-0000-4000-8000-000000000002",
+            "row": "00000000-0000-4000-8000-000000000003",
+        },
+        "autonumber": {
+            "blank": 1,
+            "row": 2,
+        },
+        "password": {
+            "blank": None,
+            "row": True,
+        },
+        "ai": {
+            "blank": None,
+            "row": "I'm an AI.",
+        },
+    }
+
+    looked_up_fields_row = {
+        get_field_ref(key): expected_results_by_field_name[key]["row"]
+        for key in expected_results_by_field_name.keys()
+    }
+    looked_up_fields_blank = {
+        get_field_ref(key): expected_results_by_field_name[key]["blank"]
+        for key in expected_results_by_field_name.keys()
+    }
+
+    if user_field_names:
+        field_references = [quote(key) for key in expected_results_by_field_name.keys()]
+        join_params = (
+            f"?{quote(link_row_field.name)}__join={','.join(field_references)}"
+            f"&user_field_names=true"
+        )
+    else:
+        field_references = [
+            linked_table_model.get_field_object_by_user_field_name(key)["name"]
+            for key in expected_results_by_field_name.keys()
+        ]
+        join_params = f"?field_{link_row_field.id}__join={','.join(field_references)}"
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    link_row_ref = (
+        link_row_field.name if user_field_names else f"field_{link_row_field.id}"
+    )
+    assert response_json == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"{link_row_ref}": [
+                    {"id": linked_blank_row.id, "value": "", **looked_up_fields_blank},
+                    {"id": linked_row.id, "value": "text", **looked_up_fields_row},
+                ],
+                "id": row.id,
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_field_to_same_table(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = table
+    linked_table_text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Text field"
+    )
+    linked_table_multiselect = data_fixture.create_multiple_select_field(
+        table=table, order=0, name="Multiple select"
+    )
+    select_option_1 = SelectOption.objects.create(
+        field=linked_table_multiselect,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    select_option_2 = SelectOption.objects.create(
+        field=linked_table_multiselect,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    select_option_3 = SelectOption.objects.create(
+        field=linked_table_multiselect,
+        order=1,
+        value="Option 3",
+        color="blue",
+    )
+    linked_table_multiselect.select_options.set(
+        [select_option_1, select_option_2, select_option_3]
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    linked_table_row = RowHandler().create_row(
+        user,
+        linked_table,
+        values={
+            f"field_{linked_table_text_field.id}": "Text 1",
+            f"field_{linked_table_multiselect.id}": [
+                select_option_1.id,
+                select_option_3.id,
+            ],
+        },
+    )
+    table_row = RowHandler().update_row(
+        user,
+        table,
+        linked_table_row,
+        values={
+            f"field_{link_row_field.id}": [linked_table_row.id],
+        },
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+        f",field_{linked_table_multiselect.id}"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{linked_table_text_field.id}": "Text 1",
+                f"field_{linked_table_multiselect.id}": [
+                    {
+                        "color": "blue",
+                        "id": select_option_1.id,
+                        "value": "Option 1",
+                    },
+                    {
+                        "color": "blue",
+                        "id": select_option_3.id,
+                        "value": "Option 3",
+                    },
+                ],
+                f"field_{link_row_field.id}": [
+                    {
+                        "id": table_row.id,
+                        "value": "unnamed row 1",
+                        f"field_{linked_table_text_field.id}": "Text 1",
+                        f"field_{linked_table_multiselect.id}": [
+                            {
+                                "color": "blue",
+                                "id": select_option_1.id,
+                                "value": "Option 1",
+                            },
+                            {
+                                "color": "blue",
+                                "id": select_option_3.id,
+                                "value": "Option 3",
+                            },
+                        ],
+                    },
+                ],
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_multiple_link_row_fields(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    linked_table_text_field = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field"
+    )
+    linked_table_text_field_2 = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field 2"
+    )
+    linked_table_2 = data_fixture.create_database_table(user=user)
+    linked_table_2_text_field = data_fixture.create_text_field(
+        table=linked_table_2, order=0, name="Table 2 Text field"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    link_row_field_2 = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table_2
+    )
+    linked_table_row = RowHandler().create_row(
+        user,
+        linked_table,
+        values={
+            f"field_{linked_table_text_field.id}": "Text 1",
+            f"field_{linked_table_text_field_2.id}": "Text 2",
+        },
+    )
+    linked_table_2_row = RowHandler().create_row(
+        user,
+        linked_table_2,
+        values={f"field_{linked_table_2_text_field.id}": "Table 2 Text 1"},
+    )
+    table_row = RowHandler().create_row(
+        user,
+        table,
+        values={
+            f"field_{link_row_field.id}": [linked_table_row.id],
+            f"field_{link_row_field_2.id}": [linked_table_2_row.id],
+        },
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+        f",field_{linked_table_text_field_2.id}"
+        f"&field_{link_row_field_2.id}__join=field_{linked_table_2_text_field.id}"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{link_row_field.id}": [
+                    {
+                        "id": table_row.id,
+                        "value": "unnamed row 1",
+                        f"field_{linked_table_text_field.id}": "Text 1",
+                        f"field_{linked_table_text_field_2.id}": "Text 2",
+                    },
+                ],
+                f"field_{link_row_field_2.id}": [
+                    {
+                        "id": table_row.id,
+                        "value": "unnamed row 1",
+                        f"field_{linked_table_2_text_field.id}": "Table 2 Text 1",
+                    },
+                ],
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_multiple_lookups_same_queries(
+    data_fixture, api_client, django_assert_max_num_queries
+):
+    """
+    Test that having more rows or multiple target fields to lookup doesn't change
+    the number of queries.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    linked_table_text_field = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field"
+    )
+    linked_table_text_field_2 = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field 2"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    linked_table_row = RowHandler().create_row(
+        user,
+        linked_table,
+        values={
+            f"field_{linked_table_text_field.id}": "Text 1",
+            f"field_{linked_table_text_field_2.id}": "Text 2",
+        },
+    )
+    linked_table_row_2 = RowHandler().create_row(
+        user,
+        linked_table,
+        values={
+            f"field_{linked_table_text_field.id}": "Text 1 row 2",
+            f"field_{linked_table_text_field_2.id}": "Text 2 row 2",
+        },
+    )
+    table_row = RowHandler().create_row(
+        user,
+        table,
+        values={
+            f"field_{link_row_field.id}": [linked_table_row.id],
+        },
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+
+    with CaptureQueriesContext(connection) as query_context:
+        api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    # add additional row
+    table_row_2 = RowHandler().create_row(
+        user,
+        table,
+        values={
+            f"field_{link_row_field.id}": [linked_table_row_2.id],
+        },
+    )
+
+    # lookup more fields
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+        f",field_{linked_table_text_field_2.id}"
+    )
+
+    with django_assert_max_num_queries(len(query_context.captured_queries)):
+        api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_field_multiple_lookups_user_field_names(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    linked_table_text_field = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field"
+    )
+    linked_table_text_field_2 = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field 2"
+    )
+    linked_table_2 = data_fixture.create_database_table(user=user)
+    linked_table_2_text_field = data_fixture.create_text_field(
+        table=linked_table_2, order=0, name="Table 2 Text field"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    link_row_field_2 = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table_2
+    )
+    linked_table_row = RowHandler().create_row(
+        user,
+        linked_table,
+        values={
+            f"field_{linked_table_text_field.id}": "Text 1",
+            f"field_{linked_table_text_field_2.id}": "Text 2",
+        },
+    )
+    linked_table_2_row = RowHandler().create_row(
+        user,
+        linked_table_2,
+        values={f"field_{linked_table_2_text_field.id}": "Table 2 Text 1"},
+    )
+    table_row = RowHandler().create_row(
+        user,
+        table,
+        values={
+            f"field_{link_row_field.id}": [linked_table_row.id],
+            f"field_{link_row_field_2.id}": [linked_table_2_row.id],
+        },
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?{quote(link_row_field.name)}__join={quote(linked_table_text_field.name)}"
+        f",{quote(linked_table_text_field_2.name)}"
+        f"&{quote(link_row_field_2.name)}__join={quote(linked_table_2_text_field.name)}"
+        f"&user_field_names=true"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"{link_row_field.name}": [
+                    {
+                        "id": table_row.id,
+                        "value": "unnamed row 1",
+                        f"{linked_table_text_field.name}": "Text 1",
+                        f"{linked_table_text_field_2.name}": "Text 2",
+                    },
+                ],
+                f"{link_row_field_2.name}": [
+                    {
+                        "id": table_row.id,
+                        "value": "unnamed row 1",
+                        f"{linked_table_2_text_field.name}": "Table 2 Text 1",
+                    },
+                ],
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_repeated_link_row_param(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    linked_table_text_field = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+        f"&field_{link_row_field.id}__join=xxx"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST, response_json
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_repeated_lookup_param(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    linked_table_text_field = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id},field_{linked_table_text_field.id}"
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST, response_json
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_field_with_include_exclude_fields(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    linked_table_text_field = data_fixture.create_text_field(
+        table=linked_table, order=0, name="Text field"
+    )
+    linked_table_2 = data_fixture.create_database_table(user=user)
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+    link_row_field_2 = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table_2
+    )
+
+    # excluding used link row field will lead to not found
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+        f"&exclude=field_{link_row_field.id}"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND, response_json
+
+    # including without used link row field will lead to not found
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{linked_table_text_field.id}"
+        f"&include=field_{link_row_field_2.id}"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND, response_json
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_field_doesnt_exist(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    field_outside_linked_table = data_fixture.create_text_field(
+        table=table, order=1, name="Text field outside target table"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{field_outside_linked_table.id}"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested field does not exist.",
+        "error": "ERROR_FIELD_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_field_doesnt_exist_user_field_names(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    field_outside_linked_table = data_fixture.create_text_field(
+        table=table, order=1, name="Name"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = f"?{quote(link_row_field.name)}__join=DoesNotExist"
+    response = api_client.get(
+        f"{url}{join_params}&user_field_names=true", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND, response_json
+    assert response_json == {
+        "detail": "The requested field does not exist.",
+        "error": "ERROR_FIELD_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_join_lookup_incompatible_field(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    linked_table = data_fixture.create_database_table(user=user)
+    link_row_field_linked_table = data_fixture.create_link_row_field(
+        table=linked_table,
+        link_row_table=table,
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=linked_table
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    join_params = (
+        f"?field_{link_row_field.id}__join=field_{link_row_field_linked_table.id}"
+    )
+    response = api_client.get(f"{url}{join_params}", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json == {
+        "detail": "The field type is not compatible with the action.",
+        "error": "ERROR_INCOMPATIBLE_FIELD_TYPE",
+    }
 
 
 @pytest.mark.django_db

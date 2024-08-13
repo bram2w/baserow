@@ -36,18 +36,22 @@ from baserow.api.utils import validate_data
 from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_DOES_NOT_EXIST,
     ERROR_FILTER_FIELD_NOT_FOUND,
+    ERROR_INCOMPATIBLE_FIELD_TYPE,
     ERROR_ORDER_BY_FIELD_NOT_FOUND,
     ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
 )
 from baserow.contrib.database.api.rows.errors import (
+    ERROR_INVALID_JOIN_PARAMETER,
     ERROR_ROW_DOES_NOT_EXIST,
     ERROR_ROW_IDS_NOT_UNIQUE,
 )
+from baserow.contrib.database.api.rows.exceptions import InvalidJoinParameterException
 from baserow.contrib.database.api.rows.serializers import GetRowAdjacentSerializer
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.api.utils import (
+    extract_link_row_joins_from_request,
     extract_user_field_names_from_params,
     get_include_exclude_fields,
 )
@@ -59,9 +63,11 @@ from baserow.contrib.database.api.views.errors import (
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     FilterFieldNotFound,
+    IncompatibleField,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
 )
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
     CreateRowsActionType,
@@ -258,6 +264,26 @@ class RowsView(APIView):
                 ),
             ),
             OpenApiParameter(
+                name="{link_row_field}__join={target_field},{target_field2}",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "This parameter allows you to "
+                    "request a lookup of field values from a target "
+                    "table through existing link row fields. "
+                    "The parameter name has to be the name of an existing link row "
+                    "field, followed by `__join`. The value should be a list of "
+                    "field names for which we want to lookup additional values. "
+                    "You can provide one or multiple target fields. It is not possible "
+                    "to lookup a value of a link row field in the target table. "
+                    "If `user_field_names` parameter is set, the names of the fields "
+                    "should be user field names. In this case the resulting field "
+                    "names in the output will also be user field names. "
+                    "The used link row field has to be among the requested fields "
+                    "if using the `include` or `exclude` parameters."
+                ),
+            ),
+            OpenApiParameter(
                 name="user_field_names",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.BOOL,
@@ -331,6 +357,8 @@ class RowsView(APIView):
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            IncompatibleField: ERROR_INCOMPATIBLE_FIELD_TYPE,
+            InvalidJoinParameterException: ERROR_INVALID_JOIN_PARAMETER,
         }
     )
     @validate_query_parameters(ListRowsQueryParamsSerializer)
@@ -355,17 +383,37 @@ class RowsView(APIView):
         order_by = query_params.get("order_by")
         include = query_params.get("include")
         exclude = query_params.get("exclude")
-        user_field_names = query_params.get("user_field_names")
+        user_field_names = extract_user_field_names_from_params(request.GET)
         view_id = query_params.get("view_id")
-        fields = get_include_exclude_fields(
-            table, include, exclude, user_field_names=user_field_names
+        fields_base_queryset = Field.objects.select_related("content_type").filter(
+            table=table
         )
+        fields = get_include_exclude_fields(
+            table,
+            include,
+            exclude,
+            queryset=fields_base_queryset,
+            user_field_names=user_field_names,
+        )
+        link_row_fields_queryset = (
+            fields if fields is not None else fields_base_queryset
+        )
+        link_row_fields = link_row_fields_queryset.filter(
+            content_type__model="linkrowfield"
+        )
+        link_row_joins = extract_link_row_joins_from_request(
+            request, link_row_fields, user_field_names=user_field_names
+        )
+        field_kwargs = {
+            f"field_{link_row_join.link_row_field_id}": {"link_row_join": link_row_join}
+            for link_row_join in link_row_joins
+        }
 
         model = table.get_model(
             fields=fields,
             field_ids=[] if fields else None,
         )
-        queryset = model.objects.all().enhance_by_fields()
+        queryset = model.objects.all().enhance_by_fields(**field_kwargs)
 
         if view_id:
             view_handler = ViewHandler()
@@ -396,7 +444,11 @@ class RowsView(APIView):
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True, user_field_names=user_field_names
+            model,
+            RowSerializer,
+            is_response=True,
+            user_field_names=user_field_names,
+            field_kwargs=field_kwargs,
         )
         serializer = serializer_class(page, many=True)
 

@@ -160,6 +160,15 @@ class FieldType(
     all times.
     """
 
+    can_be_target_of_adhoc_lookup = True
+    """
+    Set to False if the field values cannot be looked up through adhoc lookups
+    via Link to table field.
+    This can happen when such values would not be normally available/prefetched
+    or would cause an infinite loop, e.g. Link to table field itself cannot be
+    a part of adhoc lookup.
+    """
+
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
         When a row is created or updated all the values are going to be prepared for the
@@ -250,7 +259,9 @@ class FieldType(
 
         return values_by_row
 
-    def enhance_queryset(self, queryset: QuerySet, field: Field, name: str) -> QuerySet:
+    def enhance_queryset(
+        self, queryset: QuerySet, field: Field, name: str, **kwargs
+    ) -> QuerySet:
         """
         This hook can be used to enhance a queryset when fetching multiple rows of a
         table. This is for example used by the grid view endpoint. Many rows can be
@@ -276,7 +287,7 @@ class FieldType(
         return queryset
 
     def enhance_queryset_in_bulk(
-        self, queryset: QuerySet, field_objects: List[dict]
+        self, queryset: QuerySet, field_objects: List[dict], **kwargs
     ) -> QuerySet:
         """
         This hook is similar to the `enhance_queryset` method, but combined for all
@@ -294,7 +305,7 @@ class FieldType(
         # bulk.
         for field_object in field_objects:
             queryset = self.enhance_queryset(
-                queryset, field_object["field"], field_object["name"]
+                queryset, field_object["field"], field_object["name"], **kwargs
             )
         return queryset
 

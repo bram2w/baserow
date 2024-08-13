@@ -71,6 +71,7 @@ from baserow.contrib.database.api.fields.serializers import (
     PasswordSerializer,
     SelectOptionSerializer,
 )
+from baserow.contrib.database.api.utils import LinkRowJoin
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
     ERROR_VIEW_NOT_IN_TABLE,
@@ -1400,7 +1401,7 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
                 **{f"{to_field.db_column}": models.F(self.source_field_name)}
             )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         return queryset.select_related(name)
 
     def should_backup_field_data_for_same_type_update(
@@ -1605,7 +1606,7 @@ class CreatedByFieldType(ReadOnlyFieldType):
                 **{f"{to_field.db_column}": models.F(self.source_field_name)}
             )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         return queryset.select_related(name)
 
     def should_backup_field_data_for_same_type_update(
@@ -1987,6 +1988,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
     _can_be_primary_field = False
     can_get_unique_values = False
     is_many_to_many_field = True
+    can_be_target_of_adhoc_lookup = False
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         remote_field = queryset.model._meta.get_field(field.db_column).remote_field
@@ -2019,36 +2021,53 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             .values("value")[:1]
         )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         """
         Makes sure that the related rows are prefetched by Django. We also want to
         enhance the primary field of the related queryset. If for example the primary
         field is a single select field then the dropdown options need to be
         prefetched in order to prevent many queries.
+
+        Additionaly we need to prefetch any other requested field for adhoc lookups
+        that are passed as LinkRowJoins in the kwargs.
         """
 
         remote_model = queryset.model._meta.get_field(name).remote_field.model
         related_queryset = remote_model.objects.all()
 
+        # determine if there are link row joins to take care of
+        field_kwargs = kwargs.get(f"field_{field.id}", {})
+        link_row_join = field_kwargs.get("link_row_join", None)
+
+        primary_field_object = None
         try:
             primary_field_object = next(
                 object
                 for object in remote_model._field_objects.values()
                 if object["field"].primary
             )
-            # Because we only need the primary value for serialization, we only have
-            # to select and enhance that one. This will improve the performance of
-            # large related tables significantly.
-            related_queryset = related_queryset.only(primary_field_object["name"])
-            related_queryset = primary_field_object["type"].enhance_queryset(
-                related_queryset,
-                primary_field_object["field"],
-                primary_field_object["name"],
-            )
         except StopIteration:
-            # If the related model does not have a primary field then we also don't
-            # need to enhance the queryset.
             pass
+
+        # The list of fields to prefetch is going to be the primary field
+        # if it exists together with any joined field for lookup
+        target_field_names = (
+            [primary_field_object["name"]] if primary_field_object is not None else []
+        )
+        if link_row_join is not None:
+            target_field_names += [
+                f"field_{tf.field_id}" for tf in link_row_join.target_fields
+            ]
+
+        if len(target_field_names) > 0:
+            related_queryset = related_queryset.only(*target_field_names)
+            for target_field_name in target_field_names:
+                field_obj = remote_model.get_field_object(target_field_name)
+                related_queryset = field_obj["type"].enhance_queryset(
+                    related_queryset,
+                    field_obj["field"],
+                    field_obj["name"],
+                )
 
         return queryset.prefetch_related(
             models.Prefetch(name, queryset=related_queryset)
@@ -2340,10 +2359,28 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         instance. If that is the case then we can extract the primary field from the
         model and we can pass the name along to the LinkRowValueSerializer. It will
         be used to include the primary field's value in the response as a string.
+
+        Optionally, if link_row_join kwarg is passed, the serializer will also include
+        serializer fields for all the joined target fields.
         """
 
+        link_row_join: LinkRowJoin = kwargs.pop("link_row_join", None)
+        if link_row_join is None:
+            return serializers.ListSerializer(
+                child=LinkRowValueSerializer(), **{"required": False, **kwargs}
+            )
+        attrs = {
+            f"{target_field.field_ref}": target_field.field_serializer
+            for target_field in link_row_join.target_fields
+        }
+        base_class = LinkRowValueSerializer
+        inner_serializer = type(
+            str("LinkRowLookupValueSerializer"),
+            (base_class,),
+            attrs,
+        )
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(), **{"required": False, **kwargs}
+            child=inner_serializer(), **{"required": False, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):
@@ -3463,7 +3500,7 @@ class SelectOptionBaseFieldType(FieldType):
         # If there are any deleted options we need to backup
         return old_field.select_options.exclude(id__in=updated_ids).exists()
 
-    def enhance_queryset_in_bulk(self, queryset, field_objects):
+    def enhance_queryset_in_bulk(self, queryset, field_objects, **kwargs):
         existing_multi_field_prefetches = queryset.get_multi_field_prefetches()
         select_model_prefetch = None
 
@@ -3521,7 +3558,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             }
         )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         # It's important that this individual enhance_queryset method exists, even
         # though the enhance queryset in bulk exists, because the link_row field can
         # prefetch the data individually.
@@ -3883,7 +3920,7 @@ class MultipleSelectFieldType(
             }
         )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         # It's important that this individual enhance_queryset method exists, even
         # though the enhance queryset in bulk exists, because the link_row field can
         # prefetch the data individually.
@@ -5648,7 +5685,7 @@ class MultipleCollaboratorsFieldType(
             **shared_kwargs,
         ).contribute_to_class(user_model, related_name)
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         return queryset.prefetch_related(name)
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
