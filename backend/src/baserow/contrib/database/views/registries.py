@@ -588,6 +588,14 @@ class ViewType(
         :param field: The concerned field.
         """
 
+    def after_field_delete(self, field: "Field") -> None:
+        """
+        This hook is called after a field has been deleted and gives the possibility to
+        clean up any related field options.
+
+        :param field: The field that has been deleted.
+        """
+
     def before_view_create(self, values: dict, table: "Table", user: AbstractUser):
         """
         Hook that's called before the view is created.

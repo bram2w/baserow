@@ -1255,3 +1255,24 @@ def test_calendar_ical_utils_queries(
     # - 1 for all_items_query
     with django_assert_num_queries(10) as ctx:
         cal = build_calendar(all_items_query.all(), calendar_view)
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+def test_calendar_after_delete_field_set_date_field_to_none(
+    premium_data_fixture, data_fixture, django_assert_num_queries
+):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    date_field = premium_data_fixture.create_date_field(
+        table=table,
+        date_include_time=False,
+    )
+
+    view = premium_data_fixture.create_calendar_view(table=table, date_field=date_field)
+
+    FieldHandler().delete_field(user, date_field)
+    view.refresh_from_db()
+
+    assert view.date_field is None

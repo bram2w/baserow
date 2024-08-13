@@ -7,29 +7,14 @@ from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 
-from baserow.contrib.database.fields import signals as field_signals
-from baserow.contrib.database.fields.models import FileField, SingleSelectField
 from baserow.contrib.database.views import signals as view_signals
 from baserow.contrib.database.views.models import OWNERSHIP_TYPE_COLLABORATIVE
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.models import Workspace
 
 from .handler import delete_personal_views
-from .models import KanbanView
 
 User = get_user_model()
-
-
-@receiver(field_signals.field_deleted)
-def field_deleted(sender, field, **kwargs):
-    if isinstance(field, FileField):
-        KanbanView.objects.filter(card_cover_image_field_id=field.id).update(
-            card_cover_image_field_id=None
-        )
-    if isinstance(field, SingleSelectField):
-        KanbanView.objects.filter(single_select_field_id=field.id).update(
-            single_select_field_id=None
-        )
 
 
 def premium_check_ownership_type(
@@ -75,7 +60,6 @@ def connect_to_user_pre_delete_signal():
 
 
 __all__ = [
-    "field_deleted",
     "view_created",
     "connect_to_user_pre_delete_signal",
 ]
