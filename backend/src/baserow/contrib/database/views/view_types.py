@@ -33,7 +33,7 @@ from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.models import FileField
+from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
@@ -523,6 +523,12 @@ class GalleryViewType(ViewType):
 
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("galleryviewfieldoptions_set")
+
+    def after_field_delete(self, field: Field) -> None:
+        if isinstance(field, FileField):
+            GalleryView.objects.filter(card_cover_image_field_id=field.id).update(
+                card_cover_image_field_id=None
+            )
 
 
 class FormViewType(ViewType):
@@ -1091,8 +1097,8 @@ class FormViewType(ViewType):
                     field_option_id
                 ] = field_option_object.id
 
-        # Create the conditions in bulk to improve performance.
-        FormViewFieldOptionsCondition.objects.bulk_create(condition_objects)
+            # Create the conditions in bulk to improve performance.
+            FormViewFieldOptionsCondition.objects.bulk_create(condition_objects)
 
         return form_view
 

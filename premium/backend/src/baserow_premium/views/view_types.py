@@ -269,6 +269,16 @@ class KanbanViewType(ViewType):
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("kanbanviewfieldoptions_set")
 
+    def after_field_delete(self, field: Field) -> None:
+        if isinstance(field, FileField):
+            KanbanView.objects.filter(card_cover_image_field_id=field.id).update(
+                card_cover_image_field_id=None
+            )
+        elif isinstance(field, SingleSelectField):
+            KanbanView.objects.filter(single_select_field_id=field.id).update(
+                single_select_field_id=None
+            )
+
 
 class CalendarViewType(ViewType):
     type = "calendar"
@@ -404,30 +414,32 @@ class CalendarViewType(ViewType):
 
         serialized_copy = serialized_values.copy()
         if "date_field_id" in serialized_copy:
-            serialized_copy["date_field_id"] = id_mapping["database_fields"][
-                serialized_copy.pop("date_field_id")
-            ]
+            old_date_field_id = serialized_copy.pop("date_field_id")
+            serialized_copy["date_field_id"] = id_mapping["database_fields"].get(
+                old_date_field_id, None
+            )
 
         field_options = serialized_copy.pop("field_options")
         calendar_view = super().import_serialized(
             table, serialized_copy, id_mapping, files_zip, storage
         )
 
-        if "database_calendar_view_field_options" not in id_mapping:
-            id_mapping["database_calendar_view_field_options"] = {}
+        if calendar_view is not None:
+            if "database_calendar_view_field_options" not in id_mapping:
+                id_mapping["database_calendar_view_field_options"] = {}
 
-        for field_option in field_options:
-            field_option_copy = field_option.copy()
-            field_option_id = field_option_copy.pop("id")
-            field_option_copy["field_id"] = id_mapping["database_fields"][
-                field_option["field_id"]
-            ]
-            field_option_object = CalendarViewFieldOptions.objects.create(
-                calendar_view=calendar_view, **field_option_copy
-            )
-            id_mapping["database_calendar_view_field_options"][
-                field_option_id
-            ] = field_option_object.id
+            for field_option in field_options:
+                field_option_copy = field_option.copy()
+                field_option_id = field_option_copy.pop("id")
+                field_option_copy["field_id"] = id_mapping["database_fields"][
+                    field_option["field_id"]
+                ]
+                field_option_object = CalendarViewFieldOptions.objects.create(
+                    calendar_view=calendar_view, **field_option_copy
+                )
+                id_mapping["database_calendar_view_field_options"][
+                    field_option_id
+                ] = field_option_object.id
 
         return calendar_view
 
@@ -497,3 +509,6 @@ class CalendarViewType(ViewType):
 
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("calendarviewfieldoptions_set")
+
+    def after_field_delete(self, field: Field) -> None:
+        CalendarView.objects.filter(date_field_id=field.id).update(date_field_id=None)
