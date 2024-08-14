@@ -29,6 +29,8 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 import UserSourceUsersContext from '@baserow/modules/builder/components/page/UserSourceUsersContext'
 import { DEFAULT_USER_ROLE_PREFIX } from '@baserow/modules/builder/constants'
 
@@ -43,21 +45,25 @@ export default {
     loggedUser() {
       return this.$store.getters['userSourceUser/getUser'](this.builder)
     },
-    userSourceName() {
+    userSource() {
       return this.$store.getters['userSource/getUserSourceByUId'](
         this.builder,
         this.loggedUser.user_source_uid
-      ).name
+      )
     },
     userRole() {
       if (!this.isAuthenticated) {
         return ''
       }
-      if (this.loggedUser.role.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
+
+      if (
+        this.userSource &&
+        this.loggedUser.role.startsWith(DEFAULT_USER_ROLE_PREFIX)
+      ) {
         return (
           '- ' +
           this.$t('userSelector.member', {
-            prefix: this.userSourceName,
+            prefix: this.userSource.name,
           })
         )
       } else if (!this.loggedUser.role.trim().length) {
@@ -66,6 +72,21 @@ export default {
         return `- ${this.loggedUser.role}`
       }
     },
+  },
+  watch: {
+    /**
+     * When the User Source is deleted, log off the currently selected user.
+     */
+    userSource(newValue, oldValue) {
+      if (!newValue && this.isAuthenticated) {
+        this.actionLogoff({ application: this.builder })
+      }
+    },
+  },
+  methods: {
+    ...mapActions({
+      actionLogoff: 'userSourceUser/logoff',
+    }),
   },
 }
 </script>

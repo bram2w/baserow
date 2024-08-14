@@ -16,6 +16,7 @@ from baserow.contrib.database.fields.field_types import (
     UUIDFieldType,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.registries import FieldType
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
@@ -453,6 +454,14 @@ class LocalBaserowUserSourceType(UserSourceType):
             f"_{user_source.role_field_id if user_source.role_field_id else '?'}"
         )
 
+    def role_type_is_allowed(self, role_field: Optional[FieldType]) -> bool:
+        """Return True if the Role Field's type is allowed, False otherwise."""
+
+        if role_field is None:
+            return False
+
+        return role_field.get_type().type in self.field_types_allowed_as_role
+
     def get_user_role(self, user, user_source: UserSource) -> str:
         """
         Return the User Role of the user if the role_field is defined.
@@ -460,8 +469,8 @@ class LocalBaserowUserSourceType(UserSourceType):
         If the UserSource's role_field is null, return the Default User Role.
         """
 
-        if user_source.role_field:
-            field = getattr(user, user_source.role_field.db_column)
+        if self.role_type_is_allowed(user_source.role_field):
+            field = getattr(user, user_source.role_field.db_column) or ""
             if user_source.role_field.get_type().can_have_select_options:
                 return field.value.strip() if field else ""
             else:
@@ -523,6 +532,9 @@ class LocalBaserowUserSourceType(UserSourceType):
                     )
                 )
             )
+
+        if not self.role_type_is_allowed(user_source.role_field):
+            return []
 
         try:
             table = TableHandler().get_table(user_source.role_field.table.id)
