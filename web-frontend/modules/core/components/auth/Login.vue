@@ -141,11 +141,10 @@ export default {
   mounted() {
     if (this.redirectByDefault) {
       if (this.defaultRedirectUrl !== null) {
-        const { groupInvitationToken, workspaceInvitationToken } =
-          this.$route.query
+        const { workspaceInvitationToken } = this.$route.query
         const url = addQueryParamsToRedirectUrl(this.defaultRedirectUrl, {
           original: this.computedOriginal,
-          invitationToken: workspaceInvitationToken || groupInvitationToken,
+          workspaceInvitationToken,
         })
         window.location = url
       }

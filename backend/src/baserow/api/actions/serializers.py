@@ -14,8 +14,6 @@ def get_action_scopes_request_serializer() -> Type[serializers.Serializer]:
 
     for scope_type in action_scope_registry.get_all():
         attrs[scope_type.type] = scope_type.get_request_serializer_field()
-        if scope_type.compat_type:
-            attrs[scope_type.compat_type] = scope_type.get_request_serializer_field()
 
     # noinspection PyTypeChecker
     return type(

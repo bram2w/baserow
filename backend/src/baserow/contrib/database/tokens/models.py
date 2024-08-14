@@ -3,7 +3,6 @@ from django.db import models
 from django.db.models import Q
 
 from baserow.core.mixins import (
-    GroupToWorkspaceCompatModelMixin,
     HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
 )
@@ -15,7 +14,6 @@ User = get_user_model()
 class Token(
     HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
-    GroupToWorkspaceCompatModelMixin,
     models.Model,
 ):
     """

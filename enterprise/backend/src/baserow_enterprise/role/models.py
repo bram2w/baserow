@@ -4,10 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.core.mixins import (
-    CreatedAndUpdatedOnMixin,
-    GroupToWorkspaceCompatModelMixin,
-)
+from baserow.core.mixins import CreatedAndUpdatedOnMixin
 from baserow.core.models import Operation, Workspace
 
 
@@ -20,7 +17,7 @@ class RoleManager(models.Manager):
         return self.get(uid=uid)
 
 
-class Role(CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin):
+class Role(CreatedAndUpdatedOnMixin):
     """
     A Role is a set of allowed operation granted to those whom are associated to.
     """
@@ -68,7 +65,7 @@ class Role(CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin):
         ]
 
 
-class RoleAssignment(CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin):
+class RoleAssignment(CreatedAndUpdatedOnMixin):
     """
     A RoleAssignment is the association between a `Role` and a `Subject` for a
     particular `Workspace` over a given `Scope`. A Subject can be a user or anything

@@ -89,9 +89,3 @@ class WorkspaceTrashableItemType(TrashableItemType):
 
     def get_restore_operation_type(self) -> str:
         return RestoreWorkspaceOperationType.type
-
-
-# GroupDeprecation
-class GroupTrashableItemType(WorkspaceTrashableItemType):
-    type = "group"
-    deprecated_in_favor_of = "workspace"

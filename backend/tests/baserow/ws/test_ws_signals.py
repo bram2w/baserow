@@ -117,7 +117,6 @@ def test_workspace_created(mock_broadcast_to_workspace, data_fixture):
     args = mock_broadcast_to_workspace.delay.call_args
     assert args[0][0] == workspace_user.workspace_id
     assert args[0][1]["type"] == "group_created"
-    assert args[0][1]["group"]["id"] == workspace_user.workspace_id  # GroupDeprecation
     assert args[0][1]["workspace"]["id"] == workspace_user.workspace_id
 
 
@@ -156,11 +155,6 @@ def test_workspace_restored(mock_broadcast_to_users, data_fixture):
         ),
         "order": 0,
         "type": "database",
-        "group": {
-            "id": workspace.id,
-            "name": workspace.name,
-            "generative_ai_models_enabled": {},
-        },  # GroupDeprecation
         "workspace": {
             "id": workspace.id,
             "name": workspace.name,
@@ -174,23 +168,15 @@ def test_workspace_restored(mock_broadcast_to_users, data_fixture):
     assert [call_1[0], call_2[0]] == unordered([[member_user.id], [admin_user.id]])
     permissions = unordered(["MEMBER", "ADMIN"])
     assert [
-        call_1[1]["group"]["permissions"],
-        call_2[1]["group"]["permissions"],
-    ] == permissions
-    assert [
         call_1[1]["workspace"]["permissions"],
         call_2[1]["workspace"]["permissions"],
     ] == permissions
 
     assert call_1[1]["type"] == "group_restored"
-    # GroupDeprecation
-    assert call_1[1]["group"]["id"] == member_workspace_user.workspace_id
     assert call_1[1]["workspace"]["id"] == member_workspace_user.workspace_id
     assert call_1[1]["applications"] == [expected_database_json]
 
     assert call_2[1]["type"] == "group_restored"
-    # GroupDeprecation
-    assert call_2[1]["group"]["id"] == workspace_user.workspace_id
     assert call_2[1]["workspace"]["id"] == workspace_user.workspace_id
     assert call_2[1]["applications"] == [expected_database_json]
 
@@ -212,8 +198,6 @@ def test_workspace_updated(mock_broadcast_to_workspace, data_fixture):
     args = mock_broadcast_to_workspace.delay.call_args
     assert args[0][0] == workspace.id
     assert args[0][1]["type"] == "group_updated"
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert args[0][1]["group"]["id"] == workspace.id  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace"]["id"] == workspace.id
     assert args[0][2] == "test"
@@ -234,7 +218,6 @@ def test_workspace_deleted(mock_broadcast_to_users, data_fixture):
     args = mock_broadcast_to_users.delay.call_args
     assert args[0][0] == [user.id]
     assert args[0][1]["type"] == "group_deleted"
-    assert args[0][1]["group_id"] == workspace_id  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace_id
 
 
@@ -268,11 +251,6 @@ def test_workspace_user_added(
     assert args[0][0] == workspace.id
     assert args[0][1]["type"] == "group_user_added"
     assert args[0][1]["id"] == workspace_user_2.id
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert (
-        args[0][1]["group_user"]["user_id"] == workspace_user_2.user_id
-    )  # GroupDeprecation
-    assert args[0][1]["group_user"]["permissions"] == "MEMBER"  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_2.user_id
     assert args[0][1]["workspace_user"]["permissions"] == "MEMBER"
@@ -301,11 +279,6 @@ def test_workspace_user_updated(
     assert args[0][0] == workspace.id
     assert args[0][1]["type"] == "group_user_updated"
     assert args[0][1]["id"] == workspace_user_1.id
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert (
-        args[0][1]["group_user"]["user_id"] == workspace_user_1.user_id
-    )  # GroupDeprecation
-    assert args[0][1]["group_user"]["permissions"] == "MEMBER"  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_1.user_id
     assert args[0][1]["workspace_user"]["permissions"] == "MEMBER"
@@ -333,10 +306,6 @@ def test_workspace_user_deleted(
     assert args[0][0] == [user_1.id]
     assert args[0][1]["type"] == "group_user_deleted"
     assert args[0][1]["id"] == workspace_user_id
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert (
-        args[0][1]["group_user"]["user_id"] == workspace_user_1.user_id
-    )  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_1.user_id
 
@@ -345,10 +314,6 @@ def test_workspace_user_deleted(
     assert args[0][0] == workspace.id
     assert args[0][1]["type"] == "group_user_deleted"
     assert args[0][1]["id"] == workspace_user_id
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert (
-        args[0][1]["group_user"]["user_id"] == workspace_user_1.user_id
-    )  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_1.user_id
 
@@ -375,10 +340,6 @@ def test_user_leaves_workspace(
     assert args[0][0] == [user_1.id]
     assert args[0][1]["type"] == "group_user_deleted"
     assert args[0][1]["id"] == workspace_user_id
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert (
-        args[0][1]["group_user"]["user_id"] == workspace_user_1.user_id
-    )  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_1.user_id
 
@@ -387,10 +348,6 @@ def test_user_leaves_workspace(
     assert args[0][0] == workspace.id
     assert args[0][1]["type"] == "group_user_deleted"
     assert args[0][1]["id"] == workspace_user_id
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
-    assert (
-        args[0][1]["group_user"]["user_id"] == workspace_user_1.user_id
-    )  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_1.user_id
 
@@ -417,7 +374,6 @@ def test_workspaces_reordered(mock_broadcast_to_users, data_fixture):
         workspace_2.id,
         workspace_3.id,
     ]
-    assert args[0][1]["group_ids"] == workspace_ids  # GroupDeprecation
     assert args[0][1]["workspace_ids"] == workspace_ids
 
 
@@ -484,7 +440,6 @@ def test_applications_reordered(mock_broadcast_to_channel_group, data_fixture):
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == database.workspace_id
     assert args[0][1]["type"] == "applications_reordered"
-    assert args[0][1]["group_id"] == workspace.id  # GroupDeprecation
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["order"] == [generate_hash(database.id)]
 

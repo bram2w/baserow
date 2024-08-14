@@ -47,15 +47,6 @@ class OAuth2LoginView(APIView):
                 description="The relative part of URL that the user wanted to access.",
             ),
             OpenApiParameter(
-                deprecated=True,
-                name="group_invitation_token",
-                location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.STR,
-                description="Please use the functionally identical "
-                "`workspace_invitation_token` instead as this querystring "
-                "is being removed in the future.",
-            ),
-            OpenApiParameter(
                 name="workspace_invitation_token",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,

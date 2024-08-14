@@ -8,7 +8,6 @@ class AdminDashboardPerDaySerializer(serializers.Serializer):
 
 class AdminDashboardSerializer(serializers.Serializer):
     total_users = serializers.IntegerField()
-    total_groups = serializers.IntegerField()  # GroupDeprecation
     total_workspaces = serializers.IntegerField()
     total_applications = serializers.IntegerField()
     new_users_last_24_hours = serializers.IntegerField()

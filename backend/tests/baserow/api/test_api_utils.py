@@ -373,16 +373,19 @@ def test_validate_data_custom_fields():
 
 @pytest.mark.django_db
 def test_get_serializer_class(data_fixture):
-    workspace = data_fixture.create_workspace(name="Group 1")
+    workspace = data_fixture.create_workspace(name="Workspace 1")
 
     workspace_serializer = get_serializer_class(Workspace, ["name"])(workspace)
-    assert workspace_serializer.data == {"name": "Group 1"}
+    assert workspace_serializer.data == {"name": "Workspace 1"}
     assert workspace_serializer.__class__.__name__ == "WorkspaceSerializer"
 
     workspace_serializer_2 = get_serializer_class(
         Workspace, ["id", "name"], {"id": CharField()}
     )(workspace)
-    assert workspace_serializer_2.data == {"id": str(workspace.id), "name": "Group 1"}
+    assert workspace_serializer_2.data == {
+        "id": str(workspace.id),
+        "name": "Workspace 1",
+    }
 
 
 @override_settings(DEBUG=False)

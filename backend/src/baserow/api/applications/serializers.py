@@ -13,13 +13,6 @@ from baserow.core.registries import application_type_registry
 
 class ApplicationSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
-    # GroupDeprecation
-    group = WorkspaceSerializer(
-        source="workspace",
-        help_text="DEPRECATED: Please use the functionally identical "
-        "`workspace` instead as this field is "
-        "being removed in the future.",
-    )
     workspace = WorkspaceSerializer(
         help_text="The workspace that the application belongs to."
     )
@@ -31,7 +24,6 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "name",
             "order",
             "type",
-            "group",  # GroupDeprecation
             "workspace",
             "created_on",
         )

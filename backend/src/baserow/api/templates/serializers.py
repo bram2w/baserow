@@ -26,7 +26,6 @@ class TemplateSerializer(serializers.ModelSerializer):
             "slug",
             "icon",
             "keywords",
-            "group_id",  # GroupDeprecation
             "workspace_id",
             "is_default",
         )

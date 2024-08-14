@@ -23,9 +23,9 @@ _USER_ADMIN_SERIALIZER_API_DOC_KWARGS = {
 }
 
 
-class UserAdminGroupsSerializer(ModelSerializer):
-    id = serializers.IntegerField(source="group.id")
-    name = serializers.CharField(source="group.name")
+class UserAdminWorkspacesSerializer(ModelSerializer):
+    id = serializers.IntegerField(source="workspace.id")
+    name = serializers.CharField(source="workspace.name")
 
     class Meta:
         model = WorkspaceUser
@@ -45,10 +45,7 @@ class UserAdminResponseSerializer(ModelSerializer):
     # Max length set to match django user models first_name fields max length
     name = CharField(source="first_name", max_length=150)
     username = EmailField()
-    groups = UserAdminGroupsSerializer(
-        source="workspaceuser_set", many=True
-    )  # GroupDeprecation
-    workspaces = UserAdminGroupsSerializer(source="workspaceuser_set", many=True)
+    workspaces = UserAdminWorkspacesSerializer(source="workspaceuser_set", many=True)
 
     class Meta:
         model = User
@@ -56,7 +53,6 @@ class UserAdminResponseSerializer(ModelSerializer):
             "id",
             "username",
             "name",
-            "groups",  # GroupDeprecation
             "workspaces",
             "last_login",
             "date_joined",

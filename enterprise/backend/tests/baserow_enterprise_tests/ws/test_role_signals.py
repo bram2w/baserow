@@ -513,7 +513,6 @@ async def test_unsubscribe_user_from_tables_and_rows_when_role_updated(data_fixt
 
     response = await communicator.receive_json_from(timeout=0.1)
     assert response == {
-        "group_id": workspace_1.id,
         "type": "permissions_updated",
         "workspace_id": workspace_1.id,
     }
@@ -604,7 +603,6 @@ async def test_unsubscribe_user_from_tables_and_rows_when_team_trashed(
 
     response = await communicator.receive_json_from(timeout=0.1)
     assert response == {
-        "group_id": workspace_1.id,
         "type": "permissions_updated",
         "workspace_id": workspace_1.id,
     }

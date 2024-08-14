@@ -206,11 +206,6 @@ def test_get_integrations_serializer(
                 ).replace("+00:00", "Z"),
                 "order": database.order,
                 "type": "database",
-                "group": {
-                    "id": workspace.id,
-                    "name": workspace.name,
-                    "generative_ai_models_enabled": {},
-                },
                 "workspace": {
                     "id": workspace.id,
                     "name": workspace.name,

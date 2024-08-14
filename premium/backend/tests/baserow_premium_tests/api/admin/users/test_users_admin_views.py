@@ -91,20 +91,6 @@ def test_admin_can_see_admin_users_endpoint(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": staff_user.first_name,
                 "username": staff_user.email,
-                "groups": unordered(
-                    [  # GroupDeprecation
-                        {
-                            "id": workspace_user_is_admin_of.id,
-                            "name": workspace_user_is_admin_of.name,
-                            "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
-                        },
-                        {
-                            "id": workspace_user_is_not_admin_of.id,
-                            "name": workspace_user_is_not_admin_of.name,
-                            "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
-                        },
-                    ]
-                ),
                 "workspaces": unordered(
                     [
                         {
@@ -245,7 +231,6 @@ def test_admin_can_search_users(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": searched_for_user.first_name,
                 "username": searched_for_user.email,
-                "groups": [],  # GroupDeprecation
                 "workspaces": [],
                 "id": searched_for_user.id,
                 "is_staff": False,
@@ -289,7 +274,6 @@ def test_admin_can_sort_users(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": searched_for_user.first_name,
                 "username": searched_for_user.email,
-                "groups": [],  # GroupDeprecation
                 "workspaces": [],
                 "id": searched_for_user.id,
                 "is_staff": False,
@@ -672,7 +656,6 @@ def test_admin_can_create_user(api_client, premium_data_fixture):
             "date_joined": "2020-01-02T12:00:00Z",
             "name": "Test1",
             "username": "test2@test.nl",
-            "groups": [],  # GroupDeprecation
             "workspaces": [],
             "id": user.id,
             "is_staff": True,
@@ -715,7 +698,6 @@ def test_admin_can_patch_user(api_client, premium_data_fixture):
         "date_joined": "2021-04-01T01:00:00Z",
         "name": user.first_name,
         "username": "some_other_email@test.nl",
-        "groups": [],  # GroupDeprecation
         "workspaces": [],
         "id": user.id,
         "is_staff": True,
@@ -752,7 +734,6 @@ def test_admin_can_patch_user_without_providing_password(
         "date_joined": "2021-04-01T01:00:00Z",
         "name": "Test2",
         "username": "some_other_email@test.nl",
-        "groups": [],  # GroupDeprecation
         "workspaces": [],
         "id": user.id,
         "is_staff": True,

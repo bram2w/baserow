@@ -21,7 +21,7 @@
             full-width
             :disabled="loading"
             :loading="loading"
-            @click.prevent="deleteGroup()"
+            @click.prevent="deleteWorkspace()"
           >
             {{ $t('deleteWorkspaceModal.delete', workspace) }}</Button
           >
@@ -51,7 +51,7 @@ export default {
     }
   },
   methods: {
-    async deleteGroup() {
+    async deleteWorkspace() {
       this.hideError()
       this.loading = true
 

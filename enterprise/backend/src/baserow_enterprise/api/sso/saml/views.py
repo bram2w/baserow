@@ -110,17 +110,6 @@ class BaserowInitiatedSingleSignOn(APIView):
                 ),
             ),
             OpenApiParameter(
-                deprecated=True,
-                name="group_invitation_token",
-                location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.STR,
-                description=(
-                    "Please use the functionally identical "
-                    "`workspace_invitation_token` instead as this querystring "
-                    "is being removed in the future"
-                ),
-            ),
-            OpenApiParameter(
                 name="workspace_invitation_token",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
@@ -189,17 +178,6 @@ class AdminAuthProvidersLoginUrlView(APIView):
                 type=OpenApiTypes.STR,
                 description=(
                     "The url to which the user should be redirected after a successful login."
-                ),
-            ),
-            OpenApiParameter(
-                deprecated=True,
-                name="group_invitation_token",
-                location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.STR,
-                description=(
-                    "Please use the functionally identical "
-                    "`workspace_invitation_token` instead as this querystring "
-                    "is being removed in the future."
                 ),
             ),
             OpenApiParameter(

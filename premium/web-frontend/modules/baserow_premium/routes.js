@@ -12,11 +12,6 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/admin/users.vue'),
   },
   {
-    name: 'admin-groups',
-    path: '/admin/groups',
-    component: path.resolve(__dirname, 'pages/admin/workspaces.vue'),
-  }, // GroupDeprecation
-  {
     name: 'admin-workspaces',
     path: '/admin/workspaces',
     component: path.resolve(__dirname, 'pages/admin/workspaces.vue'),

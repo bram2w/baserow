@@ -143,13 +143,6 @@ class RegisterSerializer(serializers.Serializer):
         help_text="Indicates whether an authentication JWT should be generated and "
         "be included in the response.",
     )
-    # GroupDeprecation
-    group_invitation_token = serializers.CharField(
-        required=False,
-        source="workspace_invitation_token",
-        help_text="DEPRECATED: Please use `workspace_invitation_token` which "
-        "this attribute is being renamed to in 2024.",
-    )
     workspace_invitation_token = serializers.CharField(
         required=False,
         help_text="If provided and valid, the user accepts the workspace invitation and "
@@ -401,10 +394,6 @@ class TokenBlacklistSerializer(serializers.Serializer):
 
 
 class DashboardSerializer(serializers.Serializer):
-    # GroupDeprecation
-    group_invitations = UserWorkspaceInvitationSerializer(
-        many=True, source="workspace_invitations"
-    )
     workspace_invitations = UserWorkspaceInvitationSerializer(many=True)
 
 

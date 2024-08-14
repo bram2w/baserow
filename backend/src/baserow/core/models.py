@@ -22,7 +22,6 @@ from .action.models import Action
 from .integrations.models import Integration
 from .mixins import (
     CreatedAndUpdatedOnMixin,
-    GroupToWorkspaceCompatModelMixin,
     HierarchicalModelMixin,
     OrderableMixin,
     ParentWorkspaceTrashableModelMixin,
@@ -301,7 +300,6 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 class WorkspaceUser(
     HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
-    GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     models.Model,
@@ -341,7 +339,6 @@ class WorkspaceUser(
 class WorkspaceInvitation(
     HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
-    GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
     models.Model,
 ):
@@ -388,7 +385,6 @@ class Application(
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
-    GroupToWorkspaceCompatModelMixin,
     WithRegistry,
     models.Model,
 ):
@@ -439,7 +435,7 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
-class Template(GroupToWorkspaceCompatModelMixin, models.Model):
+class Template(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(
         help_text="The template slug that is used to match the template with the JSON "
@@ -487,7 +483,7 @@ class UserLogEntry(models.Model):
         ordering = ["-timestamp"]
 
 
-class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
+class TrashEntry(models.Model):
     """
     A TrashEntry is a record indicating that another model in Baserow has a trashed
     row. When a user deletes certain things in Baserow they are not actually deleted
@@ -610,7 +606,6 @@ class Snapshot(HierarchicalModelMixin, models.Model):
 
 
 class InstallTemplateJob(
-    GroupToWorkspaceCompatModelMixin,
     JobWithUserIpAddress,
     JobWithWebsocketId,
     JobWithUndoRedoIds,

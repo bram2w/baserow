@@ -62,7 +62,7 @@ def test_cant_create_comment_without_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_cant_create_comment_without_premium_license_for_group(
+def test_cant_create_comment_without_premium_license_for_workspace(
     premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(
@@ -74,7 +74,7 @@ def test_cant_create_comment_without_premium_license_for_group(
     message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     alternative_per_workspace_license_service.restrict_user_premium_to(
-        user, [table.database.group_id]
+        user, [table.database.workspace_id]
     )
 
     RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
