@@ -10,6 +10,23 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    CreatedByField,
+    CreatedOnField,
+    DateField,
+    DurationField,
+    FileField,
+    FormulaField,
+    LastModifiedByField,
+    LastModifiedField,
+    LinkRowField,
+    PasswordField,
+    PhoneNumberField,
+    RatingField,
+    SingleSelectField,
+    TextField,
+    URLField,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.app_auth_providers.models import AppAuthProvider
@@ -1695,6 +1712,100 @@ def test_get_roles_returns_default_role_if_role_field_is_null(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    "field_type,expected_is_allowed",
+    [
+        (None, False),
+        (CreatedByField, False),
+        (CreatedOnField, False),
+        (DateField, False),
+        (DurationField, False),
+        (FileField, False),
+        (FormulaField, True),
+        (LastModifiedByField, False),
+        (LastModifiedField, False),
+        (LinkRowField, False),
+        (PasswordField, False),
+        (PhoneNumberField, False),
+        (RatingField, False),
+        (SingleSelectField, True),
+        (TextField, True),
+        (URLField, False),
+    ],
+)
+def test_role_type_is_allowed(data_fixture, field_type, expected_is_allowed):
+    """
+    Ensure role_type_is_allowed() returns True if the Field Type is an allowed
+    type for Role or False otherwise.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    if field_type is None:
+        role_field = None
+    else:
+        kwargs = {}
+        if field_type == LinkRowField:
+            kwargs["link_row_table"] = user_source.table
+
+        role_field = field_type.objects.create(
+            table=user_source.table, name=f"name_{str(field_type)}", order=0, **kwargs
+        )
+        data_fixture.create_model_field(
+            user_source.table,
+            role_field,
+        )
+
+    user_source.role_field = role_field
+    user_source.save()
+
+    is_allowed = LocalBaserowUserSourceType().role_type_is_allowed(role_field)
+
+    assert is_allowed is expected_is_allowed
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "is_allowed,expected_roles",
+    [
+        (True, ["bar_role", "foo_role"]),
+        (False, []),
+    ],
+)
+def test_get_roles_returns_empty_list_if_role_type_unsupported(
+    data_fixture, is_allowed, expected_roles
+):
+    """
+    Ensure get_roles() returns an empty list if the Role Type is unsupported.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    # Create a roles field and add some rows
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = data_fixture.create_text_field(
+        table=users_table, order=0, name="role", text_default=""
+    )
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    # Add some roles
+    model = users_table.get_model()
+    for role in ["foo_role", "bar_role"]:
+        model.objects.create(**{f"field_{role_field.id}": role})
+
+    user_source_type = LocalBaserowUserSourceType()
+    user_source_type.role_type_is_allowed = MagicMock(return_value=is_allowed)
+
+    roles = user_source_type.get_roles(user_source)
+
+    assert roles == expected_roles
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
     "roles,expected_roles",
     [
         (
@@ -1822,3 +1933,36 @@ def test_get_roles_returns_expected_roles(
     roles = LocalBaserowUserSourceType().get_roles(user_source)
 
     assert sorted(roles) == sorted(expected_roles)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "role,expected_role",
+    [
+        ("foo_role", "foo_role"),
+        ("", ""),
+        # If the role field is null, return an empty string
+        (None, ""),
+    ],
+)
+def test_get_user_role_handles_empty_role_field(data_fixture, role, expected_role):
+    """
+    Test that the get_user_role() method returns a valid role, regardless of
+    the state of the role_field.
+
+    The role_field may be None or an empty string, in which case an empty string
+    should be returned as the role.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture, role_name=role)
+    user_source = data["user_source"]
+    user_model = data["user_table"].get_model()
+
+    first_user = user_model.objects.first()
+
+    user_role = LocalBaserowUserSourceType().get_user_role(
+        first_user,
+        user_source,
+    )
+
+    assert user_role == expected_role

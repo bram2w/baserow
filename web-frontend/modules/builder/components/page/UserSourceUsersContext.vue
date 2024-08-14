@@ -134,11 +134,13 @@ export default {
           this.builder,
           this.currentUser.user_source_uid
         )
-        await this.actionForceAuthenticate({
-          application: this.builder,
-          userSource,
-          user: this.currentUser,
-        })
+        if (userSource) {
+          await this.actionForceAuthenticate({
+            application: this.builder,
+            userSource,
+            user: this.currentUser,
+          })
+        }
       }
     },
 

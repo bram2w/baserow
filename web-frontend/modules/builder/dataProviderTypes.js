@@ -694,12 +694,15 @@ export class UserDataProviderType extends DataProviderType {
     }
 
     if (context.role?.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
-      const userSourceName = this.app.store.getters[
+      const userSource = this.app.store.getters[
         'userSource/getUserSourceByUId'
-      ](applicationContext.builder, loggedUser.user_source_uid).name
-      context.role = this.app.i18n.t('visibilityForm.rolesAllMembersOf', {
-        name: userSourceName,
-      })
+      ](applicationContext.builder, loggedUser.user_source_uid)
+
+      if (userSource) {
+        context.role = this.app.i18n.t('visibilityForm.rolesAllMembersOf', {
+          name: userSource.name,
+        })
+      }
     }
 
     return context
