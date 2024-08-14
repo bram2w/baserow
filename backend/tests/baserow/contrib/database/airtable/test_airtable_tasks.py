@@ -51,7 +51,7 @@ def test_run_import_from_airtable(
 
     mock_import_from_airtable_to_workspace.assert_called_once()
     args = mock_import_from_airtable_to_workspace.call_args
-    assert args[0][0].id == job.group.id
+    assert args[0][0].id == job.workspace.id
     assert args[0][1] == job.airtable_share_id
     assert isinstance(args[1]["progress_builder"], ChildProgressBuilder)
     assert args[1]["progress_builder"].represents_progress == 100

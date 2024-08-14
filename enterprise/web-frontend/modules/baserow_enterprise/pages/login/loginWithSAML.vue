@@ -179,15 +179,8 @@ export default {
     },
     getRedirectUrlWithValidQueryParams(url) {
       const parsedUrl = new URL(url)
-      // GroupDeprecation
       for (const [key, value] of Object.entries(this.$route.query)) {
-        if (
-          [
-            'language',
-            'groupInvitationToken',
-            'workspaceInvitationToken',
-          ].includes(key)
-        ) {
+        if (['language', 'workspaceInvitationToken'].includes(key)) {
           parsedUrl.searchParams.append(decamelize(key), value)
         }
       }

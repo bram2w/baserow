@@ -1,6 +1,5 @@
 from requests.exceptions import RequestException
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import (
     PolymorphicApplicationResponseSerializer,
@@ -45,17 +44,12 @@ class AirtableImportJobType(JobType):
     }
 
     request_serializer_field_names = [
-        "group_id",  # GroupDeprecation
         "workspace_id",
         "database_id",
         "airtable_share_url",
     ]
 
     request_serializer_field_overrides = {
-        "group_id": serializers.IntegerField(
-            required=False,
-            help_text="The group ID where the Airtable base must be imported into.",
-        ),  # GroupDeprecation
         "workspace_id": serializers.IntegerField(
             required=False,
             help_text="The workspace ID where the Airtable base must be imported into.",
@@ -68,16 +62,12 @@ class AirtableImportJobType(JobType):
     }
 
     serializer_field_names = [
-        "group_id",  # GroupDeprecation
         "workspace_id",
         "database",
         "airtable_share_id",
     ]
 
     serializer_field_overrides = {
-        "group_id": serializers.IntegerField(
-            help_text="The group ID where the Airtable base must be imported into.",
-        ),
         "workspace_id": serializers.IntegerField(
             help_text="The workspace ID where the Airtable base must be imported into.",
         ),
@@ -89,15 +79,7 @@ class AirtableImportJobType(JobType):
     }
 
     def prepare_values(self, values, user):
-        # GroupDeprecation
-        workspace_id = values.pop("workspace_id", values.pop("group_id", None))
-        if workspace_id is None:
-            raise ValidationError(
-                "A `workspace_id` or `group_id` is required to "
-                "execute an AirtableImportJob."
-            )
-
-        workspace = CoreHandler().get_workspace(workspace_id)
+        workspace = CoreHandler().get_workspace(values.pop("workspace_id"))
         CoreHandler().check_permissions(
             user,
             RunAirtableImportJobOperationType.type,

@@ -30,7 +30,6 @@ class RootActionScopeType(ActionScopeType):
 
 class WorkspaceActionScopeType(ActionScopeType):
     type = "workspace"
-    compat_type = "group"
 
     @classmethod
     def value(cls, workspace_id: int) -> ActionScopeStr:
@@ -41,8 +40,8 @@ class WorkspaceActionScopeType(ActionScopeType):
             min_value=0,
             allow_null=True,
             required=False,
-            help_text="If set to a workspaces id then any actions directly related to that "
-            "workspace will be be included when undoing or redoing.",
+            help_text="If set to a workspaces id then any actions directly related "
+            "to that workspace will be be included when undoing or redoing.",
         )
 
     def valid_serializer_value_to_scope_str(

@@ -42,7 +42,7 @@ def test_list_tokens(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 3
 
-    assert len(response_json[0]) == 6  # GroupDeprecation, 5->6 due to `group` addition
+    assert len(response_json[0]) == 5
     assert response_json[0]["id"] == token_1.id
     assert response_json[0]["name"] == token_1.name
     assert response_json[0]["key"] == token_1.key
@@ -54,7 +54,7 @@ def test_list_tokens(api_client, data_fixture):
         "delete": False,
     }
 
-    assert len(response_json[1]) == 6  # GroupDeprecation, 5->6 due to `group` addition
+    assert len(response_json[1]) == 5
     assert response_json[1]["id"] == token_2.id
     assert response_json[1]["name"] == token_2.name
     assert response_json[1]["key"] == token_2.key
@@ -66,7 +66,7 @@ def test_list_tokens(api_client, data_fixture):
         "delete": False,
     }
 
-    assert len(response_json[2]) == 6  # GroupDeprecation, 5->6 due to `group` addition
+    assert len(response_json[2]) == 5
     assert response_json[2]["id"] == token_3.id
     assert response_json[2]["name"] == token_3.name
     assert response_json[2]["key"] == token_3.key
@@ -120,8 +120,7 @@ def test_create_token(api_client, data_fixture):
         {
             "name": "Test",
             "workspace": workspace_2.id,
-            "group": workspace_2.id,
-        },  # GroupDeprecation
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -133,7 +132,7 @@ def test_create_token(api_client, data_fixture):
     url = reverse("api:database:tokens:list")
     response = api_client.post(
         url,
-        {"name": "Test", "workspace": workspace_1.id, "group": workspace_1.id},
+        {"name": "Test", "workspace": workspace_1.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -143,9 +142,6 @@ def test_create_token(api_client, data_fixture):
     token = Token.objects.all().first()
     assert response_json["id"] == token.id
     assert response_json["name"] == token.name
-    assert (
-        response_json["group"] == token.workspace_id == workspace_1.id
-    )  # GroupDeprecation
     assert response_json["workspace"] == token.workspace_id == workspace_1.id
     assert response_json["key"] == token.key
     assert len(response_json["key"]) == 32

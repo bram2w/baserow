@@ -47,11 +47,6 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/workspace.vue'),
   },
   {
-    name: 'group-invitation',
-    path: '/group-invitation/:token',
-    component: path.resolve(__dirname, 'pages/workspaceInvitation.vue'),
-  }, // GroupDeprecation
-  {
     name: 'workspace-invitation',
     path: '/workspace-invitation/:token',
     component: path.resolve(__dirname, 'pages/workspaceInvitation.vue'),

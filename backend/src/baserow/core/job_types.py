@@ -3,7 +3,6 @@ from typing import Any, Dict, List
 from django.contrib.auth.models import AbstractUser
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import (
     InstallTemplateJobApplicationsSerializer,
@@ -126,17 +125,12 @@ class InstallTemplateJobType(JobType):
     }
 
     request_serializer_field_names = [
-        "group_id",  # GroupDeprecation
         "workspace_id",
         "database_id",
         "airtable_share_url",
     ]
 
     request_serializer_field_overrides = {
-        "group_id": serializers.IntegerField(
-            required=False,
-            help_text="The ID of the group where the template will be installed.",
-        ),
         "workspace_id": serializers.IntegerField(
             required=False,
             help_text="The ID of the workspace where the template will be installed.",
@@ -150,7 +144,6 @@ class InstallTemplateJobType(JobType):
         "workspace",
         "template",
         "installed_applications",
-        "group",  # GroupDeprecation
     ]
     serializer_field_overrides = {
         "workspace": WorkspaceSerializer(read_only=True),
@@ -158,22 +151,13 @@ class InstallTemplateJobType(JobType):
         "installed_applications": InstallTemplateJobApplicationsSerializer(
             read_only=True
         ),
-        "group": WorkspaceSerializer(read_only=True),  # GroupDeprecation
     }
 
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-        # GroupDeprecation
-        workspace_id = values.pop("workspace_id", values.pop("group_id", None))
-        if workspace_id is None:
-            raise ValidationError(
-                "A `workspace_id` or `group_id` is required to "
-                "execute an InstallTemplateJobType."
-            )
-
         handler = CoreHandler()
-        workspace = handler.get_workspace(workspace_id)
+        workspace = handler.get_workspace(values["workspace_id"])
         CoreHandler().check_permissions(
             user,
             CreateApplicationsWorkspaceOperationType.type,

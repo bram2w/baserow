@@ -6,7 +6,6 @@ from django.db import models
 
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
-    GroupToWorkspaceCompatModelMixin,
     HierarchicalModelMixin,
     TrashableModelMixin,
 )
@@ -19,7 +18,6 @@ class Team(
     HierarchicalModelMixin,
     TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
-    GroupToWorkspaceCompatModelMixin,
 ):
     """
     Represents a collection of `Subject` (`User`, `Team`), in a

@@ -314,7 +314,7 @@ export const actions = {
    */
   async forceDelete({ commit, dispatch, rootGetters }, workspace) {
     dispatch('job/deleteForWorkspace', workspace, { root: true })
-    this.$bus.$emit('group-deleted', { workspace })
+    this.$bus.$emit('workspace-deleted', { workspace })
     const applications = rootGetters['application/getAllOfWorkspace'](workspace)
     applications.forEach((application) => {
       return dispatch('application/forceDelete', application, { root: true })

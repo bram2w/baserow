@@ -307,17 +307,12 @@ class UserView(APIView):
             else None
         )
 
-        # GroupDeprecation
-        token = data.get(
-            "workspace_invitation_token", data.get("group_invitation_token")
-        )
-
         user = action_type_registry.get(CreateUserActionType.type).do(
             name=data["name"],
             email=data["email"],
             password=data["password"],
             language=data["language"],
-            workspace_invitation_token=token,
+            workspace_invitation_token=data.get("workspace_invitation_token"),
             template=template,
         )
 
@@ -657,10 +652,7 @@ class DashboardView(APIView):
             "workspace", "invited_by"
         ).filter(email=request.user.username)
         dashboard_serializer = DashboardSerializer(
-            {
-                "workspace_invitations": workspace_invitations,
-                "group_invitations": workspace_invitations,  # GroupDeprecation
-            }
+            {"workspace_invitations": workspace_invitations}
         )
         return Response(dashboard_serializer.data)
 

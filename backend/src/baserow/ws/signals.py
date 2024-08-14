@@ -96,7 +96,6 @@ def workspace_created(sender, workspace, user, **kwargs):
             workspace.id,
             {
                 "type": "group_created",
-                "group": WorkspaceSerializer(workspace).data,  # GroupDeprecation
                 "workspace": WorkspaceSerializer(workspace).data,
             },
             getattr(user, "web_socket_id", None),
@@ -111,9 +110,7 @@ def workspace_updated(sender, workspace, user, **kwargs):
             workspace.id,
             {
                 "type": "group_updated",
-                "group_id": workspace.id,  # GroupDeprecation
                 "workspace_id": workspace.id,
-                "group": WorkspaceSerializer(workspace).data,  # GroupDeprecation
                 "workspace": WorkspaceSerializer(workspace).data,
             },
             getattr(user, "web_socket_id", None),
@@ -130,7 +127,6 @@ def workspace_deleted(
             [u.id for u in workspace_users],
             {
                 "type": "group_deleted",
-                "group_id": workspace_id,  # GroupDeprecation
                 "workspace_id": workspace_id,
             },
             getattr(user, "web_socket_id", None),
@@ -146,11 +142,7 @@ def workspace_user_added(sender, workspace_user, user, **kwargs):
             {
                 "type": "group_user_added",
                 "id": workspace_user.id,
-                "group_id": workspace_user.workspace_id,  # GroupDeprecation
                 "workspace_id": workspace_user.workspace_id,
-                "group_user": WorkspaceUserSerializer(
-                    workspace_user
-                ).data,  # GroupDeprecation
                 "workspace_user": WorkspaceUserSerializer(workspace_user).data,
             },
             getattr(user, "web_socket_id", None),
@@ -166,11 +158,7 @@ def workspace_user_updated(sender, workspace_user, user, **kwargs):
             {
                 "type": "group_user_updated",
                 "id": workspace_user.id,
-                "group_id": workspace_user.workspace_id,  # GroupDeprecation
                 "workspace_id": workspace_user.workspace_id,
-                "group_user": WorkspaceUserSerializer(
-                    workspace_user
-                ).data,  # GroupDeprecation
                 "workspace_user": WorkspaceUserSerializer(workspace_user).data,
             },
             getattr(user, "web_socket_id", None),
@@ -184,11 +172,7 @@ def workspace_user_deleted(sender, workspace_user_id, workspace_user, user, **kw
         payload = {
             "type": "group_user_deleted",
             "id": workspace_user_id,
-            "group_id": workspace_user.workspace_id,  # GroupDeprecation
             "workspace_id": workspace_user.workspace_id,
-            "group_user": WorkspaceUserSerializer(
-                workspace_user
-            ).data,  # GroupDeprecation
             "workspace_user": WorkspaceUserSerializer(workspace_user).data,
         }
         broadcast_to_group.delay(
@@ -233,11 +217,7 @@ def workspace_restored(sender, workspace_user, user, **kwargs):
             [workspace_user.user_id],
             {
                 "type": "group_restored",
-                "group_id": workspace_user.workspace_id,  # GroupDeprecation
                 "workspace_id": workspace_user.workspace_id,
-                "group": WorkspaceUserWorkspaceSerializer(  # GroupDeprecation
-                    workspaceuser_workspaces
-                ).data,
                 "workspace": WorkspaceUserWorkspaceSerializer(
                     workspaceuser_workspaces
                 ).data,
@@ -255,7 +235,6 @@ def workspaces_reordered(sender, workspace_ids, user, **kwargs):
             [user.id],
             {
                 "type": "groups_reordered",
-                "group_ids": workspace_ids,  # GroupDeprecation
                 "workspace_ids": workspace_ids,
             },
             getattr(user, "web_socket_id", None),
@@ -318,7 +297,6 @@ def applications_reordered(sender, workspace, order, user, **kwargs):
             workspace.id,
             {
                 "type": "applications_reordered",
-                "group_id": workspace.id,  # GroupDeprecation
                 "workspace_id": workspace.id,
                 "order": order,
             },

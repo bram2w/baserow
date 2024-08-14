@@ -298,7 +298,6 @@ def test_audit_log_entries_are_created_from_actions_and_returned_in_order(
 
     common_json = {
         "action_type": "create_group",
-        "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
         "workspace": f"{workspace_1.name} ({workspace_1.id})",
         "id": AnyInt(),
         "ip_address": None,
@@ -374,7 +373,6 @@ def test_audit_log_entries_are_translated_in_the_user_language(
             {
                 "action_type": "create_group",
                 "description": f'Progetto "{workspace_2.name}" ({workspace_2.id}) creato.',
-                "group": f"{workspace_2.name} ({workspace_2.id})",  # GroupDeprecation
                 "workspace": f"{workspace_2.name} ({workspace_2.id})",
                 "id": AnyInt(),
                 "ip_address": None,
@@ -385,7 +383,6 @@ def test_audit_log_entries_are_translated_in_the_user_language(
             {
                 "action_type": "create_group",
                 "description": f'Progetto "{workspace_1.name}" ({workspace_1.id}) creato.',
-                "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
                 "workspace": f"{workspace_1.name} ({workspace_1.id})",
                 "id": AnyInt(),
                 "ip_address": None,
@@ -416,7 +413,6 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
     json_workspace_1 = {
         "action_type": "create_group",
         "description": f'Group "{workspace_1.name}" ({workspace_1.id}) created.',
-        "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
         "workspace": f"{workspace_1.name} ({workspace_1.id})",
         "id": AnyInt(),
         "ip_address": None,
@@ -427,7 +423,6 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
     json_workspace_2 = {
         "action_type": "create_group",
         "description": f'Group "{workspace_2.name}" ({workspace_2.id}) created.',
-        "group": f"{workspace_2.name} ({workspace_2.id})",  # GroupDeprecation
         "workspace": f"{workspace_2.name} ({workspace_2.id})",
         "id": AnyInt(),
         "ip_address": None,

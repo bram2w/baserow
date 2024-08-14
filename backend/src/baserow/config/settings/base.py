@@ -492,8 +492,6 @@ SPECTACULAR_SETTINGS = {
         {"name": "Settings"},
         {"name": "User"},
         {"name": "User files"},
-        {"name": "Groups"},  # GroupDeprecation
-        {"name": "Group invitations"},  # GroupDeprecation
         {"name": "Workspaces"},
         {"name": "Workspace invitations"},
         {"name": "Templates"},

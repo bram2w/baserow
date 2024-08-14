@@ -11,7 +11,6 @@ from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test.utils import CaptureQueriesContext
-from django.utils.timezone import now
 
 import pytest
 from faker import Faker
@@ -22,7 +21,6 @@ from pyinstrument import Profiler
 from rest_framework.test import APIRequestFactory
 from sqlparse import format
 
-from baserow.compat.api.conf import GROUP_DEPRECATION
 from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.core.context import clear_current_workspace_id
 from baserow.core.exceptions import PermissionDenied
@@ -410,16 +408,6 @@ def profiler():
         profiler.reset()
 
     return profile_this
-
-
-@pytest.fixture
-def group_compat_timebomb():
-    if now() >= GROUP_DEPRECATION:
-        pytest.fail(
-            "Group compatibility ended on "
-            f"{GROUP_DEPRECATION.strftime('%Y-%m-%d')}, please migrate to "
-            "using the Workspace endpoints."
-        )
 
 
 class BaseMaxLocksPerTransactionStub:

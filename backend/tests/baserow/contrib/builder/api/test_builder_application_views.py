@@ -165,11 +165,6 @@ def test_get_builder_application(api_client, data_fixture):
             "+00:00", "Z"
         ),
         "type": "builder",
-        "group": {
-            "id": workspace.id,
-            "name": workspace.name,
-            "generative_ai_models_enabled": {},
-        },
         "workspace": {
             "id": workspace.id,
             "name": workspace.name,
@@ -215,11 +210,6 @@ def test_list_builder_applications(api_client, data_fixture):
             "name": application.name,
             "order": application.order,
             "type": "builder",
-            "group": {
-                "id": workspace.id,
-                "name": workspace.name,
-                "generative_ai_models_enabled": {},
-            },
             "workspace": {
                 "id": workspace.id,
                 "name": workspace.name,
