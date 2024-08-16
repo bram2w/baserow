@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "The `include` query parameter now excludes link row fields unless they are explicitly listed when listing rows.",
+    "issue_number": 2903,
+    "bullet_points": [],
+    "created_at": "2024-08-16"
+}

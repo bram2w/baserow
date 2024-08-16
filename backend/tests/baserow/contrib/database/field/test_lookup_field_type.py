@@ -1889,7 +1889,7 @@ def test_can_modify_row_containing_lookup_diamond_dep(
     )
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table2.id})
-        + f"?include=middle_lookup&user_field_names=true",
+        + f"?include=linkrowfield,middle_lookup&user_field_names=true",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1918,7 +1918,7 @@ def test_can_modify_row_containing_lookup_diamond_dep(
     }
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table3.id})
-        + f"?include=final_lookup&user_field_names=true",
+        + f"?include=a,b,final_lookup&user_field_names=true",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1957,7 +1957,7 @@ def test_can_modify_row_containing_lookup_diamond_dep(
     assert response.status_code == HTTP_200_OK
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table3.id})
-        + f"?include=final_lookup&user_field_names=true",
+        + f"?include=a,b,final_lookup&user_field_names=true",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

@@ -409,12 +409,6 @@ class RowsView(APIView):
             for link_row_join in link_row_joins
         }
 
-        model = table.get_model(
-            fields=fields,
-            field_ids=[] if fields else None,
-        )
-        queryset = model.objects.all().enhance_by_fields(**field_kwargs)
-
         if view_id:
             view_handler = ViewHandler()
             view = view_handler.get_view_as_user(
@@ -426,8 +420,19 @@ class RowsView(APIView):
             if view.table_id != table.id:
                 raise ViewDoesNotExist()
 
+            # Ensure fields used for filtering, sorting, or grouping are included in the
+            # queryset. Unrequested fields will be filtered out later in the serializer.
+
+            model = table.get_model()
+            queryset = model.objects.all().enhance_by_fields(**field_kwargs)
             queryset = view_handler.apply_filters(view, queryset)
             queryset = view_handler.apply_sorting(view, queryset)
+        else:
+            model = table.get_model(
+                fields=fields,
+                field_ids=[] if fields else None,
+            )
+            queryset = model.objects.all().enhance_by_fields(**field_kwargs)
 
         adhoc_filters = AdHocFilters.from_request(
             request, user_field_names=user_field_names
@@ -447,6 +452,7 @@ class RowsView(APIView):
             model,
             RowSerializer,
             is_response=True,
+            field_ids=[f.id for f in fields] if fields else None,
             user_field_names=user_field_names,
             field_kwargs=field_kwargs,
         )
