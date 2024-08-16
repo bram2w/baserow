@@ -4026,3 +4026,56 @@ def test_list_row_history_endpoint_is_paginated(data_fixture, api_client):
             },
         ],
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "query_params", [{"include": "Name"}, {"exclude": "Org,Active"}]
+)
+def test_list_rows_can_combine_view_id_with_include_exclude(
+    data_fixture, api_client, query_params
+):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(table=table, name="Name")
+    org_field = data_fixture.create_text_field(table=table, name="Org")
+    active_field = data_fixture.create_boolean_field(table=table, name="Active")
+    RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                name_field.db_column: "Paul",
+                org_field.db_column: "A",
+                active_field.db_column: True,
+            },
+            {
+                name_field.db_column: "John",
+                org_field.db_column: "B",
+                active_field.db_column: False,
+            },
+            {
+                name_field.db_column: "Jack",
+                org_field.db_column: "B",
+                active_field.db_column: True,
+            },
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    data_fixture.create_view_group_by(user, view=view, field=org_field)
+    data_fixture.create_view_sort(user, view=view, field=active_field, order="ASC")
+    data_fixture.create_view_filter(
+        user, field=active_field, view=view, type="boolean", value="1"
+    )
+
+    rsp = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        data={"view_id": view.id, "user_field_names": True, **query_params},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert rsp.status_code == HTTP_200_OK
+    assert rsp.json()["results"] == [
+        {"id": AnyInt(), "order": AnyStr(), "Name": "Paul"},
+        {"id": AnyInt(), "order": AnyStr(), "Name": "Jack"},
+    ]
