@@ -760,3 +760,24 @@ def test_text_field_type_get_order(data_fixture):
         result += getattr(char, f"field_{field.id}")
 
     assert result == sorted_chars
+
+
+@pytest.mark.django_db
+@override_settings(USE_PG_FULLTEXT_SEARCH=False)
+def test_tsv_not_created(data_fixture):
+    id_mapping = {}
+
+    table = data_fixture.create_database_table(force_add_tsvectors=False)
+    text_field = data_fixture.create_text_field(
+        name="Text name", text_default="Text default", table=table
+    )
+    text_field_type = field_type_registry.get_by_model(text_field)
+    text_serialized = text_field_type.export_serialized(text_field)
+    text_field_imported = text_field_type.import_serialized(
+        table,
+        text_serialized,
+        ImportExportConfig(include_permission_data=True, reduce_disk_space_usage=False),
+        id_mapping,
+        DeferredForeignKeyUpdater(),
+    )
+    assert text_field_imported.tsvector_column_created is False

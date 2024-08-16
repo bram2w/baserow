@@ -944,7 +944,10 @@ class FieldType(
             if self.can_have_select_options
             else []
         )
-        should_create_tsvector_column = not import_export_config.reduce_disk_space_usage
+        should_create_tsvector_column = (
+            not import_export_config.reduce_disk_space_usage
+            and table.tsvectors_are_supported
+        )
         field = self.model_class(
             table=table,
             tsvector_column_created=should_create_tsvector_column,
