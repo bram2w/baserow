@@ -5,6 +5,7 @@ from django.dispatch import Signal
 before_rows_update = Signal()
 before_rows_delete = Signal()
 
+rows_loaded = Signal()
 rows_created = Signal()
 rows_updated = Signal()
 rows_deleted = Signal()

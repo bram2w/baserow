@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Reduce the frequency of periodic field updates for unused workspaces.",
+    "issue_number": 2120,
+    "bullet_points": [],
+    "created_at": "2024-08-16"
+}

@@ -2,10 +2,22 @@ from collections import defaultdict
 
 from django.dispatch import receiver
 
+from baserow.contrib.database.fields.periodic_field_update_handler import (
+    PeriodicFieldUpdateHandler,
+)
 from baserow.contrib.database.fields.signals import field_updated
+from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.views import signals as view_signals
 
 from .models import LinkRowField
+
+
+@receiver(view_signals.view_loaded)
+@receiver(row_signals.rows_loaded)
+def mark_workspace_used_on_rows_loaded(sender, table, **kwargs):
+    PeriodicFieldUpdateHandler.mark_workspace_as_recently_used(
+        table.database.workspace_id
+    )
 
 
 @receiver(view_signals.view_deleted)
