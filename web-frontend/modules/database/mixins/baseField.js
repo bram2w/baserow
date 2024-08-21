@@ -28,6 +28,24 @@ export default {
       type: [String, Number, Object, Boolean, Array],
       required: false,
     },
+    /**
+     * The row object that is being edited. This can be used to reference other
+     * fields in the same row.
+     */
+    row: {
+      type: Object,
+      required: false,
+      default: null,
+    },
+    /**
+     * The table fields of the parent table. This can be used to reference other
+     * fields in the same table.
+     */
+    allFieldsInTable: {
+      type: Array,
+      required: false,
+      default: null,
+    },
   },
   computed: {
     valid() {

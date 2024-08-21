@@ -91,6 +91,7 @@
         :workspace-id="workspaceId"
         :field="field"
         :row="row"
+        :all-fields-in-table="allFieldsInTable"
         :state="state"
         :multi-select-position="getMultiSelectPosition(row.id, field)"
         :read-only="readOnly"

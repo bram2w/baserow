@@ -11,6 +11,7 @@
       :view-id="viewId"
       :value="value"
       :multiple="multiple"
+      :new-row-presets="newRowPresets"
       @selected="selected"
       @unselected="unselected"
       @hide="hide"
@@ -46,6 +47,11 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    newRowPresets: {
+      type: Object,
+      required: false,
+      default: () => ({}),
     },
   },
   methods: {

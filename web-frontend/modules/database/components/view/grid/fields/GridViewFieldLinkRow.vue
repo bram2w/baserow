@@ -44,6 +44,7 @@
       v-if="canAccessLinkedTable"
       ref="selectModal"
       :table-id="field.link_row_table_id"
+      :new-row-presets="presetsForNewRowInLinkedTable"
       :view-id="field.link_row_limit_selection_view_id"
       :value="value"
       :multiple="true"

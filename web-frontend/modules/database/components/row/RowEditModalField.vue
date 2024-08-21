@@ -56,6 +56,8 @@
       :value="row['field_' + field.id]"
       :read-only="readOnly"
       :row-is-created="!!row.id"
+      :row="row"
+      :all-fields-in-table="allFieldsInTable"
       @update="update"
       @refresh-row="$emit('refresh-row', row)"
     />
