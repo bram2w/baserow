@@ -129,6 +129,11 @@ export default {
       type: Array,
       required: true,
     },
+    presets: {
+      type: Object,
+      required: false,
+      default: () => ({}),
+    },
   },
   data() {
     return {
@@ -162,8 +167,12 @@ export default {
       const row = {}
       this.allFields.forEach((field) => {
         const name = `field_${field.id}`
-        const fieldType = this.$registry.get('field', field._.type.type)
-        row[name] = fieldType.getNewRowValue(field)
+        if (this.presets[name] !== undefined) {
+          row[name] = this.presets[name]
+        } else {
+          const fieldType = this.$registry.get('field', field._.type.type)
+          row[name] = fieldType.getNewRowValue(field)
+        }
       })
       Object.assign(row, defaults)
       Vue.set(this, 'row', row)

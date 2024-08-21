@@ -52,6 +52,7 @@
       :all-fields-in-table="allFields"
       :visible-fields="allFields"
       :can-modify-fields="false"
+      :presets="newRowPresets"
       @created="createRow"
     ></RowCreateModal>
   </div>
@@ -105,6 +106,11 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    newRowPresets: {
+      type: Object,
+      required: false,
+      default: () => ({}),
     },
   },
   data() {

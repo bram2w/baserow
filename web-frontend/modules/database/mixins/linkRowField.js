@@ -1,4 +1,42 @@
+import { getPrimaryOrFirstField } from '@baserow/modules/database/utils/field'
+
 export default {
+  computed: {
+    /**
+     * Returns the value of the field that can be used when creating a new row
+     * in the linked table starting from the current row.
+     */
+    presetsForNewRowInLinkedTable() {
+      const presets = {}
+      const value = this.primaryFieldLinkRowValue
+      if (value) {
+        presets[`field_${this.field.link_row_related_field_id}`] = [value]
+      }
+      return presets
+    },
+    /**
+     * Returns the value of the field.
+     */
+    primaryFieldLinkRowValue() {
+      // Set the starting row as preset so that can be used later if the user wants to create a new row
+      // starting from the selected row.
+      if (!this.allFieldsInTable) {
+        return
+      }
+      const primaryField = getPrimaryOrFirstField(this.allFieldsInTable)
+      const primaryFieldType = this.$registry.get(
+        'field',
+        primaryField._.type.type
+      )
+      return {
+        id: this.row.id,
+        value: primaryFieldType.toHumanReadableString(
+          primaryField,
+          this.row[`field_${primaryField.id}`]
+        ),
+      }
+    },
+  },
   methods: {
     /**
      * Removes an existing relation from the value.

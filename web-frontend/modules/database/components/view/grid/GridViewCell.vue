@@ -58,6 +58,8 @@
       :selected="parent.isCellSelected(props.field.id)"
       :store-prefix="props.storePrefix"
       :read-only="props.readOnly"
+      :row="props.row"
+      :all-fields-in-table="props.allFieldsInTable"
       @update="(...args) => $options.methods.update(listeners, props, ...args)"
       @paste="(...args) => $options.methods.paste(listeners, props, ...args)"
       @edit="(...args) => $options.methods.edit(listeners, props, ...args)"
