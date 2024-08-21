@@ -1,17 +1,20 @@
 import traceback
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 
 from loguru import logger
 from opentelemetry import trace
 
 from baserow.config.celery import app
+from baserow.contrib.database.fields.periodic_field_update_handler import (
+    PeriodicFieldUpdateHandler,
+)
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.models import RichTextFieldMention
@@ -59,9 +62,21 @@ def run_periodic_fields_updates(
         if field_qs is None:
             continue
 
-        workspace_qs = filter_distinct_workspace_ids_per_fields(field_qs, workspace_id)
-
-        for workspace in workspace_qs.all():
+        recently_used_workspace_ids = (
+            PeriodicFieldUpdateHandler.get_recently_used_workspace_ids()
+        )
+        now = datetime.now(tz=timezone.utc)
+        threshold = now - timedelta(
+            minutes=settings.BASEROW_PERIODIC_FIELD_UPDATE_UNUSED_WORKSPACE_INTERVAL_MIN
+        )
+        workspaces = filter_distinct_workspace_ids_per_fields(
+            field_qs, workspace_id
+        ).filter(
+            Q(id__in=recently_used_workspace_ids)
+            | Q(now__lte=threshold)
+            | Q(now__isnull=True)
+        )
+        for workspace in workspaces:
             _run_periodic_field_type_update_per_workspace(
                 field_type_instance, workspace, update_now
             )

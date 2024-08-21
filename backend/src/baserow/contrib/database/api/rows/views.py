@@ -83,6 +83,7 @@ from baserow.contrib.database.rows.operations import (
     ReadAdjacentRowDatabaseRowOperationType,
     ReadDatabaseRowHistoryOperationType,
 )
+from baserow.contrib.database.rows.signals import rows_loaded
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
@@ -458,6 +459,8 @@ class RowsView(APIView):
         )
         serializer = serializer_class(page, many=True)
 
+        rows_loaded.send(sender=self, table=table)
+
         return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(
@@ -782,6 +785,8 @@ class RowView(APIView):
             model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
+
+        rows_loaded.send(sender=self, table=table)
 
         return Response(serializer.data)
 
