@@ -454,4 +454,53 @@ describe('elementTypes tests', () => {
       expect(childElementTypes).toEqual(expectedAllowedChildTypes)
     })
   })
+
+  describe('elementTypes ChoiceElementType choiceOptions tests', () => {
+    test('choiceOptions returns Value if Value is not null.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: '', name: 'Foo Name' },
+          { id: 2, value: 'bar_name', name: 'Bar Name' },
+        ],
+      }
+
+      // When the Value is non-null, we expect them to be returned verbatim.
+      expect(elementType.choiceOptions(element)).toEqual(['', 'bar_name'])
+    })
+
+    test('choiceOptions returns Name if Value is null.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: null, name: 'Foo Name' },
+          { id: 2, value: 'bar_name', name: 'Bar Name' },
+        ],
+      }
+
+      // When Value is null, we assume the user wants it to be the same as
+      // the Name. Thus, we return 'Foo Name' instead of null.
+      expect(elementType.choiceOptions(element)).toEqual([
+        'Foo Name',
+        'bar_name',
+      ])
+    })
+
+    test('choiceOptions returns Value if it is an empty string.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        options: [
+          { id: 1, value: '', name: 'Foo Name' },
+          { id: 2, value: 'bar_name', name: 'Bar Name' },
+        ],
+      }
+
+      // Since an empty string is a valid Value, if the user has explicitly
+      // declared it, we should return an empty string.
+      expect(elementType.choiceOptions(element)).toEqual(['', 'bar_name'])
+    })
+  })
 })

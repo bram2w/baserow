@@ -1322,6 +1322,27 @@ export class ChoiceElementType extends FormElementType {
   }
 
   /**
+   * Given a Choice Element, return an array of all valid option Values.
+   *
+   * When adding a new Option, the Page Designer can choose to only define the
+   * Name and leave the Value undefined. In that case, the AB will assume the
+   * Value to be the same as the Name. In the backend, the Value is stored as
+   * null while the frontend visually displays the Name in its place.
+   *
+   * This means that an option's Value can sometimes be null. This method
+   * gathers all valid Values. When a Value null, the Name is used instead.
+   * Otherwise, the Value itself is used.
+   *
+   * @param element - The choice form element
+   * @returns {Array} - An array of valid Values
+   */
+  choiceOptions(element) {
+    return element.options.map((option) => {
+      return option.value !== null ? option.value : option.name
+    })
+  }
+
+  /**
    * Responsible for validating the choice form element. It behaves slightly
    * differently so that choice options with blank values are valid. We simply
    * test if the value is one of the choice's own values.
@@ -1339,11 +1360,12 @@ export class ChoiceElementType extends FormElementType {
               ...applicationContext,
             })
           ).map(ensureString)
-        : element.options.map((option) => option.value)
+        : this.choiceOptions(element)
 
     const validOption = element.multiple
       ? options.some((option) => value.includes(option))
       : options.includes(value)
+
     return !(element.required && !validOption)
   }
 
