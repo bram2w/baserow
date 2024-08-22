@@ -1356,7 +1356,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         element: ChoiceElement,
         value: Union[List, str],
         dispatch_context: DispatchContext,
-    ) -> bool:
+    ) -> str:
         """
         Responsible for validating `ChoiceElement` form data. We handle
         this validation a little differently to ensure that if someone creates
@@ -1364,10 +1364,15 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
 
         :param element: The choice element.
         :param value: The choice value we want to validate.
-        :return: Whether the value is valid or not for this element.
+        :return: The value if it is valid for this element.
         """
 
-        options = set(element.choiceelementoption_set.values_list("value", flat=True))
+        options_tuple = set(
+            element.choiceelementoption_set.values_list("value", "name")
+        )
+        options = [
+            value if value is not None else name for (value, name) in options_tuple
+        ]
 
         if element.option_type == ChoiceElement.OPTION_TYPE.FORMULAS:
             options = ensure_array(

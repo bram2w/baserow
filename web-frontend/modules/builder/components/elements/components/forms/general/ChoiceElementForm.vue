@@ -111,16 +111,18 @@
         >
           <div class="col col-5">
             <FormInput
-              :value="option.name"
+              v-model="option.name"
               :placeholder="$t('choiceOptionSelector.namePlaceholder')"
-              @input="optionUpdated(option, { name: $event })"
             />
           </div>
           <div class="col col-5">
             <FormInput
-              :value="option.value"
+              :value="option.value === null ? option.name : option.value"
               :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
-              @input="optionUpdated(option, { value: $event })"
+              :class="{
+                'choice-element__option-value--fake': option.value === null,
+              }"
+              @input="option.value = $event"
             />
           </div>
           <div class="col col-2">
@@ -181,8 +183,6 @@
 </template>
 
 <script>
-import debounce from 'lodash/debounce'
-
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
 import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
@@ -266,26 +266,12 @@ export default {
   },
   watch: {
     'element.options'(options) {
-      this.values.options = options.map((o) => o)
+      this.values.options = { ...options }
     },
   },
   methods: {
-    optionUpdated: debounce(function ({ id }, changes) {
-      const index = this.values.options.findIndex((option) => option.id === id)
-
-      // If the name changes, automatically populate the value with the name.
-      // This should only occur if the value is blank.
-      if (!changes?.value && !this.values.options[index].value.length) {
-        changes.value = changes.name
-      }
-
-      this.$set(this.values.options, index, {
-        ...this.values.options[index],
-        ...changes,
-      })
-    }, 400),
     createOption() {
-      this.values.options.push({ name: '', value: '', id: uuid() })
+      this.values.options.push({ name: '', value: null, id: uuid() })
     },
     deleteOption({ id }) {
       this.values.options = this.values.options.filter(

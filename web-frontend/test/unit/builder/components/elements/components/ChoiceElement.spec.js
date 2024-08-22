@@ -96,6 +96,32 @@ describe('ChoiceElement', () => {
     expect(wrapper.element).toMatchSnapshot()
   })
 
+  test('as manual dropdown - values', async () => {
+    const wrapper = await mountComponentForElement({
+      id: 42,
+      defaultValue: '1',
+      parent_element_id: null,
+      type: 'choice',
+      multiple: false,
+      option_type: 'manual',
+      show_as_dropdown: true,
+      options: [
+        { value: '', name: 'Foo Name' },
+        { value: 'bar_name', name: 'Bar Name' },
+        { value: null, name: 'Baz Name' },
+      ],
+    })
+
+    expect(wrapper.vm.optionsResolved).toEqual([
+      // An empty string is a valid Value
+      { value: '', name: 'Foo Name' },
+      // 'bar_name' is a valid Value
+      { value: 'bar_name', name: 'Bar Name' },
+      // null is replaced by the name, i.e. 'Baz Name'
+      { value: 'Baz Name', name: 'Baz Name' },
+    ])
+  })
+
   test('as manual radio', async () => {
     const wrapper = await mountComponentForElement({
       id: 42,

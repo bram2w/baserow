@@ -1039,3 +1039,80 @@ def test_sanitize_element_roles_fixes_default_user_role(
     )
 
     assert result == cleaned_roles
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "choices,expected_choices,invalid_choices",
+    [
+        (
+            [
+                {"name": "foo_name1", "value": "foo_value1"},
+                {"name": "bar_name1", "value": "bar_value1"},
+            ],
+            # Since the "value" exists for all options, return the values.
+            ["foo_value1", "bar_value1"],
+            # Since the "value" exists, the "name" isn't used and thus are
+            # invalid options.
+            ["foo_name1", "bar_name1"],
+        ),
+        (
+            [
+                {"name": "foo_name2", "value": None},
+                {"name": "bar_name2", "value": None},
+            ],
+            # Since the "value" doesn't exist, return the "name".
+            ["foo_name2", "bar_name2"],
+            # Since the "value" doesn't exist, the "name" is used. Any other
+            # values are invalid options.
+            ["foo_value2", "bar_value2"],
+        ),
+        (
+            [
+                {"name": "foo_name3", "value": ""},
+                {"name": "bar_name3", "value": ""},
+            ],
+            # An empty string is a valid value
+            [""],
+            # Since the "value" is an empty string and is valid, it is used.
+            # Any other values are invalid options.
+            ["foo_name3", "bar_name3"],
+        ),
+        (
+            [
+                {"name": "foo_name", "value": "foo_value"},
+                {"name": "bar_name", "value": ""},
+                {"name": "baz_name", "value": None},
+            ],
+            # The valid list of values
+            ["foo_value", "", "baz_name"],
+            # The invalid list of values
+            ["foo_name", "bar_name"],
+        ),
+    ],
+)
+def test_choice_element_validation_none_vs_empty(
+    data_fixture, choices, expected_choices, invalid_choices
+):
+    """
+    Test that None and empty string are handled correctly by the
+    ChoiceElementType's is_valid() method.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    choice = ElementService().create_element(
+        user=user,
+        element_type=element_type_registry.get("choice"),
+        page=page,
+    )
+
+    for item in choices:
+        choice.choiceelementoption_set.create(name=item["name"], value=item["value"])
+
+    for value in expected_choices:
+        assert ChoiceElementType().is_valid(choice, value, {}) is value
+
+    for value in invalid_choices:
+        with pytest.raises(FormDataProviderChunkInvalidException):
+            ChoiceElementType().is_valid(choice, value, {})

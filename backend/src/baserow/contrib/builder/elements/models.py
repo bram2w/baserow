@@ -641,9 +641,14 @@ class ChoiceElement(FormElement):
 
 class ChoiceElementOption(models.Model):
     value = models.TextField(
+        null=True,
         blank=True,
         default="",
-        help_text="The value of the option",
+        help_text=(
+            "The value of the option. An empty string is a valid value. When "
+            "the value field is null, the frontend will auto-populate the "
+            "value using the name field."
+        ),
     )
     name = models.TextField(
         blank=True,

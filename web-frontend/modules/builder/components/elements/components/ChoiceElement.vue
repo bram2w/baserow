@@ -19,7 +19,7 @@
       <ABDropdownItem
         v-for="option in optionsResolved"
         :key="option.id"
-        :name="option.name || option.value"
+        :name="option.name || (option.value ? option.value : '')"
         :value="option.value"
       />
     </ABDropdown>
@@ -117,7 +117,10 @@ export default {
     optionsResolved() {
       switch (this.element.option_type) {
         case CHOICE_OPTION_TYPES.MANUAL:
-          return this.element.options
+          return this.element.options.map(({ name, value }) => ({
+            name,
+            value: value === null ? name : value,
+          }))
         case CHOICE_OPTION_TYPES.FORMULAS: {
           const formulaValues = ensureArray(
             this.resolveFormula(this.element.formula_value)
