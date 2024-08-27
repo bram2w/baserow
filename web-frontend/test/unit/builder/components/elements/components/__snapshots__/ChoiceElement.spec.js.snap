@@ -47,7 +47,7 @@ exports[`ChoiceElement as default 1`] = `
                
               <ul
                 class="select__items"
-                tabindex=""
+                tabindex="-1"
               />
                
               <!---->
@@ -180,7 +180,7 @@ exports[`ChoiceElement as manual dropdown 1`] = `
                
               <ul
                 class="select__items"
-                tabindex=""
+                tabindex="-1"
               >
                 <li
                   class="ab-dropdownitem__item ab-dropdownitem__item--no-options"
