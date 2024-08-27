@@ -1,9 +1,9 @@
 # Install with Helm
 
-## Official Helm chart
+## Community Helm chart
 
-The official Helm chart of Baserow, maintained by us, can be found here
-https://artifacthub.io/packages/helm/baserow-chart/baserow. By default, it includes
+The community Helm chart of Baserow can be found here
+https://artifacthub.io/packages/helm/christianhuth/baserow. By default, it includes
 everything you need like PostgreSQL, Redis, MinIO for S3, and Caddy for automatic SSL
 certificates. Here you can also documentation for all the configuration possibilities
 like using an external PostgreSQL server, how to setup Caddy with various Cloud
