@@ -73,7 +73,7 @@
         v-auto-overflow-scroll
         class="select__items"
         :class="{ 'select__items--no-max-height': fixedItemsImmutable }"
-        tabindex=""
+        tabindex="-1"
       >
         <slot></slot>
       </ul>
