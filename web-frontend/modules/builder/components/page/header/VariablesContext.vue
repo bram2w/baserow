@@ -1,8 +1,8 @@
 <template>
   <Context
     class="variables-context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    overflow-scroll
+    max-height-if-outside-viewport
   >
     <div style="padding: 5px">{{ $t('common.comingSoon') }}</div>
   </Context>

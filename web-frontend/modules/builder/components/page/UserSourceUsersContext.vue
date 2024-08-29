@@ -2,7 +2,7 @@
   <Context
     class="select user-source-users-context"
     :class="{ 'context--loading-overlay': state === 'loading' }"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     @shown="shown"
   >
     <SelectSearch

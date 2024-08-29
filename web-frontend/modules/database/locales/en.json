@@ -482,7 +482,7 @@
   "shareViewLink": {
     "shareViewText": "Private shareable link allows anyone to see the data in this view.",
     "shareView": "Share {viewTypeSharingLinkName}",
-    "shareViewLinkTitle": "Create a private link",
+    "createPrivateLink": "Create a private link",
     "shareViewTitle": "You have not yet shared the view",
     "sharedViewTitle": "This {viewTypeSharingLinkName} is currently shared via a private link",
     "sharedViewDescription": "People who have the link can see the {viewTypeSharingLinkName}.",

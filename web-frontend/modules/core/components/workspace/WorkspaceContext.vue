@@ -1,8 +1,8 @@
 <template>
   <Context
     ref="context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    overflow-scroll
+    max-height-if-outside-viewport
     @shown="fetchRolesAndPermissions"
   >
     <div class="context__menu-title">

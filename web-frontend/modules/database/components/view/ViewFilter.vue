@@ -19,7 +19,7 @@
       ref="context"
       class="filters"
       :class="{ 'context--loading-overlay': view._.loading }"
-      :max-height-if-outside-viewport="true"
+      max-height-if-outside-viewport
     >
       <ViewFilterForm
         :fields="fields"

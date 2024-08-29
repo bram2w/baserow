@@ -27,8 +27,8 @@
       </a>
       <Context
         ref="stackedContext"
-        :overflow-scroll="true"
-        :max-height-if-outside-viewport="true"
+        overflow-scroll
+        max-height-if-outside-viewport
       >
         <KanbanViewStackedBy
           :table="table"

@@ -12,8 +12,8 @@
     <Context
       ref="pickerContext"
       class="picker__context"
-      :overflow-scroll="true"
-      :max-height-if-outside-viewport="true"
+      overflow-scroll
+      max-height-if-outside-viewport
     >
       <slot :hide-picker="hide" />
     </Context>

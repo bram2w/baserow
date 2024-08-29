@@ -1,10 +1,30 @@
-.data-source-context {
-  padding: 12px;
+.data-source-context__container {
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-source-context__content {
   min-width: 600px;
+
+  &--scrollable {
+    overflow: hidden scroll;
+  }
+}
+
+.data-source-context__forms {
+  display: flex;
+  flex-direction: column;
+
+  > div {
+    &:not(:last-child) {
+      border-bottom: 1px dashed $palette-neutral-200;
+    }
+  }
 }
 
 .data-source-context__none {
-  padding: 4px;
+  padding: 12px;
   margin-bottom: 14px;
   white-space: normal;
   word-break: break-word;

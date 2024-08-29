@@ -1,9 +1,5 @@
 <template>
-  <Context
-    ref="context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
-  >
+  <Context ref="context" overflow-scroll max-height-if-outside-viewport>
     <ul class="context__menu">
       <li v-if="canBeEdited(authProvider.type)" class="context__menu-item">
         <a

@@ -1,11 +1,11 @@
 <template>
-  <Context
-    ref="context"
-    class="sortings"
-    :max-height-if-outside-viewport="true"
-  >
+  <Context ref="context" class="sortings" max-height-if-outside-viewport>
     <div class="sortings__content">
-      <div v-if="view.sortings.length === 0" class="sortings__none">
+      <div
+        v-if="view.sortings.length === 0"
+        v-auto-overflow-scroll
+        class="sortings__none sortings__none--scrollable"
+      >
         <div class="sortings__none-title">
           {{ $t('viewSortContext.noSortTitle') }}
         </div>
@@ -114,32 +114,24 @@
           </div>
         </div>
       </div>
-
       <div
         v-if="view.sortings.length < availableFieldsLength && !disableSort"
-        class="sortings__footer"
+        ref="addContextToggle"
+        class="context__footer"
       >
-        <div ref="addContextToggle">
-          <ButtonText
-            icon="iconoir-plus"
-            @click="
-              $refs.addContext.toggle(
-                $refs.addContextToggle,
-                'bottom',
-                'left',
-                4
-              )
-            "
-          >
-            {{ $t('viewSortContext.addSort') }}</ButtonText
-          >
-        </div>
-
+        <ButtonText
+          icon="iconoir-plus"
+          @click="
+            $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 4)
+          "
+        >
+          {{ $t('viewSortContext.addSort') }}</ButtonText
+        >
         <Context
           ref="addContext"
           class="sortings__add-context"
-          :overflow-scroll="true"
-          :max-height-if-outside-viewport="true"
+          overflow-scroll
+          max-height-if-outside-viewport
         >
           <ul ref="items" class="context__menu">
             <li

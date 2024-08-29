@@ -1,28 +1,30 @@
 <template>
   <Context
     ref="context"
-    class="field-form-context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    class="field-context"
+    max-height-if-outside-viewport
     @shown="
       onShow()
       $emit('shown', $event)
     "
   >
-    <FieldForm
-      ref="form"
-      :table="table"
-      :view="view"
-      :forced-type="forcedType"
-      :all-fields-in-table="allFieldsInTable"
-      :database="database"
-      @submitted="submit"
-      @keydown-enter="$refs.submitButton.focus()"
-    >
+    <div class="field-context__content">
+      <FieldForm
+        ref="form"
+        :table="table"
+        :view="view"
+        :forced-type="forcedType"
+        :all-fields-in-table="allFieldsInTable"
+        :database="database"
+        @submitted="submit"
+        @keydown-enter="$refs.submitButton.focus()"
+        @field-type-changed="handleFileTypeChanged"
+      />
+
       <div
-        class="context__form-actions context__form-actions--multiple-actions"
+        class="context__footer context__form-footer-actions--multiple-actions"
       >
-        <span class="context__form-actions--alight-left">
+        <span class="context__form-footer-actions--alight-left">
           <ButtonText
             v-if="!showDescription"
             ref="showDescription"
@@ -40,11 +42,12 @@
           type="primary"
           :loading="loading"
           :disabled="loading"
+          @click="$refs.form.submit()"
         >
           {{ $t('action.create') }}
         </Button>
       </div>
-    </FieldForm>
+    </div>
   </Context>
 </template>
 
@@ -141,6 +144,9 @@ export default {
     },
     onShow() {
       this.showDescription = this.$refs.form.isDescriptionFieldNotEmpty()
+    },
+    handleFileTypeChanged(event) {
+      console.log(event)
     },
   },
 }

@@ -1,17 +1,13 @@
 .data-source-form {
-  &:not(:last-child) {
-    border-bottom: 1px solid $color-neutral-200;
-    margin-bottom: 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 12px;
 
   .tabs__header {
     border-bottom: none;
     padding-left: 0;
   }
-}
-
-.data-source-form__header {
-  margin-bottom: 20px;
 }
 
 .data-source-form__header-form {

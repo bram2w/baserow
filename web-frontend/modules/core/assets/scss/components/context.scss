@@ -173,9 +173,22 @@
 .context__form {
   min-width: 260px;
   padding: 16px;
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+
+  &--scrollable {
+    overflow-y: scroll;
+  }
 }
 
-.context__form-actions {
+.context__form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.context__form-footer-actions {
   display: flex;
   align-items: center;
   justify-content: right;
@@ -248,4 +261,14 @@
     @include loading(14px);
     @include absolute(8px, auto, auto, 10px);
   }
+}
+
+.context__footer {
+  padding: 0 14px;
+  height: 52px;
+  display: flex;
+  border-top: 1px solid $palette-neutral-200;
+  flex-shrink: 0;
+
+  @include flex-align-items(8px);
 }

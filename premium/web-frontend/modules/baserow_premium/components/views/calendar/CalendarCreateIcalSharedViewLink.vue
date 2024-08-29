@@ -4,19 +4,28 @@ Additional 'sync with external calendar' button for share view link.
 This button will be rendered differently depending on view.ical_public
 -->
 <template>
-  <ButtonText
-    tag="a"
-    type="secondary"
-    class="button-text--no-underline"
-    :icon="iconCssClasses"
-    @click="onClick"
-  >
-    {{
-      view.ical_public
-        ? $t('calendarViewType.sharedViewDisableSyncToExternalCalendar')
-        : $t('calendarViewType.sharedViewEnableSyncToExternalCalendar')
-    }}
-  </ButtonText>
+  <div>
+    <Button
+      v-if="!view.ical_public && location === 'content'"
+      type="secondary"
+      :icon="iconCssClasses"
+      @click="onClick"
+    >
+      {{ $t('calendarViewType.sharedViewEnableSyncToExternalCalendar') }}
+    </Button>
+
+    <ButtonText
+      v-if="!view.ical_public && location === 'footer'"
+      :icon="iconCssClasses"
+      @click="onClick"
+    >
+      {{ $t('calendarViewType.sharedViewEnableSyncToExternalCalendar') }}
+    </ButtonText>
+
+    <ButtonText v-if="view.ical_public" :icon="iconCssClasses" @click="onClick">
+      {{ $t('calendarViewType.sharedViewDisableSyncToExternalCalendar') }}
+    </ButtonText>
+  </div>
 </template>
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -25,11 +34,19 @@ export default {
   name: 'CalendarCreateIcalSharedViewLink',
   props: {
     view: { type: Object, required: false, default: null },
+    /**
+     * The location of the button in its parent component.
+     */
+    location: {
+      type: String,
+      default: 'content',
+      validator: (value) => ['content', 'footer'].includes(value),
+    },
   },
   computed: {
     iconCssClasses() {
       const css = this.view.ical_public
-        ? ['iconoir-cancel', 'view_sharing__create-link-icon']
+        ? ['iconoir-cancel']
         : ['iconoir-calendar']
 
       return css.join(' ')

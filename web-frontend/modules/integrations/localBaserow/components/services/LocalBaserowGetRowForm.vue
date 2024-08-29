@@ -16,6 +16,7 @@
           <FormGroup
             small-label
             :label="$t('localBaserowGetRowForm.rowFieldLabel')"
+            required
           >
             <InjectedFormulaInput
               v-model="values.row_id"

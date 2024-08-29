@@ -1,5 +1,5 @@
 <template>
-  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
+  <Context overflow-scroll max-height-if-outside-viewport>
     <ul class="context__menu">
       <li
         v-if="

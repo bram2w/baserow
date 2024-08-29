@@ -71,43 +71,26 @@ describe('Premium Share View Calendar ical feed Tests', () => {
     expect(shareViewLinkContext.props('view').id).toEqual(viewId)
     // initial state: no shared links yet, two buttons to enable sharing
     expect(
-      shareViewLinkContext.findAll('.view-sharing__create-link')
+      shareViewLinkContext.findAllComponents({ name: 'Button' })
     ).toHaveLength(2)
 
     // ..including: one with sync with external calendar
     expect(
-      shareViewLinkContext
-        .findAll('.view-sharing__create-link')
-        .filter((el) =>
-          el
-            .text()
-            .includes('calendarViewType.sharedViewEnableSyncToExternalCalendar')
-        )
-    ).toHaveLength(1)
+      shareViewLinkContext.findAllComponents({ name: 'Button' }).at(1).text()
+    ).toContain('calendarViewType.sharedViewEnableSyncToExternalCalendar')
 
     // sanity check: no footer links yet
     expect(
       shareViewLinkContext.findAll('.view-sharing__shared-link-foot')
     ).toHaveLength(0)
 
-    // click on share with external calendar link
     expect(
-      shareViewLinkContext
-        .findAll('.view-sharing__create-link')
-        .filter((el) =>
-          el
-            .text()
-            .includes('calendarViewType.sharedViewEnableSyncToExternalCalendar')
-        )
-    ).toHaveLength(1)
-
-    expect(
-      shareViewLinkContext.findAll('.view-sharing__create-link')
+      shareViewLinkContext.findAllComponents({ name: 'Button' })
     ).toHaveLength(2)
 
     // last .view-sharing__create-link is a element which needs to be clicked
     await shareViewLinkContext
-      .findAll('.view-sharing__create-link')
+      .findAllComponents({ name: 'Button' })
       .at(1)
       .trigger('click')
 
@@ -125,31 +108,16 @@ describe('Premium Share View Calendar ical feed Tests', () => {
 
     // no create link big buttons
     expect(
-      shareViewLinkContext.findAll('.view-sharing__create-link')
+      shareViewLinkContext.findAllComponents({ name: 'Button' })
     ).toHaveLength(0)
 
     // but two buttons in the footer, one to disable the sync
     expect(
       shareViewLinkContext
-        .findAll('.view-sharing__shared-link-disable')
-        .filter((el) =>
-          el
-            .text()
-            .includes('calendarViewType.sharedViewEnableSyncToExternalCalendar')
-        )
-    ).toHaveLength(0)
-
-    expect(
-      shareViewLinkContext
-        .findAll('.view-sharing__shared-link-disable')
-        .filter((el) =>
-          el
-            .text()
-            .includes(
-              'calendarViewType.sharedViewDisableSyncToExternalCalendar'
-            )
-        )
-    ).toHaveLength(1)
+        .findAllComponents({ name: 'ButtonText' })
+        .at(1)
+        .text()
+    ).toContain('calendarViewType.sharedViewDisableSyncToExternalCalendar')
 
     // one shared link option for calendar ical feed
     expect(
@@ -157,18 +125,6 @@ describe('Premium Share View Calendar ical feed Tests', () => {
         .findAll('.view-sharing__shared-link')
         .filter((el) =>
           el.text().includes('calendarViewType.sharedViewDescription')
-        )
-    ).toHaveLength(1)
-
-    expect(
-      shareViewLinkContext
-        .findAll('.view-sharing__shared-link-disable')
-        .filter((el) =>
-          el
-            .text()
-            .includes(
-              'calendarViewType.sharedViewDisableSyncToExternalCalendar'
-            )
         )
     ).toHaveLength(1)
   })
@@ -223,20 +179,15 @@ describe('Premium Share View Calendar ical feed Tests', () => {
     // sanity checks
     expect(shareViewLinkContext.props('view').type).toEqual('calendar')
     expect(shareViewLinkContext.props('view').id).toEqual(viewId)
-    // initial state: no shared links yet, two buttons to enable sharing
-    console.log('share view link', shareViewLinkContext)
-    console.log(
-      'buttons',
-      shareViewLinkContext.findAll('.view-sharing__create-link')
-    )
+
     expect(
-      shareViewLinkContext.findAll('.view-sharing__create-link')
+      shareViewLinkContext.findAllComponents({ name: 'Button' })
     ).toHaveLength(2)
 
     // ..including: one with sync with external calendar
     expect(
       shareViewLinkContext
-        .findAll('.view-sharing__create-link')
+        .findAllComponents({ name: 'Button' })
         .filter((el) =>
           el
             .text()
@@ -246,7 +197,7 @@ describe('Premium Share View Calendar ical feed Tests', () => {
 
     // last .view-sharing__create-link is a element which needs to be clicked
     await shareViewLinkContext
-      .findAll('.view-sharing__create-link')
+      .findAllComponents({ name: 'Button' })
       .at(1)
       .trigger('click')
 

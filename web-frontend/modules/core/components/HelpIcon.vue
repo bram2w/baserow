@@ -63,7 +63,7 @@ export default {
      * Additional css classes for tooltip content container
      * */
     tooltipContentClasses: {
-      type: Array,
+      type: [Array, String],
       requred: false,
       default: () => [],
     },

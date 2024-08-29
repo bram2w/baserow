@@ -1,5 +1,5 @@
 <template>
-  <Context :max-height-if-outside-viewport="true">
+  <Context max-height-if-outside-viewport>
     <ViewDecoratorList
       v-if="activeDecorations.length === 0"
       :database="database"
@@ -80,25 +80,23 @@
             database.workspace.id
           )
         "
-        class="decorator-context__footer"
+        ref="addDecoratorLink"
+        class="context__footer"
       >
-        <span ref="addDecoratorLink">
-          <ButtonText
-            icon="iconoir-plus"
-            class="choose-select-field__link margin-right-auto"
-            @click="
-              $refs.selectDecoratorContext.toggle(
-                $refs.addDecoratorLink,
-                'bottom',
-                'left',
-                4
-              )
-            "
-          >
-            {{ $t('viewDecoratorContext.addDecorator') }}
-          </ButtonText></span
+        <ButtonText
+          icon="iconoir-plus"
+          class="choose-select-field__link margin-right-auto"
+          @click="
+            $refs.selectDecoratorContext.toggle(
+              $refs.addDecoratorLink,
+              'bottom',
+              'left',
+              1
+            )
+          "
         >
-
+          {{ $t('viewDecoratorContext.addDecorator') }}
+        </ButtonText>
         <SelectViewDecoratorContext
           ref="selectDecoratorContext"
           :database="database"

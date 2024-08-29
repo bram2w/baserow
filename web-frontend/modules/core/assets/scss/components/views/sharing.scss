@@ -14,9 +14,10 @@
   }
 }
 
-.view-sharing__create-link-container {
+.view-sharing__content {
+  max-height: inherit;
   display: flex;
-  align-items: center;
+  flex-direction: column;
 }
 
 .view-sharing__loading-icon {
@@ -39,67 +40,25 @@
   }
 }
 
-.view-sharing__create-link {
-  display: flex;
-  column-gap: 8px;
-  justify-items: center;
-  line-height: 36px;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 0 12px;
-  margin-top: 36px;
-  margin-right: 12px;
-  color: $palette-neutral-1200;
-  border: solid 1px $palette-neutral-400;
-
-  @include rounded($rounded-md);
-
-  &:last-child {
-    margin-right: 0;
-  }
-
-  &:hover {
-    text-decoration: none;
-    background-color: $color-neutral-100;
-  }
-
-  &.view-sharing__create-link--disabled {
-    color: $color-neutral-500;
-    background-color: transparent;
-
-    &:hover {
-      cursor: inherit;
-    }
-  }
-}
-
-/** icons */
-.view-sharing__create-link-icon {
-  color: $palette-neutral-900;
-  font-size: 16px;
-
-  .view-sharing__create-link--disabled & {
-    color: $color-neutral-500;
-  }
-}
-
-.view-sharing__share-link-container {
+.view-sharing__share-link {
+  padding: 48px 80px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+  flex-direction: column;
+  gap: 16px;
 
-.view-sharing__share-link {
-  padding: 48px 80px;
-  text-align: center;
-  box-sizing: content-box;
-  min-width: 460px;
+  @include rounded($rounded-md);
+
+  &--scrollable {
+    overflow-y: scroll;
+  }
 }
 
 .view-sharing__shared-link {
   padding: 20px;
   text-align: left;
-  box-sizing: content-box;
   max-width: 624px;
   color: $palette-neutral-900;
   border-top: solid 1px $palette-neutral-200;
@@ -118,8 +77,12 @@
 .view-sharing__share-link-description {
   font-size: 12px;
   font-weight: normal;
-  margin-top: 16px;
-  color: $palette-neutral-900;
+  margin: 0;
+  padding: 0;
+}
+
+.view-sharing__share-link-options {
+  @include flex-align-items(16px);
 }
 
 .view-sharing__shared-link-title {
@@ -215,12 +178,6 @@
   padding: 16px;
   line-height: 20px;
   border-top: solid 1px $palette-neutral-200;
-}
-
-.view-sharing__shared-link-disable {
-  @include flex-align-items(8px);
-
-  color: $palette-neutral-900;
 }
 
 .view-sharing__shared-link-options {
