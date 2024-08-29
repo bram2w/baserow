@@ -365,27 +365,25 @@ exports[`GridViewRows component with decoration View with decoration configured 
     </div>
      
     <div
-      class="decorator-context__footer"
+      class="context__footer"
     >
-      <span>
-        <button
-          class="button-text choose-select-field__link margin-right-auto"
+      <button
+        class="button-text choose-select-field__link margin-right-auto"
+      >
+        <i
+          class="button-text__icon iconoir-plus"
+        />
+         
+        <!---->
+         
+        <span
+          class="button-text__label"
         >
-          <i
-            class="button-text__icon iconoir-plus"
-          />
-           
-          <!---->
-           
-          <span
-            class="button-text__label"
-          >
-            
-          viewDecoratorContext.addDecorator
-        
-          </span>
-        </button>
-      </span>
+          
+        viewDecoratorContext.addDecorator
+      
+        </span>
+      </button>
        
     </div>
   </div>

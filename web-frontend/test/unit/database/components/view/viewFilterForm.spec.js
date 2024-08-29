@@ -242,7 +242,10 @@ describe('ViewFilterForm can add/update/remove filters and filter groups', () =>
       .onPost(`/database/views/${viewId}/filters/`)
       .reply((config) => [200, { ...config.data, view: viewId, id: 100 }])
 
-    await wrapper.findAll('.filters__actions button').at(0).trigger('click')
+    await wrapper
+      .findAllComponents({ name: 'ButtonText' })
+      .at(0)
+      .trigger('click')
     await flushPromises()
 
     expect(view.filters.length).toBe(1)
@@ -361,7 +364,10 @@ describe('ViewFilterForm can add/update/remove filters and filter groups', () =>
       .reply((config) => [200, { ...config.data, view: viewId, id: 101 }])
 
     // button-0 creates a filter, button-1 creates a filter group
-    await wrapper.findAll('.filters__actions button').at(1).trigger('click')
+    await wrapper
+      .findAllComponents({ name: 'ButtonText' })
+      .at(1)
+      .trigger('click')
     await flushPromises()
 
     expect(view.filters.length).toBe(1)

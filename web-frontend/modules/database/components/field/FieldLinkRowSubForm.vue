@@ -1,12 +1,11 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <FormGroup
       v-if="tables.length > 0"
       small-label
       :label="$t('fieldLinkRowSubForm.selectTableLabel')"
       required
       :error="$v.values.link_row_table_id.$error"
-      class="margin-bottom-2"
     >
       <Dropdown
         v-model="values.link_row_table_id"
@@ -27,7 +26,7 @@
 
       <template #error> {{ $t('error.requiredField') }}</template>
     </FormGroup>
-    <FormGroup class="margin-bottom-2">
+    <FormGroup>
       <div
         v-show="values.link_row_table_id !== table.id"
         class="margin-bottom-1"
@@ -36,7 +35,7 @@
           $t('fieldLinkRowSubForm.hasRelatedFieldLabel')
         }}</Checkbox>
       </div>
-      <div class="margin-bottom-1">
+      <div>
         <Checkbox v-model="limitToViewToggle" @input="limitToViewToggleChange"
           >{{ $t('fieldLinkRowSubForm.limitToView') }}
           <HelpIcon
@@ -49,6 +48,7 @@
         <div v-if="viewsLoading" class="loading"></div>
         <Dropdown
           v-else
+          class="margin-top-1"
           v-model="values.link_row_limit_selection_view_id"
           small
           :fixed-items="true"

@@ -2,7 +2,7 @@
   <Context
     ref="viewsContext"
     class="select"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     @shown="shown"
   >
     <div class="select__search">

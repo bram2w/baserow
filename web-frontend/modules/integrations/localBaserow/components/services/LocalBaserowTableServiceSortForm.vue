@@ -109,7 +109,6 @@
           type="secondary"
           size="small"
           icon="iconoir-plus"
-          class="sortings__add"
           @click="
             $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 2)
           "
@@ -120,8 +119,8 @@
       <Context
         ref="addContext"
         class="sortings__add-context"
-        :overflow-scroll="true"
-        :max-height-if-outside-viewport="true"
+        overflow-scroll
+        max-height-if-outside-viewport
       >
         <ul ref="items" class="context__menu">
           <li

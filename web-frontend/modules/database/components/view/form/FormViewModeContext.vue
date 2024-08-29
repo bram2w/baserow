@@ -1,5 +1,5 @@
 <template>
-  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
+  <Context overflow-scroll max-height-if-outside-viewport>
     <ul class="select__items prevent-scroll">
       <li
         v-for="(mode, index) in modes"

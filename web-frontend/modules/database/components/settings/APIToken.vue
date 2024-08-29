@@ -25,11 +25,7 @@
           >
             <i class="baserow-icon-more-horizontal"></i>
           </a>
-          <Context
-            ref="context"
-            :overflow-scroll="true"
-            :max-height-if-outside-viewport="true"
-          >
+          <Context ref="context" overflow-scroll max-height-if-outside-viewport>
             <div class="api-token__key">
               <div class="api-token__key-name">
                 {{ $t('apiToken.tokenPrefix') }}

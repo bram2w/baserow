@@ -6,24 +6,6 @@
   flex-direction: column;
 }
 
-.elements-list__search-icon {
-  color: $palette-neutral-600;
-  padding: 0 10px;
-  font-size: 16px;
-
-  .elements-list__search:focus-within & {
-    color: $palette-blue-500;
-  }
-}
-
-.elements-list__search {
-  flex: 0 0;
-  position: relative;
-  border-bottom: 1px solid $palette-neutral-200;
-
-  @include flex-align-items;
-}
-
 .elements-list__search-input {
   display: block;
   width: 100%;

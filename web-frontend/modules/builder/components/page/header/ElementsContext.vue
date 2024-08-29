@@ -1,11 +1,11 @@
 <template>
   <Context
     class="select elements-context"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     @shown="shown()"
   >
-    <div class="elements-list__search">
-      <i class="elements-list__search-icon iconoir-search"></i>
+    <div class="select__search">
+      <i class="select__search-icon iconoir-search"></i>
       <input
         ref="search"
         v-model="search"

@@ -6,11 +6,7 @@
       @click.prevent="toggle"
     ></i>
 
-    <Context
-      ref="context"
-      :overflow-scroll="true"
-      :max-height-if-outside-viewport="true"
-    >
+    <Context ref="context" overflow-scroll max-height-if-outside-viewport>
       <ul v-auto-overflow-scroll class="select__items">
         <li
           v-for="option in options"

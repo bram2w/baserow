@@ -25,11 +25,7 @@
       <i class="baserow-icon-more-vertical"></i>
     </a>
 
-    <Context
-      ref="context"
-      :overflow-scroll="true"
-      :max-height-if-outside-viewport="true"
-    >
+    <Context ref="context" overflow-scroll max-height-if-outside-viewport>
       <div class="context__menu-title">{{ table.name }} ({{ table.id }})</div>
       <ul class="context__menu">
         <li

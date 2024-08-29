@@ -2,7 +2,7 @@
   <Context
     :hide-on-click-outside="hideOnClickOutside"
     class="time-select"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
   >
     <ul @mousedown="$event.preventDefault()">
       <li v-for="time in getTimes(notation)" :key="time">

@@ -14,171 +14,173 @@
     </a>
 
     <!-- modal -->
-    <Context ref="context" :max-height-if-outside-viewport="true">
-      <!-- is not yet shared -->
-      <div v-if="!view.isShared" class="view-sharing__share-link">
-        <div class="view-sharing__share-link-title">
-          {{ $t('shareViewLink.shareViewTitle', { viewTypeSharingLinkName }) }}
-        </div>
-
-        <!-- custom shared view text provided by viewType, should be i18n'ed already -->
-        <div class="view-sharing__share-link-description">
-          {{ view.createShareViewText || $t('shareViewLink.shareViewText') }}
-        </div>
-
+    <Context ref="context" max-height-if-outside-viewport>
+      <div class="view-sharing__content">
+        <!-- is not yet shared -->
         <div
-          v-auto-overflow-scroll="true"
-          class="view-sharing__share-link-container"
+          v-if="!view.isShared"
+          v-auto-overflow-scroll
+          class="view-sharing__share-link view-sharing__share-link--scrollable"
         >
-          <ButtonText
-            tag="a"
-            class="view-sharing__create-link"
-            :class="{ 'view-sharing__create-link--disabled': readOnly }"
-            icon="baserow-icon-share view-sharing__create-link-icon"
-            @click.stop="!readOnly && updateView({ public: true })"
-          >
+          <div class="view-sharing__share-link-title">
             {{
-              $t('shareViewLink.shareViewLinkTitle', {
-                viewTypeSharingLinkName,
-              })
+              $t('shareViewLink.shareViewTitle', { viewTypeSharingLinkName })
             }}
-          </ButtonText>
+          </div>
 
-          <component
-            :is="extraLink"
-            v-for="(extraLink, i) in additionalCreateShareLinkOptions"
-            :key="i"
-            class="view-sharing__create-link"
-            :view="view"
-            @update-view="forceUpdateView"
-          />
-        </div>
-      </div>
+          <!-- custom shared view text provided by viewType, should be i18n'ed already -->
+          <p class="view-sharing__share-link-description">
+            {{ view.createShareViewText || $t('shareViewLink.shareViewText') }}
+          </p>
 
-      <div v-else class="view-sharing">
-        <div v-auto-overflow-scroll="true" class="view-sharing--scrollable">
-          <div v-if="view.public" class="view-sharing__shared-link">
-            <!-- title and description -->
-            <div class="view-sharing__shared-link-title">
+          <div class="view-sharing__share-link-options">
+            <Button
+              type="secondary"
+              :disabled="readOnly"
+              icon="baserow-icon-share"
+              @click.stop="!readOnly && updateView({ public: true })"
+            >
               {{
-                $t('shareViewLink.sharedViewTitle', { viewTypeSharingLinkName })
-              }}
-            </div>
-            <div class="view-sharing__shared-link-description">
-              {{
-                $t('shareViewLink.sharedViewDescription', {
+                $t('shareViewLink.createPrivateLink', {
                   viewTypeSharingLinkName,
                 })
               }}
-            </div>
+            </Button>
 
-            <!-- generated url bar -->
-            <div class="view-sharing__shared-link-content">
-              <div class="view-sharing__shared-link-box">{{ shareUrl }}</div>
-              <a
-                v-tooltip="$t('shareViewLink.copyURL')"
-                class="view-sharing__shared-link-action"
-                @click="copyShareUrlToClipboard()"
-              >
-                <i class="iconoir-copy" />
-                <Copied ref="copied"></Copied>
-              </a>
-              <a
-                v-if="!readOnly"
-                v-tooltip="$t('shareViewLink.generateNewUrl')"
-                class="view-sharing__shared-link-action"
-                @click.prevent="$refs.rotateSlugModal.show()"
-              >
-                <i class="iconoir-refresh-double" />
-                <ViewRotateSlugModal
-                  ref="rotateSlugModal"
-                  :service="viewService"
-                  :view="view"
-                ></ViewRotateSlugModal>
-              </a>
-            </div>
-            <div class="view-sharing__shared-link-options">
-              <div class="view-sharing__option">
-                <SwitchInput
-                  small
-                  :value="view.public_view_has_password"
-                  @input="toggleShareViewPassword"
-                >
-                  <i
-                    class="view-sharing__option-icon"
-                    :class="[
-                      view.public_view_has_password
-                        ? 'iconoir-lock'
-                        : 'iconoir-globe',
-                    ]"
-                  />
-                  <span>{{ $t(optionPasswordText) }}</span>
-                </SwitchInput>
+            <component
+              :is="extraLink"
+              v-for="(extraLink, i) in additionalCreateShareLinkOptions"
+              :key="i"
+              :view="view"
+              @update-view="forceUpdateView"
+            />
+          </div>
+        </div>
 
-                <a
-                  v-if="view.public_view_has_password"
-                  class="view-sharing__option-change-password"
-                  @click.stop="$refs.enablePasswordModal.show"
-                >
-                  {{ $t('shareViewLink.ChangePassword') }}
-                  <i class="iconoir-edit-pencil" />
-                </a>
-                <EnablePasswordModal ref="enablePasswordModal" :view="view" />
-                <DisablePasswordModal ref="disablePasswordModal" :view="view" />
+        <div v-else class="view-sharing">
+          <div v-auto-overflow-scroll class="view-sharing--scrollable">
+            <div v-if="view.public" class="view-sharing__shared-link">
+              <!-- title and description -->
+              <div class="view-sharing__shared-link-title">
+                {{
+                  $t('shareViewLink.sharedViewTitle', {
+                    viewTypeSharingLinkName,
+                  })
+                }}
+              </div>
+              <div class="view-sharing__shared-link-description">
+                {{
+                  $t('shareViewLink.sharedViewDescription', {
+                    viewTypeSharingLinkName,
+                  })
+                }}
               </div>
 
-              <component
-                :is="component"
-                v-for="(component, i) in additionalShareLinkOptions"
-                :key="i"
-                :view="view"
-                @update-view="forceUpdateView"
-              />
+              <!-- generated url bar -->
+              <div class="view-sharing__shared-link-content">
+                <div class="view-sharing__shared-link-box">{{ shareUrl }}</div>
+                <a
+                  v-tooltip="$t('shareViewLink.copyURL')"
+                  class="view-sharing__shared-link-action"
+                  @click="copyShareUrlToClipboard()"
+                >
+                  <i class="iconoir-copy" />
+                  <Copied ref="copied"></Copied>
+                </a>
+                <a
+                  v-if="!readOnly"
+                  v-tooltip="$t('shareViewLink.generateNewUrl')"
+                  class="view-sharing__shared-link-action"
+                  @click.prevent="$refs.rotateSlugModal.show()"
+                >
+                  <i class="iconoir-refresh-double" />
+                  <ViewRotateSlugModal
+                    ref="rotateSlugModal"
+                    :service="viewService"
+                    :view="view"
+                  ></ViewRotateSlugModal>
+                </a>
+              </div>
+              <div class="view-sharing__shared-link-options">
+                <div class="view-sharing__option">
+                  <SwitchInput
+                    small
+                    :value="view.public_view_has_password"
+                    @input="toggleShareViewPassword"
+                  >
+                    <i
+                      class="view-sharing__option-icon"
+                      :class="[
+                        view.public_view_has_password
+                          ? 'iconoir-lock'
+                          : 'iconoir-globe',
+                      ]"
+                    />
+                    <span>{{ $t(optionPasswordText) }}</span>
+                  </SwitchInput>
+
+                  <a
+                    v-if="view.public_view_has_password"
+                    class="view-sharing__option-change-password"
+                    @click.stop="$refs.enablePasswordModal.show"
+                  >
+                    {{ $t('shareViewLink.ChangePassword') }}
+                    <i class="iconoir-edit-pencil" />
+                  </a>
+                  <EnablePasswordModal ref="enablePasswordModal" :view="view" />
+                  <DisablePasswordModal
+                    ref="disablePasswordModal"
+                    :view="view"
+                  />
+                </div>
+
+                <component
+                  :is="component"
+                  v-for="(component, i) in additionalShareLinkOptions"
+                  :key="i"
+                  :view="view"
+                  @update-view="forceUpdateView"
+                />
+              </div>
             </div>
+
+            <component
+              :is="sharingSection"
+              v-for="(sharingSection, i) in additionalSharingSections"
+              :key="i"
+              :view="view"
+              @update-view="forceUpdateView"
+            />
           </div>
+          <div v-if="!readOnly" class="context__footer">
+            <ButtonText
+              v-if="view.public"
+              icon="iconoir-cancel"
+              @click.stop="updateView({ public: false })"
+            >
+              {{ $t('shareViewLink.disableLink') }}
+            </ButtonText>
+            <ButtonText
+              v-else
+              icon="baserow-icon-share"
+              @click.stop="!readOnly && updateView({ public: true })"
+            >
+              {{
+                $t('shareViewLink.createPrivateLink', {
+                  viewTypeSharingLinkName,
+                })
+              }}
+            </ButtonText>
 
-          <component
-            :is="sharingSection"
-            v-for="(sharingSection, i) in additionalSharingSections"
-            :key="i"
-            :view="view"
-            @update-view="forceUpdateView"
-          />
-        </div>
-        <div v-if="!readOnly" class="view-sharing__shared-link-foot">
-          <ButtonText
-            v-if="view.public"
-            tag="a"
-            class="view-sharing__shared-link-disable button-text--no-underline"
-            type="secondary"
-            icon="iconoir-cancel"
-            @click.stop="updateView({ public: false })"
-          >
-            {{ $t('shareViewLink.disableLink') }}
-          </ButtonText>
-          <ButtonText
-            v-else
-            tag="a"
-            class="view-sharing__shared-link-disable button-text--no-underline"
-            type="secondary"
-            icon="baserow-icon-share"
-            @click.stop="!readOnly && updateView({ public: true })"
-          >
-            {{
-              $t('shareViewLink.shareViewLinkTitle', {
-                viewTypeSharingLinkName,
-              })
-            }}
-          </ButtonText>
-
-          <component
-            :is="comp"
-            v-for="(comp, i) in additionalDisableSharedLinkOptions"
-            :key="i"
-            :view="view"
-            class="view-sharing__shared-link-disable"
-            @update-view="forceUpdateView"
-          />
+            <component
+              :is="comp"
+              v-for="(comp, i) in additionalDisableSharedLinkOptions"
+              :key="i"
+              location="footer"
+              :view="view"
+              @update-view="forceUpdateView"
+            />
+          </div>
         </div>
       </div>
     </Context>

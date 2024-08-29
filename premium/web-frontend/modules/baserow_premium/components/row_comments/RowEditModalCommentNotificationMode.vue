@@ -8,11 +8,7 @@
     >
       <i class="iconoir-bell"></i>
     </a>
-    <Context
-      ref="context"
-      :overflow-scroll="true"
-      :max-height-if-outside-viewport="true"
-    >
+    <Context ref="context" overflow-scroll max-height-if-outside-viewport>
       <div>
         <ul class="context__menu context__menu--can-be-active">
           <li class="context__menu-item">

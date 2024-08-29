@@ -1,49 +1,53 @@
 <template>
   <Context
     ref="context"
-    class="field-form-context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    class="field-context"
+    max-height-if-outside-viewport
     @shown="onShow"
   >
-    <FieldForm
-      ref="form"
-      :table="table"
-      :view="view"
-      :default-values="field"
-      :primary="field.primary"
-      :all-fields-in-table="allFieldsInTable"
-      :database="database"
-      @submitted="submit"
-      @description-shown="hideDescriptionLink"
-    >
+    <div class="field-context__content">
+      <FieldForm
+        ref="form"
+        :table="table"
+        :view="view"
+        :default-values="field"
+        :primary="field.primary"
+        :all-fields-in-table="allFieldsInTable"
+        :database="database"
+        @submitted="submit"
+        @description-shown="hideDescriptionLink"
+      />
+
       <div
-        class="context__form-actions context__form-actions--multiple-actions"
+        class="context__footer context__form-footer-actions--multiple-actions"
       >
-        <span class="context__form-actions--alight-left">
+        <span class="context__form-footer-actions--alight-left">
           <ButtonText
             v-if="!showDescription"
             ref="showDescription"
             tag="a"
             class="button-text--no-underline"
-            icon="iconoir iconoir-plus"
+            icon="iconoir-plus"
             type="secondary"
             @click="showDescriptionField"
           >
             {{ $t('fieldForm.addDescription') }}
           </ButtonText>
         </span>
-
-        <span class="context__form-actions--align-right">
+        <span class="context__form-footer-actions--align-right">
           <span class="margin-right-2">
             <a class="form-action" @click="cancel">{{ $t('action.cancel') }}</a>
           </span>
-          <Button :loading="loading" :disabled="loading || fieldTypeDisabled">
+          <Button
+            :loading="loading"
+            :disabled="loading || fieldTypeDisabled"
+            @click="$refs.form.submit()"
+          >
             {{ $t('action.save') }}
           </Button>
         </span>
       </div>
-    </FieldForm>
+    </div>
   </Context>
 </template>
 

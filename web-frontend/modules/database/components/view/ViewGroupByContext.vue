@@ -1,11 +1,11 @@
 <template>
-  <Context
-    ref="context"
-    class="group-bys"
-    :max-height-if-outside-viewport="true"
-  >
+  <Context ref="context" class="group-bys" max-height-if-outside-viewport>
     <div class="group-bys__content">
-      <div v-if="view.group_bys.length === 0" class="group-bys__none">
+      <div
+        v-if="view.group_bys.length === 0"
+        v-auto-overflow-scroll
+        class="group-bys__none group-bys__none--scrollable"
+      >
         <div class="group-bys__none-title">
           {{ $t('viewGroupByContext.noGroupByTitle') }}
         </div>
@@ -120,29 +120,22 @@
       </div>
       <div
         v-if="view.group_bys.length < availableFieldsLength && !disableGroupBy"
-        class="group-bys__footer"
+        ref="addContextToggle"
+        class="context__footer"
       >
-        <div ref="addContextToggle">
-          <ButtonText
-            icon="iconoir-plus"
-            @click="
-              $refs.addContext.toggle(
-                $refs.addContextToggle,
-                'bottom',
-                'left',
-                4
-              )
-            "
-          >
-            {{ $t('viewGroupByContext.addGroupBy') }}</ButtonText
-          >
-        </div>
-
+        <ButtonText
+          icon="iconoir-plus"
+          @click="
+            $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 4)
+          "
+        >
+          {{ $t('viewGroupByContext.addGroupBy') }}</ButtonText
+        >
         <Context
           ref="addContext"
           class="group-bys__add-context"
-          :overflow-scroll="true"
-          :max-height-if-outside-viewport="true"
+          overflow-scroll
+          max-height-if-outside-viewport
         >
           <ul ref="items" class="context__menu">
             <li
