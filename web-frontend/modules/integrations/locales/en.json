@@ -1,4 +1,8 @@
 {
+  "integrationsCommon": {
+    "singleRow": "single row",
+    "multipleRows": "multiple rows"
+  },
   "integrationType": {
     "localBaserow": "Local Baserow"
   },
@@ -8,8 +12,8 @@
     "localBaserowWarning": "Authorizing your account gives everyone who has edit permissions to the application full access to the data you have access to. It’s possible to create a second user, give the right permissions and use that one."
   },
   "serviceType": {
-    "localBaserowGetRow": "Get single row",
-    "localBaserowListRows": "Get multiple rows"
+    "localBaserowGetRow": "Get {singleRow}",
+    "localBaserowListRows": "Get {multipleRows}"
   },
   "userSourceType": {
     "localBaserow": "Baserow table authentication"

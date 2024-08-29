@@ -9,7 +9,9 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   }
 
   get name() {
-    return this.app.i18n.t('serviceType.localBaserowGetRow')
+    return this.app.i18n.t('serviceType.localBaserowGetRow', {
+      singleRow: this.app.i18n.t('integrationsCommon.singleRow'),
+    })
   }
 
   get integrationType() {
@@ -20,11 +22,7 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   }
 
   isValid(service) {
-    return (
-      super.isValid(service) &&
-      Boolean(service.table_id) &&
-      Boolean(service.row_id)
-    )
+    return super.isValid(service) && Boolean(service.table_id)
   }
 
   get formComponent() {
@@ -67,7 +65,9 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
   }
 
   get name() {
-    return this.app.i18n.t('serviceType.localBaserowListRows')
+    return this.app.i18n.t('serviceType.localBaserowListRows', {
+      multipleRows: this.app.i18n.t('integrationsCommon.multipleRows'),
+    })
   }
 
   get integrationType() {

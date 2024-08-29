@@ -523,24 +523,31 @@
     "name": "Name",
     "fieldType": "Type",
     "itemsPerPagePlaceholder": "Enter value...",
-    "selectSourceFirst": "Choose a list data source to begin configuring your fields.",
+    "selectSourceFirst": "Choose a data source and/or property to begin configuring your fields.",
     "buttonColor": "Button color",
     "refreshFieldsFromDataSource": "refresh fields from data source",
     "orientation": "Orientation",
     "orientationHorizontal": "Horizontal",
     "orientationVertical": "Vertical",
-    "buttonLoadMoreLabel": "Show more label"
+    "buttonLoadMoreLabel": "Show more label",
+    "propertySelectorMissingArrays": "No multiple valued fields found to use as rows."
   },
   "tableElement": {
     "showMore": "Show more"
   },
   "abTable": {
+    "loading": "Loading...",
     "empty": "No items have been found."
   },
   "repeatElement": {
     "empty": "No items have been found.",
     "showMore": "Show more",
-    "missingDataSourceTooltip": "Choose a data source to begin adding elements."
+    "missingDataSourceTooltip": "Choose a data source to begin adding elements.",
+    "missingSchemaPropertyTooltip": "Choose a property to begin adding elements."
+  },
+  "collectionElementForm": {
+    "noDataSourceMessage": "Choose a data source with multiple rows to list all results, or a single row data source to choose a property inside this row.",
+    "noSchemaPropertyMessage": "Choose a property inside the data source to use as the list data of your element."
   },
   "repeatElementForm": {
     "dataSource": "Data source",
@@ -552,11 +559,13 @@
     "orientationVertical": "Vertical",
     "orientationHorizontal": "Horizontal",
     "buttonLoadMoreLabel": "Show more label",
-    "toggleEditorRepetitionsLabel": "Temporarily disable repetitions"
+    "toggleEditorRepetitionsLabel": "Temporarily disable repetitions",
+    "propertySelectorMissingArrays": "No multiple valued fields found to repeat with."
   },
   "currentRecordDataProviderType": {
     "index": "Index",
-    "firstPartName": "Data source: {name}"
+    "firstPartName": "Data source: {name}",
+    "schemaProperty": "{prefixName}: {schemaProperty}"
   },
   "workflowActionTypes": {
     "notificationLabel": "Show Notification",
@@ -724,5 +733,13 @@
   "customStyle": {
     "themeOverrides": "Theme overrides",
     "configureThemeOverrides": "Configure theme overrides for this element"
+  },
+  "serviceSchemaPropertySelector": {
+    "label": "Property",
+    "noProperties": "No properties available"
+  },
+  "dataSourceDropdown": {
+    "label": "Data source",
+    "noDataSources": "No data sources available"
   }
 }

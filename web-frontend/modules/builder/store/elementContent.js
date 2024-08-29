@@ -4,7 +4,14 @@ import { rangeDiff } from '@baserow/modules/core/utils/range'
 const state = {}
 
 const mutations = {
-  SET_CONTENT(state, { element, value, range }) {
+  SET_CONTENT(state, { element, value, range = null }) {
+    // If we have no range, then the `value` is the full content for `element`,
+    // we'll apply it and return early. This will happen if we are setting the
+    // content of a collection element's `schema_property`.
+    if (range === null) {
+      element._.content = value
+      return
+    }
     const [offset] = range
     const missingIndexes = offset + value.length - element._.content.length
 
@@ -41,18 +48,114 @@ const mutations = {
 const actions = {
   /**
    * Fetch the data from the server and add them to the element store.
-   * @param {object} dataSource the data source we want to dispatch
-   * @param {object} data the query body
+   * @param {object} page - the page object
+   * @param {object} element - the element object
+   * @param {object} dataSource - the data source we want to dispatch
+   * @param {object} range - the range of the data we want to fetch
+   * @param {object} dispatchContext - the context to dispatch to the data
+   * @param {bool} replace - if we want to replace the current content
+   * @param {object} data - the query body
    */
   async fetchElementContent(
     { commit, getters },
-    { element, dataSource, range, data: dispatchContext, replace = false }
+    { page, element, dataSource, range, data: dispatchContext, replace = false }
   ) {
-    if (!dataSource?.type) {
+    /**
+     * If `dataSource` is `null`, this means that we are trying to fetch the content
+     * of a nested collection element, such as a repeat nested in a repeat.
+     *
+     * The nested collection fetches its content by finding, either the root-level
+     * collection element with a dataSource, or its immediate parent with a schema property.
+     *
+     * If we have a parent with a schema property: this nested collection element
+     * is a child of a collection element using a schema property as well, e.g.:
+     *
+     * - Root collection element (with a dataSource):
+     *       - Parent collection element (with a schema property)
+     *           - Grandchild collection element (this `element`!) with a schema property.
+     *
+     * If we don't have a parent element with a schema property, we are a child of
+     * the root collection element with a dataSource, e.g.:
+     *
+     * - Root collection element (with a dataSource):
+     *      - Parent collection element (this `element`!) with a schema property.
+     */
+    if (dataSource === null) {
+      if (element.schema_property === null) {
+        // We've been given no data source, and there's no schema property to use.
+        commit('SET_LOADING', { element, value: false })
+        return
+      }
+
+      commit('SET_LOADING', { element, value: true })
+
+      // Collect all collection element ancestors, with a `data_source_id`.
+      const collectionAncestors = this.app.store.getters[
+        'element/getAncestors'
+      ](page, element, (ancestor) => {
+        const ancestorType = this.app.$registry.get('element', ancestor.type)
+        return (
+          ancestorType.isCollectionElement && ancestor.data_source_id !== null
+        )
+      })
+
+      // Pluck out the root ancestor, which has a data source.
+      const rootAncestorWithDataSource = collectionAncestors[0]
+
+      // Next, find this element's parent.
+      const parent = this.app.store.getters['element/getParent'](page, element)
+
+      // If the parent has a `schema_property`, we'll want to use the
+      // parent's element content for `element` to use. If the parent
+      // doesn't have a property, we'll access to the root ancestor's
+      // (which has a data source) for the content.
+      const targetElement = parent.schema_property
+        ? parent
+        : rootAncestorWithDataSource
+
+      const targetContent =
+        this.app.store.getters['elementContent/getElementContent'](
+          targetElement
+        )
+
+      let elementContent = []
+      if (parent.schema_property) {
+        // If the parent has a `schema_property`, it's an array of values
+        // *inside* `schema_property`, so we just copy the array.
+        elementContent = [...targetContent]
+      } else {
+        // Build a new array of content, for this `element`, which
+        // will only contain the property `schema_property`.
+        elementContent = targetContent.map((obj) => ({
+          [element.schema_property]: obj[element.schema_property],
+        }))
+      }
+
+      commit('CLEAR_CONTENT', {
+        element,
+      })
+      commit('SET_CONTENT', {
+        element,
+        value: elementContent,
+      })
+      commit('SET_LOADING', { element, value: false })
       return
     }
 
     const serviceType = this.app.$registry.get('service', dataSource.type)
+
+    // We have a data source, but if it doesn't return a list,
+    // it needs to have a `schema_property` to work correctly.
+    if (!serviceType.returnsList && element.schema_property === null) {
+      // If we previously had a list data source, we might have content,
+      // so rather than leave the content *until a schema property is set*,
+      // clear it.
+      commit('CLEAR_CONTENT', {
+        element,
+      })
+      commit('SET_LOADING', { element, value: false })
+      return
+    }
 
     commit('SET_LOADING', { element, value: true })
 
@@ -74,28 +177,40 @@ const actions = {
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]
         }
 
-        const response = await DataSourceService(this.app.$client).dispatch(
+        const { data } = await DataSourceService(this.app.$client).dispatch(
           dataSource.id,
           dispatchContext,
           { range: rangeToFetch }
         )
 
-        const results = serviceType.returnsList
-          ? response.data.results
-          : [response.data]
+        // With a list-type data source, the data object will return
+        // a `has_next_page` field for paging to the next set of results.
+        const { has_next_page: hasNextPage = false } = data
 
-        const hasNextPage =
-          serviceType.returnsList && response.data.has_next_page
         if (replace) {
           commit('CLEAR_CONTENT', {
             element,
           })
         }
-        commit('SET_CONTENT', {
-          element,
-          value: results,
-          range,
-        })
+
+        if (serviceType.returnsList) {
+          // The service type returns a list of results, we'll set the content
+          // using the results key and set the range for future paging.
+          commit('SET_CONTENT', {
+            element,
+            value: data.results,
+            range,
+          })
+        } else {
+          // The service type returns a single row of results, we'll set the
+          // content using the element's schema property. Not how there's no
+          // range for paging, all results are set at once.
+          commit('SET_CONTENT', {
+            element,
+            value: data[element.schema_property],
+          })
+        }
+
         commit('SET_HAS_MORE_PAGE', {
           element,
           value: hasNextPage,
@@ -128,9 +243,20 @@ const actions = {
 }
 
 const getters = {
-  getElementContent: (state) => (element) => {
-    return element._.content
-  },
+  getElementContent:
+    (state) =>
+    (element, applicationContext = {}) => {
+      // If we have a recordIndexPath to work with, and the element has
+      // its content loaded, then we're fetching content for a nested
+      // collection+container element, which has a schema property. We'll
+      // return the content at a specific index path, and from that property.
+      const { recordIndexPath = [] } = applicationContext
+      if (recordIndexPath.length && element._.content.length) {
+        const contentAtIndex = element._.content[recordIndexPath[0]]
+        return contentAtIndex?.[element.schema_property] || []
+      }
+      return element._.content
+    },
   getHasMorePage: (state) => (element) => {
     return element._.hasNextPage
   },

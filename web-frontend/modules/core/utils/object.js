@@ -92,7 +92,7 @@ export function isPromise(p) {
 export function getValueAtPath(obj, path) {
   function _getValueAtPath(obj, keys) {
     const [first, ...rest] = keys
-    if (!first) {
+    if (first === undefined || first === null) {
       return obj
     }
     if (first in obj) {

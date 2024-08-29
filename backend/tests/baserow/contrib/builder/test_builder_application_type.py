@@ -417,6 +417,7 @@ def test_builder_application_export(data_fixture):
                     {
                         "id": element4.id,
                         "type": "table",
+                        "schema_property": None,
                         "button_load_more_label": "",
                         "order": str(element4.order),
                         "roles": [],
@@ -850,6 +851,7 @@ def test_builder_application_export(data_fixture):
                         "style_width": "normal",
                         "data_source_id": 3,
                         "items_per_page": 42,
+                        "schema_property": "",
                         "button_load_more_label": "",
                         "fields": [
                             {

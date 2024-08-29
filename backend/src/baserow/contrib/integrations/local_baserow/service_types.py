@@ -721,7 +721,10 @@ class LocalBaserowListRowsUserServiceType(
             # can currently import properly, so we return the path as is.
             return path
 
-        if field_dbname == "id":
+        # If the `field_dbname` isn't a Baserow `Field.db_column`, then
+        # we don't have anything to map. This can happen if the `field_dbname`
+        # is an `id`, or single/multiple select option.
+        if not field_dbname.startswith("field_"):
             return path
 
         # If the field_dbname starts with anything other than "field_", it

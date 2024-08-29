@@ -3,7 +3,6 @@ import uuid
 from collections import defaultdict
 
 import pytest
-from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
@@ -69,35 +68,6 @@ def test_create_table_element_with_fields(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_table_element_with_non_collection_data_source(data_fixture):
-    user = data_fixture.create_user()
-    page = data_fixture.create_builder_page(user=user)
-    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
-        page=page
-    )
-    data_source2 = data_fixture.create_builder_data_source(page=page)
-
-    with pytest.raises(ValidationError):
-        ElementService().create_element(
-            user,
-            element_type_registry.get("table"),
-            page=page,
-            data_source_id=data_source1.id,
-            fields=[],
-        )
-
-    assert data_source2.service is None
-    with pytest.raises(ValidationError):
-        ElementService().create_element(
-            user,
-            element_type_registry.get("table"),
-            page=page,
-            data_source_id=data_source2.id,
-            fields=[],
-        )
-
-
-@pytest.mark.django_db
 def test_update_table_element_without_fields(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
@@ -123,23 +93,6 @@ def test_update_table_element_without_fields(data_fixture):
     fields[0].name == "Field 1"
     fields[1].name == "Field 2"
     fields[2].name == "Field 3"
-
-
-@pytest.mark.django_db
-def test_update_table_element_without_bad_data_source_type(data_fixture):
-    user = data_fixture.create_user()
-    page = data_fixture.create_builder_page(user=user)
-    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
-        page=page
-    )
-    table_element = data_fixture.create_builder_table_element(page=page)
-
-    with pytest.raises(ValidationError):
-        ElementService().update_element(
-            user,
-            table_element,
-            data_source_id=data_source1.id,
-        )
 
 
 @pytest.mark.django_db
