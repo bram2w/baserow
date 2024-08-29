@@ -11,6 +11,7 @@ from django.core.files.storage import FileSystemStorage
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
 )
@@ -28,6 +29,7 @@ from baserow.contrib.builder.elements.element_types import (
     InputTextElementType,
     LinkElementType,
     TextElementType,
+    collection_element_types,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.mixins import (
@@ -1039,6 +1041,74 @@ def test_sanitize_element_roles_fixes_default_user_role(
     )
 
     assert result == cleaned_roles
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("collection_element_type", collection_element_types())
+def test_collection_element_type_prepare_value_for_db(
+    collection_element_type, data_fixture
+):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    different_page = data_fixture.create_builder_page(user=user, builder=builder)
+    element = collection_element_type.model_class.objects.create(page=page)
+
+    multiple_rows = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+    )
+    single_row = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page
+    )
+
+    multiple_rows_different_page = (
+        data_fixture.create_builder_local_baserow_list_rows_data_source(
+            user=user,
+            page=different_page,
+        )
+    )
+
+    data_source_no_service = data_fixture.create_builder_data_source(page=page)
+
+    # The data source must belong to the same page as `page`.
+    with pytest.raises(RequestBodyValidationException):
+        assert collection_element_type.prepare_value_for_db(
+            {"page": page, "data_source_id": multiple_rows_different_page.id}, element
+        )
+
+    # Schema property is not allowed when the data source returns multiple rows.
+    with pytest.raises(ValidationError) as exc:
+        assert collection_element_type.prepare_value_for_db(
+            {"schema_property": "field_123", "data_source_id": multiple_rows.id},
+            element,
+        )
+    assert (
+        exc.value.args[0] == "Data sources which return multiple rows cannot "
+        "be used in conjunction with the schema property."
+    )
+
+    # The data source has no service to use.
+    with pytest.raises(ValidationError) as exc:
+        assert collection_element_type.prepare_value_for_db(
+            {"data_source_id": data_source_no_service.id},
+            element,
+        )
+    assert (
+        exc.value.args[0] == f"Data source {data_source_no_service.id} is "
+        "partially configured and not ready for use."
+    )
+
+    # Prepare for db a multiple rows data source.
+    assert collection_element_type.prepare_value_for_db(
+        {"page": page, "data_source_id": multiple_rows.id}, element
+    ) == {"data_source": multiple_rows, "page": page}
+
+    # Prepare for db a single row data source.
+    assert collection_element_type.prepare_value_for_db(
+        {"page": page, "data_source_id": single_row.id, "schema_property": "field_123"},
+        element,
+    ) == {"data_source": single_row, "page": page, "schema_property": "field_123"}
 
 
 @pytest.mark.django_db

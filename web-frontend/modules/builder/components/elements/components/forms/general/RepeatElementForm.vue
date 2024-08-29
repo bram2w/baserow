@@ -1,22 +1,44 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <FormGroup
-      :label="$t('repeatElementForm.dataSource')"
+      v-show="dataSourceDropdownAvailable"
+      :label="$t('dataSourceDropdown.label')"
       small-label
       required
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.data_source_id" :show-search="false" small>
-        <DropdownItem
-          v-for="dataSource in availableDataSources"
-          :key="dataSource.id"
-          :name="dataSource.name"
-          :value="dataSource.id"
-        />
-      </Dropdown>
+      <DataSourceDropdown
+        v-model="values.data_source_id"
+        small
+        :data-sources="dataSources"
+      >
+        <template #chooseValueState>
+          {{ $t('collectionElementForm.noDataSourceMessage') }}
+        </template>
+      </DataSourceDropdown>
     </FormGroup>
-
     <FormGroup
+      v-show="propertySelectorAvailable"
+      small-label
+      required
+      class="margin-bottom-2"
+      :label="$t('serviceSchemaPropertySelector.label')"
+    >
+      <ServiceSchemaPropertySelector
+        v-model="values.schema_property"
+        small
+        :schema="propertySelectorSchema"
+      >
+        <template #emptyState>
+          {{ $t('repeatElementForm.propertySelectorMissingArrays') }}
+        </template>
+        <template #chooseValueState>
+          {{ $t('collectionElementForm.noSchemaPropertyMessage') }}
+        </template>
+      </ServiceSchemaPropertySelector>
+    </FormGroup>
+    <FormGroup
+      v-show="pagingOptionsAvailable"
       :label="$t('repeatElementForm.itemsPerPage')"
       small-label
       required
@@ -43,12 +65,14 @@
     </FormGroup>
 
     <CustomStyle
+      v-show="values.data_source_id"
       v-model="values.styles"
       style-key="button"
       :config-block-types="['button']"
       :theme="builder.theme"
     />
     <FormGroup
+      v-show="pagingOptionsAvailable"
       small-label
       :label="$t('repeatElementForm.buttonLoadMoreLabel')"
       class="margin-bottom-2"
@@ -67,13 +91,13 @@
     >
       <RadioGroup
         v-model="values.orientation"
-        :options="imageSourceTypeOptions"
+        :options="orientationOptions"
         type="button"
       >
       </RadioGroup>
     </FormGroup>
     <FormGroup
-      v-if="values.orientation === 'horizontal'"
+      v-show="values.orientation === 'horizontal'"
       :error-message="itemsPerRowError"
       :label="$t('repeatElementForm.itemsPerRowLabel')"
       small-label
@@ -116,13 +140,17 @@ import DeviceSelector from '@baserow/modules/builder/components/page/header/Devi
 import { mapActions, mapGetters } from 'vuex'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import ServiceSchemaPropertySelector from '@baserow/modules/core/components/services/ServiceSchemaPropertySelector.vue'
+import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown.vue'
 
 export default {
   name: 'RepeatElementForm',
   components: {
+    DataSourceDropdown,
     DeviceSelector,
     CustomStyle,
     InjectedFormulaInput,
+    ServiceSchemaPropertySelector,
   },
   mixins: [elementForm, collectionElementForm],
   inject: ['applicationContext'],
@@ -130,6 +158,7 @@ export default {
     return {
       allowedValues: [
         'data_source_id',
+        'schema_property',
         'items_per_page',
         'items_per_row',
         'orientation',
@@ -138,6 +167,7 @@ export default {
       ],
       values: {
         data_source_id: null,
+        schema_property: null,
         items_per_page: 1,
         items_per_row: {},
         orientation: 'vertical',
@@ -172,7 +202,7 @@ export default {
       }
       return ''
     },
-    imageSourceTypeOptions() {
+    orientationOptions() {
       return [
         {
           label: this.$t('repeatElementForm.orientationVertical'),
@@ -213,14 +243,15 @@ export default {
     },
   },
   validations() {
+    const itemsPerPageRules = { integer }
+    if (this.pagingOptionsAvailable) {
+      itemsPerPageRules.required = required
+      itemsPerPageRules.minValue = minValue(1)
+      itemsPerPageRules.maxValue = maxValue(this.maxItemPerPage)
+    }
     return {
       values: {
-        items_per_page: {
-          required,
-          integer,
-          minValue: minValue(1),
-          maxValue: maxValue(this.maxItemPerPage),
-        },
+        items_per_page: itemsPerPageRules,
         items_per_row: this.deviceTypes.reduce((acc, deviceType) => {
           acc[deviceType.getType()] = {
             integer,

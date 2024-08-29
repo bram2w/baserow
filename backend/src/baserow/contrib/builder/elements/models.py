@@ -729,6 +729,12 @@ class CollectionElement(Element):
         "Only data_sources that return list are allowed.",
     )
 
+    schema_property = models.CharField(
+        max_length=225,
+        null=True,
+        help_text="A multiple valued schema property to use for the data source.",
+    )
+
     items_per_page = models.PositiveIntegerField(
         default=20,
         help_text="The amount item loaded with each page.",

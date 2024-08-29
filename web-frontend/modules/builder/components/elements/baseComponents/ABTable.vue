@@ -26,7 +26,7 @@
     </template>
     <template #empty-state>
       <div class="ab-table__empty-message">
-        {{ $t('abTable.empty') }}
+        {{ emptyStateMessage }}
       </div>
     </template>
   </BaserowTable>
@@ -52,6 +52,18 @@ export default {
       type: String,
       required: false,
       default: TABLE_ORIENTATION.HORIZONTAL,
+    },
+    contentLoading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  computed: {
+    emptyStateMessage() {
+      return this.contentLoading
+        ? this.$t('abTable.loading')
+        : this.$t('abTable.empty')
     },
   },
 }

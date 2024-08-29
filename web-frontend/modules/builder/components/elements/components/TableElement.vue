@@ -3,15 +3,16 @@
     <ABTable
       :fields="fields"
       :rows="rows"
+      :content-loading="contentLoading"
       :style="getStyleOverride('table')"
       :orientation="orientation"
     >
       <template #cell-content="{ rowIndex, field, value }">
         <!--
-        -- We force-self-aligment to `auto` here to prevent some self-positionning
+        -- We force-self-alignment to `auto` here to prevent some self-positioning
         -- like in buttons or links. we want to position the content through the table
         -- style to be able to override it later. Otherwise we have a conflict between
-        -- these two aligments and only the more specific one (the field one)
+        -- these two alignments and only the more specific one (the field one)
         -- is respected even if it comes from the main theme.
         -->
         <td
@@ -28,7 +29,6 @@
               :element="element"
               :field="field"
               :application-context-additions="{
-                recordIndex: rowIndex,
                 recordIndexPath: [
                   ...applicationContext.recordIndexPath,
                   rowIndex,
@@ -149,7 +149,10 @@ export default {
           this.$registry.getAll('builderDataProvider'),
           {
             ...this.applicationContext,
-            recordIndex: index,
+            recordIndexPath: [
+              ...this.applicationContext.recordIndexPath,
+              index,
+            ],
           }
         ),
         {

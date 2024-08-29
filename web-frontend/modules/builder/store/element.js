@@ -7,7 +7,7 @@ import { calculateTempOrder } from '@baserow/modules/core/utils/order'
 const populateElement = (element, registry) => {
   const elementType = registry.get('element', element.type)
   element._ = {
-    contentLoading: false,
+    contentLoading: true,
     content: [],
     hasNextPage: false,
     reset: 0,
@@ -509,7 +509,11 @@ const getters = {
    */
   getAncestors:
     (state, getters) =>
-    (page, element, parentFirst = true) => {
+    (
+      page,
+      element,
+      { parentFirst = false, predicate = () => true, includeSelf = false } = {}
+    ) => {
       const getElementAncestors = (element) => {
         const parentElement = getters.getParent(page, element)
         if (parentElement) {
@@ -518,7 +522,11 @@ const getters = {
           return []
         }
       }
-      const ancestors = getElementAncestors(element)
+      const ancestors = (
+        includeSelf
+          ? [...getElementAncestors(element), element]
+          : getElementAncestors(element)
+      ).filter(predicate)
       return parentFirst ? ancestors.reverse() : ancestors
     },
   getSiblings: (state, getters) => (page, element) => {

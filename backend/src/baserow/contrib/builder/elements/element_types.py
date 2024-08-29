@@ -64,6 +64,21 @@ from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_files.handler import UserFileHandler
 
 
+def collection_element_types():
+    """
+    Responsible for returning all collection element types. We do this by checking if
+    the element type is a subclass of the base `CollectionElementTypeMixin` class.
+
+    :return: A list of collection element types
+    """
+
+    return [
+        element_type
+        for element_type in element_type_registry.get_all()
+        if issubclass(element_type.__class__, CollectionElementTypeMixin)
+    ]
+
+
 class ColumnElementType(ContainerElementTypeMixin, ElementType):
     """
     A column element is a container element that can be used to display other elements

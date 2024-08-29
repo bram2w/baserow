@@ -12,6 +12,47 @@ describe('elementTypes tests', () => {
 
   const contextBlankParam = { page: { parameters: { id: '' } } }
 
+  test('hasAncestorOfType', () => {
+    const page = { id: 123 }
+    const elementParent = { id: 456, type: 'column', page_id: page.id }
+    const element = {
+      id: 789,
+      type: 'heading',
+      page_id: page.id,
+      parent_element_id: elementParent.id,
+    }
+    page.elementMap = { 456: elementParent, 789: element }
+
+    const elementType = testApp.getRegistry().get('element', element.type)
+    expect(elementType.hasAncestorOfType(page, element, 'column')).toBe(true)
+    expect(elementType.hasAncestorOfType(page, element, 'repeat')).toBe(false)
+  })
+
+  test('hasCollectionAncestor', () => {
+    const page = { id: 123 }
+    const repeatAncestor = { id: 111, type: 'repeat', page_id: page.id }
+    const tableElement = {
+      id: 222,
+      type: 'table',
+      page_id: page.id,
+      parent_element_id: repeatAncestor.id,
+    }
+    page.elementMap = { 111: repeatAncestor, 222: tableElement }
+
+    const repeatElementType = testApp
+      .getRegistry()
+      .get('element', repeatAncestor.type)
+    expect(repeatElementType.hasCollectionAncestor(page, repeatAncestor)).toBe(
+      false
+    )
+    const tableElementType = testApp
+      .getRegistry()
+      .get('element', tableElement.type)
+    expect(tableElementType.hasCollectionAncestor(page, tableElement)).toBe(
+      true
+    )
+  })
+
   describe('elementType getDisplayName permutation tests', () => {
     test('ElementType returns the name by default', () => {
       const elementType = new ElementType()
@@ -228,6 +269,9 @@ describe('elementTypes tests', () => {
       ).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
       expect(elementType.getDisplayName({}, {})).toBe(elementType.name)
     })
+  })
+
+  describe('elementType form validation tests', () => {
     test('InputTextElementType | required | no value.', () => {
       const elementType = new InputTextElementType()
       expect(elementType.isValid({ required: true }, '')).toBe(false)
@@ -359,10 +403,9 @@ describe('elementTypes tests', () => {
         .filter((elementType) => !elementType.isFormElement)
         .map((elementType) => elementType.getType())
 
-      const forbiddenChildTypes =
-        formContainerElementType.childElementTypesForbidden.map((el) =>
-          el.getType()
-        )
+      const forbiddenChildTypes = formContainerElementType
+        .childElementTypesForbidden({}, {})
+        .map((el) => el.getType())
       expect(forbiddenChildTypes).toEqual(nonFormElementTypes)
     })
     test('ColumnElementType forbids container elements as children.', () => {
@@ -373,24 +416,57 @@ describe('elementTypes tests', () => {
         .filter((elementType) => elementType.isContainerElement)
         .map((elementType) => elementType.getType())
 
-      const forbiddenChildTypes =
-        columnElementType.childElementTypesForbidden.map((el) => el.getType())
+      const forbiddenChildTypes = columnElementType
+        .childElementTypesForbidden({}, {})
+        .map((el) => el.getType())
       expect(forbiddenChildTypes).toEqual(containerElementTypes)
     })
     test('RepeatElementType forbids collection elements as children.', () => {
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
+      const page = { id: 1, name: 'Contact Us' }
 
-      const expectedForbiddenChildTypes = Object.values(
+      const rootRepeatElement = {
+        id: 1,
+        type: 'repeat',
+        page_id: page.id,
+        parent_element_id: null,
+      }
+      const childRepeatElement = {
+        id: 2,
+        type: 'repeat',
+        page_id: page.id,
+        parent_element_id: rootRepeatElement.id,
+      }
+      const grandchildRepeatElement = {
+        id: 3,
+        type: 'repeat',
+        page_id: page.id,
+        parent_element_id: childRepeatElement.id,
+      }
+
+      page.elementMap = { 1: rootRepeatElement, 2: childRepeatElement }
+
+      expect(
+        repeatElementType.childElementTypesForbidden(page, rootRepeatElement)
+      ).toEqual([])
+
+      expect(
+        repeatElementType.childElementTypesForbidden(page, childRepeatElement)
+      ).toEqual([])
+
+      const forbiddenCollectionTypes = Object.values(
         testApp.getRegistry().getAll('element')
       )
         .filter((type) => type.isCollectionElement)
         .map((elementType) => elementType.getType())
+        .sort()
 
-      const forbiddenChildTypes =
-        repeatElementType.childElementTypesForbidden.map((el) => el.getType())
-      expect(forbiddenChildTypes.sort()).toEqual(
-        expectedForbiddenChildTypes.sort()
-      )
+      expect(
+        repeatElementType
+          .childElementTypesForbidden(page, grandchildRepeatElement)
+          .map((el) => el.getType())
+          .sort()
+      ).toEqual(forbiddenCollectionTypes)
     })
   })
 
@@ -433,12 +509,14 @@ describe('elementTypes tests', () => {
       ).map((el) => el.getType())
 
       const columnElementType = testApp.getRegistry().get('element', 'column')
-      const forbiddenColumnChildTypes =
-        columnElementType.childElementTypesForbidden.map((el) => el.getType())
+      const forbiddenColumnChildTypes = columnElementType
+        .childElementTypesForbidden(page, element)
+        .map((el) => el.getType())
 
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
-      const forbiddenRepeatChildTypes =
-        repeatElementType.childElementTypesForbidden.map((el) => el.getType())
+      const forbiddenRepeatChildTypes = repeatElementType
+        .childElementTypesForbidden(page, {})
+        .map((el) => el.getType())
 
       const allExpectedForbiddenChildTypes = forbiddenColumnChildTypes.concat(
         forbiddenRepeatChildTypes
