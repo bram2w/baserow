@@ -11,6 +11,7 @@ from baserow.contrib.database.api.webhooks.validators import (
 from baserow.contrib.database.webhooks.handler import WebhookHandler
 from baserow.contrib.database.webhooks.models import TableWebhook, TableWebhookCall
 from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
+from baserow.core.utils import truncate_middle
 
 
 class TableWebhookEventsSerializer(serializers.ListField):
@@ -94,6 +95,13 @@ class TableWebhookUpdateRequestSerializer(serializers.ModelSerializer):
 
 
 class TableWebhookCallSerializer(serializers.ModelSerializer):
+    request = serializers.SerializerMethodField(
+        help_text="A text copy of the request headers and body."
+    )
+    response = serializers.SerializerMethodField(
+        help_text="A text copy of the response headers and body."
+    )
+
     class Meta:
         model = TableWebhookCall
         fields = [
@@ -107,6 +115,12 @@ class TableWebhookCallSerializer(serializers.ModelSerializer):
             "response_status",
             "error",
         ]
+
+    def get_request(self, obj):
+        return truncate_middle(obj.request, 100000, "\n...(truncated)\n")
+
+    def get_response(self, obj):
+        return truncate_middle(obj.response, 100000, "\n...(truncated)\n")
 
 
 class TableWebhookSerializer(serializers.ModelSerializer):

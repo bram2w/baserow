@@ -48,8 +48,8 @@
         <div v-if="viewsLoading" class="loading"></div>
         <Dropdown
           v-else
-          class="margin-top-1"
           v-model="values.link_row_limit_selection_view_id"
+          class="margin-top-1"
           small
           :fixed-items="true"
         >

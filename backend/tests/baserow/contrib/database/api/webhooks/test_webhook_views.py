@@ -11,6 +11,7 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.webhooks.models import TableWebhook
+from baserow.core.utils import truncate_middle
 
 
 @pytest.mark.django_db
@@ -75,6 +76,33 @@ def test_list_webhooks(api_client, data_fixture):
 
     assert response_json[1]["id"] == webhook_2.id
     assert response_json[1]["events"] == ["rows.created"]
+
+
+@pytest.mark.django_db
+def test_list_webhooks_truncated_calls(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    webhook_1 = data_fixture.create_table_webhook(
+        table=table, headers={"Baserow-add-1": "Value 1"}
+    )
+    call_1 = data_fixture.create_table_webhook_call(
+        webhook=webhook_1, request="s" * 100010, response="s" * 100010
+    )
+
+    response = api_client.get(
+        reverse("api:database:webhooks:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json) == 1
+    assert response_json[0]["calls"][0]["request"] == truncate_middle(
+        "s" * 100010, 100000, "\n...(truncated)\n"
+    )
+    assert response_json[0]["calls"][0]["response"] == truncate_middle(
+        "s" * 100010, 100000, "\n...(truncated)\n"
+    )
 
 
 @pytest.mark.django_db
