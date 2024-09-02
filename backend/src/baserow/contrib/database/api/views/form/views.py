@@ -24,6 +24,7 @@ from baserow.contrib.database.api.views.errors import (
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.fields.models import FileField, LongTextField
+from baserow.contrib.database.views.actions import SubmitFormActionType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
@@ -34,6 +35,7 @@ from baserow.contrib.database.views.registries import view_ownership_type_regist
 from baserow.contrib.database.views.validators import (
     no_empty_form_values_when_required_validator,
 )
+from baserow.core.action.registries import action_type_registry
 from baserow.core.user_files.exceptions import (
     FileSizeTooLargeError,
     InvalidFileStreamError,
@@ -150,10 +152,14 @@ class SubmitFormViewView(APIView):
         validation_serializer = get_row_serializer_class(
             model, field_ids=field_ids, field_kwargs=field_kwargs
         )
-        data = validate_data(validation_serializer, request.data)
+        values = validate_data(
+            validation_serializer, request.data, return_validated=True
+        )
 
-        instance = handler.submit_form_view(request.user, form, data, model, options)
-        form.row_id = instance.id
+        created_row = action_type_registry.get_by_type(SubmitFormActionType).do(
+            request.user, form, values, model, options
+        )
+        form.row_id = created_row.id
         return Response(FormViewSubmittedSerializer(form).data)
 
 

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Create an ActionType for form submissions to track them in the audit log.",
+    "issue_number": 2938,
+    "bullet_points": [],
+    "created_at": "2024-08-23"
+}
