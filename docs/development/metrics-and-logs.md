@@ -230,3 +230,17 @@ def create_row(table):
     )
 
 ```
+
+## traceidratio and force full trace
+
+If you've set a tracer sampler using the `traceidratio`, then not every request will
+have a full trace.
+
+```
+OTEL_TRACES_SAMPLER_ARG: "0.1"
+OTEL_TRACES_SAMPLER: "traceidratio"
+```
+
+It can hold you back if you want to debug a specific request. We've therefore
+implemented a query parameter that allows you to force a full trace. You can add
+`?force_full_otel_trace=true` to any backend request to get a full trace back.
