@@ -60,7 +60,7 @@ def capture_user_event(
     :param workspace: Optionally the workspace related to the event.
     """
 
-    properties["user_email"] = user.email
+    properties["user_email"] = getattr(user, "email", None)
 
     if session is not None:
         properties["user_session"] = session

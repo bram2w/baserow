@@ -113,6 +113,7 @@ class DatabaseConfig(AppConfig):
             DuplicateViewActionType,
             OrderViewsActionType,
             RotateViewSlugActionType,
+            SubmitFormActionType,
             UpdateDecorationActionType,
             UpdateViewActionType,
             UpdateViewFieldOptionsActionType,
@@ -136,6 +137,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(CreateViewGroupByActionType())
         action_type_registry.register(UpdateViewGroupByActionType())
         action_type_registry.register(DeleteViewGroupByActionType())
+        action_type_registry.register(SubmitFormActionType())
         action_type_registry.register(RotateViewSlugActionType())
         action_type_registry.register(UpdateViewFieldOptionsActionType())
         action_type_registry.register(CreateDecorationActionType())
