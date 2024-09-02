@@ -695,7 +695,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             field_cache
         )
 
-        updated_fields += self._update_field_dependencies_on_field_updated(
+        updated_fields += self.update_dependencies_of_field_updated(
             field, old_field, update_collector, field_cache
         )
 
@@ -715,7 +715,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         else:
             return field
 
-    def _update_field_dependencies_on_field_updated(
+    def update_dependencies_of_field_updated(
         self, field, old_field, update_collector, field_cache
     ):
         updated_fields = []

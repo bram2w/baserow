@@ -169,6 +169,19 @@ class FieldType(
     a part of adhoc lookup.
     """
 
+    _db_column_fields = None
+    """
+    Indicates which fields is mapped on a database column property somehow. This is used
+    to determine if a change in the field attrs requires a database schema change. If
+    it's None (default), it uses the allowed_fields by default to be on the safe side.
+    """
+
+    @property
+    def db_column_fields(self) -> Set[str]:
+        if self._db_column_fields is not None:
+            return self._db_column_fields
+        return set(self.allowed_fields)
+
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
         When a row is created or updated all the values are going to be prepared for the

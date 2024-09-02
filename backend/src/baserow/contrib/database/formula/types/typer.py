@@ -82,4 +82,5 @@ def recreate_formula_field_if_needed(
             model._meta.get_field(field.db_column),
             None,
             connection,
+            force_recreate_column=force_recreate_column,
         )

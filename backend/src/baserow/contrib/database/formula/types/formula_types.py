@@ -1,7 +1,7 @@
 import datetime
 from abc import ABC
 from decimal import Decimal
-from typing import Any, List, Optional, Type, Union
+from typing import Any, List, Optional, Set, Type, Union
 
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.files.storage import default_storage
@@ -199,6 +199,10 @@ class BaserowFormulaLinkType(BaserowJSONBObjectBaseType):
 
     def get_baserow_field_instance_and_type(self):
         return self, self
+
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
 
     def get_model_field(self, instance, **kwargs) -> models.Field:
         kwargs["null"] = True
@@ -545,6 +549,10 @@ class BaserowFormulaDateIntervalType(
         # Until Baserow has a duration field type implement the required methods below
         return self, self
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         from baserow.contrib.database.fields.fields import (
             DurationFieldUsingPostgresFormatting,
@@ -876,6 +884,10 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return []
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=dict, **kwargs)
 
@@ -1087,6 +1099,10 @@ class BaserowFormulaArrayType(
         # Until Baserow has a array field type implement the required methods below
         return self, self
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=list, **kwargs)
 
@@ -1293,6 +1309,10 @@ class BaserowFormulaSingleSelectType(BaserowJSONBObjectBaseType):
     def get_baserow_field_instance_and_type(self):
         return self, self
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=dict, **kwargs)
 
@@ -1400,6 +1420,13 @@ class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
 
     def get_baserow_field_instance_and_type(self):
         return self, self
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        return "p_in = '';"
+
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
 
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=list, **kwargs)
