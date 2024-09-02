@@ -95,3 +95,23 @@
     display: none;
   }
 }
+
+.onboarding__form-group-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.onboarding__form-group-column {
+  flex: 1 1 45%;
+}
+
+.onboarding__form-group-label {
+  margin-bottom: 0.5rem;
+}
+
+@media screen and (max-width: $onboarding-breakpoint) {
+  .onboarding__form-group-column {
+    flex: 1 1 100%;
+  }
+}
