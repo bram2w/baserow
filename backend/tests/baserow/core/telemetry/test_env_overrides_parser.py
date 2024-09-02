@@ -4,10 +4,10 @@ from opentelemetry.sdk.trace.sampling import (
     DEFAULT_OFF,
     DEFAULT_ON,
     ParentBasedTraceIdRatio,
-    TraceIdRatioBased,
 )
 
 from baserow.core.telemetry.env_overrides_parser import get_sampler_overrides_from_str
+from baserow.core.telemetry.sampling import ForcableTraceIdRatioBased
 
 
 def test_invalid_sampler_strings():
@@ -52,7 +52,7 @@ def test_valid_sampler_strings():
 
 def test_valid_sampler_with_args():
     for_trace_id = get_sampler_overrides_from_str("my.module=traceidratio@0.4")
-    assert type(for_trace_id["my.module"]) is TraceIdRatioBased
+    assert type(for_trace_id["my.module"]) is ForcableTraceIdRatioBased
     assert for_trace_id["my.module"].rate == 0.4
     for_parent_trace_id = get_sampler_overrides_from_str(
         "my.module=parentbased_traceidratio@0.4"
