@@ -346,6 +346,8 @@ export default {
           preparedRow
         )
 
+        await this.fetch(this.page)
+
         // When you create a new row from a linked row that links to its own table,the
         // realtime update will be sent from you, and you won't receive it.Since you
         // don't receive the realtime update we have to manually add the new row to the
