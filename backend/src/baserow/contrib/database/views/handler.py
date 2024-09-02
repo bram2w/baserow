@@ -21,6 +21,7 @@ from django.db.models.query import QuerySet
 import jwt
 from loguru import logger
 from opentelemetry import trace
+from psycopg2 import sql
 from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
@@ -84,7 +85,7 @@ from baserow.contrib.database.views.registries import (
     view_ownership_type_registry,
 )
 from baserow.contrib.database.views.view_filter_groups import ViewGroupedFiltersAdapter
-from baserow.core.db import specific_iterator
+from baserow.core.db import specific_iterator, transaction_atomic
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
@@ -343,7 +344,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         :param view: The view that was deleted.
         """
 
-        return cls.remove_index_if_unused(view)
+        return cls.drop_index_if_unused(view)
 
     @classmethod
     def after_field_changed_or_deleted(cls, field: Field):
@@ -374,8 +375,11 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         schedule_view_index_update(view.pk)
 
     @classmethod
-    def add_index_if_not_exists(
-        cls, view: View, model: GeneratedTableModel
+    def create_index_if_not_exists(
+        cls,
+        view: View,
+        model: GeneratedTableModel,
+        db_index: django_models.Index,
     ) -> Optional[str]:
         """
         Creates a new index for the provided view if it does not exist yet.
@@ -383,12 +387,9 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         :param view: The view to create the index for.
         :param model: The model to use for the table. If not provided it will be
             generated.
+        :param db_index: The index to create.
         :return: The name of the index for the current view if any.
         """
-
-        db_index = cls.get_index(view, model)
-        if db_index is None:
-            return None
 
         other_view_using_index = View.objects.filter(
             db_index_name=db_index.name, table=view.table
@@ -409,7 +410,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         return db_index.name
 
     @classmethod
-    def remove_index_if_unused(
+    def drop_index_if_unused(
         cls, view: View, model: Optional[GeneratedTableModel] = None
     ) -> Optional[str]:
         """
@@ -451,6 +452,45 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         return current_index_name
 
     @classmethod
+    def update_index_by_view_id(cls, view_id: int, nowait=True):
+        """
+        Updates the index for the view with the provided id. If the view has been
+        trashed, a ViewDoesNotExist exception will be raised. If nowait is set to True,
+        the operation will not wait for a lock on the table, raising a DatabaseError if
+        the lock cannot be acquired immediately.
+
+        :param view_id: The id of the view to update the index for.
+        :param nowait: If set to True, the operation will not wait for a lock on the
+            table, raising a DatabaseError if the lock cannot be acquired immediately
+        :raises ViewDoesNotExist: When the view with the provided id does not exist.
+        :raises DatabaseError: When the lock on the table cannot be acquired
+            immediately.
+        """
+
+        view = ViewHandler().get_view(
+            view_id,
+            base_queryset=View.objects.select_related("table").prefetch_related(
+                "viewsort_set", "viewgroupby_set"
+            ),
+        )
+
+        # Let's immediately try to get a lock on the table with the NOWAIT option. If
+        # we can't get the lock, we don't want to queue this operation, but rather
+        # retry it in a few seconds.
+        if nowait:
+            first_sql_to_run = (
+                sql.SQL("LOCK TABLE {0} IN SHARE MODE NOWAIT"),
+                [sql.Identifier(view.table.get_database_table_name())],
+            )
+        else:
+            first_sql_to_run = None
+
+        with transaction_atomic(
+            first_sql_to_run_in_transaction_with_args=first_sql_to_run
+        ):
+            ViewIndexingHandler.update_index(view)
+
+    @classmethod
     def update_index(cls, view: View, model: Optional[GeneratedTableModel] = None):
         """
         Updates the index for the provided view. If the view has been trashed,
@@ -467,10 +507,17 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
             if model is None:
                 model = view.table.get_model()
 
-            cls.remove_index_if_unused(view, model)
+            db_index = cls.get_index(view, model)
+            new_index_name = db_index and db_index.name
+            if view.db_index_name == new_index_name:
+                return  # Nothing to do, the index is already up to date.
 
-            db_index_name = cls.add_index_if_not_exists(view, model)
-            view.db_index_name = db_index_name
+            # remove the previous and create the new index
+            cls.drop_index_if_unused(view, model)
+            if db_index is not None:
+                cls.create_index_if_not_exists(view, model, db_index)
+
+            view.db_index_name = new_index_name
             view.save(update_fields=["db_index_name"])
 
 
