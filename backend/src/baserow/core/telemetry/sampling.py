@@ -27,17 +27,22 @@ class ForcableTraceIdRatioBased(TraceIdRatioBased):
 
         if isinstance(current_span, Span):
             span_attributes = current_span.attributes
-            # Check if the HTTP request contains the query parameter to force full
-            # tracing, and if so do the full trace.
-            http_url = span_attributes.get("http.url", "")
-            if "force_full_otel_trace=true" in http_url:
+            # Check if any of the HTTP properties contains `force_full_otel_trace=true`
+            # which forces make a full trace. This is because it can differ per
+            # deployment how the attributes are structured.
+            forced = False
+            for key, value in span_attributes.items():
+                if key.startswith("http.") and "force_full_otel_trace=true" in value:
+                    forced = True
+                    break
+            if forced:
                 return SamplingResult(
                     Decision.RECORD_AND_SAMPLE,
                     span_attributes,
                     _get_parent_trace_state(parent_context),
                 )
-        # If the full trace query parameter is not provided, then fallback on the
-        # original TraceIdRatioBased class.
+        # If the full trace parameter is not provided, then fallback on the original
+        # TraceIdRatioBased class.
         return super().should_sample(
             parent_context, trace_id, name, kind, attributes, links, trace_state
         )
