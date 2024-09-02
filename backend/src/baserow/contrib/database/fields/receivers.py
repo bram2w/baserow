@@ -12,8 +12,7 @@ from baserow.contrib.database.views import signals as view_signals
 from .models import LinkRowField
 
 
-@receiver(view_signals.view_loaded)
-@receiver(row_signals.rows_loaded)
+@receiver([view_signals.view_loaded, row_signals.rows_loaded])
 def mark_workspace_used_on_rows_loaded(sender, table, **kwargs):
     PeriodicFieldUpdateHandler.mark_workspace_as_recently_used(
         table.database.workspace_id

@@ -123,15 +123,6 @@ def _baserow_expression_to_django_expression(
         return Value(None)
 
 
-def _get_model_field_for_type(expression_type):
-    (
-        field_instance,
-        baserow_field_type,
-    ) = expression_type.get_baserow_field_instance_and_type()
-    model_field = baserow_field_type.get_model_field(field_instance)
-    return model_field
-
-
 JoinIdsType = List[Tuple[str, str]]
 
 

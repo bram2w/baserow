@@ -524,6 +524,7 @@ class NumberFieldType(FieldType):
         "_spectacular_annotation": {"exclude_fields": ["number_type"]},
     }
     _can_group_by = True
+    _db_column_fields = ["number_decimal_places"]
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
@@ -666,6 +667,7 @@ class RatingFieldType(FieldType):
     allowed_fields = ["max_value", "color", "style"]
     serializer_field_names = ["max_value", "color", "style"]
     _can_group_by = True
+    _db_column_fields = []
 
     def prepare_value_for_db(self, instance, value):
         if not value:
@@ -863,6 +865,7 @@ class DateFieldType(FieldType):
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
     _can_group_by = True
+    _db_column_fields = ["date_include_time"]
 
     def can_represent_date(self, field):
         return True
@@ -1744,6 +1747,7 @@ class DurationFieldType(FieldType):
     allowed_fields = ["duration_format"]
     serializer_field_names = ["duration_format"]
     _can_group_by = True
+    _db_column_fields = []
 
     def get_model_field(self, instance: DurationField, **kwargs):
         return DurationModelField(instance.duration_format, null=True)
@@ -3468,6 +3472,7 @@ class SelectOptionBaseFieldType(FieldType):
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
     _can_group_by = True
+    _db_column_fields = []
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
@@ -4352,6 +4357,7 @@ class FormulaFieldType(
 ):
     type = "formula"
     model_class = FormulaField
+    _db_column_fields = []
 
     can_be_in_form_view = False
     field_data_is_derived_from_attrs = True
@@ -4409,7 +4415,7 @@ class FormulaFieldType(
 
         return checker
 
-    def _get_field_instance_and_type_from_formula_field(
+    def get_field_instance_and_type_from_formula_field(
         self,
         formula_field_instance: FormulaField,
     ) -> Tuple[Field, FieldType]:
@@ -4428,14 +4434,14 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_serializer_field(field_instance, **kwargs)
 
     def get_response_serializer_field(self, instance, **kwargs):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_response_serializer_field(field_instance, **kwargs)
 
     def get_model_field(self, instance: FormulaField, **kwargs):
@@ -4453,7 +4459,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         expression_field_type = field_type.get_model_field(field_instance, **kwargs)
 
         # Depending on the `expression_field_type` class level state is changed when
@@ -4502,7 +4508,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_export_value(
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
@@ -4513,7 +4519,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
 
         if not isinstance(field_type, HasValueEmptyFilterSupport):
             raise FilterNotSupportedException()
@@ -4532,7 +4538,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
 
         if not isinstance(field_type, HasValueFilterSupport):
             raise FilterNotSupportedException()
@@ -4547,7 +4553,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
 
         if not isinstance(field_type, HasValueContainsFilterSupport):
             raise FilterNotSupportedException()
@@ -4562,7 +4568,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
 
         if not isinstance(field_type, HasValueContainsWordFilterSupport):
             raise FilterNotSupportedException()
@@ -4577,7 +4583,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
 
         if not isinstance(field_type, HasValueLengthIsLowerThanFilterSupport):
             raise FilterNotSupportedException()
@@ -4590,14 +4596,14 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_query(field_name, value, model_field, field_instance)
 
     def contains_word_query(self, field_name, value, model_field, field):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_word_query(
             field_name, value, model_field, field_instance
         )
@@ -4606,7 +4612,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(from_field)
+        ) = self.get_field_instance_and_type_from_formula_field(from_field)
         return field_type.get_alter_column_prepare_old_value(
             connection, field_instance, to_field
         )
@@ -4631,7 +4637,7 @@ class FormulaFieldType(
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field_object["field"])
+        ) = self.get_field_instance_and_type_from_formula_field(field_object["field"])
         return field_type.get_human_readable_value(
             value,
             {
