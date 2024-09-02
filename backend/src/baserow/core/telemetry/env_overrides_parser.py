@@ -8,15 +8,16 @@ from opentelemetry.sdk.trace.sampling import (
     DEFAULT_ON,
     ParentBasedTraceIdRatio,
     Sampler,
-    TraceIdRatioBased,
 )
+
+from .sampling import ForcableTraceIdRatioBased
 
 _KNOWN_SAMPLERS = {
     "always_on": ALWAYS_ON,
     "always_off": ALWAYS_OFF,
     "parentbased_always_on": DEFAULT_ON,
     "parentbased_always_off": DEFAULT_OFF,
-    "traceidratio": TraceIdRatioBased,
+    "traceidratio": ForcableTraceIdRatioBased,
     "parentbased_traceidratio": ParentBasedTraceIdRatio,
 }
 
