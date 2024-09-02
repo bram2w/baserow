@@ -4,8 +4,13 @@
   border-top-left-radius: $rounded-3xl;
   overflow: hidden;
   pointer-events: none;
+  transition: left 0.5s ease;
 
   @include absolute(10%, 0, 0, 10%);
+}
+
+.onboarding-tool-preview__focus-table {
+  left: -500px !important;
 }
 
 .onboarding-tool-preview__inner {

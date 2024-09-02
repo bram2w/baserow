@@ -46,6 +46,7 @@
               <component
                 :is="step.getFormComponent()"
                 ref="form"
+                :data="data"
                 @update-data="updateData"
               ></component>
             </div>

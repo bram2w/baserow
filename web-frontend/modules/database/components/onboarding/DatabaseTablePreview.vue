@@ -38,6 +38,12 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      fieldsDefs: [],
+      nameRows: [],
+    }
+  },
   computed: {
     database() {
       return this.applications[0]
@@ -59,7 +65,25 @@ export default {
         },
         this.$registry
       )
-      return [primaryTextField]
+
+      const instances = [primaryTextField]
+      this.fieldsDefs.forEach((field, index) => {
+        instances.push(
+          populateField(
+            {
+              id: index + 1,
+              table_id: this.table.id,
+              order: index + 1,
+              read_only: false,
+              primary: false,
+              hidden: false,
+              ...field,
+            },
+            this.$registry
+          )
+        )
+      })
+      return instances
     },
     views() {
       const gridView1 = populateView(
@@ -122,8 +146,63 @@ export default {
           endIndex: rows.length,
           top: 0,
         })
+        this.nameRows = rows
       },
       immediate: true,
+      deep: true,
+    },
+    'data.database_scratch_track_fields': {
+      handler(value) {
+        const fieldsDefs = []
+
+        const commit = (name, value) => {
+          return this.$store.commit(`page/view/grid/${name}`, value)
+        }
+
+        const rows = JSON.parse(JSON.stringify(this.nameRows))
+
+        Object.values(value.fields).forEach((field, fieldIndex) => {
+          fieldsDefs.push({
+            primary: false,
+            ...field.props,
+          })
+
+          field.rows.forEach((rowValue, index) => {
+            rows[index][`field_${fieldIndex + 1}`] = rowValue
+          })
+
+          commit('CLEAR_ROWS')
+          commit('ADD_ROWS', {
+            rows,
+            prependToRows: 0,
+            appendToRows: rows.length,
+            count: rows.length,
+            bufferStartIndex: 0,
+            bufferLimit: rows.length,
+          })
+          commit('SET_ROWS_INDEX', {
+            startIndex: 0,
+            endIndex: rows.length,
+            top: 0,
+          })
+        })
+        this.fieldsDefs = fieldsDefs
+
+        for (let idx = 0; idx <= this.fieldsDefs.length; idx++) {
+          commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+            fieldId: idx + 1,
+            values: {
+              width: 150,
+              order: 32767,
+              aggregation_type: '',
+              aggregation_raw_type: '',
+              hidden: false,
+            },
+          })
+        }
+
+        this.$emit('focusOnTable', fieldsDefs.length > 0)
+      },
       deep: true,
     },
   },

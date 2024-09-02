@@ -171,8 +171,12 @@ export class FieldType extends Registerable {
    * icon, you must return 'database' here. This will result in the classname
    * 'iconoir-database'.
    */
-  getIconClass() {
+  static getIconClass() {
     return null
+  }
+
+  getIconClass() {
+    return this.constructor.getIconClass()
   }
 
   /**
@@ -811,7 +815,7 @@ export class TextFieldType extends FieldType {
     return 'text'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-text'
   }
 
@@ -898,7 +902,7 @@ export class LongTextFieldType extends FieldType {
     return 'long_text'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-align-left'
   }
 
@@ -1006,7 +1010,7 @@ export class LinkRowFieldType extends FieldType {
     return 'link_row'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-ev-plug'
   }
 
@@ -1246,7 +1250,7 @@ export class NumberFieldType extends FieldType {
     return 'number'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'baserow-icon-hashtag'
   }
 
@@ -1455,7 +1459,7 @@ export class RatingFieldType extends FieldType {
     return 'rating'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-star'
   }
 
@@ -1589,7 +1593,7 @@ export class BooleanFieldType extends FieldType {
     return 'boolean'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'baserow-icon-circle-checked'
   }
 
@@ -1684,7 +1688,7 @@ export class BooleanFieldType extends FieldType {
 }
 
 class BaseDateFieldType extends FieldType {
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-calendar'
   }
 
@@ -1998,7 +2002,7 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     return 'last_modified'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-edit'
   }
 
@@ -2032,7 +2036,7 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
     return 'created_on'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-plus'
   }
 
@@ -2054,7 +2058,7 @@ export class LastModifiedByFieldType extends FieldType {
     return 'last_modified_by'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-user'
   }
 
@@ -2192,7 +2196,7 @@ export class CreatedByFieldType extends FieldType {
     return 'created_by'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-user'
   }
 
@@ -2334,7 +2338,7 @@ export class DurationFieldType extends FieldType {
     return RowCardFieldDuration
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-clock-rotate-right'
   }
 
@@ -2482,7 +2486,7 @@ export class URLFieldType extends FieldType {
     return 'url'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-link'
   }
 
@@ -2581,7 +2585,7 @@ export class EmailFieldType extends FieldType {
     return 'email'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-mail'
   }
 
@@ -2686,7 +2690,7 @@ export class FileFieldType extends FieldType {
     return 'file'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-empty-page'
   }
 
@@ -2877,7 +2881,7 @@ export class SingleSelectFieldType extends FieldType {
     return 'single_select'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'baserow-icon-single-select'
   }
 
@@ -3098,7 +3102,7 @@ export class MultipleSelectFieldType extends FieldType {
     return 'multiple_select'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-list'
   }
 
@@ -3381,7 +3385,7 @@ export class PhoneNumberFieldType extends FieldType {
     return 'phone_number'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-phone'
   }
 
@@ -3517,7 +3521,7 @@ export class FormulaFieldType extends mix(
     return `array(${type})`
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'baserow-icon-formula'
   }
 
@@ -3704,7 +3708,7 @@ export class CountFieldType extends FormulaFieldType {
     return 'count'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-calculator'
   }
 
@@ -3731,7 +3735,7 @@ export class RollupFieldType extends FormulaFieldType {
     return 'rollup'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-box-iso'
   }
 
@@ -3758,7 +3762,7 @@ export class LookupFieldType extends FormulaFieldType {
     return 'lookup'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-binocular'
   }
 
@@ -3785,7 +3789,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
     return 'multiple_collaborators'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-community'
   }
 
@@ -3987,7 +3991,7 @@ export class UUIDFieldType extends FieldType {
     return 'uuid'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-fingerprint'
   }
 
@@ -4062,7 +4066,7 @@ export class AutonumberFieldType extends FieldType {
     return 'autonumber'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-numbered-list-left'
   }
 
@@ -4165,7 +4169,7 @@ export class PasswordFieldType extends FieldType {
     return 'password'
   }
 
-  getIconClass() {
+  static getIconClass() {
     return 'iconoir-lock'
   }
 

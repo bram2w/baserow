@@ -1,5 +1,10 @@
 <template>
-  <div class="onboarding-tool-preview">
+  <div
+    :class="{
+      'onboarding-tool-preview': true,
+      'onboarding-tool-preview__focus-table': focusOnTable,
+    }"
+  >
     <div ref="inner" class="onboarding-tool-preview__inner">
       <div
         class="onboarding-tool-preview__highlight"
@@ -30,6 +35,7 @@
             :data="data"
             :selected-workspace="selectedWorkspace"
             :applications="applications"
+            @focusOnTable="handleFocusOnTable"
           ></component>
         </div>
       </div>
@@ -61,6 +67,7 @@ export default {
   },
   data() {
     return {
+      focusOnTable: false,
       highlightPosition: {
         visible: false,
         left: 0,
@@ -148,6 +155,9 @@ export default {
       }
 
       this.highlightPosition = position
+    },
+    handleFocusOnTable(focusOnTable) {
+      this.focusOnTable = focusOnTable
     },
   },
 }
