@@ -243,3 +243,31 @@ class ButtonCollectionFieldType(CollectionFieldType):
     def before_delete(self, instance: CollectionField):
         # We delete the related workflow actions
         BuilderWorkflowAction.objects.filter(event__startswith=instance.uid).delete()
+
+
+class ImageCollectionFieldType(CollectionFieldType):
+    type = "image"
+    allowed_fields = ["src", "alt"]
+    serializer_field_names = ["src", "alt"]
+    simple_formula_fields = ["src", "alt"]
+
+    class SerializedDict(TypedDict):
+        src: BaserowFormula
+        alt: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            "src": FormulaSerializerField(
+                help_text="A link to the image file",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "alt": FormulaSerializerField(
+                help_text="A brief text description of the image",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+        }
