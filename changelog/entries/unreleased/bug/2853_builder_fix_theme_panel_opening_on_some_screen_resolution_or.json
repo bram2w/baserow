@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix theme panel opening on some screen resolution or when using browser zoom",
+    "issue_number": 2853,
+    "bullet_points": [],
+    "created_at": "2024-09-02"
+}
