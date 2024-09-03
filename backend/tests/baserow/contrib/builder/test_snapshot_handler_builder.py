@@ -11,9 +11,9 @@ def test_can_create_a_snapshot_for_builder_application(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user)
 
-    snapshot = SnapshotHandler().create(builder.id, performed_by=user, name="test")[
-        "snapshot"
-    ]
+    snapshot = SnapshotHandler().start_create_job(
+        builder.id, performed_by=user, name="test"
+    )["snapshot"]
 
     assert snapshot is not None
     assert snapshot.name == "test"
@@ -25,9 +25,9 @@ def test_can_delete_a_snapshot_for_builder_application(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user)
 
-    snapshot = SnapshotHandler().create(builder.id, performed_by=user, name="test")[
-        "snapshot"
-    ]
+    snapshot = SnapshotHandler().start_create_job(
+        builder.id, performed_by=user, name="test"
+    )["snapshot"]
 
     SnapshotHandler().delete(snapshot.id, user)
 

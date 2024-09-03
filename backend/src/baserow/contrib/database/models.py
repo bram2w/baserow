@@ -67,4 +67,8 @@ __all__ = [
 
 class Database(Application):
     def get_parent(self):
+        # This is a bit of a hack to prevent an unecesary query to the database to
+        # get the parent workspace that we already have.
+        if "workspace" in self._state.fields_cache:
+            self.application_ptr.workspace = self.workspace
         return self.application_ptr

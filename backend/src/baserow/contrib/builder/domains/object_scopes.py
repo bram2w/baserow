@@ -1,6 +1,6 @@
 from typing import Optional
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.object_scopes import BuilderObjectScopeType
@@ -22,9 +22,16 @@ class BuilderDomainObjectScopeType(ObjectScopeType):
     def get_parent(self, context: ContextObject) -> Optional[ContextObject]:
         return context.builder
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "builder", "builder__workspace"
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(builder__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "builder__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):

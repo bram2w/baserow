@@ -769,20 +769,29 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
             f"Must be implemented by the specific type <{self.type}>"
         )
 
-    def get_base_queryset(self) -> QuerySet:
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
         """
+        :params include_trash: If true then also includes trashed objects in the
+            queryset. Needed to verify if a user needs to be included in the recipient
+            list of a deleted_* signal.
         Returns the base queryset for the objects of this scope
         """
 
-        return self.model_class.objects.all()
+        model_manager = self.model_class.objects
+        if include_trash and hasattr(self.model_class, "objects_and_trash"):
+            model_manager = self.model_class.objects_and_trash
+        return model_manager.order_by().all()
 
-    def get_enhanced_queryset(self) -> QuerySet:
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
         """
+        :params include_trash: If true then also includes trashed objects in the
+            queryset. Needed to verify if a user needs to be included in the recipient
+            list of a deleted_* signal.
         Returns the enhanced queryset for the objects of this scope enhanced for better
         performances.
         """
 
-        return self.get_base_queryset()
+        return self.get_base_queryset(include_trash=include_trash)
 
     def are_objects_child_of(
         self, child_objects: List[Any], parent_object: ScopeObject
@@ -849,14 +858,18 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         """
 
         objects_per_scope = {}
+        parent_scope_types = set()
 
         parent_scopes = []
         for scope in scopes:
-            if object_scope_type_registry.get_by_model(scope).type == self.type:
+            object_scope_type = object_scope_type_registry.get_by_model(scope)
+            if object_scope_type.type == self.type:
                 # Scope of the same type doesn't need to be queried
                 objects_per_scope[scope] = set([scope])
             else:
                 parent_scopes.append(scope)
+                objects_per_scope[scope] = set()
+                parent_scope_types.add(object_scope_type)
 
         if parent_scopes:
             query_result = list(
@@ -867,15 +880,13 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
 
             # We have all the objects in the queryset, but now we want to sort them
             # into buckets per original scope they are a child of.
-            for scope in parent_scopes:
-                objects_per_scope[scope] = set()
-                scope_type = object_scope_type_registry.get_by_model(scope)
-                for obj in query_result:
+            for obj in query_result:
+                for scope_type in parent_scope_types:
                     parent_scope = object_scope_type_registry.get_parent(
                         obj, at_scope_type=scope_type
                     )
-                    if parent_scope == scope:
-                        objects_per_scope[scope].add(obj)
+                    if parent_scope in objects_per_scope:
+                        objects_per_scope[parent_scope].add(obj)
 
         return objects_per_scope
 

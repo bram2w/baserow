@@ -28,6 +28,7 @@ from baserow.contrib.database.table.operations import (
     UpdateDatabaseTableOperationType,
 )
 from baserow.core.exceptions import PermissionException
+from baserow.core.handler import CoreHandler
 from baserow.core.models import Application
 from baserow.core.notifications.operations import (
     ClearNotificationsOperationType,
@@ -47,7 +48,9 @@ from baserow.core.operations import (
     UpdateWorkspaceOperationType,
 )
 from baserow.core.registries import operation_type_registry
+from baserow.core.snapshots.handler import SnapshotHandler
 from baserow.core.types import PermissionCheck
+from baserow.core.utils import Progress
 from baserow_enterprise.role.default_roles import default_roles
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
@@ -1775,3 +1778,72 @@ def test_check_multiple_permissions_perf(
     for q in captured.captured_queries:
         print(q)
     print(len(captured.captured_queries))
+
+
+@pytest.mark.django_db
+def test_fetching_permissions_does_not_extra_queries_per_snapshot(
+    data_fixture, enterprise_data_fixture, synced_roles
+):
+    enterprise_data_fixture.enable_enterprise()
+    admin = data_fixture.create_user()
+    viewer = data_fixture.create_user()
+
+    workspace = data_fixture.create_workspace(
+        members=[admin, viewer],
+    )
+    database = data_fixture.create_database_application(workspace=workspace, order=1)
+    table = data_fixture.create_database_table(user=admin, database=database)
+
+    role_admin = Role.objects.get(uid="ADMIN")
+    role_viewer = Role.objects.get(uid="VIEWER")
+    RoleAssignmentHandler().assign_role(admin, workspace, role=role_admin)
+    RoleAssignmentHandler().assign_role(viewer, workspace, role=role_viewer)
+    RoleAssignmentHandler().assign_role(
+        admin, workspace, role=role_admin, scope=database.application_ptr
+    )
+    RoleAssignmentHandler().assign_role(
+        viewer, workspace, role=role_viewer, scope=database.application_ptr
+    )
+
+    # The first time it also fetches the settings and the content types
+    CoreHandler().get_permissions(viewer, workspace=workspace)
+
+    with CaptureQueriesContext(connection) as captured_1:
+        CoreHandler().get_permissions(viewer, workspace=workspace)
+
+    # Let's create a snapshot of the database
+    handler = SnapshotHandler()
+    snapshot = handler.create(database.id, admin, "Test snapshot")
+    handler.perform_create(snapshot, Progress(100))
+
+    with CaptureQueriesContext(connection) as captured_2:
+        CoreHandler().get_permissions(viewer, workspace=workspace)
+
+    assert len(captured_2.captured_queries) == len(captured_1.captured_queries)
+
+    # Another snapshot won't increase the number of queries
+    snapshot = handler.create(database.id, admin, "Test snapshot 2")
+    handler.perform_create(snapshot, Progress(100))
+
+    with CaptureQueriesContext(connection) as captured_3:
+        CoreHandler().get_permissions(viewer, workspace=workspace)
+
+    assert len(captured_3.captured_queries) == len(captured_2.captured_queries)
+
+    # The same should be valid for builder applications
+
+    builder = data_fixture.create_builder_application(user=admin, workspace=workspace)
+    page = data_fixture.create_builder_page(builder=builder)
+
+    with CaptureQueriesContext(connection) as captured_1:
+        CoreHandler().get_permissions(viewer, workspace=workspace)
+
+    # Let's create a snapshot of the builder app
+    handler = SnapshotHandler()
+    snapshot = handler.create(builder.id, admin, "Test snapshot")
+    handler.perform_create(snapshot, Progress(100))
+
+    with CaptureQueriesContext(connection) as captured_2:
+        CoreHandler().get_permissions(viewer, workspace=workspace)
+
+    assert len(captured_1.captured_queries) == len(captured_2.captured_queries)
