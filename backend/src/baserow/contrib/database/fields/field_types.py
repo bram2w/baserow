@@ -5528,7 +5528,11 @@ class LookupFieldType(FormulaFieldType):
         serialized_fields_map: Dict[int, Dict[str, Any]],
         primary_table_fields_map: Dict[int, int],
     ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
-        via_field = serialized_fields_map[serialized_field["through_field_id"]]
+        through_field_id = serialized_field.get("through_field_id", None)
+        if through_field_id is None:
+            return None
+
+        via_field = serialized_fields_map[through_field_id]
         via_field_name = via_field["name"]
 
         # it means we're targeting a field that already exists before the import

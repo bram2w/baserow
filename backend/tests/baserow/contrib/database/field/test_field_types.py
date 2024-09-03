@@ -6,7 +6,12 @@ from django.test.utils import override_settings
 import pytest
 from faker import Faker
 
-from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
+from baserow.contrib.database.fields.field_types import (
+    LinkRowFieldType,
+    LookupFieldType,
+    PhoneNumberFieldType,
+    TextFieldType,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     EmailField,
@@ -708,6 +713,59 @@ def test_import_export_lookup_field(data_fixture, api_client):
     assert lookup_field_imported.target_field_name == lookup.target_field_name
 
     assert id_mapping["database_fields"][lookup.id] == lookup_field_imported.id
+
+
+@pytest.mark.django_db
+def test_lookup_field_get_field_dependencies_import_serialized_broken_lookup(
+    data_fixture,
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+    lookup_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name="link",
+        target_field_name="target",
+    )
+
+    serialized_field = LookupFieldType().export_serialized(lookup_field)
+    serialized_fields_map = {
+        link_field.id: LinkRowFieldType().export_serialized(link_field),
+        target_field.id: TextFieldType().export_serialized(target_field),
+    }
+    primary_table_fields_map = {}
+
+    # the dependencies are listed normally when lookup is valid
+    field_deps = LookupFieldType().get_field_depdendencies_before_import_serialized(
+        serialized_field, serialized_fields_map, primary_table_fields_map
+    )
+    assert field_deps == set(
+        [
+            (
+                "target",
+                "link",
+            ),
+        ]
+    )
+
+    # lookup is broken
+    FieldHandler().delete_field(user, link_field)
+    lookup_field.refresh_from_db()
+
+    serialized_field = LookupFieldType().export_serialized(lookup_field)
+    serialized_fields_map = {
+        link_field.id: LinkRowFieldType().export_serialized(link_field),
+        target_field.id: TextFieldType().export_serialized(target_field),
+    }
+    primary_table_fields_map = {}
+
+    field_deps = LookupFieldType().get_field_depdendencies_before_import_serialized(
+        serialized_field, serialized_fields_map, primary_table_fields_map
+    )
+    assert field_deps is None
 
 
 def test_field_types_with_get_order_have_get_value_for_filter():
