@@ -153,7 +153,6 @@ export default {
       this.delayedUpdate(this.value, true)
     },
     setValue(value) {
-      console.log(value)
       this.copy = value
       this.delayedUpdate(value, true)
     },
@@ -182,8 +181,8 @@ export default {
       }
 
       if (newDate.isValid()) {
-        this.setCopy(newDate.format('YYYY-MM-DD'), sender)
-        this.delayedUpdate(this.copy, true)
+        const dateString = newDate.format('YYYY-MM-DD')
+        this.setValue(dateString, sender)
       } else {
         this.copy = value
       }
