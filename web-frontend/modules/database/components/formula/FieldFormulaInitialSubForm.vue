@@ -1,11 +1,10 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <FormGroup
       small-label
       :label="$t('fieldType.formula')"
       required
       :error="!!error"
-      class="margin-bottom-2"
     >
       <FormInput
         ref="formInput"

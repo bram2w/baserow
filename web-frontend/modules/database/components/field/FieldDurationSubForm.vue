@@ -2,7 +2,6 @@
   <FormGroup
     required
     small-label
-    class="margin-bottom-2"
     :label="$t('fieldDurationSubForm.durationFormatLabel')"
   >
     <Dropdown

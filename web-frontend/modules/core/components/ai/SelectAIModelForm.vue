@@ -1,10 +1,9 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <FormGroup
       small-label
       :label="$t('selectAIModelForm.AIType')"
       :error="$v.values.ai_generative_ai_type.$error"
-      class="margin-bottom-2"
       required
     >
       <Dropdown
@@ -32,7 +31,6 @@
       small-label
       :label="$t('selectAIModelForm.AIModel')"
       :error="$v.values.ai_generative_ai_model.$error"
-      class="margin-bottom-2"
       required
     >
       <Dropdown

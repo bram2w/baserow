@@ -1,10 +1,9 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <FieldSelectThroughFieldSubForm
       :fields="allFieldsInTable"
       :database="database"
       :default-values="defaultValues"
-      class="margin-bottom-2"
       @input="selectedThroughField = $event"
     ></FieldSelectThroughFieldSubForm>
     <FieldSelectTargetFieldSubForm
@@ -13,7 +12,6 @@
       :through-field="selectedThroughField"
       :default-values="defaultValues"
       :label="$t('fieldRollupSubForm.selectTargetFieldLabel')"
-      class="margin-bottom-2"
       @input="selectedTargetField = $event"
     ></FieldSelectTargetFieldSubForm>
     <template v-if="selectedTargetField">
@@ -21,7 +19,6 @@
         required
         small-label
         :label="$t('fieldRollupSubForm.label')"
-        class="margin-bottom-2"
         :error="$v.values.rollup_function.$error"
       >
         <Dropdown

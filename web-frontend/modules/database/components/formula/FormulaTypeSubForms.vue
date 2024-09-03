@@ -1,37 +1,35 @@
 <template>
-  <div>
-    <FieldNumberSubForm
-      v-if="formulaType === 'number'"
-      :default-values="defaultValues"
-      :table="table"
-      :view="view"
-      :primary="primary"
-      :allow-set-number-negative="false"
-      :all-fields-in-table="allFieldsInTable"
-      :database="database"
-    >
-    </FieldNumberSubForm>
-    <FieldDateSubForm
-      v-else-if="['date', 'last_modified', 'created_on'].includes(formulaType)"
-      :default-values="defaultValues"
-      :table="table"
-      :view="view"
-      :all-fields-in-table="allFieldsInTable"
-      :database="database"
-      :primary="primary"
-    >
-    </FieldDateSubForm>
-    <FieldDurationSubForm
-      v-else-if="formulaType === 'duration'"
-      :default-values="defaultValues"
-      :table="table"
-      :view="view"
-      :all-fields-in-table="allFieldsInTable"
-      :database="database"
-      :primary="primary"
-    >
-    </FieldDurationSubForm>
-  </div>
+  <FieldNumberSubForm
+    v-if="formulaType === 'number'"
+    :default-values="defaultValues"
+    :table="table"
+    :view="view"
+    :primary="primary"
+    :allow-set-number-negative="false"
+    :all-fields-in-table="allFieldsInTable"
+    :database="database"
+  >
+  </FieldNumberSubForm>
+  <FieldDateSubForm
+    v-else-if="['date', 'last_modified', 'created_on'].includes(formulaType)"
+    :default-values="defaultValues"
+    :table="table"
+    :view="view"
+    :all-fields-in-table="allFieldsInTable"
+    :database="database"
+    :primary="primary"
+  >
+  </FieldDateSubForm>
+  <FieldDurationSubForm
+    v-else-if="formulaType === 'duration'"
+    :default-values="defaultValues"
+    :table="table"
+    :view="view"
+    :all-fields-in-table="allFieldsInTable"
+    :database="database"
+    :primary="primary"
+  >
+  </FieldDurationSubForm>
 </template>
 <script>
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
