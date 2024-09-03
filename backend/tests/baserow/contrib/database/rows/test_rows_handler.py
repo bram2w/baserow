@@ -1661,3 +1661,42 @@ def test_formula_referencing_fields_add_additional_queries_on_rows_updated(
     assert getattr(r, f"field_{f1.id}") == "Tonale-a"
     assert getattr(r, f"field_{f2.id}") == "Tonale-b"
     assert getattr(r, f"field_{f3.id}") == "Tonale-a-c"
+
+
+@pytest.mark.django_db
+def test_can_move_rows_and_formulas_are_updated_correctly(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
+    prim_b = data_fixture.create_text_field(table=table_b, primary=True, name="name")
+
+    row_b1, row_b2 = RowHandler().create_rows(
+        user, table_b, [{prim_b.db_column: "b1"}, {prim_b.db_column: "b2"}]
+    )
+
+    lookup_a = data_fixture.create_formula_field(
+        table=table_a, formula="join(lookup('link', 'name'), '')"
+    )
+
+    row_a1, row_a2 = RowHandler().create_rows(
+        user,
+        table_a,
+        [{link_a_b.db_column: [row_b1.id]}, {link_a_b.db_column: [row_b2.id]}],
+    )
+
+    assert getattr(row_a1, lookup_a.db_column) == "b1"
+    assert getattr(row_a2, lookup_a.db_column) == "b2"
+
+    # moving rows up and down should mantain the formulas correct
+    row_a2 = RowHandler().move_row(user, table_a, row_a2, before_row=row_a1)
+
+    row_a1.refresh_from_db()
+    row_a2.refresh_from_db()
+    assert getattr(row_a1, lookup_a.db_column) == "b1"
+    assert getattr(row_a2, lookup_a.db_column) == "b2"
+
+    row_a1 = RowHandler().move_row(user, table_a, row_a1, before_row=row_a2)
+
+    row_a1.refresh_from_db()
+    row_a2.refresh_from_db()
+    assert getattr(row_a1, lookup_a.db_column) == "b1"
+    assert getattr(row_a2, lookup_a.db_column) == "b2"
