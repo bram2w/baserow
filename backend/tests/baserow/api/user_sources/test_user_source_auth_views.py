@@ -655,6 +655,32 @@ def test_refresh_json_web_token_fails_with_deleted_user(
 
 
 @pytest.mark.django_db
+def test_refresh_json_web_token_fails_with_trashed_table(api_client, data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    published_builder = data_fixture.create_builder_application(workspace=None)
+    data_fixture.create_builder_custom_domain(
+        builder=builder, published_to=published_builder
+    )
+    table = data_fixture.create_database_table(user=user, trashed=True)
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=published_builder, table=table
+    )
+
+    url = reverse("api:user_sources:token_refresh")
+    us_user = data_fixture.create_user_source_user(user_source=user_source)
+
+    response = api_client.post(
+        url,
+        {"refresh_token": str(us_user.get_refresh_token())},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+
+
+@pytest.mark.django_db
 def test_refresh_json_web_token_blacklisted(
     api_client, data_fixture, stub_user_source_registry
 ):

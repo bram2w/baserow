@@ -2,7 +2,7 @@
   <Context
     ref="context"
     class="hidings"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     @shown="shown()"
   >
     <div class="hidings__head">

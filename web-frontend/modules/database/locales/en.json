@@ -63,7 +63,7 @@
   },
   "sidebar": {
     "viewAPI": "View API Docs",
-    "createTable": "Create table"
+    "createTable": "New table"
   },
   "sidebarItem": {
     "exportTable": "Export table",
@@ -141,7 +141,7 @@
     "description": "To list rows in the *{name}* table a `GET` request has to be made to the *{name}* endpoint. The response is paginated and by default the first page is returned. The correct page can be fetched by providing the `page` and `size` query parameters.",
     "page": "Defines which page of rows should be returned.",
     "size": "Defines how many rows should be returned per page.",
-    "userFieldNames": "When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.\n\n Additionally when `user_field_names` is set then the behaviour of the other GET parameters `order_by`, `include` and `exclude` changes. They instead expect comma separated lists of the actual field names instead.",
+    "userFieldNames": "When the `user_field_names` GET parameter is provided and its value is one of the following: `y`, `yes`, `true`, `t`, `on`, `1`, or empty string, the field names returned by this endpoint will be the actual names of the fields.\n\nIf the `user_field_names` GET parameter is not provided, or if it does not match any of the above values, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.\n\n Additionally when `user_field_names` is set then the behaviour of the other GET parameters `order_by`, `include` and `exclude` changes. They instead expect comma separated lists of the actual field names instead.",
     "search": "If provided only rows with data that matches the search query are going to be returned.",
     "orderBy": "Optionally the rows can be ordered by fields separated by comma. By default or if prepended with a '+' a field is ordered in ascending (A-Z) order, but by prepending the field with a '-' it can be ordered descending (Z-A).\n\n #### With `user_field_names`:\n\n `order_by` should be a comma separated list of the field names to order by. For example if you provide the following GET parameter `order_by=My Field,-My Field 2` the rows will ordered by the field called `My Field` in ascending order. If some fields have the same value, that subset will be ordered by the field called `My Field 2` in descending order.\n\n Ensure fields with names starting with a `+` or `-` are explicitly prepended with another `+` or `-`. E.g `+-Name`.\n\n The name of fields containing commas must be surrounded by quotes: `\"Name ,\"`. If the field names contain quotes, then they must be escaped using the `\\` character. Eg: `Name \\\"`. \n\n#### Without `user_field_names`:\n\n `order_by` should be a comma separated list of `field_` followed by the id of the field to order by. For example if you provide the following GET parameter `order_by=field_1,-field_2` the rows will ordered by `field_1` in ascending order. If some fields have the same value, that subset will be ordered by `field_2` in descending order.",
     "filters": "Rows can optionally be filtered using the same view filters that are available for the views. This parameter accepts a JSON serialized string containing the filter tree to apply to this view. The filter tree is a nested structure containing the filters that need to be applied. \n\n#### With `user_field_names`:\n\nAn example of a valid filter tree is the following: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\"}]}`.\n\n#### Without `user_field_names`:\n\nFor example, if you optionally provide the following GET parameter: `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`\n\nPlease note that if this parameter is provided, all other `filter__{field}__{filter}` will be ignored, as well as the filter_type parameter.",
@@ -151,7 +151,8 @@
     "include": "All the fields are included in the response by default. You can select a subset of fields to include by providing the include query parameter.\n\n #### With `user_field_names`:\n\n `include` should be a comma separated list of field names to be included in results. For example if you provide the following GET param: `include=My Field,-My Field 2` then only those fields will be included (unless they are explicitly excluded).\n\n The name of fields containing commas must be surrounded by quotes: `\"Name ,\"`. If the field names contain quotes, then they must be escaped using the `\\` character. Eg: `Name \\\"`.\n\n #### Without `user_field_names`:\n\n `include` should be a comma separated list of `field_` followed by the id of the field to include in the results. For example: If you provide the following GET parameter `include=field_1,field_2` then the fields with id `1` and id `2` then only those fields will be included (unless they are explicitly excluded).",
     "exclude": "All the fields are included in the response by default. You can select a subset of fields to exclude by providing the exclude query parameter.\n\n #### With `user_field_names`:\n\n `exclude` should be a comma separated list of field names to be excluded from the results. For example if you provide the following GET param: `exclude=My Field,-My Field 2` then those fields will be excluded.\n\n The name of fields containing commas must be surrounded by quotes: `\"Name ,\"`. If the field names contain quotes, then they must be escaped using the `\\` character. Eg: `Name \\\"`.\n\n #### Without `user_field_names`:\n\n `exclude` should be a comma separated list of `field_` followed by the id of the field to exclude from the results. For example: If you provide the following GET parameter `exclude=field_1,field_2` then the fields with id `1` and id `2` will be excluded.",
     "viewId": "By default non of the filters and sorts outside of the ones defined in the query parameters are applied. You can add the filters and sorts of a view by providing its `id` in the `view_id` GET parameter. For example if you provide the following GET parameter `view_id=1` then the filters and sorts defined in the view with id `1` will be applied. You can find the `view_id` in the context menu of any given view. It is the number in brackets behind the view name. \n\n #### With `filter__{field}__{filter}` \n\n Both the filter provided in the query parameter and the filters defined in the view will be applied.\n\n #### With `order_by` \n\n If `order_by` is provided then the sort defined in the view will be ignored.",
-    "filtersBuilder": "Open filters parameter builder"
+    "filtersBuilder": "Open filters parameter builder",
+    "join": "Makes it possible to request a lookup of field values from a target table through existing link row fields. The parameter name has to be the name of an existing link row field, followed by __join. The value should be a list of field names for which we want to lookup additional values. You can provide one or multiple target fields. It is not possible to lookup a value of a link row field in the target table.\n\n #### With `user_field_names`:\n\n `join` should be a comma separated list of field names to be included in results. For example: If you provide the following GET parameter `LinkRowField__join=MyField,MyField2` then the values of `MyField` and `My Field2` in the table linked by `LinkRowField` will be included in the response .\n\n#### Without `user_field_names`:\n\n `join` should be a comma separated list of `field_` followed by the id of the field to include in the results. For example: If you provide the following GET parameter `field_1__join=field_2,field_3` then the values of `field_2` and `field_3` in the table linked by `field_1` will be included in the response."
   },
   "apiDocsIntro": {
     "intro": "The {name} database provides an easy way to integrate the data with any external system. The API follows REST semantics, uses JSON to encode objects and relies on standard HTTP codes, machine and human readable errors to signal operation outcomes.",
@@ -279,7 +280,8 @@
     "editField": "Edit field",
     "deleteField": "Delete field",
     "hideField": "Hide field",
-    "showField": "Show field"
+    "showField": "Show field",
+    "changePrimaryField": "Change primary field"
   },
   "fieldForm": {
     "name": "Name",
@@ -478,16 +480,19 @@
     "add": "Add {view}"
   },
   "shareViewLink": {
+    "shareViewText": "Private shareable link allows anyone to see the data in this view.",
     "shareView": "Share {viewTypeSharingLinkName}",
-    "shareViewTitle": "Create a private shareable link to the {viewTypeSharingLinkName}",
+    "createPrivateLink": "Create a private link",
+    "shareViewTitle": "You have not yet shared the view",
     "sharedViewTitle": "This {viewTypeSharingLinkName} is currently shared via a private link",
     "sharedViewDescription": "People who have the link can see the {viewTypeSharingLinkName}.",
-    "disableLink": "disable shared link",
+    "disableLink": "Disable shared link",
     "generateNewUrl": "generate new url",
     "copyURL": "copy URL",
     "EnablePassword": "Restrict access with a password",
     "DisablePassword": "Access is password-protected",
-    "ChangePassword": "Change"
+    "ChangePassword": "Change",
+    "notSharedYetText": "Allow anyone to see the data in this view or sync events to your external calendar."
   },
   "viewGroupByContext": {
     "noGroupByTitle": "You have not yet created any groupings",
@@ -738,8 +743,9 @@
   "viewDecoratorContext": {
     "addDecorator": "Add decorator"
   },
-  "databaseDashboardSidebarLinks": {
-    "apiDocumentation": "API documentation"
+  "databaseDashboardResourceLinks": {
+    "title": "API documentation",
+    "description": "Learn more about our code"
   },
   "formViewField": {
     "required": "required",
@@ -753,6 +759,12 @@
     "duplicate": "Duplicate field",
     "cloneData": "Copy data",
     "readOnlyField": "Cell values will be filled automatically."
+  },
+  "changePrimaryFieldModal": {
+    "title": "Change the primary field",
+    "change": "Change",
+    "primaryFieldLabel": "Primary field",
+    "existingPrimary": "\"{name}\" is currently the primary field."
   },
   "snapshotsModal": {
     "title": "snapshots",
@@ -858,6 +870,51 @@
     "title": "Import your data",
     "description": "Move your data to Baserow, in just a few clicks.",
     "tableNameLabel": "Table name"
+  },
+  "databaseScratchTrackFieldsStep": {
+    "title": "Choose fields for every row",
+    "description": "Pick up to {selectedFieldsLimitCount} fields. You can add more later.",
+    "fieldName": "Name",
+    "fieldType": "Field type",
+    "fieldDescription": "Description",
+    "fieldDetails": "Details",
+    "fieldNumber": "Number",
+    "fieldDate": "Date",
+    "fieldBoolean": "Finished",
+    "fieldDuration": "Duration",
+    "fieldUrl": "URL",
+    "fieldEmail": "Email",
+    "fieldRating": "Rating",
+    "fieldCategory": "Category",
+    "fieldKickoffDate": "Kickoff date",
+    "fieldDueDate": "Due date",
+    "fieldBudget": "Budget",
+    "fieldCompleted": "Completed",
+    "fieldNotes": "Notes",
+    "fieldRole": "Role",
+    "fieldPhone": "Phone",
+    "fieldActive": "Active",
+    "fieldEstimatedDays": "Estimated days",
+    "fieldStartDate": "Start date",
+    "fieldEndDate": "End date",
+    "projectsCategoryDesign": "Design",
+    "projectsCategoryDevelopment": "Development",
+    "projectsCategoryMarketing": "Marketing",
+    "projectsNotesRow1": "Acme is looking for a complete rebranding of their website with the following guidelines.",
+    "projectsNotesRow2": "Research if the current users of Soylent are interested into a new user portal.",
+    "projectsNotesRow3": "Wondering if this is worth doing after the Facebook ad boycott. Studies are showing that paid ad campaigns have become increasingly less effective.",
+    "teamsRoleDesigner": "Designer",
+    "teamsRoleDeveloper": "Developer",
+    "teamsRoleMarketer": "Marketer",
+    "tasksDetailsRow1": "The logo needs to be improved to make the CTA clearer.",
+    "tasksDetailsRow2": "The structure is a little off, so we may need to adjust the sitemap here as well.",
+    "tasksDetailsRow3": "The new footer should include our contact information and also a small (but clear) CTA.",
+    "campaignsDetailsRow1": "Heat up your savings with our sizzling summer sale, featuring unbeatable discounts on all your favorite products!",
+    "campaignsDetailsRow2": "Boost customer retention and engagement with our enticing loyalty rewards program, designed to reward your most dedicated customers.",
+    "campaignsDetailsRow3": "Revitalize your business and captivate your audience with a dynamic brand relaunch that aligns perfectly with today's market trends and customer desires.",
+    "customFieldsDescriptionRow1": "Turpis massa tincidunt dui ut ornare lectus sit amet est.",
+    "customFieldsDescriptionRow2": "Vitae justo eget magna fermentum iaculis eu non diam.",
+    "customFieldsDescriptionRow3": "Convallis tellus id interdum velit laoreet id donec ultrices tincidunt."
   },
   "databaseScratchTrackStep": {
     "title": "What would you like to track?",

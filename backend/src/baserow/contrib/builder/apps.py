@@ -243,8 +243,10 @@ class BuilderConfig(AppConfig):
             ButtonThemeConfigBlockType,
             ColorThemeConfigBlockType,
             ImageThemeConfigBlockType,
+            InputThemeConfigBlockType,
             LinkThemeConfigBlockType,
             PageThemeConfigBlockType,
+            TableThemeConfigBlockType,
             TypographyThemeConfigBlockType,
         )
 
@@ -254,10 +256,13 @@ class BuilderConfig(AppConfig):
         theme_config_block_registry.register(LinkThemeConfigBlockType())
         theme_config_block_registry.register(ImageThemeConfigBlockType())
         theme_config_block_registry.register(PageThemeConfigBlockType())
+        theme_config_block_registry.register(InputThemeConfigBlockType())
+        theme_config_block_registry.register(TableThemeConfigBlockType())
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
             CreateRowWorkflowActionType,
+            DeleteRowWorkflowActionType,
             LogoutWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
@@ -269,6 +274,7 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
         builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
         builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(DeleteRowWorkflowActionType())
         builder_workflow_action_type_registry.register(LogoutWorkflowActionType())
         builder_workflow_action_type_registry.register(
             RefreshDataSourceWorkflowAction()
@@ -277,6 +283,7 @@ class BuilderConfig(AppConfig):
         from .elements.collection_field_types import (
             BooleanCollectionFieldType,
             ButtonCollectionFieldType,
+            ImageCollectionFieldType,
             LinkCollectionFieldType,
             TagsCollectionFieldType,
             TextCollectionFieldType,
@@ -288,6 +295,7 @@ class BuilderConfig(AppConfig):
         collection_field_type_registry.register(LinkCollectionFieldType())
         collection_field_type_registry.register(TagsCollectionFieldType())
         collection_field_type_registry.register(ButtonCollectionFieldType())
+        collection_field_type_registry.register(ImageCollectionFieldType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

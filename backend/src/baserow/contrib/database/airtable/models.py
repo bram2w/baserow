@@ -3,11 +3,10 @@ from django.db import models
 from baserow.contrib.database.models import Database
 from baserow.core.jobs.mixins import JobWithUserIpAddress
 from baserow.core.jobs.models import Job
-from baserow.core.mixins import GroupToWorkspaceCompatModelMixin
 from baserow.core.models import Workspace
 
 
-class AirtableImportJob(JobWithUserIpAddress, Job, GroupToWorkspaceCompatModelMixin):
+class AirtableImportJob(JobWithUserIpAddress, Job):
     workspace = models.ForeignKey(
         Workspace,
         on_delete=models.CASCADE,

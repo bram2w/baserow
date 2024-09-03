@@ -1,15 +1,20 @@
 .alert {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0;
+  width: var(--alert-width, auto);
+
+  @include rounded($rounded-md);
+  @include elevation($elevation-low);
+}
+
+.alert__wrapper {
   display: flex;
   padding: 16px;
   align-items: flex-start;
   flex-wrap: nowrap;
-  margin: 20px 0;
   gap: 12px;
-  box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
-  z-index: $z-index-toasts;
-
-  @include rounded($rounded-md);
-  @include elevation($elevation-low);
 }
 
 .alert__icon {
@@ -48,6 +53,19 @@
   font-size: 16px;
   flex: 0 1 auto;
   cursor: pointer;
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  right: 10px;
+}
+
+.alert--blank {
+  @include alert-style(
+    $white,
+    $palette-neutral-1100,
+    $palette-neutral-1300,
+    $palette-neutral-400
+  );
 }
 
 .alert--info-neutral {
@@ -137,7 +155,6 @@
   right: 15px;
   bottom: 15px;
   margin: 0;
-  max-width: 350px;
 }
 
 .alert--top {

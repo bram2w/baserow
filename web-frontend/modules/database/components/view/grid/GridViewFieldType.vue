@@ -250,13 +250,14 @@
           </a>
         </li>
       </FieldContext>
-      <GridViewWidthHandle
+      <HorizontalResize
         v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
         :width="width"
+        :min="100"
         @move="moveFieldWidth(field, $event)"
         @update="updateFieldWidth(field, view, database, readOnly, $event)"
-      ></GridViewWidthHandle>
+      ></HorizontalResize>
     </div>
   </div>
 </template>
@@ -268,14 +269,14 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
-import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
+import HorizontalResize from '@baserow/modules/core/components/HorizontalResize'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
   components: {
+    HorizontalResize,
     FieldContext,
-    GridViewWidthHandle,
     InsertFieldContext,
     DuplicateFieldModal,
   },

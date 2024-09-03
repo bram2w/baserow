@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Generator, List, Optional, Type
 
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -28,6 +28,7 @@ from baserow.contrib.builder.elements.signals import elements_moved
 from baserow.contrib.builder.elements.types import CollectionElementSubClass
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
+from baserow.core.registry import Instance
 
 
 class ContainerElementTypeMixin:
@@ -117,9 +118,11 @@ class CollectionElementTypeMixin:
         "data_source",
         "data_source_id",
         "items_per_page",
+        "schema_property",
         "button_load_more_label",
     ]
     serializer_field_names = [
+        "schema_property",
         "data_source_id",
         "items_per_page",
         "button_load_more_label",
@@ -129,6 +132,7 @@ class CollectionElementTypeMixin:
         data_source_id: int
         items_per_page: int
         button_load_more_label: str
+        schema_property: str
 
     @property
     def serializer_field_overrides(self):
@@ -139,6 +143,14 @@ class CollectionElementTypeMixin:
                 allow_null=True,
                 default=None,
                 help_text=CollectionElement._meta.get_field("data_source").help_text,
+                required=False,
+            ),
+            "schema_property": serializers.CharField(
+                allow_null=True,
+                default=None,
+                help_text=CollectionElement._meta.get_field(
+                    "schema_property"
+                ).help_text,
                 required=False,
             ),
             "items_per_page": serializers.IntegerField(
@@ -162,14 +174,19 @@ class CollectionElementTypeMixin:
         if "data_source_id" in values:
             data_source_id = values.pop("data_source_id")
             if data_source_id is not None:
+                schema_property = values.get("schema_property", None)
                 data_source = DataSourceHandler().get_data_source(data_source_id)
-                if (
-                    not data_source.service
-                    or not data_source.service.specific.get_type().returns_list
-                ):
+                if data_source.service:
+                    service_type = data_source.service.specific.get_type()
+                    if service_type.returns_list and schema_property:
+                        raise DRFValidationError(
+                            "Data sources which return multiple rows cannot be "
+                            "used in conjunction with the schema property."
+                        )
+                else:
                     raise DRFValidationError(
-                        f"The data source with ID {data_source_id} doesn't return a "
-                        "list."
+                        f"Data source {data_source_id} is partially "
+                        "configured and not ready for use."
                     )
 
                 if instance:
@@ -273,6 +290,20 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
     class SerializedDict(CollectionElementTypeMixin.SerializedDict):
         fields: List[Dict]
+
+    def formula_generator(
+        self, element: "CollectionElementWithFieldsTypeMixin"
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for LinkCollectionFieldType.
+
+        Some formula fields are in the config JSON field, e.g. page_parameters.
+        """
+
+        yield from super().formula_generator(element)
+
+        for collection_field in element.fields.all():
+            yield from collection_field.get_type().formula_generator(collection_field)
 
     def serialize_property(
         self,

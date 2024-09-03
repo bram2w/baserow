@@ -11,6 +11,7 @@
 
 <script>
 import elementSidePanel from '@baserow/modules/builder/mixins/elementSidePanel'
+import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'GeneralSidePanel',
@@ -22,6 +23,7 @@ export default {
         ...this.applicationContext,
         element: this.element,
       },
+      dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_ELEMENTS,
     }
   },
 }

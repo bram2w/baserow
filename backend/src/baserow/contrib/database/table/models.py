@@ -160,7 +160,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         with cachalot_enabled():
             return super().count()
 
-    def enhance_by_fields(self):
+    def enhance_by_fields(self, **kwargs):
         """
         Enhances the queryset based on the `enhance_queryset_in_bulk` for each unique
         field type used in the table. This one will eventually call the
@@ -177,7 +177,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
             field_type = field_object["type"]
             by_type[field_type].append(field_object)
         for field_type, field_objects in by_type.items():
-            self = field_type.enhance_queryset_in_bulk(self, field_objects)
+            self = field_type.enhance_queryset_in_bulk(self, field_objects, **kwargs)
         return self
 
     def search_all_fields(
@@ -594,6 +594,17 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
             raise ValueError(f"Field {field_name} not found.")
 
     @classmethod
+    def get_field_object_by_user_field_name(
+        cls, field_name: str, include_trash: bool = False
+    ):
+        field_objects = cls.get_field_objects(include_trash)
+
+        try:
+            return next(filter(lambda f: f["field"].name == field_name, field_objects))
+        except StopIteration:
+            raise ValueError(f"Field {field_name} not found.")
+
+    @classmethod
     def get_field_objects(cls, include_trash: bool = False):
         field_objects = cls._field_objects.values()
         if include_trash:
@@ -707,24 +718,27 @@ class GeneratedModelAppsProxy:
         global ones.
         """
 
-        model_name = model._meta.model_name.lower()
-        if not hasattr(model, "_generated_table_model"):
-            # it must be an auto created intermediary m2m model, so use a list of
-            # baserow models we can later use to resolve the pending operations.
-            if not hasattr(self, "baserow_models"):
-                self.baserow_models = model._meta.auto_created.baserow_models
+        # Use the RLock defined in the apps registry to prevent any thead from
+        # accessing the apps registry concurrently because it's not thread safe.
+        with self._lock:
+            model_name = model._meta.model_name.lower()
+            if not hasattr(model, "_generated_table_model"):
+                # it must be an auto created intermediary m2m model, so use a list of
+                # baserow models we can later use to resolve the pending operations.
+                if not hasattr(self, "baserow_models"):
+                    self.baserow_models = model._meta.auto_created.baserow_models
 
-        self.baserow_models[model_name] = model
-        self.do_all_pending_operations()
-        self._clear_baserow_models_cache()
+            self.baserow_models[model_name] = model
+            self.do_all_pending_operations()
+            self._clear_baserow_models_cache()
 
-        # The `all_models` is a defaultdict, and will therefore have a residual empty
-        # key in with the app label because the app label is uniquely generated. This
-        # will make sure it's cleared.
-        try:
-            del apps.all_models[self.baserow_app_label]
-        except KeyError:
-            pass
+            # The `all_models` is a defaultdict, and will therefore have a residual
+            # empty key in with the app label because the app label is uniquely
+            # generated. This will make sure it's cleared.
+            try:
+                del apps.all_models[self.baserow_app_label]
+            except KeyError:
+                pass
 
     def _clear_baserow_models_cache(self):
         for model in self.baserow_models.values():
@@ -1219,7 +1233,11 @@ class Table(
         # trashed field attributes then model.objects.create will fail as the
         # trashed columns will be given null values by django triggering not null
         # constraints in the database.
-        fields_query = self.field_set(manager="objects_and_trash").all()
+        fields_query = (
+            self.field_set(manager="objects_and_trash")
+            .select_related("table", "content_type")
+            .all()
+        )
 
         # If the field ids are provided we must only fetch the fields of which the
         # ids are in that list.

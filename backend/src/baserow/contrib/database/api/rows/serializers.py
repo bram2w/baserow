@@ -9,6 +9,7 @@ from rest_framework import serializers
 
 from baserow.api.search.serializers import SearchQueryParamSerializer
 from baserow.api.utils import get_serializer_class
+from baserow.contrib.database.api.rows.fields import UserFieldNamesField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.models import RowHistory
 from baserow.contrib.database.rows.registries import row_metadata_registry
@@ -241,8 +242,9 @@ def get_example_row_serializer_class(example_type="get", user_field_names=False)
     optional_user_field_names_info = ""
     if user_field_names:
         optional_user_field_names_info = (
-            " If the GET parameter `user_field_names` is provided then the key will "
-            "instead be the actual name of the field."
+            " If the GET parameter user_field_names is provided and its value is "
+            "one of the following: `y`, `yes`, `true`, `t`, `on`, `1`, or empty, "
+            "then the key will instead be the actual name of the field."
         )
 
     for i, field_type in enumerate(field_types):
@@ -334,6 +336,12 @@ def remap_serialized_row_to_user_field_names(
     return new_row
 
 
+class UserFieldNamesSerializer(serializers.Serializer):
+    user_field_names = UserFieldNamesField(
+        required=False, default=False, allow_null=True
+    )
+
+
 class MoveRowQueryParamsSerializer(serializers.Serializer):
     before_id = serializers.IntegerField(required=False)
 
@@ -346,8 +354,9 @@ class BatchCreateRowsQueryParamsSerializer(serializers.Serializer):
     before = serializers.IntegerField(required=False)
 
 
-class ListRowsQueryParamsSerializer(SearchQueryParamSerializer):
-    user_field_names = serializers.BooleanField(required=False, default=False)
+class ListRowsQueryParamsSerializer(
+    SearchQueryParamSerializer, UserFieldNamesSerializer
+):
     order_by = serializers.CharField(required=False)
     include = serializers.CharField(required=False)
     exclude = serializers.CharField(required=False)
@@ -395,8 +404,9 @@ def get_example_batch_rows_serializer_class(example_type="get", user_field_names
     return class_object
 
 
-class GetRowAdjacentSerializer(SearchQueryParamSerializer, serializers.Serializer):
-    user_field_names = serializers.BooleanField(required=False, default=False)
+class GetRowAdjacentSerializer(
+    SearchQueryParamSerializer, UserFieldNamesSerializer, serializers.Serializer
+):
     previous = serializers.BooleanField(required=False, default=False)
     view_id = serializers.IntegerField(required=False)
 

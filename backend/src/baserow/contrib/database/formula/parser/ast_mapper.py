@@ -183,3 +183,85 @@ class BaserowFormulaToBaserowASTMapper(BaserowFormulaVisitor):
         self, ctx: BaserowFormula.RightWhitespaceOrCommentsContext
     ):
         return ctx.expr().accept(self)
+
+
+class BaserowFieldReferenceVisitor(BaserowFormulaVisitor):
+    """
+    Visitor which visits a Baserow Formula parse tree and returns a set of field
+    references found in the formula. This is used for example when importing
+    new tables with formula fields to import the fields in the correct order.
+    """
+
+    def visitRoot(self, ctx: BaserowFormula.RootContext):
+        return ctx.expr().accept(self)
+
+    def visitStringLiteral(self, ctx: BaserowFormula.StringLiteralContext):
+        return set()
+
+    def visitDecimalLiteral(self, ctx: BaserowFormula.DecimalLiteralContext):
+        return set()
+
+    def visitBooleanLiteral(self, ctx: BaserowFormula.BooleanLiteralContext):
+        return set()
+
+    def visitBrackets(self, ctx: BaserowFormula.BracketsContext):
+        return ctx.expr().accept(self)
+
+    def visitLookupFieldReference(
+        self, ctx: BaserowFormula.LookupFieldReferenceContext
+    ):
+        reference = ctx.field_reference(1)
+        field_name = convert_string_literal_token_to_string(
+            reference.getText(), reference.SINGLEQ_STRING_LITERAL()
+        )
+
+        reference = ctx.field_reference(0)
+        via_field_name = convert_string_literal_token_to_string(
+            reference.getText(), reference.SINGLEQ_STRING_LITERAL()
+        )
+
+        if not field_name:
+            return set()
+
+        return {(field_name, via_field_name)}
+
+    def visitFunctionCall(self, ctx: BaserowFormula.FunctionCallContext):
+        args = set()
+        for expr in ctx.expr():
+            args.update(expr.accept(self))
+        return args
+
+    def visitFunc_name(self, ctx: BaserowFormula.Func_nameContext):
+        return set()
+
+    def visitIdentifier(self, ctx: BaserowFormula.IdentifierContext):
+        return set()
+
+    def visitIntegerLiteral(self, ctx: BaserowFormula.IntegerLiteralContext):
+        return set()
+
+    def visitFieldReference(self, ctx: BaserowFormula.FieldReferenceContext):
+        reference = ctx.field_reference()
+        field_name = convert_string_literal_token_to_string(
+            reference.getText(), reference.SINGLEQ_STRING_LITERAL()
+        )
+        return {(field_name, None)}
+
+    def visitFieldByIdReference(self, ctx: BaserowFormula.FieldByIdReferenceContext):
+        return set()
+
+    def visitLeftWhitespaceOrComments(
+        self, ctx: BaserowFormula.LeftWhitespaceOrCommentsContext
+    ):
+        return ctx.expr().accept(self)
+
+    def visitRightWhitespaceOrComments(
+        self, ctx: BaserowFormula.RightWhitespaceOrCommentsContext
+    ):
+        return ctx.expr().accept(self)
+
+    def visitBinaryOp(self, ctx: BaserowFormula.RightWhitespaceOrCommentsContext):
+        args = set()
+        for expr in ctx.expr():
+            args.update(expr.accept(self))
+        return args

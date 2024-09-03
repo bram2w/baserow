@@ -1,7 +1,7 @@
 import dataclasses
 from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -16,10 +16,11 @@ from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import FieldOptionsDict, ViewHandler
 from baserow.contrib.database.views.models import (
+    FormView,
     View,
     ViewDecoration,
     ViewFilter,
@@ -30,6 +31,7 @@ from baserow.contrib.database.views.models import (
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
+    ActionType,
     ActionTypeDescription,
     UndoableActionType,
 )
@@ -2224,3 +2226,77 @@ class DeleteViewGroupByActionType(UndoableActionType):
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         view_group_by = ViewHandler().get_group_by(user, params.view_group_by_id)
         ViewHandler().delete_group_by(user, view_group_by)
+
+
+class SubmitFormActionType(ActionType):
+    type = "submit_form"
+    description = ActionTypeDescription(
+        _("Submit form"),
+        _("Row (%(row_id)s) created via form submission"),
+        VIEW_ACTION_CONTEXT,
+    )
+    analytics_params = [
+        "view_id",
+        "table_id",
+        "database_id",
+        "row_id",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        row_id: int
+        values: Dict[str, Any]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        form: FormView,
+        values: Dict[str, Any],
+        model: Optional[Type[GeneratedTableModel]] = None,
+        field_options: Dict[str, Any] | None = None,
+    ) -> GeneratedTableModel:
+        """
+        Submits a form and creates a new row in the table with the provided values.
+
+        :param user: The user of whose behalf the row is created. If an anonymous user
+            is submitting the form, the created_by and last_modified_by fields will be
+            set to None.
+        :param form: The form view that is being submitted.
+        :param values: The values that are being submitted to create the row.
+        :param model: The table model to use to create the row.
+        :param field_options: The form view field options to use to validate values. If
+            not provided, the field options will be fetched from the form view.
+        :return: The created row instance.
+        """
+
+        if model is None:
+            model = form.table.get_model()
+
+        row = ViewHandler().submit_form_view(user, form, values, model, field_options)
+
+        table = model.baserow_table
+        workspace = table.database.workspace
+        params = cls.Params(
+            form.id,
+            form.name,
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            row.id,
+            values,
+        )
+        cls.register_action(user, params, scope=cls.scope(form.id), workspace=workspace)
+
+        return row
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)

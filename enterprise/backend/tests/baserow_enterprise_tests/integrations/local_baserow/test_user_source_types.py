@@ -10,6 +10,23 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    CreatedByField,
+    CreatedOnField,
+    DateField,
+    DurationField,
+    FileField,
+    FormulaField,
+    LastModifiedByField,
+    LastModifiedField,
+    LinkRowField,
+    PasswordField,
+    PhoneNumberField,
+    RatingField,
+    SingleSelectField,
+    TextField,
+    URLField,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.app_auth_providers.models import AppAuthProvider
@@ -21,6 +38,7 @@ from baserow.core.user_sources.registries import (
     user_source_type_registry,
 )
 from baserow.core.utils import MirrorDict, Progress
+from baserow.test_utils.helpers import AnyStr
 from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
 from baserow_enterprise.integrations.local_baserow.user_source_types import (
     LocalBaserowUserSourceType,
@@ -192,7 +210,7 @@ def test_create_local_baserow_user_source_wrong_field_type(api_client, data_fixt
 
     integration = data_fixture.create_local_baserow_integration(application=application)
 
-    table, fields, rows = data_fixture.build_table(
+    table, fields, _ = data_fixture.build_table(
         user=user,
         database=database,
         columns=[
@@ -201,7 +219,7 @@ def test_create_local_baserow_user_source_wrong_field_type(api_client, data_fixt
             ("Email", "text"),
         ],
         rows=[
-            [2, "Test", "test"],
+            [2, "https://baserow.io", "test"],
         ],
     )
 
@@ -955,7 +973,7 @@ def test_public_dispatch_data_source_with_ab_user_using_user_source(
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "id": 2,
-        "order": "1.00000000000000000000",
+        "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
     }
@@ -990,7 +1008,7 @@ def test_local_baserow_user_source_get_user(
 
 
 @pytest.mark.django_db
-def test_local_baserow_user_source_get_user_not_configured(
+def test_local_baserow_user_source_get_user_misconfigured(
     data_fixture,
 ):
     data = populate_local_baserow_test_data(data_fixture)
@@ -998,12 +1016,27 @@ def test_local_baserow_user_source_get_user_not_configured(
     user_source = data["user_source"]
     user_source_type = user_source.get_type()
 
-    UserModel = data["user_table"].get_model()
+    user_table = data["user_table"]
+    UserModel = user_table.get_model()
 
     first_user = UserModel.objects.first()
 
+    name_field = user_source.name_field
+
+    # `is_configured` will be False if the name_field is None
     user_source.name_field = None
     user_source.save()
+
+    with pytest.raises(UserNotFound):
+        user_source_type.get_user(user_source, user_id=first_user.id)
+
+    # Re-add the name field, so we can verify that `get_user_model`
+    # will raise `UserNotFound` (from `UserSourceImproperlyConfigured`)
+    # if the table has been trashed.
+    user_source.name_field = name_field
+    user_source.save()
+    user_table.trashed = True
+    user_table.save()
 
     with pytest.raises(UserNotFound):
         user_source_type.get_user(user_source, user_id=first_user.id)
@@ -1196,6 +1229,33 @@ def test_local_baserow_user_source_authentication_list_users_not_configured(
     assert len(result) == 0
 
 
+@pytest.mark.django_db
+def test_local_baserow_user_source_authentication_list_users_get_user_model_misconfiguration(
+    data_fixture,
+):
+    data = populate_local_baserow_test_data(data_fixture)
+    table = data["user_table"]
+    table.trashed = True
+    table.save()
+
+    user_source = data["user_source"]
+    user_source_type = user_source.get_type()
+    result = user_source_type.list_users(user_source)
+
+    assert len(result) == 0
+
+
+def test_local_baserow_user_source_get_user_model_with_trashed_table(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_local_baserow_integration(user=user)
+    trashed_table = data_fixture.create_database_table(user=user, trashed=True)
+    with pytest.raises(UserSourceImproperlyConfigured) as exc:
+        LocalBaserowUserSourceType().get_user_model(
+            LocalBaserowUserSource(table=trashed_table, integration=integration)
+        )
+    assert exc.value.args[0] == "The table doesn't exist."
+
+
 def test_local_baserow_user_source_authentication_is_configured(
     data_fixture,
 ):
@@ -1206,7 +1266,8 @@ def test_local_baserow_user_source_authentication_is_configured(
         email_field_id=1,
         name_field_id=2,
         table_id=3,
-        role_field_id=4
+        role_field_id=4,
+        integration_id=5
     )) is True
     # Missing email field.
     # fmt: off
@@ -1231,6 +1292,15 @@ def test_local_baserow_user_source_authentication_is_configured(
         name_field_id=2,
         table_id=None,
         role_field_id=4,
+    )) is False
+    # Missing integration field.
+    # fmt: off
+    assert user_source_type.is_configured(LocalBaserowUserSource(
+        email_field_id=1,
+        name_field_id=2,
+        table_id=3,
+        role_field_id=4,
+        integration_id=None,
     )) is False
 
 
@@ -1642,6 +1712,100 @@ def test_get_roles_returns_default_role_if_role_field_is_null(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    "field_type,expected_is_allowed",
+    [
+        (None, False),
+        (CreatedByField, False),
+        (CreatedOnField, False),
+        (DateField, False),
+        (DurationField, False),
+        (FileField, False),
+        (FormulaField, True),
+        (LastModifiedByField, False),
+        (LastModifiedField, False),
+        (LinkRowField, False),
+        (PasswordField, False),
+        (PhoneNumberField, False),
+        (RatingField, False),
+        (SingleSelectField, True),
+        (TextField, True),
+        (URLField, False),
+    ],
+)
+def test_role_type_is_allowed(data_fixture, field_type, expected_is_allowed):
+    """
+    Ensure role_type_is_allowed() returns True if the Field Type is an allowed
+    type for Role or False otherwise.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    if field_type is None:
+        role_field = None
+    else:
+        kwargs = {}
+        if field_type == LinkRowField:
+            kwargs["link_row_table"] = user_source.table
+
+        role_field = field_type.objects.create(
+            table=user_source.table, name=f"name_{str(field_type)}", order=0, **kwargs
+        )
+        data_fixture.create_model_field(
+            user_source.table,
+            role_field,
+        )
+
+    user_source.role_field = role_field
+    user_source.save()
+
+    is_allowed = LocalBaserowUserSourceType().role_type_is_allowed(role_field)
+
+    assert is_allowed is expected_is_allowed
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "is_allowed,expected_roles",
+    [
+        (True, ["bar_role", "foo_role"]),
+        (False, []),
+    ],
+)
+def test_get_roles_returns_empty_list_if_role_type_unsupported(
+    data_fixture, is_allowed, expected_roles
+):
+    """
+    Ensure get_roles() returns an empty list if the Role Type is unsupported.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+    user_source = data["user_source"]
+
+    # Create a roles field and add some rows
+    users_table = data_fixture.create_database_table(name="test_users")
+    role_field = data_fixture.create_text_field(
+        table=users_table, order=0, name="role", text_default=""
+    )
+    user_source.table = users_table
+    user_source.role_field = role_field
+    user_source.save()
+
+    # Add some roles
+    model = users_table.get_model()
+    for role in ["foo_role", "bar_role"]:
+        model.objects.create(**{f"field_{role_field.id}": role})
+
+    user_source_type = LocalBaserowUserSourceType()
+    user_source_type.role_type_is_allowed = MagicMock(return_value=is_allowed)
+
+    roles = user_source_type.get_roles(user_source)
+
+    assert roles == expected_roles
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
     "roles,expected_roles",
     [
         (
@@ -1769,3 +1933,36 @@ def test_get_roles_returns_expected_roles(
     roles = LocalBaserowUserSourceType().get_roles(user_source)
 
     assert sorted(roles) == sorted(expected_roles)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "role,expected_role",
+    [
+        ("foo_role", "foo_role"),
+        ("", ""),
+        # If the role field is null, return an empty string
+        (None, ""),
+    ],
+)
+def test_get_user_role_handles_empty_role_field(data_fixture, role, expected_role):
+    """
+    Test that the get_user_role() method returns a valid role, regardless of
+    the state of the role_field.
+
+    The role_field may be None or an empty string, in which case an empty string
+    should be returned as the role.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture, role_name=role)
+    user_source = data["user_source"]
+    user_model = data["user_table"].get_model()
+
+    first_user = user_model.objects.first()
+
+    user_role = LocalBaserowUserSourceType().get_user_role(
+        first_user,
+        user_source,
+    )
+
+    assert user_role == expected_role

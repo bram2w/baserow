@@ -8,6 +8,7 @@ from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
+from pytest_unordered import unordered
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -2214,13 +2215,18 @@ def test_clear_link_row_limit_selection_view_when_view_is_deleted(
     assert table_2_link_row_field_2.link_row_limit_selection_view is None
 
     assert len(mock_field_updated.call_args_list) == 2
-    assert mock_field_updated.call_args_list[0].kwargs == {
-        "field": table_1_link_row_field_1,
-        "related_fields": [table_1_link_row_field_2],
-        "user": None,
-    }
-    assert mock_field_updated.call_args_list[1].kwargs == {
-        "field": table_2_link_row_field_1,
-        "related_fields": [],
-        "user": None,
-    }
+
+    assert [mock_field_updated.call_args_list[i].kwargs for i in range(2)] == unordered(
+        [
+            {
+                "field": table_1_link_row_field_1,
+                "related_fields": [table_1_link_row_field_2],
+                "user": None,
+            },
+            {
+                "field": table_2_link_row_field_1,
+                "related_fields": [],
+                "user": None,
+            },
+        ]
+    )

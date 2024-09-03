@@ -1,42 +1,58 @@
 <template>
-  <div class="custom-style">
+  <div class="custom-style" :class="`custom-style--${variant}`">
     <ButtonText
+      v-if="variant === 'float'"
+      v-tooltip="$t('customStyle.configureThemeOverrides')"
       class="custom-style__button"
       icon="baserow-icon-settings"
+      tooltip-position="bottom-left"
       @click="openPanel()"
     />
-    <Context ref="context">
-      <div v-auto-overflow-scroll class="custom-style__config-blocks">
-        <h2>{{ $t('customStyle.themeOverrides') }}</h2>
-        <div
-          v-for="(themeConfigBlock, index) in themeConfigBlocks"
-          :key="themeConfigBlock.getType()"
-          class="custom-style__config-block"
-        >
-          <h2
-            v-if="themeConfigBlocks.length > 1"
-            class="custom-style__config-block-title"
-          >
-            {{ themeConfigBlock.label }}
-          </h2>
-          <ThemeConfigBlock
-            ref="configBlocks"
-            :theme="theme"
-            :default-values="value?.[styleKey]"
-            :preview="false"
-            :theme-config-block-type="themeConfigBlock"
-            :class="{ 'margin-top-3': index >= 1 }"
-            :extra-args="extraArgs"
-            @values-changed="onValuesChanged($event)"
-          />
+    <ButtonIcon
+      v-else
+      v-tooltip="$t('customStyle.configureThemeOverrides')"
+      class="custom-style__button"
+      icon="baserow-icon-settings"
+      tooltip-position="bottom-left"
+      @click="openPanel()"
+    />
+    <Context ref="context" class="custom-style__context">
+      <div class="custom-style__header" @click="$refs.context.hide()">
+        <i class="custom-style__title-icon iconoir-nav-arrow-left" />
+        <div class="custom-style__title">
+          {{ $t('customStyle.themeOverrides') }}
         </div>
       </div>
+      <Tabs class="custom-style__config-blocks">
+        <Tab
+          v-for="themeConfigBlock in themeConfigBlocks"
+          :key="themeConfigBlock.getType()"
+          :title="themeConfigBlock.label"
+          class="custom-style__config-block"
+        >
+          <div
+            v-auto-overflow-scroll
+            class="custom-style__config-block-content"
+          >
+            <ThemeConfigBlock
+              ref="configBlocks"
+              :theme="theme"
+              :default-values="value?.[styleKey]"
+              :preview="false"
+              :theme-config-block-type="themeConfigBlock"
+              :extra-args="extraArgs"
+              @values-changed="onValuesChanged($event)"
+            />
+          </div>
+        </Tab>
+      </Tabs>
     </Context>
   </div>
 </template>
 
 <script>
 import ThemeConfigBlock from '@baserow/modules/builder/components/theme/ThemeConfigBlock'
+import { getParentMatchingPredicate } from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'CustomStyle',
@@ -46,6 +62,14 @@ export default {
       type: Object,
       required: false,
       default: () => {},
+    },
+    variant: {
+      required: false,
+      type: String,
+      default: 'float',
+      validator: function (value) {
+        return ['float', 'normal'].includes(value)
+      },
     },
     theme: { type: Object, required: true },
     configBlockTypes: {
@@ -71,7 +95,10 @@ export default {
   },
   methods: {
     openPanel() {
-      this.$refs.context.toggle(this.$el, 'bottom', 'left', -100, -425)
+      const sidePanel = getParentMatchingPredicate(this.$el, (el) =>
+        el.classList.contains('page-editor__side-panel')
+      )
+      this.$refs.context.show(sidePanel, 'over', 'right', 0, 0)
     },
     onValuesChanged(newValues) {
       this.$emit('input', {

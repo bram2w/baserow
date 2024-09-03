@@ -1,63 +1,70 @@
 <template>
   <Context
-    class="data-source-context"
     :class="{ 'context--loading-overlay': state === 'loading' }"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     @shown="shown"
   >
-    <template v-if="state === 'loaded'">
-      <div v-if="dataSources.length > 0">
-        <ReadOnlyForm
-          v-for="dataSource in dataSources"
-          :key="dataSource.id"
-          :read-only="
-            !$hasPermission(
-              'builder.page.data_source.update',
-              dataSource,
+    <div class="data-source-context__container">
+      <div
+        v-if="state === 'loaded'"
+        v-auto-overflow-scroll
+        class="data-source-context__content data-source-context__content--scrollable"
+      >
+        <div v-if="dataSources.length > 0" class="data-source-context__forms">
+          <ReadOnlyForm
+            v-for="dataSource in dataSources"
+            :key="dataSource.id"
+            :read-only="
+              !$hasPermission(
+                'builder.page.data_source.update',
+                dataSource,
+                workspace.id
+              )
+            "
+          >
+            <DataSourceForm
+              :id="dataSource.id"
+              :ref="`dataSourceForm_${dataSource.id}`"
+              :builder="builder"
+              :data-source="dataSource"
+              :page="page"
+              :default-values="dataSource"
+              :integrations="integrations"
+              :loading="dataSourcesLoading.includes(dataSource.id)"
+              @delete="deleteDataSource(dataSource)"
+              @values-changed="updateDataSource(dataSource, $event)"
+            />
+          </ReadOnlyForm>
+        </div>
+
+        <template v-else>
+          <div class="data-source-context__none">
+            <div class="data-source-context__none-title">
+              {{ $t('dataSourceContext.noDataSourceTitle') }}
+            </div>
+            <div class="data-source-context__none-description">
+              {{ $t('dataSourceContext.noDataSourceMessage') }}
+            </div>
+          </div>
+        </template>
+      </div>
+      <div class="context__footer">
+        <ButtonText
+          v-if="
+            $hasPermission(
+              'builder.page.create_data_source',
+              page,
               workspace.id
             )
           "
+          icon="iconoir-plus"
+          :loading="creationInProgress"
+          @click="createDataSource()"
         >
-          <DataSourceForm
-            :id="dataSource.id"
-            :ref="`dataSourceForm_${dataSource.id}`"
-            :builder="builder"
-            :data-source="dataSource"
-            :page="page"
-            :default-values="dataSource"
-            :integrations="integrations"
-            :loading="dataSourcesLoading.includes(dataSource.id)"
-            @delete="deleteDataSource(dataSource)"
-            @values-changed="updateDataSource(dataSource, $event)"
-          />
-        </ReadOnlyForm>
+          {{ $t('dataSourceContext.addDataSource') }}
+        </ButtonText>
       </div>
-
-      <template v-else>
-        <div class="data-source-context__none">
-          <div class="data-source-context__none-title">
-            {{ $t('dataSourceContext.noDataSourceTitle') }}
-          </div>
-          <div class="data-source-context__none-description">
-            {{ $t('dataSourceContext.noDataSourceMessage') }}
-          </div>
-        </div>
-      </template>
-
-      <ButtonText
-        v-if="
-          $hasPermission('builder.page.create_data_source', page, workspace.id)
-        "
-        type="secondary"
-        icon="iconoir-plus"
-        size="small"
-        :loading="creationInProgress"
-        @click="createDataSource()"
-      >
-        {{ $t('dataSourceContext.addDataSource') }}
-      </ButtonText>
-    </template>
+    </div>
   </Context>
 </template>
 

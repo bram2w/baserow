@@ -8,12 +8,13 @@ import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 import {
-  newFieldMatchesActiveSearchTerm,
   isAdhocFiltering,
   isAdhocSorting,
+  newFieldMatchesActiveSearchTerm,
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
+
 export const maxPossibleOrderValue = 32767
 
 export class ViewType extends Registerable {
@@ -172,6 +173,14 @@ export class ViewType extends Registerable {
       Object.prototype.hasOwnProperty.call(view, 'type') &&
       view.type === this.getType()
     )
+  }
+
+  /**
+   * Returns true if view is already configured to be shared. This may be just
+   * a public flag state or more complex per-view calculation
+   */
+  isShared(view) {
+    return !!view.public
   }
 
   /**
@@ -370,6 +379,92 @@ export class ViewType extends Registerable {
     return {
       hidden: false,
     }
+  }
+
+  /**
+    ShareView component allows for customization which requires a bit of explaination.
+    ViewType may provide additional components through specific methods which are
+    injected into specific places in ShareViewLink component.
+
+    Below is a draft of placement of those additional components
+
+    # shareview create state #
+
+     +---------------------------------------------------------------------+
+     |                                                                     |
+     |    ${ getSharedViewText() }                                         |
+     |   [share view button] [..getAdditionalCreateShareLinkOptions()]     |
+     |                                                                     |
+     +---------------------------------------------------------------------+
+
+    # shareview shared state #
+
+     +-----------------------------------------------------------------------+
+     |                                                                       |
+     |   this view is currently shared via a private link                    |
+     |  [ share URL                    ]  [ copy ] [ rotate url ]            |
+     |  [ restrict access with password]                                     |
+     |  [ ..getAdditionalShareLinkOPptions()]                                |
+     |                                                                       |
+     [-----------------------------------------------------------------------]
+     [                                                                       ]
+     [    ..getAdditionalSharingSections() shoudl provide                    ]
+     [      whole component. It should be in sync with footer link options   ]
+     [                                                                       ]
+     +-----------------------------------------------------------------------+
+     | [disalbe/enable sharing]  [..getAdditionalDisableSharedLinkOptions()] |
+     +-----------------------------------------------------------------------+
+   */
+
+  /**
+   * Every registered view can display multiple additional public share link options
+   * which will be visible on the share public view context. Those options are added
+   * to a default share link component only.
+   *
+   * Additional sharing sections (which may be visible even if default share link is not)
+   * can be returned from getAdditionalSharingSections
+   */
+  getAdditionalShareLinkOptions() {
+    return []
+  }
+
+  /**
+   * A view type can show additional options (links) in a create shared view
+   * modal. This should return a list of components to display.
+   *
+   * @returns {*[]}
+   */
+  getAdditionalCreateShareLinkOptions() {
+    return []
+  }
+
+  /**
+   * Once a view is shared, additional disable shared link buttons may
+   * be presented in the footer
+   */
+  getAdditionalDisableSharedLinkOptions() {
+    return []
+  }
+
+  /**
+   * Additional share link sections that are added after a default one. This method should
+   * return a list of Vue components. Each component will receive `view` and
+   * should be responsible for checking its visibility.
+   *
+   * In most cases state of components returned from  here should be in sync with state
+   * of components returned by getAdditionalDisableSharedLinkOptions() visible in footer.
+   */
+  getAdditionalSharingSections() {
+    return []
+  }
+
+  /**
+   * Custom translation text to return for Shared View text.
+   *
+   * @returns {null|String}
+   */
+  getSharedViewText() {
+    return this.app.i18n.t('shareViewLink.shareViewText')
   }
 }
 

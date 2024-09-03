@@ -66,10 +66,12 @@ export default {
      *
      * @param target      The original element that changed the state of the
      *                    context, this will be used to calculate the correct position.
-     * @param vertical    Bottom positions the context under the target.
-     *                    Top positions the context above the target.
-     *                    Over-bottom positions the context over and under the target.
-     *                    Over-top positions the context over and above the target.
+     * @param vertical    `bottom` positions the context under the target.
+     *                    `top` positions the context above the target.
+     *                    `over-bottom` positions the context over and under the target.
+     *                    `over-top` positions the context over and above the target.
+     *                    `over` positions the context between top and bottom of the
+     *                    target.
      * @param horizontal  `left` aligns the context with the left side of the target.
      *                    `right` aligns the context with the right side of the target.
      * @param verticalOffset
@@ -427,11 +429,26 @@ export default {
         positions.top = targetBottom + verticalOffset
       }
 
+      if (verticalAdjusted === 'over-bottom' || verticalAdjusted === 'over') {
+        positions.top = targetTop + verticalOffset
+      }
+
       if (verticalAdjusted === 'top') {
         positions.bottom = window.innerHeight - targetTop + verticalOffset
       }
 
-      return positions
+      if (verticalAdjusted === 'over-top' || verticalAdjusted === 'over') {
+        positions.bottom = window.innerHeight - targetBottom + verticalOffset
+      }
+
+      // Round position otherwise sometimes it breaks, especially when using
+      // Browser zoom
+      return Object.fromEntries(
+        Object.entries(positions).map(([key, value]) => [
+          key,
+          Number.isFinite(value) ? Math.round(value) : value,
+        ])
+      )
     },
     /**
      * Checks if we need to adjust the horizontal/vertical value of where the context

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Automatically prefill reverse relationship for new row in linked table",
+    "issue_number": 2825,
+    "bullet_points": [],
+    "created_at": "2024-08-14"
+}

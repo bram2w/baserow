@@ -113,6 +113,7 @@ class DatabaseConfig(AppConfig):
             DuplicateViewActionType,
             OrderViewsActionType,
             RotateViewSlugActionType,
+            SubmitFormActionType,
             UpdateDecorationActionType,
             UpdateViewActionType,
             UpdateViewFieldOptionsActionType,
@@ -136,6 +137,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(CreateViewGroupByActionType())
         action_type_registry.register(UpdateViewGroupByActionType())
         action_type_registry.register(DeleteViewGroupByActionType())
+        action_type_registry.register(SubmitFormActionType())
         action_type_registry.register(RotateViewSlugActionType())
         action_type_registry.register(UpdateViewFieldOptionsActionType())
         action_type_registry.register(CreateDecorationActionType())
@@ -246,6 +248,7 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(PasswordFieldConverter())
 
         from .fields.actions import (
+            ChangePrimaryFieldActionType,
             CreateFieldActionType,
             DeleteFieldActionType,
             DuplicateFieldActionType,
@@ -256,6 +259,7 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(DeleteFieldActionType())
         action_type_registry.register(UpdateFieldActionType())
         action_type_registry.register(DuplicateFieldActionType())
+        action_type_registry.register(ChangePrimaryFieldActionType())
 
         from .views.view_types import FormViewType, GalleryViewType, GridViewType
 
@@ -384,6 +388,28 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(MultipleCollaboratorsHasNotViewFilterType())
         view_filter_type_registry.register(UserIsViewFilterType())
         view_filter_type_registry.register(UserIsNotViewFilterType())
+
+        from .views.array_view_filters import (
+            HasEmptyValueViewFilterType,
+            HasNotEmptyValueViewFilterType,
+            HasNotValueContainsViewFilterType,
+            HasNotValueContainsWordViewFilterType,
+            HasNotValueEqualViewFilterType,
+            HasValueContainsViewFilterType,
+            HasValueContainsWordViewFilterType,
+            HasValueEqualViewFilterType,
+            HasValueLengthIsLowerThanViewFilterType,
+        )
+
+        view_filter_type_registry.register(HasValueEqualViewFilterType())
+        view_filter_type_registry.register(HasNotValueEqualViewFilterType())
+        view_filter_type_registry.register(HasValueContainsViewFilterType())
+        view_filter_type_registry.register(HasNotValueContainsViewFilterType())
+        view_filter_type_registry.register(HasValueContainsWordViewFilterType())
+        view_filter_type_registry.register(HasNotValueContainsWordViewFilterType())
+        view_filter_type_registry.register(HasValueLengthIsLowerThanViewFilterType())
+        view_filter_type_registry.register(HasEmptyValueViewFilterType())
+        view_filter_type_registry.register(HasNotEmptyValueViewFilterType())
 
         from .views.view_aggregations import (
             AverageViewAggregationType,

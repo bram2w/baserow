@@ -243,7 +243,7 @@ class FormulaTypingVisitor(
         else:
             field_type = field_type_registry.get_by_model(referenced_field)
             target_field = field_reference.target_field
-            if target_field is not None:
+            if target_field is not None:  # it's a lookup, verify the target field
                 from baserow.contrib.database.fields.models import LinkRowField
 
                 if not isinstance(referenced_field, LinkRowField):

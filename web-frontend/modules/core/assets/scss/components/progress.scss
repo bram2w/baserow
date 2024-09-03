@@ -6,6 +6,10 @@
   margin-right: 30px;
 
   @include rounded($rounded-md);
+
+  &.progress-bar--palette-neutral-200 {
+    background-color: $palette-neutral-200;
+  }
 }
 
 .progress-bar__inner {

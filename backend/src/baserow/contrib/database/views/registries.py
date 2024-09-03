@@ -58,7 +58,7 @@ from .exceptions import (
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
-    from baserow.contrib.database.table.models import Table
+    from baserow.contrib.database.table.models import FieldObject, Table
     from baserow.contrib.database.views.models import FormView, View
 
 
@@ -395,6 +395,10 @@ class ViewType(
                 filter_group_copy = filter_group.copy()
                 filter_group_id = filter_group_copy.pop("id")
                 filter_group_copy["view_id"] = view.id
+                if filter_group_copy["parent_group"]:
+                    filter_group_copy["parent_group_id"] = id_mapping[
+                        "database_view_filter_groups"
+                    ][filter_group_copy.pop("parent_group")]
                 filter_group_object = ViewFilterGroup.objects.create(
                     view=view, **filter_group_copy
                 )
@@ -481,7 +485,7 @@ class ViewType(
 
     def get_visible_fields_and_model(
         self, view: "View"
-    ) -> Tuple[List["Field"], django_models.Model]:
+    ) -> Tuple[List["FieldObject"], django_models.Model]:
         """
         Returns the field objects for the provided view. Depending on the view type this
         will only return the visible or appropriate fields as different view types can
@@ -582,6 +586,14 @@ class ViewType(
         possibility to check compatibility with view stuff like specific field options.
 
         :param field: The concerned field.
+        """
+
+    def after_field_delete(self, field: "Field") -> None:
+        """
+        This hook is called after a field has been deleted and gives the possibility to
+        clean up any related field options.
+
+        :param field: The field that has been deleted.
         """
 
     def before_view_create(self, values: dict, table: "Table", user: AbstractUser):

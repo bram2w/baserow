@@ -16,7 +16,7 @@
         <DropdownItem name="RGB" :value="COLOR_NOTATIONS.RGB"></DropdownItem>
       </Dropdown>
       <div v-if="type === 'hex'" class="color-picker-context__color-hex">
-        <FormInput small :value="hexColorExcludingAlpha" @input="hexChanged" />
+        <FormInput v-model="fakeHexExcludingAlpha" small @blur="hexChanged" />
       </div>
       <div v-if="type === 'rgb'" class="color-picker-context__color-rgb">
         <FormInput
@@ -139,6 +139,18 @@ export default {
   },
   computed: {
     COLOR_NOTATIONS: () => COLOR_NOTATIONS,
+    /**
+     * This computed property is used to detect when hexColorExcludingAlpha has
+     * changed, then set its value to the new value.
+     */
+    fakeHexExcludingAlpha: {
+      set(newValue) {
+        this.hexColorExcludingAlpha = newValue
+      },
+      get() {
+        return this.hexColorExcludingAlpha
+      },
+    },
     selectedVariable() {
       return this.variables.find(({ value }) => value === this.value)
     },
@@ -164,6 +176,13 @@ export default {
   },
   methods: {
     setColorFromPicker(value) {
+      if (this.selectedVariable) {
+        // If we come from a variable before we reset the alpha channel to 1 otherwise
+        // You could think something doesn't work.
+        const rgba = convertHexToRgb(value)
+        rgba.a = 1
+        value = convertRgbToHex(rgba)
+      }
       this.colorUpdated(value)
       this.$emit(
         'input',
@@ -219,7 +238,8 @@ export default {
      * Called when one the raw hex value must be updated.
      */
     hexChanged(event) {
-      const value = event
+      const value = event.target.value
+
       if (!isValidHexColor(value)) {
         return
       }
@@ -235,10 +255,6 @@ export default {
       const hex = convertRgbToHex(rgba)
 
       this.colorUpdated(hex)
-      // Set the value for `hexColorExcludingAlpha`. That will prevent that the value
-      // suddenly changes to something else while typing, which is annoying to the user.
-      this.hexColorExcludingAlpha = value
-
       this.$emit('input', hex)
     },
     /**

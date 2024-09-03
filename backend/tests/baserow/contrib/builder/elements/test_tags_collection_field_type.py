@@ -1,13 +1,15 @@
 import pytest
 
-from baserow.contrib.builder.elements.collection_field_types import (
-    TagsCollectionFieldType,
-)
 from baserow.contrib.builder.pages.service import PageService
 
 
 @pytest.mark.django_db
 def test_import_export_tags_collection_field_type(data_fixture):
+    """
+    Ensure that the TagsCollectionField's formulas are exported correctly
+    with the updated Data Sources.
+    """
+
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     table, fields, rows = data_fixture.build_table(
@@ -54,25 +56,20 @@ def test_import_export_tags_collection_field_type(data_fixture):
 
     id_mapping = {"builder_data_sources": {data_source.id: data_source2.id}}
 
-    tags_with_formula = table_element.fields.get(name="Colors as formula")
-    exported_with = TagsCollectionFieldType().export_serialized(tags_with_formula)
-    imported_with = TagsCollectionFieldType().import_serialized(
-        exported_with, id_mapping, data_source.id
+    exported = table_element.get_type().export_serialized(table_element)
+    imported_table_element = table_element.get_type().import_serialized(
+        page, exported, id_mapping
     )
 
-    assert imported_with.config == {
+    tags_with_formula = imported_table_element.fields.get(name="Colors as formula")
+    assert tags_with_formula.config == {
         "values": f"get('data_source.{data_source2.id}.0.{name_field.db_column}')",
         "colors": f"get('data_source.{data_source2.id}.0.{color_field.db_column}')",
         "colors_is_formula": True,
     }
 
-    tags_without_formula = table_element.fields.get(name="Colors as hex")
-    exported_without = TagsCollectionFieldType().export_serialized(tags_without_formula)
-    imported_with = TagsCollectionFieldType().import_serialized(
-        exported_without, id_mapping, data_source.id
-    )
-
-    assert imported_with.config == {
+    tags_without_formula = imported_table_element.fields.get(name="Colors as hex")
+    assert tags_without_formula.config == {
         "values": "'a,b,c'",
         "colors_is_formula": False,
         "colors": "#d06060ff",

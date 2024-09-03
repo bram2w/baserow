@@ -60,23 +60,3 @@
     font-size: 16px;
   }
 }
-
-.decorator-context__footer {
-  border-top: 1px solid rgba(217, 219, 222, 0.5);
-  padding: 12px;
-}
-
-.decorator-context__add {
-  display: inline-block;
-
-  @include flex-align-items(4px);
-
-  &:hover {
-    text-decoration: none;
-    color: $color-neutral-900;
-  }
-}
-
-.decorator-context__add-icon {
-  font-size: 20px;
-}

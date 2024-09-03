@@ -56,12 +56,14 @@ export function populateDecoration(decoration) {
 export function populateView(view, registry) {
   const type = registry.get('view', view.type)
 
-  view._ = {
+  view._ = view._ || {
     type: type.serialize(),
     selected: false,
     loading: false,
     focusFilter: null,
   }
+
+  view.isShared = type.isShared(view)
 
   if (Object.prototype.hasOwnProperty.call(view, 'filters')) {
     view.filters.forEach((filter) => {
@@ -400,7 +402,10 @@ export const actions = {
   /**
    * Updates the values of the view with the provided id.
    */
-  async update({ commit, dispatch }, { view, values, readOnly = false }) {
+  async update(
+    { commit, dispatch },
+    { view, values, readOnly = false, refreshFromFetch = false }
+  ) {
     commit('SET_ITEM_LOADING', { view, value: true })
     const oldValues = {}
     const newValues = {}
@@ -428,7 +433,7 @@ export const actions = {
       })
     }
 
-    dispatch('forceUpdate', { view, values: newValues })
+    dispatch('forceUpdate', { view, values: newValues, repopulate: true })
     try {
       if (!readOnly) {
         dispatch(
@@ -438,7 +443,14 @@ export const actions = {
             root: true,
           }
         )
-        await ViewService(this.$client).update(view.id, values)
+        // in some cases view may return extra data that were not present in values
+        const newValues = (
+          await ViewService(this.$client).update(view.id, values)
+        ).data
+        if (refreshFromFetch) {
+          dispatch('forceUpdate', { view, values: newValues, repopulate: true })
+        }
+
         updatePublicViewHasPassword()
       }
       commit('SET_ITEM_LOADING', { view, value: false })

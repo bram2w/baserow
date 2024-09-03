@@ -1,29 +1,46 @@
 <template>
   <div class="table-element">
-    <BaserowTable
-      :fields="element.fields"
+    <ABTable
+      :fields="fields"
       :rows="rows"
+      :content-loading="contentLoading"
+      :style="getStyleOverride('table')"
       :orientation="orientation"
     >
       <template #cell-content="{ rowIndex, field, value }">
-        <component
-          :is="collectionFieldTypes[field.type].component"
-          :element="element"
-          :field="field"
-          :application-context-additions="{
-            recordIndex: rowIndex,
-            recordIndexPath: [...applicationContext.recordIndexPath, rowIndex],
-            field,
+        <!--
+        -- We force-self-alignment to `auto` here to prevent some self-positioning
+        -- like in buttons or links. we want to position the content through the table
+        -- style to be able to override it later. Otherwise we have a conflict between
+        -- these two alignments and only the more specific one (the field one)
+        -- is respected even if it comes from the main theme.
+        -->
+        <td
+          :key="field.id"
+          class="ab-table__cell"
+          :style="{
+            '--force-self-alignment': 'auto',
+            ...fieldOverrides[field.id],
           }"
-          v-bind="value"
-        />
+        >
+          <div class="ab-table__cell-content">
+            <component
+              :is="collectionFieldTypes[field.type].component"
+              :element="element"
+              :field="field"
+              :application-context-additions="{
+                recordIndexPath: [
+                  ...applicationContext.recordIndexPath,
+                  rowIndex,
+                ],
+                field,
+              }"
+              v-bind="value"
+            />
+          </div>
+        </td>
       </template>
-      <template #empty-state>
-        <div class="table-element__empty-message">
-          {{ $t('tableElement.empty') }}
-        </div>
-      </template>
-    </BaserowTable>
+    </ABTable>
     <div class="table-element__footer">
       <ABButton
         v-if="hasMorePage"
@@ -95,6 +112,22 @@ export default {
         return newRow
       })
     },
+    fieldOverrides() {
+      return Object.fromEntries(
+        this.element.fields.map((field) => {
+          const fieldType = this.collectionFieldTypes[field.type]
+
+          return [
+            field.id,
+            fieldType.getStyleOverride({
+              colorVariables: this.colorVariables,
+              field,
+              theme: this.builder.theme,
+            }),
+          ]
+        })
+      )
+    },
     collectionFieldTypes() {
       return this.$registry.getAll('collectionField')
     },
@@ -116,7 +149,10 @@ export default {
           this.$registry.getAll('builderDataProvider'),
           {
             ...this.applicationContext,
-            recordIndex: index,
+            recordIndexPath: [
+              ...this.applicationContext.recordIndexPath,
+              index,
+            ],
           }
         ),
         {

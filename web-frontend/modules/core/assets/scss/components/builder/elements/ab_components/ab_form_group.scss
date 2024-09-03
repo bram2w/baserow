@@ -1,6 +1,8 @@
 .ab-form-group {
+  font-size: var(--label-font-size, 13px);
+
   &.ab-form-group--with-label {
-    margin-bottom: 10px;
+    margin-bottom: 0.33em;
   }
 
   &.ab-form-group--horizontal,
@@ -13,15 +15,13 @@
 
 .ab-form-group__label {
   display: block;
-  font-size: 13px;
+  font-size: var(--label-font-size, 13px);
+  color: var(--label-text-color, $color-neutral-900);
+  font-family: var(--label-font-family, Inter);
   font-weight: 500;
-  margin-bottom: 12px;
+  margin-bottom: 0.33em;
 
   @include flex-align-items(3px);
-
-  &.ab-form-group__label--small {
-    font-size: 13px;
-  }
 
   .ab-form-group--horizontal & {
     flex-basis: 30%;
@@ -46,11 +46,17 @@
     margin-top: 0;
     margin-left: 16px;
   }
+}
 
-  &.ab-form-group__children--error {
-    input,
-    textarea {
-      border-color: $palette-red-600;
-    }
+.ab-form-group--error {
+  .ab-input,
+  .ab-dropdown__selected {
+    border-color: var(--main-error-color, $color-error-600);
   }
+}
+
+.ab-form-group__error-message {
+  margin-top: 0.8em;
+  font-size: 0.9em;
+  color: var(--main-error-color, $color-error-600);
 }

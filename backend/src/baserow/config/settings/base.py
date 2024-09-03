@@ -24,6 +24,7 @@ from baserow.config.settings.utils import (
     read_file,
     set_settings_from_env_if_present,
     str_to_bool,
+    try_int,
 )
 from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.throttling_types import RateLimit
@@ -485,14 +486,12 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.26.1",
+    "VERSION": "1.27.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
         {"name": "User"},
         {"name": "User files"},
-        {"name": "Groups"},  # GroupDeprecation
-        {"name": "Group invitations"},  # GroupDeprecation
         {"name": "Workspaces"},
         {"name": "Workspace invitations"},
         {"name": "Templates"},
@@ -562,6 +561,7 @@ SPECTACULAR_SETTINGS = {
             "formula",
             "count",
             "lookup",
+            "url",
         ],
         "ViewFilterTypesEnum": [
             "equal",
@@ -959,6 +959,13 @@ INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT = int(
     )
 )
 
+
+# set max events to be returned by every ICal feed. Empty value means no limit.
+BASEROW_ICAL_VIEW_MAX_EVENTS = try_int(
+    os.getenv("BASEROW_ICAL_VIEW_MAX_EVENTS", None), None
+)
+
+
 # If you change this default please also update the default for the web-frontend found
 # in web-frontend/modules/core/module.js:55
 HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = int(
@@ -984,6 +991,9 @@ PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES = int(
 )
 PERIODIC_FIELD_UPDATE_CRONTAB = get_crontab_from_env(
     "BASEROW_PERIODIC_FIELD_UPDATE_CRONTAB", default_crontab=EVERY_TEN_MINUTES
+)
+BASEROW_PERIODIC_FIELD_UPDATE_UNUSED_WORKSPACE_INTERVAL_MIN = int(
+    os.getenv("BASEROW_PERIODIC_FIELD_UPDATE_UNUSED_WORKSPACE_INTERVAL_MIN", 60)
 )
 PERIODIC_FIELD_UPDATE_QUEUE_NAME = os.getenv(
     "BASEROW_PERIODIC_FIELD_UPDATE_QUEUE_NAME", "export"
@@ -1065,7 +1075,7 @@ BASEROW_ROW_HISTORY_RETENTION_DAYS = int(
 BASEROW_MAX_ROW_REPORT_ERROR_COUNT = int(
     os.getenv("BASEROW_MAX_ROW_REPORT_ERROR_COUNT", 30)
 )
-BASEROW_MAX_SNAPSHOTS_PER_GROUP = int(os.getenv("BASEROW_MAX_SNAPSHOTS_PER_GROUP", -1))
+BASEROW_MAX_SNAPSHOTS_PER_GROUP = int(os.getenv("BASEROW_MAX_SNAPSHOTS_PER_GROUP", 50))
 BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = int(
     os.getenv("BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS", 360)  # 360 days
 )

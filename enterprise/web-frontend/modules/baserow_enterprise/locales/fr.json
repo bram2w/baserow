@@ -323,5 +323,17 @@
         "viewPricing": "Voir les prix",
         "enterprise": "Enterprise",
         "premium": "Premium"
+    },
+    "authFormElement": {
+        "email": "Courriel",
+        "password": "Mot de passe",
+        "emailPlaceholder": "Saisissez votre courriel...",
+        "passwordPlaceholder": "Saisissez votre mot de passe...",
+        "selectOrConfigureUserSourceFirst": "Choisissez une source d'utilisateurs pour commencer à utiliser ce formulaire d'authentification."
+    },
+    "authFormElementForm": {
+        "userSource": "Source d'utilisateur",
+        "loginButtonLabelPlaceholder": "Saisissez le libellé...",
+        "loginButtonLabel": "Libéllé du bouton de connexion"
     }
 }

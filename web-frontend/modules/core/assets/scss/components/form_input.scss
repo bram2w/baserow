@@ -83,6 +83,10 @@
     padding-left: 8px;
   }
 
+  .form-input--icon-right & {
+    padding-right: 8px;
+  }
+
   .form-input--disabled & {
     cursor: not-allowed;
     background-color: $palette-neutral-100;
@@ -104,6 +108,14 @@
 
   .form-input--no-controls & {
     @extend %remove-number-input-controls;
+  }
+
+  &.form-input__input--text-invisible {
+    color: transparent;
+
+    &::placeholder {
+      color: transparent;
+    }
   }
 }
 

@@ -60,12 +60,11 @@
   .control--horizontal & {
     flex-basis: 30%;
     font-weight: 500;
-    padding: 10px 0;
     margin: 0;
+  }
 
-    &.control__label--small {
-      padding: 15px 0;
-    }
+  .control--horizontal-narrow & {
+    flex-basis: 40%;
   }
 
   .control--horizontal-variable & {
@@ -182,6 +181,7 @@
 .control__messages--error {
   margin: 0;
   color: $palette-red-800;
+  white-space: wrap;
 
   @include flex-align-items(3px);
 }

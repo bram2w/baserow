@@ -92,6 +92,8 @@ import {
   LinkThemeConfigBlockType,
   ImageThemeConfigBlockType,
   PageThemeConfigBlockType,
+  InputThemeConfigBlockType,
+  TableThemeConfigBlockType,
 } from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
   CreateRowWorkflowActionType,
@@ -100,6 +102,7 @@ import {
   UpdateRowWorkflowActionType,
   LogoutWorkflowActionType,
   RefreshDataSourceWorkflowActionType,
+  DeleteRowWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
@@ -108,6 +111,7 @@ import {
   LinkCollectionFieldType,
   ButtonCollectionFieldType,
   TagsCollectionFieldType,
+  ImageCollectionFieldType,
 } from '@baserow/modules/builder/collectionFieldTypes'
 
 import {
@@ -291,6 +295,14 @@ export default (context) => {
     'themeConfigBlock',
     new PageThemeConfigBlockType(context)
   )
+  app.$registry.register(
+    'themeConfigBlock',
+    new InputThemeConfigBlockType(context)
+  )
+  app.$registry.register(
+    'themeConfigBlock',
+    new TableThemeConfigBlockType(context)
+  )
 
   app.$registry.register(
     'workflowAction',
@@ -316,6 +328,10 @@ export default (context) => {
     'workflowAction',
     new UpdateRowWorkflowActionType(context)
   )
+  app.$registry.register(
+    'workflowAction',
+    new DeleteRowWorkflowActionType(context)
+  )
 
   app.$registry.register(
     'collectionField',
@@ -336,6 +352,10 @@ export default (context) => {
   app.$registry.register(
     'collectionField',
     new ButtonCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
+    new ImageCollectionFieldType(context)
   )
 
   app.$registry.register('fontFamily', new InterFontFamilyType(context))

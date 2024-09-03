@@ -6,35 +6,35 @@
     class="data-explorer"
     @shown="onShow"
   >
-    <div
-      ref="wrapper"
-      tabindex="0"
-      @focusin="$emit('focusin')"
-      @focusout="$emit('focusout')"
-    >
+    <div ref="wrapper">
       <div v-if="loading" class="context--loading">
-        <div class="loading"></div>
+        <div class="loading" />
       </div>
       <template v-else>
         <SelectSearch
           v-model="search"
           :placeholder="$t('action.search')"
           class="margin-bottom-1"
-        ></SelectSearch>
-        <RootNode
-          v-for="node in matchingNodes"
+        />
+        <DataExplorerNode
+          v-for="node in nodes"
           :key="node.identifier"
           :node="node"
-          :node-selected="nodeSelected"
           :open-nodes="openNodes"
-          @node-selected="$emit('node-selected', $event)"
+          :path="node.identifier"
+          :search-path="node.identifier"
+          :node-selected="nodeSelected"
+          :search="debouncedSearch"
+          @click="$emit('node-selected', $event)"
           @toggle="toggleNode"
+        />
+        <div
+          v-if="nodes.length === 0 || emptyResults"
+          class="context__description"
         >
-        </RootNode>
-        <div v-if="matchingNodes.length === 0" class="context__description">
-          <span v-if="isSearching">{{
-            $t('dataExplorer.noMatchingNodesText')
-          }}</span>
+          <span v-if="emptyResults">
+            {{ $t('dataExplorer.noMatchingNodesText') }}
+          </span>
           <span v-else>{{ $t('dataExplorer.noProvidersText') }}</span>
         </div>
       </template>
@@ -45,12 +45,13 @@
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
-import RootNode from '@baserow/modules/core/components/dataExplorer/RootNode'
+import DataExplorerNode from '@baserow/modules/core/components/dataExplorer/DataExplorerNode'
+
 import _ from 'lodash'
 
 export default {
   name: 'DataExplorer',
-  components: { SelectSearch, RootNode },
+  components: { SelectSearch, DataExplorerNode },
   mixins: [context],
   props: {
     nodes: {
@@ -82,6 +83,9 @@ export default {
     isSearching() {
       return Boolean(this.debouncedSearch)
     },
+    emptyResults() {
+      return this.isSearching && this.openNodes.size === 0
+    },
     matchingPaths() {
       if (!this.isSearching) {
         return new Set()
@@ -89,34 +93,26 @@ export default {
         return this.matchesSearch(this.nodes, this.debouncedSearch)
       }
     },
-    matchingNodes() {
-      if (!this.isSearching) {
-        return this.nodes
-      } else {
-        return this.filterNodes(
-          this.nodes,
-          (node, path) => path === '' || this.matchingPaths.has(path)
-        )
-      }
-    },
   },
   watch: {
     /**
      * Debounces the actual search to prevent perf issues
      */
-    search(value) {
+    search(newSearch) {
+      this.$emit('node-unselected')
       clearTimeout(this.debounceSearch)
       this.debounceSearch = setTimeout(() => {
-        this.debouncedSearch = value
+        this.debouncedSearch = newSearch.trim().toLowerCase() || null
       }, 300)
     },
     matchingPaths(value) {
       this.openNodes = value
     },
     nodeSelected: {
-      handler(value) {
-        if (value !== null) {
-          this.toggleNode(value, true)
+      handler(path) {
+        if (path) {
+          this.debouncedSearch = null
+          this.toggleNode(path, true)
         }
       },
       immediate: true,
@@ -146,13 +142,16 @@ export default {
      * @returns A Set of path of nodes that match the search term
      */
     matchesSearch(nodes, search, parentPath = []) {
-      const searchSanitised = search.trim().toLowerCase()
-
       return (nodes || []).reduce((acc, subNode) => {
-        const subNodePath = [...parentPath, subNode.identifier]
-
+        let subNodePath = [...parentPath, subNode.identifier]
         if (subNode.nodes) {
           // It's not a leaf
+          if (subNode.type === 'array') {
+            // For array we have a special case. We need to match any intermediate value
+            // Can be either `*` or an integer. We use the `__any__` placeholder to
+            // achieve that.
+            subNodePath = [...parentPath, subNode.identifier, '__any__']
+          }
           const subSubNodes = this.matchesSearch(
             subNode.nodes,
             search,
@@ -160,35 +159,16 @@ export default {
           )
           acc = new Set([...acc, ...subSubNodes])
         } else {
-          // It's a leaf we check if the name match the search
+          // It's a leaf we check if the name matches the search
           const nodeNameSanitised = subNode.name.trim().toLowerCase()
 
-          if (nodeNameSanitised.includes(searchSanitised)) {
+          if (nodeNameSanitised.includes(search)) {
             // We also add the parents of the node
             acc = new Set([...acc, ...this.getPathAndParents(subNodePath)])
           }
         }
         return acc
       }, new Set())
-    },
-    /**
-     * Filters the nodes according to the given predicate. The predicate receives the
-     * node itself and the path of the node.
-     * @param {Array} nodes Node tree to filter.
-     * @param {Function} predicate Should return true if the node should be kept.
-     * @param {Array<String>} path Current nodes path part list.
-     */
-    filterNodes(nodes, predicate, path = []) {
-      const result = (nodes || [])
-        .filter((node) => predicate(node, [...path, node.identifier].join('.')))
-        .map((node) => ({
-          ...node,
-          nodes: this.filterNodes(node.nodes, predicate, [
-            ...path,
-            node.identifier,
-          ]),
-        }))
-      return result
     },
     /**
      * Toggles a node state

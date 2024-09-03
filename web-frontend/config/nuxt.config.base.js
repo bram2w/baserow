@@ -33,7 +33,7 @@ export default function (
   const modules = baseModules.concat(additionalModules)
   return {
     modules,
-    buildModules: ['@nuxtjs/stylelint-module'],
+    buildModules: ['@nuxtjs/stylelint-module', '@nuxtjs/svg'],
     sentry: {
       clientIntegrations: {
         Dedupe: {},

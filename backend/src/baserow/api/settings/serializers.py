@@ -5,20 +5,6 @@ from baserow.core.models import Settings
 
 
 class SettingsSerializer(serializers.ModelSerializer):
-    allow_global_group_creation = serializers.BooleanField(
-        required=False,
-        source="allow_global_workspace_creation",
-        help_text="DEPRECATED: Please use the functionally identical "
-        "`allow_global_workspace_creation` instead as this attribute is "
-        "being removed in the future.",
-    )  # GroupDeprecation
-    allow_signups_via_group_invitations = serializers.BooleanField(
-        required=False,
-        source="allow_signups_via_workspace_invitations",
-        help_text="DEPRECATED: Please use the functionally identical "
-        "`allow_signups_via_workspace_invitations` instead as this attribute "
-        "is being removed in the future.",
-    )  # GroupDeprecation
     co_branding_logo = UserFileField(
         required=False,
         help_text="Co-branding logo that's placed next to the Baserow logo (176x29).",
@@ -29,10 +15,8 @@ class SettingsSerializer(serializers.ModelSerializer):
         fields = (
             "allow_new_signups",
             "allow_signups_via_workspace_invitations",
-            "allow_signups_via_group_invitations",  # GroupDeprecation
             "allow_reset_password",
             "allow_global_workspace_creation",
-            "allow_global_group_creation",  # GroupDeprecation
             "account_deletion_grace_delay",
             "show_admin_signup_page",
             "track_workspace_usage",

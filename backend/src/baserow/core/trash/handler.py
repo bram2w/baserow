@@ -116,9 +116,6 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
         trashable_item_type = trash_item_type_registry.get(trash_item_type)
         _check_parent_id_valid(parent_trash_item_id, trashable_item_type)
 
-        if hasattr(trashable_item_type, "deprecated_in_favor_of"):
-            trash_item_type = trashable_item_type.deprecated_in_favor_of
-
         return _get_trash_entry(trash_item_type, parent_trash_item_id, trash_item_id)
 
     @classmethod
@@ -184,7 +181,7 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
             possibly have trash contents.
         """
 
-        structure = {"workspaces": [], "groups": []}
+        structure = {"workspaces": []}
         workspaces = _get_workspaces_excluding_perm_deleted(user)
         from baserow.core.handler import CoreHandler
 
@@ -199,14 +196,6 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
             )
             if can_view_workspace:
                 applications = _get_applications_excluding_perm_deleted(workspace, user)
-                structure["groups"].append(  # GroupDeprecation
-                    {
-                        "id": workspace.id,
-                        "trashed": workspace.trashed,
-                        "name": workspace.name,
-                        "applications": applications,
-                    }
-                )
                 structure["workspaces"].append(
                     {
                         "id": workspace.id,

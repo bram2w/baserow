@@ -410,6 +410,25 @@ VALID_FORMULA_TESTS = [
     ("split_part('John, Jane, Matthew', ', ', 3.5)", "Matthew"),
     ("split_part('John, Jane, Matthew', ', ', 4.5)", ""),
     ("split_part('John, Jane, Matthew', ', ', 9999)", ""),
+    ("tourl('baserow.io')", "baserow.io"),
+    ("tourl('baserow.io/subpage')", "baserow.io/subpage"),
+    ("tourl('baserow.io/subpage/?query=true')", "baserow.io/subpage/?query=true"),
+    (
+        "tourl(concat('baserow.io', '/subpage/?query=true'))",
+        "baserow.io/subpage/?query=true",
+    ),
+    ("tourl(lower('BASEROW.io'))", "baserow.io"),
+    ("tourl(replace('base-ow.io', '-', 'r'))", "baserow.io"),
+    ("tourl('localhost')", "localhost"),
+    ("tourl('skype://call-me')", "skype://call-me"),
+    ("tourl('https://baserow.io:3000')", "https://baserow.io:3000"),
+    ("tourl('ftp://baserow.io/some/path')", "ftp://baserow.io/some/path"),
+    ("tourl('https://baserow.io:3000invalid')", ""),
+    ("tourl('https://baserow.iohttps://baserow.io')", ""),
+    (
+        "tourl('https://user:password@www.baserow.io:8080/path/to/resource?search=query&filter=active#section2')",
+        "https://user:password@www.baserow.io:8080/path/to/resource?search=query&filter=active#section2",
+    ),
 ]
 
 
@@ -1105,6 +1124,11 @@ INVALID_FORMULA_TESTS = [
         "ERROR_WITH_FORMULA",
         "Error with formula: cannot extract seconds from a date without time.",
     ),
+    (
+        "tourl(1)",
+        "ERROR_WITH_FORMULA",
+        "Error with formula: argument number 1 given to function tourl was of type number but the only usable type for this argument is text.",
+    ),
 ]
 
 
@@ -1417,10 +1441,10 @@ def test_formula_returns_zeros_instead_of_null_if_output_is_decimal(
 def test_reference_to_null_number_field_acts_as_zero(
     data_fixture,
 ):
-    number_field = data_fixture.create_number_field()
-    formula_field = data_fixture.create_formula_field(
-        table=number_field.table, formula="1"
-    )
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(table=table)
+    formula_field = data_fixture.create_formula_field(table=table, formula="1")
 
     formula_field.formula = f"field('{number_field.name}') + 1"
     formula_field.save(recalculate=True)
@@ -1429,8 +1453,7 @@ def test_reference_to_null_number_field_acts_as_zero(
         formula_field.internal_formula
         == f"error_to_nan(add(when_empty(field('{number_field.db_column}'),0),1))"
     )
-    model = number_field.table.get_model()
-    row = model.objects.create(**{f"{number_field.db_column}": None})
+    row = RowHandler().create_row(user, table, {f"{number_field.db_column}": None})
     assert getattr(row, formula_field.db_column) == 1
 
 
@@ -1803,3 +1826,172 @@ def test_can_filter_in_aggregated_formulas_with_multipleselects(data_fixture):
     assert getattr(row_a1, formula_field.db_column) == 2  # a and b
     assert getattr(row_a2, formula_field.db_column) == 1  # autonr of row_b[2], d
     assert getattr(row_a3, formula_field.db_column) == 1  # autonr of row_b[5], b
+
+
+@pytest.mark.django_db
+def test_formulas_with_lookup_url_field_type(data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        primary=True,
+        name="Primary",
+        table=table,
+    )
+
+    linked_table = data_fixture.create_database_table(
+        user=user, database=table.database
+    )
+
+    linked_table_primary_field = data_fixture.create_text_field(
+        primary=True,
+        name="Primary",
+        table=linked_table,
+    )
+    linked_table_url_field = data_fixture.create_url_field(
+        name="URL",
+        table=linked_table,
+    )
+
+    linked_row_1, linked_row_2 = RowHandler().create_rows(
+        user,
+        linked_table,
+        [
+            {
+                linked_table_primary_field.db_column: "URL #1",
+                linked_table_url_field.db_column: "https://baserow.io/1",
+            },
+            {
+                linked_table_primary_field.db_column: "URL #2",
+                linked_table_url_field.db_column: "https://baserow.io/2",
+            },
+        ],
+    )
+
+    link_field = FieldHandler().create_field(
+        user, table, "link_row", link_row_table=linked_table, name="Link"
+    )
+
+    formula_scenarios = [
+        f"lookup('{link_field.name}', 'URL')",
+        f"join(lookup('{link_field.name}', 'URL'), '')",
+        f"join(lookup('{link_field.name}', 'URL'), 'some-text')",
+        f"concat(lookup('{link_field.name}', 'URL'), '')",
+        f"concat(lookup('{link_field.name}', 'URL'), 'some-text')",
+        f"max(lookup('{link_field.name}', 'URL'))",
+        f"min(lookup('{link_field.name}', 'URL'))",
+        f"count(lookup('{link_field.name}', 'URL'))",
+        f"when_empty(lookup('{link_field.name}', 'URL'), 'some-default')",
+    ]
+
+    fields = [
+        data_fixture.create_formula_field(
+            user=user,
+            table=table,
+            formula=formula,
+        )
+        for formula in formula_scenarios
+    ]
+
+    RowHandler().create_rows(
+        user,
+        table,
+        [
+            {
+                text_field.db_column: "Row #1",
+                link_field.db_column: [linked_row_1.id],
+            },
+            {
+                text_field.db_column: "Row #2",
+                link_field.db_column: [
+                    linked_row_1.id,
+                    linked_row_2.id,
+                ],
+            },
+            {text_field.db_column: "Row #3", link_field.db_column: []},
+        ],
+    )
+
+    rows = data_fixture.get_rows(fields=[text_field, *fields])
+
+    assert rows == [
+        [
+            "Row #1",
+            [{"id": 1, "value": "https://baserow.io/1"}],
+            "https://baserow.io/1",
+            "https://baserow.io/1",
+            [{"id": 1, "value": "https://baserow.io/1"}],
+            [{"id": 1, "value": "https://baserow.io/1some-text"}],
+            "https://baserow.io/1",
+            "https://baserow.io/1",
+            Decimal("1"),
+            [{"id": 1, "value": "https://baserow.io/1"}],
+        ],
+        [
+            "Row #2",
+            [
+                {"id": 1, "value": "https://baserow.io/1"},
+                {"id": 2, "value": "https://baserow.io/2"},
+            ],
+            "https://baserow.io/1https://baserow.io/2",
+            "https://baserow.io/1some-texthttps://baserow.io/2",
+            [
+                {"id": 1, "value": "https://baserow.io/1"},
+                {"id": 2, "value": "https://baserow.io/2"},
+            ],
+            [
+                {"id": 1, "value": "https://baserow.io/1some-text"},
+                {"id": 2, "value": "https://baserow.io/2some-text"},
+            ],
+            "https://baserow.io/2",
+            "https://baserow.io/1",
+            Decimal("2"),
+            [
+                {"id": 1, "value": "https://baserow.io/1"},
+                {"id": 2, "value": "https://baserow.io/2"},
+            ],
+        ],
+        ["Row #3", [], None, None, [], [], None, None, Decimal("0"), []],
+    ]
+
+
+@pytest.mark.django_db
+def test_lookup_arrays(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    table_b_primary_field = table_b.field_set.get(primary=True)
+    row_b1, row_b2 = data_fixture.create_rows_in_table(
+        table=table_b,
+        rows=[["b1"], ["b2"]],
+        fields=[table_b_primary_field],
+    )
+    (row_a1,) = RowHandler().create_rows(
+        user, table_a, [{link_field.db_column: [row_b1.id, row_b2.id]}]
+    )
+    lookup_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "formula",
+        name="lookup",
+        formula=f"lookup('{link_field.name}', '{table_b_primary_field.name}')",
+    )
+
+    join_lookup_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "formula",
+        name="join_lookup",
+        formula="join(field('lookup'), ',')",
+    )
+
+    table_a_model = table_a.get_model()
+    rows = table_a_model.objects.all()
+    assert rows.count() == 1
+    assert list(rows.values(lookup_field.db_column, join_lookup_field.db_column)) == [
+        {
+            lookup_field.db_column: [
+                {"id": row_b1.id, "value": "b1"},
+                {"id": row_b2.id, "value": "b2"},
+            ],
+            join_lookup_field.db_column: "b1,b2",
+        }
+    ]

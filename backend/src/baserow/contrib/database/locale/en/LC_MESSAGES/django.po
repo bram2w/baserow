@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-20 05:25+0000\n"
+"POT-Creation-Date: 2024-07-16 13:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,46 +68,57 @@ msgstr ""
 msgid "Table \"%(table_name)s\" (%(table_id)s) exported to %(export_type)s"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:35
+#: src/baserow/contrib/database/fields/actions.py:36
 msgid "Update field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:36
+#: src/baserow/contrib/database/fields/actions.py:37
 #, python-format
 msgid "Field \"%(field_name)s\" (%(field_id)s) updated"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:339
+#: src/baserow/contrib/database/fields/actions.py:340
 msgid "Create field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:340
+#: src/baserow/contrib/database/fields/actions.py:341
 #, python-format
 msgid "Field \"%(field_name)s\" (%(field_id)s) created"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:433
+#: src/baserow/contrib/database/fields/actions.py:434
 msgid "Delete field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:434
+#: src/baserow/contrib/database/fields/actions.py:435
 #, python-format
 msgid "Field \"%(field_name)s\" (%(field_id)s) deleted"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:506
+#: src/baserow/contrib/database/fields/actions.py:507
 msgid "Duplicate field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:508
+#: src/baserow/contrib/database/fields/actions.py:509
 #, python-format
 msgid ""
 "Field \"%(field_name)s\" (%(field_id)s) duplicated (with_data=%(with_data)s) "
 "from field \"%(original_field_name)s\" (%(original_field_id)s)"
 msgstr ""
 
+#: src/baserow/contrib/database/fields/actions.py:592
+msgid "Change primary field"
+msgstr ""
+
+#: src/baserow/contrib/database/fields/actions.py:594
+#, python-format
+msgid ""
+"Primary field of table %(table_name)s was changed to "
+"%(new_primary_field_name)s"
+msgstr ""
+
 #: src/baserow/contrib/database/fields/models.py:371
-#: src/baserow/contrib/database/fields/models.py:510
+#: src/baserow/contrib/database/fields/models.py:519
 msgid "The format of the duration."
 msgstr ""
 
@@ -136,8 +147,8 @@ msgstr ""
 
 #: src/baserow/contrib/database/plugins.py:55
 #: src/baserow/contrib/database/plugins.py:77
-#: src/baserow/contrib/database/table/handler.py:623
-#: src/baserow/contrib/database/table/handler.py:636
+#: src/baserow/contrib/database/table/handler.py:624
+#: src/baserow/contrib/database/table/handler.py:637
 msgid "Name"
 msgstr ""
 
@@ -146,13 +157,13 @@ msgid "Last name"
 msgstr ""
 
 #: src/baserow/contrib/database/plugins.py:57
-#: src/baserow/contrib/database/table/handler.py:624
+#: src/baserow/contrib/database/table/handler.py:625
 msgid "Notes"
 msgstr ""
 
 #: src/baserow/contrib/database/plugins.py:58
 #: src/baserow/contrib/database/plugins.py:79
-#: src/baserow/contrib/database/table/handler.py:625
+#: src/baserow/contrib/database/table/handler.py:626
 msgid "Active"
 msgstr ""
 
@@ -300,11 +311,11 @@ msgid ""
 "\"%(original_table_name)s\" (%(original_table_id)s) "
 msgstr ""
 
-#: src/baserow/contrib/database/table/handler.py:527
+#: src/baserow/contrib/database/table/handler.py:528
 msgid "Grid"
 msgstr ""
 
-#: src/baserow/contrib/database/table/handler.py:585
+#: src/baserow/contrib/database/table/handler.py:586
 #, python-format
 msgid "Field %d"
 msgstr ""

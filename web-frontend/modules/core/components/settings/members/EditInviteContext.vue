@@ -1,5 +1,5 @@
 <template>
-  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
+  <Context overflow-scroll max-height-if-outside-viewport>
     <template v-if="Object.keys(invitation).length > 0">
       <ul class="context__menu">
         <li class="context__menu-item">

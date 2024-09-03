@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix filter data source formula fields alignment",
+    "issue_number": 2804,
+    "bullet_points": [],
+    "created_at": "2024-07-12"
+}

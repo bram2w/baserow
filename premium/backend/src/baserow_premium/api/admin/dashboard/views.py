@@ -82,7 +82,6 @@ class AdminDashboardView(APIView):
         serializer = AdminDashboardSerializer(
             {
                 "total_users": total_users,
-                "total_groups": total_workspaces,  # GroupDeprecation
                 "total_workspaces": total_workspaces,
                 "total_applications": total_applications,
                 "new_users_per_day": new_users_per_day,

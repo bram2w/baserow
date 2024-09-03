@@ -33,19 +33,13 @@ import WorkflowActionSelector from '@baserow/modules/core/components/workflowAct
 import _ from 'lodash'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { mapActions } from 'vuex'
-import { DATA_PROVIDERS_ALLOWED_WORKFLOW_ACTIONS } from '@baserow/modules/builder/enums'
-import { fixPropertyReactivityForProvide } from '@baserow/modules/core/utils/object'
+import applicationContext from '@baserow/modules/builder/mixins/applicationContext'
 
 export default {
   name: 'WorkflowAction',
   components: { WorkflowActionSelector },
+  mixins: [applicationContext],
   inject: ['page', 'builder', 'mode'],
-  provide() {
-    return {
-      dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_WORKFLOW_ACTIONS,
-      applicationContext: this.applicationContext,
-    }
-  },
   props: {
     availableWorkflowActionTypes: {
       type: Array,
@@ -70,17 +64,6 @@ export default {
         (workflowActionType) =>
           workflowActionType.getType() === this.workflowAction.type
       )
-    },
-    applicationContext() {
-      const context = {
-        page: this.page,
-        builder: this.builder,
-        mode: this.mode,
-        element: this.element,
-      }
-      return fixPropertyReactivityForProvide(context, {
-        workflowAction: () => this.workflowAction,
-      })
     },
   },
   methods: {

@@ -3,6 +3,25 @@
   inset: 0;
 }
 
+.layout__resize {
+  @include absolute(0, auto, 0, auto);
+
+  width: 5px;
+  z-index: $z-index-layout-resize;
+
+  &:hover {
+    cursor: col-resize;
+
+    &::before {
+      @include absolute(0, auto, 0, 0);
+
+      content: '';
+      background-color: $palette-neutral-400;
+      width: 3px;
+    }
+  }
+}
+
 .layout__col-1 {
   position: absolute;
   z-index: $z-index-layout-col-1;
@@ -10,20 +29,12 @@
   top: 0;
   bottom: 0;
   width: 240px;
-
-  .layout--collapsed & {
-    width: 48px;
-  }
 }
 
 .layout__col-2 {
   position: absolute;
   z-index: $z-index-layout-col-3;
   inset: 0 0 0 240px;
-
-  .layout--collapsed & {
-    left: 48px;
-  }
 }
 
 .layout__col-2-scroll {

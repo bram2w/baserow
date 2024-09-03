@@ -621,6 +621,141 @@ def test_queryset_only_includes_elements_allowed_by_role(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    "user_role,parent_element_roles,chid_element_roles,parent_visibility_type,child_visibility_type,role_type,logged_in",
+    [
+        (
+            "",
+            [],
+            [],
+            # Parent Element's visibility should be logged in, thus is
+            # invisible to Anon users.
+            Element.VISIBILITY_TYPES.LOGGED_IN,
+            # Child Element's visibility should be 'not logged', since we want
+            # to test if the child element is visible to Anon users.
+            Element.VISIBILITY_TYPES.NOT_LOGGED,
+            Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT,
+            False,
+        ),
+        (
+            "user_role",
+            ["parent_role"],
+            ["child_role"],
+            Element.VISIBILITY_TYPES.NOT_LOGGED,
+            Element.VISIBILITY_TYPES.NOT_LOGGED,
+            # The role type here doesn't matter, since the element
+            # is visible to non-logged in users.
+            Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT,
+            True,
+        ),
+        (
+            "user_role",
+            # Parent shouldn't allow user_role to see it
+            ["user_role"],
+            # Child should allow user_role to see it
+            [],
+            Element.VISIBILITY_TYPES.LOGGED_IN,
+            Element.VISIBILITY_TYPES.LOGGED_IN,
+            Element.ROLE_TYPES.ALLOW_ALL_EXCEPT,
+            True,
+        ),
+        (
+            "user_role",
+            # Parent element shouldn't allow anyone access to it
+            [],
+            # Child should allow user_role to see it
+            ["user_role"],
+            Element.VISIBILITY_TYPES.LOGGED_IN,
+            Element.VISIBILITY_TYPES.LOGGED_IN,
+            Element.ROLE_TYPES.DISALLOW_ALL_EXCEPT,
+            True,
+        ),
+    ],
+)
+def test_queryset_excludes_all_child_elements(
+    ab_builder_user_page,
+    data_fixture,
+    user_role,
+    parent_element_roles,
+    chid_element_roles,
+    parent_visibility_type,
+    child_visibility_type,
+    role_type,
+    logged_in,
+):
+    """
+    Ensure that if the parent element is hidden due to a role, all its child
+    elements are excluded from the returned queryset.
+    """
+
+    public_user_source, _, public_page = ab_builder_user_page
+
+    public_user_source_user = UserSourceUser(
+        public_user_source,
+        None,
+        1,
+        "foo_username",
+        "foo@bar.com",
+        user_role,
+    )
+
+    # Create a Repeat element, which will be the parent element and first
+    # level of nesting.
+    repeat_element = data_fixture.create_builder_repeat_element(
+        page=public_page,
+        visibility=parent_visibility_type,
+        roles=parent_element_roles,
+        role_type=role_type,
+    )
+
+    # Create a Column element, which is the 2nd level of nesting.
+    column_element = data_fixture.create_builder_column_element(
+        page=public_page,
+        visibility=child_visibility_type,
+        roles=chid_element_roles,
+        role_type=role_type,
+        parent_element_id=repeat_element.id,
+    )
+
+    # Add a Heading element that matches the user's role, and is the final
+    # 3rd level of nesting.
+    element = data_fixture.create_builder_heading_element(
+        page=public_page,
+        visibility=child_visibility_type,
+        roles=chid_element_roles,
+        role_type=role_type,
+        parent_element_id=column_element.id,
+    )
+
+    # Create a workflow action connected to the element that requires the role
+    workflow_action_logged_in = (
+        data_fixture.create_local_baserow_create_row_workflow_action(
+            page=public_page, element=element
+        )
+    )
+
+    perm_manager = ElementVisibilityPermissionManager()
+
+    user = public_user_source_user
+    if not logged_in:
+        user = AnonymousUser()
+
+    elements = perm_manager.filter_queryset(
+        user,
+        ListElementsPageOperationType.type,
+        Element.objects.all(),
+    )
+    assert len(elements) == 0
+
+    actions = perm_manager.filter_queryset(
+        user,
+        ListBuilderWorkflowActionsPageOperationType.type,
+        BuilderWorkflowAction.objects.all(),
+    )
+    assert len(actions) == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
     "role,roles,role_type,expected_bool_result",
     [
         # If the role_type is 'allow_all', then it should always return True
@@ -841,37 +976,5 @@ def test_auth_user_can_view_element_returns_true(
     )
 
     result = perm_manager.auth_user_can_view_element(user_source_user, element)
-
-    assert result is True
-
-
-@pytest.mark.django_db
-def test_auth_user_can_view_element_returns_true_if_role_type_is_none(
-    ab_builder_user_page,
-    data_fixture,
-):
-    """
-    Test the auth_user_can_view_element(). Ensure that if the role_type is None, it
-    is treated the same as the default, which is ALLOW_ALL.
-
-    This is a temporary solution to support zero downtime. This should be
-    removed in an upcoming release.
-
-    See: https://gitlab.com/baserow/baserow/-/issues/2724
-    """
-
-    _, _, public_page = ab_builder_user_page
-
-    # Create an element with a role and role_type
-    element = data_fixture.create_builder_button_element(
-        page=public_page,
-        # The visibility value doesn't really matter for testing this method
-        visibility=Element.VISIBILITY_TYPES.LOGGED_IN,
-        roles=[],
-        role_type=None,
-    )
-    perm_manager = ElementVisibilityPermissionManager()
-
-    result = perm_manager.auth_user_can_view_element(AnonymousUser(), element)
 
     assert result is True

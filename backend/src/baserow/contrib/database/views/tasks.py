@@ -2,15 +2,14 @@ import traceback
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db import transaction
+from django.db import DatabaseError, transaction
 
 from celery_singleton import DuplicateTaskError, Singleton
 from loguru import logger
 
 from baserow.config.celery import app
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
-from baserow.contrib.database.views.handler import ViewHandler, ViewIndexingHandler
-from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.handler import ViewIndexingHandler
 
 AUTO_INDEX_CACHE_KEY = "auto_index_view_cache_key"
 
@@ -25,7 +24,6 @@ def get_auto_index_cache_key(view_id):
     lock_expiry=settings.AUTO_INDEX_LOCK_EXPIRY,
     raise_on_duplicate=True,
 )
-@transaction.atomic()
 def update_view_index(view_id: int):
     """
     Create/update the index for the provided view if needed.
@@ -33,21 +31,31 @@ def update_view_index(view_id: int):
     :param view_id: The id of the view for which the index should be updated.
     """
 
+    recheck_delay = 0
     try:
-        view = ViewHandler().get_view(
-            view_id,
-            base_queryset=View.objects.prefetch_related(
-                "viewsort_set", "viewgroupby_set"
-            ),
-        )
-        ViewIndexingHandler.update_index(view)
+        ViewIndexingHandler.update_index_by_view_id(view_id)
+
     except ViewDoesNotExist:
-        # can be ignored, the view doesn't exist anymore
-        pass
-    finally:
-        # check for any pending view index updates and schedule them out of this
-        # singleton task to avoid concurrency issues
-        _check_for_pending_view_index_updates.delay(view_id)
+        return  # can be ignored, the view doesn't exist anymore
+    except DatabaseError:
+        if "could not obtain lock on" in traceback.format_exc():
+            recheck_delay = 10
+            logger.debug("Retrying view index update in {0} seconds", recheck_delay)
+            _set_pending_view_index_update(view_id)
+
+    # check for any pending view index updates and schedule them out of this
+    # singleton task to avoid concurrency issues
+    _check_for_pending_view_index_updates.s(view_id).apply_async(
+        countdown=recheck_delay
+    )
+
+
+def _set_pending_view_index_update(view_id: int):
+    cache.set(
+        get_auto_index_cache_key(view_id),
+        True,
+        timeout=settings.AUTO_INDEX_LOCK_EXPIRY * 2,
+    )
 
 
 @app.task(queue="export")
@@ -69,16 +77,16 @@ def _schedule_view_index_update(view_id: int):
     :param view_id: The id of the view for which the index should be updated.
     """
 
+    # another task has already scheduled the view index update
+    if cache.get(get_auto_index_cache_key(view_id)):
+        return
+
     try:
         update_view_index.delay(view_id)
     except DuplicateTaskError:
         # Add the view_id in the cache so that `update_view_index` will
         # re-schedule itself at the end of the currently running task.
-        cache.set(
-            get_auto_index_cache_key(view_id),
-            True,
-            timeout=settings.AUTO_INDEX_LOCK_EXPIRY * 2,
-        )
+        _set_pending_view_index_update(view_id)
     except Exception as exc:  # nosec
         logger.error("Failed to schedule index update because of {e}", e=str(exc))
         traceback.print_exc()

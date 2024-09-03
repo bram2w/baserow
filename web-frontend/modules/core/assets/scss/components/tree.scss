@@ -2,7 +2,11 @@
   position: relative;
   list-style: none;
   padding: 0;
-  margin: 0 0 12px;
+  margin: 0;
+
+  &:not(:last-child) {
+    margin-bottom: 12px;
+  }
 
   .tree__item & {
     padding-left: 8px;
@@ -10,27 +14,23 @@
   }
 }
 
-.tree:not(:last-child) {
-  margin-bottom: 3px;
-}
-
 .tree__item {
   @extend %first-last-no-margin;
 
   position: relative;
-  margin: 4px 0;
+  margin: 2px 0;
 
-  @include rounded($rounded);
+  @include rounded($rounded-md);
 
   &.active {
-    background-color: $color-primary-100;
+    background-color: rgba($palette-neutral-1300, 0.04);
   }
 
   &.tree__item--loading::after {
     content: ' ';
 
     @include loading(14px);
-    @include absolute(9px, 9px, auto, auto);
+    @include absolute(8px, 9px, auto, auto);
   }
 }
 
@@ -41,16 +41,9 @@
 .tree__action {
   @extend %tree-size;
 
-  padding: 0 6px;
+  padding: 0 8px;
 
   @include rounded($rounded);
-
-  .layout--collapsed & {
-    height: 32px;
-    justify-content: center;
-
-    @include flex-align-items;
-  }
 
   &.tree__action--disabled {
     opacity: 0.6;
@@ -62,7 +55,7 @@
   }
 
   &:not(.tree__action--disabled):hover {
-    background-color: $color-neutral-100;
+    background-color: rgba($palette-neutral-1300, 0.04);
   }
 
   .tree__item.active &:hover {
@@ -74,22 +67,17 @@
   &.tree__action--has-right-icon {
     padding-right: 32px;
   }
-
-  &.tree__action--has-notification {
-    padding-right: 48px;
-  }
 }
 
 .tree__link {
   @extend %tree-size;
 
-  color: $color-neutral-900;
-  font-size: 14px;
+  color: $palette-neutral-900;
 
-  @include flex-align-items(4px);
+  @include flex-align-items(8px);
 
   .tree__action--deactivated & {
-    color: $color-neutral-500;
+    color: $palette-neutral-500;
   }
 
   &:hover {
@@ -119,6 +107,12 @@
   @extend %ellipsis;
 
   min-width: 0;
+  color: $palette-neutral-900;
+  font-weight: 500;
+
+  .active & {
+    color: $palette-neutral-1200;
+  }
 }
 
 .tree__progress-percentage {
@@ -132,16 +126,17 @@
   @extend %tree-size;
 
   text-align: center;
-  color: $color-neutral-900;
+  color: $palette-neutral-700;
+  font-size: 16px;
 
-  &.tree__icon--type {
-    color: $color-neutral-500;
+  .active & {
+    color: $palette-neutral-1200;
   }
 }
 
 %tree-sub-size {
-  line-height: 28px;
-  height: 28px;
+  line-height: 32px;
+  height: 32px;
 }
 
 .tree__subs {
@@ -155,29 +150,33 @@
   @extend %tree-sub-size;
 
   position: relative;
-  padding: 0 34px;
+  margin: 2px 0 0 21px;
+
+  @include rounded($rounded-md);
+
+  &:hover,
+  &.active {
+    background-color: rgba($palette-neutral-1300, 0.04);
+  }
 
   &::before,
   &::after {
     content: '';
     position: absolute;
-    left: 12px;
+    left: -8px;
   }
 
   &::before {
-    top: 0;
-    height: 28px;
-    border-left: 1px solid $color-neutral-200;
+    height: 32px;
+    border-right: 1px solid $palette-neutral-200;
   }
 
-  &::after {
-    top: 14px;
-    width: 12px;
-    border-bottom: 1px solid $color-neutral-200;
-  }
+  &:not(:last-child) {
+    margin-bottom: 2px;
 
-  &:last-child::before {
-    height: 15px;
+    &::before {
+      height: 34px;
+    }
   }
 }
 
@@ -193,18 +192,18 @@
   @extend %tree-sub-size;
   @extend %ellipsis;
 
-  color: $color-neutral-900;
+  color: $palette-neutral-900;
   display: block;
+  font-weight: 500;
+  padding: 0 32px 0 16px;
 
   &:hover {
     cursor: pointer;
     text-decoration: none;
-    color: $color-primary-500;
   }
 
   .active > & {
-    font-weight: 600;
-    color: $color-primary-600;
+    color: $palette-neutral-1200;
   }
 
   &--empty::before {
@@ -237,13 +236,24 @@
 
 .tree__sub-add {
   display: inline-block;
-  margin: 0 0 10px 10px;
+  margin: 10px 0 10px 6px;
+  line-height: 17px;
   font-size: 12px;
-  color: $color-neutral-400;
+  font-weight: 500;
+  color: $palette-neutral-900;
 
   &:hover {
     text-decoration: none;
-    color: $color-neutral-500;
+    color: $palette-neutral-1200;
+  }
+}
+
+.tree__sub-add-icon {
+  font-size: 16px;
+  color: $palette-neutral-600;
+
+  .tree__sub-add:hover & {
+    color: $palette-neutral-1200;
   }
 }
 
@@ -286,4 +296,11 @@
   position: absolute;
   top: 8px;
   right: 8px;
+}
+
+.tree__heading {
+  font-size: 11px;
+  font-weight: 500;
+  color: $palette-neutral-900;
+  margin: 8px;
 }

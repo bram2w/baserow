@@ -7,6 +7,10 @@ from rest_framework import serializers
 from baserow.core.models import Template, TemplateCategory
 
 
+class ListRequestQueryParamSerializer(serializers.Serializer):
+    search = serializers.CharField(required=False)
+
+
 class TemplateSerializer(serializers.ModelSerializer):
     is_default = serializers.SerializerMethodField(
         help_text="Indicates if the template must be selected by default. The "
@@ -19,9 +23,9 @@ class TemplateSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "slug",
             "icon",
             "keywords",
-            "group_id",  # GroupDeprecation
             "workspace_id",
             "is_default",
         )

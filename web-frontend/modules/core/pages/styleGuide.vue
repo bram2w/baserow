@@ -190,6 +190,25 @@
             >
               Small disabled
             </SwitchInput>
+            <SwitchInput
+              v-model="switchValue"
+              color="neutral"
+              class="margin-bottom-2"
+              >Neutral color</SwitchInput
+            >
+            <SwitchInput
+              v-model="switchUnknown"
+              color="neutral"
+              class="margin-bottom-2"
+              >Neutral intermediate</SwitchInput
+            >
+            <SwitchInput
+              v-model="switchValue"
+              color="neutral"
+              :disabled="true"
+              class="margin-bottom-2"
+              >Neutral disabled</SwitchInput
+            >
           </FormGroup>
 
           <FormGroup label="Dropdown" required class="margin-bottom-2">

@@ -1,23 +1,41 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.values"
-      small
+    <FormGroup
+      small-label
       :label="$t('tagsFieldForm.fieldValuesLabel')"
-      :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
       horizontal
-    />
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.values"
+        :placeholder="$t('tagsFieldForm.fieldValuesPlaceholder')"
+      />
+      <template #after-input>
+        <CustomStyle
+          v-model="values.styles"
+          style-key="cell"
+          :config-block-types="['table', 'typography']"
+          :theme="baseTheme"
+          :extra-args="{ onlyCell: true, onlyBody: true, noAlignment: true }"
+          variant="normal"
+        />
+      </template>
+    </FormGroup>
+
     <div>
-      <ApplicationBuilderFormulaInputGroup
+      <FormGroup
         v-if="values.colors_is_formula"
-        v-model="values.colors"
-        small
+        small-label
         :label="$t('tagsFieldForm.fieldColorsLabel')"
-        :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
         horizontal
+        class="margin-bottom-2"
+        required
       >
+        <InjectedFormulaInput
+          v-model="values.colors"
+          :placeholder="$t('tagsFieldForm.fieldColorsPlaceholder')"
+        />
         <template #after-input>
           <ButtonIcon
             icon="iconoir-color-picker"
@@ -25,12 +43,13 @@
             @click="setColorsToPicker"
           />
         </template>
-      </ApplicationBuilderFormulaInputGroup>
+      </FormGroup>
       <FormGroup
         v-else
         horizontal
         small-label
         :label="$t('tagsFieldForm.fieldColorsLabel')"
+        class="margin-bottom-2"
       >
         <ColorInput
           v-model="values.colors"
@@ -50,20 +69,22 @@
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'TagsField',
-  components: { ApplicationBuilderFormulaInputGroup },
+  components: { InjectedFormulaInput, CustomStyle },
   mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['values', 'colors', 'colors_is_formula'],
+      allowedValues: ['values', 'colors', 'colors_is_formula', 'styles'],
       values: {
         values: '',
         colors: '#acc8f8',
         colors_is_formula: false,
+        styles: {},
       },
     }
   },

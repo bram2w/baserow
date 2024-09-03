@@ -2,7 +2,7 @@
   <Context
     class="select user-source-users-context"
     :class="{ 'context--loading-overlay': state === 'loading' }"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     @shown="shown"
   >
     <SelectSearch
@@ -130,15 +130,17 @@ export default {
       if (!this.currentUser) {
         await this.actionLogoff({ application: this.builder })
       } else {
-        const userSource = this.$store.getters['userSource/getUserSourceById'](
+        const userSource = this.$store.getters['userSource/getUserSourceByUId'](
           this.builder,
-          this.currentUser.user_source_id
+          this.currentUser.user_source_uid
         )
-        await this.actionForceAuthenticate({
-          application: this.builder,
-          userSource,
-          user: this.currentUser,
-        })
+        if (userSource) {
+          await this.actionForceAuthenticate({
+            application: this.builder,
+            userSource,
+            user: this.currentUser,
+          })
+        }
       }
     },
 
@@ -181,7 +183,7 @@ export default {
 
     isSelectedUser(userSource, user) {
       return (
-        this.currentUser?.user_source_id === userSource.id &&
+        this.currentUser?.user_source_uid === userSource.uid &&
         this.currentUser?.id === user.id
       )
     },

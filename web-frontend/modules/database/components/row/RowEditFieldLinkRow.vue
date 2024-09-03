@@ -39,7 +39,10 @@
       :table-id="field.link_row_table_id"
       :view-id="field.link_row_limit_selection_view_id"
       :value="value"
+      :multiple="true"
+      :new-row-presets="presetsForNewRowInLinkedTable"
       @selected="addValue(value, $event)"
+      @unselected="removeValue({}, value, $event.row.id)"
     ></SelectRowModal>
     <ForeignRowEditModal
       v-if="!readOnly || isInForeignRowEditModal"

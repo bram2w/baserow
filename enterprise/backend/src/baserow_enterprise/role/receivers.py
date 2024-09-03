@@ -59,7 +59,6 @@ def notify_users_about_updated_permissions(
             associated_user_ids,
             {
                 "type": "permissions_updated",
-                "group_id": workspace.id,
                 "workspace_id": workspace.id,
             },
         )

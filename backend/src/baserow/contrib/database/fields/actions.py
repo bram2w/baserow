@@ -17,6 +17,7 @@ from baserow.contrib.database.fields.backup_handler import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, SpecificFieldForUpdate
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
@@ -494,10 +495,7 @@ class DeleteFieldActionType(UndoableActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         field = FieldHandler().get_field(params.field_id)
-        FieldHandler().delete_field(
-            user,
-            field,
-        )
+        FieldHandler().delete_field(user, field)
 
 
 class DuplicateFieldActionType(UndoableActionType):
@@ -576,10 +574,93 @@ class DuplicateFieldActionType(UndoableActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
-        FieldHandler().delete_field(user, FieldHandler().get_field(params.field_id))
+        handler = FieldHandler()
+        field = handler.get_field(params.field_id)
+        handler.delete_field(user, field)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         TrashHandler.restore_item(
             user, "field", params.field_id, parent_trash_item_id=None
         )
+
+
+class ChangePrimaryFieldActionType(UndoableActionType):
+    type = "change_primary_field"
+    description = ActionTypeDescription(
+        _("Change primary field"),
+        _(
+            "Primary field of table %(table_name)s was changed to "
+            "%(new_primary_field_name)s"
+        ),
+        TABLE_ACTION_CONTEXT,
+    )
+    analytics_params = [
+        "table_id",
+        "new_primary_field_id",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        database_id: int
+        database_name: str
+        table_id: int
+        table_name: str
+        new_primary_field_id: int
+        new_primary_field_name: str
+        old_primary_field_id: int
+        old_primary_field_name: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        new_primary_field: Field,
+    ) -> Tuple[Field, Field]:
+        """
+        Change the primary field of the provided table.
+
+        :param user: The user on whose behalf the duplicated field will be
+            changed.
+        :param table: The table where to change the primary field in.
+        :param new_primary_field: The field that must be changed to the primary field.
+        :return: The updated field object.
+        """
+
+        new_primary_field, old_primary_field = FieldHandler().change_primary_field(
+            user, table, new_primary_field
+        )
+        params = cls.Params(
+            table.database_id,
+            table.database.name,
+            table.id,
+            table.name,
+            new_primary_field.id,
+            new_primary_field.name,
+            old_primary_field.id,
+            old_primary_field.name,
+        )
+        workspace = table.database.workspace
+        cls.register_action(user, params, cls.scope(table.id), workspace)
+        return new_primary_field, old_primary_field
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        table = TableHandler().get_table_for_update(params.table_id)
+        field = FieldHandler().get_specific_field_for_update(
+            params.old_primary_field_id
+        )
+        FieldHandler().change_primary_field(user, table, field)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        table = TableHandler().get_table_for_update(params.table_id)
+        field = FieldHandler().get_specific_field_for_update(
+            params.new_primary_field_id
+        )
+        FieldHandler().change_primary_field(user, table, field)

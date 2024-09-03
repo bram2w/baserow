@@ -9,7 +9,6 @@ from baserow.core.user_sources.constants import (
     EMAIL_CLAIM,
     ROLE,
     USER_SOURCE_CLAIM,
-    USER_SOURCE_ID_CLAIM,
     USERNAME_CLAIM,
 )
 from baserow.core.user_sources.jwt_token import UserSourceToken
@@ -67,7 +66,6 @@ class UserSourceUser:
 
         # add basic information
         refresh[USER_SOURCE_CLAIM] = str(self.user_source.uid)
-        refresh[USER_SOURCE_ID_CLAIM] = self.user_source.id
         refresh[USERNAME_CLAIM] = str(self.username)
         refresh[EMAIL_CLAIM] = str(self.email)
         refresh[jwt_settings.USER_ID_CLAIM] = self.id

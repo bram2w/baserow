@@ -11,7 +11,9 @@
       rel="nofollow noopener noreferrer"
       @mousedown.stop
     >
-      {{ $options.methods.getLabelOrURL(props.value) }}
+      <span class=".array-field__ellipsis">{{
+        $options.methods.getLabelOrURL(props.value)
+      }}</span>
     </Button>
     <Button v-else size="tiny" type="secondary" tag="a" disabled>
       {{ $options.methods.getLabelOrURL(props.value) }}
@@ -22,7 +24,7 @@
 <script>
 import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
-  name: 'FunctionalFormulaLinkArrayItem',
+  name: 'FunctionalFormulaButtonArrayItem',
   mixins: [linkURLField],
 }
 </script>

@@ -31,6 +31,10 @@ export default {
     },
     async selectWorkspace(workspace) {
       await this.$store.dispatch('workspace/select', workspace)
+      await this.$router.push({
+        name: 'workspace',
+        params: { workspaceId: workspace.id },
+      })
       this.$emit('selected')
     },
   },

@@ -1,0 +1,9 @@
+{
+  "type": "feature",
+  "message": "[premium] Calendar view can be shared with external applications via ical feed url",
+  "issue_number": 1911,
+  "bullet_points": [
+    "added `BASEROW_ICAL_VIEW_MAX_EVENTS` setting to limit amount of events in the output"
+  ],
+  "created_at": "2024-06-01"
+}

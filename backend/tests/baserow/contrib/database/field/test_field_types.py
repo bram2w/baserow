@@ -6,10 +6,12 @@ from django.test.utils import override_settings
 import pytest
 from faker import Faker
 
-from baserow.contrib.database.fields.deferred_foreign_key_updater import (
-    DeferredForeignKeyUpdater,
+from baserow.contrib.database.fields.field_types import (
+    LinkRowFieldType,
+    LookupFieldType,
+    PhoneNumberFieldType,
+    TextFieldType,
 )
-from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     EmailField,
@@ -18,6 +20,7 @@ from baserow.contrib.database.fields.models import (
     URLField,
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -632,7 +635,7 @@ def test_human_readable_values(data_fixture):
         "formula_text": "test FORMULA",
         "formula_link_url_only": "https://google.com",
         "formula_link_with_label": "label (https://google.com)",
-        "formula_multipleselect": "D, C, E",
+        "formula_multipleselect": "C, D, E",
         "lookup": "linked_row_1, linked_row_2, ",
         "autonumber": "2",
         "duration_rollup_sum": "0:04",
@@ -712,6 +715,59 @@ def test_import_export_lookup_field(data_fixture, api_client):
     assert id_mapping["database_fields"][lookup.id] == lookup_field_imported.id
 
 
+@pytest.mark.django_db
+def test_lookup_field_get_field_dependencies_import_serialized_broken_lookup(
+    data_fixture,
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+    lookup_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name="link",
+        target_field_name="target",
+    )
+
+    serialized_field = LookupFieldType().export_serialized(lookup_field)
+    serialized_fields_map = {
+        link_field.id: LinkRowFieldType().export_serialized(link_field),
+        target_field.id: TextFieldType().export_serialized(target_field),
+    }
+    primary_table_fields_map = {}
+
+    # the dependencies are listed normally when lookup is valid
+    field_deps = LookupFieldType().get_field_depdendencies_before_import_serialized(
+        serialized_field, serialized_fields_map, primary_table_fields_map
+    )
+    assert field_deps == set(
+        [
+            (
+                "target",
+                "link",
+            ),
+        ]
+    )
+
+    # lookup is broken
+    FieldHandler().delete_field(user, link_field)
+    lookup_field.refresh_from_db()
+
+    serialized_field = LookupFieldType().export_serialized(lookup_field)
+    serialized_fields_map = {
+        link_field.id: LinkRowFieldType().export_serialized(link_field),
+        target_field.id: TextFieldType().export_serialized(target_field),
+    }
+    primary_table_fields_map = {}
+
+    field_deps = LookupFieldType().get_field_depdendencies_before_import_serialized(
+        serialized_field, serialized_fields_map, primary_table_fields_map
+    )
+    assert field_deps is None
+
+
 def test_field_types_with_get_order_have_get_value_for_filter():
     for field_type in field_type_registry.get_all():
         if field_type.__class__.get_order.__code__ is not FieldType.get_order.__code__:
@@ -762,3 +818,24 @@ def test_text_field_type_get_order(data_fixture):
         result += getattr(char, f"field_{field.id}")
 
     assert result == sorted_chars
+
+
+@pytest.mark.django_db
+@override_settings(USE_PG_FULLTEXT_SEARCH=False)
+def test_tsv_not_created(data_fixture):
+    id_mapping = {}
+
+    table = data_fixture.create_database_table(force_add_tsvectors=False)
+    text_field = data_fixture.create_text_field(
+        name="Text name", text_default="Text default", table=table
+    )
+    text_field_type = field_type_registry.get_by_model(text_field)
+    text_serialized = text_field_type.export_serialized(text_field)
+    text_field_imported = text_field_type.import_serialized(
+        table,
+        text_serialized,
+        ImportExportConfig(include_permission_data=True, reduce_disk_space_usage=False),
+        id_mapping,
+        DeferredForeignKeyUpdater(),
+    )
+    assert text_field_imported.tsvector_column_created is False

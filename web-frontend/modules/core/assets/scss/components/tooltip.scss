@@ -10,8 +10,10 @@
     border-style: solid;
     border-width: 0 6px 8px;
     border-color: transparent transparent $color-neutral-800 transparent;
-
-    @include absolute(0, auto, auto, 50%);
+    position: absolute;
+    top: 0;
+    left: var(--tooltip-cursor-position-left, 50%);
+    right: var(--tooltip-cursor-position-right, auto);
   }
 
   &.tooltip--top {
@@ -37,26 +39,23 @@
 }
 
 .tooltip__content {
-  background-color: $color-neutral-800;
+  background-color: $palette-neutral-1200;
   color: $white;
   padding: 0 8px;
   text-align: center;
-  white-space: nowrap;
 
   @include fixed-height(26px, 12px);
-  @include rounded($rounded);
+  @include rounded($rounded-md);
 
   &--expandable {
     padding: 12px;
     text-align: left;
-    white-space: nowrap;
     max-height: 320px;
     line-height: 20px;
     font-size: 12px;
     overflow: auto;
     height: auto;
     max-width: 320px;
-    text-wrap: wrap;
 
     @include rounded($rounded);
 

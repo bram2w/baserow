@@ -24,14 +24,15 @@
     <FormGroup
       small-label
       :label="$t('oauthSettingsForm.baseUrl')"
-      :error="fieldHasErrors('base_url')"
+      :error="fieldHasErrors('base_url') || !!serverErrors.baseUrl"
       class="margin-bottom-2"
       required
     >
       <FormInput
         ref="base_url"
+        v-model="values.base_url"
         size="large"
-        :error="fieldHasErrors('base_url')"
+        :error="fieldHasErrors('base_url') || !!serverErrors.baseUrl"
         :placeholder="$t('oauthSettingsForm.baseUrlPlaceholder')"
         @blur="$v.values.base_url.$touch()"
       ></FormInput>
@@ -40,8 +41,12 @@
         <div v-if="$v.values.base_url.$dirty && !$v.values.base_url.required">
           {{ $t('error.requiredField') }}
         </div>
-        <div v-if="$v.values.base_url.$dirty && !$v.values.base_url.url"></div>
-        {{ $t('oauthSettingsForm.invalidBaseUrl') }}
+        <div v-else-if="$v.values.base_url.$dirty && !$v.values.base_url.url">
+          {{ $t('oauthSettingsForm.invalidBaseUrl') }}
+        </div>
+        <div v-else-if="!!serverErrors.baseUrl">
+          {{ $t('oauthSettingsForm.invalidBaseUrl') }}
+        </div>
       </template>
     </FormGroup>
 

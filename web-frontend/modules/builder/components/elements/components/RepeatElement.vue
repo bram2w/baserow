@@ -22,7 +22,6 @@
                 :key="`${child.id}-${index}`"
                 :element="child"
                 :application-context-additions="{
-                  recordIndex: index,
                   recordIndexPath: [
                     ...applicationContext.recordIndexPath,
                     index,
@@ -34,11 +33,11 @@
               <!-- Override the mode so that any children are in public mode -->
               <PageElement
                 v-else
+                v-show="!isCollapsed"
                 :key="`${child.id}_${index}`"
                 :element="child"
                 :force-mode="isEditMode ? 'public' : mode"
                 :application-context-additions="{
-                  recordIndex: index,
                   recordIndexPath: [
                     ...applicationContext.recordIndexPath,
                     index,
@@ -56,8 +55,8 @@
       <template v-if="children.length === 0 && isEditMode">
         <!-- Give the designer the chance to add child elements -->
         <AddElementZone
-          :disabled="element.data_source_id === null"
-          :tooltip="$t('repeatElement.missingDataSourceTooltip')"
+          :disabled="elementIsInError"
+          :tooltip="addElementErrorTooltipMessage"
           @add-element="showAddElementModal"
         ></AddElementZone>
         <AddElementModal
@@ -72,8 +71,8 @@
       <!-- If we also have no children, allow the designer to add elements -->
       <template v-if="children.length === 0 && isEditMode">
         <AddElementZone
-          :disabled="element.data_source_id === null"
-          :tooltip="$t('repeatElement.missingDataSourceTooltip')"
+          :disabled="elementIsInError"
+          :tooltip="addElementErrorTooltipMessage"
           @add-element="showAddElementModal"
         ></AddElementZone>
         <AddElementModal
@@ -84,12 +83,15 @@
       </template>
       <!-- We have no contents, but we do have children in edit mode -->
       <template v-else-if="isEditMode">
-        <ElementPreview
-          v-for="child in children"
-          :key="child.id"
-          :element="child"
-          @move="moveElement(child, $event)"
-        />
+        <div v-if="contentLoading" class="loading"></div>
+        <template v-else>
+          <ElementPreview
+            v-for="child in children"
+            :key="child.id"
+            :element="child"
+            @move="moveElement(child, $event)"
+          />
+        </template>
       </template>
     </template>
     <div class="repeat-element__footer">
@@ -117,6 +119,7 @@ import ElementPreview from '@baserow/modules/builder/components/elements/Element
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { ensureString } from '@baserow/modules/core/utils/validator'
+import { RepeatElementType } from '@baserow/modules/builder/elementTypes'
 
 export default {
   name: 'RepeatElement',
@@ -143,6 +146,30 @@ export default {
   },
   computed: {
     ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),
+    isCollapsed() {
+      return this.$store.getters['element/getRepeatElementCollapsed'](
+        this.element
+      )
+    },
+    repeatElementIsNested() {
+      return this.elementType.hasAncestorOfType(
+        this.page,
+        this.element,
+        RepeatElementType.getType()
+      )
+    },
+    elementIsInError() {
+      return this.elementType.isInError({
+        page: this.page,
+        element: this.element,
+      })
+    },
+    addElementErrorTooltipMessage() {
+      if (!this.repeatElementIsNested && this.element.data_source_id === null) {
+        return this.$t('repeatElement.missingDataSourceTooltip')
+      }
+      return this.$t('repeatElement.missingSchemaPropertyTooltip')
+    },
     repeatedElementsStyles() {
       // These styles are applied inline as we are unable to provide
       // the CSS rules with the correct `items_per_row` per device. If

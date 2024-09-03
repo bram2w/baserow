@@ -1,7 +1,8 @@
 <template>
   <Context
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    overflow-scroll
+    max-height-if-outside-viewport
+    class="create-application-context"
     @shown="fetchRolesAndPermissions"
   >
     <div
@@ -10,26 +11,39 @@
     ></div>
     <ul v-else class="context__menu">
       <li
-        v-for="(applicationType, type) in applications"
-        :key="type"
+        v-for="applicationType in applicationTypes"
+        :key="applicationType.getType()"
         class="context__menu-item"
       >
         <a
-          :ref="'createApplicationModalToggle' + type"
-          class="context__menu-item-link"
+          :ref="'createApplicationModalToggle' + applicationType.getType()"
+          class="context__menu-item-link context__menu-item-link--with-desc"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
-          @click="toggleCreateApplicationModal(type)"
+          @click="toggleCreateApplicationModal(applicationType.getType())"
         >
-          <i
-            class="context__menu-item-icon"
-            :class="applicationType.iconClass"
-          ></i>
-          {{ applicationType.getName() }}
+          <span class="context__menu-item-title">
+            <i
+              class="context__menu-item-icon"
+              :class="applicationType.iconClass"
+            ></i>
+            {{ applicationType.getName()
+            }}<Badge
+              v-if="applicationType.isBeta()"
+              color="cyan"
+              size="small"
+              >{{ $t('common.beta') }}</Badge
+            ></span
+          >
+          <div
+            class="context__menu-item-description context__menu-item-description--offset"
+          >
+            {{ applicationType.getDescription() }}
+          </div>
         </a>
         <CreateApplicationModal
-          :ref="'createApplicationModal' + type"
+          :ref="'createApplicationModal' + applicationType.getType()"
           :application-type="applicationType"
           :workspace="workspace"
           @created="hide"
@@ -37,14 +51,21 @@
       </li>
       <li class="context__menu-item">
         <a
-          class="context__menu-item-link"
+          class="context__menu-item-link context__menu-item-link--with-desc"
           :class="{
             disabled: !canCreateCreateApplication,
           }"
           @click="openTemplateModal()"
         >
-          <i class="context__menu-item-icon iconoir-page"></i>
-          {{ $t('createApplicationContext.fromTemplate') }}
+          <span class="context__menu-item-title">
+            <i class="context__menu-item-icon iconoir-page"></i>
+            {{ $t('createApplicationContext.fromTemplate') }}</span
+          >
+          <div
+            class="context__menu-item-description context__menu-item-description--offset"
+          >
+            {{ $t('createApplicationContext.fromTemplateDesc') }}
+          </div>
         </a>
         <TemplateModal
           ref="templateModal"
@@ -74,12 +95,11 @@ export default {
     },
   },
   computed: {
-    applications() {
-      const applications = this.$registry.getAll('application')
-      return Object.fromEntries(
-        Object.entries(applications).filter(([type, application]) =>
-          application.isVisible(applications, this)
-        )
+    applicationTypes() {
+      const applicationTypes = this.$registry.getOrderedList('application')
+
+      return applicationTypes.filter((applicationType) =>
+        applicationType.canBeCreated()
       )
     },
     canCreateCreateApplication() {

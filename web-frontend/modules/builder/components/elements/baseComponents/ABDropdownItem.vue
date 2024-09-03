@@ -19,13 +19,6 @@
           <Checkbox :disabled="disabled" :checked="isActive(value)"></Checkbox>
         </div>
         <slot>
-          <i
-            v-if="icon"
-            v-tooltip="iconTooltip"
-            class="ab-dropdownitem__item-icon"
-            :class="icon"
-          />
-          <img v-if="image" class="ab-dropdownitem__item-image" :src="image" />
           <span class="ab-dropdownitem__item-name-text" :title="name">{{
             name
           }}</span>

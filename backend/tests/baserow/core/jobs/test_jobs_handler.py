@@ -6,6 +6,7 @@ import pytest
 from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
+from baserow.core.jobs.registries import JobType, job_type_registry
 
 
 @pytest.mark.django_db(transaction=True)
@@ -74,3 +75,40 @@ def test_get_job(data_fixture):
     job = JobHandler().get_job(user, job_1.id)
     assert isinstance(job, Job)
     assert job.id == job_1.id
+
+
+@pytest.mark.django_db
+def test_job_progress_changed_bug_regression(data_fixture):
+    """
+    Small regression test for an undefined variable in JobHandler.run
+    """
+
+    class IdlingJobType(JobType):
+        type = "idling_job"
+        model_class = Job
+
+        def run(self, job, progress):
+            return (
+                job,
+                progress,
+            )
+
+    with patch.object(job_type_registry, "registry", {}):
+        job_type_registry.get_for_class.cache_clear()
+        job_type_registry.register(IdlingJobType())
+
+        user = data_fixture.create_user()
+
+        job_1 = data_fixture.create_fake_job(user=user, type=IdlingJobType.type)
+
+        _job, _progress = JobHandler().run(job_1)
+
+        assert _job
+        assert _progress
+
+        _job.progress = 1
+        _job.save()
+        _progress.set_progress(1, None)
+        assert _job.progress == 1
+        # in old code this will fail with UnboundLocalError
+        _progress.set_progress(1, None)

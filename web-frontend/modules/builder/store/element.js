@@ -4,14 +4,16 @@ import ElementService from '@baserow/modules/builder/services/element'
 import PublicBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 import { calculateTempOrder } from '@baserow/modules/core/utils/order'
 
-const populateElement = (element) => {
+const populateElement = (element, registry) => {
+  const elementType = registry.get('element', element.type)
   element._ = {
-    contentLoading: false,
+    contentLoading: true,
     content: [],
     hasNextPage: false,
     reset: 0,
     shouldBeFocused: false,
     elementNamespacePath: null,
+    ...elementType.getPopulateStoreProperties(),
   }
 
   return element
@@ -68,23 +70,37 @@ const updateCachedValues = (page) => {
 const mutations = {
   SET_ITEMS(state, { page, elements }) {
     state.selected = null
-    page.elements = elements.map(populateElement)
+    page.elements = elements.map((element) =>
+      populateElement(element, this.$registry)
+    )
     updateCachedValues(page)
   },
   ADD_ITEM(state, { page, element, beforeId = null }) {
-    page.elements.push(populateElement(element))
+    page.elements.push(populateElement(element, this.$registry))
     updateCachedValues(page)
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
+    let updateCached = false
     page.elements.forEach((element) => {
       if (element.id === elementToUpdate.id) {
+        if (
+          (values.order !== undefined && values.order !== element.order) ||
+          (values.place_in_container !== undefined &&
+            values.place_in_container !== element.place_in_container)
+        ) {
+          updateCached = true
+        }
         Object.assign(element, values)
       }
     })
     if (state.selected?.id === elementToUpdate.id) {
       Object.assign(state.selected, values)
     }
-    updateCachedValues(page)
+    if (updateCached) {
+      // We need to update cached values only if order or place of an element has
+      // changed or if an element has been added or removed.
+      updateCachedValues(page)
+    }
   },
   DELETE_ITEM(state, { page, elementId }) {
     const index = page.elements.findIndex((element) => element.id === elementId)
@@ -105,6 +121,9 @@ const mutations = {
   },
   _SET_ELEMENT_NAMESPACE_PATH(state, { element, path }) {
     element._.elementNamespacePath = path
+  },
+  SET_REPEAT_ELEMENT_COLLAPSED(state, { element, collapsed }) {
+    element._.collapsed = collapsed
   },
 }
 
@@ -438,6 +457,12 @@ const actions = {
       path: elementNamespacePath,
     })
   },
+  setRepeatElementCollapsed({ commit }, { element, collapsed }) {
+    commit('SET_REPEAT_ELEMENT_COLLAPSED', {
+      element,
+      collapsed,
+    })
+  },
 }
 
 const getters = {
@@ -484,7 +509,11 @@ const getters = {
    */
   getAncestors:
     (state, getters) =>
-    (page, element, parentFirst = true) => {
+    (
+      page,
+      element,
+      { parentFirst = false, predicate = () => true, includeSelf = false } = {}
+    ) => {
       const getElementAncestors = (element) => {
         const parentElement = getters.getParent(page, element)
         if (parentElement) {
@@ -493,7 +522,11 @@ const getters = {
           return []
         }
       }
-      const ancestors = getElementAncestors(element)
+      const ancestors = (
+        includeSelf
+          ? [...getElementAncestors(element), element]
+          : getElementAncestors(element)
+      ).filter(predicate)
       return parentFirst ? ancestors.reverse() : ancestors
     },
   getSiblings: (state, getters) => (page, element) => {
@@ -585,6 +618,9 @@ const getters = {
     }
 
     return null
+  },
+  getRepeatElementCollapsed: (state) => (element) => {
+    return element._.collapsed
   },
 }
 

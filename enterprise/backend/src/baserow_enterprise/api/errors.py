@@ -3,7 +3,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 ERROR_TEAM_NAME_NOT_UNIQUE = (
     "ERROR_TEAM_NAME_NOT_UNIQUE",
     HTTP_400_BAD_REQUEST,
-    "The specified team name is already in use in this group.",
+    "The specified team name is already in use in this workspace.",
 )
 
 ERROR_TEAM_DOES_NOT_EXIST = (
@@ -33,7 +33,7 @@ ERROR_SUBJECT_BAD_REQUEST = (
 ERROR_SUBJECT_NOT_IN_GROUP = (
     "ERROR_SUBJECT_NOT_IN_GROUP",
     HTTP_400_BAD_REQUEST,
-    "The specified subject does not belong to this team's group.",
+    "The specified subject does not belong to this team's workspace.",
 )
 
 ERROR_ROLE_DOES_NOT_EXIST = (
@@ -81,5 +81,5 @@ ERROR_CANT_ASSIGN_ROLE_EXCEPTION_TO_ADMIN = (
 ERROR_LAST_ADMIN_OF_GROUP = (
     "ERROR_LAST_ADMIN_OF_GROUP",
     HTTP_400_BAD_REQUEST,
-    "You can't remove the last admin of a group.",
+    "You can't remove the last admin of a workspace.",
 )

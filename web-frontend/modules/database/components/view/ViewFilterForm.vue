@@ -1,15 +1,18 @@
 <template>
   <div class="filters__content">
-    <div v-if="view.filters.length === 0">
-      <div class="filters__none">
-        <div class="filters__none-title">
-          {{ $t('viewFilterContext.noFilterTitle') }}
-        </div>
-        <div class="filters__none-description">
-          {{ $t('viewFilterContext.noFilterText') }}
-        </div>
+    <div
+      v-if="view.filters.length === 0"
+      v-auto-overflow-scroll
+      class="filters__none filters__none--scrollable"
+    >
+      <div class="filters__none-title">
+        {{ $t('viewFilterContext.noFilterTitle') }}
+      </div>
+      <div class="filters__none-description">
+        {{ $t('viewFilterContext.noFilterText') }}
       </div>
     </div>
+
     <ViewFieldConditionsForm
       v-if="view.filters.length > 0"
       :filters="view.filters"
@@ -31,20 +34,19 @@
       @updateFilter="updateFilter($event)"
       @updateFilterType="updateFilterType(view, $event)"
     />
-    <div v-if="!disableFilter" class="filters__footer">
-      <div class="filters__actions">
-        <ButtonText icon="iconoir-plus" @click.prevent="addFilter()">
-          {{ $t('viewFilterContext.addFilter') }}</ButtonText
-        >
+    <div v-if="!disableFilter" class="context__footer">
+      <ButtonText icon="iconoir-plus" @click.prevent="addFilter()">
+        {{ $t('viewFilterContext.addFilter') }}</ButtonText
+      >
 
-        <ButtonText
-          icon="iconoir-plus"
-          @click.prevent="addFilter({ filterGroupId: uuidv1() })"
-        >
-          {{ $t('viewFilterContext.addFilterGroup') }}</ButtonText
-        >
-      </div>
-      <div v-if="view.filters.length > 0">
+      <ButtonText
+        icon="iconoir-plus"
+        @click.prevent="addFilter({ filterGroupId: uuidv1() })"
+      >
+        {{ $t('viewFilterContext.addFilterGroup') }}</ButtonText
+      >
+
+      <div v-if="view.filters.length > 0" class="margin-left-auto">
         <SwitchInput
           small
           :value="view.filters_disabled"

@@ -247,6 +247,16 @@
     border: 2px solid $color-warning-500;
     pointer-events: none;
   }
+
+  &.grid-view__row--selected {
+    background-color: $palette-neutral-25;
+  }
+}
+
+// Exception when the row decorations are enabled, we don't want to have a row selected
+// background color.
+.grid-view__row-background-wrapper .grid-view__row--selected {
+  background-color: inherit;
 }
 
 .grid-view__row-placeholder {

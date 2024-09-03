@@ -39,14 +39,17 @@
         ></DropdownItem>
       </Dropdown>
     </FormGroup>
-    <FormGroup v-if="navigateTo === 'custom'" class="margin-bottom-2" required>
-      <ApplicationBuilderFormulaInputGroup
+
+    <FormGroup
+      v-if="navigateTo === 'custom'"
+      class="margin-bottom-2"
+      :label="$t('linkNavigationSelection.url')"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
         v-model="values.navigate_to_url"
-        :page="page"
-        :label="$t('linkNavigationSelection.url')"
         :placeholder="$t('linkNavigationSelection.urlPlaceholder')"
-        :data-providers-allowed="dataProvidersAllowed"
-        small
       />
     </FormGroup>
     <FormGroup v-if="destinationPage" class="margin-bottom-2" required>
@@ -66,17 +69,20 @@
         </Alert>
       </template>
       <div v-else>
-        <div v-for="param in values.page_parameters" :key="param.name" required>
-          <ApplicationBuilderFormulaInputGroup
+        <FormGroup
+          v-for="param in values.page_parameters"
+          :key="param.name"
+          small-label
+          :label="param.name"
+          class="margin-bottom-2"
+          required
+          horizontal
+        >
+          <InjectedFormulaInput
             v-model="param.value"
-            :page="page"
-            :label="param.name"
-            horizontal
             :placeholder="$t('linkNavigationSelection.paramPlaceholder')"
-            :data-providers-allowed="dataProvidersAllowed"
-            small
           />
-        </div>
+        </FormGroup>
       </div>
     </FormGroup>
     <FormGroup
@@ -95,24 +101,16 @@
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
-import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'LinkNavigationSelectionForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
   },
   mixins: [elementForm],
-  props: {
-    dataProvidersAllowed: {
-      type: Array,
-      required: false,
-      default: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
-    },
-  },
   data() {
     return {
       parametersInError: false,

@@ -6,20 +6,10 @@ from baserow.core.models import WorkspaceInvitation
 
 
 class WorkspaceInvitationSerializer(serializers.ModelSerializer):
-    group = serializers.IntegerField(
-        source="group_id",
-        help_text=(
-            "DEPRECATED: Please use the functionally identical "
-            "`workspace` instead as this field is "
-            "being removed in the future."
-        ),
-    )  # GroupDeprecation
-
     class Meta:
         model = WorkspaceInvitation
         fields = (
             "id",
-            "group",  # GroupDeprecation
             "workspace",
             "email",
             "permissions",
@@ -54,7 +44,6 @@ class UserWorkspaceInvitationSerializer(serializers.ModelSerializer):
     """
 
     invited_by = serializers.SerializerMethodField()
-    group = serializers.SerializerMethodField()  # GroupDeprecation
     workspace = serializers.SerializerMethodField()
     email_exists = serializers.SerializerMethodField()
 
@@ -63,7 +52,6 @@ class UserWorkspaceInvitationSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "invited_by",
-            "group",  # GroupDeprecation
             "workspace",
             "email",
             "message",
@@ -79,10 +67,6 @@ class UserWorkspaceInvitationSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_invited_by(self, object):
         return object.invited_by.first_name
-
-    @extend_schema_field(OpenApiTypes.STR)
-    def get_group(self, object):  # GroupDeprecation
-        return object.workspace.name
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_workspace(self, object):

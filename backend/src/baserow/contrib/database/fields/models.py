@@ -154,6 +154,15 @@ class Field(
     def db_column(self):
         return f"field_{self.id}"
 
+    def get_field_ref(self, user_field_names: bool = False) -> str:
+        """
+        Generates a reference (name or user field name) for a field.
+
+        :param user_field_names: Whether user field names are used.
+        """
+
+        return self.name if user_field_names else self.db_column
+
     @property
     def tsv_db_column(self):
         return get_tsv_vector_field_name(self.id)
@@ -181,22 +190,6 @@ class Field(
 
     def invalidate_table_model_cache(self):
         invalidate_table_in_model_cache(self.table_id)
-
-    def all_dependant_fields_with_types(
-        self,
-        field_cache=None,
-        associated_relation_changed=False,
-    ) -> "FieldDependants":
-        from baserow.contrib.database.fields.dependencies.handler import (
-            FieldDependencyHandler,
-        )
-
-        return FieldDependencyHandler.get_all_dependent_fields_with_type(
-            self.table_id,
-            [self.id],
-            field_cache,
-            associated_relation_changed,
-        )
 
     def dependant_fields_with_types(
         self,
@@ -521,6 +514,14 @@ class FormulaField(Field):
     needs_periodic_update = models.BooleanField(
         default=False,
         help_text="Indicates if the field needs to be periodically updated.",
+    )
+    expand_formula_when_referenced = models.BooleanField(
+        default=False,
+        null=True,  # TODO zdm remove me in next release
+        help_text=(
+            "Indicates if the formula should be expanded when referenced (i.e. contains a lookup) "
+            "or if it's possible to use the calculated value directly.",
+        ),
     )
 
     @cached_property

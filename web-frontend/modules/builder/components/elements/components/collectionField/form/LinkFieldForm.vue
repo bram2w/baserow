@@ -1,13 +1,27 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.link_name"
-      small
+    <FormGroup
+      small-label
       :label="$t('linkFieldForm.fieldLinkNameLabel')"
-      :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      class="margin-bottom-2"
+      required
       horizontal
-    />
+    >
+      <InjectedFormulaInput
+        v-model="values.link_name"
+        :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
+      />
+      <template #after-input>
+        <CustomStyle
+          v-model="values.styles"
+          style-key="cell"
+          :config-block-types="['table', 'button']"
+          :theme="baseTheme"
+          :extra-args="{ onlyCell: true, noAlignment: true }"
+          variant="normal"
+        />
+      </template>
+    </FormGroup>
     <LinkNavigationSelectionForm
       :default-values="defaultValues"
       @values-changed="emitChange($event)"
@@ -17,21 +31,24 @@
 
 <script>
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
 
 export default {
   name: 'TextField',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
+    CustomStyle,
     LinkNavigationSelectionForm,
   },
   mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['link_name'],
+      allowedValues: ['link_name', 'styles'],
       values: {
         link_name: '',
+        styles: {},
       },
     }
   },

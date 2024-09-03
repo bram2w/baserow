@@ -2,23 +2,34 @@
   margin: 5px 4px;
   padding: 0 5px;
   background-color: $color-neutral-100;
-  display: flex;
+  display: inline-flex;
   flex-wrap: nowrap;
-  max-width: calc(100% - 8px);
+  white-space: nowrap;
 
   @include rounded($rounded);
+  @include fixed-height(22px, 13px);
 
   &:last-child {
     margin-right: 0;
   }
 
-  @include fixed-height(22px, 13px);
+  .row-modal__field-item &,
+  .grid-view-array-field.active & {
+    margin: 5px 4px;
+    max-width: calc(100% - 8px);
+    white-space: initial;
+    display: flex;
+  }
 }
 
-.array-field__ellipsis {
-  @extend %ellipsis;
+.array-field__ellipsis,
+.array-field__name {
+  .row-modal__field-item &,
+  .grid-view-array-field.active & {
+    max-width: 100%;
 
-  max-width: 100%;
+    @extend %ellipsis;
+  }
 }
 
 .array-field__time {
@@ -27,7 +38,11 @@
 
 .array-field__button {
   margin: 3px 4px;
-  max-width: calc(100% - 8px);
+
+  .row-modal__field-item &,
+  .active & {
+    max-width: calc(100% - 8px);
+  }
 
   &:last-child {
     margin-right: 0;
@@ -35,24 +50,44 @@
 }
 
 .array-field__multiple-select-container {
-  display: contents;
+  display: inline-flex;
+
+  .row-modal__field-item &,
+  .grid-view-array-field.active & {
+    display: contents;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
 }
 
 .array-field__single-option {
   white-space: nowrap;
   margin: 6px 4px 4px;
   overflow: unset;
-  display: flex;
   flex-wrap: nowrap;
 
   // must use !import because the `select-option-style` overwrites the `max-width`, and
   // we don't want to use that one.
   max-width: calc(100% - 8px) !important;
+  box-sizing: unset;
 
-  @include select-option-style(flex, true);
+  @include select-option-style(inline-flex, true);
 
   &:last-child {
     margin-right: 0;
+  }
+
+  .row-modal__field-item & {
+    box-sizing: border-box;
+  }
+
+  .grid-view-array-field.active & {
+    display: flex;
+    overflow: auto;
+
+    &:last-child {
+      margin-right: 4px;
+    }
   }
 }
 

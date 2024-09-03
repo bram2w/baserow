@@ -14,7 +14,7 @@
       :label="$t('headingElementForm.levelTitle')"
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.level" :show-search="false">
+      <Dropdown v-model="values.level" :show-search="false" small>
         <DropdownItem
           v-for="level in levels"
           :key="level.value"
@@ -25,20 +25,22 @@
         </DropdownItem>
       </Dropdown>
     </FormGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.value"
+    <FormGroup
       small-label
-      required
       :label="$t('headingElementForm.textTitle')"
-      :placeholder="$t('elementForms.textInputPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       class="margin-bottom-2"
-    />
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.value"
+        :placeholder="$t('elementForms.textInputPlaceholder')"
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import CustomStyle from '../style/CustomStyle.vue'
@@ -46,7 +48,7 @@ import CustomStyle from '../style/CustomStyle.vue'
 export default {
   name: 'HeaderElementForm',
   components: {
-    ApplicationBuilderFormulaInputGroup,
+    InjectedFormulaInput,
     CustomStyle,
   },
   mixins: [elementForm],

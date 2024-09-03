@@ -1,27 +1,44 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+    />
+    <FormGroup
       :label="$t('generalForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       :label="$t('generalForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.placeholder"
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       :label="$t('generalForm.placeholderTitle')"
-      :placeholder="$t('generalForm.placeholderPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_FORM_ELEMENTS"
       class="margin-bottom-2"
-    ></ApplicationBuilderFormulaInputGroup>
-
+      required
+      small-label
+    >
+      <InjectedFormulaInput
+        v-model="values.placeholder"
+        :placeholder="$t('generalForm.placeholderPlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       :label="$t('generalForm.requiredTitle')"
       small-label
@@ -37,7 +54,7 @@
       required
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.validation_type" :show-search="true">
+      <Dropdown v-model="values.validation_type" :show-search="true" small>
         <DropdownItem
           v-for="validationType in validationTypes"
           :key="validationType.name"
@@ -78,7 +95,6 @@
       <FormInput
         v-model="values.rows"
         type="number"
-        size="large"
         :label="$t('inputTextElementForm.rowsTitle')"
         :placeholder="$t('inputTextElementForm.rowsPlaceholder')"
         :to-value="(value) => parseInt(value)"
@@ -97,7 +113,7 @@
       required
       class="margin-bottom-2"
     >
-      <Dropdown v-model="values.input_type" :show-search="false">
+      <Dropdown v-model="values.input_type" :show-search="false" small>
         <DropdownItem
           v-for="inputType in inputTypes"
           :key="inputType.name"
@@ -113,14 +129,15 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import elementForm from '@baserow/modules/builder/mixins/elementForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import { required, integer, minValue, maxValue } from 'vuelidate/lib/validators'
 
 export default {
   name: 'InputTextElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [elementForm],
+  components: { InjectedFormulaInput, CustomStyle },
+  mixins: [formElementForm],
   data() {
     return {
       values: {

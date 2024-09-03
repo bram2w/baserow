@@ -134,6 +134,11 @@ ERROR_INVALID_LOOKUP_TARGET_FIELD = (
     "The provided target field does not exist or is in a different table to the table"
     " linked to by the through field.",
 )
+ERROR_INCOMPATIBLE_FIELD_TYPE = (
+    "ERROR_INCOMPATIBLE_FIELD_TYPE",
+    HTTP_400_BAD_REQUEST,
+    "The field type is not compatible with the action.",
+)
 ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES = (
     "ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES",
     HTTP_400_BAD_REQUEST,
@@ -151,4 +156,14 @@ ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR = (
     "The field date should already exists and date_include_time  "
     "must be set to True on the field to convert values with "
     "the utc_offset provided in date_force_timezone_offset.",
+)
+ERROR_FIELD_IS_ALREADY_PRIMARY = (
+    "ERROR_FIELD_IS_ALREADY_PRIMARY",
+    HTTP_400_BAD_REQUEST,
+    "The provided field is already the primary field.",
+)
+ERROR_TABLE_HAS_NO_PRIMARY_FIELD = (
+    "ERROR_TABLE_HAS_NO_PRIMARY_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided table does not have a primary field.",
 )

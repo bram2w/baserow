@@ -1,11 +1,11 @@
 <template>
-  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
+  <Context overflow-scroll max-height-if-outside-viewport>
     <KanbanViewOptionForm
       ref="form"
       :default-values="option"
       @submitted="submit"
     >
-      <div class="context__form-actions">
+      <div class="context__form-footer-actions">
         <Button type="primary" :loading="loading" :disabled="loading">
           {{ $t('action.save') }}</Button
         >

@@ -1,23 +1,24 @@
-from typing import Any, Dict, TypedDict, Union
+from typing import Any, Dict, Generator, TypedDict, Union
 
 from rest_framework import serializers
 
 from baserow.contrib.builder.elements.element_types import NavigationElementManager
 from baserow.contrib.builder.elements.models import CollectionField
 from baserow.contrib.builder.elements.registries import CollectionFieldType
-from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.formula.serializers import (
     FormulaSerializerField,
     OptionalFormulaSerializerField,
 )
 from baserow.core.formula.types import BaserowFormula
+from baserow.core.registry import Instance
 
 
 class BooleanCollectionFieldType(CollectionFieldType):
     type = "boolean"
     allowed_fields = ["value"]
     serializer_field_names = ["value"]
+    simple_formula_fields = ["value"]
 
     class SerializedDict(TypedDict):
         value: bool
@@ -33,26 +34,12 @@ class BooleanCollectionFieldType(CollectionFieldType):
             ),
         }
 
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        serialized_values: Dict[str, Any],
-        **kwargs,
-    ) -> Any:
-        if prop_name == "value":
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, serialized_values, **kwargs
-        )
-
 
 class TextCollectionFieldType(CollectionFieldType):
     type = "text"
     allowed_fields = ["value"]
     serializer_field_names = ["value"]
+    simple_formula_fields = ["value"]
 
     class SerializedDict(TypedDict):
         value: str
@@ -61,31 +48,19 @@ class TextCollectionFieldType(CollectionFieldType):
     def serializer_field_overrides(self):
         return {
             "value": FormulaSerializerField(
-                help_text="The formula for the link URL.",
+                help_text="The formula for the text.",
                 required=False,
                 allow_blank=True,
                 default="",
             ),
         }
 
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        serialized_values: Dict[str, Any],
-        **kwargs,
-    ) -> Any:
-        if prop_name == "value":
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, serialized_values, **kwargs
-        )
-
 
 class LinkCollectionFieldType(CollectionFieldType):
     type = "link"
+    simple_formula_fields = NavigationElementManager.simple_formula_fields + [
+        "link_name"
+    ]
 
     def after_register(self):
         """
@@ -154,6 +129,25 @@ class LinkCollectionFieldType(CollectionFieldType):
             }
         )
 
+    def formula_generator(
+        self, collection_field: CollectionField
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for LinkCollectionFieldType.
+
+        Some formula fields are in the config JSON field, e.g. page_parameters.
+        """
+
+        yield from super().formula_generator(collection_field)
+
+        for index, page_parameter in enumerate(
+            collection_field.config.get("page_parameters") or []
+        ):
+            new_formula = yield page_parameter.get("value")
+            if new_formula is not None:
+                collection_field.config["page_parameters"][index]["value"] = new_formula
+                yield collection_field
+
     def deserialize_property(
         self,
         prop_name: str,
@@ -162,9 +156,6 @@ class LinkCollectionFieldType(CollectionFieldType):
         serialized_values: Dict[str, Any],
         **kwargs,
     ) -> Any:
-        if prop_name == "link_name":
-            return import_formula(value, id_mapping, **kwargs)
-
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
@@ -180,6 +171,7 @@ class TagsCollectionFieldType(CollectionFieldType):
     type = "tags"
     allowed_fields = ["values", "colors", "colors_is_formula"]
     serializer_field_names = ["values", "colors", "colors_is_formula"]
+    simple_formula_fields = ["values"]
 
     class SerializedDict(TypedDict):
         values: str
@@ -209,33 +201,30 @@ class TagsCollectionFieldType(CollectionFieldType):
             ),
         }
 
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        serialized_values: Dict[str, Any],
-        **kwargs,
-    ) -> Any:
-        if prop_name == "values":
-            return import_formula(value, id_mapping, **kwargs)
+    def formula_generator(
+        self, collection_field: CollectionField
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formula fields for TagsCollectionFieldType.
 
-        if prop_name == "colors":
-            return (
-                import_formula(value, id_mapping, **kwargs)
-                if serialized_values["config"]["colors_is_formula"]
-                else value
-            )
+        Some formula fields are in the config JSON field. Whether the field is
+        a formula field or not is controlled by additional keys.
+        """
 
-        return super().deserialize_property(
-            prop_name, value, id_mapping, serialized_values, **kwargs
-        )
+        yield from super().formula_generator(collection_field)
+
+        if collection_field.config.get("colors_is_formula"):
+            new_formula = yield collection_field.config.get("colors", "")
+            if new_formula is not None:
+                collection_field.config["colors"] = new_formula
+                yield collection_field
 
 
 class ButtonCollectionFieldType(CollectionFieldType):
     type = "button"
     allowed_fields = ["label"]
     serializer_field_names = ["label"]
+    simple_formula_fields = ["label"]
 
     class SerializedDict(TypedDict):
         label: str
@@ -251,21 +240,34 @@ class ButtonCollectionFieldType(CollectionFieldType):
             ),
         }
 
-    def deserialize_property(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        serialized_values: Dict[str, Any],
-        **kwargs,
-    ) -> Any:
-        if prop_name == "label":
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name, value, id_mapping, serialized_values, **kwargs
-        )
-
     def before_delete(self, instance: CollectionField):
         # We delete the related workflow actions
         BuilderWorkflowAction.objects.filter(event__startswith=instance.uid).delete()
+
+
+class ImageCollectionFieldType(CollectionFieldType):
+    type = "image"
+    allowed_fields = ["src", "alt"]
+    serializer_field_names = ["src", "alt"]
+    simple_formula_fields = ["src", "alt"]
+
+    class SerializedDict(TypedDict):
+        src: BaserowFormula
+        alt: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        return {
+            "src": FormulaSerializerField(
+                help_text="A link to the image file",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "alt": FormulaSerializerField(
+                help_text="A brief text description of the image",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+        }

@@ -6,8 +6,7 @@ import WorkspaceService from '@baserow/modules/core/services/workspace'
  */
 export default {
   async asyncData({ route, app }) {
-    const token =
-      route.query.workspaceInvitationToken || route.query.groupInvitationToken
+    const token = route.query.workspaceInvitationToken
 
     if (token) {
       try {

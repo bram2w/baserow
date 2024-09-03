@@ -59,5 +59,9 @@ export default (client) => {
 
       return client.get(`/database/views/calendar/${calendarId}/${url}`, config)
     },
+
+    rotateSlug(viewId) {
+      return client.post(`/database/views/calendar/${viewId}/ical_slug_rotate/`)
+    },
   }
 }

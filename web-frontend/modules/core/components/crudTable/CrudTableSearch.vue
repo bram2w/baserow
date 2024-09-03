@@ -7,7 +7,7 @@
       :placeholder="$t('crudTableSearch.search')"
       icon-left="iconoir-search"
       :loading="loading"
-      @keyup="searchIfChanged(headerSearchTerm, false)"
+      @input="doSearch($event, false)"
     >
     </FormInput>
   </form>
@@ -36,7 +36,6 @@ export default {
   },
   data: () => {
     return {
-      lastSearch: '',
       headerSearchTerm: '',
       searchDebounce: null,
     }
@@ -52,6 +51,11 @@ export default {
     this.$priorityBus.$off('start-search', this.searchStarted)
   },
   methods: {
+    keydown(event) {
+      if (event.key !== 'Enter') {
+        this.doSearch(this.headerSearchTerm, false)
+      }
+    },
     searchStarted({ event }) {
       event.preventDefault()
       this.$bus.$emit('close-modals')
@@ -70,14 +74,6 @@ export default {
         this.searchDebounce = debounce(search, 400)
         this.searchDebounce()
       }
-    },
-    searchIfChanged(query, immediate = false) {
-      if (this.lastSearch === query) {
-        return
-      }
-
-      this.lastSearch = query
-      this.doSearch(query, immediate)
     },
   },
 }

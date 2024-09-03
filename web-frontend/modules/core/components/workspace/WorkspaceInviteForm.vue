@@ -19,12 +19,13 @@
       </div>
       <div class="col col-5">
         <FormGroup>
-          <div class="group-invite-form__role-selector">
+          <div class="workspace-invite-form__role-selector">
             <slot name="roleSelectorLabel"></slot>
             <Dropdown
               v-model="values.permissions"
-              class="group-invite-form__role-selector-dropdown"
+              class="workspace-invite-form__role-selector-dropdown"
               :show-search="false"
+              fixed-items
               small
             >
               <DropdownItem

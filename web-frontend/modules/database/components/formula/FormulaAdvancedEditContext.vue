@@ -1,7 +1,7 @@
 <template>
   <Context
     ref="editContext"
-    :max-height-if-outside-viewport="true"
+    max-height-if-outside-viewport
     class="formula-field"
   >
     <div class="formula-field__input">

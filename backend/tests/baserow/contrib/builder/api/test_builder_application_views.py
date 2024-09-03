@@ -161,12 +161,10 @@ def test_get_builder_application(api_client, data_fixture):
         "id": application.id,
         "name": application.name,
         "order": application.order,
+        "created_on": application.created_on.isoformat(timespec="microseconds").replace(
+            "+00:00", "Z"
+        ),
         "type": "builder",
-        "group": {
-            "id": workspace.id,
-            "name": workspace.name,
-            "generative_ai_models_enabled": {},
-        },
         "workspace": {
             "id": workspace.id,
             "name": workspace.name,
@@ -205,15 +203,13 @@ def test_list_builder_applications(api_client, data_fixture):
     assert response_json == [
         {
             "favicon_file": UserFileSerializer(application.favicon_file).data,
+            "created_on": application.created_on.isoformat(
+                timespec="microseconds"
+            ).replace("+00:00", "Z"),
             "id": application.id,
             "name": application.name,
             "order": application.order,
             "type": "builder",
-            "group": {
-                "id": workspace.id,
-                "name": workspace.name,
-                "generative_ai_models_enabled": {},
-            },
             "workspace": {
                 "id": workspace.id,
                 "name": workspace.name,

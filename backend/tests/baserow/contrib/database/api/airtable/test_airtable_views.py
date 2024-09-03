@@ -101,7 +101,6 @@ def test_create_airtable_import_job(
     assert response.json() == {
         "id": airtable_import_job.id,
         "type": "airtable",
-        "group_id": workspace.id,  # GroupDeprecation
         "workspace_id": workspace.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
@@ -128,7 +127,6 @@ def test_create_airtable_import_job(
     assert response.json() == {
         "id": airtable_import_job.id,
         "type": "airtable",
-        "group_id": workspace.id,  # GroupDeprecation
         "workspace_id": workspace.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
@@ -179,7 +177,6 @@ def test_create_airtable_import_job_long_share_id(
     assert response.json() == {
         "id": airtable_import_job.id,
         "type": "airtable",
-        "group_id": workspace.id,  # GroupDeprecation
         "workspace_id": workspace.id,
         "airtable_share_id": long_share_id,
         "progress_percentage": 0,
@@ -218,7 +215,6 @@ def test_get_airtable_import_job(data_fixture, api_client):
     assert json == {
         "id": airtable_job_1.id,
         "type": "airtable",
-        "group_id": airtable_job_1.workspace_id,  # GroupDeprecation
         "workspace_id": airtable_job_1.workspace_id,
         "airtable_share_id": "test",
         "progress_percentage": 0,
@@ -245,7 +241,6 @@ def test_get_airtable_import_job(data_fixture, api_client):
     assert json == {
         "id": airtable_job_1.id,
         "type": "airtable",
-        "group_id": airtable_job_1.workspace_id,  # GroupDeprecation
         "workspace_id": airtable_job_1.workspace_id,
         "airtable_share_id": "test",
         "progress_percentage": 50,
@@ -254,13 +249,11 @@ def test_get_airtable_import_job(data_fixture, api_client):
         "database": {
             "id": airtable_job_1.database.id,
             "name": airtable_job_1.database.name,
+            "created_on": airtable_job_1.database.created_on.isoformat(
+                timespec="microseconds"
+            ).replace("+00:00", "Z"),
             "order": 0,
             "type": "database",
-            "group": {  # GroupDeprecation
-                "id": airtable_job_1.database.workspace.id,
-                "name": airtable_job_1.database.workspace.name,
-                "generative_ai_models_enabled": {},
-            },
             "workspace": {
                 "id": airtable_job_1.database.workspace.id,
                 "name": airtable_job_1.database.workspace.name,

@@ -23,6 +23,18 @@ export class ApplicationType extends Registerable {
     return null
   }
 
+  getNamePlural() {
+    return null
+  }
+
+  /**
+   * Small description of the application type, shown in the create new application
+   * context menu.
+   */
+  getDescription() {
+    return null
+  }
+
   /**
    * A human readable default name for new applications of this type.
    */
@@ -178,9 +190,28 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * Indicates whether the application is visible in the create new application contact.
+   * Indicates whether the given application is visible in the sidebar or dashboard view
    */
-  isVisible(application, context) {
+  isVisible(application) {
     return true
+  }
+
+  /**
+   * Indicates whether the application can be created with the create new application
+   * context.
+   */
+  canBeCreated() {
+    return true
+  }
+
+  /**
+   * Adds a visual `beta` label indicator when creating a new one.
+   */
+  isBeta() {
+    return false
+  }
+
+  getOrder() {
+    return 50
   }
 }

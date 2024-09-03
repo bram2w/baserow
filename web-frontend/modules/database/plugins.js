@@ -1,12 +1,12 @@
 import { BaserowPlugin } from '@baserow/modules/core/plugins'
-import DatabaseDashboardSidebarLinks from '@baserow/modules/database/components/dashboard/DatabaseDashboardSidebarLinks'
+import DatabaseDashboardResourceLinks from '@baserow/modules/database/components/dashboard/DatabaseDashboardResourceLinks'
 
 export class DatabasePlugin extends BaserowPlugin {
   static getType() {
     return 'database'
   }
 
-  getDashboardSidebarLinksComponent() {
-    return DatabaseDashboardSidebarLinks
+  getDashboardResourceLinksComponent() {
+    return DatabaseDashboardResourceLinks
   }
 }

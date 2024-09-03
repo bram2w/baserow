@@ -37,7 +37,7 @@ exports[`Dropdown component Test slots 1`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active"
@@ -107,7 +107,7 @@ exports[`Dropdown component With items 1`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options"
@@ -192,7 +192,7 @@ exports[`Dropdown component With items 2`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active"
@@ -392,7 +392,7 @@ exports[`Dropdown component With items 3`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active"
@@ -503,7 +503,7 @@ exports[`Dropdown component basics 1`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     />
      
     <!---->
@@ -539,7 +539,7 @@ exports[`Dropdown component basics 2`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     />
      
     <!---->
@@ -588,7 +588,7 @@ exports[`Dropdown component basics 3`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     />
      
     <!---->
@@ -642,7 +642,7 @@ exports[`Dropdown component change value prop 1`] = `
      
     <ul
       class="select__items"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options"
@@ -758,7 +758,7 @@ exports[`Dropdown component test focus 1`] = `
      
     <ul
       class="select__items prevent-scroll"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active hover"
@@ -843,7 +843,7 @@ exports[`Dropdown component test focus 2`] = `
      
     <ul
       class="select__items prevent-scroll"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active hover"
@@ -928,7 +928,7 @@ exports[`Dropdown component test interactions 1`] = `
      
     <ul
       class="select__items prevent-scroll"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active hover"
@@ -1044,7 +1044,7 @@ exports[`Dropdown component test interactions 2`] = `
      
     <ul
       class="select__items prevent-scroll"
-      tabindex=""
+      tabindex="-1"
     >
       <li
         class="select__item select__item--no-options active hover"

@@ -2,10 +2,6 @@ from django.urls import include, path
 
 from drf_spectacular.views import SpectacularRedocView
 
-from baserow.compat.api.applications import urls as application_compat_urls
-from baserow.compat.api.groups import urls as group_compat_urls
-from baserow.compat.api.templates import urls as templates_compat_urls
-from baserow.compat.api.trash import urls as trash_compat_urls
 from baserow.core.registries import application_type_registry, plugin_registry
 
 from .applications import urls as application_urls
@@ -46,16 +42,6 @@ urlpatterns = (
         path("jobs/", include(jobs_urls, namespace="jobs")),
         path("snapshots/", include(snapshots_urls, namespace="snapshots")),
         path("_health/", include(health_urls, namespace="health")),
-        # GroupDeprecation
-        path("groups/", include(group_compat_urls, namespace="groups")),
-        path(
-            "applications/",
-            include(application_compat_urls, namespace="applications_compat"),
-        ),
-        path("trash/", include(trash_compat_urls, namespace="trash_compat")),
-        path(
-            "templates/", include(templates_compat_urls, namespace="templates_compat")
-        ),
         path("notifications/", include(notifications_urls, namespace="notifications")),
         path(
             "",

@@ -3,7 +3,9 @@
     :error="hasError"
     class="control"
     :class="{
-      'control--horizontal': horizontal,
+      'control--horizontal':
+        horizontal || horizontalNarrow || horizontalVariable,
+      'control--horizontal-narrow': horizontalNarrow,
       'control--horizontal-variable': horizontalVariable,
       'control--messages': hasMessages,
       'control--after-input': hasAfterInputSlot,
@@ -102,6 +104,15 @@ export default {
      * If true the label and the input will be displayed horizontally.
      */
     horizontal: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    /**
+     * If true the label and the input will be displayed horizontally but in a narrow
+     * space.
+     */
+    horizontalNarrow: {
       type: Boolean,
       required: false,
       default: false,

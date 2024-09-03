@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <FieldSelectThroughFieldSubForm
       :fields="allFieldsInTable"
       :database="database"

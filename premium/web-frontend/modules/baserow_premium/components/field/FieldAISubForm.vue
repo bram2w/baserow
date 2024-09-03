@@ -1,17 +1,12 @@
 <template>
-  <div v-if="!isDeactivated">
+  <div v-if="!isDeactivated" class="context__form-container">
     <SelectAIModelForm
       :default-values="defaultValues"
       :database="database"
       @ai-type-changed="setFileFieldSupported"
     ></SelectAIModelForm>
 
-    <FormGroup
-      v-if="fileFieldSupported"
-      required
-      small-label
-      class="margin-bottom-2"
-    >
+    <FormGroup v-if="fileFieldSupported" required small-label>
       <template #label>
         {{ $t('selectAIModelForm.fileField') }}
         <HelpIcon
@@ -48,7 +43,6 @@
       :label="$t('fieldAISubForm.prompt')"
       :error="$v.values.ai_prompt.$dirty && $v.values.ai_prompt.$error"
       required
-      class="margin-bottom-2"
     >
       <div style="max-width: 366px">
         <FormulaInputField

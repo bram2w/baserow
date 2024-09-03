@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 from django.conf import settings as django_settings
@@ -11,7 +11,6 @@ from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test.utils import CaptureQueriesContext
-from django.utils.timezone import now
 
 import pytest
 from faker import Faker
@@ -22,10 +21,11 @@ from pyinstrument import Profiler
 from rest_framework.test import APIRequestFactory
 from sqlparse import format
 
-from baserow.compat.api.conf import GROUP_DEPRECATION
 from baserow.contrib.database.application_types import DatabaseApplicationType
+from baserow.core.context import clear_current_workspace_id
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.permission_manager import CorePermissionManagerType
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
@@ -410,16 +410,6 @@ def profiler():
     return profile_this
 
 
-@pytest.fixture
-def group_compat_timebomb():
-    if now() >= GROUP_DEPRECATION:
-        pytest.fail(
-            "Group compatibility ended on "
-            f"{GROUP_DEPRECATION.strftime('%Y-%m-%d')}, please migrate to "
-            "using the Workspace endpoints."
-        )
-
-
 class BaseMaxLocksPerTransactionStub:
     # Determines whether we raise an `OperationalError` about
     # `max_locks_per_transaction` or something else.
@@ -705,3 +695,32 @@ def mutable_generative_ai_model_type_registry():
     before = generative_ai_model_type_registry.registry.copy()
     yield generative_ai_model_type_registry
     generative_ai_model_type_registry.registry = before
+
+
+@pytest.fixture(autouse=True)
+def run_clear_current_workspace_id_after_test():
+    """Clear workspace_id stored in local context after each test."""
+
+    yield
+    clear_current_workspace_id()
+
+
+def fake_import_formula(formula, id_mapping):
+    return formula
+
+
+class FakeDispatchContext(DispatchContext):
+    def range(self, service):
+        return [0, 100]
+
+    def __getitem__(self, key: str) -> Any:
+        if key == "test":
+            return 2
+        if key == "test1":
+            return 1
+        if key == "test2":
+            return ""
+        if key == "test999":
+            return "999"
+
+        return super().__getitem__(key)

@@ -1,1 +1,2 @@
--e /baserow/backend
+-r /baserow/backend/requirements/base.in
+-e /baserow/backend/

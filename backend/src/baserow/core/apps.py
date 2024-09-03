@@ -27,14 +27,11 @@ class CoreConfig(AppConfig):
         from baserow.core.trash.registries import trash_item_type_registry
         from baserow.core.trash.trash_types import (
             ApplicationTrashableItemType,
-            GroupTrashableItemType,
             WorkspaceTrashableItemType,
         )
 
         trash_item_type_registry.register(WorkspaceTrashableItemType())
         trash_item_type_registry.register(ApplicationTrashableItemType())
-        # GroupDeprecation
-        trash_item_type_registry.register(GroupTrashableItemType())
 
         from baserow.core.formula.registries import formula_runtime_function_registry
         from baserow.core.formula.runtime_formula_types import (

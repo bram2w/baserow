@@ -123,15 +123,6 @@ def _baserow_expression_to_django_expression(
         return Value(None)
 
 
-def _get_model_field_for_type(expression_type):
-    (
-        field_instance,
-        baserow_field_type,
-    ) = expression_type.get_baserow_field_instance_and_type()
-    model_field = baserow_field_type.get_model_field(field_instance)
-    return model_field
-
-
 JoinIdsType = List[Tuple[str, str]]
 
 
@@ -423,13 +414,13 @@ class BaserowExpressionToDjangoExpressionGenerator(
                 output_field=model_field,
             )
 
-    def _wrap_in_subquery(self, select_option_extractor, db_column):
+    def _wrap_in_subquery(self, subquery_expression, db_column):
         filters = {f"{db_column}__isnull": False}
 
         return ExpressionWrapper(
             Subquery(
                 self.model.objects.filter(id=OuterRef("id"), **filters).values(
-                    result=select_option_extractor
+                    result=subquery_expression
                 )
             ),
             output_field=JSONField(),

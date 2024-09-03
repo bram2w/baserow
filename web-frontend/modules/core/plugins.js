@@ -21,14 +21,14 @@ export class BaserowPlugin extends Registerable {
    * Every registered plugin can have a component that's rendered at the top of the
    * left sidebar.
    */
-  getSidebarTopComponent() {
+  getImpersonateComponent() {
     return null
   }
 
-  /*
-   * Every registered plugin can display an item in the main sidebar menu.
+  /**
+   * Every registered plugin can have a component displaying a badge with the highest license type
    */
-  getSidebarMainMenuComponent() {
+  getHighestLicenseTypeBadge() {
     return null
   }
 
@@ -40,11 +40,18 @@ export class BaserowPlugin extends Registerable {
     return null
   }
 
+  /**
+   * Every registered plugin can display additional items in the user context menu.
+   */
+  getUserContextComponents() {
+    return null
+  }
+
   /*
    * Every registered plugin can display a component in the links section of the
    * dashboard sidebar.
    */
-  getDashboardSidebarLinksComponent() {
+  getDashboardResourceLinksComponent() {
     return null
   }
 
@@ -52,15 +59,11 @@ export class BaserowPlugin extends Registerable {
    * Every registered plugin can display a component in the `DashboardWorkspace`
    * component directly after the workspace name.
    */
-  getDashboardWorkspaceExtraComponent() {
+  getDashboardWorkspacePlanBadge() {
     return null
   }
 
-  /*
-   * Every registered plugin can display a component in the `DashboardWorkspace`
-   * component directly below the workspace name.
-   */
-  getDashboardWorkspaceComponent() {
+  getDashboardWorkspaceRowUsageComponent() {
     return null
   }
 
@@ -103,7 +106,7 @@ export class BaserowPlugin extends Registerable {
     return null
   }
 
-  /*
+  /**
    * Every registered plugin can display multiple additional public share link options
    * which will be visible on the share public view context.
    */

@@ -1,161 +1,185 @@
 .sidebar {
   @include absolute(0);
 
-  overflow-y: auto;
-  background-color: $color-neutral-10;
+  background-color: $color-neutral-50;
   border-right: solid 1px $color-neutral-200;
   height: 100%;
-
-  .layout--collapsed & {
-    overflow: visible;
-  }
-}
-
-.sidebar__inner {
-  position: relative;
-  min-height: 100%;
-  padding-bottom: 46px;
-
-  .layout--collapsed & {
-    padding-bottom: 56px;
-  }
-}
-
-.sidebar__user {
   display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 16px;
-  margin-bottom: 4px;
-  gap: 12px;
+  flex-direction: column;
+}
+
+.sidebar__section {
+  padding: 8px;
+  flex: 0 0;
+
+  &:not(:last-child) {
+    border-bottom: solid 1px $palette-neutral-200;
+  }
+
+  &.sidebar__section--scrollable {
+    flex: 1 1;
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &.sidebar__section--bottom {
+    margin-top: auto;
+  }
+}
+
+.sidebar__section-scrollable {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.sidebar__section-scrollable-inner {
+  padding: 8px;
+}
+
+.sidebar__workspaces-selector {
+  @include flex-align-items(10px);
+
+  border-bottom: 1px solid $palette-neutral-200;
+  padding: 0 16px;
+  height: 51px;
+  color: $palette-neutral-1200;
+  font-weight: 500;
 
   &:hover {
-    background-color: $color-neutral-100;
     text-decoration: none;
   }
 
-  .layout--collapsed & {
-    padding: 8px;
+  .sidebar--collapsed & {
+    justify-content: center;
   }
 }
 
-.sidebar__user-info {
-  width: 100%;
-  min-width: 0;
-
-  .layout--collapsed & {
-    display: none;
-  }
-}
-
-.sidebar__user-info-top {
-  @include flex-align-items(4px);
-
-  justify-items: center;
-  margin-bottom: 4px;
-}
-
-.sidebar__user-name {
+.sidebar__workspaces-selector-selected-workspace {
   @extend %ellipsis;
 
-  min-width: 0;
-  line-height: 22px;
-  color: $color-neutral-900;
+  flex: 1;
 }
 
-.sidebar__user-icon {
-  color: $color-neutral-900;
+.sidebar__workspaces-selector-icon {
+  font-size: 18px;
+  color: $palette-neutral-600;
+}
+
+.sidebar__user {
+  border-top: solid 1px $palette-neutral-200;
+  background: $palette-neutral-25;
+  padding-bottom: 8px;
+  border-bottom-left-radius: $rounded-md;
+  border-bottom-right-radius: $rounded-md;
 }
 
 .sidebar__user-email {
-  @extend %ellipsis;
-
-  font-size: 12px;
-  line-height: 1.25;
-  color: $color-neutral-600;
+  font-weight: 500;
+  font-size: 11px;
+  color: $palette-neutral-900;
+  padding-left: 8px;
 }
 
-.sidebar__nav {
-  padding: 0 10px;
+.sidebar__user-info {
+  @include flex-align-items;
 
-  .layout--collapsed & {
-    padding: 0 8px;
+  padding: 8px 8px 0;
+  gap: 18px;
+}
+
+.sidebar__user-license {
+  margin-left: auto;
+  margin-right: 8px;
+
+  &.badge.badge--neutral {
+    background-color: $palette-neutral-200;
   }
 }
 
 .sidebar__new-wrapper {
-  margin-top: 12px;
+  padding: 14px;
+}
+
+.sidebar__new-wrapper--separator {
+  border-top: solid 1px $palette-neutral-200;
 }
 
 .sidebar__new {
   font-size: 13px;
-  color: $color-neutral-400;
-  padding-left: 6px;
+  font-weight: 500;
+  line-height: 17px;
+  color: $palette-neutral-900;
 
   @include flex-align-items(4px);
 
   &:hover {
-    color: $color-neutral-500;
+    color: $palette-neutral-1200;
     text-decoration: none;
   }
 }
 
 .sidebar__new-icon {
-  font-size: 18px;
+  font-size: 16px;
+  color: $palette-neutral-600;
+
+  .sidebar__new:hover & {
+    color: $palette-neutral-1200;
+  }
+}
+
+.sidebar__unread-notifications-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background-color: $color-primary-500;
+  margin-left: 4px;
+}
+
+.sidebar__impersonate {
+  position: relative;
 }
 
 .sidebar__foot {
-  @include absolute(auto, 0, 0, 0);
-
+  height: 31px;
+  padding: 8px;
   display: flex;
-  width: 100%;
-  padding: 0 16px 16px;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 
-  .layout--collapsed & {
-    flex-direction: column;
-    height: 56px;
-    padding: 0 8px 8px;
-  }
-
-  // Is needed temporarily while the undo redo functionality is behind the
-  // `undo` feature flag.
-  &.sidebar__foot--with-undo-redo {
-    .layout--collapsed & {
-      height: 114px;
-    }
+  .sidebar--collapsed & {
+    height: auto;
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+    flex-direction: column-reverse;
   }
 }
 
 .sidebar__foot-links {
   display: flex;
+  gap: 16px;
+  margin-top: -4px;
 
-  .layout--collapsed & {
+  .sidebar--collapsed & {
     flex-direction: column;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 8px;
   }
 }
 
 .sidebar__foot-link {
   position: relative;
-  color: $color-neutral-700;
+  color: $palette-neutral-700;
 
-  @include center-text(20px, 12px);
-  @include rounded($rounded);
+  @include center-text(16px, 16px);
 
   &:hover {
-    display: inline-block;
     text-decoration: none;
-    background-color: $color-neutral-100;
-  }
-
-  &:not(:first-child) {
-    margin-left: 6px;
-
-    .layout--collapsed & {
-      margin-left: auto;
-      margin-top: 8px;
-    }
+    color: $palette-neutral-1200;
   }
 
   &.sidebar__foot-link--loading {
@@ -182,54 +206,97 @@
   font-size: 18px;
 }
 
-.layout--collapsed {
-  // Some minor changes regarding the tree items within the collapsed sidebar.
-  .tree .sidebar__tree {
-    padding-left: 0;
-  }
+.sidebar__workspace-active-icon {
+  text-align: center;
+  color: $palette-neutral-1200;
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  font-size: 14px;
+  transform: translateY(-50%);
+}
 
-  .sidebar__action {
-    .tree__link {
-      text-align: center;
+.dashboard__user-workspaces.select__items {
+  padding: 6px;
+
+  .select__item {
+    &.active:not(.select__item--loading) {
+      background-color: transparent;
     }
-
-    .tree__icon {
-      margin-right: 0;
-    }
-
-    .sidebar__item-name {
-      background-color: $color-neutral-900;
-      color: $white;
-      padding: 0 4px;
-      white-space: nowrap;
-      font-weight: 400;
-      display: none;
-      flex: 1;
-
-      @include absolute(6px, auto, auto, 36px);
-      @include center-text(auto, 11px, 21px);
-      @include rounded($rounded);
-    }
-
-    &:hover .sidebar__item-name {
-      display: block;
-    }
-  }
-
-  .sidebar__logo {
-    display: inline-block;
-    order: 2;
-    width: 18px;
-    overflow: hidden;
   }
 }
 
-.sidebar__unread-notifications-icon {
-  position: absolute;
-  top: 12px;
-  right: 32px;
-  width: 8px;
-  height: 8px;
-  border-radius: 100%;
-  background-color: $color-primary-500;
+.dashboard__user-workspace-avatar {
+  margin-right: 4px;
+}
+
+.sidebar__back-icon {
+  font-size: 14px;
+  color: $palette-neutral-700;
+}
+
+.sidebar__head {
+  @include flex-align-items(15px);
+
+  border-bottom: 1px solid $palette-neutral-200;
+  padding: 0 21px;
+  height: 51px;
+  color: $palette-neutral-1200;
+  font-weight: 500;
+
+  .sidebar--collapsed & {
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+.sidebar__back {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $palette-neutral-1200;
+
+  @include rounded($rounded-md);
+
+  &:hover {
+    background-color: rgba($palette-neutral-1300, 0.04);
+  }
+}
+
+.sidebar__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: $palette-neutral-1200;
+}
+
+.sidebar__logo {
+  .sidebar--collapsed & {
+    width: 16px;
+    height: 16px;
+    overflow: hidden;
+    padding-left: 2px;
+  }
+}
+
+.sidebar__collapse-link {
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $palette-neutral-1200;
+
+  @include rounded($rounded-md);
+
+  &:hover {
+    background-color: rgba($palette-neutral-1300, 0.04);
+  }
+}
+
+.sidebar__item-count {
+  margin-left: auto;
+  color: $palette-neutral-700;
 }

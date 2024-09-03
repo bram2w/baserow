@@ -4,6 +4,7 @@ import SidebarComponentBuilder from '@baserow/modules/builder/components/sidebar
 import { populatePage } from '@baserow/modules/builder/store/page'
 import PageTemplate from '@baserow/modules/builder/components/page/PageTemplate'
 import PageTemplateSidebar from '@baserow/modules/builder/components/page/PageTemplateSidebar'
+import ApplicationContext from '@baserow/modules/builder/components/application/ApplicationContext'
 
 export class BuilderApplicationType extends ApplicationType {
   static getType() {
@@ -11,12 +12,22 @@ export class BuilderApplicationType extends ApplicationType {
   }
 
   getIconClass() {
-    return 'iconoir-apple-imac-2021'
+    return 'baserow-icon-application'
   }
 
   getName() {
     const { i18n } = this.app
     return i18n.t('applicationType.builder')
+  }
+
+  getNamePlural() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.builders')
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('applicationType.builderDesc')
   }
 
   getDefaultName() {
@@ -34,6 +45,10 @@ export class BuilderApplicationType extends ApplicationType {
 
   getSidebarComponent() {
     return SidebarComponentBuilder
+  }
+
+  getApplicationContextComponent() {
+    return ApplicationContext
   }
 
   getTemplateSidebarComponent() {
@@ -108,5 +123,23 @@ export class BuilderApplicationType extends ApplicationType {
 
   prepareForStoreUpdate(application, data) {
     return data
+  }
+
+  isBeta() {
+    return true
+  }
+
+  isVisible(application) {
+    // We don't want to show a builder application the user doesn't
+    // have the permission to list pages.
+    return this.app.$hasPermission(
+      'builder.list_pages',
+      application,
+      application.workspace.id
+    )
+  }
+
+  getOrder() {
+    return 70
   }
 }

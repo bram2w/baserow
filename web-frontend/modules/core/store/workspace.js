@@ -312,16 +312,19 @@ export const actions = {
    * workspace. This is needed so that we can redirect the user to another page if for
    * example a Table is open that has been deleted because the workspace has been deleted.
    */
-  forceDelete({ commit, dispatch, rootGetters }, workspace) {
+  async forceDelete({ commit, dispatch, rootGetters }, workspace) {
     dispatch('job/deleteForWorkspace', workspace, { root: true })
-    this.$bus.$emit('group-deleted', { workspace })
+    this.$bus.$emit('workspace-deleted', { workspace })
     const applications = rootGetters['application/getAllOfWorkspace'](workspace)
     applications.forEach((application) => {
       return dispatch('application/forceDelete', application, { root: true })
     })
 
     if (workspace._.selected) {
-      dispatch('unselect', workspace)
+      // Navigate to the dashboard if selected because any of those related pages
+      // can't be accessed anymore.
+      await dispatch('unselect', workspace)
+      await this.$router.push({ name: 'dashboard' })
     }
 
     commit('DELETE_ITEM', workspace.id)

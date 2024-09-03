@@ -48,7 +48,6 @@ class AuditLogWorkspaceFilterQueryParamsSerializer(serializers.Serializer):
 
 class AuditLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
-    group = serializers.SerializerMethodField()  # GroupDeprecation
     workspace = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
@@ -67,10 +66,6 @@ class AuditLogSerializer(serializers.ModelSerializer):
         return instance.description
 
     @extend_schema_field(OpenApiTypes.STR)
-    def get_group(self, instance):  # GroupDeprecation
-        return self.get_workspace(instance)
-
-    @extend_schema_field(OpenApiTypes.STR)
     def get_workspace(self, instance):
         return render_workspace(instance.workspace_id, instance.workspace_name)
 
@@ -80,7 +75,6 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "id",
             "action_type",
             "user",
-            "group",  # GroupDeprecation
             "workspace",
             "type",
             "description",

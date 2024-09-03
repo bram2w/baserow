@@ -3,12 +3,23 @@ from typing import Any, Dict, Type
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.core.registry import EasyImportExportMixin, Instance, ModelInstanceMixin
+from baserow.core.registry import (
+    EasyImportExportMixin,
+    Instance,
+    InstanceWithFormulaMixin,
+    ModelInstanceMixin,
+)
 from baserow.core.workflow_actions.models import WorkflowAction
 from baserow.core.workflow_actions.types import WorkflowActionDictSubClass
 
 
-class WorkflowActionType(Instance, ModelInstanceMixin, EasyImportExportMixin, ABC):
+class WorkflowActionType(
+    InstanceWithFormulaMixin,
+    EasyImportExportMixin,
+    ModelInstanceMixin,
+    Instance,
+    ABC,
+):
     SerializedDict: Type[WorkflowActionDictSubClass]
 
     def serialize_property(

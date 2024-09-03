@@ -6,18 +6,20 @@
       :config-block-types="['button']"
       :theme="builder.theme"
     />
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.submit_button_label"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
-      class="margin-bottom-2"
+    <FormGroup
       small-label
-      required
       :label="$t('formContainerElementForm.submitButtonLabel')"
-      :placeholder="$t('formContainerElementForm.submitButtonPlaceholder')"
-    />
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.submit_button_label"
+        :placeholder="$t('formContainerElementForm.submitButtonPlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       :label="$t('formContainerElementForm.resetToInitialValuesTitle')"
-      :description="
+      :helper-text="
         $t('formContainerElementForm.resetToInitialValuesDescription')
       "
       small-label
@@ -31,13 +33,13 @@
 </template>
 
 <script>
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'FormContainerElementForm',
-  components: { ApplicationBuilderFormulaInputGroup, CustomStyle },
+  components: { InjectedFormulaInput, CustomStyle },
   mixins: [elementForm],
   data() {
     return {

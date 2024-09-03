@@ -5,6 +5,7 @@ import { getValueAtPath } from '@baserow/modules/core/utils/object'
 import { defaultValueForParameterType } from '@baserow/modules/builder/utils/params'
 import { DEFAULT_USER_ROLE_PREFIX } from '@baserow/modules/builder/constants'
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
+import { extractSubSchema } from '@baserow/modules/core/utils/schema'
 
 export class DataSourceDataProviderType extends DataProviderType {
   constructor(...args) {
@@ -280,26 +281,6 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return true
   }
 
-  getFirstCollectionAncestor(page, element) {
-    if (!element) {
-      return null
-    }
-    const elementType = this.app.$registry.get('element', element.type)
-    if (elementType.isCollectionElement) {
-      return element
-    }
-    const ancestors = this.app.store.getters['element/getAncestors'](
-      page,
-      element
-    )
-    for (const ancestor of ancestors) {
-      const ancestorType = this.app.$registry.get('element', ancestor.type)
-      if (ancestorType.isCollectionElement) {
-        return ancestor
-      }
-    }
-  }
-
   // Loads all element contents
   async init(applicationContext) {
     const { page } = applicationContext
@@ -308,7 +289,8 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
     await Promise.all(
       elements.map(async (element) => {
-        if (element.data_source_id) {
+        const elementType = this.app.$registry.get('element', element.type)
+        if (elementType.isCollectionElement) {
           const dataSource = this.app.store.getters[
             'dataSource/getPageDataSourceById'
           ](page, element.data_source_id)
@@ -324,6 +306,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
             return await this.app.store.dispatch(
               'elementContent/fetchElementContent',
               {
+                page,
                 element,
                 dataSource,
                 data: dispatchContext,
@@ -340,7 +323,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   }
 
   getActionDispatchContext(applicationContext) {
-    return applicationContext.recordIndex
+    return applicationContext.recordIndexPath.at(-1)
   }
 
   getDataChunk(applicationContext, path) {
@@ -349,21 +332,48 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   }
 
   getDataContent(applicationContext) {
-    const { page, element, recordIndex = 0 } = applicationContext
-    const collectionElement = this.getFirstCollectionAncestor(page, element)
-    if (!collectionElement) {
-      return []
-    }
+    // `recordIndexPath` defaults to `[0]` if it's not present, which can happen in
+    // places where it can't be provided, such as the elements context.
+    const { page, element, recordIndexPath = [0] } = applicationContext
 
-    const rows =
+    const collectionAncestry = this.app.store.getters['element/getAncestors'](
+      page,
+      element,
+      {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type).isCollectionElement,
+        includeSelf: true,
+      }
+    )
+
+    const elementWithContent = collectionAncestry.at(-1)
+    const contentRows =
       this.app.store.getters['elementContent/getElementContent'](
-        collectionElement
+        elementWithContent
       )
 
-    const row = { [this.indexKey]: recordIndex, ...rows[recordIndex] }
+    // Copy the record index path, as we'll be shifting the first element.
+    const mappedRecordIndex = [...recordIndexPath]
+    const dataPaths = collectionAncestry
+      .map((ancestor, index) => {
+        if (ancestor.data_source_id) {
+          // If we have a data source id, and no schema property, or
+          // we have a data source id and a schema property
+          return [mappedRecordIndex.shift()]
+        } else {
+          // We have just a schema property
+          return [ancestor.schema_property, mappedRecordIndex.shift()]
+        }
+      })
+      .flat()
+
+    // Get the value at the dataPaths path. If the formula is invalid,
+    // as the ds/property has changed, and the value can't be found,
+    // we'll return an empty object.
+    const row = getValueAtPath(contentRows, dataPaths) || {}
 
     // Add the index value
-    row[this.indexKey] = recordIndex
+    row[this.indexKey] = dataPaths.at(-1)
 
     return row
   }
@@ -376,30 +386,97 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return null
   }
 
-  getDataSchema(applicationContext) {
-    // `collectionField` is set by any collection element using collection fields
-    // If we have a collection field in the application context, we are in
-    // the context of a collection field inside a collection element.
-    const { page, element, collectionField = null } = applicationContext
-    const collectionElement = this.getFirstCollectionAncestor(page, element)
-    const dataSourceId = collectionElement?.data_source_id
+  /**
+   * Given a data source's schema, is responsible for returning the properties.
+   * Depending on the schema's `type`, it will be in different places.
+   * @param {object} schema - the data source's schema.
+   * @returns {object} - the schema's properties.
+   */
+  getDataSourceSchemaProperties(schema) {
+    return schema.type === 'array'
+      ? schema?.items?.properties
+      : schema.properties
+  }
+
+  getDataSourceAndSchemaPath(
+    page,
+    element,
+    allowSameElement,
+    followSameElementSchemaProperties
+  ) {
+    // Find the first collection ancestor with a `data_source`. If we
+    // find one, this is what we'll use to generate the schema.
+    const collectionAncestors = this.app.store.getters['element/getAncestors'](
+      page,
+      element,
+      {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type).isCollectionElement,
+        includeSelf: allowSameElement,
+      }
+    )
+
+    const firstCollectionElement = collectionAncestors[0]
+    const dataSourceId = firstCollectionElement?.data_source_id
 
     if (
       // If the collection element doesn't have a data source configured
       !dataSourceId ||
-      // Or if the collection element IS the current element and we are not in a
-      // collection field
-      (element.id === collectionElement.id && collectionField === null)
+      // Or if the collection element is the application context element
+      // and we don't allow same element
+      (element.id === firstCollectionElement.id && !allowSameElement)
     ) {
-      return null
+      return [null, null]
     }
 
     const dataSource = this.app.store.getters[
       'dataSource/getPageDataSourceById'
     ](page, dataSourceId)
 
+    const schemaProperties = collectionAncestors
+      .filter(
+        (ancestor) =>
+          ancestor.schema_property !== null &&
+          (followSameElementSchemaProperties || ancestor.id !== element.id)
+      )
+      .map(({ schema_property: schemaProperty }) => schemaProperty)
+
+    return [dataSource, schemaProperties]
+  }
+
+  getDataSchema(applicationContext) {
+    // `allowSameElement` is set if we want to consider the current element in the
+    // collection ancestry list. If so it will be used to get the data source id if
+    // it's the first collection element. For instance, we don't
+    //
+    // `followSameElementSchemaProperties` can be passed in the `applicationContext`
+    // to control whether we wish to fetch schema property for the current element
+    // or not.
+    const {
+      page,
+      element,
+      allowSameElement = false,
+      followSameElementSchemaProperties = true,
+    } = applicationContext
+
+    const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
+      page,
+      element,
+      allowSameElement,
+      followSameElementSchemaProperties
+    )
+
+    if (dataSource === null) {
+      return null
+    }
+
+    // Extract the subSchema corresponding to the schemaProperties path.
     const schema = this.getDataSourceSchema(dataSource)
-    const rowSchema = schema?.items?.properties || {}
+    const subSchema = extractSubSchema(schema, schemaProperties)
+
+    if (subSchema === null) {
+      return null
+    }
 
     // Here we add the index property schema
     const properties = {
@@ -407,7 +484,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
         type: 'number',
         title: this.app.i18n.t('currentRecordDataProviderType.index'),
       },
-      ...rowSchema,
+      ...this.getDataSourceSchemaProperties(subSchema),
     }
 
     return { type: 'object', properties }
@@ -416,15 +493,47 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 1) {
       const { page, element } = applicationContext
-      const collectionElement = this.getFirstCollectionAncestor(page, element)
-      const dataSourceId = collectionElement?.data_source_id
 
-      const dataSource = this.app.store.getters[
-        'dataSource/getPageDataSourceById'
-      ](page, dataSourceId)
+      const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
+        page,
+        element,
+        true,
+        true
+      )
 
+      // We have no data source. Let's just return the part.
       if (!dataSource) {
         return pathParts[0]
+      }
+
+      // If we have at least an ancestor with a schema property,
+      // we'll find the title using this property.
+      if (schemaProperties.length > 0) {
+        const schema = this.getDataSourceSchema(dataSource)
+        const schemaField = extractSubSchema(schema, schemaProperties)
+
+        if (schemaField === null) {
+          // The dataSource has probably changed and the schemaProperties are
+          // not valid anymore.
+          return pathParts[0]
+        }
+
+        let prefixName = dataSource.name
+        // Only Local/Remote Baserow table schemas will have `original_type`,
+        // which is the `FieldType`. If we find it, we can use it to display
+        // what kind of field type was used.
+        if (schemaField.original_type) {
+          const fieldType = this.app.$registry.get(
+            'field',
+            schemaField.original_type
+          )
+          prefixName = fieldType.getName()
+        }
+        const propertyTitle = schemaField.title
+        return this.app.i18n.t('currentRecordDataProviderType.schemaProperty', {
+          prefixName,
+          schemaProperty: propertyTitle,
+        })
       }
 
       return this.app.i18n.t('currentRecordDataProviderType.firstPartName', {
@@ -515,24 +624,10 @@ export class FormDataProviderType extends DataProviderType {
     )
     return Object.fromEntries(
       accessibleFormElements.map((element) => {
-        let formEntry = {}
-        if (recordIndexPath !== undefined) {
-          const uniqueElementId = this.app.$registry
-            .get('element', element.type)
-            .uniqueElementId(element, recordIndexPath)
-          formEntry = getValueAtPath(formData, uniqueElementId)
-        } else {
-          // When `getDataContent` is called by `getNodes`, we won't have
-          // access to `recordIndexPath`, so we need to find the first *array*
-          // in the form data that corresponds to the element.
-          function _findActualValue(currentValue) {
-            if (Array.isArray(currentValue)) {
-              return _findActualValue(currentValue[0])
-            }
-            return currentValue
-          }
-          formEntry = _findActualValue(formData[element.id])
-        }
+        const uniqueElementId = this.app.$registry
+          .get('element', element.type)
+          .uniqueElementId(element, recordIndexPath)
+        const formEntry = getValueAtPath(formData, uniqueElementId)
         return [element.id, formEntry?.value]
       })
     )
@@ -708,12 +803,15 @@ export class UserDataProviderType extends DataProviderType {
     }
 
     if (context.role?.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
-      const userSourceName = this.app.store.getters[
-        'userSource/getUserSourceById'
-      ](applicationContext.builder, loggedUser.user_source_id).name
-      context.role = this.app.i18n.t('visibilityForm.rolesAllMembersOf', {
-        name: userSourceName,
-      })
+      const userSource = this.app.store.getters[
+        'userSource/getUserSourceByUId'
+      ](applicationContext.builder, loggedUser.user_source_uid)
+
+      if (userSource) {
+        context.role = this.app.i18n.t('visibilityForm.rolesAllMembersOf', {
+          name: userSource.name,
+        })
+      }
     }
 
     return context

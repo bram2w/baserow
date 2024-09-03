@@ -1,0 +1,9 @@
+.field-context {
+  min-width: 400px;
+}
+
+.field-context__content {
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+}

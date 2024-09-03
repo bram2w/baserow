@@ -30,14 +30,7 @@ export default {
       return this.getPageDataSourceById(this.page, this.element.data_source_id)
     },
     elementContent() {
-      if (
-        !this.element.data_source_id ||
-        !this.getElementContent(this.element)
-      ) {
-        return []
-      }
-
-      return this.getElementContent(this.element)
+      return this.getElementContent(this.element, this.applicationContext)
     },
     hasMorePage() {
       return this.getHasMorePage(this.element)
@@ -55,6 +48,11 @@ export default {
   watch: {
     reset() {
       this.debouncedReset()
+    },
+    'element.schema_property'(newValue, oldValue) {
+      if (newValue) {
+        this.debouncedReset()
+      }
     },
     'element.data_source_id'() {
       this.debouncedReset()
@@ -93,6 +91,7 @@ export default {
     async fetchContent(range, replace) {
       try {
         await this.fetchElementContent({
+          page: this.page,
           element: this.element,
           dataSource: this.dataSource,
           data: this.dispatchContext,

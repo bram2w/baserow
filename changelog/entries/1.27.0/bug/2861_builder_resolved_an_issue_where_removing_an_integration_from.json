@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Resolved an issue where removing an integration from a user source would raise an error when its users are listed.",
+    "issue_number": 2861,
+    "bullet_points": [],
+    "created_at": "2024-08-07"
+}

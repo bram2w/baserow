@@ -81,8 +81,7 @@ class TokensView(APIView):
     def post(self, request, data):
         """Creates a new database token for the authorized user."""
 
-        workspace_id = data.pop("workspace", data.pop("group"))  # GroupDeprecation
-        data["workspace"] = CoreHandler().get_workspace(workspace_id)
+        data["workspace"] = CoreHandler().get_workspace(data["workspace"])
         token = action_type_registry.get(CreateDbTokenActionType.type).do(
             request.user, data["workspace"], data["name"]
         )

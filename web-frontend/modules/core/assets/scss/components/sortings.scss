@@ -11,8 +11,11 @@
 }
 
 .sortings__none {
-  padding: 4px;
-  margin: 16px 20px;
+  padding: 16px 20px;
+
+  &--scrollable {
+    overflow-y: scroll;
+  }
 }
 
 .sortings__none-title {
@@ -28,8 +31,8 @@
 .sortings__items {
   display: flex;
   flex-direction: column;
-  padding: 12px 0;
-  gap: 12px;
+  padding: 16px 0;
+  gap: 16px;
 
   &--scrollable {
     overflow-y: scroll;
@@ -38,24 +41,17 @@
 
 .sortings__item {
   position: relative;
-  padding: 0 12px;
+  padding: 0 16px;
 
   @include rounded($rounded);
   @include flex-align-items(10px);
 
-  &:not(:last-child) {
-    margin-bottom: 6px;
-  }
-
   &.sortings__item--loading {
-    padding-left: 44px;
-
     &::before {
       content: '';
-      margin-top: -7px;
+      margin: 0 4px;
 
       @include loading(14px);
-      @include absolute(50%, auto, 0, 15px);
     }
   }
 }
@@ -143,28 +139,4 @@
       background-color: $color-neutral-100;
     }
   }
-}
-
-.sortings__add {
-  margin: 12px 0 6px 4px;
-
-  @include flex-align-items(4px, inline-flex);
-
-  &:hover {
-    text-decoration: none;
-    color: $color-neutral-900;
-  }
-}
-
-.sortings__add-icon {
-  font-size: 20px;
-}
-
-.sortings__footer {
-  border-top: 1px solid rgba(217, 219, 222, 0.5);
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
 }

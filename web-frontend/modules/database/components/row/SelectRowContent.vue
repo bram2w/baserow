@@ -1,42 +1,47 @@
 <template>
   <div>
-    <div v-if="!loaded" class="select-row-modal__initial-loading"></div>
-    <div v-if="loaded" :class="{ 'select-row-modal__loading': loading }">
-      <div class="select-row-modal__search">
-        <i class="iconoir-search select-row-modal__search-icon"></i>
-        <input
-          ref="search"
-          v-model="visibleSearch"
-          type="text"
-          :placeholder="$t('selectRowContent.search')"
-          class="select-row-modal__search-input"
-          @input="doSearch(visibleSearch, false)"
-          @keypress.enter="doSearch(visibleSearch, true)"
-        />
-      </div>
-      <div class="select-row-modal__rows">
-        <SimpleGrid
-          :fixed-fields="[primary]"
-          :fields="fields"
-          :rows="rows"
-          :full-height="true"
-          :can-add-row="true"
-          :with-footer="true"
-          :show-hovered-row="true"
-          :selected-rows="selectedRows"
-          :show-row-id="true"
-          @add-row="$refs.rowCreateModal.show()"
-          @row-click="select($event)"
-        >
-          <template #footLeft>
-            <Paginator
-              :total-pages="totalPages"
-              :page="page"
-              @change-page="fetch"
-            ></Paginator>
-          </template>
-        </SimpleGrid>
-      </div>
+    <div class="select-row-modal__search">
+      <i class="iconoir-search select-row-modal__search-icon"></i>
+      <input
+        ref="search"
+        v-model="visibleSearch"
+        type="text"
+        :placeholder="$t('selectRowContent.search')"
+        class="select-row-modal__search-input"
+        @input="doSearch(visibleSearch, false)"
+        @keydown.enter="doSearch(visibleSearch, true)"
+        @keydown.up.down="$refs.search.blur()"
+      />
+    </div>
+    <div
+      class="select-row-modal__rows"
+      :class="{
+        'select-row-modal__rows--loading': loading || !metaDataLoaded,
+      }"
+    >
+      <SimpleGrid
+        v-if="metaDataLoaded && firstPageLoaded"
+        :fixed-fields="[primary]"
+        :fields="fields"
+        :rows="rows"
+        :full-height="true"
+        :can-add-row="true"
+        :with-footer="true"
+        :show-hovered-row="true"
+        :selected-rows="selectedRows"
+        :multiple="multiple"
+        :show-row-id="true"
+        @add-row="$refs.rowCreateModal.show()"
+        @row-click="select($event)"
+      >
+        <template #footLeft>
+          <Paginator
+            :total-pages="totalPages"
+            :page="page"
+            @change-page="fetch($event, true)"
+          ></Paginator>
+        </template>
+      </SimpleGrid>
     </div>
     <RowCreateModal
       v-if="table"
@@ -47,6 +52,7 @@
       :all-fields-in-table="allFields"
       :visible-fields="allFields"
       :can-modify-fields="false"
+      :presets="newRowPresets"
       @created="createRow"
     ></RowCreateModal>
   </div>
@@ -91,11 +97,31 @@ export default {
       required: false,
       default: () => [],
     },
+    initialSearch: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    multiple: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    newRowPresets: {
+      type: Object,
+      required: false,
+      default: () => ({}),
+    },
   },
   data() {
     return {
+      // Indicates if we're loading new rows.
       loading: false,
-      loaded: false,
+      // Indicates if the metadata (fields, etc) has been loaded.
+      metaDataLoaded: false,
+      // Indicates if the page has loaded for the first time. We keep track of this
+      // state to show a non flickering loading state for the user.
+      firstPageLoaded: false,
       primary: null,
       fields: null,
       rows: [],
@@ -141,28 +167,25 @@ export default {
     },
   },
   async mounted() {
+    // Focus the search field so the user may begin typing immediately.
+    this.$nextTick(() => {
+      this.focusSearch({})
+    })
+
     // The first time we have to fetch the fields because they are unknown for this
     // table.
     if (!(await this.fetchFields(this.tableId))) {
       return false
     }
 
-    // We want to start with some initial data when the modal opens for the first time.
-    if (!(await this.fetch(1))) {
-      return false
-    }
-
     await this.orderFieldsByFirstGridViewFieldOptions(this.tableId)
 
-    // Because most of the template depends on having some initial data we mark the
-    // state as loaded after that. Only a loading animation is shown if there isn't any
+    // Because the page data depends on having some initial metadata we mark the state
+    // as loaded after that. Only a loading animation is shown if there isn't any
     // data.
-    this.loaded = true
+    this.metaDataLoaded = true
 
-    // Focus the search field so the user may begin typing immediately.
-    this.$nextTick(() => {
-      this.focusSearch({})
-    })
+    this.doSearch(this.visibleSearch, false)
 
     this.$priorityBus.$on(
       'start-search',
@@ -241,11 +264,12 @@ export default {
       const search = () => {
         this.search = query
         this.totalPages = 0
-        return this.fetch(1)
+        return this.fetch(1, false)
       }
       if (this.searchDebounce) {
         this.searchDebounce.cancel()
       }
+      this.loading = true
       if (immediate) {
         search()
       } else {
@@ -257,8 +281,10 @@ export default {
      * Fetches the rows of a given page and adds them to the state. If a search query
      * has been stored in the state then that will be remembered.
      */
-    async fetch(page) {
-      this.loading = true
+    async fetch(page, startLoading = true) {
+      if (startLoading) {
+        this.loading = true
+      }
 
       try {
         const { data } = await RowService(this.$client).fetchAll({
@@ -274,11 +300,12 @@ export default {
         this.totalPages = Math.ceil(data.count / 10)
         this.rows = data.results
         this.loading = false
+        this.firstPageLoaded = true
         return true
       } catch (error) {
         notifyIf(error, 'row')
-        this.$emit('hide')
         this.loading = false
+        this.$emit('hide')
         return false
       }
     },
@@ -286,11 +313,14 @@ export default {
      * Called when the user selects a row.
      */
     select(row) {
-      if (this.selectedRows.includes(row.id)) {
+      const exists = this.selectedRows.includes(row.id)
+
+      // In multiple mode it's also possible to unselect.
+      if (!this.multiple && exists) {
         return
       }
 
-      this.$emit('selected', {
+      this.$emit(exists ? 'unselected' : 'selected', {
         row,
         primary: this.primary,
         fields: this.fields,
@@ -315,6 +345,8 @@ export default {
           this.table.id,
           preparedRow
         )
+
+        await this.fetch(this.page)
 
         // When you create a new row from a linked row that links to its own table,the
         // realtime update will be sent from you, and you won't receive it.Since you

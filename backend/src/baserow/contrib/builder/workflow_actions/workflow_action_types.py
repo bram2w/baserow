@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict, Generator, Union
 
 from django.contrib.auth.models import AbstractUser
 
@@ -12,6 +12,7 @@ from baserow.contrib.builder.elements.element_types import NavigationElementMana
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import (
     LocalBaserowCreateRowWorkflowAction,
+    LocalBaserowDeleteRowWorkflowAction,
     LocalBaserowUpdateRowWorkflowAction,
     LogoutWorkflowAction,
     NotificationWorkflowAction,
@@ -20,19 +21,42 @@ from baserow.contrib.builder.workflow_actions.models import (
 )
 from baserow.contrib.builder.workflow_actions.registries import (
     BuilderWorkflowActionType,
+    builder_workflow_action_type_registry,
 )
 from baserow.contrib.builder.workflow_actions.types import BuilderWorkflowActionDict
+from baserow.contrib.integrations.local_baserow.service_types import (
+    LocalBaserowDeleteRowServiceType,
+    LocalBaserowUpsertRowServiceType,
+)
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.types import BaserowFormula
 from baserow.core.integrations.models import Integration
+from baserow.core.registry import Instance
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.core.workflow_actions.models import WorkflowAction
 
 
+def service_backed_workflow_actions():
+    """
+    Responsible for returning all workflow action types which are backed by a service.
+    We do this by checking if the workflow action type is a subclass of the base
+    `BuilderWorkflowServiceActionType` class.
+
+    :return: A list of workflow action types backed by a service.
+    """
+
+    return [
+        workflow_action_type
+        for workflow_action_type in builder_workflow_action_type_registry.get_all()
+        if issubclass(workflow_action_type.__class__, BuilderWorkflowServiceActionType)
+    ]
+
+
 class NotificationWorkflowActionType(BuilderWorkflowActionType):
     type = "notification"
     model_class = NotificationWorkflowAction
+    simple_formula_fields = ["title", "description"]
     serializer_field_names = ["title", "description"]
     serializer_field_overrides = {
         "title": FormulaSerializerField(
@@ -60,78 +84,56 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         return {"title": "'hello'", "description": "'there'"}
 
-    def deserialize_property(
-        self,
-        prop_name,
-        value,
-        id_mapping: Dict,
-        files_zip=None,
-        storage=None,
-        cache=None,
-        **kwargs,
-    ) -> Any:
-        """
-        Migrate the formulas.
-        """
-
-        if prop_name == "title":
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "description":
-            return import_formula(value, id_mapping, **kwargs)
-
-        return super().deserialize_property(
-            prop_name,
-            value,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            **kwargs,
-        )
-
 
 class OpenPageWorkflowActionType(BuilderWorkflowActionType):
     type = "open_page"
     model_class = OpenPageWorkflowAction
+    simple_formula_fields = NavigationElementManager.simple_formula_fields
 
     @property
     def serializer_field_names(self):
         return (
             super().serializer_field_names
             + NavigationElementManager.serializer_field_names
-            + ["url"]  # TODO remove in the next release
         )
 
     @property
     def allowed_fields(self):
-        return (
-            super().allowed_fields + NavigationElementManager.allowed_fields + ["url"]
-        )  # TODO remove in the next release
+        return super().allowed_fields + NavigationElementManager.allowed_fields
 
     @property
     def serializer_field_overrides(self):
         return (
             super().serializer_field_overrides
             | NavigationElementManager().get_serializer_field_overrides()
-            | {
-                "url": serializers.CharField(
-                    help_text="The url of the page to open.",
-                    required=False,
-                    allow_blank=True,
-                    default="",
-                )
-            }  # TODO remove in the next release
         )
 
     class SerializedDict(
         BuilderWorkflowActionDict,
         NavigationElementManager.SerializedDict,
     ):
-        url: str  # TODO remove in the next release, replace with "..."
+        ...
 
     def get_pytest_params(self, pytest_data_fixture):
         return NavigationElementManager().get_pytest_params(pytest_data_fixture)
+
+    def formula_generator(
+        self, workflow_action: WorkflowAction
+    ) -> Generator[str | Instance, str, None]:
+        """
+        Generator that iterates over formulas for the OpenPageWorkflowActionType.
+
+        In addition to formula fields, formulas can also be stored in the
+        page_parameters JSON field.
+        """
+
+        yield from super().formula_generator(workflow_action)
+
+        for index, page_parameter in enumerate(workflow_action.page_parameters):
+            new_formula = yield page_parameter.get("value")
+            if new_formula is not None:
+                workflow_action.page_parameters[index]["value"] = new_formula
+                yield workflow_action
 
     def deserialize_property(
         self,
@@ -143,16 +145,6 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
         cache=None,
         **kwargs,
     ) -> Any:
-        """
-        Migrate the formulas.
-        """
-
-        if prop_name == "url":  # TODO remove in the next release
-            return import_formula(value, id_mapping, **kwargs)
-
-        if prop_name == "description":
-            return import_formula(value, id_mapping, **kwargs)
-
         return super().deserialize_property(
             prop_name,
             NavigationElementManager().deserialize_property(
@@ -226,13 +218,21 @@ class RefreshDataSourceWorkflowAction(BuilderWorkflowActionType):
 
 
 class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
+    service_type = None  # Must be implemented by subclasses.
     serializer_field_names = ["service"]
-    serializer_field_overrides = {
-        "service": serializers.SerializerMethodField(
-            help_text="The Service this workflow action is dispatched by.",
-            source="service",
-        ),
+    request_serializer_field_overrides = {
+        "service": PolymorphicServiceRequestSerializer(
+            default=None,
+            required=False,
+            help_text="The service which this workflow action is associated with.",
+        )
     }
+    serializer_field_overrides = {
+        "service": PolymorphicServiceSerializer(
+            help_text="The service which this workflow action is associated with."
+        )
+    }
+    request_serializer_field_names = ["service"]
 
     class SerializedDict(BuilderWorkflowActionDict):
         service: Dict
@@ -240,10 +240,6 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
     @property
     def allowed_fields(self):
         return super().allowed_fields + ["service"]
-
-    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, int]:
-        service = pytest_data_fixture.create_local_baserow_upsert_row_service()
-        return {"service": service}
 
     def get_pytest_params_serialized(
         self, pytest_params: Dict[str, Any]
@@ -313,6 +309,9 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
                 integration,
                 serialized_service,
                 id_mapping,
+                storage=storage,
+                cache=cache,
+                files_zip=files_zip,
                 import_formula=import_formula,
             )
         return super().deserialize_property(
@@ -325,27 +324,6 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
             **kwargs,
         )
 
-
-class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
-    type = "upsert_row"
-    request_serializer_field_overrides = {
-        "service": PolymorphicServiceRequestSerializer(
-            default=None,
-            required=False,
-            help_text="The service which this workflow action is associated with.",
-        )
-    }
-    serializer_field_overrides = {
-        "service": PolymorphicServiceSerializer(
-            help_text="The service which this workflow action is associated with."
-        )
-    }
-    request_serializer_field_names = ["service"]
-
-    @property
-    def allowed_fields(self):
-        return super().allowed_fields + ["service"]
-
     def prepare_values(
         self,
         values: Dict[str, Any],
@@ -355,16 +333,16 @@ class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
         ] = None,
     ):
         """
-        Responsible for preparing the upsert row workflow action. By default, the
-        only step is to pass any `service` data into the upsert row service.
+        Responsible for preparing the service based workflow action. By default,
+        the only step is to pass any `service` data into the service.
 
         :param values: The full workflow action values to prepare.
         :param user: The user on whose behalf the change is made.
-        :param instance: A create or update row workflow action instance.
+        :param instance: A `BuilderWorkflowServiceAction` subclass instance.
         :return: The modified workflow action values, prepared.
         """
 
-        service_type = service_type_registry.get("local_baserow_upsert_row")
+        service_type = service_type_registry.get(self.service_type)
 
         if not instance:
             # If we haven't received a workflow action instance, we're preparing
@@ -389,6 +367,15 @@ class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
         return super().prepare_values(values, user, instance)
 
 
+class UpsertRowWorkflowActionType(BuilderWorkflowServiceActionType):
+    type = "upsert_row"
+    service_type = LocalBaserowUpsertRowServiceType.type
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, int]:
+        service = pytest_data_fixture.create_local_baserow_upsert_row_service()
+        return {"service": service}
+
+
 class CreateRowWorkflowActionType(UpsertRowWorkflowActionType):
     type = "create_row"
     model_class = LocalBaserowCreateRowWorkflowAction
@@ -397,3 +384,13 @@ class CreateRowWorkflowActionType(UpsertRowWorkflowActionType):
 class UpdateRowWorkflowActionType(UpsertRowWorkflowActionType):
     type = "update_row"
     model_class = LocalBaserowUpdateRowWorkflowAction
+
+
+class DeleteRowWorkflowActionType(BuilderWorkflowServiceActionType):
+    type = "delete_row"
+    model_class = LocalBaserowDeleteRowWorkflowAction
+    service_type = LocalBaserowDeleteRowServiceType.type
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, int]:
+        service = pytest_data_fixture.create_local_baserow_delete_row_service()
+        return {"service": service}

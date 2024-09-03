@@ -38,7 +38,10 @@
           :class="{
             'simple-grid__row--hover':
               showHoveredRow && currentHoveredRow === row.id,
-            'simple-grid__row--selected': selectedRows.includes(row.id),
+            'simple-grid__row--disabled':
+              !multiple && selectedRows.includes(row.id),
+            'simple-grid__row--checked':
+              multiple && selectedRows.includes(row.id),
           }"
           @click="$emit('row-click', row)"
           @mouseover="currentHoveredRow = row.id"
@@ -49,6 +52,15 @@
             class="simple-grid__cell simple-grid__cell--first"
           >
             {{ row.id }}
+            <div
+              v-if="multiple"
+              v-show="
+                currentHoveredRow === row.id || selectedRows.includes(row.id)
+              "
+              class="simple-grid__cell-checkbox"
+            >
+              <Checkbox :checked="selectedRows.includes(row.id)"></Checkbox>
+            </div>
           </div>
           <div
             v-for="field in fixedFields"
@@ -61,7 +73,9 @@
         <div
           v-if="canAddRow"
           class="simple-grid__row"
-          :class="{ 'simple-grid__row--hover': showHoveredRow && addRowHover }"
+          :class="{
+            'simple-grid__row--hover': showHoveredRow && addRowHover,
+          }"
           @mouseover="addRowHover = true"
           @mouseleave="addRowHover = false"
           @click="$emit('add-row')"
@@ -106,7 +120,10 @@
               :class="{
                 'simple-grid__row--hover':
                   showHoveredRow && currentHoveredRow === row.id,
-                'simple-grid__row--selected': selectedRows.includes(row.id),
+                'simple-grid__row--disabled':
+                  !multiple && selectedRows.includes(row.id),
+                'simple-grid__row--checked':
+                  multiple && selectedRows.includes(row.id),
               }"
               @click="$emit('row-click', row)"
               @mouseover="currentHoveredRow = row.id"
@@ -143,6 +160,7 @@
 
 <script>
 import SimpleGridField from './SimpleGridField'
+import _ from 'lodash'
 export default {
   name: 'SimpleGrid',
   components: { SimpleGridField },
@@ -195,6 +213,11 @@ export default {
       required: false,
       default: false,
     },
+    multiple: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return { addRowHover: false, currentHoveredRow: null }
@@ -203,6 +226,40 @@ export default {
     fieldTypes() {
       return this.$registry.getAll('field')
     },
+  },
+  mounted() {
+    const keydownEvent = (event) => {
+      if (
+        // If we allow row hovering, we also want to allow keyboard navigation.
+        this.showHoveredRow &&
+        // Check if the user has hit either of the keys we care about. If not,
+        // ignore.
+        (event.key === 'ArrowUp' || event.key === 'ArrowDown')
+      ) {
+        // Prevent scrolling up and down while pressing the up and down key.
+        event.stopPropagation()
+        event.preventDefault()
+        this.handleUpAndDownArrowPress(event)
+      }
+      // Allow the Enter key to select the value that is currently being hovered
+      // over.
+      if (
+        this.showHoveredRow &&
+        this.currentHoveredRow &&
+        event.key === 'Enter'
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+        const row = this.rows.find((row) => row.id === this.currentHoveredRow)
+        if (row) {
+          this.$emit('row-click', row)
+        }
+      }
+    }
+    document.body.addEventListener('keydown', keydownEvent)
+    this.$once('hide', () => {
+      document.body.removeEventListener('keydown', keydownEvent)
+    })
   },
   methods: {
     getHorizontalScrollbarElement() {
@@ -220,6 +277,23 @@ export default {
     },
     horizontalScroll(left) {
       this.$refs.right.scrollLeft = left
+    },
+    handleUpAndDownArrowPress(event) {
+      const isArrowUp = event.key === 'ArrowUp'
+      let index = this.rows.findIndex((item) =>
+        _.isEqual(item.id, this.currentHoveredRow)
+      )
+      if (index === -1) {
+        // Selects the first or last row if no row was hovered before.
+        index = isArrowUp ? this.rows.length - 1 : 0
+      } else {
+        // Selects the previous or next row if a row was in hover state before.
+        index = isArrowUp ? index - 1 : index + 1
+      }
+      const next = this.rows[index]
+      if (next) {
+        this.currentHoveredRow = next.id
+      }
     },
   },
 }

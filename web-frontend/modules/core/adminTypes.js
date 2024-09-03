@@ -25,6 +25,15 @@ export class AdminType extends Registerable {
   }
 
   /**
+   * A human readable name of the admin type category. This admin type is grouped by
+   * the category in the left sidebar.
+   */
+  getCategory() {
+    const { i18n } = this.app
+    return i18n.t('sidebar.general')
+  }
+
+  /**
    * The order value used to sort admin types in the sidebar menu.
    */
   getOrder() {

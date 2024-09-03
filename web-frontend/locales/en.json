@@ -7,17 +7,19 @@
     "free": "Free",
     "comingSoon": "Coming soon...",
     "billable": "Billable",
-    "all": "All"
+    "all": "All",
+    "beta": "Beta"
   },
   "action": {
     "upload": "Upload",
     "back": "Back",
     "backToLogin": "Back to login",
+    "backToHome": "Back to home",
     "signUp": "Sign up",
     "signIn": "Sign in",
     "login": "Login",
     "logout": "Logout",
-    "createNew": "Create new",
+    "createNew": "Add new",
     "create": "Create",
     "edit": "Edit",
     "change": "Change",
@@ -46,9 +48,13 @@
   },
   "applicationType": {
     "database": "Database",
+    "databases": "Databases",
     "databaseDefaultName": "Untitled Database",
+    "databaseDesc": "Create an organized collection of structured data.",
     "builder": "Application",
+    "builders": "Applications",
     "builderDefaultName": "Untitled Application",
+    "builderDesc": "Easily build websites, web apps and portals without code.",
     "cantSelectTableTitle": "Couldn't select the database.",
     "cantSelectTableDescription": "The database couldn't be selected because it doesn't have any tables. Use the sidebar to create one.",
     "cantSelectPageTitle": "Couldn't select the application.",
@@ -81,7 +87,8 @@
     "maxValueField": "The field must be less than or equal to {max}.",
     "minMaxValueField": "The field value must be between {min} and {max}.",
     "invalidURL": "Please enter a valid URL.",
-    "email": "The field must be an email."
+    "email": "The field must be an email.",
+    "alreadyInUse": "This field name is already in use."
   },
   "permission": {
     "admin": "Admin",
@@ -173,6 +180,15 @@
     "password": "A write-only field that holds a hashed password. The value will be `null` if not set, or `true` if it has been set. It accepts a string to set it."
   },
   "viewFilter": {
+    "hasEmptyValue": "has empty value",
+    "hasNotEmptyValue": "doesn't have empty value",
+    "hasValueEqual": "has value equal",
+    "hasNotValueEqual": "doesn't have value equal",
+    "hasValueContains": "has value contains",
+    "hasNotValueContains": "doesn't have value contains",
+    "hasValueContainsWord": "has value contains word",
+    "hasNotValueContainsWord": "doesn't have value contains word",
+    "hasValueLengthIsLowerThan": "has value length is lower than",
     "contains": "contains",
     "containsNot": "doesn't contain",
     "containsWord": "contains word",
@@ -359,7 +375,11 @@
     "generateAIPromptTitle": "Prompt error",
     "generateAIPromptDescription": "Something was wrong with the constructed prompt.",
     "maxNumberOfPendingWorkspaceInvitesReachedTitle": "Max pending invites reached",
-    "maxNumberOfPendingWorkspaceInvitesReachedDescription": "You've reached the maximum number of pending invites for this workspace. Please let invitees accept the invite or cancel existing ones to continue."
+    "maxNumberOfPendingWorkspaceInvitesReachedDescription": "You've reached the maximum number of pending invites for this workspace. Please let invitees accept the invite or cancel existing ones to continue.",
+    "fieldIsAlreadyPrimaryTitle": "Field is already primary",
+    "fieldIsAlreadyPrimaryDescription": "The chose new primary field is already the primary field.",
+    "incompatiblePrimaryFieldTypeTitle": "Field is not compatible",
+    "incompatiblePrimaryFieldTypeDescription": "The chose field can't be the primary field because it's incompatible."
   },
   "importerType": {
     "csv": "Import a CSV file",
@@ -391,7 +411,7 @@
     "queryParameters": "Query parameters",
     "pathParameters": "Path parameters",
     "requestBodySchema": "Request body schema",
-    "userFieldNamesDescription": "When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.",
+    "userFieldNamesDescription": "When the `user_field_names` GET parameter is provided and its value is one of the following: `y`, `yes`, `true`, `t`, `on`, `1`, or empty string, the field names returned by this endpoint will be the actual names of the fields.\n\nIf the `user_field_names` GET parameter is not provided, or if it does not match any of the above values, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.",
     "singleRow": "Single",
     "batchRows": "Batch",
     "fileUploads": "File uploads"

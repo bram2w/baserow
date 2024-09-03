@@ -27,6 +27,8 @@ def test_row_comment_created(mock_broadcast_to_channel_group, premium_data_fixtu
     )
     message = premium_data_fixture.create_comment_message_from_plain_text("comment")
 
+    mock_broadcast_to_channel_group.delay.reset_mock()
+
     with freeze_time("2020-01-02 12:00"):
         c = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
 

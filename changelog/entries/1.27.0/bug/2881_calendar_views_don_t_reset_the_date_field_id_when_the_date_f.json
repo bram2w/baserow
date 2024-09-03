@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug where calendar views did not reset the `date_field_id` when the associated date field was deleted.",
+    "issue_number": 2881,
+    "bullet_points": [],
+    "created_at": "2024-08-12"
+}

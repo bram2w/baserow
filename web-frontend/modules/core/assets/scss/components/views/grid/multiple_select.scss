@@ -3,7 +3,11 @@
   margin: 6px 4px 4px;
   overflow: unset;
 
-  @include select-option-style(flex, true);
+  @include select-option-style(flex, true, false);
+
+  .grid-field-many-to-many__cell.active & {
+    max-width: calc(100% - 8px);
+  }
 
   .grid-view__column--matches-search .grid-field-many-to-many__cell.active & {
     background-color: $color-primary-200;

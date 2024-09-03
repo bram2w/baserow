@@ -6,8 +6,10 @@ from .models import (
     ButtonThemeConfigBlock,
     ColorThemeConfigBlock,
     ImageThemeConfigBlock,
+    InputThemeConfigBlock,
     LinkThemeConfigBlock,
     PageThemeConfigBlock,
+    TableThemeConfigBlock,
     ThemeConfigBlock,
     TypographyThemeConfigBlock,
 )
@@ -147,3 +149,13 @@ class PageThemeConfigBlockType(ThemeConfigBlockType):
             return None
 
         return value
+
+
+class InputThemeConfigBlockType(ThemeConfigBlockType):
+    type = "input"
+    model_class = InputThemeConfigBlock
+
+
+class TableThemeConfigBlockType(ThemeConfigBlockType):
+    type = "table"
+    model_class = TableThemeConfigBlock

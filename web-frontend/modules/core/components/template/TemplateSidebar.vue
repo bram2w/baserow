@@ -1,35 +1,39 @@
 <template>
-  <div class="sidebar">
-    <div v-show="!collapsed" class="sidebar__nav">
-      <ul class="tree">
-        <li class="tree__item margin-top-2">
-          <div class="tree__link tree__link--group">
-            <span class="tree__link-text">{{ template.name }}</span>
-          </div>
-        </li>
-        <component
-          :is="getApplicationComponent(application)"
-          v-for="application in sortedApplications"
-          :key="application.id"
-          :application="application"
-          :page="page"
-          @selected="selectedApplication"
-          @selected-page="$emit('selected-page', $event)"
-        ></component>
-      </ul>
-    </div>
-    <div class="sidebar__foot">
-      <div class="sidebar__logo">
-        <Logo height="14" alt="Baserow logo" />
+  <div class="sidebar" :class="{ 'sidebar--collapsed': collapsed }">
+    <div
+      v-show="!collapsed"
+      class="sidebar__section sidebar__section--scrollable"
+    >
+      <div class="sidebar__section-scrollable">
+        <div class="sidebar__section-scrollable-inner">
+          <ul class="tree">
+            <component
+              :is="getApplicationComponent(application)"
+              v-for="application in sortedApplications"
+              :key="application.id"
+              :application="application"
+              :page="page"
+              @selected="selectedApplication"
+              @selected-page="$emit('selected-page', $event)"
+            ></component>
+          </ul>
+        </div>
       </div>
-      <a class="sidebar__collapse-link" @click="$emit('collapse-toggled')">
-        <i
-          :class="{
-            'iconoir-fast-arrow-right': collapsed,
-            'iconoir-fast-arrow-left': !collapsed,
-          }"
-        ></i>
-      </a>
+    </div>
+    <div class="sidebar__section sidebar__section--bottom">
+      <div class="sidebar__foot">
+        <div class="sidebar__logo">
+          <Logo height="14" alt="Baserow logo" />
+        </div>
+        <a class="sidebar__collapse-link" @click="$emit('collapse-toggled')">
+          <i
+            :class="{
+              'iconoir-fast-arrow-right': collapsed,
+              'iconoir-fast-arrow-left': !collapsed,
+            }"
+          ></i>
+        </a>
+      </div>
     </div>
   </div>
 </template>

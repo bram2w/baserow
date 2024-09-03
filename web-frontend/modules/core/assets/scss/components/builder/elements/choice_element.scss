@@ -1,35 +1,10 @@
 .choice-element {
-  border: 1px solid $black;
-  border-radius: 0;
-
-  .ab-dropdown__selected {
-    border: none;
-    height: auto;
-    line-height: 1;
-  }
-
-  .ab-dropdown__items {
-    border-radius: 0;
-  }
-
-  .select__item {
-    border-radius: 0;
-  }
-
-  .select__items {
-    border: 1px solid $palette-neutral-800;
-  }
-
-  .ab-dropdown__toggle-icon {
-    color: $black;
-  }
-
   .element--read-only & {
     pointer-events: none;
     user-select: none;
   }
 }
 
-.choice-element--error {
-  border-color: $color-error-300;
+.choice-element__option-value--fake .form-input__input {
+  color: $palette-neutral-700;
 }

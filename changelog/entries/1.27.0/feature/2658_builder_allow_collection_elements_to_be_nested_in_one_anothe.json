@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "[Builder] Allow collection elements to be nested in one another. It is now possible to nest a repeat in a repeat, or a table within a repeat. ",
+    "issue_number": 2658,
+    "bullet_points": [],
+    "created_at": "2024-08-11"
+}

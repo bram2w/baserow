@@ -194,30 +194,27 @@ export function chainConvert(sourceColor, convertFunctions) {
 }
 
 export const conversionsMap = {
-  hex: [
-    ['hsl', (hex) => chainConvert(hex, [convertHexToRgb, convertRgbToHsl])],
-    [
-      'hsv',
-      (hex) =>
-        chainConvert(hex, [convertHexToRgb, convertRgbToHwb, convertHwbToHsv]),
-    ],
-    ['rgb', convertHexToRgb],
-  ],
-  hsl: [
-    ['hex', (hsl) => chainConvert(hsl, [convertHslToRgb, convertRgbToHex])],
-    ['hsv', convertHslToHsv],
-    ['rgb', convertHslToRgb],
-  ],
-  hsv: [
-    ['hex', (hsv) => chainConvert(hsv, [convertHsvToRgb, convertRgbToHex])],
-    ['hsl', convertHsvToHsl],
-    ['rgb', convertHsvToRgb],
-  ],
-  rgb: [
-    ['hex', convertRgbToHex],
-    ['hsl', convertRgbToHsl],
-    ['hsv', (rgb) => chainConvert(rgb, [convertRgbToHwb, convertHwbToHsv])],
-  ],
+  hex: {
+    hsl: (hex) => chainConvert(hex, [convertHexToRgb, convertRgbToHsl]),
+    hsv: (hex) =>
+      chainConvert(hex, [convertHexToRgb, convertRgbToHwb, convertHwbToHsv]),
+    rgb: convertHexToRgb,
+  },
+  hsl: {
+    hex: (hsl) => chainConvert(hsl, [convertHslToRgb, convertRgbToHex]),
+    hsv: convertHslToHsv,
+    rgb: convertHslToRgb,
+  },
+  hsv: {
+    hex: (hsv) => chainConvert(hsv, [convertHsvToRgb, convertRgbToHex]),
+    hsl: convertHsvToHsl,
+    rgb: convertHsvToRgb,
+  },
+  rgb: {
+    hex: convertRgbToHex,
+    hsl: convertRgbToHsl,
+    hsv: (rgb) => chainConvert(rgb, [convertRgbToHwb, convertHwbToHsv]),
+  },
 }
 
 export function isColorVariable(value) {
@@ -247,4 +244,22 @@ export function resolveColor(value, variables, recursively = true) {
   // If the value is a color name, e.g, 'dark-green' use the color defined in
   // the SASS module.
   return styles[value] || value
+}
+
+/**
+ * Return the color to mix depending on the luminance of the given color.
+ * @param {string} hexColor The hex string of the color.
+ * @returns `black` or `white` depending on the best match for the given color.
+ */
+export const colorRecommendation = (hexColor) => {
+  // l is the luminance
+  const hsl = conversionsMap.hex.hsl(hexColor)
+  if (hsl.l > 0.8 || hsl.l < 0.2) {
+    return 'gray'
+  }
+  if (hsl.l > 0.5) {
+    return 'black'
+  } else {
+    return 'white'
+  }
 }

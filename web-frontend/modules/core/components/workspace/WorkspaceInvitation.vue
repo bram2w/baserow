@@ -15,24 +15,24 @@
 
     <template #actions>
       <Button
-        v-if="!rejectLoading"
         type="primary"
         size="small"
-        :disabled="rejectLoading || acceptLoading"
+        :disabled="acceptLoading || rejectLoading"
         :loading="acceptLoading"
         @click="!rejectLoading && !acceptLoading && accept(invitation)"
       >
         {{ $t('workspaceInvitation.accept') }}
       </Button>
-      <button
-        v-if="!acceptLoading"
+      <ButtonText
         class="alert__actions-button-text"
-        :class="{ 'alert__actions-button--loading': rejectLoading }"
+        type="primary"
+        size="small"
         :disabled="rejectLoading || acceptLoading"
-        @click="!rejectLoading && !acceptLoading && reject(invitation)"
+        :loading="rejectLoading"
+        @click="!acceptLoading && !rejectLoading && reject(invitation)"
       >
         {{ $t('workspaceInvitation.reject') }}
-      </button>
+      </ButtonText>
     </template>
   </Alert>
 </template>
@@ -108,6 +108,13 @@ export default {
             this.$store.dispatch('application/forceCreate', application)
           })
         }
+
+        await this.$router.push({
+          name: 'workspace',
+          params: {
+            workspaceId: workspace.id,
+          },
+        })
       } catch (error) {
         this.acceptLoading = false
         notifyIf(error, 'workspace')

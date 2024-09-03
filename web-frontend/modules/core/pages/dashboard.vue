@@ -1,170 +1,93 @@
 <template>
-  <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
-    <div class="dashboard">
-      <DashboardHelp
-        v-if="dashboardHelpComponents.length === 0"
-      ></DashboardHelp>
-      <template v-else>
-        <component
-          :is="component"
-          v-for="(component, index) in dashboardHelpComponents"
-          :key="index"
-        ></component>
-      </template>
-      <DashboardVerifyEmail></DashboardVerifyEmail>
+  <div class="dashboard__container">
+    <div class="dashboard__main">
+      <DashboardVerifyEmail
+        class="margin-top-0 margin-bottom-0"
+      ></DashboardVerifyEmail>
       <WorkspaceInvitation
         v-for="invitation in workspaceInvitations"
         :key="'invitation-' + invitation.id"
         :invitation="invitation"
-        @invitation-accepted="invitationAccepted($event)"
+        class="margin-top-0 margin-bottom-0"
       ></WorkspaceInvitation>
-      <div class="dashboard__container">
-        <div class="dashboard__sidebar">
-          <DashboardSidebar
-            :workspaces="sortedWorkspaces"
-            @workspace-selected="scrollToWorkspace"
-            @create-workspace-clicked="$refs.createWorkspaceModal.show()"
-          ></DashboardSidebar>
-        </div>
-        <div class="dashboard__content">
-          <DashboardNoWorkspaces
-            v-if="workspaces.length === 0"
-            @create-clicked="$refs.createWorkspaceModal.show()"
-          ></DashboardNoWorkspaces>
-          <template v-else>
-            <DashboardWorkspace
-              v-for="workspace in sortedWorkspaces"
-              :ref="'workspace-' + workspace.id"
-              :key="workspace.id"
-              :workspace="workspace"
-              :component-arguments="workspaceComponentArguments"
-              @workspace-updated="workspaceUpdated($event)"
-            ></DashboardWorkspace>
-            <div>
-              <a
-                v-if="$hasPermission('create_workspace')"
-                class="dashboard__create-link"
-                @click="$refs.createWorkspaceModal.show()"
-              >
-                <i class="dashboard__create-link-icon iconoir-plus"></i>
-                {{ $t('dashboard.createWorkspace') }}
-              </a>
-            </div>
-          </template>
+      <div class="dashboard__wrapper">
+        <div class="dashboard__no-application">
+          <img
+            src="@baserow/modules/core/assets/images/empty_workspace_illustration.png"
+            srcset="
+              @baserow/modules/core/assets/images/empty_workspace_illustration@2x.png 2x
+            "
+          />
+          <h4>{{ $t('dashboard.noWorkspace') }}</h4>
+          <p v-if="$hasPermission('create_workspace')">
+            {{ $t('dashboard.noWorkspaceDescription') }}
+          </p>
+          <span
+            v-if="$hasPermission('create_workspace')"
+            ref="createApplicationContextLink2"
+          >
+            <Button icon="iconoir-plus" tag="a" @click="$refs.modal.show()">{{
+              $t('dashboard.addNew')
+            }}</Button>
+          </span>
         </div>
       </div>
     </div>
-    <CreateWorkspaceModal
-      ref="createWorkspaceModal"
-      @created="workspaceUpdated($event)"
-    ></CreateWorkspaceModal>
+    <CreateWorkspaceModal ref="modal"></CreateWorkspaceModal>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
+import { mapGetters } from 'vuex'
 
 import CreateWorkspaceModal from '@baserow/modules/core/components/workspace/CreateWorkspaceModal'
-import WorkspaceInvitation from '@baserow/modules/core/components/workspace/WorkspaceInvitation'
-import DashboardWorkspace from '@baserow/modules/core/components/dashboard/DashboardWorkspace'
-import DashboardHelp from '@baserow/modules/core/components/dashboard/DashboardHelp'
-import DashboardNoWorkspaces from '@baserow/modules/core/components/dashboard/DashboardNoWorkspaces'
-import DashboardSidebar from '@baserow/modules/core/components/dashboard/DashboardSidebar'
 import DashboardVerifyEmail from '@baserow/modules/core/components/dashboard/DashboardVerifyEmail'
+import WorkspaceInvitation from '@baserow/modules/core/components/workspace/WorkspaceInvitation'
 
+/**
+ * The main purpose of the dashboard is to either redirect the user to the correct
+ * workspace homepage or show a message if the user doesn't have a workspace.
+ */
 export default {
   components: {
-    DashboardHelp,
-    DashboardNoWorkspaces,
-    DashboardSidebar,
     CreateWorkspaceModal,
-    DashboardWorkspace,
-    WorkspaceInvitation,
     DashboardVerifyEmail,
+    WorkspaceInvitation,
   },
   layout: 'app',
-  /**
-   * Fetches the data that must be shown on the dashboard, this could for example be
-   * pending workspace invitations.
-   */
-  async asyncData(context) {
-    const { error, app, store } = context
-    try {
-      await store.dispatch('auth/fetchWorkspaceInvitations')
-      let asyncData = { workspaceComponentArguments: {} }
+  async asyncData({ query, store, redirect }) {
+    const selectedWorkspace = store.getters['workspace/getSelected']
+    const allWorkspaces = store.getters['workspace/getAll']
 
-      // Loop over all the plugin and call the `fetchAsyncDashboardData` because there
-      // might be plugins that extend the dashboard and we want to fetch that async data
-      // here.
-      const plugins = Object.values(app.$registry.getAll('plugin'))
-      for (let i = 0; i < plugins.length; i++) {
-        asyncData = await plugins[i].fetchAsyncDashboardData(context, asyncData)
-      }
-      return asyncData
-    } catch (e) {
-      return error({ statusCode: 400, message: 'Error loading dashboard.' })
+    // If there is a selected workspace, we'll redirect the user to that homepage.
+    if (Object.keys(selectedWorkspace).length > 0) {
+      return redirect({
+        name: 'workspace',
+        params: {
+          workspaceId: selectedWorkspace.id,
+        },
+        query,
+      })
     }
-  },
-  head() {
-    return {
-      title: this.$t('dashboard.title'),
+
+    // If there isn't a selected workspace, but one does exist, we'll select the first
+    // one.
+    if (allWorkspaces.length > 0) {
+      return redirect({
+        name: 'workspace',
+        params: {
+          workspaceId: allWorkspaces[0].id,
+        },
+        query,
+      })
     }
+
+    await store.dispatch('auth/fetchWorkspaceInvitations')
   },
   computed: {
-    dashboardHelpComponents() {
-      return Object.values(this.$registry.getAll('plugin'))
-        .reduce(
-          (components, plugin) =>
-            components.concat(plugin.getDashboardHelpComponents()),
-          []
-        )
-        .filter((component) => component !== null)
-    },
     ...mapGetters({
-      sortedWorkspaces: 'workspace/getAllSorted',
       workspaceInvitations: 'auth/getWorkspaceInvitations',
     }),
-    ...mapState({
-      user: (state) => state.auth.user,
-      workspaces: (state) => state.workspace.items,
-      applications: (state) => state.application.items,
-    }),
-  },
-  methods: {
-    /**
-     * Make sure that the selected workspace is visible.
-     */
-    scrollToWorkspace(workspace) {
-      const ref = this.$refs['workspace-' + workspace.id]
-      if (ref) {
-        const element = ref[0].$el
-        element.scrollIntoView({ behavior: 'smooth' })
-      }
-    },
-    async invitationAccepted({ workspace }) {
-      await this.fetchWorkspaceExtraData(workspace)
-    },
-    async workspaceUpdated(workspace) {
-      await this.fetchWorkspaceExtraData(workspace)
-    },
-    async fetchWorkspaceExtraData(workspace) {
-      const plugins = Object.values(this.$registry.getAll('plugin'))
-      const asyncData = {}
-      for (let i = 0; i < plugins.length; i++) {
-        const workspaceData = await plugins[i].fetchAsyncDashboardData(
-          this.$root.$nuxt.context,
-          asyncData,
-          workspace.id
-        )
-        const data = {
-          workspaceComponentArguments: this.workspaceComponentArguments,
-        }
-        this.workspaceComponentArguments = plugins[i].mergeDashboardData(
-          JSON.parse(JSON.stringify(data)),
-          workspaceData
-        ).workspaceComponentArguments
-      }
-    },
   },
 }
 </script>

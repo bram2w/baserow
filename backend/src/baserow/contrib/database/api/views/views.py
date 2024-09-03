@@ -439,7 +439,7 @@ class ViewView(APIView):
         tags=["Database table views"],
         operation_id="get_database_table_view",
         description=(
-            "Returns the existing view. Depending on the type different properties"
+            "Returns the existing view. Depending on the type different properties "
             "could be returned."
         ),
         responses={

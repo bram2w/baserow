@@ -64,7 +64,7 @@ class NotificationWorkflowAction(BuilderWorkflowAction):
 
 
 class OpenPageWorkflowAction(BuilderWorkflowAction, NavigationElementMixin):
-    url = FormulaField(default="")  # TODO remove in the next release
+    pass
 
 
 class LogoutWorkflowAction(BuilderWorkflowAction):
@@ -96,4 +96,8 @@ class LocalBaserowCreateRowWorkflowAction(BuilderWorkflowServiceAction):
 
 
 class LocalBaserowUpdateRowWorkflowAction(BuilderWorkflowServiceAction):
+    ...
+
+
+class LocalBaserowDeleteRowWorkflowAction(BuilderWorkflowServiceAction):
     ...

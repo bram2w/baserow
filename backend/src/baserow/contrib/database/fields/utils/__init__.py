@@ -1,6 +1,9 @@
 import re
 from typing import Optional, Union
 
+from .deferred_field_importer import DeferredFieldImporter  # noqa: F401
+from .deferred_foreign_key_updater import DeferredForeignKeyUpdater  # noqa: F401
+
 field_pattern = re.compile("^field_([0-9]+)$")
 
 

@@ -1,8 +1,8 @@
 <template>
   <Context
     ref="context"
-    :overflow-scroll="true"
-    :max-height-if-outside-viewport="true"
+    overflow-scroll
+    max-height-if-outside-viewport
     @shown="fetchRolesAndPermissions"
   >
     <div class="context__menu-title">
@@ -141,12 +141,18 @@ export default {
     async deleteWorkspace() {
       this.loading = true
 
+      const selected =
+        this.$store.getters['workspace/getSelected'].id === this.workspace.id
+
       try {
         await this.$store.dispatch('workspace/delete', this.workspace)
         await this.$store.dispatch('toast/restore', {
           trash_item_type: 'workspace',
           trash_item_id: this.workspace.id,
         })
+        if (selected) {
+          await this.$nuxt.$router.push({ name: 'dashboard' })
+        }
         this.hide()
       } catch (error) {
         notifyIf(error, 'application')

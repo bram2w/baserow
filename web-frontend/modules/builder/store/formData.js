@@ -7,15 +7,23 @@ import {
 const state = {}
 
 /**
- * Responsible for setting a form entry at a given path in the form data of a page.
- * We use lodash's `set` in `setValueAtPath`. A shallow copy of `page.formData` is
- * returned with the updated value.
+ * Responsible for setting a form entry at a given path in the form data of a page in
+ * a reactive way.
+ *
  * @param {Object} page - The page object that holds the form data.
  * @param {String} uniqueElementId - The unique element id of the form element.
  * @param {Any} value - The value to set at the path.
  */
 function setFormEntryAtPath(page, uniqueElementId, value) {
-  page.formData = setValueAtPath({ ...page.formData }, uniqueElementId, value)
+  // We update properties per properties here to avoid updating the array
+  // and then trigger to many element update in repeat elements.
+  if (typeof value === 'object') {
+    Object.entries(value).forEach(([key, value]) =>
+      setValueAtPath(page.formData, `${uniqueElementId}.${key}`, value)
+    )
+  } else {
+    setValueAtPath(page.formData, uniqueElementId, value)
+  }
 }
 
 const mutations = {
@@ -23,6 +31,7 @@ const mutations = {
     if (!page.formData) {
       Vue.set(page, 'formData', {})
     }
+
     setFormEntryAtPath(page, uniqueElementId, payload)
   },
   REMOVE_FORM_DATA(state, { page, elementId }) {

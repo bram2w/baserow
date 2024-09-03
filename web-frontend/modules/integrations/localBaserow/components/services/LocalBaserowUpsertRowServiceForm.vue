@@ -1,37 +1,15 @@
 <template>
   <form @submit.prevent>
-    <FormGroup
-      :label="$t('upsertRowWorkflowActionForm.integrationDropdownLabel')"
-      small-label
-      required
-    >
-      <IntegrationDropdown
-        v-model="values.integration_id"
-        :application="application"
-        :integrations="integrations"
-        :integration-type="integrationType"
-      />
-    </FormGroup>
-    <LocalBaserowTableSelector
-      v-if="selectedIntegration"
-      v-model="fakeTableId"
-      :databases="databases"
-      :display-view-dropdown="false"
-      class="margin-top-2"
-    ></LocalBaserowTableSelector>
-
-    <InjectedFormulaInputGroup
-      v-if="enableRowId && values.integration_id"
-      v-model="values.row_id"
-      small
-      small-label
-      :placeholder="$t('upsertRowWorkflowActionForm.rowIdPlaceholder')"
-      :label="$t('upsertRowWorkflowActionForm.rowIdLabel')"
-    />
-    <p v-if="selectedIntegration && !values.table_id">
+    <LocalBaserowServiceForm
+      :enable-row-id="enableRowId"
+      :default-values="defaultValues"
+      @table-changed="handleTableChange"
+      @values-changed="emitServiceChange($event)"
+    ></LocalBaserowServiceForm>
+    <div v-if="tableLoading" class="loading margin-bottom-1"></div>
+    <p v-if="values.integration_id && !values.table_id">
       {{ $t('upsertRowWorkflowActionForm.noTableSelectedMessage') }}
     </p>
-    <div v-if="tableLoading" class="loading margin-bottom-1"></div>
     <FieldMappingForm
       v-if="!tableLoading"
       v-model="values.field_mappings"
@@ -41,27 +19,19 @@
 </template>
 
 <script>
-import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
-import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
+import _ from 'lodash'
 import FieldMappingForm from '@baserow/modules/integrations/localBaserow/components/services/FieldMappingForm'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
-import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import form from '@baserow/modules/core/mixins/form'
+import LocalBaserowServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowServiceForm'
 
 export default {
   name: 'LocalBaserowUpsertRowServiceForm',
   components: {
-    IntegrationDropdown,
+    LocalBaserowServiceForm,
     FieldMappingForm,
-    LocalBaserowTableSelector,
-    InjectedFormulaInputGroup,
   },
   mixins: [form],
   props: {
-    application: {
-      type: Object,
-      required: true,
-    },
     workflowAction: {
       type: Object,
       required: false,
@@ -75,61 +45,28 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['row_id', 'table_id', 'integration_id', 'field_mappings'],
+      allowedValues: ['field_mappings'],
       values: {
-        row_id: '',
-        table_id: null,
         field_mappings: [],
-        integration_id: null,
       },
       state: null,
       tableLoading: false,
     }
   },
-
   computed: {
-    integrations() {
-      return this.$store.getters['integration/getIntegrations'](
-        this.application
-      )
-    },
+    /**
+     * Returns the loading state of the workflow action. Used to
+     * determine whether to show the loading spinner in the water.
+     */
     workflowActionLoading() {
       return this.$store.getters['workflowAction/getLoading'](
         this.workflowAction
       )
     },
-    fakeTableId: {
-      get() {
-        return this.values.table_id
-      },
-      set(newValue) {
-        // If we currently have a `table_id` selected, and the `newValue`
-        // is different to the current `table_id`, then reset the
-        // `field_mappings` to a blank array.
-        if (this.values.table_id !== newValue) {
-          this.tableLoading = true
-          if (this.values.table_id) {
-            this.values.field_mappings = []
-          }
-        }
-        this.values.table_id = newValue
-      },
-    },
-    integrationType() {
-      return this.$registry.get(
-        'integration',
-        LocalBaserowIntegrationType.getType()
-      )
-    },
-    selectedIntegration() {
-      return this.$store.getters['integration/getIntegrationById'](
-        this.application,
-        this.values.integration_id
-      )
-    },
-    databases() {
-      return this.selectedIntegration?.context_data.databases || []
-    },
+    /**
+     * Returns the writable fields in the schema, which the
+     * `FieldMappingForm` can use to display the field mapping options.
+     */
     getWritableSchemaFields() {
       if (
         this.workflowAction.service == null ||
@@ -152,6 +89,42 @@ export default {
           this.tableLoading = false
         }
       },
+    },
+  },
+  methods: {
+    /**
+     * When `LocalBaserowServiceForm` informs us that the table
+     * has changed, we'll flag our `tableLoading` boolean as true.
+     * We want to display a loading spinner between the `table_id`
+     * changing, and the `field_mappings` being loaded.
+     */
+    handleTableChange(newValue) {
+      this.tableLoading = true
+    },
+    /**
+     * When `LocalBaserowServiceForm` informs us that service specific
+     * values have changed, we want to determine what has changed and
+     * emit the new values to the parent component.
+     */
+    emitServiceChange(newValues) {
+      if (this.isFormValid()) {
+        const updated = { ...this.defaultValues, ...newValues }
+        const differences = Object.fromEntries(
+          Object.entries(updated).filter(
+            ([key, value]) => !_.isEqual(value, this.defaultValues[key])
+          )
+        )
+        // If the `table_id` has changed, we'll reset the `field_mappings`
+        // to an empty array. We update both the values and the differences
+        // for different reasons: the former so that a subsequent change don't
+        // stack up, and the latter so that the HTTP request which is triggered
+        // due to the changes in `differences` don't include the old field mappings.
+        if (differences.table_id) {
+          this.values.field_mappings = []
+          differences.field_mappings = []
+        }
+        this.$emit('values-changed', differences)
+      }
     },
   },
 }

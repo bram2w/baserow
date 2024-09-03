@@ -91,6 +91,7 @@
                             "primary": false,
                             "link_row_table_id": 946,
                             "link_row_related_field_id": 9656,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -108,6 +109,7 @@
                             "primary": false,
                             "link_row_table_id": 945,
                             "link_row_related_field_id": 9646,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -169,15 +171,15 @@
                             "name": "Total contract value",
                             "order": 9,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9633,
                             "target_field_id": 9660,
@@ -189,15 +191,15 @@
                             "name": "Total closed won",
                             "order": 10,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "sum(filter(lookup('Pipelines','Contract Value'),lookup('Pipelines','Stage') = 'Closed Won'))",
                             "formula_type": "number"
@@ -208,15 +210,15 @@
                             "name": "Total closed lost",
                             "order": 11,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "sum(filter(lookup('Pipelines','Contract Value'),lookup('Pipelines','Stage') = 'Closed Lost'))",
                             "formula_type": "number"
@@ -227,15 +229,15 @@
                             "name": "Total in progress",
                             "order": 12,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "sum(filter(lookup('Pipelines','Contract Value'),and(lookup('Pipelines','Stage') != 'Closed Lost',lookup('Pipelines','Stage') != 'Closed Won')))",
                             "formula_type": "number"
@@ -246,15 +248,15 @@
                             "name": "Pipelines count",
                             "order": 13,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9633
                         },
@@ -264,15 +266,15 @@
                             "name": "Active pipelines count",
                             "order": 14,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "count(filter(lookup('Pipelines','Stage'),and(lookup('Pipelines','Stage') != 'Closed Won',lookup('Pipelines','Stage') != 'Closed Lost')))",
                             "formula_type": "number"
@@ -889,6 +891,7 @@
                             "primary": false,
                             "link_row_table_id": 944,
                             "link_row_related_field_id": 9635,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -913,6 +916,7 @@
                             "primary": false,
                             "link_row_table_id": 947,
                             "link_row_related_field_id": 9669,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -928,15 +932,15 @@
                             "name": "Activities count",
                             "order": 9,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9649
                         },
@@ -946,15 +950,15 @@
                             "name": "Last activity",
                             "order": 10,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": "ISO",
                             "date_time_format": "24",
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": false,
                             "nullable": true,
+                            "date_show_tzinfo": false,
+                            "duration_format": null,
                             "date_include_time": false,
                             "through_field_id": 9649,
                             "target_field_id": 9670,
@@ -966,15 +970,15 @@
                             "name": "Company name",
                             "order": 11,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9646,
                             "target_field_id": 9630,
@@ -986,18 +990,18 @@
                             "name": "Employee",
                             "order": 12,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": "references the deleted or unknown field Employee Email in table Activities",
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
-                            "formula": "join(lookup('Activities','Employee Email'),' ')",
-                            "formula_type": "invalid"
+                            "formula": "join(lookup('Activities','Employee email'),' ')",
+                            "formula_type": "text"
                         }
                     ],
                     "views": [
@@ -1100,7 +1104,7 @@
                                     "id": 35420,
                                     "field_id": 9654,
                                     "width": 296,
-                                    "hidden": false,
+                                    "hidden": true,
                                     "order": 8,
                                     "aggregation_type": "",
                                     "aggregation_raw_type": ""
@@ -1740,6 +1744,7 @@
                             "primary": false,
                             "link_row_table_id": 944,
                             "link_row_related_field_id": 9633,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -1832,6 +1837,7 @@
                             "primary": false,
                             "link_row_table_id": 947,
                             "link_row_related_field_id": 9672,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -1842,6 +1848,7 @@
                             "primary": false,
                             "link_row_table_id": 948,
                             "link_row_related_field_id": 9682,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -1850,15 +1857,15 @@
                             "name": "Company name",
                             "order": 9,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9656,
                             "target_field_id": 9630,
@@ -1870,15 +1877,15 @@
                             "name": "Activities count",
                             "order": 10,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9662
                         },
@@ -1888,15 +1895,15 @@
                             "name": "Owner name",
                             "order": 11,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9663,
                             "target_field_id": 9679,
@@ -1908,15 +1915,15 @@
                             "name": "Owner e-mail",
                             "order": 12,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "min(lookup('Owner','Email'))",
                             "formula_type": "char"
@@ -3344,6 +3351,7 @@
                             "primary": false,
                             "link_row_table_id": 945,
                             "link_row_related_field_id": 9649,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -3374,6 +3382,7 @@
                             "primary": false,
                             "link_row_table_id": 946,
                             "link_row_related_field_id": 9662,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -3382,15 +3391,15 @@
                             "name": "Contacts name",
                             "order": 8,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9669,
                             "target_field_id": 9644,
@@ -3402,15 +3411,15 @@
                             "name": "Pipeline name",
                             "order": 9,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9672,
                             "target_field_id": 9655,
@@ -3422,15 +3431,15 @@
                             "name": "Employee",
                             "order": 10,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": "text",
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9672,
                             "through_field_name": "Pipeline",
@@ -3443,15 +3452,15 @@
                             "name": "Employee email",
                             "order": 11,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "min(lookup('Pipeline','Owner e-mail'))",
                             "formula_type": "char"
@@ -3462,15 +3471,15 @@
                             "name": "Employee name",
                             "order": 12,
                             "primary": false,
+                            "number_decimal_places": null,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": null,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": true,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "min(lookup('Pipeline','Owner'))",
                             "formula_type": "text"
@@ -4641,6 +4650,7 @@
                             "primary": false,
                             "link_row_table_id": 946,
                             "link_row_related_field_id": 9663,
+                            "link_row_limit_selection_view_id": null,
                             "has_related_field": true
                         },
                         {
@@ -4649,15 +4659,15 @@
                             "name": "Active pipelines count",
                             "order": 4,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "formula": "count(filter(lookup('Pipelines','Stage'),and(lookup('Pipelines','Stage') != 'Closed Won',lookup('Pipelines','Stage') != 'Closed Lost')))",
                             "formula_type": "number"
@@ -4668,15 +4678,15 @@
                             "name": "Total pipelines count",
                             "order": 5,
                             "primary": false,
+                            "number_decimal_places": 0,
+                            "error": null,
                             "date_format": null,
                             "date_time_format": null,
                             "array_formula_type": null,
-                            "duration_format": null,
-                            "number_decimal_places": 0,
                             "date_force_timezone": null,
-                            "error": null,
-                            "date_show_tzinfo": null,
                             "nullable": false,
+                            "date_show_tzinfo": null,
+                            "duration_format": null,
                             "date_include_time": null,
                             "through_field_id": 9682
                         },
@@ -4923,11 +4933,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3548,
@@ -4965,9 +4971,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\ud83d\udd10 Login'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3549,
@@ -5004,7 +5008,8 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "small",
-                            "user_source_id": 53
+                            "user_source_id": 53,
+                            "login_button_label": ""
                         }
                     ],
                     "data_sources": [],
@@ -5020,8 +5025,7 @@
                             "navigate_to_page_id": 504,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": ""
+                            "target": "self"
                         }
                     ]
                 },
@@ -5106,11 +5110,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3554,
@@ -5144,7 +5144,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -5182,10 +5181,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3556,
@@ -5228,10 +5224,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3551,
@@ -5307,11 +5300,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3558,
@@ -5354,10 +5343,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3559,
@@ -5400,10 +5386,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3560,
@@ -5446,10 +5429,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3561,
@@ -5492,10 +5472,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3552,
@@ -5568,9 +5545,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\ud83d\udc64 My contacts'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3563,
@@ -5611,10 +5586,7 @@
                             "navigate_to_url": "'http://localhost/form/34h_8tqKUEM6A124VZI8PBk3GexEpQOcBLP6md3eWj4'",
                             "target": "self",
                             "value": "'\u2795 Add new contact'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3564,
@@ -5659,6 +5631,7 @@
                                     "uid": "a69e62de-aff3-4623-ace7-5eb86931ffed",
                                     "name": "Name",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9644')"
                                     }
@@ -5667,6 +5640,7 @@
                                     "uid": "b98df986-1a76-40e9-bff4-9a803a580855",
                                     "name": "Title",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9645')"
                                     }
@@ -5675,6 +5649,7 @@
                                     "uid": "960552b3-d929-4531-bec4-ebcf138ef94e",
                                     "name": "Company",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9646.0.value')"
                                     }
@@ -5683,6 +5658,7 @@
                                     "uid": "aefb4b96-d005-4263-b723-ef9cbd0ac90c",
                                     "name": "Phone",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9648')"
                                     }
@@ -5691,6 +5667,7 @@
                                     "uid": "c99b8af5-f2f4-48de-a6a7-61930c6209d7",
                                     "name": "Last activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9652')"
                                     }
@@ -5699,6 +5676,7 @@
                                     "uid": "3e9a96b4-6a46-44b6-826a-b0b17417727e",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 508,
@@ -5714,7 +5692,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -5757,9 +5734,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26d3 My pipelines'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3566,
@@ -5800,10 +5775,7 @@
                             "navigate_to_url": "concat('http://localhost/form/YK0FcaN4c7nEsi4FweopJnY8QwutxxU7sEuDAusT6ZQ?prefill_Owner=',get('user.username'),'&hide_Owner')",
                             "target": "self",
                             "value": "'\u2795 Add new pipeline'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3567,
@@ -5848,6 +5820,7 @@
                                     "uid": "17904a6a-e739-4ae7-86db-5cfe95230ea4",
                                     "name": "Opportunity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9655')"
                                     }
@@ -5856,6 +5829,7 @@
                                     "uid": "8921d8b8-ebd6-48af-b77c-bbe199b50c71",
                                     "name": "Company",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9656.0.value')"
                                     }
@@ -5864,6 +5838,7 @@
                                     "uid": "9f451d6b-08f7-4d57-a8ee-685bf773cbe9",
                                     "name": "Stage",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9658.value')"
                                     }
@@ -5872,6 +5847,7 @@
                                     "uid": "d2945dbb-7440-4cab-924d-c5f0ae0a352d",
                                     "name": "Close date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9659')"
                                     }
@@ -5880,6 +5856,7 @@
                                     "uid": "ffb505e4-a9f7-45ab-a1cc-12f8d1b6af2f",
                                     "name": "Value",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "concat(get('current_record.field_9660'),'$')"
                                     }
@@ -5888,6 +5865,7 @@
                                     "uid": "d273f215-cef1-45b0-bcf2-378cf836d26e",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 510,
@@ -5903,7 +5881,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -5946,9 +5923,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26a1 Upcoming activities'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3569,
@@ -5989,10 +5964,7 @@
                             "navigate_to_url": "'http://localhost/form/hE4FakjKrkH2z8pHx_sgnqQwvYsqllbOR8Ylb8oFWtM'",
                             "target": "self",
                             "value": "'\u2795Add new activity'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3570,
@@ -6037,6 +6009,7 @@
                                     "uid": "223fb3be-cb35-4cc9-8e35-a7e90a93fba4",
                                     "name": "Activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9668.value')"
                                     }
@@ -6045,6 +6018,7 @@
                                     "uid": "d8316868-73ef-4181-91c1-9eeaa9071f51",
                                     "name": "Contact",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9669.0.value')"
                                     }
@@ -6053,6 +6027,7 @@
                                     "uid": "b3f306ce-58b1-4e8a-b28f-55bacf6d5022",
                                     "name": "Pipeline",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9672.0.value')"
                                     }
@@ -6061,6 +6036,7 @@
                                     "uid": "4bd44873-72dd-4dd6-9c3b-3679711600b8",
                                     "name": "Date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9670')"
                                     }
@@ -6069,6 +6045,7 @@
                                     "uid": "ebfa9995-7b04-47d5-a606-93a511a645c4",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 512,
@@ -6084,7 +6061,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -6103,6 +6079,12 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 945,
                                 "view_id": 4410,
+                                "sortings": [
+                                    {
+                                        "field_id": 9652,
+                                        "order_by": "DESC"
+                                    }
+                                ],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -6111,12 +6093,6 @@
                                         "type": "contains_word",
                                         "value": "get('user.email')",
                                         "value_is_formula": true
-                                    }
-                                ],
-                                "sortings": [
-                                    {
-                                        "field_id": 9652,
-                                        "order_by": "DESC"
                                     }
                                 ]
                             }
@@ -6131,6 +6107,7 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 946,
                                 "view_id": 4414,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -6140,8 +6117,7 @@
                                         "value": "get('user.id')",
                                         "value_is_formula": true
                                     }
-                                ],
-                                "sortings": []
+                                ]
                             }
                         },
                         {
@@ -6154,6 +6130,12 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 947,
                                 "view_id": 4423,
+                                "sortings": [
+                                    {
+                                        "field_id": 9670,
+                                        "order_by": "ASC"
+                                    }
+                                ],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -6162,12 +6144,6 @@
                                         "type": "contains_word",
                                         "value": "get('user.email')",
                                         "value_is_formula": true
-                                    }
-                                ],
-                                "sortings": [
-                                    {
-                                        "field_id": 9670,
-                                        "order_by": "ASC"
                                     }
                                 ]
                             }
@@ -6185,8 +6161,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 451,
@@ -6279,11 +6254,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3575,
@@ -6317,7 +6288,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -6355,10 +6325,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3577,
@@ -6401,10 +6368,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3572,
@@ -6480,11 +6444,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3579,
@@ -6527,10 +6487,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3580,
@@ -6573,10 +6530,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3581,
@@ -6619,10 +6573,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3582,
@@ -6665,10 +6616,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3573,
@@ -6741,9 +6689,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\ud83c\udfe2 All companies'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3584,
@@ -6788,6 +6734,7 @@
                                     "uid": "ad80e9dc-9cb3-4ebb-a193-c9b2008abe76",
                                     "name": "Name",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9630')"
                                     }
@@ -6796,6 +6743,7 @@
                                     "uid": "c4f5f3f8-4343-41a8-ad6d-31b8a1db99d1",
                                     "name": "Industry",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9632.value')"
                                     }
@@ -6804,6 +6752,7 @@
                                     "uid": "df945b05-81c0-4720-99cc-a2173e491d8b",
                                     "name": "Size",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9637.value')"
                                     }
@@ -6812,6 +6761,7 @@
                                     "uid": "d96585b4-9b59-43f2-ad67-f6f33edf1fbe",
                                     "name": "Won",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "concat(get('current_record.field_9639'),'$')"
                                     }
@@ -6820,6 +6770,7 @@
                                     "uid": "923fd099-d7a4-4fcd-a326-26492721773e",
                                     "name": "Lost",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "concat(get('current_record.field_9640'),'$')"
                                     }
@@ -6828,6 +6779,7 @@
                                     "uid": "e27ab4a7-9353-4abc-be30-901c39ccabea",
                                     "name": "Progress",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "concat(get('current_record.field_9641'),'$')"
                                     }
@@ -6836,6 +6788,7 @@
                                     "uid": "f657deff-04cb-4388-ad08-398829a42fda",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 506,
@@ -6851,7 +6804,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -6870,10 +6822,10 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 944,
                                 "view_id": 4407,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
-                                "filters": [],
-                                "sortings": []
+                                "filters": []
                             }
                         }
                     ],
@@ -6889,8 +6841,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 453,
@@ -6988,11 +6939,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3590,
@@ -7026,7 +6973,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -7064,10 +7010,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3592,
@@ -7101,7 +7044,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Address:** ',get('data_source.958.field_9631'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7136,7 +7078,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Total pipelines:** ',get('data_source.958.field_9642'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7180,10 +7121,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3586,
@@ -7259,11 +7197,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3596,
@@ -7306,10 +7240,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3597,
@@ -7352,10 +7283,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3598,
@@ -7398,10 +7326,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3599,
@@ -7444,10 +7369,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3600,
@@ -7481,7 +7403,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Industry:** ',get('data_source.958.field_9632.value'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7516,7 +7437,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Active pipelines:** ',get('data_source.958.field_9643'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7586,7 +7506,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Size:** ',get('data_source.958.field_9637.value'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7621,7 +7540,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Total contract values:** ',get('data_source.958.field_9638'),'$')",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7660,9 +7578,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83c\udfe2 ',get('data_source.958.field_9630'))",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3605,
@@ -7701,10 +7617,7 @@
                             "navigate_to_url": "get('data_source.958.field_9634')",
                             "target": "self",
                             "value": "get('data_source.958.field_9634')",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3606,
@@ -7738,7 +7651,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Total won:** ',get('data_source.958.field_9639'),'$')",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7773,7 +7685,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "get('data_source.958.field_9636')",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -7808,7 +7719,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Total lost:** ',get('data_source.958.field_9640'),'$')",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7878,7 +7788,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Total in progress:** ',get('data_source.958.field_9641'),'$')",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -7917,9 +7826,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26d3 Related pipelines'",
-                            "font_color": "default",
-                            "level": 3,
-                            "alignment": "left"
+                            "level": 3
                         },
                         {
                             "id": 3611,
@@ -7960,10 +7867,7 @@
                             "navigate_to_url": "concat('http://localhost/form/YK0FcaN4c7nEsi4FweopJnY8QwutxxU7sEuDAusT6ZQ?prefill_Owner=',get('user.username'),'&hide_Owner&prefill_Company=',get('data_source.958.field_9630'))",
                             "target": "self",
                             "value": "'\u2795 Add new pipeline'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3612,
@@ -8008,6 +7912,7 @@
                                     "uid": "273a57a9-f4cf-4d0c-a327-b9ada38a431e",
                                     "name": "Opportunity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9655')"
                                     }
@@ -8016,6 +7921,7 @@
                                     "uid": "53ece985-d1a9-401e-9e12-84559006255e",
                                     "name": "Stage",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9658.value')"
                                     }
@@ -8024,6 +7930,7 @@
                                     "uid": "ab8128a1-1b58-43b9-9ebb-f9619050ab3d",
                                     "name": "Close date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9659')"
                                     }
@@ -8032,6 +7939,7 @@
                                     "uid": "3b9f4bb1-2694-43c7-b5dd-3be7cd54ba83",
                                     "name": "Value",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "concat(get('current_record.field_9660'),'$')"
                                     }
@@ -8040,6 +7948,7 @@
                                     "uid": "04b93e04-6331-4af6-a186-662c19bd5225",
                                     "name": "Owner",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9663.0.value')"
                                     }
@@ -8048,6 +7957,7 @@
                                     "uid": "9a30a578-f2a7-45b8-8566-3a6faf298486",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 510,
@@ -8063,7 +7973,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -8106,9 +8015,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\ud83d\udc64 Related contacts'",
-                            "font_color": "default",
-                            "level": 3,
-                            "alignment": "left"
+                            "level": 3
                         },
                         {
                             "id": 3614,
@@ -8149,10 +8056,7 @@
                             "navigate_to_url": "concat('http://localhost/form/34h_8tqKUEM6A124VZI8PBk3GexEpQOcBLP6md3eWj4?prefill_Company=',get('data_source.958.field_9630'))",
                             "target": "self",
                             "value": "'\u2795 Add new contact'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3615,
@@ -8197,6 +8101,7 @@
                                     "uid": "360947a4-1756-4aae-93d3-4b814aff37a4",
                                     "name": "Name",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9644')"
                                     }
@@ -8205,6 +8110,7 @@
                                     "uid": "c4ff0c7e-d331-46dd-9f3e-df0d43a2d3c5",
                                     "name": "Title",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9645')"
                                     }
@@ -8213,6 +8119,7 @@
                                     "uid": "be0f907d-f869-40e7-8284-6e2aa830b205",
                                     "name": "Phone",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9648')"
                                     }
@@ -8221,6 +8128,7 @@
                                     "uid": "53bd2046-7aec-419d-9579-5dd16dc1724d",
                                     "name": "E-mail",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9647')"
                                     }
@@ -8229,6 +8137,7 @@
                                     "uid": "0c8739aa-669d-433e-a8eb-f14e42409a20",
                                     "name": "Last activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9652')"
                                     }
@@ -8237,6 +8146,7 @@
                                     "uid": "627af771-6aad-409e-b9bf-fb2112a7fdb6",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 508,
@@ -8252,7 +8162,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -8271,10 +8180,10 @@
                                 "type": "local_baserow_get_row",
                                 "table_id": 944,
                                 "view_id": 4407,
+                                "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [],
-                                "row_id": "get('page_parameter.id')",
-                                "search_query": ""
+                                "row_id": "get('page_parameter.id')"
                             }
                         },
                         {
@@ -8287,6 +8196,7 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 946,
                                 "view_id": 4414,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -8296,8 +8206,7 @@
                                         "value": "get('page_parameter.id')",
                                         "value_is_formula": true
                                     }
-                                ],
-                                "sortings": []
+                                ]
                             }
                         },
                         {
@@ -8310,6 +8219,7 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 945,
                                 "view_id": 4410,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -8319,8 +8229,7 @@
                                         "value": "get('page_parameter.id')",
                                         "value_is_formula": true
                                     }
-                                ],
-                                "sortings": []
+                                ]
                             }
                         }
                     ],
@@ -8336,8 +8245,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 455,
@@ -8430,11 +8338,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3620,
@@ -8468,7 +8372,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -8506,10 +8409,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3622,
@@ -8552,10 +8452,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3617,
@@ -8631,11 +8528,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3624,
@@ -8678,10 +8571,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3625,
@@ -8724,10 +8614,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3626,
@@ -8770,10 +8657,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3627,
@@ -8816,10 +8700,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3618,
@@ -8892,9 +8773,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\ud83d\udc64 All contacts'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3629,
@@ -8935,10 +8814,7 @@
                             "navigate_to_url": "'http://localhost/form/34h_8tqKUEM6A124VZI8PBk3GexEpQOcBLP6md3eWj4'",
                             "target": "self",
                             "value": "'\u2795 Add new contact'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3630,
@@ -8983,6 +8859,7 @@
                                     "uid": "f5f4a98c-58b8-4cac-95b2-8fdd3f9c5767",
                                     "name": "Name",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9644')"
                                     }
@@ -8991,6 +8868,7 @@
                                     "uid": "bb904261-8b69-42e0-94e4-5349fdb569eb",
                                     "name": "Title",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9645')"
                                     }
@@ -8999,6 +8877,7 @@
                                     "uid": "e5e2066a-8107-4d13-ae5b-c80f514855df",
                                     "name": "Company",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9646.0.value')"
                                     }
@@ -9007,6 +8886,7 @@
                                     "uid": "ded86425-946a-4392-ba06-ec363626819d",
                                     "name": "Phone",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9648')"
                                     }
@@ -9015,6 +8895,7 @@
                                     "uid": "605e19b8-148f-442b-9424-29bd5faa70cf",
                                     "name": "Last activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9652')"
                                     }
@@ -9023,6 +8904,7 @@
                                     "uid": "ae34cee7-4c5d-4df5-9494-b1860f57ab8c",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 508,
@@ -9038,7 +8920,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -9057,10 +8938,10 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 945,
                                 "view_id": 4410,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
-                                "filters": [],
-                                "sortings": []
+                                "filters": []
                             }
                         }
                     ],
@@ -9076,8 +8957,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 457,
@@ -9175,11 +9055,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3636,
@@ -9213,7 +9089,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -9251,10 +9126,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3638,
@@ -9288,7 +9160,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Title:** ',get('data_source.962.field_9645'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -9323,7 +9194,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Total activities:** ',get('data_source.962.field_9651'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -9367,10 +9237,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3632,
@@ -9446,11 +9313,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3642,
@@ -9493,10 +9356,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3643,
@@ -9539,10 +9399,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3644,
@@ -9585,10 +9442,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3645,
@@ -9631,10 +9485,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3646,
@@ -9668,7 +9519,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Phone:** ',get('data_source.962.field_9648'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -9703,7 +9553,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Last activity:** ',get('data_source.962.field_9652'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -9777,9 +9626,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat(' \ud83d\udc64 ',get('data_source.962.field_9644'),' (',get('data_source.962.field_9646.0.value'),')')",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3649,
@@ -9818,10 +9665,7 @@
                             "navigate_to_url": "concat('mailto:',get('data_source.962.field_9647'))",
                             "target": "self",
                             "value": "concat('E-mail: ',get('data_source.962.field_9647'))",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3650,
@@ -9860,10 +9704,7 @@
                             "navigate_to_url": "get('data_source.962.field_9650')",
                             "target": "self",
                             "value": "'LinkedIn profile'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3634,
@@ -9936,9 +9777,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26a1 Related activities'",
-                            "font_color": "default",
-                            "level": 3,
-                            "alignment": "left"
+                            "level": 3
                         },
                         {
                             "id": 3652,
@@ -9979,10 +9818,7 @@
                             "navigate_to_url": "concat('http://localhost/form/hE4FakjKrkH2z8pHx_sgnqQwvYsqllbOR8Ylb8oFWtM?prefill_Contact=',get('data_source.962.field_9644'))",
                             "target": "self",
                             "value": "'\u2795 Add new activity'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3653,
@@ -10027,6 +9863,7 @@
                                     "uid": "e40acaf1-ee01-4764-a068-2416d2d9c63b",
                                     "name": "Activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9668.value')"
                                     }
@@ -10035,6 +9872,7 @@
                                     "uid": "6addffa1-2dba-49a0-b098-6bbc6fa9a329",
                                     "name": "Pipeline",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9672.0.value')"
                                     }
@@ -10043,6 +9881,7 @@
                                     "uid": "311d520e-b13b-45f6-ab7f-053bb2ee3aab",
                                     "name": "Date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9670')"
                                     }
@@ -10051,6 +9890,7 @@
                                     "uid": "367b3186-20ff-4a23-85ee-fd438811c9af",
                                     "name": "Employee",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9677')"
                                     }
@@ -10059,6 +9899,7 @@
                                     "uid": "da4d7e1c-effc-424f-a357-e9575b606aed",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 512,
@@ -10074,7 +9915,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -10093,10 +9933,10 @@
                                 "type": "local_baserow_get_row",
                                 "table_id": 945,
                                 "view_id": null,
+                                "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [],
-                                "row_id": "get('page_parameter.id')",
-                                "search_query": ""
+                                "row_id": "get('page_parameter.id')"
                             }
                         },
                         {
@@ -10109,6 +9949,7 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 947,
                                 "view_id": 4422,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -10118,8 +9959,7 @@
                                         "value": "get('page_parameter.id')",
                                         "value_is_formula": true
                                     }
-                                ],
-                                "sortings": []
+                                ]
                             }
                         }
                     ],
@@ -10135,8 +9975,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 459,
@@ -10229,11 +10068,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3658,
@@ -10267,7 +10102,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -10305,10 +10139,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3660,
@@ -10351,10 +10182,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3655,
@@ -10430,11 +10258,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3662,
@@ -10477,10 +10301,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3663,
@@ -10523,10 +10344,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3664,
@@ -10569,10 +10387,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3665,
@@ -10615,10 +10430,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3656,
@@ -10691,9 +10503,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26d3 All pipelines'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3667,
@@ -10734,10 +10544,7 @@
                             "navigate_to_url": "concat('http://localhost/form/YK0FcaN4c7nEsi4FweopJnY8QwutxxU7sEuDAusT6ZQ?prefill_Owner=',get('user.username'),'&hide_Owner')",
                             "target": "self",
                             "value": "'\u2795 Add new pipeline'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3668,
@@ -10782,6 +10589,7 @@
                                     "uid": "aec795e9-2ff8-4f94-a833-1133d4d4863e",
                                     "name": "Opportunity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9655')"
                                     }
@@ -10790,6 +10598,7 @@
                                     "uid": "afd0b65e-0b8e-40a3-a68b-0e4279836683",
                                     "name": "Company",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9656.0.value')"
                                     }
@@ -10798,6 +10607,7 @@
                                     "uid": "f5d91935-08ed-440e-afd1-7111a3201716",
                                     "name": "Stage",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9658.value')"
                                     }
@@ -10806,6 +10616,7 @@
                                     "uid": "d3152464-cd89-4945-a06e-ee79c0199670",
                                     "name": "Close date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9659')"
                                     }
@@ -10814,6 +10625,7 @@
                                     "uid": "ae83298b-4d8d-4b9f-8c5a-419ffb1a44d5",
                                     "name": "Value",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "concat(get('current_record.field_9660'),'$')"
                                     }
@@ -10822,6 +10634,7 @@
                                     "uid": "95dd2ef8-92c7-4ac2-9d6d-19723aca7bbb",
                                     "name": "Owner",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9663.0.value')"
                                     }
@@ -10830,6 +10643,7 @@
                                     "uid": "abb46f95-6d3e-488f-870c-e4b060485d5d",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 510,
@@ -10845,7 +10659,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -10864,10 +10677,10 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 946,
                                 "view_id": 4414,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
-                                "filters": [],
-                                "sortings": []
+                                "filters": []
                             }
                         }
                     ],
@@ -10883,8 +10696,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 461,
@@ -10982,11 +10794,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3675,
@@ -11020,7 +10828,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -11058,10 +10865,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3677,
@@ -11095,7 +10899,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Stage:** ',get('data_source.965.field_9658.value'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -11139,10 +10942,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3670,
@@ -11258,11 +11058,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3680,
@@ -11305,10 +11101,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3681,
@@ -11351,10 +11144,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3682,
@@ -11397,10 +11187,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3683,
@@ -11443,10 +11230,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3684,
@@ -11480,7 +11264,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Expected close date:** ',get('data_source.965.field_9659'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -11550,7 +11333,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Contract value:** ',get('data_source.965.field_9660'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -11588,10 +11370,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Update notes'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Update notes'"
                         },
                         {
                             "id": 3687,
@@ -11629,9 +11408,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat(' \u26d3 ',get('data_source.965.field_9655'),' (',get('data_source.965.field_9656.0.value'),')')",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3688,
@@ -11665,7 +11442,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Owner:** ',get('data_source.965.field_9663.0.value'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -11700,7 +11476,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "get('data_source.965.field_9657')",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -11774,9 +11549,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26a1 Related activities'",
-                            "font_color": "default",
-                            "level": 3,
-                            "alignment": "left"
+                            "level": 3
                         },
                         {
                             "id": 3691,
@@ -11817,10 +11590,7 @@
                             "navigate_to_url": "concat('http://localhost/form/hE4FakjKrkH2z8pHx_sgnqQwvYsqllbOR8Ylb8oFWtM?prefill_Pipeline=',get('data_source.965.field_9655'))",
                             "target": "self",
                             "value": "'\u2795 Add new activity'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3692,
@@ -11865,6 +11635,7 @@
                                     "uid": "a370de78-6352-40c3-b259-526cb3e5aaac",
                                     "name": "Activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9668.value')"
                                     }
@@ -11873,6 +11644,7 @@
                                     "uid": "c3dc524a-62d1-4fb1-ae27-6390b46c68e6",
                                     "name": "Pipeline",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9672.0.value')"
                                     }
@@ -11881,6 +11653,7 @@
                                     "uid": "e5e52b8c-cbd8-4eed-9231-ce4a568ae644",
                                     "name": "Date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9670')"
                                     }
@@ -11889,6 +11662,7 @@
                                     "uid": "701e7248-209b-4d21-bd48-66008d741283",
                                     "name": "Employee",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9677')"
                                     }
@@ -11897,6 +11671,7 @@
                                     "uid": "1e309912-fd3f-48af-83b4-585fcd686ec8",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 512,
@@ -11912,7 +11687,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -11931,10 +11705,10 @@
                                 "type": "local_baserow_get_row",
                                 "table_id": 946,
                                 "view_id": 4414,
+                                "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [],
-                                "row_id": "get('page_parameter.id')",
-                                "search_query": ""
+                                "row_id": "get('page_parameter.id')"
                             }
                         },
                         {
@@ -11947,6 +11721,7 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 947,
                                 "view_id": 4422,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [
@@ -11956,8 +11731,7 @@
                                         "value": "get('page_parameter.id')",
                                         "value_is_formula": true
                                     }
-                                ],
-                                "sortings": []
+                                ]
                             }
                         }
                     ],
@@ -11973,8 +11747,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 463,
@@ -11987,12 +11760,13 @@
                                 "id": 1030,
                                 "integration_id": 64,
                                 "type": "local_baserow_upsert_row",
-                                "row_id": "get('page_parameter.id')",
                                 "table_id": 946,
+                                "row_id": "get('page_parameter.id')",
                                 "field_mappings": [
                                     {
                                         "field_id": 9661,
-                                        "value": "get('form_data.3673')"
+                                        "value": "get('form_data.3673')",
+                                        "enabled": true
                                     }
                                 ]
                             }
@@ -12098,11 +11872,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3697,
@@ -12136,7 +11906,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -12174,10 +11943,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3699,
@@ -12220,10 +11986,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3694,
@@ -12299,11 +12062,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3701,
@@ -12346,10 +12105,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3702,
@@ -12392,10 +12148,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3703,
@@ -12438,10 +12191,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3704,
@@ -12484,10 +12234,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3695,
@@ -12560,9 +12307,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "'\u26a1 All activities'",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3706,
@@ -12603,10 +12348,7 @@
                             "navigate_to_url": "'http://localhost/form/hE4FakjKrkH2z8pHx_sgnqQwvYsqllbOR8Ylb8oFWtM'",
                             "target": "self",
                             "value": "'\u2795 Add new activity'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3707,
@@ -12651,6 +12393,7 @@
                                     "uid": "d1e0eef3-daf0-4fed-92a3-3546dd2e81ed",
                                     "name": "Activity",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9668.value')"
                                     }
@@ -12659,6 +12402,7 @@
                                     "uid": "d7d4a0a9-14a1-437c-9f3d-b32361e6e9da",
                                     "name": "Contact",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9669.0.value')"
                                     }
@@ -12667,6 +12411,7 @@
                                     "uid": "ecf49a59-c967-4ee7-a1e9-d144ca8543aa",
                                     "name": "Pipeline",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9672.0.value')"
                                     }
@@ -12675,6 +12420,7 @@
                                     "uid": "6b12843d-d98e-4185-9a18-6ec22a6b88b8",
                                     "name": "Date",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9670')"
                                     }
@@ -12683,6 +12429,7 @@
                                     "uid": "fda6d563-e5ae-41ef-a5e2-5d2623d5a58e",
                                     "name": "Employee",
                                     "type": "text",
+                                    "styles": {},
                                     "config": {
                                         "value": "get('current_record.field_9677')"
                                     }
@@ -12691,6 +12438,7 @@
                                     "uid": "e618ffbb-2807-48b9-9bf5-f9f2fd72991a",
                                     "name": "-",
                                     "type": "link",
+                                    "styles": {},
                                     "config": {
                                         "navigation_type": "page",
                                         "navigate_to_page_id": 512,
@@ -12706,7 +12454,6 @@
                                     }
                                 }
                             ],
-                            "button_color": "primary",
                             "orientation": {
                                 "tablet": "horizontal",
                                 "desktop": "horizontal",
@@ -12725,10 +12472,10 @@
                                 "type": "local_baserow_list_rows",
                                 "table_id": 947,
                                 "view_id": 4422,
+                                "sortings": [],
                                 "search_query": "",
                                 "filter_type": "AND",
-                                "filters": [],
-                                "sortings": []
+                                "filters": []
                             }
                         }
                     ],
@@ -12744,8 +12491,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 467,
@@ -12883,11 +12629,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3714,
@@ -12921,7 +12663,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('\ud83d\udc4b Welcome ',get('user.username'))",
-                            "alignment": "left",
                             "format": "plain"
                         },
                         {
@@ -12959,10 +12700,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Logout'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Logout'"
                         },
                         {
                             "id": 3716,
@@ -12996,7 +12734,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Date:** ',get('data_source.968.field_9670'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -13040,10 +12777,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Login'",
-                            "variant": "button",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "variant": "button"
                         },
                         {
                             "id": 3709,
@@ -13119,11 +12853,7 @@
                                 "original_name": "baserow-logo.png"
                             },
                             "image_url": "",
-                            "alt_text": "",
-                            "alignment": "left",
-                            "style_image_constraint": "contain",
-                            "style_max_width": 100,
-                            "style_max_height": null
+                            "alt_text": ""
                         },
                         {
                             "id": 3719,
@@ -13166,10 +12896,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Companies'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3720,
@@ -13212,10 +12939,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Contacts'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3721,
@@ -13258,10 +12982,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Pipelines'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3722,
@@ -13304,10 +13025,7 @@
                             "navigate_to_url": "",
                             "target": "self",
                             "value": "'Activities'",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "center",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3723,
@@ -13344,10 +13062,7 @@
                             "style_background_file_id": null,
                             "style_background_mode": "fill",
                             "style_width": "normal",
-                            "value": "'Update notes'",
-                            "width": "auto",
-                            "alignment": "right",
-                            "button_color": "primary"
+                            "value": "'Update notes'"
                         },
                         {
                             "id": 3710,
@@ -13421,10 +13136,7 @@
                             "navigate_to_url": "concat('/pipelines/',get('data_source.968.field_9672.0.id'))",
                             "target": "self",
                             "value": "concat('Pipeline: ',get('data_source.968.field_9672.0.value'))",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3725,
@@ -13462,9 +13174,7 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat(' \u26a1 ',get('data_source.968.field_9668.value'),' with ',get('data_source.968.field_9669.0.value'))",
-                            "font_color": "default",
-                            "level": 2,
-                            "alignment": "left"
+                            "level": 2
                         },
                         {
                             "id": 3726,
@@ -13498,7 +13208,6 @@
                             "style_background_mode": "fill",
                             "style_width": "normal",
                             "value": "concat('**Employee:** ',get('data_source.968.field_9677'))",
-                            "alignment": "left",
                             "format": "markdown"
                         },
                         {
@@ -13538,10 +13247,7 @@
                             "navigate_to_url": "get('data_source.968.field_9678.0.url')",
                             "target": "self",
                             "value": "concat('Attachment: ',get('data_source.968.field_9678.0.visible_name'))",
-                            "variant": "link",
-                            "width": "auto",
-                            "alignment": "left",
-                            "button_color": "primary"
+                            "variant": "link"
                         },
                         {
                             "id": 3711,
@@ -13626,10 +13332,10 @@
                                 "type": "local_baserow_get_row",
                                 "table_id": 947,
                                 "view_id": 4422,
+                                "search_query": "",
                                 "filter_type": "AND",
                                 "filters": [],
-                                "row_id": "get('page_parameter.id')",
-                                "search_query": ""
+                                "row_id": "get('page_parameter.id')"
                             }
                         }
                     ],
@@ -13645,12 +13351,13 @@
                                 "id": 1031,
                                 "integration_id": 64,
                                 "type": "local_baserow_upsert_row",
-                                "row_id": "get('page_parameter.id')",
                                 "table_id": 947,
+                                "row_id": "get('page_parameter.id')",
                                 "field_mappings": [
                                     {
                                         "field_id": 9671,
-                                        "value": "get('form_data.3712')"
+                                        "value": "get('form_data.3712')",
+                                        "enabled": true
                                     }
                                 ]
                             }
@@ -13666,8 +13373,7 @@
                             "navigate_to_page_id": null,
                             "page_parameters": [],
                             "navigate_to_url": "",
-                            "target": "self",
-                            "url": "'/'"
+                            "target": "self"
                         },
                         {
                             "id": 470,
@@ -13760,7 +13466,36 @@
                 "image_constraint": "contain",
                 "page_background_color": "#ffffffff",
                 "page_background_file_id": null,
-                "page_background_mode": "tile"
+                "page_background_mode": "tile",
+                "label_font_family": "inter",
+                "label_text_color": "#070810FF",
+                "label_font_size": 13,
+                "input_font_family": "inter",
+                "input_font_size": 13,
+                "input_text_color": "#070810FF",
+                "input_background_color": "#FFFFFFFF",
+                "input_border_color": "#000000FF",
+                "input_border_size": 1,
+                "input_border_radius": 0,
+                "input_vertical_padding": 8,
+                "input_horizontal_padding": 12,
+                "table_border_color": "#000000FF",
+                "table_border_size": 1,
+                "table_border_radius": 0,
+                "table_header_background_color": "#edededff",
+                "table_header_text_color": "#000000ff",
+                "table_header_font_size": 13,
+                "table_header_font_family": "inter",
+                "table_header_text_alignment": "left",
+                "table_cell_background_color": "transparent",
+                "table_cell_alternate_background_color": "transparent",
+                "table_cell_alignment": "left",
+                "table_cell_vertical_padding": 10,
+                "table_cell_horizontal_padding": 20,
+                "table_vertical_separator_color": "#000000FF",
+                "table_vertical_separator_size": 0,
+                "table_horizontal_separator_color": "#000000FF",
+                "table_horizontal_separator_size": 1
             },
             "user_sources": [
                 {

@@ -1,6 +1,7 @@
 import datetime
 
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
 from django.db import IntegrityError, OperationalError
 from django.db.models.query import QuerySet
@@ -17,7 +18,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
-from baserow.core.models import Application, Snapshot, User, Workspace
+from baserow.core.models import Application, Snapshot, Workspace
 from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.signals import application_created
 from baserow.core.snapshots.exceptions import (
@@ -77,7 +78,7 @@ class SnapshotHandler:
         if snapshot.mark_for_deletion is True:
             raise SnapshotIsBeingDeleted()
 
-    def list(self, application_id: int, performed_by: User) -> QuerySet:
+    def list(self, application_id: int, performed_by: AbstractUser) -> QuerySet:
         """
         Lists all snapshots for the given application id if the provided
         user is in the same workspace as the application.
@@ -122,31 +123,46 @@ class SnapshotHandler:
             .order_by("-created_at", "-id")
         )
 
-    def create(self, application_id: int, performed_by: User, name: str):
+    def start_create_job(
+        self, application_id: int, performed_by: AbstractUser, name: str
+    ):
         """
-        Creates a new application snapshot of the given application if the provided
-        user is in the same workspace as the application.
+        Create a snapshot instance to track the creation of a snapshot and start the job
+        to perform the snapshot creation.
 
-        :param application_id: The ID of the application for which to list
-            snapshots.
-        :param performed_by: The user performing the operation that should
-            have sufficient permissions.
+        :param application_id: The ID of the application for which to list snapshots.
+        :param performed_by: The user performing the operation that should have
+            sufficient permissions.
         :param name: The name for the new snapshot.
-        :raises ApplicationDoesNotExist: When the application with the provided id
-            does not exist.
+        :raises ApplicationDoesNotExist: When the application with the provided id does
+            not exist.
         :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
-        :raises MaximumSnapshotsReached: When the workspace has already reached
-            the maximum of allowed snapshots.
-        :raises ApplicationOperationNotSupported: When the application type
-            doesn't support creating snapshots.
-        :raises SnapshotIsBeingCreated: When creating a snapshot is already
-            scheduled for the application.
-        :raises MaxJobCountExceeded: When the user already has a running
-            job to create a snapshot of the same type.
-        :return: The snapshot object that was created.
+        :raises MaximumSnapshotsReached: When the workspace has already reached the
+            maximum of allowed snapshots.
+        :raises ApplicationOperationNotSupported: When the application type doesn't
+            support creating snapshots.
+        :raises SnapshotIsBeingCreated: When creating a snapshot is already scheduled
+            for the application.
+        :raises MaxJobCountExceeded: When the user already has a running job to create a
+            snapshot of the same type.
+        :return: The snapshot object that was created and the started job.
         """
 
+        snapshot = self.create(application_id, performed_by, name)
+
+        job = JobHandler().create_and_start_job(
+            performed_by,
+            CreateSnapshotJobType.type,
+            snapshot=snapshot,
+        )
+
+        return {
+            "snapshot": snapshot,
+            "job": job,
+        }
+
+    def create(self, application_id, performed_by, name):
         try:
             application = (
                 Application.objects.filter(id=application_id)
@@ -192,23 +208,12 @@ class SnapshotHandler:
             if "unique constraint" in e.args[0]:
                 raise SnapshotNameNotUnique()
             raise e
+        return snapshot
 
-        job = JobHandler().create_and_start_job(
-            performed_by,
-            CreateSnapshotJobType.type,
-            False,
-            snapshot=snapshot,
-        )
-
-        return {
-            "snapshot": snapshot,
-            "job": job,
-        }
-
-    def restore(
+    def start_restore_job(
         self,
         snapshot_id: int,
-        performed_by: User,
+        performed_by: AbstractUser,
     ) -> Job:
         """
         Restores a previously created snapshot with the given ID if the
@@ -262,7 +267,6 @@ class SnapshotHandler:
         job = JobHandler().create_and_start_job(
             performed_by,
             RestoreSnapshotJobType.type,
-            False,
             snapshot=snapshot,
         )
 
@@ -274,7 +278,7 @@ class SnapshotHandler:
         if snapshot.snapshot_to_application is not None:
             delete_application_snapshot.delay(snapshot.snapshot_to_application.id)
 
-    def delete(self, snapshot_id: int, performed_by: User) -> None:
+    def delete(self, snapshot_id: int, performed_by: AbstractUser) -> None:
         """
         Deletes a previously created snapshot with the given ID if the
         provided user belongs to the same workspace as the application.
@@ -444,6 +448,9 @@ class SnapshotHandler:
         restore_snapshot_import_export_config = ImportExportConfig(
             include_permission_data=True, reduce_disk_space_usage=False
         )
+        # Temporary set the workspace for the application so that the permissions can
+        # be correctly set during the import process.
+        application.workspace = workspace
         exported_application = application_type.export_serialized(
             application, restore_snapshot_import_export_config, None, default_storage
         )

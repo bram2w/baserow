@@ -4,70 +4,64 @@ exports[`ViewFilterForm match snapshots Default view filter component 1`] = `
 <div
   class="filters__content"
 >
-  <div>
+  <div
+    class="filters__none filters__none--scrollable"
+  >
     <div
-      class="filters__none"
+      class="filters__none-title"
     >
-      <div
-        class="filters__none-title"
-      >
-        
-        viewFilterContext.noFilterTitle
       
-      </div>
-       
-      <div
-        class="filters__none-description"
-      >
-        
-        viewFilterContext.noFilterText
+      viewFilterContext.noFilterTitle
+    
+    </div>
+     
+    <div
+      class="filters__none-description"
+    >
       
-      </div>
+      viewFilterContext.noFilterText
+    
     </div>
   </div>
    
   <!---->
    
   <div
-    class="filters__footer"
+    class="context__footer"
   >
-    <div
-      class="filters__actions"
+    <button
+      class="button-text"
     >
-      <button
-        class="button-text"
-      >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilter
-        </span>
-      </button>
+      <i
+        class="button-text__icon iconoir-plus"
+      />
        
-      <button
-        class="button-text"
+      <!---->
+       
+      <span
+        class="button-text__label"
       >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilterGroup
-        </span>
-      </button>
-    </div>
+        
+      viewFilterContext.addFilter
+      </span>
+    </button>
+     
+    <button
+      class="button-text"
+    >
+      <i
+        class="button-text__icon iconoir-plus"
+      />
+       
+      <!---->
+       
+      <span
+        class="button-text__label"
+      >
+        
+      viewFilterContext.addFilterGroup
+      </span>
+    </button>
      
     <!---->
   </div>
@@ -152,7 +146,7 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options active"
@@ -299,7 +293,7 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options active"
@@ -659,7 +653,7 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
                
               <ul
                 class="select__items select__items--no-max-height"
-                tabindex=""
+                tabindex="-1"
               >
                 <li
                   class="select__item select__item--no-options active"
@@ -782,7 +776,7 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options"
@@ -929,7 +923,7 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options active"
@@ -1166,49 +1160,47 @@ exports[`ViewFilterForm match snapshots Full view filter component 1`] = `
   </div>
    
   <div
-    class="filters__footer"
+    class="context__footer"
   >
-    <div
-      class="filters__actions"
+    <button
+      class="button-text"
     >
-      <button
-        class="button-text"
-      >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilter
-        </span>
-      </button>
+      <i
+        class="button-text__icon iconoir-plus"
+      />
        
-      <button
-        class="button-text"
+      <!---->
+       
+      <span
+        class="button-text__label"
       >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilterGroup
-        </span>
-      </button>
-    </div>
+        
+      viewFilterContext.addFilter
+      </span>
+    </button>
      
-    <div>
+    <button
+      class="button-text"
+    >
+      <i
+        class="button-text__icon iconoir-plus"
+      />
+       
+      <!---->
+       
+      <span
+        class="button-text__label"
+      >
+        
+      viewFilterContext.addFilterGroup
+      </span>
+    </button>
+     
+    <div
+      class="margin-left-auto"
+    >
       <div
-        class="switch switch--small"
+        class="switch switch--small switch--color-green"
       >
         <div
           class="switch__label"
@@ -1299,7 +1291,7 @@ exports[`ViewFilterForm match snapshots Test rating filter 1`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options"
@@ -1447,7 +1439,7 @@ exports[`ViewFilterForm match snapshots Test rating filter 1`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height prevent-scroll"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options active hover"
@@ -1684,49 +1676,47 @@ exports[`ViewFilterForm match snapshots Test rating filter 1`] = `
   </div>
    
   <div
-    class="filters__footer"
+    class="context__footer"
   >
-    <div
-      class="filters__actions"
+    <button
+      class="button-text"
     >
-      <button
-        class="button-text"
-      >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilter
-        </span>
-      </button>
+      <i
+        class="button-text__icon iconoir-plus"
+      />
        
-      <button
-        class="button-text"
+      <!---->
+       
+      <span
+        class="button-text__label"
       >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilterGroup
-        </span>
-      </button>
-    </div>
+        
+      viewFilterContext.addFilter
+      </span>
+    </button>
      
-    <div>
+    <button
+      class="button-text"
+    >
+      <i
+        class="button-text__icon iconoir-plus"
+      />
+       
+      <!---->
+       
+      <span
+        class="button-text__label"
+      >
+        
+      viewFilterContext.addFilterGroup
+      </span>
+    </button>
+     
+    <div
+      class="margin-left-auto"
+    >
       <div
-        class="switch switch--small"
+        class="switch switch--small switch--color-green"
       >
         <div
           class="switch__label"
@@ -1817,7 +1807,7 @@ exports[`ViewFilterForm match snapshots Test rating filter 2`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options"
@@ -1965,7 +1955,7 @@ exports[`ViewFilterForm match snapshots Test rating filter 2`] = `
                  
                 <ul
                   class="select__items select__items--no-max-height prevent-scroll"
-                  tabindex=""
+                  tabindex="-1"
                 >
                   <li
                     class="select__item select__item--no-options active hover"
@@ -2202,49 +2192,47 @@ exports[`ViewFilterForm match snapshots Test rating filter 2`] = `
   </div>
    
   <div
-    class="filters__footer"
+    class="context__footer"
   >
-    <div
-      class="filters__actions"
+    <button
+      class="button-text"
     >
-      <button
-        class="button-text"
-      >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilter
-        </span>
-      </button>
+      <i
+        class="button-text__icon iconoir-plus"
+      />
        
-      <button
-        class="button-text"
+      <!---->
+       
+      <span
+        class="button-text__label"
       >
-        <i
-          class="button-text__icon iconoir-plus"
-        />
-         
-        <!---->
-         
-        <span
-          class="button-text__label"
-        >
-          
-        viewFilterContext.addFilterGroup
-        </span>
-      </button>
-    </div>
+        
+      viewFilterContext.addFilter
+      </span>
+    </button>
      
-    <div>
+    <button
+      class="button-text"
+    >
+      <i
+        class="button-text__icon iconoir-plus"
+      />
+       
+      <!---->
+       
+      <span
+        class="button-text__label"
+      >
+        
+      viewFilterContext.addFilterGroup
+      </span>
+    </button>
+     
+    <div
+      class="margin-left-auto"
+    >
       <div
-        class="switch switch--small"
+        class="switch switch--small switch--color-green"
       >
         <div
           class="switch__label"

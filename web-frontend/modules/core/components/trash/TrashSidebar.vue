@@ -6,27 +6,28 @@
         {{ $t('trashSidebar.title') }}
       </div>
     </div>
-    <ul class="trash-sidebar__groups">
+    <ul class="trash-sidebar__workspaces">
       <li
         v-for="workspace in workspaces"
-        :key="'trash-group-' + workspace.id"
-        class="trash-sidebar__group"
+        :key="'trash-workspace-' + workspace.id"
+        class="trash-sidebar__workspace"
         :class="{
-          'trash-sidebar__group--active': isSelectedTrashWorkspace(workspace),
-          'trash-sidebar__group--open':
+          'trash-sidebar__workspace--active':
+            isSelectedTrashWorkspace(workspace),
+          'trash-sidebar__workspace--open':
             isSelectedTrashWorkspaceApplication(workspace),
-          'trash-sidebar__group--trashed': workspace.trashed,
+          'trash-sidebar__workspace--trashed': workspace.trashed,
         }"
       >
         <a
-          class="trash-sidebar__group-link"
+          class="trash-sidebar__workspace-link"
           @click="emitIfNotAlreadySelectedTrashWorkspace(workspace)"
         >
           <i
-            class="trash-sidebar__group-link-caret-right iconoir-nav-arrow-right"
+            class="trash-sidebar__workspace-link-caret-right iconoir-nav-arrow-right"
           ></i>
           <i
-            class="trash-sidebar__group-link-caret-down iconoir-nav-arrow-down"
+            class="trash-sidebar__workspace-link-caret-down iconoir-nav-arrow-down"
           ></i>
           {{
             workspace.name ||

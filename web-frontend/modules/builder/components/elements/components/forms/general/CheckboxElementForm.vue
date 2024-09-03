@@ -1,23 +1,35 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.label"
-      class="margin-bottom-2"
+    <CustomStyle
+      v-model="values.styles"
+      style-key="input"
+      :config-block-types="['input']"
+      :theme="builder.theme"
+      :extra-args="{ onlyInput: true }"
+    />
+    <FormGroup
       small-label
-      required
       :label="$t('checkboxElementForm.labelTitle')"
-      :placeholder="$t('generalForm.labelPlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
-    ></ApplicationBuilderFormulaInputGroup>
-    <ApplicationBuilderFormulaInputGroup
-      v-model="values.default_value"
       class="margin-bottom-2"
-      small-label
       required
+    >
+      <InjectedFormulaInput
+        v-model="values.label"
+        :placeholder="$t('generalForm.labelPlaceholder')"
+      />
+    </FormGroup>
+
+    <FormGroup
+      small-label
       :label="$t('checkboxElementForm.valueTitle')"
-      :placeholder="$t('generalForm.valuePlaceholder')"
-      :data-providers-allowed="dataProvidersAllowed"
-    ></ApplicationBuilderFormulaInputGroup>
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.default_value"
+        :placeholder="$t('generalForm.valuePlaceholder')"
+      />
+    </FormGroup>
     <FormGroup
       small-label
       required
@@ -29,19 +41,14 @@
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
-import {
-  CurrentRecordDataProviderType,
-  DataSourceContextDataProviderType,
-  DataSourceDataProviderType,
-  PageParameterDataProviderType,
-} from '@baserow/modules/builder/dataProviderTypes'
+import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
+import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 
 export default {
   name: 'CheckboxElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
+  components: { InjectedFormulaInput, CustomStyle },
+  mixins: [formElementForm],
   data() {
     return {
       values: {
@@ -50,23 +57,6 @@ export default {
         required: false,
       },
     }
-  },
-  computed: {
-    dataProvidersAllowed() {
-      return [
-        CurrentRecordDataProviderType.getType(),
-        PageParameterDataProviderType.getType(),
-        DataSourceDataProviderType.getType(),
-        DataSourceContextDataProviderType.getType(),
-      ]
-    },
-  },
-  methods: {
-    emitChange(newValues) {
-      if (this.isFormValid()) {
-        form.methods.emitChange.bind(this)(newValues)
-      }
-    },
   },
 }
 </script>

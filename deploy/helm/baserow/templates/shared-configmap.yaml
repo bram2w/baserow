@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.global.baserow.sharedConfigMap }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install, pre-upgrade
+    helm.sh/hook-weight: "2"
+  labels:
+    {{- include "baserow.global.labels" . | nindent 4 }}
+data:
+  PUBLIC_BACKEND_URL: https://{{ .Values.global.baserow.backendDomain }}
+  PUBLIC_WEB_FRONTEND_URL: https://{{ .Values.global.baserow.domain }}
+  PRIVATE_BACKEND_URL: http://{{ lower .Release.Name }}-baserow-backend-wsgi
+  {{- range $key, $val := .Values.sharedConfigMap }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

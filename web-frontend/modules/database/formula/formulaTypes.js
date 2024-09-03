@@ -41,6 +41,19 @@ import SingleFileArrayModal from '@baserow/modules/database/components/view/grid
 import GridViewSingleFile from '@baserow/modules/database/components/view/grid/fields/GridViewSingleFile.vue'
 import RowEditSingleFileReadOnly from '@baserow/modules/database/components/row/RowEditSingleFileReadOnly.vue'
 import RowCardFieldSingleFile from '@baserow/modules/database/components/card/RowCardFieldSingleFile.vue'
+import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL.vue'
+import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL.vue'
+import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL.vue'
+import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL.vue'
+import FunctionalFormulaURLArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaURLArrayItem.vue'
+import { mix } from '@baserow/modules/core/mixins'
+import {
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+} from '@baserow/modules/database/arrayFilterMixins'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -179,7 +192,14 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   }
 }
 
-export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
+export class BaserowFormulaTextType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  BaserowFormulaTypeDefinition
+) {
   static getType() {
     return 'text'
   }
@@ -217,7 +237,14 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
   }
 }
 
-export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
+export class BaserowFormulaCharType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  BaserowFormulaTypeDefinition
+) {
   static getType() {
     return 'char'
   }
@@ -487,7 +514,15 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
     return false
   }
 }
-export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
+
+export class BaserowFormulaArrayType extends mix(
+  hasEmptyValueFilterMixin,
+  hasValueEqualFilterMixin,
+  hasValueContainsFilterMixin,
+  hasValueContainsWordFilterMixin,
+  hasValueLengthIsLowerThanFilterMixin,
+  BaserowFormulaTypeDefinition
+) {
   static getType() {
     return 'array'
   }
@@ -660,6 +695,46 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
 
   canGroupByInView() {
     return false
+  }
+
+  getHasEmptyValueFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasEmptyValueFilterFunction(field)
+  }
+
+  getHasValueEqualFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueEqualFilterFunction(field)
+  }
+
+  getHasValueContainsFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueContainsFilterFunction(field)
+  }
+
+  getHasValueContainsWordFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueContainsWordFilterFunction(field)
+  }
+
+  getHasValueLengthIsLowerThanFilterFunction(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.getHasValueLengthIsLowerThanFilterFunction(field)
   }
 }
 
@@ -893,6 +968,64 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
 
   getCardComponent() {
     return RowCardFieldLinkURL
+  }
+
+  prepareValueForCopy(field, value) {
+    return this.toHumanReadableString(field, value)
+  }
+
+  getCanSortInView(field) {
+    return false
+  }
+
+  canGroupByInView() {
+    return false
+  }
+}
+
+export class BaserowFormulaURLType extends BaserowFormulaTypeDefinition {
+  static getType() {
+    return 'url'
+  }
+
+  getFieldType() {
+    return 'url'
+  }
+
+  getIconClass() {
+    return 'iconoir-link'
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldURL
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldURL
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldURL
+  }
+
+  getSortOrder() {
+    return 10
+  }
+
+  getFunctionalFieldArrayComponent() {
+    return FunctionalFormulaURLArrayItem
+  }
+
+  toHumanReadableString(field, value) {
+    if (value?.label) {
+      return `${value.label} (${value.url})`
+    } else {
+      return value.url
+    }
+  }
+
+  getCardComponent() {
+    return RowCardFieldURL
   }
 
   prepareValueForCopy(field, value) {

@@ -16,7 +16,7 @@ import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
 
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
-import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import ApplicationBuilderFormulaInput from '@baserow/modules/builder/components/ApplicationBuilderFormulaInput'
 import _ from 'lodash'
 
 import {
@@ -24,6 +24,17 @@ import {
   setToken,
   userSourceCookieTokenName,
 } from '@baserow/modules/core/utils/auth'
+
+const logOffAndReturnToLogin = async ({ builder, store, redirect }) => {
+  await store.dispatch('userSourceUser/logoff', {
+    application: builder,
+  })
+  // Redirect to home page after logout
+  await redirect({
+    name: 'application-builder-page',
+    params: { pathMatch: '/' },
+  })
+}
 
 export default {
   components: { PageContent, Toasts },
@@ -33,7 +44,7 @@ export default {
       builder: this.builder,
       page: this.page,
       mode: this.mode,
-      formulaComponent: ApplicationBuilderFormulaInputGroup,
+      formulaComponent: ApplicationBuilderFormulaInput,
       applicationContext: this.applicationContext,
     }
   },
@@ -48,7 +59,7 @@ export default {
     redirect,
   }) {
     let mode = 'public'
-    const builderId = parseInt(params.builderId, 10)
+    const builderId = params.builderId ? parseInt(params.builderId, 10) : null
 
     // We have a builderId parameter in the path so it's a preview
     if (builderId) {
@@ -57,7 +68,7 @@ export default {
 
     let builder = store.getters['application/getSelected']
 
-    if (!builder || builderId !== builder.id) {
+    if (!builder || (builderId && builderId !== builder.id)) {
       try {
         if (builderId) {
           // We have the builderId in the params so this is a preview
@@ -93,6 +104,7 @@ export default {
     store.dispatch('userSourceUser/setCurrentApplication', {
       application: builder,
     })
+
     if (
       (!process.server || req) &&
       !store.getters['userSourceUser/isAuthenticated'](builder)
@@ -116,14 +128,7 @@ export default {
         } catch (error) {
           if (error.response?.status === 401) {
             // We logoff as the token has probably expired or became invalid
-            await store.dispatch('userSourceUser/logoff', {
-              application: builder,
-            })
-            // Redirect to home page after logout
-            await redirect({
-              name: 'application-builder-page',
-              params: { pathMatch: '/' },
-            })
+            logOffAndReturnToLogin({ builder, store, redirect })
           } else {
             throw error
           }
@@ -145,13 +150,33 @@ export default {
 
     const page = await store.getters['page/getById'](builder, pageFound.id)
 
-    await Promise.all([
-      store.dispatch('dataSource/fetchPublished', {
-        page,
-      }),
-      store.dispatch('element/fetchPublished', { page }),
-      store.dispatch('workflowAction/fetchPublished', { page }),
-    ])
+    try {
+      await Promise.all([
+        store.dispatch('dataSource/fetchPublished', {
+          page,
+        }),
+        store.dispatch('element/fetchPublished', { page }),
+        store.dispatch('workflowAction/fetchPublished', { page }),
+      ])
+    } catch (error) {
+      if (error.response?.status === 401) {
+        // this case can happen if the site has been published with changes in the
+        // user source. In this case we want to unlog the user.
+        logOffAndReturnToLogin({ builder, store, redirect })
+      } else if (
+        error.response?.status === 404 &&
+        error.response?.data?.error === 'ERROR_PAGE_NOT_FOUND'
+      ) {
+        // This case is when you had a tab open on the site and the site has been
+        // published in the meantime. Page IDs aren't valid anymore
+        return error({
+          statusCode: 404,
+          message: app.i18n.t('publicPage.pageNotFound'),
+        })
+      } else {
+        throw error
+      }
+    }
 
     await DataProviderType.initAll($registry.getAll('builderDataProvider'), {
       builder,

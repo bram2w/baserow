@@ -830,6 +830,27 @@ def test_list_workspace_tables_in_trashed_workspace(data_fixture):
 
 
 @pytest.mark.django_db
+def test_table_usage_handler_mark_table_for_usage_update_row_count_default_zero(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user, database=database)
+
+    TableUsageHandler.mark_table_for_usage_update(table_id=table.id)
+
+    assert TableUsageUpdate.objects.count() == 1
+    table_usage = TableUsageUpdate.objects.get(table_id=table.id)
+    assert table_usage.row_count == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_table_usage_handler_mark_table_for_usage_update_table_doesnt_exist():
+    TableUsageHandler.mark_table_for_usage_update(table_id=999, row_count=1)
+
+
+@pytest.mark.django_db
 def test_table_usage_handler_mark_table_for_usage_update(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -866,14 +887,14 @@ def test_table_usage_handler_mark_table_for_usage_update(data_fixture):
     assert usage_entry.row_count == 7
     assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 24, tzinfo=timezone.utc)
 
-    # If row_count is 0, then 0 should be the stored value
+    # If row_count is 0, then row_count is not changed
     with freeze_time("2020-02-01 01:25"):
         TableUsageHandler.mark_table_for_usage_update(table.id, 0)
 
     assert TableUsageUpdate.objects.all().count() == 1
     usage_entry = TableUsageUpdate.objects.get(table_id=table.id)
     assert usage_entry.row_count == 7
-    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 24, tzinfo=timezone.utc)
+    assert usage_entry.timestamp == datetime(2020, 2, 1, 1, 25, tzinfo=timezone.utc)
 
     # An update to a second table, should create a second entry
     with freeze_time("2020-02-01 01:26"):

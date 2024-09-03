@@ -6,6 +6,9 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.trash.handler import TrashHandler
 
 
 def _unwrap_ids(qs):
@@ -316,3 +319,52 @@ def test_str_of_field_dependency_uniquely_identifies_it(
                 broken_reference_field_name="via",
             )
         )
+
+
+@pytest.mark.django_db
+def test_trashing_and_restoring_a_field_recreate_dependencies_correctly(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text = data_fixture.create_text_field(name="text", table=table)
+    f1 = data_fixture.create_formula_field(
+        name="f1", table=table, formula_type="text", formula="field('text')"
+    )
+    f1_id = f1.id
+    f2 = data_fixture.create_formula_field(
+        name="f2", table=table, formula_type="text", formula="field('f1')"
+    )
+
+    field_cache = FieldCache()
+    deps = FieldDependencyHandler.group_all_dependent_fields_by_level(
+        table.id, [text.id], field_cache, associated_relations_changed=False
+    )
+    assert len(deps) == 2
+    assert deps[0][0][0] == f1
+    assert deps[1][0][0] == f2
+
+    row_1 = RowHandler().force_create_row(user, table, {text.db_column: "a"})
+    assert getattr(row_1, f2.db_column) == "a"
+
+    FieldHandler().delete_field(user, f1)
+    deps = FieldDependencyHandler.group_all_dependent_fields_by_level(
+        table.id, [text.id], field_cache, associated_relations_changed=False
+    )
+    assert len(deps) == 0
+    FieldDependency.objects.get(dependant=f2).broken_reference_field_name == "f1"
+
+    # Adding a new row should not update the f2 field since the f1 field is missing
+    row_2 = RowHandler().force_create_row(user, table, {text.db_column: "b"})
+    assert getattr(row_2, f2.db_column) is None
+
+    # restoring the f1 field should fix the f2 field and row values
+    TrashHandler().restore_item(user, "field", f1_id)
+    deps = FieldDependencyHandler.group_all_dependent_fields_by_level(
+        table.id, [text.id], field_cache, associated_relations_changed=False
+    )
+    assert len(deps) == 2
+    assert deps[0][0][0] == f1
+    assert deps[1][0][0] == f2
+
+    row_2.refresh_from_db()
+    assert getattr(row_2, f1.db_column) == "b"
+    assert getattr(row_2, f2.db_column) == "b"

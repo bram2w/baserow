@@ -46,6 +46,7 @@ describe('Premium Share View Link Tests', () => {
       public: true,
       table: { database_id: databaseId },
       show_logo: true,
+      isShared: true,
     }
     testApp.getStore().dispatch('view/forceCreate', { data: view })
 

@@ -15,8 +15,8 @@
       <span>
         {{ $t('shareLinkOptions.baserowLogo.label') }}
       </span>
-      <i v-if="!hasPremiumFeatures" class="deactivated-label iconoir-lock"></i
-    ></SwitchInput>
+      <i v-if="!hasPremiumFeatures" class="deactivated-label iconoir-lock" />
+    </SwitchInput>
 
     <PremiumModal
       v-if="!hasPremiumFeatures"

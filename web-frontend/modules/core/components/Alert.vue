@@ -1,22 +1,29 @@
 <template>
-  <div class="alert" :class="classes">
-    <i v-if="loading" class="alert__loading"></i>
-    <i v-else class="alert__icon" :class="iconClass"></i>
+  <div class="alert" :style="cssWidth" :class="classes">
+    <slot name="image" />
+    <div class="alert__wrapper">
+      <i v-if="loading" class="alert__loading"></i>
+      <i
+        v-else-if="type !== 'blank'"
+        class="alert__icon"
+        :class="iconClass"
+      ></i>
 
-    <div class="alert__content">
-      <div v-if="hasTitleSlot" class="alert__title">
-        <slot name="title" />
-      </div>
-      <div v-if="hasDefaultSlot" class="alert__message"><slot /></div>
+      <div class="alert__content">
+        <div v-if="hasTitleSlot" class="alert__title">
+          <slot name="title" />
+        </div>
+        <div v-if="hasDefaultSlot" class="alert__message"><slot /></div>
 
-      <div v-if="hasActionsSlot" class="alert__actions">
-        <slot name="actions" />
+        <div v-if="hasActionsSlot" class="alert__actions">
+          <slot name="actions" />
+        </div>
       </div>
+
+      <button v-if="closeButton" class="alert__close" @click="close">
+        <i class="iconoir-cancel"></i>
+      </button>
     </div>
-
-    <button v-if="closeButton" class="alert__close" @click="close">
-      <i class="iconoir-cancel"></i>
-    </button>
   </div>
 </template>
 
@@ -37,6 +44,7 @@ export default {
           'warning',
           'error',
           'success',
+          'blank',
         ].includes(value)
       },
     },
@@ -66,6 +74,14 @@ export default {
       required: false,
       type: Boolean,
       default: false,
+    },
+    /**
+     * The  width of the alert.
+     */
+    width: {
+      required: false,
+      type: Number,
+      default: null,
     },
   },
   computed: {
@@ -105,6 +121,13 @@ export default {
         'iconoir-warning-circle': this.isErrorAlert,
       }
       return classObj
+    },
+    cssWidth() {
+      if (this.width)
+        return {
+          '--alert-width': this.width + 'px',
+        }
+      return 'auto'
     },
   },
   methods: {

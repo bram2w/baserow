@@ -6,7 +6,7 @@
         :label="$t('defaultStyleForm.backgroundLabel')"
         small-label
         required
-        class="margin-bottom-1"
+        class="margin-bottom-2"
       >
         <RadioGroup
           v-model="values.style_background"
@@ -19,7 +19,7 @@
           values.style_background === BACKGROUND_TYPES.COLOR &&
           isStyleAllowed('style_background_color')
         "
-        class="margin-bottom-1"
+        class="margin-bottom-2"
         small-label
         required
       >
@@ -59,9 +59,9 @@
         :label="$t('defaultStyleForm.widthLabel')"
         small-label
         required
-        class="margin-bottom-1"
+        class="margin-bottom-2"
       >
-        <Dropdown v-model="values.style_width">
+        <Dropdown v-model="values.style_width" small>
           <DropdownItem
             v-for="type in Object.values(WIDTH_TYPES)"
             :key="type.value"

@@ -7,12 +7,10 @@ from django.shortcuts import reverse
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from baserow.contrib.database.fields.deferred_foreign_key_updater import (
-    DeferredForeignKeyUpdater,
-)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import UUIDField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.utils import DeferredForeignKeyUpdater
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig

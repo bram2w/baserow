@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from itertools import cycle
 from random import randint, randrange, sample
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple, Union
 from zipfile import ZipFile
 from zoneinfo import ZoneInfo
 
@@ -71,12 +71,21 @@ from baserow.contrib.database.api.fields.serializers import (
     PasswordSerializer,
     SelectOptionSerializer,
 )
+from baserow.contrib.database.api.utils import LinkRowJoin
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
     ERROR_VIEW_NOT_IN_TABLE,
 )
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
+from baserow.contrib.database.fields.filter_support import (
+    FilterNotSupportedException,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+)
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
     BaserowExpression,
@@ -117,9 +126,9 @@ from ..formula.types.formula_types import (
     BaserowFormulaDurationType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
+    BaserowFormulaURLType,
 )
 from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
-from .deferred_foreign_key_updater import DeferredForeignKeyUpdater
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
     SelfReferenceFieldDependencyError,
@@ -127,6 +136,7 @@ from .dependencies.exceptions import (
 from .dependencies.handler import FieldDependants, FieldDependencyHandler
 from .dependencies.models import FieldDependency
 from .dependencies.types import FieldDependencies
+from .dependencies.update_collector import FieldUpdateCollector
 from .exceptions import (
     AllProvidedCollaboratorIdsMustBeValidUsers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
@@ -141,13 +151,13 @@ from .exceptions import (
     InvalidRollupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
-    RichTextFieldCannotBePrimaryField,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .expressions import extract_jsonb_array_values_to_single_string
 from .field_cache import FieldCache
 from .field_filters import (
     AnnotatedQ,
+    OptionallyAnnotatedQ,
     contains_filter,
     contains_word_filter,
     filename_contains_filter,
@@ -201,6 +211,7 @@ from .registries import (
     StartingRowType,
     field_type_registry,
 )
+from .utils import DeferredForeignKeyUpdater
 from .utils.duration import (
     DURATION_FORMATS,
     duration_value_sql_to_text,
@@ -214,10 +225,8 @@ from .utils.duration import (
 
 User = get_user_model()
 
+
 if TYPE_CHECKING:
-    from baserow.contrib.database.fields.dependencies.update_collector import (
-        FieldUpdateCollector,
-    )
     from baserow.contrib.database.table.models import FieldObject, GeneratedTableModel
 
 
@@ -419,24 +428,14 @@ class LongTextFieldType(CollationSortMixin, FieldType):
     def check_can_group_by(self, field: Field) -> bool:
         return not field.long_text_enable_rich_text
 
-    def before_create(
-        self, table, primary, allowed_field_values, order, user, field_kwargs
-    ):
-        # Disallow rich text fields from being primary fields as they can be difficult
-        # to render in some email notifications, as linked rows and possibly other
-        # places.
-        if primary and field_kwargs.get("long_text_enable_rich_text", False):
-            raise RichTextFieldCannotBePrimaryField(
-                "A rich text field cannot be the primary field."
+    def can_be_primary_field(self, field_or_values: Union[Field, dict]) -> bool:
+        if isinstance(field_or_values, dict):
+            enable_rich_text = field_or_values.get("long_text_enable_rich_text", False)
+        else:
+            enable_rich_text = getattr(
+                field_or_values, "long_text_enable_rich_text", False
             )
-
-    def before_update(self, from_field, to_field_values, user, field_kwargs):
-        if from_field.primary and to_field_values.get(
-            "long_text_enable_rich_text", False
-        ):
-            raise RichTextFieldCannotBePrimaryField(
-                "A rich text field cannot be the primary field."
-            )
+        return enable_rich_text is False
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -505,6 +504,9 @@ class URLFieldType(CollationSortMixin, TextFieldMatchingRegexFieldType):
         value = getattr(row, field.db_column)
         return collate_expression(Value(value))
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaURLType(nullable=True)
+
 
 class NumberFieldType(FieldType):
     MAX_DIGITS = 50
@@ -522,6 +524,7 @@ class NumberFieldType(FieldType):
         "_spectacular_annotation": {"exclude_fields": ["number_type"]},
     }
     _can_group_by = True
+    _db_column_fields = ["number_decimal_places"]
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
@@ -664,6 +667,7 @@ class RatingFieldType(FieldType):
     allowed_fields = ["max_value", "color", "style"]
     serializer_field_names = ["max_value", "color", "style"]
     _can_group_by = True
+    _db_column_fields = []
 
     def prepare_value_for_db(self, instance, value):
         if not value:
@@ -861,6 +865,7 @@ class DateFieldType(FieldType):
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
     _can_group_by = True
+    _db_column_fields = ["date_include_time"]
 
     def can_represent_date(self, field):
         return True
@@ -1398,7 +1403,7 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
                 **{f"{to_field.db_column}": models.F(self.source_field_name)}
             )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         return queryset.select_related(name)
 
     def should_backup_field_data_for_same_type_update(
@@ -1603,7 +1608,7 @@ class CreatedByFieldType(ReadOnlyFieldType):
                 **{f"{to_field.db_column}": models.F(self.source_field_name)}
             )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         return queryset.select_related(name)
 
     def should_backup_field_data_for_same_type_update(
@@ -1742,6 +1747,7 @@ class DurationFieldType(FieldType):
     allowed_fields = ["duration_format"]
     serializer_field_names = ["duration_format"]
     _can_group_by = True
+    _db_column_fields = []
 
     def get_model_field(self, instance: DurationField, **kwargs):
         return DurationModelField(instance.duration_format, null=True)
@@ -1982,9 +1988,10 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         ViewNotInTable: ERROR_VIEW_NOT_IN_TABLE,
     }
     _can_order_by = False
-    can_be_primary_field = False
+    _can_be_primary_field = False
     can_get_unique_values = False
     is_many_to_many_field = True
+    can_be_target_of_adhoc_lookup = False
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         remote_field = queryset.model._meta.get_field(field.db_column).remote_field
@@ -2017,36 +2024,53 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             .values("value")[:1]
         )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         """
         Makes sure that the related rows are prefetched by Django. We also want to
         enhance the primary field of the related queryset. If for example the primary
         field is a single select field then the dropdown options need to be
         prefetched in order to prevent many queries.
+
+        Additionaly we need to prefetch any other requested field for adhoc lookups
+        that are passed as LinkRowJoins in the kwargs.
         """
 
         remote_model = queryset.model._meta.get_field(name).remote_field.model
         related_queryset = remote_model.objects.all()
 
+        # determine if there are link row joins to take care of
+        field_kwargs = kwargs.get(f"field_{field.id}", {})
+        link_row_join = field_kwargs.get("link_row_join", None)
+
+        primary_field_object = None
         try:
             primary_field_object = next(
                 object
                 for object in remote_model._field_objects.values()
                 if object["field"].primary
             )
-            # Because we only need the primary value for serialization, we only have
-            # to select and enhance that one. This will improve the performance of
-            # large related tables significantly.
-            related_queryset = related_queryset.only(primary_field_object["name"])
-            related_queryset = primary_field_object["type"].enhance_queryset(
-                related_queryset,
-                primary_field_object["field"],
-                primary_field_object["name"],
-            )
         except StopIteration:
-            # If the related model does not have a primary field then we also don't
-            # need to enhance the queryset.
             pass
+
+        # The list of fields to prefetch is going to be the primary field
+        # if it exists together with any joined field for lookup
+        target_field_names = (
+            [primary_field_object["name"]] if primary_field_object is not None else []
+        )
+        if link_row_join is not None:
+            target_field_names += [
+                f"field_{tf.field_id}" for tf in link_row_join.target_fields
+            ]
+
+        if len(target_field_names) > 0:
+            related_queryset = related_queryset.only(*target_field_names)
+            for target_field_name in target_field_names:
+                field_obj = remote_model.get_field_object(target_field_name)
+                related_queryset = field_obj["type"].enhance_queryset(
+                    related_queryset,
+                    field_obj["field"],
+                    field_obj["name"],
+                )
 
         return queryset.prefetch_related(
             models.Prefetch(name, queryset=related_queryset)
@@ -2338,10 +2362,28 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         instance. If that is the case then we can extract the primary field from the
         model and we can pass the name along to the LinkRowValueSerializer. It will
         be used to include the primary field's value in the response as a string.
+
+        Optionally, if link_row_join kwarg is passed, the serializer will also include
+        serializer fields for all the joined target fields.
         """
 
+        link_row_join: LinkRowJoin = kwargs.pop("link_row_join", None)
+        if link_row_join is None:
+            return serializers.ListSerializer(
+                child=LinkRowValueSerializer(), **{"required": False, **kwargs}
+            )
+        attrs = {
+            f"{target_field.field_ref}": target_field.field_serializer
+            for target_field in link_row_join.target_fields
+        }
+        base_class = LinkRowValueSerializer
+        inner_serializer = type(
+            str("LinkRowLookupValueSerializer"),
+            (base_class,),
+            attrs,
+        )
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(), **{"required": False, **kwargs}
+            child=inner_serializer(), **{"required": False, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):
@@ -2682,7 +2724,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
                 field=from_field.link_row_related_field,
                 # Prevent the deletion of from_field itself as normally both link row
                 # fields are deleted together.
-                immediately_delete_only_the_provided_field=True,
+                permanently_delete_field=True,
             )
             if to_instance:
                 to_field.link_row_related_field = None
@@ -2893,10 +2935,10 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         id_mapping: Dict[str, Any],
     ):
         if field.link_row_related_field:
-            FieldDependencyHandler().rebuild_dependencies(
+            FieldDependencyHandler.rebuild_dependencies(
                 field.link_row_related_field, field_cache
             )
-        super().after_import_serialized(field, field_cache, id_mapping)
+        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         cache_entry = f"{field_name}_relations"
@@ -3003,7 +3045,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         self,
         field: Field,
         starting_row: "StartingRowType",
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
         via_path_to_starting_table: List["LinkRowField"],
     ):
@@ -3023,9 +3065,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         field: Field,
         updated_field: Field,
         updated_old_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         update_collector.add_field_which_has_changed(
             field, via_path_to_starting_table, send_field_updated_signal=False
@@ -3430,6 +3472,7 @@ class SelectOptionBaseFieldType(FieldType):
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
     _can_group_by = True
+    _db_column_fields = []
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
@@ -3461,7 +3504,7 @@ class SelectOptionBaseFieldType(FieldType):
         # If there are any deleted options we need to backup
         return old_field.select_options.exclude(id__in=updated_ids).exists()
 
-    def enhance_queryset_in_bulk(self, queryset, field_objects):
+    def enhance_queryset_in_bulk(self, queryset, field_objects, **kwargs):
         existing_multi_field_prefetches = queryset.get_multi_field_prefetches()
         select_model_prefetch = None
 
@@ -3519,7 +3562,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             }
         )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         # It's important that this individual enhance_queryset method exists, even
         # though the enhance queryset in bulk exists, because the link_row field can
         # prefetch the data individually.
@@ -3881,7 +3924,7 @@ class MultipleSelectFieldType(
             }
         )
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         # It's important that this individual enhance_queryset method exists, even
         # though the enhance queryset in bulk exists, because the link_row field can
         # prefetch the data individually.
@@ -4304,13 +4347,22 @@ class PhoneNumberFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
         return collate_expression(Value(value))
 
 
-class FormulaFieldType(ReadOnlyFieldType):
+class FormulaFieldType(
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+    ReadOnlyFieldType,
+):
     type = "formula"
     model_class = FormulaField
+    _db_column_fields = []
 
     can_be_in_form_view = False
     field_data_is_derived_from_attrs = True
     needs_refresh_after_import_serialized = True
+    include_in_row_move_updated_fields = False
 
     CORE_FORMULA_FIELDS = [
         "formula",
@@ -4364,7 +4416,7 @@ class FormulaFieldType(ReadOnlyFieldType):
 
         return checker
 
-    def _get_field_instance_and_type_from_formula_field(
+    def get_field_instance_and_type_from_formula_field(
         self,
         formula_field_instance: FormulaField,
     ) -> Tuple[Field, FieldType]:
@@ -4383,14 +4435,14 @@ class FormulaFieldType(ReadOnlyFieldType):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_serializer_field(field_instance, **kwargs)
 
     def get_response_serializer_field(self, instance, **kwargs):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_response_serializer_field(field_instance, **kwargs)
 
     def get_model_field(self, instance: FormulaField, **kwargs):
@@ -4399,14 +4451,16 @@ class FormulaFieldType(ReadOnlyFieldType):
         # case but we still want to generate a model field so the model can be
         # used to do SQL operations like dropping fields etc.
         if not (instance.error or instance.trashed):
-            expression = self.to_baserow_formula_expression(instance)
+            expression = FormulaHandler.get_typed_internal_expression_from_field(
+                instance
+            )
         else:
             expression = None
 
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         expression_field_type = field_type.get_model_field(field_instance, **kwargs)
 
         # Depending on the `expression_field_type` class level state is changed when
@@ -4424,7 +4478,6 @@ class FormulaFieldType(ReadOnlyFieldType):
             blank=True,
             expression=expression,
             expression_field=expression_field_type,
-            requires_refresh_after_insert=instance.requires_refresh_after_insert,
             **kwargs,
         )
 
@@ -4456,25 +4509,102 @@ class FormulaFieldType(ReadOnlyFieldType):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        ) = self.get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_export_value(
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
             rich_value=rich_value,
         )
 
+    def get_in_array_empty_query(self, field_name, model_field, field: FormulaField):
+        (
+            field_instance,
+            field_type,
+        ) = self.get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueEmptyFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_empty_query(
+            field_name, model_field, field_instance
+        )
+
+    def get_in_array_is_query(
+        self,
+        field_name: str,
+        value: str,
+        model_field: models.Field,
+        field: FormulaField,
+    ) -> Q | OptionallyAnnotatedQ:
+        (
+            field_instance,
+            field_type,
+        ) = self.get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_is_query(
+            field_name, value, model_field, field_instance
+        )
+
+    def get_in_array_contains_query(
+        self, field_name, value, model_field, field: FormulaField
+    ):
+        (
+            field_instance,
+            field_type,
+        ) = self.get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueContainsFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_contains_query(
+            field_name, value, model_field, field_instance
+        )
+
+    def get_in_array_contains_word_query(
+        self, field_name, value, model_field, field: FormulaField
+    ):
+        (
+            field_instance,
+            field_type,
+        ) = self.get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueContainsWordFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_contains_word_query(
+            field_name, value, model_field, field_instance
+        )
+
+    def get_in_array_length_is_lower_than_query(
+        self, field_name, value, model_field, field: FormulaField
+    ):
+        (
+            field_instance,
+            field_type,
+        ) = self.get_field_instance_and_type_from_formula_field(field)
+
+        if not isinstance(field_type, HasValueLengthIsLowerThanFilterSupport):
+            raise FilterNotSupportedException()
+
+        return field_type.get_in_array_length_is_lower_than_query(
+            field_name, value, model_field, field_instance
+        )
+
     def contains_query(self, field_name, value, model_field, field: FormulaField):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_query(field_name, value, model_field, field_instance)
 
     def contains_word_query(self, field_name, value, model_field, field):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field)
+        ) = self.get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_word_query(
             field_name, value, model_field, field_instance
         )
@@ -4483,7 +4613,7 @@ class FormulaFieldType(ReadOnlyFieldType):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(from_field)
+        ) = self.get_field_instance_and_type_from_formula_field(from_field)
         return field_type.get_alter_column_prepare_old_value(
             connection, field_instance, to_field
         )
@@ -4494,7 +4624,10 @@ class FormulaFieldType(ReadOnlyFieldType):
     def to_baserow_formula_expression(
         self, field: FormulaField
     ) -> BaserowExpression[BaserowFormulaType]:
-        return FormulaHandler.get_typed_internal_expression_from_field(field)
+        if field.expand_formula_when_referenced:
+            return FormulaHandler.get_typed_internal_expression_from_field(field)
+        else:
+            return super().to_baserow_formula_expression(field)
 
     def get_field_dependencies(
         self, field_instance: FormulaField, field_cache: "FieldCache"
@@ -4505,7 +4638,7 @@ class FormulaFieldType(ReadOnlyFieldType):
         (
             field_instance,
             field_type,
-        ) = self._get_field_instance_and_type_from_formula_field(field_object["field"])
+        ) = self.get_field_instance_and_type_from_formula_field(field_object["field"])
         return field_type.get_human_readable_value(
             value,
             {
@@ -4542,77 +4675,77 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def run_periodic_update(
         self,
-        field: Field,
+        fields: List[Field],
         update_collector: "Optional[FieldUpdateCollector]" = None,
         field_cache: "Optional[FieldCache]" = None,
         via_path_to_starting_table: Optional[List[LinkRowField]] = None,
-        all_updated_fields: Optional[List[Field]] = None,
+        already_updated_fields: Optional[List[Field]] = None,
     ):
         from baserow.contrib.database.fields.dependencies.update_collector import (
             FieldUpdateCollector,
         )
 
-        is_root_update_call = False
-
-        if update_collector is None:
-            # We are the outermost root call, and so we should send all the signals
-            # when we finish.
-            is_root_update_call = True
-            update_collector = FieldUpdateCollector(field.table)
+        update_collectors = {}
+        updated_fields = set(
+            already_updated_fields.copy() if already_updated_fields else []
+        )
 
         if field_cache is None:
             field_cache = FieldCache()
-        if via_path_to_starting_table is None:
-            via_path_to_starting_table = []
-        if all_updated_fields is None:
-            all_updated_fields = []
 
-        new_all_updated_fields = all_updated_fields.copy()
+        for field in fields:
+            if field.table_id not in update_collectors:
+                update_collectors[field.table_id] = FieldUpdateCollector(
+                    field.table, update_changes_only=True
+                )
 
-        # If the field is already in the `all_updated_fields` list, we must not do
-        # anything because otherwise the field will be updated for a second time,
-        # and there is no need for that.
-        if field.id in [f.id for f in new_all_updated_fields]:
-            return new_all_updated_fields
+            update_collector = update_collectors[field.table_id]
 
-        self._refresh_row_values(
-            field, update_collector, field_cache, via_path_to_starting_table
-        )
+            self._update_field_values(
+                field, update_collector, field_cache, via_path_to_starting_table
+            )
+            updated_fields.add(field)
 
-        # Add the field to the `all_updated_fields` to avoid that it will be updated
-        # twice.
-        new_all_updated_fields.append(field)
-
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            new_all_updated_fields = dependant_field_type.run_periodic_update(
-                dependant_field,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-                new_all_updated_fields,
+        for update_collector in update_collectors.values():
+            updated_fields |= set(
+                update_collector.apply_updates_and_get_updated_fields(field_cache)
             )
 
-        if is_root_update_call:
-            update_collector.apply_updates_and_get_updated_fields(field_cache)
-            update_collector.send_force_refresh_signals_for_all_updated_tables()
+        all_dependent_fields_grouped_by_depth = (
+            FieldDependencyHandler.group_all_dependent_fields_by_level_from_fields(
+                fields,
+                field_cache,
+                associated_relations_changed=False,
+            )
+        )
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for table_id, dependant_field in dependant_fields_group:
+                self._update_field_values(
+                    dependant_field,
+                    update_collectors[table_id],
+                    field_cache,
+                    via_path_to_starting_table,
+                )
+            updated_fields |= set(
+                update_collector.apply_updates_and_get_updated_fields(field_cache)
+            )
 
-        return new_all_updated_fields
+        update_collector.send_force_refresh_signals_for_all_updated_tables()
+
+        return list(updated_fields)
 
     def row_of_dependency_updated(
         self,
         field: FormulaField,
         starting_row: "StartingRowType",
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
         via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
-        self._refresh_row_values_if_not_in_starting_table(
+        self._update_field_values(
             field, update_collector, field_cache, via_path_to_starting_table
         )
+
         super().row_of_dependency_updated(
             field,
             starting_row,
@@ -4621,25 +4754,10 @@ class FormulaFieldType(ReadOnlyFieldType):
             via_path_to_starting_table,
         )
 
-    def _refresh_row_values_if_not_in_starting_table(
+    def _update_field_values(
         self,
         field: FormulaField,
-        update_collector: "FieldUpdateCollector",
-        field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
-    ):
-        if (
-            via_path_to_starting_table is not None
-            and len(via_path_to_starting_table) > 0
-        ):
-            self._refresh_row_values(
-                field, update_collector, field_cache, via_path_to_starting_table
-            )
-
-    def _refresh_row_values(
-        self,
-        field: FormulaField,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
         via_path_to_starting_table: Optional[List[LinkRowField]],
     ):
@@ -4659,9 +4777,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         self,
         field: Field,
         created_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         old_field = deepcopy(field)
         self._update_formula_after_dependency_change(
@@ -4673,9 +4791,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         field: Field,
         updated_field: Field,
         updated_old_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         old_field = deepcopy(field)
 
@@ -4706,9 +4824,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         self,
         field: FormulaField,
         old_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         expr = FormulaHandler.recalculate_formula_and_get_update_expression(
             field, old_field, field_cache
@@ -4722,9 +4840,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         self,
         field: Field,
         deleted_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         old_field = deepcopy(field)
         self._update_formula_after_dependency_change(
@@ -4747,11 +4865,10 @@ class FormulaFieldType(ReadOnlyFieldType):
         self,
         field: FormulaField,
         rows: List["GeneratedTableModel"],
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
     ):
-        if field.requires_refresh_after_insert:
-            self._refresh_row_values(field, update_collector, field_cache, [])
+        self._update_field_values(field, update_collector, field_cache, [])
 
     def after_update(
         self,
@@ -4773,22 +4890,31 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def after_import_serialized(self, field, field_cache, id_mapping):
         field.save(recalculate=True, field_cache=field_cache)
-        super().after_import_serialized(field, field_cache, id_mapping)
+        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
 
     def after_rows_imported(
         self,
         field: FormulaField,
-        update_collector: "FieldUpdateCollector",
-        field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        update_collector: Optional[FieldUpdateCollector] = None,
+        field_cache: Optional["FieldCache"] = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
-        if field.requires_refresh_after_insert:
-            self._refresh_row_values(
-                field, update_collector, field_cache, via_path_to_starting_table
-            )
-        super().after_rows_imported(
-            field, update_collector, field_cache, via_path_to_starting_table
+        apply_updates = False
+        if update_collector is None:
+            update_collector = FieldUpdateCollector(field.table)
+            apply_updates = True
+
+        if field_cache is None:
+            field_cache = FieldCache()
+
+        self._update_field_values(
+            field, update_collector, field_cache, via_path_to_starting_table or []
         )
+
+        # TODO: To improve performance, group formula fields at the same level and
+        # in the same table and apply updates in one go.
+        if apply_updates:
+            update_collector.apply_updates_and_get_updated_fields(field_cache)
 
     def check_can_order_by(self, field):
         return self.to_baserow_formula_type(field.specific).can_order_by
@@ -4829,6 +4955,23 @@ class FormulaFieldType(ReadOnlyFieldType):
                 forbidden_field.name, forbidden_field.table.name
             )
         )
+
+    def valid_for_bulk_update(self, field: Field) -> bool:
+        # Let the dependency handler handle the update in the right order
+        return False
+
+    def get_field_depdendencies_before_import_serialized(
+        self,
+        serialized_field: Dict[str, Any],
+        serialized_fields_map: Dict[int, Dict[str, Any]],
+        primary_table_fields_map: Dict[int, int],
+    ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
+        if "formula" not in serialized_field:
+            raise NotImplementedError(
+                "Each formula subtype needs to implement this method."
+            )
+
+        return FormulaHandler.get_dependencies_field_names(serialized_field["formula"])
 
 
 class CountFieldType(FormulaFieldType):
@@ -4943,6 +5086,27 @@ class CountFieldType(FormulaFieldType):
             field, "through_field_id", original_through_field_id, "database_fields"
         )
         return field
+
+    def get_field_depdendencies_before_import_serialized(
+        self,
+        serialized_field: Dict[str, Any],
+        serialized_fields_map: Dict[int, Dict[str, Any]],
+        primary_table_fields_map: Dict[int, int],
+    ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
+        through_field_id = serialized_field["through_field_id"]
+        through_field = serialized_fields_map[through_field_id]
+        through_field_name = through_field["name"]
+        related_table_id = through_field["link_row_table_id"]
+
+        # it means we're targeting a field that already exists before the import
+        # (i.e. duplicating a table/field)
+        if related_table_id not in primary_table_fields_map:
+            return None
+
+        target_field_id = primary_table_fields_map[related_table_id]
+        target_field = serialized_fields_map[target_field_id]
+        target_field_name = target_field["name"]
+        return {(target_field_name, through_field_name)}
 
 
 class RollupFieldType(FormulaFieldType):
@@ -5099,6 +5263,25 @@ class RollupFieldType(FormulaFieldType):
         )
         return field
 
+    def get_field_depdendencies_before_import_serialized(
+        self,
+        serialized_field: Dict[str, Any],
+        serialized_fields_map: Dict[int, Dict[str, Any]],
+        primary_table_fields_map: Dict[int, int],
+    ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
+        via_field = serialized_fields_map[serialized_field["through_field_id"]]
+        via_field_name = via_field["name"]
+
+        # it means we're targeting a field that already exists before the import
+        # (i.e. duplicating a table/field)
+        if serialized_field["target_field_id"] not in serialized_fields_map:
+            return None
+
+        target_field_id = serialized_field["target_field_id"]
+        target_field = serialized_fields_map[target_field_id]
+        target_field_name = target_field["name"]
+        return {(target_field_name, via_field_name)}
+
 
 class LookupFieldType(FormulaFieldType):
     type = "lookup"
@@ -5245,9 +5428,9 @@ class LookupFieldType(FormulaFieldType):
         field: LookupField,
         updated_field: Field,
         updated_old_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         self._rebuild_field_from_names(field)
 
@@ -5264,9 +5447,9 @@ class LookupFieldType(FormulaFieldType):
         self,
         field: LookupField,
         deleted_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         self._rebuild_field_from_names(field)
 
@@ -5282,9 +5465,9 @@ class LookupFieldType(FormulaFieldType):
         self,
         field: LookupField,
         created_field: Field,
-        update_collector: "FieldUpdateCollector",
+        update_collector: FieldUpdateCollector,
         field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         self._rebuild_field_from_names(field)
 
@@ -5339,6 +5522,30 @@ class LookupFieldType(FormulaFieldType):
             field, "target_field_id", original_target_field_id, "database_fields"
         )
         return field
+
+    def get_field_depdendencies_before_import_serialized(
+        self,
+        serialized_field: Dict[str, Any],
+        serialized_fields_map: Dict[int, Dict[str, Any]],
+        primary_table_fields_map: Dict[int, int],
+    ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
+        through_field_id = serialized_field.get("through_field_id", None)
+        if through_field_id is None:
+            return None
+
+        via_field = serialized_fields_map[through_field_id]
+        via_field_name = via_field["name"]
+
+        # it means we're targeting a field that already exists before the import
+        # (i.e. duplicating a table/field)
+        if serialized_field["target_field_id"] not in serialized_fields_map:
+            return None
+
+        target_field_id = serialized_field["target_field_id"]
+        target_field = serialized_fields_map[target_field_id]
+        target_field_name = target_field["name"]
+
+        return {(target_field_name, via_field_name)}
 
 
 class MultipleCollaboratorsFieldType(
@@ -5562,7 +5769,7 @@ class MultipleCollaboratorsFieldType(
             **shared_kwargs,
         ).contribute_to_class(user_model, related_name)
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset, field, name, **kwargs):
         return queryset.prefetch_related(name)
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
@@ -5796,14 +6003,10 @@ class AutonumberFieldType(ReadOnlyFieldType):
     def after_rows_imported(
         self,
         field: FormulaField,
-        update_collector: "FieldUpdateCollector",
-        field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
+        update_collector: Optional[FieldUpdateCollector] = None,
+        field_cache: Optional["FieldCache"] = None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
-        super().after_rows_imported(
-            field, update_collector, field_cache, via_path_to_starting_table
-        )
-
         # Create the sequence so that rows can start being automatically numbered.
         self.create_field_sequence(field, field.table.get_model(), connection)
 
@@ -5997,7 +6200,7 @@ class PasswordFieldType(FieldType):
     can_be_in_form_view = True
     keep_data_on_duplication = True
     _can_order_by = False
-    can_be_primary_field = False
+    _can_be_primary_field = False
     can_get_unique_values = False
 
     def get_serializer_field(self, instance, **kwargs):

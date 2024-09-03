@@ -339,8 +339,11 @@ def create_many_to_many_relations(model, rows):
 
 
 def bulk_create_rows(model, rows):
-    model.objects.bulk_create([row for (row, _) in rows], batch_size=1000)
+    created_rows = model.objects.bulk_create(
+        [row for (row, _) in rows], batch_size=1000
+    )
     create_many_to_many_relations(model, rows)
+    return created_rows
 
 
 def fill_table_rows(
@@ -403,7 +406,8 @@ def fill_table_rows(
 
             for model in models:
                 pbar.refresh()
-                bulk_create_rows(model, rows[model.baserow_table_id])
+                created_rows = bulk_create_rows(model, rows[model.baserow_table_id])
+                RowHandler().update_dependencies_of_rows_created(model, created_rows)
 
         if update_tsvectors:
             progress.increment(0, state="Updating tsvector")

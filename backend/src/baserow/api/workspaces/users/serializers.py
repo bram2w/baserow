@@ -13,12 +13,6 @@ User = get_user_model()
 
 
 class WorkspaceUserSerializer(serializers.ModelSerializer):
-    group = serializers.IntegerField(
-        source="group_id",
-        help_text="DEPRECATED: Please use the functionally identical "
-        "`workspace` instead as this field is "
-        "being removed in the future.",
-    )  # GroupDeprecation
     name = serializers.SerializerMethodField(help_text="User defined name.")
     email = serializers.SerializerMethodField(help_text="User email.")
     to_be_deleted = serializers.BooleanField(
@@ -32,7 +26,6 @@ class WorkspaceUserSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "email",
-            "group",  # GroupDeprecation
             "workspace",
             "permissions",
             "created_on",
@@ -111,7 +104,7 @@ class WorkspaceUserWorkspaceSerializer(serializers.Serializer):
     Additionally, the list of users are included for each workspace.
     """
 
-    # Group fields
+    # Workspace fields
     id = serializers.IntegerField(
         source="workspace.id", read_only=True, help_text="Workspace id."
     )

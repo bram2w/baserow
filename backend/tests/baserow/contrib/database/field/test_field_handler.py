@@ -14,6 +14,8 @@ from baserow.contrib.database.fields.exceptions import (
     CannotChangeFieldType,
     CannotDeletePrimaryField,
     FieldDoesNotExist,
+    FieldIsAlreadyPrimary,
+    FieldNotInTable,
     FieldTypeDoesNotExist,
     FieldWithSameNameAlreadyExists,
     IncompatibleFieldTypeForUniqueValues,
@@ -22,6 +24,7 @@ from baserow.contrib.database.fields.exceptions import (
     MaxFieldNameLengthExceeded,
     PrimaryFieldAlreadyExists,
     ReservedBaserowFieldNameException,
+    TableHasNoPrimaryField,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -1419,7 +1422,7 @@ def test_can_convert_formula_to_numeric_field(data_fixture):
     model = table.get_model()
 
     field_name = f"field_{existing_formula_field.id}"
-    row = model.objects.create()
+    row = RowHandler().create_row(user=user, table=table, model=model)
     assert getattr(row, field_name) == "1"
 
     handler = FieldHandler()
@@ -1733,3 +1736,117 @@ def test_duplicating_link_row_field_properly_resets_pk_sequence_of_new_table(
     )
     assert table_b_row_1.id in linked_vals
     assert table_b_row_2.id in linked_vals
+
+
+@pytest.mark.django_db
+def test_change_primary_field_different_table(data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+    table_b = data_fixture.create_database_table(user)
+
+    with pytest.raises(FieldNotInTable):
+        FieldHandler().change_primary_field(user, table_b, field_2)
+
+
+@pytest.mark.django_db
+def test_change_primary_field_type_not_primary(data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_password_field(
+        user=user, primary=False, table=table_a
+    )
+
+    with pytest.raises(IncompatiblePrimaryFieldTypeError):
+        FieldHandler().change_primary_field(user, table_a, field_2)
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_is_already_primary(data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+
+    with pytest.raises(FieldIsAlreadyPrimary):
+        FieldHandler().change_primary_field(user, table_a, field_1)
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_no_update_permissions(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    with pytest.raises(UserNotInWorkspace):
+        FieldHandler().change_primary_field(user_2, table_a, field_2)
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_without_primary(data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    with pytest.raises(TableHasNoPrimaryField):
+        FieldHandler().change_primary_field(user, table_a, field_2)
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_with_primary(data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    new_primary, old_primary = FieldHandler().change_primary_field(
+        user, table_a, field_2
+    )
+
+    assert new_primary.id == field_2.id
+    assert new_primary.primary is True
+    assert old_primary.id == field_1.id
+    assert old_primary.primary is False
+
+
+@pytest.mark.django_db
+def test_change_primary_field_field_with_existing_primary_field(data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+    data_fixture.create_text_field(user=user, primary=True)
+
+    new_primary, old_primary = FieldHandler().change_primary_field(
+        user, table_a, field_2
+    )
+
+    assert new_primary.id == field_2.id
+    assert new_primary.primary is True
+    assert old_primary.id == field_1.id
+    assert old_primary.primary is False
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.fields.signals.field_updated.send")
+def test_change_primary_field_signal_send(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    new_primary, old_primary = FieldHandler().change_primary_field(
+        user, table_a, field_2
+    )
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["user"].id == user.id
+    assert send_mock.call_args[1]["field"].id == field_2.id
+    assert send_mock.call_args[1]["field"].primary is True
+    assert send_mock.call_args[1]["old_field"].id == field_2.id
+    assert send_mock.call_args[1]["old_field"].primary is False
+    assert send_mock.call_args[1]["related_fields"][0].id == field_1.id
+    assert send_mock.call_args[1]["related_fields"][0].primary is False

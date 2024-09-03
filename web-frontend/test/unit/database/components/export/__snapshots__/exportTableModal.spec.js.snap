@@ -93,7 +93,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                        
                       <ul
                         class="select__items"
-                        tabindex=""
+                        tabindex="-1"
                       >
                         <li
                           class="select__item select__item--no-options active hover"
@@ -308,7 +308,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                          
                         <ul
                           class="select__items"
-                          tabindex=""
+                          tabindex="-1"
                         >
                           <li
                             class="select__item select__item--no-options active"
@@ -581,7 +581,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                          
                         <ul
                           class="select__items"
-                          tabindex=""
+                          tabindex="-1"
                         >
                           <li
                             class="select__item select__item--no-options active"
@@ -1862,7 +1862,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                        
                       <ul
                         class="select__items"
-                        tabindex=""
+                        tabindex="-1"
                       >
                         <li
                           class="select__item select__item--no-options hover"
@@ -2077,7 +2077,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                          
                         <ul
                           class="select__items"
-                          tabindex=""
+                          tabindex="-1"
                         >
                           <li
                             class="select__item select__item--no-options active"
@@ -2350,7 +2350,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                          
                         <ul
                           class="select__items"
-                          tabindex=""
+                          tabindex="-1"
                         >
                           <li
                             class="select__item select__item--no-options active"

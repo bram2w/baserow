@@ -1,17 +1,20 @@
 import traceback
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 
 from loguru import logger
 from opentelemetry import trace
 
 from baserow.config.celery import app
+from baserow.contrib.database.fields.periodic_field_update_handler import (
+    PeriodicFieldUpdateHandler,
+)
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.models import RichTextFieldMention
@@ -59,9 +62,21 @@ def run_periodic_fields_updates(
         if field_qs is None:
             continue
 
-        workspace_qs = filter_distinct_workspace_ids_per_fields(field_qs, workspace_id)
-
-        for workspace in workspace_qs.all():
+        recently_used_workspace_ids = (
+            PeriodicFieldUpdateHandler.get_recently_used_workspace_ids()
+        )
+        now = datetime.now(tz=timezone.utc)
+        threshold = now - timedelta(
+            minutes=settings.BASEROW_PERIODIC_FIELD_UPDATE_UNUSED_WORKSPACE_INTERVAL_MIN
+        )
+        workspaces = filter_distinct_workspace_ids_per_fields(
+            field_qs, workspace_id
+        ).filter(
+            Q(id__in=recently_used_workspace_ids)
+            | Q(now__lte=threshold)
+            | Q(now__isnull=True)
+        )
+        for workspace in workspaces:
             _run_periodic_field_type_update_per_workspace(
                 field_type_instance, workspace, update_now
             )
@@ -81,24 +96,24 @@ def _run_periodic_field_type_update_per_workspace(
 
     all_updated_fields = []
 
-    for field in qs.filter(
+    fields = qs.filter(
         table__database__workspace_id=workspace.id,
         table__trashed=False,
         table__database__trashed=False,
-    ):
-        # noinspection PyBroadException
-        try:
-            all_updated_fields = _run_periodic_field_update(
-                field, field_type_instance, all_updated_fields
-            )
-        except Exception:
-            tb = traceback.format_exc()
-            logger.error(
-                "Failed to periodically update {field_id} because of: \n{tb}",
-                field_id=field.id,
-                tb=tb,
-            )
-            continue
+    )
+    # noinspection PyBroadException
+    try:
+        all_updated_fields = _run_periodic_field_update(
+            fields, field_type_instance, all_updated_fields
+        )
+    except Exception:
+        tb = traceback.format_exc()
+        field_ids = ", ".join(str(field.id) for field in fields)
+        logger.error(
+            "Failed to periodically update {field_ids} because of: \n{tb}",
+            field_ids=field_ids,
+            tb=tb,
+        )
 
     # After a successful periodic update of all fields, we would need to update the
     # search index for all of them in one function per table to avoid ending up in a
@@ -106,7 +121,7 @@ def _run_periodic_field_type_update_per_workspace(
     fields_per_table = defaultdict(list)
     for field in all_updated_fields:
         fields_per_table[field.table_id].append(field)
-    for table_id, fields in fields_per_table.items():
+    for _, fields in fields_per_table.items():
         SearchHandler().entire_field_values_changed_or_created(fields[0].table, fields)
 
 
@@ -121,11 +136,10 @@ def delete_mentions_marked_for_deletion(self):
 
 
 @baserow_trace(tracer)
-def _run_periodic_field_update(field, field_type_instance, all_updated_fields):
-    add_baserow_trace_attrs(field_id=field.id)
+def _run_periodic_field_update(fields, field_type_instance, all_updated_fields):
     with transaction.atomic():
         return field_type_instance.run_periodic_update(
-            field, all_updated_fields=all_updated_fields
+            fields, already_updated_fields=all_updated_fields
         )
 
 

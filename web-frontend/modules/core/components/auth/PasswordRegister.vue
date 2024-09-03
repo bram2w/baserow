@@ -222,8 +222,7 @@ export default {
         // user.
         if (this.invitation !== null) {
           values.workspaceInvitationToken =
-            this.$route.query.workspaceInvitationToken ||
-            this.$route.query.groupInvitationToken // GroupDeprecation
+            this.$route.query.workspaceInvitationToken
         }
 
         // If a template is provided, we can add that id to the parameters so that the

@@ -19,6 +19,7 @@
           <Dropdown
             v-model="selectedRoleType"
             :placeholder="$t('visibilityForm.roleTypesHint')"
+            small
           >
             <DropdownItem
               v-for="(value, key) in roleTypeOptions"
@@ -251,16 +252,18 @@ export default {
         const userSourceId = parseInt(
           roleName.split(DEFAULT_USER_ROLE_PREFIX)[1]
         )
-        const userSources = this.userSources.filter((userSource) => {
-          return userSource.id === userSourceId
-        })
-
-        return this.$t('visibilityForm.rolesAllMembersOf', {
-          name: userSources[0].name,
-        })
-      } else {
-        return roleName
+        const userSource = this.$store.getters['userSource/getUserSourceById'](
+          this.builder,
+          userSourceId
+        )
+        if (userSource) {
+          return this.$t('visibilityForm.rolesAllMembersOf', {
+            name: userSource.name,
+          })
+        }
       }
+
+      return roleName
     },
 
     /**

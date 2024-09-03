@@ -1,0 +1,12 @@
+.ab-text {
+  font-size: var(--body-font-size, 14px);
+  margin: 0;
+  color: var(--body-text-color, $black);
+  text-align: var(--body-text-alignment, left);
+  font-family: var(--body-font-family, Inter);
+
+  // for markdown text
+  strong {
+    color: var(--body-text-color, $black);
+  }
+}

@@ -10,6 +10,7 @@ from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.actions import (
+    ChangePrimaryFieldActionType,
     DuplicateFieldActionType,
     UpdateFieldActionType,
 )
@@ -1490,3 +1491,46 @@ def test_date_field_type_undo_redo_fix_timezone_offset(api_client, data_fixture)
     assert getattr(
         row_3, f"field_{datetime_field.id}"
     ) == original_datetime_3 + timedelta(minutes=utc_offset)
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+@pytest.mark.field_single_select
+def test_can_undo_redo_change_primary_field(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table_a = data_fixture.create_database_table(user)
+    field_1 = data_fixture.create_text_field(user=user, primary=True, table=table_a)
+    field_2 = data_fixture.create_text_field(user=user, primary=False, table=table_a)
+
+    new_primary_field, old_primary_field = action_type_registry.get_by_type(
+        ChangePrimaryFieldActionType
+    ).do(user, table_a, field_2)
+
+    assert new_primary_field.id == field_2.id
+    assert old_primary_field.id == field_1.id
+
+    field_1.refresh_from_db()
+    field_2.refresh_from_db()
+    assert field_1.primary is False
+    assert field_2.primary is True
+
+    actions = ActionHandler.undo(
+        user, [ChangePrimaryFieldActionType.scope(table_a.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions, [ChangePrimaryFieldActionType])
+
+    field_1.refresh_from_db()
+    field_2.refresh_from_db()
+    assert field_1.primary is True
+    assert field_2.primary is False
+
+    actions = ActionHandler.redo(
+        user, [ChangePrimaryFieldActionType.scope(table_a.id)], session_id
+    )
+    assert_undo_redo_actions_are_valid(actions, [ChangePrimaryFieldActionType])
+
+    field_1.refresh_from_db()
+    field_2.refresh_from_db()
+    assert field_1.primary is False
+    assert field_2.primary is True

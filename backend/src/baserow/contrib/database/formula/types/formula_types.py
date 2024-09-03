@@ -1,7 +1,7 @@
 import datetime
 from abc import ABC
 from decimal import Decimal
-from typing import Any, List, Optional, Type, Union
+from typing import Any, List, Optional, Set, Type, Union
 
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.files.storage import default_storage
@@ -20,6 +20,14 @@ from baserow.contrib.database.fields.expressions import (
     json_extract_path,
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
+from baserow.contrib.database.fields.filter_support import (
+    FilterNotSupportedException,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+)
 from baserow.contrib.database.fields.mixins import get_date_time_format
 from baserow.contrib.database.fields.utils.duration import (
     D_H_M_S,
@@ -95,6 +103,11 @@ class BaserowFormulaBaseTextType(BaserowFormulaTypeHasEmptyBaserowExpression):
 
 
 class BaserowFormulaTextType(
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
     BaserowFormulaBaseTextType,
     BaserowFormulaTypeHasEmptyBaserowExpression,
     BaserowFormulaValidType,
@@ -129,6 +142,11 @@ class BaserowFormulaTextType(
         return JSONBSingleKeyArrayExpression(
             field_name, "value", "text", output_field=models.TextField()
         )
+
+
+class BaserowFormulaURLType(BaserowFormulaTextType, BaserowFormulaValidType):
+    type = "url"
+    baserow_field_type = "url"
 
 
 class BaserowFormulaCharType(BaserowFormulaTextType, BaserowFormulaValidType):
@@ -181,6 +199,10 @@ class BaserowFormulaLinkType(BaserowJSONBObjectBaseType):
 
     def get_baserow_field_instance_and_type(self):
         return self, self
+
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
 
     def get_model_field(self, instance, **kwargs) -> models.Field:
         kwargs["null"] = True
@@ -527,6 +549,10 @@ class BaserowFormulaDateIntervalType(
         # Until Baserow has a duration field type implement the required methods below
         return self, self
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         from baserow.contrib.database.fields.fields import (
             DurationFieldUsingPostgresFormatting,
@@ -858,6 +884,10 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return []
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=dict, **kwargs)
 
@@ -956,7 +986,14 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
         )
 
 
-class BaserowFormulaArrayType(BaserowFormulaValidType):
+class BaserowFormulaArrayType(
+    HasValueEmptyFilterSupport,
+    HasValueFilterSupport,
+    HasValueContainsFilterSupport,
+    HasValueContainsWordFilterSupport,
+    HasValueLengthIsLowerThanFilterSupport,
+    BaserowFormulaValidType,
+):
     type = "array"
     user_overridable_formatting_option_fields = [
         "array_formula_type",
@@ -1062,6 +1099,10 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         # Until Baserow has a array field type implement the required methods below
         return self, self
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=list, **kwargs)
 
@@ -1117,6 +1158,46 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
 
     def contains_query(self, field_name, value, model_field, field):
         return Q()
+
+    def get_in_array_is_query(self, field_name, value, model_field, field):
+        if not isinstance(self.sub_type, HasValueFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_is_query(
+            field_name, value, model_field, field
+        )
+
+    def get_in_array_empty_query(self, field_name, model_field, field):
+        if not isinstance(self.sub_type, HasValueEmptyFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_empty_query(field_name, model_field, field)
+
+    def get_in_array_contains_query(self, field_name, value, model_field, field):
+        if not isinstance(self.sub_type, HasValueContainsFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_contains_query(
+            field_name, value, model_field, field
+        )
+
+    def get_in_array_contains_word_query(self, field_name, value, model_field, field):
+        if not isinstance(self.sub_type, HasValueContainsWordFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_contains_word_query(
+            field_name, value, model_field, field
+        )
+
+    def get_in_array_length_is_lower_than_query(
+        self, field_name, value, model_field, field
+    ):
+        if not isinstance(self.sub_type, HasValueLengthIsLowerThanFilterSupport):
+            raise FilterNotSupportedException()
+
+        return self.sub_type.get_in_array_length_is_lower_than_query(
+            field_name, value, model_field, field
+        )
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         return "p_in = '';"
@@ -1228,6 +1309,10 @@ class BaserowFormulaSingleSelectType(BaserowJSONBObjectBaseType):
     def get_baserow_field_instance_and_type(self):
         return self, self
 
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=dict, **kwargs)
 
@@ -1336,6 +1421,13 @@ class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
     def get_baserow_field_instance_and_type(self):
         return self, self
 
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        return "p_in = '';"
+
+    @property
+    def db_column_fields(self) -> Set[str]:
+        return {}
+
     def get_model_field(self, instance, **kwargs) -> models.Field:
         return JSONField(default=list, **kwargs)
 
@@ -1435,6 +1527,7 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaSingleSelectType,
     BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
+    BaserowFormulaURLType,
 ]
 
 BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = list(

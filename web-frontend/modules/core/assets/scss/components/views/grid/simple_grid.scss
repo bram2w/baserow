@@ -72,6 +72,20 @@
   &.simple-grid__cell--single {
     width: 100%;
   }
+
+  &.simple-grid__cell--with-checkbox {
+    width: 64px;
+    padding-right: 22px;
+  }
+}
+
+.simple-grid__cell-checkbox {
+  @include absolute(0, 0, 0, 0);
+
+  display: flex;
+  vertical-align: center;
+  justify-content: center;
+  background-color: inherit;
 }
 
 .simple-grid__row--hover {
@@ -83,12 +97,19 @@
   }
 }
 
-.simple-grid__row--selected {
+.simple-grid__row--disabled {
   cursor: initial;
 
   .simple-grid__cell,
   .grid-view__cell {
     background-color: $color-neutral-50;
+  }
+}
+
+.simple-grid__row--checked {
+  .simple-grid__cell,
+  .grid-view__cell {
+    background-color: $color-primary-100;
   }
 }
 
@@ -121,6 +142,13 @@
     &:last-child {
       border-right: none;
     }
+  }
+}
+
+.simple-grid__row--hover.simple-grid__row--checked {
+  .simple-grid__cell,
+  .grid-view__cell {
+    background-color: darken($color-primary-100, 1%);
   }
 }
 

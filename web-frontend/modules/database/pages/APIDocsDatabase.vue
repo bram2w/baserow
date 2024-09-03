@@ -291,7 +291,7 @@ export default {
      */
     updateNav() {
       const body = document.documentElement
-      const sections = body.querySelectorAll('[id]')
+      const sections = body.querySelectorAll('[id^="section-"]')
       sections.forEach((section, index) => {
         const top = section.offsetTop
         const nextIndex = (index + 1).toString()

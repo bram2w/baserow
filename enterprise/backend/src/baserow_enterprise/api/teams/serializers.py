@@ -84,12 +84,6 @@ class TeamResponseSerializer(serializers.ModelSerializer):
         source="default_role_uid",
         help_text=("The uid of the role this team has in its workspace."),
     )
-    group = serializers.IntegerField(
-        source="group_id",
-        help_text="DEPRECATED: Please use the functionally identical "
-        "`workspace` instead as this field is "
-        "being removed in the future.",
-    )  # GroupDeprecation
     subject_count = serializers.IntegerField(
         help_text="The amount of subjects (e.g. users) that are currently assigned to this team."
     )
@@ -104,7 +98,6 @@ class TeamResponseSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "group",  # GroupDeprecation
             "workspace",
             "created_on",
             "updated_on",
@@ -151,5 +144,5 @@ class WorkspaceUserEnterpriseTeamSerializer(serializers.Serializer):
         read_only=True, help_text="The unique identifier for this team."
     )
     name = serializers.CharField(
-        read_only=True, help_text="The team name that this group user belongs to."
+        read_only=True, help_text="The team name that this workspace user belongs to."
     )

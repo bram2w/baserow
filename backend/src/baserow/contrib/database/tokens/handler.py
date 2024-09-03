@@ -388,7 +388,9 @@ class TokenHandler:
             if token_operation in TOKEN_TO_OPERATION_MAP
         ]
 
-        token_permission = CoreHandler().check_multiple_permissions(checks, token.group)
+        token_permission = CoreHandler().check_multiple_permissions(
+            checks, token.workspace
+        )
 
         # At least one must be True
         return any([v is True for v in token_permission.values()])

@@ -1,5 +1,6 @@
 from copy import deepcopy
 from typing import Optional
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -60,7 +61,15 @@ def capture_user_event(
     :param workspace: Optionally the workspace related to the event.
     """
 
-    properties["user_email"] = user.email
+    if user.is_anonymous:
+        # The user_id cannot be None. It's needed by Posthog to identify the user
+        user_id = str(uuid4())
+        user_email = None
+    else:
+        user_id = user.id
+        user_email = user.email
+
+    properties["user_email"] = user_email
 
     if session is not None:
         properties["user_session"] = session
@@ -68,7 +77,7 @@ def capture_user_event(
     if workspace is not None:
         properties["workspace_id"] = workspace.id
 
-    capture_event(user.id, event, properties)
+    capture_event(user_id, event, properties)
 
 
 @receiver(action_done)

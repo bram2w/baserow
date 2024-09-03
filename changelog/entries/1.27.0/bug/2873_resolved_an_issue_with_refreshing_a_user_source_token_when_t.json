@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Resolved an issue with refreshing a user source token when the table it's associated with has been trashed.",
+    "issue_number": 2873,
+    "bullet_points": [],
+    "created_at": "2024-08-09"
+}

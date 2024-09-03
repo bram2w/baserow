@@ -1,29 +1,39 @@
 <template>
   <form @submit.prevent="submit">
-    <InjectedFormulaInputGroup
-      v-model="values.title"
-      small
+    <FormGroup
       small-label
-      :placeholder="$t('notificationWorkflowActionForm.titlePlaceholder')"
       :label="$t('notificationWorkflowActionForm.titleLabel')"
-    />
-    <InjectedFormulaInputGroup
-      v-model="values.description"
-      small
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.title"
+        :placeholder="$t('notificationWorkflowActionForm.titlePlaceholder')"
+      />
+    </FormGroup>
+    <FormGroup
       small-label
-      :placeholder="$t('notificationWorkflowActionForm.descriptionPlaceholder')"
       :label="$t('notificationWorkflowActionForm.descriptionLabel')"
-    />
+      class="margin-bottom-2"
+      required
+    >
+      <InjectedFormulaInput
+        v-model="values.description"
+        :placeholder="
+          $t('notificationWorkflowActionForm.descriptionPlaceholder')
+        "
+      />
+    </FormGroup>
   </form>
 </template>
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   name: 'NotificationWorkflowActionForm',
-  components: { InjectedFormulaInputGroup },
+  components: { InjectedFormulaInput },
   mixins: [form],
   data() {
     return {

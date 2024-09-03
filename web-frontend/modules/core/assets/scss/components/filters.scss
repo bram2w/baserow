@@ -11,8 +11,11 @@
 }
 
 .filters__none {
-  padding: 4px;
-  margin: 16px 20px;
+  padding: 16px 20px;
+
+  &--scrollable {
+    overflow-y: scroll;
+  }
 }
 
 .filters__none-title {
@@ -28,14 +31,14 @@
 .filters__items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 
   &--scrollable {
     overflow-y: scroll;
   }
 
   &--with-padding {
-    padding: 16px 8px 10px;
+    padding: 16px;
   }
 }
 
@@ -217,36 +220,6 @@
 .filters__value-link-row-choose {
   font-weight: 600;
   text-align: center;
-}
-
-.filters__footer {
-  border-top: 1px solid rgba(217, 219, 222, 0.5);
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.filters__actions {
-  @include flex-align-items(16px);
-}
-
-.filters__add {
-  @include flex-align-items(4px);
-
-  &:hover {
-    text-decoration: none;
-    color: $color-neutral-900;
-  }
-
-  .filters__container--dark & {
-    color: $palette-neutral-900;
-
-    &:hover {
-      color: $palette-neutral-1100;
-    }
-  }
 }
 
 .filters__add-icon {

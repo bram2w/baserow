@@ -23,15 +23,21 @@
   },
   "sidebar": {
     "createWorkspace": "Create workspace",
+    "addNewWorkspace": "Add new workspace",
     "inviteOthers": "Invite others",
     "members": "Members",
-    "logoff": "Logoff",
+    "logoff": "Log out",
     "errorNoWorkspace": "You don’t have any workspaces.",
-    "admin": "Admin",
+    "adminTools": "Admin tools",
+    "home": "Home",
     "dashboard": "Dashboard",
     "trash": "Trash",
-    "settings": "Settings",
-    "notifications": "Notifications"
+    "settings": "My settings",
+    "notifications": "Notifications",
+    "adminSettings": "Admin settings",
+    "general": "General",
+    "people": "People",
+    "licenses": "Licenses"
   },
   "accountForm": {
     "nameLabel": "Your name",
@@ -44,7 +50,7 @@
     "submitButton": "Update account"
   },
   "settingsModal": {
-    "title": "Settings"
+    "title": "My settings"
   },
   "notificationPanel": {
     "title": "Notifications",
@@ -157,11 +163,6 @@
     "errorTooLongMessage": "Messages are limited to {amount} characters.",
     "additionalRoles": "Additional roles"
   },
-  "workspacesContext": {
-    "search": "Search workspaces",
-    "noResults": "No results found",
-    "createWorkspace": "Create workspace"
-  },
   "workspaceContext": {
     "renameWorkspace": "Rename workspace",
     "settings": "Settings",
@@ -266,7 +267,10 @@
     "errorWrongFileTypeMessage": "You can't upload a file of type {type}"
   },
   "createApplicationContext": {
-    "fromTemplate": "From template"
+    "fromTemplate": "From template",
+    "fromTemplateDesc": "Quickly start with one of our recommended templates",
+    "table": "Table",
+    "tableDesc": "Create a new place to manage data in your database."
   },
   "applicationForm": {
     "nameLabel": "Name",
@@ -340,28 +344,34 @@
   "dashboard": {
     "title": "Dashboard",
     "alertTitle": "We need your help!",
-    "alertText": "If you find Baserow useful then starring or sharing us is greatly appreciated. By sharing Baserow you are helping us to improve the product and to make it more useful for you.",
+    "alertText": "By sharing Baserow you are helping us to improve the product and to make it more useful for you.",
     "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
     "redditTitle": "'Baserow - An open source no-code database",
-    "noWorkspaceTitle": "No workspaces found",
-    "noWorkspaceText": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
-    "noWorkspaceTextWithoutCreatePermission": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
-    "createWorkspace": "Create workspace",
     "becomeGithubSponsor": "Become a GitHub sponsor",
     "starOnGitlab": "Star us on GitLab",
     "shareOnTwitter": "Tweet about Baserow",
     "shareOnReddit": "Share on Reddit",
     "shareOnFacebook": "Share on Facebook",
-    "shareOnLinkedIn": "Share on LinkedIn"
-  },
-  "dashboardSidebar": {
-    "workspaces": "Workspaces",
-    "links": "Links",
+    "shareOnLinkedIn": "Share on LinkedIn",
+    "suggestedTemplates": "Suggested templates",
+    "resources": "Resources",
     "knowledgeBase": "Knowledge base",
+    "knowledgeBaseMessage": "Find answers to all of your questions",
     "tutorials": "Tutorials",
-    "userSettings": "User settings",
-    "trash": "Trash",
-    "logoff": "Logoff"
+    "tutorialsMessage": "Discover the potential of Baserow",
+    "apiDocumentation": "API documentation",
+    "apiDocumentationMessage": "Learn more about our code",
+    "emptyWorkspace": "This workspace is empty",
+    "emptyWorkspaceMessage": "Get started by creating a new database or application.",
+    "addNew": "Add new...",
+    "noWorkspace": "No workspace",
+    "noWorkspaceDescription": "Get started by creating a new workspace"
+  },
+  "dashboardApplication": {
+    "createdAt": "created"
+  },
+  "templateCard": {
+    "viewMore": "View more"
   },
   "login": {
     "title": "Login",
@@ -413,6 +423,8 @@
     "settingsTitle": "Admin settings",
     "baserowInstanceId": "Instance ID",
     "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
+    "baserowVersion": "Baserow version",
+    "baserowVersionDescription": "The version number of this instance.",
     "accountRestrictions": "Account restrictions",
     "settingAllowResetPasswordName": "Allow resetting password",
     "settingAllowResetPasswordDescription": "By default, users can request a password reset link.",
@@ -638,7 +650,7 @@
     "errorInvalidFormula": "The formula is invalid."
   },
   "dataExplorer": {
-    "noMatchingNodesText": "No matching data providers were found.",
+    "noMatchingNodesText": "No matching results were found.",
     "noProvidersText": "No data providers were found. To get started you can, for example, add a data source or page parameter."
   },
   "richTextEditorBubbleMenu": {
@@ -716,5 +728,8 @@
   "imageInput": {
     "labelDescription": "Select an image to upload...",
     "labelButton": "Upload"
+  },
+  "dataExplorerNode": {
+    "showMore": "Show more repetitions"
   }
 }

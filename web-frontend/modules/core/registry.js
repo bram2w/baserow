@@ -35,6 +35,11 @@ export class Registerable {
   getSort() {
     return 0
   }
+
+  $t(key) {
+    const { i18n } = this.app
+    return i18n.t(key)
+  }
 }
 
 /**

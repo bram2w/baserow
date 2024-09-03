@@ -172,6 +172,14 @@ export class ClientErrorMap {
             'clientHandler.maxNumberOfPendingWorkspaceInvitesReachedDescription'
           )
         ),
+      ERROR_FIELD_IS_ALREADY_PRIMARY: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.fieldIsAlreadyPrimaryTitle'),
+        app.i18n.t('clientHandler.fieldIsAlreadyPrimaryDescription')
+      ),
+      ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeTitle'),
+        app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeDescription')
+      ),
     }
   }
 

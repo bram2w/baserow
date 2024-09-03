@@ -8,12 +8,20 @@ import { resolveFormula } from '@baserow/modules/core/formula'
  * registry required.
  */
 export class Event {
-  constructor({ i18n, store, $registry, name, label }) {
+  constructor({
+    i18n,
+    store,
+    $registry,
+    name,
+    label,
+    applicationContextAdditions = {},
+  }) {
     this.i18n = i18n
     this.store = store
     this.$registry = $registry
     this.name = name
     this.label = label
+    this.applicationContextAdditions = applicationContextAdditions
   }
 
   async fire({ workflowActions, applicationContext }) {

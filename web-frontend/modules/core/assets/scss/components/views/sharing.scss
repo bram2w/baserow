@@ -1,76 +1,145 @@
-.view-sharing__create-link {
-  display: block;
-  line-height: 56px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0 20px;
-  color: $color-neutral-900;
+/**
+ layout changes for shared links (smaller padding)
+ for not-yet shared use `share` naming
+ for shared use `shared` naming
+ */
 
-  @include rounded($rounded-md);
-  @include flex-align-items(20px);
+.view-sharing {
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
 
-  &:hover {
-    text-decoration: none;
-    background-color: $color-neutral-100;
-  }
-
-  &.view-sharing__create-link--disabled {
-    color: $color-neutral-500;
-    background-color: transparent;
-
-    &:hover {
-      cursor: inherit;
-    }
+  &--scrollable {
+    overflow-y: scroll;
   }
 }
 
-.view-sharing__create-link-icon {
-  color: $color-warning-500;
-  font-size: 20px;
+.view-sharing__content {
+  max-height: inherit;
+  display: flex;
+  flex-direction: column;
+}
 
-  .view-sharing__create-link--disabled & {
-    color: $color-neutral-500;
+.view-sharing__loading-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px;
+  margin-left: 4px;
+  margin-right: 16px;
+  top: -2px;
+  position: relative;
+
+  @include rounded($rounded-md);
+
+  &::before {
+    content: '';
+    z-index: 1;
+
+    @include loading(14px);
+  }
+}
+
+.view-sharing__share-link {
+  padding: 48px 80px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+
+  @include rounded($rounded-md);
+
+  &--scrollable {
+    overflow-y: scroll;
   }
 }
 
 .view-sharing__shared-link {
-  padding: 25px;
+  padding: 20px;
+  text-align: left;
+  max-width: 624px;
+  color: $palette-neutral-900;
+  border-top: solid 1px $palette-neutral-200;
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.view-sharing__share-link-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: $palette-neutral-1200;
+}
+
+.view-sharing__share-link-description {
+  font-size: 12px;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
+.view-sharing__share-link-options {
+  @include flex-align-items(16px);
 }
 
 .view-sharing__shared-link-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  margin-bottom: 8px;
+  color: $palette-neutral-1200;
 }
 
 .view-sharing__shared-link-description {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  margin-bottom: 8px;
+}
+
+.view-sharing__share-link-content {
+  display: flex;
   margin-bottom: 15px;
 }
 
 .view-sharing__shared-link-content {
   display: flex;
-  margin-bottom: 15px;
+  align-items: center;
 }
 
 .view-sharing__shared-link-box {
-  background-color: $color-neutral-100;
+  background-color: $palette-neutral-100;
   line-height: 32px;
   padding: 0 8px;
   font-family: monospace;
   font-size: 10px;
-  min-width: 0;
+  width: 516px;
+  border: solid 1px $palette-neutral-400;
+  overscroll-behavior: none;
+  margin: 8px 0;
+  height: 32px;
 
+  @include scrollable-overflow;
   @include rounded($rounded);
+
+  &.view-sharing__shared-link-box--short {
+    width: 484px;
+  }
 }
 
 .view-sharing__shared-link-action {
   position: relative;
   width: 32px;
-  margin-left: 8px;
+  height: 32px;
+  vertical-align: center;
+  margin-left: 4px;
   line-height: 32px;
-  color: $color-neutral-900;
   font-size: 14px;
   text-align: center;
+  color: $palette-neutral-900;
 
   @include rounded($rounded);
 
@@ -94,7 +163,6 @@
   }
 
   &.view-sharing__shared-link-action--disabled {
-    color: $color-neutral-900;
     background-color: transparent;
 
     &:hover {
@@ -105,21 +173,20 @@
 
 .view-sharing__shared-link-foot {
   display: flex;
-  justify-content: space-between;
-}
-
-.view-sharing__shared-link-disable {
-  @include flex-align-items(4px);
-
-  color: $color-error-500;
+  justify-content: left;
+  gap: 20px;
+  padding: 16px;
+  line-height: 20px;
+  border-top: solid 1px $palette-neutral-200;
 }
 
 .view-sharing__shared-link-options {
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin-top: 14px;
 }
 
 .view-sharing__option {
+  margin-top: 14px;
+
   @include flex-align-items(4px);
 
   &--disabled {
@@ -143,6 +210,5 @@ p.box__description {
 
   &:hover {
     text-decoration: none;
-    color: $color-neutral-900;
   }
 }

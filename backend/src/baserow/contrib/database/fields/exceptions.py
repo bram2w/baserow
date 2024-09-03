@@ -264,3 +264,15 @@ class RichTextFieldCannotBePrimaryField(Exception):
     """
     Raised when a rich text field is attempted to be set as the primary field.
     """
+
+
+class FieldIsAlreadyPrimary(Exception):
+    """
+    Raised when the new primary field is already the primary field.
+    """
+
+
+class TableHasNoPrimaryField(Exception):
+    """
+    Raised when the table doesn't have a primary field.
+    """

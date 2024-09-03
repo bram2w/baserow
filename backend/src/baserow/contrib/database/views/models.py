@@ -157,7 +157,7 @@ class View(
         Rotates the slug used to address this view.
         """
 
-        self.slug = secrets.token_urlsafe()
+        self.slug = View.create_new_slug()
 
     @staticmethod
     def create_new_slug() -> str:

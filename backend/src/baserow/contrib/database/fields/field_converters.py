@@ -34,6 +34,7 @@ class RecreateFieldConverter(FieldConverter):
         to_model_field,
         user,
         connection,
+        **kwargs,
     ):
         """
         Does the field alteration by removing the old field and creating the new field.
@@ -48,6 +49,73 @@ class RecreateFieldConverter(FieldConverter):
 
 class FormulaFieldConverter(RecreateFieldConverter):
     type = "formula"
+
+    def alter_field(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        from_model_field,
+        to_model_field,
+        user,
+        connection,
+        force_recreate_column=False,
+    ):
+        """
+        Recreates the underlying column if the formula field type has changed or if
+        something else has changed that requires the column to be recreated. This will
+        prevent unnecessary ALTER TABLE statements from being executed, so updating a
+        formula field will be faster and won't lock the table requiring an ACCESS
+        EXCLUSIVE lock.
+        """
+
+        from baserow.contrib.database.fields.field_types import FormulaFieldType
+
+        if isinstance(from_field, FormulaField):
+            (
+                from_field_instance,
+                from_field_type,
+            ) = FormulaFieldType().get_field_instance_and_type_from_formula_field(
+                from_field
+            )
+            (
+                to_field_instance,
+                to_field_type,
+            ) = FormulaFieldType().get_field_instance_and_type_from_formula_field(
+                to_field
+            )
+            formula_field_type_changed = from_field_type.type != to_field_type.type
+
+            def has_different_db_column_attrs():
+                return any(
+                    [
+                        getattr(from_field_instance, attr)
+                        != getattr(to_field_instance, attr)
+                        for attr in from_field_type.db_column_fields
+                    ]
+                )
+
+            recreate_field = (
+                formula_field_type_changed
+                or from_field.error
+                or has_different_db_column_attrs()
+                or force_recreate_column
+            )
+        else:
+            recreate_field = True
+
+        if recreate_field:
+            super().alter_field(
+                from_field,
+                to_field,
+                from_model,
+                to_model,
+                from_model_field,
+                to_model_field,
+                user,
+                connection,
+            )
 
     def is_applicable(self, from_model, from_field, to_field):
         return isinstance(to_field, FormulaField)

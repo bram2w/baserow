@@ -319,5 +319,17 @@
     "viewPricing": "View pricing",
     "premium": "Premium",
     "enterprise": "Enterprise"
+  },
+  "authFormElementForm": {
+    "userSource": "User source",
+    "loginButtonLabel": "Login button label",
+    "loginButtonLabelPlaceholder": "Enter the label..."
+  },
+  "authFormElement": {
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "Enter your email...",
+    "passwordPlaceholder": "Enter your password...",
+    "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
   }
 }

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed undefined variable in JobHandler.run",
+    "issue_number": 2796,
+    "bullet_points": [],
+    "created_at": "2024-07-15"
+}

@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.contrib.database.table.models import Table
@@ -16,9 +16,16 @@ class DatabaseTableObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "database", "database__workspace"
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):

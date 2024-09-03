@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="context__form-container">
     <Alert v-if="linkRowFieldsInThisTable.length === 0" type="error">
       <p>{{ $t('fieldSelectThroughFieldSubForm.noTable') }}</p>
     </Alert>
@@ -10,7 +10,6 @@
       :label="$t('fieldSelectThroughFieldSubForm.selectThroughFieldLabel')"
       required
       :error="$v.values.through_field_id.$error"
-      class="margin-bottom-2"
     >
       <Dropdown
         v-model="values.through_field_id"

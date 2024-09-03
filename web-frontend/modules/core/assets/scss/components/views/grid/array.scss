@@ -1,24 +1,19 @@
 .grid-view-array-field {
-  overflow: hidden;
-  display: flex;
-  flex-flow: row;
-  flex-wrap: nowrap;
+  overflow: clip;
   list-style: none;
   margin: 0;
-  padding: 0 4px;
+  padding: 0 0 0 4px;
   user-select: none;
+  display: flex;
 
   &.active {
     height: auto;
+    flex-flow: row;
     flex-wrap: wrap;
-    overflow: auto;
     bottom: auto;
     min-width: calc(100% + 4px);
     min-height: calc(100% + 4px);
-
-    .array-field__item {
-      height: auto;
-    }
+    padding: 0 4px;
   }
 
   .grid-view__column--matches-search & {

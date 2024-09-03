@@ -32,7 +32,7 @@ import SwitchInput from '@baserow/modules/core/components/SwitchInput'
         value: {
             control: {
                 type: 'radio',
-                options: [2, true, false],
+                options: ['intermediate state', true, false],
             },
             defaultValue: false,
         },
@@ -49,6 +49,13 @@ import SwitchInput from '@baserow/modules/core/components/SwitchInput'
                 options: [true, false],
             },
             defaultValue: false,
+        },
+        color: {
+            control: {
+                type: 'select',
+                options: ['green', 'neutral'],
+            },
+            defaultValue: 'green',
         },
     }}
 />

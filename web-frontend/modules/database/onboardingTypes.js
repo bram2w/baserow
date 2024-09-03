@@ -10,7 +10,10 @@ import DatabaseAppLayoutPreview from '@baserow/modules/database/components/onboa
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import ApplicationService from '@baserow/modules/core/services/application'
 import TableService from '@baserow/modules/database/services/table'
+import FieldService from '@baserow/modules/database/services/field'
+import RowService from '@baserow/modules/database/services/row'
 import AirtableService from '@baserow/modules/database/services/airtable'
+import DatabaseScratchTrackFieldsStep from '@baserow/modules/database/components/onboarding/DatabaseScratchTrackFieldsStep.vue'
 
 const databaseTypeCondition = (data, type) => {
   const dependingType = DatabaseOnboardingType.getType()
@@ -133,6 +136,80 @@ export class DatabaseScratchTrackOnboardingType extends OnboardingType {
     )
 
     return table
+  }
+
+  getCompletedRoute(data, responses) {
+    return {
+      name: 'database-table',
+      params: {
+        databaseId: responses[this.getType()].database_id,
+        tableId: responses[this.getType()].id,
+      },
+    }
+  }
+}
+
+export class DatabaseScratchTrackFieldsOnboardingType extends OnboardingType {
+  static getType() {
+    return 'database_scratch_track_fields'
+  }
+
+  getOrder() {
+    return 2200
+  }
+
+  getFormComponent() {
+    return DatabaseScratchTrackFieldsStep
+  }
+
+  getPreviewComponent() {
+    return DatabaseAppLayoutPreview
+  }
+
+  condition(data) {
+    return databaseTypeCondition(data, 'scratch')
+  }
+
+  canSkip() {
+    return true
+  }
+
+  async complete(data, responses) {
+    const tableData = responses[DatabaseScratchTrackOnboardingType.getType()]
+    let onboardingTrackFieldsType
+    try {
+      onboardingTrackFieldsType = this.app.$registry.get(
+        'onboardingTrackFields',
+        `${this.getType()}_${tableData.name.toLowerCase()}`
+      )
+    } catch {
+      onboardingTrackFieldsType = this.app.$registry.get(
+        'onboardingTrackFields',
+        `${this.getType()}_custom`
+      )
+    }
+
+    const fieldParams = Object.values(data[this.getType()]?.fields || {})
+    const items = [{ id: 1 }, { id: 2 }, { id: 3 }]
+
+    for (const field of fieldParams) {
+      const response = await FieldService(this.app.$client).create(
+        tableData.id,
+        field.props
+      )
+
+      onboardingTrackFieldsType.afterFieldCreated(field, response)
+
+      field.rows.forEach((row, index) => {
+        items[index][`field_${response.data.id}`] = row
+      })
+    }
+
+    if (fieldParams.length > 0) {
+      await RowService(this.app.$client).batchUpdate(tableData.id, items)
+    }
+
+    return tableData
   }
 
   getCompletedRoute(data, responses) {

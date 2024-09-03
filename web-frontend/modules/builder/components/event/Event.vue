@@ -48,6 +48,7 @@
           :available-workflow-action-types="availableWorkflowActionTypes"
           :workflow-action="workflowAction"
           :workflow-action-index="index"
+          :application-context-additions="{ workflowAction }"
           @delete="deleteWorkflowAction(workflowAction)"
         />
       </div>
@@ -65,9 +66,10 @@
 
 <script>
 import { Event } from '@baserow/modules/builder/eventTypes'
-import WorkflowAction from '@baserow/modules/core/components/workflowActions/WorkflowAction.vue'
+import WorkflowAction from '@baserow/modules/core/components/workflowActions/WorkflowAction'
 import { NotificationWorkflowActionType } from '@baserow/modules/builder/workflowActionTypes'
 import { mapActions } from 'vuex'
+import applicationContext from '@baserow/modules/builder/mixins/applicationContext'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 const DEFAULT_WORKFLOW_ACTION_TYPE = NotificationWorkflowActionType.getType()
@@ -75,6 +77,7 @@ const DEFAULT_WORKFLOW_ACTION_TYPE = NotificationWorkflowActionType.getType()
 export default {
   name: 'Event',
   components: { WorkflowAction },
+  mixins: [applicationContext],
   inject: ['workspace', 'builder', 'page'],
   props: {
     event: {

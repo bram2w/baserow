@@ -1,7 +1,6 @@
 import abc
-import warnings
 from decimal import Decimal
-from typing import Dict, List, Optional, Type
+from typing import List, Optional
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -363,7 +362,8 @@ class HierarchicalModelMixin(models.Model, metaclass=AbstractModelMeta):
     This mixin introduce some helpers for working with hierarchical models.
     """
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def get_parent(self):
         """
         :return: The parent of this model. Returns None if this is the root.
@@ -408,64 +408,6 @@ def make_trashable_mixin(parent):
 
 
 ParentWorkspaceTrashableModelMixin = make_trashable_mixin("workspace")
-
-
-def support_foreignkey_compat(compats: Dict[str, str]) -> Type[models.Model]:
-    """
-    Constructs a mixin class which easily allows us to traverse `ForeignKey`
-    when we've renamed them to something else.
-    """
-
-    class ForeignKeyCompatMixin(models.Model):
-        class Meta:
-            abstract = True
-
-    mixin = ForeignKeyCompatMixin
-    for from_fk, to_fk in compats.items():
-        # Return the `to_fk` when you access `from_fk`.
-        setattr(mixin, from_fk, property(lambda self: getattr(self, to_fk)))
-        # Return the `{to_fk}_id` FK ID when you access `{from_fk}_id`.
-        setattr(
-            mixin, f"{from_fk}_id", property(lambda self: getattr(self, f"{to_fk}_id"))
-        )
-        warnings.warn(
-            f"The `{from_fk}` field will be deprecated soon, please use `{to_fk}` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-    return mixin
-
-
-GroupToWorkspaceCompatModelMixin = support_foreignkey_compat({"group": "workspace"})
-
-
-class GroupToWorkspaceCompatModelSerializerMixin:
-    """
-    A mixin that allows us to rename the `group` field to `workspace` when serializing.
-    """
-
-    def to_representation(self, instance):
-        """
-        Provide both the deprecated `group` field and the new `workspace` when
-        serializing.
-        """
-
-        ret = super().to_representation(instance)
-        if "workspace" in ret:
-            ret["group"] = ret["workspace"]
-
-        return ret
-
-    def to_internal_value(self, data):
-        """
-        Allow the deprecated `group` field to be used when deserializing.
-        """
-
-        if "group" in data and "workspace" not in data:
-            data["workspace"] = data.pop("group")
-
-        return super().to_internal_value(data)
 
 
 class TrashableModelMixin(models.Model):

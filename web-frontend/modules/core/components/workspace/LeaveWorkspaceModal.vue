@@ -48,8 +48,14 @@ export default {
       this.hideError()
       this.loading = true
 
+      const selected =
+        this.$store.getters['workspace/getSelected'].id === this.workspace.id
+
       try {
         await this.$store.dispatch('workspace/leave', this.workspace)
+        if (selected) {
+          await this.$nuxt.$router.push({ name: 'dashboard' })
+        }
         this.hide()
       } catch (error) {
         this.handleError(error, 'view')

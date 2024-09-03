@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractUser
 
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.registries import PublicCustomFieldsInstanceMixin
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.registry import (
@@ -90,7 +91,7 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
                 imported_element_id, id_mapping, cache.get("imported_element_map", None)
             )
 
-        return super().import_serialized(
+        created_instance = super().import_serialized(
             parent,
             serialized_values,
             id_mapping,
@@ -99,6 +100,14 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
             cache,
             **(kwargs | import_context),
         )
+
+        updated_models = self.import_formulas(
+            created_instance, id_mapping, import_formula, **(kwargs | import_context)
+        )
+
+        [m.save() for m in updated_models]
+
+        return created_instance
 
 
 class BuilderWorkflowActionTypeRegistry(

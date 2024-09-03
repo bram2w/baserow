@@ -44,9 +44,12 @@
       v-if="canAccessLinkedTable"
       ref="selectModal"
       :table-id="field.link_row_table_id"
+      :new-row-presets="presetsForNewRowInLinkedTable"
       :view-id="field.link_row_limit_selection_view_id"
       :value="value"
+      :multiple="true"
       @selected="addValue(value, $event)"
+      @unselected="removeValue({}, value, $event.row.id)"
       @hidden="hideModal"
     ></SelectRowModal>
     <ForeignRowEditModal
@@ -72,6 +75,7 @@ import SelectRowModal from '@baserow/modules/database/components/row/SelectRowMo
 import ForeignRowEditModal from '@baserow/modules/database/components/row/ForeignRowEditModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils/events'
 
 export default {
   name: 'GridViewFieldLinkRow',
@@ -131,7 +135,31 @@ export default {
       // While the field is selected we want to open the select row toast by pressing
       // the enter key.
       this.$el.keydownEvent = (event) => {
-        if (event.key === 'Enter' && !this.modalOpen) {
+        // If the tab or arrow keys are pressed we don't want to do anything because
+        // the GridViewField component will select the next field.
+        const ignoredKeys = [
+          'Tab',
+          'ArrowLeft',
+          'ArrowUp',
+          'ArrowRight',
+          'ArrowDown',
+        ]
+        if (ignoredKeys.includes(event.key)) {
+          return
+        }
+
+        // If the space bar key is pressed, we don't want to do anything because it
+        // should open the row edit modal.
+        if (event.key === ' ') {
+          return
+        }
+
+        // When the enter key, or any printable character is pressed when not editing
+        // the value we want to show the select row modal.
+        if (
+          !this.modalOpen &&
+          (event.key === 'Enter' || isPrintableUnicodeCharacterKeyPress(event))
+        ) {
           this.showModal()
         }
       }

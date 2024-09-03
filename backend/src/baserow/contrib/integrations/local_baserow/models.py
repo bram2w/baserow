@@ -90,6 +90,14 @@ class LocalBaserowUpsertRow(LocalBaserowTableService):
     row_id = FormulaField()
 
 
+class LocalBaserowDeleteRow(LocalBaserowTableService):
+    """
+    A model for the local baserow delete row service configuration data.
+    """
+
+    row_id = FormulaField()
+
+
 class LocalBaserowTableServiceRefinementManager(models.Manager):
     """
     Manager for the `LocalBaserowTableService` filter and sort models.
@@ -211,6 +219,12 @@ class LocalBaserowTableServiceFieldMapping(models.Model):
         Field,
         on_delete=models.CASCADE,
         help_text="The Baserow field that this mapping relates to.",
+    )
+    enabled = models.BooleanField(
+        null=True,  # TODO zdm remove me after v1.27
+        default=True,
+        help_text="Indicates if the field mapping is enabled. If it is disabled, "
+        "we will not use the `value` when creating and updating rows.",
     )
     value = FormulaField(default="", help_text="The field mapping's value.")
     service = models.ForeignKey(

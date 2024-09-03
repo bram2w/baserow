@@ -1,10 +1,9 @@
 <template>
   <FormInput
-    small
     :value="value"
     type="number"
     remove-number-input-controls
-    :to-value="(val) => parseInt(val)"
+    :to-value="(value) => (value ? parseInt(value) : null)"
     :style="{
       width: '100px',
     }"

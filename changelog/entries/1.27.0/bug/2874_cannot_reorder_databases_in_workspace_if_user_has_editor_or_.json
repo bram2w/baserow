@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug causing an issue reordering databases in workspace if user has editor or lower access on any database.",
+    "issue_number": 2874,
+    "bullet_points": [],
+    "created_at": "2024-08-09"
+}

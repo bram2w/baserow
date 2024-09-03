@@ -3,13 +3,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.builder.workflow_actions.registries import (
     builder_workflow_action_type_registry,
 )
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
+    DeleteRowWorkflowActionType,
+    NotificationWorkflowActionType,
+    OpenPageWorkflowActionType,
     RefreshDataSourceWorkflowAction,
     UpsertRowWorkflowActionType,
+    service_backed_workflow_actions,
 )
 from baserow.core.utils import MirrorDict
 from baserow.core.workflow_actions.registries import WorkflowActionType
@@ -24,10 +29,6 @@ def pytest_generate_tests(metafunc):
                 for e in builder_workflow_action_type_registry.get_all()
             ],
         )
-
-
-def fake_import_formula(formula, id_mapping):
-    return formula
 
 
 @pytest.mark.django_db
@@ -78,7 +79,10 @@ def test_import_workflow_action(data_fixture, workflow_action_type: WorkflowActi
     assert workflow_action.id != 9999
     assert isinstance(workflow_action, workflow_action_type.model_class)
 
-    if not issubclass(workflow_action_type.__class__, UpsertRowWorkflowActionType):
+    if not issubclass(
+        workflow_action_type.__class__,
+        (UpsertRowWorkflowActionType, DeleteRowWorkflowActionType),
+    ):
         for key, value in pytest_params.items():
             assert getattr(workflow_action, key) == value
 
@@ -98,6 +102,9 @@ def test_export_import_upsert_row_workflow_action_type(data_fixture):
     data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         table=table, page=page
     )
+    duplicated_page = PageService().duplicate_page(user, page)
+    data_source2 = duplicated_page.datasource_set.first()
+
     field = table.field_set.get(name="Animal")
     element = data_fixture.create_builder_button_element(page=page)
     service = data_fixture.create_local_baserow_upsert_row_service(
@@ -126,11 +133,15 @@ def test_export_import_upsert_row_workflow_action_type(data_fixture):
             "type": "local_baserow_upsert_row",
             "row_id": "",
             "table_id": table.id,
-            "field_mappings": [{"field_id": field.id, "value": field_mapping.value}],
+            "field_mappings": [
+                {"field_id": field.id, "value": field_mapping.value, "enabled": True}
+            ],
         },
     }
 
     id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["builder_data_sources"] = {data_source.id: data_source2.id}
+
     new_workflow_action = workflow_action_type.import_serialized(
         page, exported, id_mapping
     )
@@ -152,9 +163,22 @@ def test_export_import_upsert_row_workflow_action_type(data_fixture):
     )
     assert field_mapping.value == exported["service"]["field_mappings"][0]["value"]
 
+    # Ensure the service's field mapping value has the updated Data Source ID
+    # in its formula.
+    imported_field_mapping = new_workflow_action.service.field_mappings.all()[0]
+    assert (
+        imported_field_mapping.value
+        == f"get('data_source.{data_source2.id}.{field.db_column}')"
+    )
+
 
 @pytest.mark.django_db
-def test_upsert_row_workflow_action_prepare_values_with_instance(
+@pytest.mark.parametrize(
+    "builder_workflow_service_type",
+    service_backed_workflow_actions(),
+)
+def test_builder_workflow_service_type_prepare_values_with_instance(
+    builder_workflow_service_type,
     data_fixture,
 ):
     user, token = data_fixture.create_user_and_token()
@@ -166,8 +190,12 @@ def test_upsert_row_workflow_action_prepare_values_with_instance(
     )
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
-    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
-        page=page, element=element, event=EventTypes.CLICK, user=user
+    workflow_action = data_fixture.create_builder_workflow_service_action(
+        builder_workflow_service_type.model_class,
+        page=page,
+        element=element,
+        event=EventTypes.CLICK,
+        user=user,
     )
     service = workflow_action.service.specific
     service.table = table
@@ -175,7 +203,7 @@ def test_upsert_row_workflow_action_prepare_values_with_instance(
     field = data_fixture.create_text_field(table=table)
     model = table.get_model()
     row2 = model.objects.create(**{f"field_{field.id}": "Cheese"})
-    UpsertRowWorkflowActionType().prepare_values(
+    builder_workflow_service_type.prepare_values(
         {
             "service": {
                 "row_id": row2.id,
@@ -257,3 +285,77 @@ def test_refresh_data_source_returns_value_from_super_method(
     mock_deserialize.assert_called_once_with(
         *args, files_zip=None, cache=None, storage=None
     )
+
+
+@pytest.mark.django_db
+def test_import_notification_workflow_action(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    workflow_action_type = NotificationWorkflowActionType()
+    button_1 = data_fixture.create_builder_button_element(page=page)
+    button_2 = data_fixture.create_builder_button_element(page=page)
+
+    exported_workflow_action = data_fixture.create_notification_workflow_action(
+        page=page,
+        element=button_1,
+        title=f"get('data_source.{data_source_1.id}.field_1')",
+        description=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = workflow_action_type.export_serialized(exported_workflow_action)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {
+        "builder_data_sources": {data_source_1.id: data_source_2.id},
+        "builder_page_elements": {button_1.id: button_2.id},
+    }
+    imported_workflow_action = workflow_action_type.import_serialized(
+        page, serialized, id_mapping
+    )
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_workflow_action.title == expected_formula
+    assert imported_workflow_action.description == expected_formula
+
+
+@pytest.mark.django_db
+def test_import_open_page_workflow_action(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    workflow_action_type = OpenPageWorkflowActionType()
+    button_1 = data_fixture.create_builder_button_element(page=page)
+    button_2 = data_fixture.create_builder_button_element(page=page)
+
+    exported_workflow_action = data_fixture.create_open_page_workflow_action(
+        page=page,
+        element=button_1,
+        navigate_to_url=f"get('data_source.{data_source_1.id}.field_1')",
+        page_parameters=[
+            {
+                "name": "fooPageParam",
+                "value": f"get('data_source.{data_source_1.id}.field_1')",
+            },
+        ],
+    )
+    serialized = workflow_action_type.export_serialized(exported_workflow_action)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {
+        "builder_data_sources": {data_source_1.id: data_source_2.id},
+        "builder_page_elements": {button_1.id: button_2.id},
+    }
+    imported_workflow_action = workflow_action_type.import_serialized(
+        page, serialized, id_mapping
+    )
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_workflow_action.navigate_to_url == expected_formula
+
+    assert imported_workflow_action.page_parameters == [
+        {
+            "name": "fooPageParam",
+            "value": f"get('data_source.{data_source_2.id}.field_1')",
+        },
+    ]

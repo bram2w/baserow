@@ -10,7 +10,7 @@
     <i v-if="icon !== '' && !loading" class="button-text__icon" :class="icon" />
 
     <i v-if="loading" class="button-text__spinner"></i>
-    <span class="button-text__label"><slot /></span>
+    <span v-if="$slots.default" class="button-text__label"><slot /></span>
   </component>
 </template>
 

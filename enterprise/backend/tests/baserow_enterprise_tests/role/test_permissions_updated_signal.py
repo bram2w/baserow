@@ -31,7 +31,6 @@ def test_permissions_updated_signal_role_assignment_created(
     assert args[0][0] == [user.id]
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }
 
@@ -57,7 +56,6 @@ def test_permissions_updated_signal_role_assignment_updated(
     assert args[0][0] == [user.id]
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }
 
@@ -82,7 +80,6 @@ def test_permissions_updated_signal_role_assignment_deleted(
     assert args[0][0] == [user.id]
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }
 
@@ -103,7 +100,6 @@ def test_permissions_updated_signal_role_workspace_level_permissions_updated(
     assert args[0][0] == [user.id]
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }
 
@@ -126,7 +122,6 @@ def test_permissions_updated_signal_role_team_trashed(
     assert args[0][0] == [user.id]
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }
 
@@ -152,7 +147,6 @@ def test_permissions_updated_signal_role_team_restored(
     assert args[0][0] == [user.id]
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }
 
@@ -179,6 +173,5 @@ def test_permissions_updated_signal_role_many_users(
     assert args[0][0].sort() == user_ids.sort()
     assert args[0][1] == {
         "type": "permissions_updated",
-        "group_id": workspace.id,
         "workspace_id": workspace.id,
     }

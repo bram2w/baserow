@@ -46,6 +46,7 @@
               <component
                 :is="step.getFormComponent()"
                 ref="form"
+                :data="data"
                 @update-data="updateData"
               ></component>
             </div>
@@ -89,7 +90,6 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import AuthService from '@baserow/modules/core/services/auth'
 import WorkspaceService from '@baserow/modules/core/services/workspace'
-import VueRouter from 'vue-router'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
 
@@ -218,20 +218,7 @@ export default {
       await this.$store.dispatch('workspace/clearAll')
       await this.$store.dispatch('application/clearAll')
 
-      try {
-        this.$router.push(route)
-      } catch (error) {
-        // When redirecting to the `database-table`, it can happen that it redirects
-        // to another view. For some reason, this is causing the router throw an
-        // error. In our case, it's perfectly fine, so we're suppressing this error
-        // here. More information:
-        // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
-        // error-redirected-from-login-to-via-a
-        const { isNavigationFailure, NavigationFailureType } = VueRouter
-        if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
-          throw error
-        }
-      }
+      this.$router.push(route)
     },
     /**
      * Mark the onboarding as completed, and redirect the user to the dashboard so

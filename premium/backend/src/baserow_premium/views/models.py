@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.urls import reverse_lazy
 
 from baserow.contrib.database.fields.models import Field, FileField, SingleSelectField
 from baserow.contrib.database.views.models import View
@@ -81,9 +83,33 @@ class CalendarView(View):
         help_text="One of the supported date fields that "
         "the calendar view will be based on.",
     )
+    # TODO Remove null=True in a future release
+    ical_public = models.BooleanField(
+        null=True,
+        default=False,
+        db_index=True,
+        help_text=("Setting this to `True` will expose ical feed url"),
+    )
+    # TODO Remove null=True in a future release
+    ical_slug = models.SlugField(
+        null=True,
+        unique=True,
+        default=None,
+        db_index=True,
+        help_text=("Additional slug that allow access to ical format feed"),
+    )
 
     class Meta:
         db_table = "database_calendarview"
+
+    @property
+    def ical_feed_url(self) -> str | None:
+        if self.ical_slug:
+            url_name = "api:database:views:calendar:calendar_ical_feed"
+            return (
+                f"{settings.PUBLIC_BACKEND_URL}"
+                f"{reverse_lazy(url_name, args=(self.ical_slug,))}"
+            )
 
 
 class CalendarViewFieldOptionsManager(models.Manager):

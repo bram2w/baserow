@@ -232,6 +232,7 @@ export default {
     },
     inError() {
       return this.elementType.isInError({
+        page: this.page,
         element: this.element,
         builder: this.builder,
       })

@@ -73,6 +73,8 @@ from .exceptions import (
     CannotDeletePrimaryField,
     FailedToLockFieldDueToConflict,
     FieldDoesNotExist,
+    FieldIsAlreadyPrimary,
+    FieldNotInTable,
     FieldWithSameNameAlreadyExists,
     IncompatibleFieldTypeForUniqueValues,
     IncompatiblePrimaryFieldTypeError,
@@ -81,6 +83,7 @@ from .exceptions import (
     MaxFieldNameLengthExceeded,
     PrimaryFieldAlreadyExists,
     ReservedBaserowFieldNameException,
+    TableHasNoPrimaryField,
 )
 from .field_cache import FieldCache
 from .models import Field, SelectOption, SpecificFieldForUpdate
@@ -343,6 +346,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
+        if primary and not field_type.can_be_primary_field(field_values):
+            raise IncompatiblePrimaryFieldTypeError(field_type.type)
+
         num_fields = table.field_set.count()
         if (num_fields + 1) > settings.MAX_FIELD_LIMIT:
             raise MaxFieldLimitExceeded(
@@ -398,23 +404,11 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         field_cache.cache_model_fields(to_model)
         update_collector = FieldUpdateCollector(table)
-        for (
-            dependant_field,
-            dependant_field_type,
-            via_path_to_starting_table,
-        ) in instance.all_dependant_fields_with_types(
-            field_cache=field_cache, associated_relation_changed=True
-        ):
-            dependant_field_type.field_dependency_created(
-                dependant_field,
-                instance,
-                update_collector,
-                field_cache,
-                via_path_to_starting_table,
-            )
-
-        updated_fields = update_collector.apply_updates_and_get_updated_fields(
-            field_cache, skip_search_updates
+        updated_fields = self._update_field_dependencies_on_field_created(
+            instance,
+            update_collector,
+            field_cache,
+            skip_search_updates,
         )
 
         field_created.send(
@@ -430,6 +424,38 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             return instance, updated_fields
         else:
             return instance
+
+    def _update_field_dependencies_on_field_created(
+        self, field, update_collector, field_cache, skip_search_updates
+    ):
+        updated_fields = []
+
+        all_dependent_fields_grouped_by_depth = (
+            FieldDependencyHandler.group_all_dependent_fields_by_level(
+                field.table_id,
+                [field.id],
+                field_cache,
+                associated_relations_changed=True,
+            )
+        )
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in dependant_fields_group:
+                dependant_field_type.field_dependency_created(
+                    dependant_field,
+                    field,
+                    update_collector,
+                    field_cache,
+                    path_to_starting_table,
+                )
+            updated_fields += update_collector.apply_updates_and_get_updated_fields(
+                field_cache, skip_search_updates
+            )
+
+        return updated_fields
 
     def update_field(
         self,
@@ -494,12 +520,19 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # migrate the field to the new type.
         baserow_field_type_changed = from_field_type.type != to_field_type_name
         field_cache = FieldCache()
+
         if baserow_field_type_changed:
             to_field_type = field_type_registry.get(to_field_type_name)
+        else:
+            to_field_type = from_field_type
 
-            if field.primary and not to_field_type.can_be_primary_field:
-                raise IncompatiblePrimaryFieldTypeError(to_field_type_name)
+        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
+        field_values = extract_allowed(kwargs, allowed_fields)
 
+        if field.primary and not to_field_type.can_be_primary_field(field_values):
+            raise IncompatiblePrimaryFieldTypeError(to_field_type_name)
+
+        if baserow_field_type_changed:
             dependants_broken_due_to_type_change = (
                 from_field_type.get_dependants_which_will_break_when_field_type_changes(
                     field, to_field_type, field_cache
@@ -510,10 +543,6 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         else:
             dependants_broken_due_to_type_change = []
-            to_field_type = from_field_type
-
-        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
-        field_values = extract_allowed(kwargs, allowed_fields)
 
         self._validate_name_and_optionally_rename_if_collision(
             field, field_values, postfix_to_fix_name_collisions
@@ -646,17 +675,13 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             after_schema_change_callback(field)
 
         field_cache.cache_model_fields(to_model)
+
         update_collector = FieldUpdateCollector(field.table)
         for (
             dependant_field,
             dependant_field_type,
             via_path_to_starting_table,
-        ) in (
-            dependants_broken_due_to_type_change
-            + field.all_dependant_fields_with_types(
-                field_cache=field_cache, associated_relation_changed=True
-            )
-        ):
+        ) in dependants_broken_due_to_type_change:
             dependant_field_type.field_dependency_updated(
                 dependant_field,
                 field,
@@ -668,6 +693,10 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         updated_fields = update_collector.apply_updates_and_get_updated_fields(
             field_cache
+        )
+
+        updated_fields += self.update_dependencies_of_field_updated(
+            field, old_field, update_collector, field_cache
         )
 
         ViewHandler().field_updated(field)
@@ -685,6 +714,37 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             return field, updated_fields
         else:
             return field
+
+    def update_dependencies_of_field_updated(
+        self, field, old_field, update_collector, field_cache
+    ):
+        updated_fields = []
+        all_dependent_fields_grouped_by_depth = (
+            FieldDependencyHandler.group_all_dependent_fields_by_level(
+                field.table_id,
+                [field.id],
+                field_cache,
+                associated_relations_changed=True,
+            )
+        )
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in dependant_fields_group:
+                dependant_field_type.field_dependency_updated(
+                    dependant_field,
+                    field,
+                    old_field,
+                    update_collector,
+                    field_cache,
+                    path_to_starting_table,
+                )
+            updated_fields += update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
+        return updated_fields
 
     def duplicate_field(
         self,
@@ -759,7 +819,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         field_cache: Optional[FieldCache] = None,
         apply_and_send_updates: Optional[bool] = True,
         allow_deleting_primary: Optional[bool] = False,
-        immediately_delete_only_the_provided_field: Optional[bool] = False,
+        permanently_delete_field: Optional[bool] = False,
     ) -> List[Field]:
         """
         Deletes an existing field if it is not a primary field.
@@ -777,7 +837,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             updates being applied and any signals from being sent.
         :param allow_deleting_primary: Set to true if its OK for a primary field
             to be deleted.
-        :param immediately_delete_only_the_provided_field: If True, avoids to use
+        :param permanently_delete_field: If True, avoids to use
             the trash system and directly calls delete for the field metadata
             instead. In case we're not using the trash but just deleting the
             field, we also skip the deletion of other related fields defined by
@@ -803,16 +863,19 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             )
 
         field = field.specific
-
         if update_collector is None:
             update_collector = FieldUpdateCollector(field.table)
         if field_cache is None:
             field_cache = FieldCache()
 
-        dependant_fields = field.all_dependant_fields_with_types(
-            field_cache=field_cache, associated_relation_changed=True
+        all_dependent_fields_grouped_by_depth = list(
+            FieldDependencyHandler.group_all_dependent_fields_by_level(
+                field.table_id,
+                [field.id],
+                field_cache,
+                associated_relations_changed=True,
+            )
         )
-
         before_return = before_field_deleted.send(
             self,
             field_id=field.id,
@@ -820,11 +883,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             user=user,
         )
 
-        field_type = field_type_registry.get_by_model(field)
-
         FieldDependencyHandler.break_dependencies_delete_dependants(field)
 
-        if immediately_delete_only_the_provided_field:
+        if permanently_delete_field:
             field.delete()
         else:
             existing_trash_entry = TrashHandler.trash(
@@ -837,33 +898,25 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # The trash call above might have just caused a massive field update to lots of
         # different fields. We need to reset our cache accordingly.
         field_cache.reset_cache()
+        updated_fields = self._update_field_dependencies_on_field_deleted(
+            field, update_collector, field_cache, all_dependent_fields_grouped_by_depth
+        )
 
-        for (
-            dependant_field,
-            dependant_field_type,
-            via_path_to_starting_table,
-        ) in dependant_fields:
-            dependant_field_type.field_dependency_deleted(
-                dependant_field,
-                field,
-                update_collector,
-                field_cache,
-                via_path_to_starting_table,
-            )
-
-        if not immediately_delete_only_the_provided_field:
-            for (
-                related_field
-            ) in field_type.get_other_fields_to_trash_restore_always_together(field):
-                if not related_field.trashed:
-                    FieldHandler().delete_field(
-                        user, related_field, existing_trash_entry=existing_trash_entry
-                    )
+        if not permanently_delete_field:
+            field_type = field_type_registry.get_by_model(field)
+            related_fields_to_trash = [
+                f
+                for f in field_type.get_other_fields_to_trash_restore_always_together(
+                    field
+                )
+                if not f.trashed
+            ]
+            for related_field in related_fields_to_trash:
+                self.delete_field(
+                    user, related_field, existing_trash_entry=existing_trash_entry
+                )
 
         if apply_and_send_updates:
-            updated_fields = update_collector.apply_updates_and_get_updated_fields(
-                field_cache
-            )
             field_deleted.send(
                 self,
                 field_id=field.id,
@@ -873,9 +926,34 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 before_return=before_return,
             )
             update_collector.send_additional_field_updated_signals()
-            return updated_fields
-        else:
-            return []
+        return list(updated_fields)
+
+    def _update_field_dependencies_on_field_deleted(
+        self,
+        field,
+        update_collector,
+        field_cache,
+        all_dependent_fields_grouped_by_depth,
+    ):
+        updated_fields = []
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in dependant_fields_group:
+                dependant_field_type.field_dependency_deleted(
+                    dependant_field,
+                    field,
+                    update_collector,
+                    field_cache,
+                    path_to_starting_table,
+                )
+
+            updated_fields += update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
+        return updated_fields
 
     def update_field_select_options(self, user, field, select_options):
         """
@@ -1053,24 +1131,10 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
             field.save(field_cache=field_cache)
 
-            FieldDependencyHandler.rebuild_dependencies(field, field_cache)
-            for (
-                dependant_field,
-                dependant_field_type,
-                via_path_to_starting_table,
-            ) in field.all_dependant_fields_with_types(
-                field_cache, associated_relation_changed=True
-            ):
-                dependant_field_type.field_dependency_created(
-                    dependant_field,
-                    field,
-                    update_collector,
-                    field_cache,
-                    via_path_to_starting_table,
-                )
-            updated_fields = update_collector.apply_updates_and_get_updated_fields(
-                field_cache
+            updated_fields = self._update_field_dependencies_on_field_restored(
+                field, update_collector, field_cache
             )
+
             ViewHandler().field_updated(updated_fields)
             SearchHandler.entire_field_values_changed_or_created(
                 field.table, updated_fields=[field]
@@ -1094,6 +1158,48 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 field_restored.send(self, field=field, user=None, related_fields=[])
             else:
                 raise e
+
+    def _update_field_dependencies_on_field_restored(
+        self, field, update_collector, field_cache
+    ):
+        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
+
+        field_type = field_type_registry.get_by_model(field)
+        field_type.field_dependency_created(field, field, update_collector, field_cache)
+
+        # Update the restored field first
+        updated_fields = update_collector.apply_updates_and_get_updated_fields(
+            field_cache
+        )
+
+        all_dependent_fields_grouped_by_depth = (
+            FieldDependencyHandler.group_all_dependent_fields_by_level(
+                field.table_id,
+                [field.id],
+                field_cache,
+                associated_relations_changed=True,
+            )
+        )
+
+        for dependant_fields_group in all_dependent_fields_grouped_by_depth:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in dependant_fields_group:
+                dependant_field_type.field_dependency_created(
+                    dependant_field,
+                    field,
+                    update_collector,
+                    field_cache,
+                    path_to_starting_table,
+                )
+
+            updated_fields += update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
+
+        return updated_fields
 
     def move_field_between_tables(self, field_to_move, target_table):
         """
@@ -1241,6 +1347,78 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             res = cursor.fetchall()
 
         return [x[0] for x in res]
+
+    def change_primary_field(
+        self, user: AbstractUser, table: Table, new_primary_field: Field
+    ) -> Tuple[Field, Field]:
+        """
+        Changes the primary field of the given table.
+
+        :param user: The user on whose behalf the duplicated field will be
+            changed.
+        :param table: The table where to change the primary field in.
+        :param new_primary_field: The field that must be changed to the primary field.
+        :raises FieldNotInTable:
+        :raises IncompatiblePrimaryFieldTypeError:
+        :raises FieldIsAlreadyPrimary:
+        :return: The updated field object.
+        """
+
+        if not isinstance(new_primary_field, Field):
+            raise ValueError("The field is not an instance of Field.")
+
+        if type(new_primary_field) is Field:
+            raise ValueError(
+                "The field must be a specific instance of Field and not the base type "
+                "Field itself."
+            )
+
+        workspace = table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            UpdateFieldOperationType.type,
+            workspace=workspace,
+            context=new_primary_field,
+        )
+
+        if new_primary_field.table_id != table.id:
+            raise FieldNotInTable(
+                "The provided new primary field does not belong in the provided table."
+            )
+
+        new_primary_field_type = field_type_registry.get_by_model(new_primary_field)
+        if not new_primary_field_type.can_be_primary_field(new_primary_field):
+            raise IncompatiblePrimaryFieldTypeError(new_primary_field_type.type)
+
+        existing_primary_fields = self.get_fields(
+            table,
+            Field.objects.filter(table=table, primary=True).select_for_update(),
+            specific=True,
+        )
+        existing_primary_field = next(iter(existing_primary_fields), None)
+
+        if existing_primary_field is None:
+            raise TableHasNoPrimaryField("The provided table has no primary field.")
+
+        if existing_primary_field.id == new_primary_field.id:
+            raise FieldIsAlreadyPrimary("The provided field is already primary.")
+
+        existing_primary_field.primary = False
+        existing_primary_field.save()
+
+        old_new_primary_field = deepcopy(new_primary_field)
+        new_primary_field.primary = True
+        new_primary_field.save()
+
+        field_updated.send(
+            self,
+            field=new_primary_field,
+            old_field=old_new_primary_field,
+            related_fields=[existing_primary_field],
+            user=user,
+        )
+
+        return new_primary_field, existing_primary_field
 
     def _validate_name_and_optionally_rename_if_collision(
         self,

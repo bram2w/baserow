@@ -126,9 +126,9 @@ class WebhookHandler:
             context=table,
         )
 
-        return TableWebhook.objects.prefetch_related("events", "headers").filter(
-            table_id=table.id
-        )
+        return TableWebhook.objects.prefetch_related(
+            "events", "headers", "calls"
+        ).filter(table_id=table.id)
 
     def create_table_webhook(
         self,

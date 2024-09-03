@@ -6,9 +6,9 @@
     >
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('typographyThemeConfigBlock.fontFamily')"
         >
           <FontFamilySelector v-model="values.body_font_family" />
@@ -20,9 +20,10 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          v-if="!extraArgs?.noAlignment"
+          horizontal-narrow
           small-label
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('typographyThemeConfigBlock.textAlignment')"
         >
           <HorizontalAlignmentsSelector v-model="values.body_text_alignment" />
@@ -34,9 +35,9 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('typographyThemeConfigBlock.size')"
           :error-message="
             $v.values[`body_font_size`].$invalid
@@ -60,9 +61,9 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('typographyThemeConfigBlock.color')"
         >
           <ColorInput
@@ -94,9 +95,9 @@
       >
         <template #default>
           <FormGroup
-            horizontal
+            horizontal-narrow
             small-label
-            class="margin-bottom-1"
+            class="margin-bottom-2"
             :label="$t('typographyThemeConfigBlock.fontFamily')"
           >
             <FontFamilySelector
@@ -110,9 +111,9 @@
             </template>
           </FormGroup>
           <FormGroup
-            horizontal
+            horizontal-narrow
             small-label
-            class="margin-bottom-1"
+            class="margin-bottom-2"
             :label="$t('typographyThemeConfigBlock.textAlignment')"
           >
             <HorizontalAlignmentsSelector
@@ -126,9 +127,9 @@
             </template>
           </FormGroup>
           <FormGroup
-            horizontal
+            horizontal-narrow
             small-label
-            class="margin-bottom-1"
+            class="margin-bottom-2"
             :label="$t('typographyThemeConfigBlock.size')"
             :error-message="
               $v.values[`heading_${level}_font_size`].$invalid
@@ -152,9 +153,9 @@
             </template>
           </FormGroup>
           <FormGroup
-            horizontal
+            horizontal-narrow
             small-label
-            class="margin-bottom-1"
+            class="margin-bottom-2"
             :label="$t('typographyThemeConfigBlock.color')"
           >
             <ColorInput

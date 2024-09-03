@@ -2,7 +2,6 @@ from django.shortcuts import reverse
 from django.test.utils import override_settings
 
 import pytest
-from rest_framework.exceptions import ValidationError
 from rest_framework.status import HTTP_200_OK
 
 from baserow_enterprise.api.sso.serializers import SsoLoginRequestSerializer
@@ -49,20 +48,7 @@ def test_saml_available_with_an_enterprise_license(
     assert response_json["saml"]["domain_required"] is True
 
 
-def test_sso_login_request_serializer_with_group_token_converts_to_workspace_token():
-    assert SsoLoginRequestSerializer({"group_invitation_token": "abc123"}).data == {
-        "workspace_invitation_token": "abc123"
-    }
-
-
 def test_sso_login_request_serializer_with_workspace_token():
     assert SsoLoginRequestSerializer({"workspace_invitation_token": "abc123"}).data == {
         "workspace_invitation_token": "abc123"
     }
-
-
-def test_sso_login_request_serializer_with_both_group_and_workspace_token_raises():
-    with pytest.raises(ValidationError):
-        _ = SsoLoginRequestSerializer(
-            {"group_invitation_token": "abc123", "workspace_invitation_token": "abc123"}
-        ).data

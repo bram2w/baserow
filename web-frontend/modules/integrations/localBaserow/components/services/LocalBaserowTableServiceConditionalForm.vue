@@ -27,11 +27,10 @@
           slotProps: { filter, filterType: propFilterType },
         }"
       >
-        <InjectedFormulaInputGroup
+        <InjectedFormulaInput
           v-if="filter.value_is_formula && propFilterType.hasEditableValue"
           v-model="filter.value"
           class="filters__value--formula-input"
-          small
           :placeholder="
             $t(
               'localBaserowTableServiceConditionalForm.formulaFilterInputPlaceholder'
@@ -83,17 +82,13 @@ import ViewFieldConditionsForm from '@baserow/modules/database/components/view/V
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { v1 as uuidv1 } from 'uuid'
-import InjectedFormulaInputGroup from '@baserow/modules/core/components/formula/InjectedFormulaInputGroup.vue'
-import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
+import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 
 export default {
   name: 'LocalBaserowTableServiceConditionalForm',
   components: {
-    InjectedFormulaInputGroup,
+    InjectedFormulaInput,
     ViewFieldConditionsForm,
-  },
-  provide() {
-    return { dataProvidersAllowed: DATA_PROVIDERS_ALLOWED_DATA_SOURCES }
   },
   props: {
     value: {

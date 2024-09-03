@@ -3,11 +3,11 @@
     <ThemeConfigBlockSection>
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
           :label="$t('buttonThemeConfigBlock.width')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <WidthSelector v-model="buttonWidth" />
           <template #after-input>
@@ -18,11 +18,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          v-if="values.button_width === 'auto'"
-          horizontal
+          v-if="values.button_width === 'auto' && !extraArgs?.noAlignment"
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.alignment')"
         >
           <HorizontalAlignmentsSelector v-model="values.button_alignment" />
@@ -34,11 +34,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          v-else
-          horizontal
+          v-if="values.button_width === 'full'"
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.textAlignment')"
         >
           <HorizontalAlignmentsSelector
@@ -52,10 +52,10 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           :label="$t('buttonThemeConfigBlock.fontFamily')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <FontFamilySelector v-model="values.button_font_family" />
           <template #after-input>
@@ -66,11 +66,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           :label="$t('buttonThemeConfigBlock.size')"
           :error-message="getError('button_font_size')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <PixelValueSelector v-model="values.button_font_size" />
           <template #after-input>
@@ -81,11 +81,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           :label="$t('buttonThemeConfigBlock.borderSize')"
           :error-message="getError('button_border_size')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <PixelValueSelector v-model="values.button_border_size" />
           <template #after-input>
@@ -96,11 +96,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           :label="$t('buttonThemeConfigBlock.borderRadius')"
           :error-message="getError('button_border_radius')"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <PixelValueSelector v-model="values.button_border_radius" />
           <template #after-input>
@@ -111,11 +111,11 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           :label="$t('buttonThemeConfigBlock.padding')"
           :error-message="getPaddingError()"
-          class="margin-bottom-1"
+          class="margin-bottom-2"
         >
           <PaddingSelector v-model="padding" />
           <template #after-input>
@@ -140,10 +140,10 @@
     <ThemeConfigBlockSection :title="$t('buttonThemeConfigBlock.defaultState')">
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.backgroundColor')"
         >
           <ColorInput
@@ -160,10 +160,10 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.textColor')"
         >
           <ColorInput
@@ -180,10 +180,10 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.borderColor')"
         >
           <ColorInput
@@ -207,10 +207,10 @@
     <ThemeConfigBlockSection :title="$t('buttonThemeConfigBlock.hoverState')">
       <template #default>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
           required
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.backgroundColor')"
         >
           <ColorInput
@@ -227,9 +227,9 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.textColor')"
         >
           <ColorInput
@@ -246,9 +246,9 @@
           </template>
         </FormGroup>
         <FormGroup
-          horizontal
+          horizontal-narrow
           small-label
-          class="margin-bottom-1"
+          class="margin-bottom-2"
           :label="$t('buttonThemeConfigBlock.borderColor')"
         >
           <ColorInput
@@ -303,11 +303,11 @@ const minMax = {
   },
   button_horizontal_padding: {
     min: 0,
-    max: 100,
+    max: 200,
   },
   button_vertical_padding: {
     min: 0,
-    max: 100,
+    max: 200,
   },
 }
 
