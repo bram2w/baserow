@@ -587,9 +587,11 @@
   },
   "collectionFieldType": {
     "boolean": "Boolean",
+    "button": "Button",
     "text": "Text",
     "link": "Link",
-    "tags": "Tags"
+    "tags": "Tags",
+    "image": "Image"
   },
   "textFieldForm": {
     "fieldValueLabel": "Value",
@@ -610,6 +612,13 @@
   },
   "linkField": {
     "details": "Details"
+  },
+  "imageFieldForm": {
+    "fieldSrcLabel": "Image source",
+    "fieldSrcPlaceholder": "Enter value",
+    "fieldAltLabel": "Alt text",
+    "fieldAltPlaceholder": "Enter value...",
+    "fieldAltHelp": "Is used by screen readers and displayed if the image can't load"
   },
   "createUserSourceForm": {
     "userSourceType": "Type",

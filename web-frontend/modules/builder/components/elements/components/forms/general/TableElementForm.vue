@@ -15,7 +15,7 @@
       class="margin-bottom-2"
     >
       <DataSourceDropdown
-        v-model="values.data_source_id"
+        v-model="computedDataSourceId"
         small
         :data-sources="dataSources"
       >
@@ -283,7 +283,6 @@ export default {
         orientation: {},
         button_load_more_label: '',
       },
-      userHasChangedDataSource: false,
     }
   },
   computed: {
@@ -312,15 +311,17 @@ export default {
         ? this.$t('error.maxValueField', { max: this.maxItemPerPage })
         : ''
     },
-  },
-  watch: {
-    async 'values.data_source_id'(newValue, oldValue) {
-      if (newValue && !oldValue) {
-        await this.$nextTick()
-        if (this.userHasChangedDataSource) {
+    computedDataSourceId: {
+      get() {
+        return this.element.data_source_id
+      },
+      set(newValue) {
+        const oldValue = this.values.data_source_id
+        this.values.data_source_id = newValue
+        if (newValue !== oldValue && newValue) {
           this.refreshFieldsFromDataSource()
         }
-      }
+      },
     },
   },
   methods: {
@@ -380,7 +381,11 @@ export default {
     refreshFieldsFromDataSource() {
       // If the data source returns multiple records, generate
       // the collection field values.
-      if (this.selectedDataSourceReturnsList) {
+
+      if (
+        this.selectedDataSourceReturnsList &&
+        this.selectedDataSourceType.isValid(this.selectedDataSource)
+      ) {
         this.values.fields =
           this.selectedDataSourceType.getDefaultCollectionFields(
             this.selectedDataSource

@@ -1,6 +1,11 @@
 <template>
   <div class="ab-image">
-    <img class="ab-image__img" :alt="alt" :src="src" />
+    <img
+      class="ab-image__img"
+      :alt="alt"
+      :src="src"
+      :loading="lazy ? 'lazy' : null"
+    />
   </div>
 </template>
 
@@ -27,6 +32,14 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    /**
+     * @type {Boolean} - Whether the image should be loaded lazily.
+     */
+    lazy: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
 }
