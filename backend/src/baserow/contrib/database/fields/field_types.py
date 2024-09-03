@@ -4362,6 +4362,7 @@ class FormulaFieldType(
     can_be_in_form_view = False
     field_data_is_derived_from_attrs = True
     needs_refresh_after_import_serialized = True
+    include_in_row_move_updated_fields = False
 
     CORE_FORMULA_FIELDS = [
         "formula",

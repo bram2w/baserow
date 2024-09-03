@@ -1003,7 +1003,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         updated_rows: List[GeneratedTableModel],
         model: Type[GeneratedTableModel],
         updated_field_ids: Set[int],
-        m2m_change_tracker: RowM2MChangeTracker,
+        m2m_change_tracker: Optional[RowM2MChangeTracker] = None,
         skip_search_updates: bool = False,
     ) -> List["Field"]:
         """
@@ -1030,10 +1030,15 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 associated_relations_changed=True,
             )
         )
+        deleted_m2m_rels_per_link_field = None
+        if m2m_change_tracker is not None:
+            deleted_m2m_rels_per_link_field = (
+                m2m_change_tracker.get_deleted_link_row_rels_for_update_collector()
+            )
         update_collector = FieldUpdateCollector(
             table,
             starting_row_ids=[row.id for row in updated_rows],
-            deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
+            deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
         )
         updated_fields = []
         for dependant_fields_group in all_dependent_fields_grouped_by_depth:
@@ -2005,36 +2010,23 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         row.order = self.get_unique_orders_before_row(before_row, model)[0]
         row.save()
 
-        update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
-        field_cache = FieldCache()
-        field_cache.cache_model(model)
+        # All fields must be marked as updated because the lookup fields can depend
+        # on the row order. Only fields that are specifically marked as
+        # `not include_in_row_move_updated_fields` are excluded. This is for example
+        # the case with the formula because that value can depend on other values and
+        # must be updated in the right grouped order in
+        # `update_dependencies_of_rows_updated`.
         updated_field_ids = []
         updated_fields = []
         for field_id, field_object in model._field_objects.items():
-            updated_field_ids.append(field_id)
-            field = field_object["field"]
-            updated_fields.append(field)
+            if field_object["type"].include_in_row_move_updated_fields:
+                updated_field_ids.append(field_id)
+                field = field_object["field"]
+                updated_fields.append(field)
 
-        dependant_fields = []
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
-            table.id,
-            updated_field_ids,
-            field_cache,
-            associated_relations_changed=True,
-        ):
-            dependant_fields.append(dependant_field)
-            dependant_field_type.row_of_dependency_moved(
-                dependant_field,
-                row,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
+        dependant_fields = self.update_dependencies_of_rows_updated(
+            table, [row], model, updated_field_ids
+        )
 
         from baserow.contrib.database.views.handler import ViewHandler
 
