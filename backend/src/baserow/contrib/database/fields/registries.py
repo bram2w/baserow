@@ -176,6 +176,12 @@ class FieldType(
     it's None (default), it uses the allowed_fields by default to be on the safe side.
     """
 
+    include_in_row_move_updated_fields = True
+    """
+    By default all fields are included in the `updated_fields` when a row moves because
+    some fields can depend on it like the `lookup` field.
+    """
+
     @property
     def db_column_fields(self) -> Set[str]:
         if self._db_column_fields is not None:
@@ -1387,40 +1393,6 @@ class FieldType(
         :param field_cache: An optional field cache to be used when fetching fields.
         :param via_path_to_starting_table: A list of link row fields if any leading
             back to the starting table where the row was deleted.
-        """
-
-        self.row_of_dependency_updated(
-            field,
-            starting_row,
-            update_collector,
-            field_cache,
-            via_path_to_starting_table,
-        )
-
-    def row_of_dependency_moved(
-        self,
-        field: Field,
-        starting_row: "StartingRowType",
-        update_collector: "FieldUpdateCollector",
-        field_cache: "FieldCache",
-        via_path_to_starting_table: Optional[List[LinkRowField]],
-    ):
-        """
-        Called when a row is moved in a dependency field (a field that the
-        field instance parameter depends on).
-        If as a result row value changes are required by this field type an
-        update expression should be provided to the update_collector.
-        Ensure super is called if this fields rows also change so dependants of this
-        field also get notified.
-
-        :param field: The field whose dependency has had a row deleted.
-        :param starting_row: The row which was moved.
-        :param update_collector: Any update statements should be passed to this
-            collector so they are run correctly at the right time. You should not be
-            manually updating row values yourself in this method.
-        :param field_cache: An optional field cache to be used when fetching fields.
-        :param via_path_to_starting_table: A list of link row fields if any leading
-            back to the starting table where the row was moved.
         """
 
         self.row_of_dependency_updated(
