@@ -441,7 +441,14 @@ export default {
         positions.bottom = window.innerHeight - targetBottom + verticalOffset
       }
 
-      return positions
+      // Round position otherwise sometimes it breaks, especially when using
+      // Browser zoom
+      return Object.fromEntries(
+        Object.entries(positions).map(([key, value]) => [
+          key,
+          Number.isFinite(value) ? Math.round(value) : value,
+        ])
+      )
     },
     /**
      * Checks if we need to adjust the horizontal/vertical value of where the context
