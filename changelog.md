@@ -1,5 +1,104 @@
 # Changelog
 
+## Released 1.27.0
+
+### New features
+* Allow changing the primary field. [#1301](https://gitlab.com/baserow/baserow/-/issues/1301)
+* Introduced official Helm chart. [#1728](https://gitlab.com/baserow/baserow/-/issues/1728)
+* [premium] Calendar view can be shared with external applications via ical feed url [#1911](https://gitlab.com/baserow/baserow/-/issues/1911)
+  * added `BASEROW_ICAL_VIEW_MAX_EVENTS` setting to limit amount of events in the output
+* Allow typing immediately in the grid for link row cell to search for a relationship. [#193](https://gitlab.com/baserow/baserow/-/issues/193)
+* Reduce the frequency of periodic field updates for unused workspaces. [#2120](https://gitlab.com/baserow/baserow/-/issues/2120)
+* Allow selecting multiple relationships in the row select modal of the link row field. [#2267](https://gitlab.com/baserow/baserow/-/issues/2267)
+* Join additional fields of a relationship via the API without creating a lookup field [#2460](https://gitlab.com/baserow/baserow/-/issues/2460)
+* [Builder] Made it easier for application builder page designers to disable fields in their create/update row actions. [#2620](https://gitlab.com/baserow/baserow/-/issues/2620)
+* Add onboarding step that adds fields to the created table [#2639](https://gitlab.com/baserow/baserow/-/issues/2639)
+* [Builder] Allow collection elements to be nested in one another. It is now possible to nest a repeat in a repeat, or a table within a repeat.  [#2658](https://gitlab.com/baserow/baserow/-/issues/2658)
+* Display hyperlinks in lookup fields when lookup field is URLField [#2692](https://gitlab.com/baserow/baserow/-/issues/2692)
+* Show the Baserow version in the setting page. [#2696](https://gitlab.com/baserow/baserow/-/issues/2696)
+* Add array filters for formula arrays based on text [#2727](https://gitlab.com/baserow/baserow/-/issues/2727)
+* [Builder] Add image collection field to table elements [#2759](https://gitlab.com/baserow/baserow/-/issues/2759)
+* [Builder] Improve data explorer performances and allow to select any repetition from a source [#2762](https://gitlab.com/baserow/baserow/-/issues/2762)
+* Add tourl formula to support operations on url field type [#2791](https://gitlab.com/baserow/baserow/-/issues/2791)
+* [Builder] Allow to change input elements style [#2803](https://gitlab.com/baserow/baserow/-/issues/2803)
+* [Builder] Allow to configure table field styles [#2803](https://gitlab.com/baserow/baserow/-/issues/2803)
+* [Builder] Allow to style the table element [#2803](https://gitlab.com/baserow/baserow/-/issues/2803)
+* Extend array filters to support lookups of URL, email, phone number, and UUID fields [#2819](https://gitlab.com/baserow/baserow/-/issues/2819)
+* [Builder] Introduce the 'delete row' workflow action [#2822](https://gitlab.com/baserow/baserow/-/issues/2822)
+* Automatically prefill reverse relationship for new row in linked table [#2825](https://gitlab.com/baserow/baserow/-/issues/2825)
+* Introduced arrow key navigation in the row select modal.
+* Automatically start Storybook in the dev environment.
+* [Builder] Introduced a checkbox to the repeat element form so that repetitions can be temporarily paused in the editor.
+* Horizontal resize sidebar
+* Introduced a neutral switch color.
+* Replaced the dashboard with a workspace specific homepage.
+* Redesigned the left sidebar.
+* User admin: search for id, prevent unnecessary refresh, and add scrollbar expand list context
+
+### Bug fixes
+* Fix highlight of active menu item in API docs. [#2573](https://gitlab.com/baserow/baserow/-/issues/2573)
+* [Builder] Fix bug where some child elements that should have been excluded by the Permission Manager were being returned in the queryset. [#2601](https://gitlab.com/baserow/baserow/-/issues/2601)
+* Grid view: highlight edited row [#2690](https://gitlab.com/baserow/baserow/-/issues/2690)
+* [Builder] Fix bug where changing Data Source type from 'Get multiple rows' to 'Get single row' could sometimes cause problems with exporting and duplicating the application. [#2730](https://gitlab.com/baserow/baserow/-/issues/2730)
+* Cut off long relationship descriptions [#2742](https://gitlab.com/baserow/baserow/-/issues/2742)
+* Properly handle user_field_names in api calls [#2784](https://gitlab.com/baserow/baserow/-/issues/2784)
+* Fix nested filter group duplication. [#2788](https://gitlab.com/baserow/baserow/-/issues/2788)
+* Fixed undefined variable in JobHandler.run [#2796](https://gitlab.com/baserow/baserow/-/issues/2796)
+* [Builder] Fix filter data source formula fields alignment [#2804](https://gitlab.com/baserow/baserow/-/issues/2804)
+* Clear workspace_id after each test [#2815](https://gitlab.com/baserow/baserow/-/issues/2815)
+* Fix translation in SAML configuration [#2830](https://gitlab.com/baserow/baserow/-/issues/2830)
+* [Builder] Fixed bug where typing too quickly in the Color style input caused duplicate characters. [#2831](https://gitlab.com/baserow/baserow/-/issues/2831)
+* Fix upserts for table usage [#2839](https://gitlab.com/baserow/baserow/-/issues/2839)
+* Update plugin boilerplate deps. [#2846](https://gitlab.com/baserow/baserow/-/issues/2846)
+* [Builder] Fix theme panel opening on some screen resolution or when using browser zoom [#2853](https://gitlab.com/baserow/baserow/-/issues/2853)
+* [Builder] Resolved an issue where removing an integration from a user source would raise an error when its users are listed. [#2861](https://gitlab.com/baserow/baserow/-/issues/2861)
+* Fix a bug where the clear button doesn't work in workspace level audit logs. [#2866](https://gitlab.com/baserow/baserow/-/issues/2866)
+* Prevent unnecessary $set events in Posthog [#2868](https://gitlab.com/baserow/baserow/-/issues/2868)
+* [Builder] Fix bug where deleting a User Source would cause the frontend to crash. [#2869](https://gitlab.com/baserow/baserow/-/issues/2869)
+* [Builder] Resolved an issue with refreshing a user source token when the table it's associated with has been trashed. [#2873](https://gitlab.com/baserow/baserow/-/issues/2873)
+* Fixed a bug causing an issue reordering databases in workspace if user has editor or lower access on any database. [#2874](https://gitlab.com/baserow/baserow/-/issues/2874)
+* Fixed a bug where calendar views did not reset the `date_field_id` when the associated date field was deleted. [#2881](https://gitlab.com/baserow/baserow/-/issues/2881)
+* Display newly created linked row [#2901](https://gitlab.com/baserow/baserow/-/issues/2901)
+* list rows via api fails with include or exclude and view_id [#2903](https://gitlab.com/baserow/baserow/-/issues/2903)
+* Fix a bug causing dropdowns to not always work in forms when searching for an item. [#2929](https://gitlab.com/baserow/baserow/-/issues/2929)
+* Update helm chart docs [#2936](https://gitlab.com/baserow/baserow/-/issues/2936)
+* Create an ActionType for form submissions to track them in the audit log. [#2938](https://gitlab.com/baserow/baserow/-/issues/2938)
+* Fix a bug causing every snapshot to perform additional queries to check permissions for RBAC. [#2941](https://gitlab.com/baserow/baserow/-/issues/2941)
+* Fix date filter input [#2945](https://gitlab.com/baserow/baserow/-/issues/2945)
+* Fix posthog error when user is an AnonymousUser and distinc_id is None. [#2954](https://gitlab.com/baserow/baserow/-/issues/2954)
+* Fix import for broken lookup fields [#2955](https://gitlab.com/baserow/baserow/-/issues/2955)
+* [Builder] Button click action were unable to access the current record values
+* [Builder] Fix broken navigation or login after application pulication with modified user source
+* [Builder] Hide builder application to roles other than Builder
+* [Builder] improve performance when editing default value of input element inside repeat element
+* [Builder] The `value` property was missing for lookup fields in the data explorer
+* Fix clickable link in the URL field in the row edit modal. [#2804](https://gitlab.com/baserow/baserow/-/issues/2804)
+* [Builder] Fix IFrame element source type selector
+* Fixed broken OpenID Connect base_url validation.
+* Fix pagination loading animation in the row select modal.
+* Improved thread safety when generating models.
+* Fix bug where the single select is any of values were not duplicated.
+* Fix loading webhooks when request and response is huge.
+* Reset search when collaborator dropdown closes.
+* Stop creating tsv columns when PG_FULLTEXT_SEARCH is disabled.
+
+### Refactors
+* [Builder] Add Formula Generator to extract formulas for Elements. [#2063](https://gitlab.com/baserow/baserow/-/issues/2063)
+* [Builder] Ensure the Element Panel's Dropdown and Input fields use the dense style. [#2705](https://gitlab.com/baserow/baserow/-/issues/2705)
+* [Builder] Improve how Choice Element's values are auto-populated. [#2706](https://gitlab.com/baserow/baserow/-/issues/2706)
+* Make unittests more resiliant to environment variables changes [#2801](https://gitlab.com/baserow/baserow/-/issues/2801)
+* Refactor array filter mixins [#2802](https://gitlab.com/baserow/baserow/-/issues/2802)
+* Don t recreate table column when updating a formula field if not needed [#2890](https://gitlab.com/baserow/baserow/-/issues/2890)
+* Reschedule view index creation if table is already locked. [#2934](https://gitlab.com/baserow/baserow/-/issues/2934)
+* [Builder] Improve UX for the Choice Element: auto-fill Values, reverse Name and Value positions, and update translations. [#2706](https://gitlab.com/baserow/baserow/-/issues/2706)
+* [Builder] Remove zero downtime related field properties. Some fields can't be null anymore.
+* Change title template suffix from `// Baserow` to `| Baserow`.
+* Modify formulas to update values in correct dependency order instead of expanding each referenced formula for every field.
+
+### Breaking API changes
+* The `include` query parameter now excludes link row fields unless they are explicitly listed when listing rows. [#2903](https://gitlab.com/baserow/baserow/-/issues/2903)
+
+
 ## Released 1.26.1
 
 ### Bug fixes
