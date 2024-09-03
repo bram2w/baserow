@@ -477,6 +477,12 @@ class RoleAssignmentHandler:
         roles_per_scope_per_user = defaultdict(list)
         for actor in actors:
             for key, value in roles_by_scope[actor.id].items():
+                # scope_cache contains all the filtered scopes we need to check
+                # permissions for. Objects from snapshotted applications (table,
+                # applications, etc.) are filtered out as they're not accessible to the
+                # user, so we can safely ignore them here.
+                if key not in scope_cache:
+                    continue
                 roles_per_scope_per_user[actor].append((scope_cache[key], value))
 
         return roles_per_scope_per_user
@@ -744,17 +750,23 @@ class RoleAssignmentHandler:
 
         return self.assign_role_batch(workspace, new_role_assignments)
 
-    def get_scopes(self, content_type_id, scope_ids) -> List[ScopeObject]:
+    def get_scopes(self, content_type_id, scope_ids) -> QuerySet[ScopeObject]:
         """
         Helper method that returns the actual scope object given the scope ID and
         the scope type.
 
         :param scope_id: The scope id.
         :param content_type_id: The content_type id
+        :return: A QuerySet of the scope objects matching the given scope IDs.
         """
 
         content_type = ContentType.objects.get_for_id(content_type_id)
-        return content_type.get_all_objects_for_this_type(id__in=scope_ids)
+        object_scope = object_scope_type_registry.get_for_class(
+            content_type.model_class()
+        )
+        return object_scope.get_enhanced_queryset(include_trash=True).filter(
+            id__in=scope_ids
+        )
 
     def get_role_assignments(self, workspace: Workspace, scope: Optional[ScopeObject]):
         """

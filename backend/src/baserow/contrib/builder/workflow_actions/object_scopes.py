@@ -1,6 +1,6 @@
 from typing import Optional
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.builder.elements.object_scopes import BuilderElementObjectScopeType
 from baserow.contrib.builder.object_scopes import BuilderObjectScopeType
@@ -18,7 +18,19 @@ class BuilderWorkflowActionScopeType(ObjectScopeType):
     model_class = BuilderWorkflowAction
 
     def get_parent_scope(self) -> Optional["ObjectScopeType"]:
-        return object_scope_type_registry.get("builder_element")
+        return object_scope_type_registry.get_by_type(BuilderElementObjectScopeType)
+
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(page__builder__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "page__builder__workspace"
+        )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == WorkspaceObjectScopeType.type:

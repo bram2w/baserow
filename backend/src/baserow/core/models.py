@@ -419,13 +419,11 @@ class Application(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_parent(self):
-        # If this application is an application snapshot, then it'll
-        # have a None workspace, so instead we define its parent as
-        # the source snapshot's `snapshot_from`.
-        if self.workspace_id:
-            return self.workspace
-        else:
-            return self.snapshot_from.get()
+        if not self.workspace_id:
+            raise ValueError(
+                "Cannot call get_parent if workspace is None. Please check your hierarchy."
+            )
+        return self.workspace
 
 
 class TemplateCategory(models.Model):

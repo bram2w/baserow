@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.contrib.database.table.object_scopes import DatabaseTableObjectScopeType
@@ -24,9 +24,16 @@ class DatabaseViewObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_table")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "table", "table__database", "table__database__workspace"
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(table__database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
@@ -52,12 +59,16 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "view",
-            "view__table",
-            "view__table__database",
-            "view__table__database__workspace",
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(view__table__database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "view__table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
@@ -86,12 +97,16 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "view",
-            "view__table",
-            "view__table__database",
-            "view__table__database__workspace",
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(view__table__database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "view__table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
@@ -120,12 +135,16 @@ class DatabaseViewFilterObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "view",
-            "view__table",
-            "view__table__database",
-            "view__table__database__workspace",
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(view__table__database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "view__table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
@@ -154,12 +173,16 @@ class DatabaseViewFilterGroupObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "view",
-            "view__table",
-            "view__table__database",
-            "view__table__database__workspace",
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(view__table__database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "view__table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
@@ -188,12 +211,16 @@ class DatabaseViewGroupByObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
 
-    def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related(
-            "view",
-            "view__table",
-            "view__table__database",
-            "view__table__database__workspace",
+    def get_base_queryset(self, include_trash: bool = False) -> QuerySet:
+        return (
+            super()
+            .get_base_queryset(include_trash)
+            .filter(view__table__database__workspace__isnull=False)
+        )
+
+    def get_enhanced_queryset(self, include_trash: bool = False) -> QuerySet:
+        return self.get_base_queryset(include_trash).select_related(
+            "view__table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):

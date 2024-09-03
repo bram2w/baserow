@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug causing every snapshot to perform additional queries to check permissions for RBAC.",
+    "issue_number": 2941,
+    "bullet_points": [],
+    "created_at": "2024-08-27"
+}

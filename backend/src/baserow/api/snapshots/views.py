@@ -135,7 +135,9 @@ class SnapshotsView(APIView):
         """
 
         handler = SnapshotHandler()
-        snapshot_created = handler.create(application_id, request.user, data["name"])
+        snapshot_created = handler.start_create_job(
+            application_id, request.user, data["name"]
+        )
         serializer = JobSerializer(snapshot_created["job"])
         return Response(serializer.data, status=HTTP_202_ACCEPTED)
 
@@ -195,7 +197,7 @@ class RestoreSnapshotView(APIView):
         """
 
         handler = SnapshotHandler()
-        job = handler.restore(snapshot_id, request.user)
+        job = handler.start_restore_job(snapshot_id, request.user)
         serializer = JobSerializer(job)
         return Response(serializer.data)
 

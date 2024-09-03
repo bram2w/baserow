@@ -29,7 +29,9 @@ def test_create_snapshot_action_type(
     application = data_fixture.create_database_application(workspace=workspace)
 
     with django_capture_on_commit_callbacks(execute=True):
-        result = SnapshotHandler().create(application.id, user, "test snapshot")
+        result = SnapshotHandler().start_create_job(
+            application.id, user, "test snapshot"
+        )
 
     snapshot = result["snapshot"]
     job = result["job"]
@@ -68,7 +70,7 @@ def test_restore_snapshot_action_type(
     )
 
     with django_capture_on_commit_callbacks(execute=True):
-        job = SnapshotHandler().restore(snapshot.id, user)
+        job = SnapshotHandler().start_restore_job(snapshot.id, user)
 
     job.refresh_from_db()
     assert job.state == JOB_FINISHED

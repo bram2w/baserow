@@ -362,7 +362,8 @@ class HierarchicalModelMixin(models.Model, metaclass=AbstractModelMeta):
     This mixin introduce some helpers for working with hierarchical models.
     """
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def get_parent(self):
         """
         :return: The parent of this model. Returns None if this is the root.
