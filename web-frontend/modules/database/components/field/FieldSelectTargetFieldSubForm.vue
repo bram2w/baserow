@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div
+    v-if="
+      loading || (fieldsInThroughTable.length > 0 && isSelectedFieldAccessible)
+    "
+  >
     <div v-if="loading" class="context--loading">
       <div class="loading"></div>
     </div>
@@ -10,7 +14,6 @@
       small-label
       required
       :error="$v.values.target_field_id.$error"
-      class="margin-bottom-2"
     >
       <Dropdown
         v-model="values.target_field_id"
