@@ -147,7 +147,8 @@
         "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus.",
         "viewId": "Par défaut, aucun des filtres et tris autres que ceux définis dans les paramètres de la requête ne sont appliqués. Vous pouvez définir les filtres et les tris d'une vue en fournissant son `id` dans le paramètre GET `view_id`. Par exemple, si vous fournissez le paramètre GET suivant `view_id=1`, les filtres et les tris définis dans la vue avec l'id `1` seront appliqués. Vous pouvez trouver le `view_id` dans le menu contextuel d'une vue donnée. Il s'agit du nombre entre parenthèses derrière le nom de la vue. \n\n #### Avec `filter__{field}__{filter}` \n\n Le filtre fourni dans le paramètre de la requête et les filtres définis dans la vue seront appliqués.\n\n #### Avec `order_by` \n\n Si `order_by` est fourni, le tri défini dans la vue sera ignoré.",
         "filtersBuilder": "Ouvrir le générateur de filtres",
-        "filters": "Les lignes peuvent être filtrées en utilisant les mêmes filtres que ceux disponibles pour les vues. Ce paramètre accepte une chaîne sérialisée en JSON contenant l'arbre de filtre à appliquer pour cette vue. L'arbre de filtre est une structure imbriquée contenant les filtres qui doivent être appliqués.\n\n#### Avec `user_field_names` :\n\nUn exemple d'arbre de filtre valide est le suivant : `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\"}]}`\n\n#### Sans `user_field_names` :\n\nPar exemple, si vous fournissez le paramètre GET suivant : `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`\n\nVeuillez noter que si ce paramètre est fourni, tous les autres `filter__{field}__{filter}` seront ignorés, ainsi que le paramètre `filter_type`."
+        "filters": "Les lignes peuvent être filtrées en utilisant les mêmes filtres que ceux disponibles pour les vues. Ce paramètre accepte une chaîne sérialisée en JSON contenant l'arbre de filtre à appliquer pour cette vue. L'arbre de filtre est une structure imbriquée contenant les filtres qui doivent être appliqués.\n\n#### Avec `user_field_names` :\n\nUn exemple d'arbre de filtre valide est le suivant : `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\"}]}`\n\n#### Sans `user_field_names` :\n\nPar exemple, si vous fournissez le paramètre GET suivant : `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`\n\nVeuillez noter que si ce paramètre est fourni, tous les autres `filter__{field}__{filter}` seront ignorés, ainsi que le paramètre `filter_type`.",
+        "join": "Permet de consulter les valeurs des champs d'une table liée par l'intermédiaire des champs de lien de la table courante. Le nom du paramètre doit être le nom d'un champ de lien existant, suivi de `__join`. La valeur doit être une liste de noms de champs pour lesquels vous souhaiter inclure les valeurs. Vous pouvez fournir un ou plusieurs champs cibles. Il n'est pas possible de rechercher la valeur d'un champ de lien dans la table liée.\n\n #### Avec `user_field_names` :\n\n `join` doit être une liste de noms de champs séparés par des virgules à inclure dans les résultats. Par exemple, si vous fournissez le paramètre GET suivant `LinkRowField__join=MyField,MyField2`, les valeurs de `MyField` et `My Field2` dans la table liée par `LinkRowField` seront incluses dans la réponse.\n\n#### Sans `user_field_names` :\n\n `join` doit être une liste de `field_` séparés par des virgules, suivi de l'identifiant du champ à inclure dans les résultats. Par exemple, si vous fournissez le paramètre GET suivant `field_1__join=field_2,field_3` alors les valeurs de `field_2` et `field_3` dans la table liée par `field_1` seront incluses dans la réponse."
     },
     "apiDocsIntro": {
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
@@ -431,7 +432,8 @@
         "ChangePassword": "Changer",
         "shareViewText": "Le lien de partage permet à quiconque de consulter les données dans cette vue.",
         "shareViewLinkTitle": "Créer un lien privé",
-        "notSharedYetText": "Permettre à quiconque de consulter les données de cette vue ou de synchroniser les événements avec un calendrier externe."
+        "notSharedYetText": "Permettre à quiconque de consulter les données de cette vue ou de synchroniser les événements avec un calendrier externe.",
+        "createPrivateLink": "Créer un lien privé"
     },
     "viewSortContext": {
         "noSortTitle": "Vous n'avez configuré aucun tri",
@@ -927,5 +929,50 @@
         "change": "Changer",
         "primaryFieldLabel": "Champ primaire",
         "existingPrimary": "\"{name}\" est actuellement le champ primaire."
+    },
+    "databaseScratchTrackFieldsStep": {
+        "title": "Choisissez des champs pour chaque ligne",
+        "description": "Choisissez jusqu'à {selectedFieldsLimitCount} champs. Vous pourrez en ajouter ultérieurement.",
+        "fieldNumber": "Nombre",
+        "fieldEmail": "Courriel",
+        "fieldRating": "Evaluation",
+        "fieldCategory": "Catégorie",
+        "fieldKickoffDate": "Date du kickoff",
+        "fieldNotes": "Notes",
+        "fieldRole": "Rôle",
+        "projectsCategoryDevelopment": "Développement",
+        "fieldDueDate": "Date d'échéance",
+        "fieldBudget": "Budget",
+        "fieldCompleted": "Complété",
+        "fieldPhone": "Téléphone",
+        "fieldActive": "Actif",
+        "fieldEstimatedDays": "Nombre de jours estimés",
+        "teamsRoleDeveloper": "Développeur",
+        "customFieldsDescriptionRow2": "Vitae justo eget magna fermentum iaculis eu non diam.",
+        "fieldStartDate": "Date de début",
+        "fieldEndDate": "Date de fin",
+        "projectsCategoryDesign": "Design",
+        "projectsCategoryMarketing": "Marketing",
+        "projectsNotesRow1": "Acme recherche une refonte complète de son site web selon les lignes directrices suivantes.",
+        "projectsNotesRow2": "Rechercher si les utilisateurs actuels de Soylent sont intéressés par un nouveau portail d'utilisateurs.",
+        "projectsNotesRow3": "Je me demande si cela vaut la peine de le faire après le boycott des publicités sur Facebook. Des études montrent que les campagnes publicitaires payantes sont de moins en moins efficaces.",
+        "teamsRoleDesigner": "Designer",
+        "tasksDetailsRow2": "La structure est un peu étrange, il se peut donc que nous devions adapter le plan du site ici également.",
+        "teamsRoleMarketer": "Marketer",
+        "tasksDetailsRow1": "Le logo doit être amélioré pour rendre le CTA plus clair.",
+        "tasksDetailsRow3": "Le nouveau pied de page doit contenir nos coordonnées ainsi qu'un petit (mais clair) CTA.",
+        "campaignsDetailsRow1": "Faites le plein d'économies avec nos soldes d'été, qui proposent des réductions imbattables sur tous vos produits préférés !",
+        "campaignsDetailsRow2": "Stimulez la fidélisation et l'engagement de vos clients grâce à notre programme de fidélisation, conçu pour récompenser vos clients les plus fidèles.",
+        "campaignsDetailsRow3": "Revitalisez votre entreprise et captivez votre public grâce à une relance dynamique de votre marque qui s'aligne parfaitement sur les tendances actuelles du marché et les désirs des clients.",
+        "customFieldsDescriptionRow1": "Turpis massa tincidunt dui ut ornare lectus sit amet est.",
+        "customFieldsDescriptionRow3": "Convallis tellus id interdum velit laoreet id donec ultrices tincidunt.",
+        "fieldName": "Nom",
+        "fieldType": "Type de champ",
+        "fieldDescription": "Description",
+        "fieldDetails": "Détails",
+        "fieldDate": "Date",
+        "fieldBoolean": "Terminé",
+        "fieldDuration": "Durée",
+        "fieldUrl": "URL"
     }
 }

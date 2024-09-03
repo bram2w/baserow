@@ -18,7 +18,7 @@
         "backToLogin": "Atrás para iniciar sesión",
         "signUp": "Inscribirse",
         "signIn": "Iniciar sesión",
-        "createNew": "Añadir nuevo...",
+        "createNew": "Añadir nuevo",
         "create": "Crear",
         "edit": "Editar",
         "change": "Cambiar",
@@ -89,7 +89,8 @@
         "minMaxValueField": "El valor del campo debe estar comprendido entre {min} y {max}.",
         "invalidNumber": "El campo debe ser un número.",
         "email": "El campo debe ser un correo electrónico.",
-        "invalidURL": "Por favor, introduce una URL válida."
+        "invalidURL": "Por favor, introduce una URL válida.",
+        "alreadyInUse": "Este nombre de campo ya está en uso."
     },
     "permission": {
         "admin": "Admin",
@@ -247,7 +248,16 @@
         "nrYearsFromNow": "años desde hoy",
         "exactDate": "fecha exacta",
         "isBefore": "es antes",
-        "isAfter": "es después"
+        "isAfter": "es después",
+        "hasEmptyValue": "tiene un valor vacío",
+        "hasNotEmptyValue": "no tiene un valor vacío",
+        "hasValueEqual": "tiene un valor igual a",
+        "hasNotValueEqual": "no tiene el mismo valor",
+        "hasValueContains": "contiene un valor",
+        "hasNotValueContains": "no contiene un valor",
+        "hasNotValueContainsWord": "el valor no contiene una palabra",
+        "hasValueLengthIsLowerThan": "tiene un valor inferior a",
+        "hasValueContainsWord": "el valor contiene una palabra"
     },
     "viewType": {
         "grid": "Cuadrícula",
