@@ -19,7 +19,7 @@
     "sidebar": {
         "createWorkspace": "Crea un grupo",
         "inviteOthers": "Invitar a otros",
-        "logoff": "Cerrar la sesión",
+        "logoff": "Cerrar sesión",
         "errorNoWorkspace": "No tienes ningún grupo.",
         "admin": "Admin",
         "dashboard": "Tablero",
@@ -192,10 +192,14 @@
         "retry": "Volver a intentar"
     },
     "createApplicationContext": {
-        "fromTemplate": "De la plantilla"
+        "fromTemplate": "De la plantilla",
+        "fromTemplateDesc": "Empieza rápidamente con una de nuestras plantillas recomendadas",
+        "table": "Tabla",
+        "tableDesc": "Crea un nuevo espacio para gestionar los datos en tu base de datos."
     },
     "applicationForm": {
-        "nameLabel": "Nombre"
+        "nameLabel": "Nombre",
+        "namePlaceholder": "Introduce el nombre..."
     },
     "connectingNotification": {
         "title": "Reconectando",
@@ -321,7 +325,9 @@
         "emailVerificationNoVerification": "Ninguna verificación",
         "emailVerificationEnforced": "Forzado",
         "emailVerificationRecommended": "Recomendado",
-        "emailVerification": "Verificación de correo electrónico"
+        "emailVerification": "Verificación de correo electrónico",
+        "baserowVersion": "Versión de Baserow",
+        "baserowVersionDescription": "El número de versión de esta instancia."
     },
     "copyingNotification": {
         "title": "Copiando...",
@@ -607,7 +613,7 @@
         "warningTitle": "Advertencia"
     },
     "dropdown": {
-        "empty": "No hay artículos disponibles"
+        "empty": "No hay artículos"
     },
     "styleSidePanel": {
         "paddingBottom": "Acolchado inferior",
@@ -772,7 +778,7 @@
     "teamStep": {
         "creativeProductionTeam": "Producción creativa",
         "otherPersonalTeam": "Otros / personal",
-        "title": "Construyamos juntos tu primer espacio de trabajo",
+        "title": "¡Construyamos juntos tu primer espacio de trabajo!",
         "description": "¿En qué equipo estás?",
         "marketingTeam": "Marketing",
         "productAndDesignTeam": "Producto y diseño",

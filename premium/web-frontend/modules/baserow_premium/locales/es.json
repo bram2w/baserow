@@ -398,6 +398,10 @@
         "featureName": "Generar fórmulas con IA"
     },
     "calendarViewType": {
-        "sharedViewText": "Permite que cualquiera vea los datos de esta vista o sincroniza los eventos con tu calendario externo."
+        "sharedViewText": "Permite que cualquiera vea los datos de esta vista o sincroniza los eventos con tu calendario externo.",
+        "sharedViewEnableSyncToExternalCalendar": "Sincronizar con un calendario externo",
+        "sharedViewDisableSyncToExternalCalendar": "Desactivar sincronización externa",
+        "sharedViewDescription": "Pega este enlace en tu aplicación de calendario",
+        "sharedViewTitle": "Sincronizar con un calendario externo"
     }
 }

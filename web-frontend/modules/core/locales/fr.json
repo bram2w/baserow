@@ -325,7 +325,9 @@
         "emailVerificationRecommended": "Recommandée",
         "emailVerificationEnforced": "Obligatoire",
         "userSettings": "Utilisateur",
-        "emailVerification": "Vérification de l'adresse électronique"
+        "emailVerification": "Vérification de l'adresse électronique",
+        "baserowVersion": "Version de Baserow",
+        "baserowVersionDescription": "Le numéro de version de cette instance."
     },
     "copyingNotification": {
         "title": "Copie en cours...",

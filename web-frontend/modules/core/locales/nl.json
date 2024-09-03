@@ -325,7 +325,9 @@
         "emailVerificationDescription": "Bepaalt of e-mailadressen moeten worden geverifieerd.",
         "emailVerificationNoVerification": "Geen verificatie",
         "emailVerificationRecommended": "Aanbevolen",
-        "emailVerificationEnforced": "Afgedwongen"
+        "emailVerificationEnforced": "Afgedwongen",
+        "baserowVersionDescription": "Het versienummer van deze instantie.",
+        "baserowVersion": "Baserow versie"
     },
     "copyingNotification": {
         "title": "Kopiëren...",

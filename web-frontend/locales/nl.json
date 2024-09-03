@@ -89,7 +89,8 @@
         "minMaxValueField": "De veldwaarde moet tussen {min} en {max} liggen.",
         "invalidNumber": "Het veld moet een getal zijn.",
         "email": "Het veld moet een e-mail zijn.",
-        "invalidURL": "Voer een geldige URL in."
+        "invalidURL": "Voer een geldige URL in.",
+        "alreadyInUse": "Deze veldnaam is al in gebruik."
     },
     "permission": {
         "admin": "Beheerder",

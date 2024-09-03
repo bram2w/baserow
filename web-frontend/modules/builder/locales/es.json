@@ -305,7 +305,7 @@
     "columnElementForm": {
         "columnGapPlaceholder": "Introducir espacio entre columnas...",
         "columnGapTitle": "Espacio entre columnas",
-        "columnAmountTitle": "Diseño",
+        "columnAmountTitle": "Disposición",
         "columnAmountName": "sin columnas | 1 columna | {columnaCantidad} columnas",
         "verticalAlignment": "Alineación vertical"
     },

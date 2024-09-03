@@ -18,7 +18,7 @@
         "backToLogin": "Retour à l'identification",
         "signUp": "Créer un compte",
         "signIn": "S'identifier",
-        "createNew": "Ajouter...",
+        "createNew": "Ajouter",
         "create": "Créer",
         "edit": "Modifier",
         "change": "Changer",
@@ -89,7 +89,8 @@
         "minMaxValueField": "La valeur du champ doit être comprise entre {min} et {max}.",
         "invalidNumber": "Le champ doit être un nombre.",
         "email": "La valeur doit être un email.",
-        "invalidURL": "Veuillez saisir une URL valide."
+        "invalidURL": "Veuillez saisir une URL valide.",
+        "alreadyInUse": "Ce nom de champ est déjà utilisé."
     },
     "permission": {
         "admin": "Admin",

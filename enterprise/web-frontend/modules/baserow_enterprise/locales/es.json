@@ -325,7 +325,9 @@
         "viewPricing": "Ver los precios"
     },
     "authFormElementForm": {
-        "loginButtonLabelPlaceholder": "Introduce la etiqueta..."
+        "loginButtonLabelPlaceholder": "Introduce la etiqueta...",
+        "userSource": "Fuente del usuario",
+        "loginButtonLabel": "Etiqueta del botón de inicio de sesión"
     },
     "authFormElement": {
         "email": "Correo electrónico",
