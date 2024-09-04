@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug causing a formula referencing a link to a table not updating properly when the primary field changes.",
+    "issue_number": 2856,
+    "bullet_points": [],
+    "created_at": "2024-09-04"
+}

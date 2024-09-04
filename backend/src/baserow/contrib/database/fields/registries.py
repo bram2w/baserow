@@ -1320,8 +1320,6 @@ class FieldType(
         instance parameter depends on).
         If as a result row value changes are required by this field type an
         update expression should be provided to the update_collector.
-        Ensure super is called if this fields rows also change so dependants of this
-        field also get notified.
 
         :param field: The field whose dependency has had a row created.
         :param starting_row: The row which was created in the dependency field.
@@ -1354,8 +1352,6 @@ class FieldType(
         field instance parameter depends on).
         If as a result row value changes are required by this field type an
         update expression should be provided to the update_collector.
-        Ensure super is called if this fields rows also change so dependants of this
-        field also get notified.
 
         :param field: The field whose dependency has had a row or rows updated.
         :param starting_row: The very first row which changed triggering this
@@ -1382,8 +1378,6 @@ class FieldType(
         field instance parameter depends on).
         If as a result row value changes are required by this field type an
         update expression should be provided to the update_collector.
-        Ensure super is called if this fields rows also change so dependants of this
-        field also get notified.
 
         :param field: The field whose dependency has had a row deleted.
         :param starting_row: The very row which was deleted.
@@ -1415,8 +1409,6 @@ class FieldType(
         Called when a field is created which the field parameter depends on.
         If as a result row value changes are required by this field type an
         update expression should be provided to the update_collector.
-        Ensure super is called if this field also changes so dependants of this
-        field also get notified.
 
         :param field: The field who has had a new dependency field created.
         :param created_field: The dependency field which was created.
@@ -1452,8 +1444,6 @@ class FieldType(
         Called when a field is updated which the field parameter depends on.
         If as a result row value changes are required by this field type an
         update expression should be provided to the update_collector.
-        Ensure super is called if this field also changes so dependants of this
-        field also get notified.
 
         :param field: The field who has had a new dependency field created.
         :param updated_field: The dependency field which was updated.
@@ -1490,8 +1480,6 @@ class FieldType(
         Called when a field is deleted which the field parameter depends on.
         If as a result row value changes are required by this field type an
         update expression should be provided to the update_collector.
-        Ensure super is called if this field also changes so dependants of this
-        field also get notified.
 
         :param field: The field who has had a new dependency field created.
         :param deleted_field: The dependency field which was deleted.
