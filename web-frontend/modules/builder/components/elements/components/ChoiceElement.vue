@@ -59,6 +59,7 @@
 import formElement from '@baserow/modules/builder/mixins/formElement'
 import {
   ensureString,
+  ensureStringOrInteger,
   ensureArray,
 } from '@baserow/modules/core/utils/validator'
 import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
@@ -96,16 +97,17 @@ export default {
       if (this.element.multiple) {
         const existingValues = this.optionsResolved.map(({ value }) => value)
         return ensureArray(this.resolveFormula(this.element.default_value))
-          .map(ensureString)
+          .map(ensureStringOrInteger)
           .filter((value) => existingValues.includes(value))
       } else {
         // Always return a string if we have a default value, otherwise
         // set the value to null as single select fields will only skip
         // field preparation if the value is null.
-        const resolvedSingleValue = ensureString(
+        const resolvedSingleValue = ensureStringOrInteger(
           this.resolveFormula(this.element.default_value)
         )
-        return resolvedSingleValue.length ? resolvedSingleValue : null
+
+        return resolvedSingleValue === '' ? null : resolvedSingleValue
       }
     },
     canHaveOptions() {
@@ -130,7 +132,7 @@ export default {
           )
           return formulaValues.map((value, index) => ({
             id: index,
-            value: ensureString(value),
+            value: ensureStringOrInteger(value),
             name: ensureString(
               index < formulaValues.length ? formulaNames[index] : value
             ),

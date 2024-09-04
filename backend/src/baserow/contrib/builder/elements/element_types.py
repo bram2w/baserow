@@ -57,7 +57,7 @@ from baserow.core.formula.validator import (
     ensure_array,
     ensure_boolean,
     ensure_integer,
-    ensure_string,
+    ensure_string_or_integer,
 )
 from baserow.core.registry import Instance, T
 from baserow.core.services.dispatch_context import DispatchContext
@@ -1397,7 +1397,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
                     dispatch_context,
                 )
             )
-            options = [ensure_string(option) for option in options]
+            options = [ensure_string_or_integer(option) for option in options]
 
         if element.multiple:
             try:

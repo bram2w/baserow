@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Allow Integer as a valid Option Value for Choice Element when referencing a linked table.",
+    "issue_number": 2910,
+    "bullet_points": [],
+    "created_at": "2024-09-04"
+}

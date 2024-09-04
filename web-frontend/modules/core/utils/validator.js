@@ -60,6 +60,23 @@ export const ensureString = (value, { allowEmpty = true } = {}) => {
 }
 
 /**
+ * Ensures the value is a string or an integer, otherwise tries to
+ * convert the value to a string.
+ *
+ * @param {*} value - The value to ensure as a string or integer.
+ * @param {Boolean} allowEmpty - Whether we should throw an error if `value` is empty.
+ * @returns {string|number} The value as a string or integer.
+ * @throws {Error} If !allowEmpty and the `value` is empty.
+ */
+export const ensureStringOrInteger = (value, { allowEmpty = true } = {}) => {
+  if (Number.isInteger(value)) {
+    return value
+  }
+
+  return ensureString(value, { allowEmpty })
+}
+
+/**
  * Ensure that the value is an array or try to convert it.
  * Strings will be treated as comma separated values.
  * Other data types will be transformed into a single element array.

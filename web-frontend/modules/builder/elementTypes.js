@@ -15,6 +15,7 @@ import {
   ensureArray,
   ensureBoolean,
   ensureString,
+  ensureStringOrInteger,
 } from '@baserow/modules/core/utils/validator'
 import {
   CHOICE_OPTION_TYPES,
@@ -1462,14 +1463,23 @@ export class ChoiceElementType extends FormElementType {
 
   getInitialFormDataValue(element, applicationContext) {
     try {
-      return ensureString(
-        this.resolveFormula(element.default_value, {
-          element,
-          ...applicationContext,
-        })
-      )
+      if (element.multiple) {
+        return ensureArray(
+          this.resolveFormula(element.default_value, {
+            element,
+            ...applicationContext,
+          })
+        ).map(ensureStringOrInteger)
+      } else {
+        return ensureStringOrInteger(
+          this.resolveFormula(element.default_value, {
+            element,
+            ...applicationContext,
+          })
+        )
+      }
     } catch {
-      return element.multiple ? [] : ''
+      return element.multiple ? [] : null
     }
   }
 
