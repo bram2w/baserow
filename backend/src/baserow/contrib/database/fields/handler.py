@@ -404,7 +404,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         field_cache.cache_model_fields(to_model)
         update_collector = FieldUpdateCollector(table)
-        updated_fields = self._update_field_dependencies_on_field_created(
+        updated_fields = self._update_dependencies_of_field_created(
             instance,
             update_collector,
             field_cache,
@@ -425,7 +425,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         else:
             return instance
 
-    def _update_field_dependencies_on_field_created(
+    def _update_dependencies_of_field_created(
         self, field, update_collector, field_cache, skip_search_updates
     ):
         updated_fields = []
@@ -695,7 +695,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             field_cache
         )
 
-        updated_fields += self.update_dependencies_of_field_updated(
+        updated_fields += self._update_dependencies_of_field_updated(
             field, old_field, update_collector, field_cache
         )
 
@@ -715,7 +715,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         else:
             return field
 
-    def update_dependencies_of_field_updated(
+    def _update_dependencies_of_field_updated(
         self, field, old_field, update_collector, field_cache
     ):
         updated_fields = []
@@ -898,7 +898,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # The trash call above might have just caused a massive field update to lots of
         # different fields. We need to reset our cache accordingly.
         field_cache.reset_cache()
-        updated_fields = self._update_field_dependencies_on_field_deleted(
+        updated_fields = self._update_dependencies_of_field_deleted(
             field, update_collector, field_cache, all_dependent_fields_grouped_by_depth
         )
 
@@ -928,7 +928,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             update_collector.send_additional_field_updated_signals()
         return list(updated_fields)
 
-    def _update_field_dependencies_on_field_deleted(
+    def _update_dependencies_of_field_deleted(
         self,
         field,
         update_collector,
@@ -1131,7 +1131,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
             field.save(field_cache=field_cache)
 
-            updated_fields = self._update_field_dependencies_on_field_restored(
+            updated_fields = self._update_dependencies_of_field_restored(
                 field, update_collector, field_cache
             )
 
@@ -1159,7 +1159,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             else:
                 raise e
 
-    def _update_field_dependencies_on_field_restored(
+    def _update_dependencies_of_field_restored(
         self, field, update_collector, field_cache
     ):
         FieldDependencyHandler.rebuild_dependencies(field, field_cache)
@@ -1409,6 +1409,14 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         old_new_primary_field = deepcopy(new_primary_field)
         new_primary_field.primary = True
         new_primary_field.save()
+
+        update_collector = FieldUpdateCollector(existing_primary_field.table)
+        self._update_dependencies_of_field_updated(
+            existing_primary_field,
+            existing_primary_field,
+            update_collector,
+            FieldCache(),
+        )
 
         field_updated.send(
             self,
