@@ -1186,3 +1186,49 @@ def test_choice_element_validation_none_vs_empty(
     for value in invalid_choices:
         with pytest.raises(FormDataProviderChunkInvalidException):
             ChoiceElementType().is_valid(choice, value, {})
+
+
+@pytest.mark.django_db
+def test_choice_element_integer_option_values(data_fixture):
+    """
+    Ensure that the row ID key (in addition to the Primary DB field) can be used
+    as a valid Option Value when referring to a linked table.
+    """
+
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Ingredient", "text"),
+        ],
+        rows=[
+            ["Palak Paneer", "Cottage Cheese"],
+            ["Gobi Manchurian", "Cauliflower"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    choice = ElementService().create_element(
+        user=user,
+        element_type=element_type_registry.get("choice"),
+        page=page,
+        option_type=ChoiceElement.OPTION_TYPE.FORMULAS,
+        formula_name=f"get('data_source.{data_source.id}.*.field_{fields[0].id}')",
+        formula_value=f"get('data_source.{data_source.id}.*.id')",
+    )
+
+    expected_choices = [row.id for row in rows]
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    for value in expected_choices:
+        dispatch_context.reset_call_stack()
+        assert ChoiceElementType().is_valid(choice, value, dispatch_context) is value

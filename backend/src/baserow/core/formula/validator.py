@@ -64,6 +64,22 @@ def ensure_string(value: Any, allow_empty: bool = True) -> str:
     return str(value)
 
 
+def ensure_string_or_integer(value: Any, allow_empty: bool = True) -> str:
+    """
+    Ensures that the value is a string or an integer.
+
+    :param value: The value to ensure as a string.
+    :param allow_empty: Whether we should throw an error if `value` is empty.
+    :return: The value as a string.
+    :raises ValueError: If not allow_empty and the `value` is empty.
+    """
+
+    if isinstance(value, int):
+        return value
+
+    return ensure_string(value, allow_empty=allow_empty)
+
+
 def ensure_array(value: Any, allow_empty: bool = True) -> List[Any]:
     """
     Ensure that the value is an array or try to convert it.
