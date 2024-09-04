@@ -1850,3 +1850,52 @@ def test_change_primary_field_signal_send(send_mock, data_fixture):
     assert send_mock.call_args[1]["old_field"].primary is False
     assert send_mock.call_args[1]["related_fields"][0].id == field_1.id
     assert send_mock.call_args[1]["related_fields"][0].primary is False
+
+
+@pytest.mark.django_db
+def test_can_change_primary_field_and_update_dependencies(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
+    orig_prim_b = table_b.get_primary_field()
+    new_prim_b = data_fixture.create_text_field(
+        user=user, table=table_b, name="new_primary"
+    )
+
+    row_b1 = RowHandler().create_row(
+        user,
+        table_b,
+        {orig_prim_b.db_column: "orig1", new_prim_b.db_column: "new1"},
+    )
+
+    f1 = data_fixture.create_formula_field(
+        user=user, table=table_a, formula="field('link')", name="f1"
+    )
+    f2 = data_fixture.create_formula_field(
+        user=user, table=table_a, formula="field('f1') + ' ?!'"
+    )
+    lookup_old = data_fixture.create_formula_field(
+        user=user, table=table_a, formula="lookup('link', 'primary')"
+    )
+    lookup_new = data_fixture.create_formula_field(
+        user=user, table=table_a, formula="lookup('link', 'new_primary')"
+    )
+
+    row_a1 = RowHandler().create_row(user, table_a, {link_a_b.db_column: [row_b1.id]})
+
+    assert getattr(row_a1, f1.db_column) == [{"id": row_b1.id, "value": "orig1"}]
+    assert getattr(row_a1, f2.db_column) == [{"id": row_b1.id, "value": "orig1 ?!"}]
+    assert getattr(row_a1, lookup_old.db_column) == [
+        {"id": row_b1.id, "value": "orig1"}
+    ]
+    assert getattr(row_a1, lookup_new.db_column) == [{"id": row_b1.id, "value": "new1"}]
+
+    FieldHandler().change_primary_field(user, table_b, new_prim_b)
+
+    row_a1.refresh_from_db()
+
+    assert getattr(row_a1, f1.db_column) == [{"id": row_b1.id, "value": "new1"}]
+    assert getattr(row_a1, f2.db_column) == [{"id": row_b1.id, "value": "new1 ?!"}]
+    assert getattr(row_a1, lookup_old.db_column) == [
+        {"id": row_b1.id, "value": "orig1"}
+    ]
+    assert getattr(row_a1, lookup_new.db_column) == [{"id": row_b1.id, "value": "new1"}]

@@ -4392,6 +4392,14 @@ def test_link_row_has_not_filter_type(data_fixture):
             f"field_{related_primary_field.id}": "Related row 3",
         },
     )
+    related_row_4 = row_handler.create_row(
+        user=user,
+        table=related_table,
+        model=related_model,
+        values={
+            f"field_{related_primary_field.id}": "Related row 4",
+        },
+    )
 
     row_handler.create_row(
         user=user,
@@ -4458,6 +4466,11 @@ def test_link_row_has_not_filter_type(data_fixture):
     assert len(ids) == 5
 
     view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 5
+
+    view_filter.value = f"{related_row_4.id}"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 5

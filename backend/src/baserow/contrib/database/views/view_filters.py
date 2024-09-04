@@ -1179,17 +1179,14 @@ class ManyToManyHasBaseViewFilter(ViewFilterType):
     """
 
     def get_filter(self, field_name, value, model_field, field):
-        value = value.strip()
-
         try:
+            val = int(value.strip())
             remote_field = model_field.remote_field
             remote_model = remote_field.model
             return Q(
-                **{
-                    "id__in": remote_model.objects.filter(
-                        **{"id": int(value)}
-                    ).values_list(f"{remote_field.related_name}__id", flat=True)
-                }
+                id__in=remote_model.objects.filter(id=val).values(
+                    f"{remote_field.related_name}__id"
+                )
             )
         except ValueError:
             return Q()
@@ -1234,7 +1231,7 @@ class LinkRowHasViewFilterType(ManyToManyHasBaseViewFilter):
         return {"display_name": name}
 
 
-class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterType):
+class LinkRowHasNotViewFilterType(LinkRowHasViewFilterType):
     """
     The link row has filter accepts the row ID of the related table as value. It
     filters the queryset so that only rows that don't have a relationship with the
@@ -1243,6 +1240,16 @@ class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterTy
     """
 
     type = "link_row_has_not"
+
+    def default_filter_on_exception(self):
+        return Q()
+
+    def get_filter(self, field_name, value, model_field, field):
+        try:
+            val = int(value.strip())
+            return ~Q(**{f"field_{field.id}": val})
+        except ValueError:
+            return Q()
 
 
 class LinkRowContainsViewFilterType(ViewFilterType):

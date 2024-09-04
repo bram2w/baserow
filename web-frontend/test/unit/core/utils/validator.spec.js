@@ -2,6 +2,7 @@ import {
   ensureArray,
   ensureInteger,
   ensureString,
+  ensureStringOrInteger,
 } from '@baserow/modules/core/utils/validator'
 import { expect } from '@jest/globals'
 
@@ -41,6 +42,43 @@ describe('ensureString', () => {
     expect(ensureString([1, 2, 3])).toBe('1,2,3')
     expect(ensureString([[], [[], [5, 7], 6]])).toBe('5,7,6')
     expect(ensureString({ key: 'value' })).toBe('[object Object]')
+  })
+})
+
+describe('ensureStringOrInteger', () => {
+  it('should return the same value if value is an integer', () => {
+    expect(ensureStringOrInteger(0)).toBe(0)
+    expect(ensureStringOrInteger(1)).toBe(1)
+    expect(ensureStringOrInteger(10)).toBe(10)
+  })
+
+  it('should return the same value if value is a string', () => {
+    expect(ensureStringOrInteger('0')).toBe('0')
+    expect(ensureStringOrInteger('1')).toBe('1')
+    expect(ensureStringOrInteger('10')).toBe('10')
+  })
+
+  it('should return an empty string if value is falsey and allowEmpty is true', () => {
+    expect(ensureStringOrInteger('', { allowEmpty: true })).toBe('')
+    expect(ensureStringOrInteger([], { allowEmpty: true })).toBe('')
+    expect(ensureStringOrInteger(null, { allowEmpty: true })).toBe('')
+    expect(ensureStringOrInteger(undefined, { allowEmpty: true })).toBe('')
+  })
+
+  it('should return an error if value is falsey and allowEmpty is false', () => {
+    const error = new Error('A valid String is required.')
+    expect(() => ensureStringOrInteger('', { allowEmpty: false })).toThrow(
+      error
+    )
+    expect(() => ensureStringOrInteger([], { allowEmpty: false })).toThrow(
+      error
+    )
+    expect(() => ensureStringOrInteger(null, { allowEmpty: false })).toThrow(
+      error
+    )
+    expect(() =>
+      ensureStringOrInteger(undefined, { allowEmpty: false })
+    ).toThrow(error)
   })
 })
 

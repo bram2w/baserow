@@ -1,5 +1,14 @@
 # Changelog
 
+## Released 1.27.1
+
+### Bug fixes
+* Revert a change causing the `is` condition filter to be unavailable for numeric and text formulas. [#2848](https://gitlab.com/baserow/baserow/-/issues/2848)
+* Fix a bug causing a formula referencing a link to a table not updating properly when the primary field changes. [#2856](https://gitlab.com/baserow/baserow/-/issues/2856)
+* [Builder] Allow Integer as a valid Option Value for Choice Element when referencing a linked table. [#2910](https://gitlab.com/baserow/baserow/-/issues/2910)
+* Fixed a bug causing the link_row_has_not view filter to not return the correct rows. [#2948](https://gitlab.com/baserow/baserow/-/issues/2948)
+
+
 ## Released 1.27.0
 
 ### New features

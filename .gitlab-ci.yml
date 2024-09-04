@@ -935,3 +935,36 @@ mjml-compiled-check:
     - |
       git diff --exit-code || \
         (echo "Uncompiled changes found to mjml email templates, run the compiler in backend/email_compiler/ and committed the changes" && exit 1)
+
+publish-helm-chart:
+  image: dtzar/helm-kubectl:3.15.2
+  stage: publish
+  variables:
+    HELM_REPO_PROJECT_ID: 59591209 # https://gitlab.com/baserow/baserow-chart
+  only:
+    refs:
+      - tags
+  artifacts:
+    paths:
+      - deploy/helm/baserow-*.tgz
+  script:
+    - cd deploy/helm
+    - rm baserow/Chart.lock
+    - helm repo add bitnami https://charts.bitnami.com/bitnami
+    - helm repo add caddy https://caddyserver.github.io/ingress
+    - helm dependency build baserow
+    - helm package baserow
+    - ls baserow-*.tgz
+    - echo "Upload to chart repository"
+    - CHART_FILE=$(ls baserow-*.tgz)
+    - | 
+      HELM_CHART_VERSION=$(helm show chart baserow | grep version | tail -n 1 | awk -F ': ' '{print $2}')
+    - |
+      curl --request POST \
+      --form token=$CI_JOB_TOKEN \
+      --form ref=main \
+      --form variables[CHART_FILE]="$CHART_FILE" \
+      --form variables[HELM_CHART_VERSION]="$HELM_CHART_VERSION" \
+      --form variables[TRIGGER_ID]="$CI_JOB_ID" \
+        --url "https://gitlab.com/api/v4/projects/$HELM_REPO_PROJECT_ID/trigger/pipeline"
+    - echo "Triggered pipeline to upload helm chart in project $HELM_REPO_PROJECT_ID"

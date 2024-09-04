@@ -197,6 +197,7 @@ export class EqualViewFilterType extends ViewFilterType {
       'uuid',
       'autonumber',
       'duration',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }
 
