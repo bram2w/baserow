@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixed a bug causing the link_row_has_not view filter to not return the correct rows.",
+    "issue_number": 2948,
+    "bullet_points": [],
+    "created_at": "2024-08-30"
+}
