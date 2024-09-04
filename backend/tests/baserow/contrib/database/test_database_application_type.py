@@ -18,6 +18,9 @@ from baserow.core.actions import CreateApplicationActionType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Template
 from baserow.core.registries import ImportExportConfig, application_type_registry
+from baserow.core.snapshots.handler import SnapshotHandler
+from baserow.core.utils import Progress
+from baserow.test_utils.helpers import setup_interesting_test_database
 
 
 @pytest.mark.django_db
@@ -195,3 +198,59 @@ def test_database_application_creation_does_register_an_action(data_fixture):
         init_with_data=False,
     )
     assert Action.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_perform_create_interesting_database(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = setup_interesting_test_database(
+        data_fixture, user=user, workspace=workspace, name="db"
+    )
+    snapshot = data_fixture.create_snapshot(
+        snapshot_from_application=database,
+        name="snapshot",
+        created_by=user,
+    )
+    progress = Progress(total=100)
+
+    SnapshotHandler().perform_create(snapshot, progress)
+
+    snapshot.refresh_from_db()
+    for table_name in ["A", "B", "C"]:
+        snapshotted_table = Table.objects.get(
+            database=snapshot.snapshot_to_application, name=table_name
+        )
+        model = snapshotted_table.get_model()
+        assert model.objects.count() == 2
+
+    assert progress.progress == 100
+
+
+@pytest.mark.django_db
+def test_perform_restore_interesting_database(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace, order=1)
+
+    database = setup_interesting_test_database(
+        data_fixture, user=user, workspace=workspace, name="db"
+    )
+    database.workspace = None
+    database.save(update_fields=["workspace"])
+
+    snapshot = data_fixture.create_snapshot(
+        snapshot_from_application=application,
+        snapshot_to_application=database,
+        name="snapshot",
+        created_by=user,
+    )
+    progress = Progress(total=100)
+
+    restored = SnapshotHandler().perform_restore(snapshot, progress)
+    snapshot.refresh_from_db()
+    for table_name in ["A", "B", "C"]:
+        snapshotted_table = Table.objects.get(database=restored, name=table_name)
+        model = snapshotted_table.get_model()
+        assert model.objects.count() == 2
+    assert progress.progress == 100

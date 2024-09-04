@@ -8,7 +8,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q, UniqueConstraint
-from django.utils import timezone as django_timezone
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -253,7 +252,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
         return None
 
     def refresh_now(self):
-        self.now = django_timezone.now()
+        self.now = datetime.now(tz=timezone.utc)
         self.save(update_fields=["now"])
 
     def get_now_or_set_if_null(self):

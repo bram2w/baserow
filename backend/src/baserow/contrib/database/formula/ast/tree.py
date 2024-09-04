@@ -1,5 +1,6 @@
 import abc
 import typing
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Generic, List, Optional, Tuple, Type, TypeVar
 
@@ -305,10 +306,22 @@ class BaserowExpressionContext:
     def __init__(self, model: Type[Model], model_instance: Optional[Model]):
         self.model = model
         self.model_instance = model_instance
-        self.group = model.get_root()
+        try:
+            # TODO: rename to workspace
+            self.group = model.get_root()
+        except ValueError:
+            # when creating a snapshot, the application does not have a root, but it's
+            # not mandatory to have one
+            self.group = None
 
     def get_utc_now(self):
-        return self.group.get_now_or_set_if_null()
+        # Inside a workspace, we want to use the workspace value to keep all the
+        # formulas in sync. If the workspace is not set as during a snapshot, we can use
+        # just the current time to ensure rows have a value.
+        if self.group:
+            return self.group.get_now_or_set_if_null()
+        else:
+            return datetime.now(tz=timezone.utc)
 
 
 class BaserowFunctionCall(BaserowExpression[A]):
