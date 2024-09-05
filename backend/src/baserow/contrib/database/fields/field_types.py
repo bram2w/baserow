@@ -5093,14 +5093,16 @@ class CountFieldType(FormulaFieldType):
         serialized_fields_map: Dict[int, Dict[str, Any]],
         primary_table_fields_map: Dict[int, int],
     ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
-        through_field_id = serialized_field["through_field_id"]
+        through_field_id = serialized_field.get("through_field_id", None)
+        if through_field_id is None or through_field_id not in serialized_fields_map:
+            return None  # broken reference
         through_field = serialized_fields_map[through_field_id]
         through_field_name = through_field["name"]
-        related_table_id = through_field["link_row_table_id"]
+        related_table_id = through_field.get("link_row_table_id", None)
 
         # it means we're targeting a field that already exists before the import
         # (i.e. duplicating a table/field)
-        if related_table_id not in primary_table_fields_map:
+        if related_table_id is None or related_table_id not in primary_table_fields_map:
             return None
 
         target_field_id = primary_table_fields_map[related_table_id]
@@ -5269,15 +5271,19 @@ class RollupFieldType(FormulaFieldType):
         serialized_fields_map: Dict[int, Dict[str, Any]],
         primary_table_fields_map: Dict[int, int],
     ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
-        via_field = serialized_fields_map[serialized_field["through_field_id"]]
+        through_field_id = serialized_field.get("through_field_id", None)
+        if through_field_id is None or through_field_id not in serialized_fields_map:
+            return None  # broken reference
+
+        via_field = serialized_fields_map[through_field_id]
         via_field_name = via_field["name"]
+        target_field_id = serialized_field.get("target_field_id", None)
 
         # it means we're targeting a field that already exists before the import
         # (i.e. duplicating a table/field)
-        if serialized_field["target_field_id"] not in serialized_fields_map:
+        if target_field_id is None or target_field_id not in serialized_fields_map:
             return None
 
-        target_field_id = serialized_field["target_field_id"]
         target_field = serialized_fields_map[target_field_id]
         target_field_name = target_field["name"]
         return {(target_field_name, via_field_name)}
@@ -5530,15 +5536,16 @@ class LookupFieldType(FormulaFieldType):
         primary_table_fields_map: Dict[int, int],
     ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
         through_field_id = serialized_field.get("through_field_id", None)
-        if through_field_id is None:
-            return None
+        if through_field_id is None or through_field_id not in serialized_fields_map:
+            return None  # broken reference
 
         via_field = serialized_fields_map[through_field_id]
         via_field_name = via_field["name"]
+        target_field_id = serialized_field.get("target_field_id", None)
 
         # it means we're targeting a field that already exists before the import
         # (i.e. duplicating a table/field)
-        if serialized_field["target_field_id"] not in serialized_fields_map:
+        if target_field_id is None or target_field_id not in serialized_fields_map:
             return None
 
         target_field_id = serialized_field["target_field_id"]
