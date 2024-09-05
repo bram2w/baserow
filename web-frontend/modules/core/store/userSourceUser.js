@@ -176,26 +176,35 @@ export const actions = {
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
    */
-  async refreshAuth({ getters, dispatch }, { application, token = null }) {
+  async refreshAuth(
+    { getters, dispatch, commit },
+    { application, token = null }
+  ) {
     const refreshToken = token || getters.refreshToken(application)
 
     if (!refreshToken) {
       throw new Error('Invalid refresh token')
     }
 
-    const tokenUpdatedAt = new Date().getTime()
-    const {
-      data: { refresh_token: refresh = null, access_token: access },
-    } = await UserSourceService(this.$client).refreshAuth(refreshToken)
+    commit('SET_REFRESHING', { application, refreshing: true })
 
-    // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
-    // a new refresh token. In that case, we keep the one we just used.
-    dispatch('login', {
-      application,
-      refresh: refresh || refreshToken,
-      access,
-      tokenUpdatedAt,
-    })
+    try {
+      const tokenUpdatedAt = new Date().getTime()
+      const {
+        data: { refresh_token: refresh = null, access_token: access },
+      } = await UserSourceService(this.$client).refreshAuth(refreshToken)
+
+      // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
+      // a new refresh token. In that case, we keep the one we just used.
+      dispatch('login', {
+        application,
+        refresh: refresh || refreshToken,
+        access,
+        tokenUpdatedAt,
+      })
+    } finally {
+      commit('SET_REFRESHING', { application, refreshing: false })
+    }
   },
 }
 
