@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug causing the import to crash when a Count, a Rollup or Lookup field has some broken references.",
+    "issue_number": 2961,
+    "bullet_points": [],
+    "created_at": "2024-09-04"
+}
