@@ -1834,15 +1834,15 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if table.needs_background_update_column_added:
             bulk_update_fields.append(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME)
         for field_obj in model._field_objects.values():
+            field_id = field_obj["field"].id
             field_name = field_obj["name"]
             field_type = field_obj["type"]
             model_field = model._meta.get_field(field_name)
-            # For now all valid fields that don't represent a relationship will be
-            # used in the bulk_update() call. This could be optimized in the future
-            # if we can select just fields that need to be updated (fields that are
-            # passed in + read only fields that need updating too)
-            not_m2m = not isinstance(model_field, ManyToManyField)
-            if not_m2m and field_type.valid_for_bulk_update(model_field):
+            if (
+                not isinstance(model_field, ManyToManyField)
+                and field_id in updated_field_ids
+                and field_type.valid_for_bulk_update(model_field)
+            ):
                 bulk_update_fields.append(field_name)
 
         if len(bulk_update_fields) > 0:
