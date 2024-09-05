@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix missing current record data in data explorer for table button events",
+    "issue_number": 2962,
+    "bullet_points": [],
+    "created_at": "2024-09-05"
+}

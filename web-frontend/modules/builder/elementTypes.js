@@ -944,7 +944,7 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
             ...this.app,
             namePrefix: uid,
             labelSuffix: `- ${name}`,
-            applicationContextAdditions: { collectionField: field },
+            applicationContextAdditions: { allowSameElement: true },
           })
         })
       })
