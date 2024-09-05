@@ -1,5 +1,16 @@
 # Changelog
 
+## Released 1.27.2
+
+### Bug fixes
+* Fix a bug causing the import to crash when a Count, a Rollup or Lookup field has some broken references. [#2961](https://gitlab.com/baserow/baserow/-/issues/2961)
+* [Builder] Fix missing current record data in data explorer for table button events [#2962](https://gitlab.com/baserow/baserow/-/issues/2962)
+* Fix bug with formulas and empty workspace when creating a snapshot.
+
+### Refactors
+* Limit the bulk update to only include fields that have been updated.
+
+
 ## Released 1.27.1
 
 ### Bug fixes
