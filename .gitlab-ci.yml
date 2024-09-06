@@ -965,6 +965,7 @@ publish-helm-chart:
       --form ref=main \
       --form variables[CHART_FILE]="$CHART_FILE" \
       --form variables[HELM_CHART_VERSION]="$HELM_CHART_VERSION" \
+      --form variables[HELM_APP_VERSION]="$CI_COMMIT_TAG" \
       --form variables[TRIGGER_ID]="$CI_JOB_ID" \
         --url "https://gitlab.com/api/v4/projects/$HELM_REPO_PROJECT_ID/trigger/pipeline"
     - echo "Triggered pipeline to upload helm chart in project $HELM_REPO_PROJECT_ID"
