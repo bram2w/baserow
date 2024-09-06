@@ -1,5 +1,5 @@
 from collections import defaultdict
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -807,3 +807,80 @@ def test_local_baserow_list_rows_user_service_type_import_path(
     result = service_type.import_path(path, id_mapping)
 
     assert result == expected
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.integrations.local_baserow.service_types.CoreHandler")
+@pytest.mark.parametrize(
+    "view_sorts",
+    (
+        [],
+        ["foo"],
+        ["foo", "bar"],
+        ["foo", "bar", "baz"],
+    ),
+)
+def test_order_by_is_applied_depending_on_views_sorts(
+    mock_core_handler, view_sorts, data_fixture
+):
+    """
+    Test to ensure that the queryset's order_by() is only applied if
+    view_sorts has items.
+
+    If view_sorts is empty, order_by() should never be called.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    service_type = LocalBaserowListRowsUserServiceType()
+
+    mock_queryset = MagicMock()
+
+    mock_objects = MagicMock()
+    mock_objects.enhance_by_fields.return_value = mock_queryset
+
+    mock_model = MagicMock()
+    mock_objects = mock_model.objects.all.return_value = mock_objects
+
+    mock_table = MagicMock()
+    mock_table.get_model.return_value = mock_model
+
+    resolved_values = {
+        "table": mock_table,
+    }
+
+    service_type.get_dispatch_search = MagicMock(return_value=None)
+    service_type.get_dispatch_filters = MagicMock(return_value=mock_queryset)
+    service_type.get_dispatch_sorts = MagicMock(
+        return_value=(view_sorts, mock_queryset)
+    )
+
+    dispatch_context = FakeDispatchContext()
+    service_type.dispatch_data(service, resolved_values, dispatch_context)
+
+    if view_sorts:
+        mock_queryset.order_by.assert_called_once_with(*view_sorts)
+    else:
+        mock_queryset.order_by.assert_not_called()

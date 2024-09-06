@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Fix bug where ordering of List Rows and Get Rows service types could be inconsistent.",
+    "issue_number": 2964,
+    "bullet_points": [],
+    "created_at": "2024-09-05"
+}

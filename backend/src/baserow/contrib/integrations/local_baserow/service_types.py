@@ -876,7 +876,7 @@ class LocalBaserowListRowsUserServiceType(
 
         # Find sorts applicable to this service.
         view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts is not None:
+        if view_sorts:
             queryset = queryset.order_by(*view_sorts)
 
         offset, count = dispatch_context.range(service)
@@ -1148,7 +1148,7 @@ class LocalBaserowGetRowUserServiceType(
 
         # Find sorts applicable to this service.
         view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts is not None:
+        if view_sorts:
             queryset = queryset.order_by(*view_sorts)
 
         # If no row id is provided return the first item from the queryset
