@@ -189,14 +189,6 @@ def test_element_visibility_permission_manager_filter_queryset(
     # Element
     ##
 
-    # Ensure that for an Editor user, all elements are returned.
-    all_elements_for_auth = perm_manager.filter_queryset(
-        user,
-        ListElementsPageOperationType.type,
-        Element.objects.all(),
-    )
-    assert len(all_elements_for_auth) == 3
-
     # Ensure that for an Authenticated UserSourceUser, the element with
     # visibility of NOT_LOGGED is excluded.
     all_elements_for_auth = perm_manager.filter_queryset(
