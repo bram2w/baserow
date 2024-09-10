@@ -520,7 +520,11 @@ const prepareRequestHeaders = (store) => (config) => {
     // Here we are logged as a user source user
     const userSourceToken =
       store.getters['userSourceUser/accessToken'](application)
-    config.headers.Authorization = `JWT ${userSourceToken}`
+    // We don't want to add the user source token if we are refreshing as the token
+    // won't be accepted.
+    if (!store.getters['userSourceUser/isRefreshing'](application)) {
+      config.headers.Authorization = `JWT ${userSourceToken}`
+    }
   }
   if (store.getters['auth/webSocketId'] !== null) {
     const webSocketId = store.getters['auth/webSocketId']
