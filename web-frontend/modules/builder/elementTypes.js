@@ -1534,7 +1534,7 @@ export class ChoiceElementType extends FormElementType {
               element,
               ...applicationContext,
             })
-          ).map(ensureString)
+          ).map(ensureStringOrInteger)
         : this.choiceOptions(element)
 
     const validOption = element.multiple
