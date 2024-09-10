@@ -193,6 +193,7 @@ def test_link_collection_field_import_export_formula(data_fixture):
                 },
             ],
             "target": "",
+            "variant": LinkElement.VARIANTS.BUTTON,
         },
     )
     table_element.fields.add(field)

@@ -3,7 +3,7 @@ from typing import Any, Dict, Generator, TypedDict, Union
 from rest_framework import serializers
 
 from baserow.contrib.builder.elements.element_types import NavigationElementManager
-from baserow.contrib.builder.elements.models import CollectionField
+from baserow.contrib.builder.elements.models import CollectionField, LinkElement
 from baserow.contrib.builder.elements.registries import CollectionFieldType
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.formula.serializers import (
@@ -98,6 +98,7 @@ class LinkCollectionFieldType(CollectionFieldType):
             + NavigationElementManager.serializer_field_names
             + [
                 "link_name",
+                "variant",
             ]
         )
 
@@ -108,11 +109,13 @@ class LinkCollectionFieldType(CollectionFieldType):
             + NavigationElementManager.allowed_fields
             + [
                 "link_name",
+                "variant",
             ]
         )
 
     class SerializedDict(NavigationElementManager.SerializedDict):
         link_name: str
+        variant: str
 
     @property
     def serializer_field_overrides(self):
@@ -125,6 +128,12 @@ class LinkCollectionFieldType(CollectionFieldType):
                     required=False,
                     allow_blank=True,
                     default="",
+                ),
+                "variant": serializers.ChoiceField(
+                    choices=LinkElement.VARIANTS.choices,
+                    help_text=LinkElement._meta.get_field("variant").help_text,
+                    required=False,
+                    default=LinkElement.VARIANTS.LINK,
                 ),
             }
         )

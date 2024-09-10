@@ -16,6 +16,7 @@ from baserow.contrib.builder.elements.models import (
     ColumnElement,
     Element,
     HeadingElement,
+    LinkElement,
     TableElement,
     TextElement,
 )
@@ -1133,6 +1134,7 @@ IMPORT_REFERENCE = {
                                 "navigate_to_url": "get('current_record.field_25')",
                                 "link_name": "'Test'",
                                 "target": "self",
+                                "variant": LinkElement.VARIANTS.BUTTON,
                             },
                         },
                     ],

@@ -149,3 +149,8 @@ export const CHOICE_OPTION_TYPES = {
   DATA_SOURCE: 'data_source',
   FORMULAS: 'formulas',
 }
+
+export const LINK_VARIANTS = {
+  LINK: 'link',
+  BUTTON: 'button',
+}

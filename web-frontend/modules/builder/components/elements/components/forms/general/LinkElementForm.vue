@@ -48,6 +48,7 @@
 <script>
 import {
   HORIZONTAL_ALIGNMENTS,
+  LINK_VARIANTS,
   WIDTHS_NEW,
 } from '@baserow/modules/builder/enums'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
@@ -69,14 +70,20 @@ export default {
       values: {
         value: '',
         alignment: HORIZONTAL_ALIGNMENTS.LEFT,
-        variant: 'link',
+        variant: LINK_VARIANTS.LINK,
         width: WIDTHS_NEW.AUTO,
         styles: {},
       },
       allowedValues: ['value', 'alignment', 'variant', 'width', 'styles'],
       linkElementFormVariantOptions: [
-        { value: 'link', label: this.$t('linkElementForm.variantLink') },
-        { value: 'button', label: this.$t('linkElementForm.variantButton') },
+        {
+          value: LINK_VARIANTS.LINK,
+          label: this.$t('linkElementForm.variantLink'),
+        },
+        {
+          value: LINK_VARIANTS.BUTTON,
+          label: this.$t('linkElementForm.variantButton'),
+        },
       ],
     }
   },
