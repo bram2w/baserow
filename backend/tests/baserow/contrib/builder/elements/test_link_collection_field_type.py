@@ -7,6 +7,7 @@ import pytest
 from baserow.contrib.builder.elements.collection_field_types import (
     LinkCollectionFieldType,
 )
+from baserow.contrib.builder.elements.models import LinkElement
 from baserow.contrib.builder.elements.receivers import (
     page_deleted_update_link_collection_fields,
 )
@@ -72,6 +73,7 @@ def test_import_export_link_collection_field_type(data_fixture):
                             "value": f"get('data_source.{data_source.id}.field_1')",
                         },
                     ],
+                    "variant": LinkElement.VARIANTS.LINK,
                 },
             },
         ],
@@ -83,6 +85,11 @@ def test_import_export_link_collection_field_type(data_fixture):
     id_mapping = {"builder_data_sources": {data_source.id: data_source2.id}}
 
     exported = table_element.get_type().export_serialized(table_element)
+
+    # Here we omit the "variant" property in order to test the default attribution,
+    # i.e, if none is provided it should use the default value provided in the
+    # `serializer_field_overrides`
+    exported["fields"][0]["config"].pop("variant")
 
     imported_table_element = table_element.get_type().import_serialized(
         page, exported, id_mapping
@@ -101,4 +108,5 @@ def test_import_export_link_collection_field_type(data_fixture):
             },
         ],
         "target": "self",
+        "variant": LinkElement.VARIANTS.LINK,
     }

@@ -26,6 +26,18 @@
       :default-values="defaultValues"
       @values-changed="emitChange($event)"
     />
+    <FormGroup
+      :label="$t('linkElementForm.variant')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.variant"
+        :options="LINK_VARIANTS"
+        type="button"
+      />
+    </FormGroup>
   </form>
 </template>
 
@@ -34,9 +46,10 @@ import collectionFieldForm from '@baserow/modules/builder/mixins/collectionField
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import CustomStyle from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyle'
 import LinkNavigationSelectionForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkNavigationSelectionForm'
+import { LINK_VARIANTS } from '@baserow/modules/builder/enums'
 
 export default {
-  name: 'TextField',
+  name: 'LinkField',
   components: {
     InjectedFormulaInput,
     CustomStyle,
@@ -45,12 +58,27 @@ export default {
   mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['link_name', 'styles'],
+      allowedValues: ['link_name', 'styles', 'variant'],
       values: {
         link_name: '',
         styles: {},
+        variant: LINK_VARIANTS.LINK,
       },
     }
+  },
+  computed: {
+    LINK_VARIANTS() {
+      return [
+        {
+          value: LINK_VARIANTS.LINK,
+          label: this.$t('linkElementForm.variantLink'),
+        },
+        {
+          value: LINK_VARIANTS.BUTTON,
+          label: this.$t('linkElementForm.variantButton'),
+        },
+      ]
+    },
   },
 }
 </script>

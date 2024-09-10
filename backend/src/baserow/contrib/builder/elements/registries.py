@@ -429,9 +429,15 @@ class CollectionFieldType(
 
         deserialized_config = {}
         for name in self.SerializedDict.__annotations__.keys():
+            # If any field declared in the `SerializedDict` is not present in
+            # `serialized_values`, try to use a default value instead.
+            # The default value is retrieved from the `serialized_field_overrides`
+            # method, if present.
+            serializer_field_override = self.serializer_field_overrides.get(name)
+            default = getattr(serializer_field_override, "default", None)
             deserialized_config[name] = self.deserialize_property(
                 name,
-                serialized_values["config"][name],
+                serialized_values["config"].get(name, default),
                 id_mapping,
                 serialized_values,
                 **kwargs,
