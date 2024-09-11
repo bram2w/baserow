@@ -41,7 +41,7 @@ You can use the following configuration to use an existing Postgres database and
 redis:
   enabled: false
 
-postgres:
+postgresql:
   enabled: false
 ```
 
