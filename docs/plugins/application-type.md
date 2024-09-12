@@ -66,7 +66,7 @@ $ baserow migrate
 
 Lets try to create a new application with the `text_file` type by calling the 
 `create_application` endpoint. More information on how to do this can be found in the
-[api docs](../apis/api.md) and in the 
+[api docs](../apis/rest-api.md) and in the 
 [create application api spec](https://api.baserow.io/api/redoc/#operation/create_application).
 If that succeeds you are ready to get to the next web-frontend part. You might want to 
 inspect the `backend/src/baserow/core/registries.py::ApplicationType` class for all the
