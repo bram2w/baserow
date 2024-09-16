@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix text wrapping for longer toast messages",
+    "issue_number": 2998,
+    "bullet_points": [],
+    "created_at": "2024-09-12"
+}

@@ -38,6 +38,8 @@
   padding: 0;
   flex: 1 1 auto;
   font-size: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
 
   p {
     margin: 0;
