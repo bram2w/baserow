@@ -92,11 +92,10 @@ const actions = {
       // Collect all collection element ancestors, with a `data_source_id`.
       const collectionAncestors = this.app.store.getters[
         'element/getAncestors'
-      ](page, element, (ancestor) => {
-        const ancestorType = this.app.$registry.get('element', ancestor.type)
-        return (
-          ancestorType.isCollectionElement && ancestor.data_source_id !== null
-        )
+      ](page, element, {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type)
+            .isCollectionElement && ancestor.data_source_id !== null,
       })
 
       // Pluck out the root ancestor, which has a data source.

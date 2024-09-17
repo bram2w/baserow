@@ -393,101 +393,32 @@ describe('elementTypes tests', () => {
   })
 
   describe('elementType childElementTypesForbidden tests', () => {
-    test('FormContainerElementType forbids non-form elements as children.', () => {
+    test('FormContainerElementType only itself as a nested child.', () => {
       const formContainerElementType = testApp
         .getRegistry()
         .get('element', 'form_container')
-      const nonFormElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => !elementType.isFormElement)
-        .map((elementType) => elementType.getType())
-
       const forbiddenChildTypes = formContainerElementType
         .childElementTypesForbidden({}, {})
         .map((el) => el.getType())
-      expect(forbiddenChildTypes).toEqual(nonFormElementTypes)
+      expect(forbiddenChildTypes).toEqual(['form_container'])
     })
-    test('ColumnElementType forbids container elements as children.', () => {
+    test('ColumnElementType forbids only itself as a nested child.', () => {
       const columnElementType = testApp.getRegistry().get('element', 'column')
-      const containerElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => elementType.isContainerElement)
-        .map((elementType) => elementType.getType())
-
       const forbiddenChildTypes = columnElementType
         .childElementTypesForbidden({}, {})
         .map((el) => el.getType())
-      expect(forbiddenChildTypes).toEqual(containerElementTypes)
+      expect(forbiddenChildTypes).toEqual(['column'])
     })
-    test('RepeatElementType forbids collection elements as children.', () => {
+    test('RepeatElementType forbids nothing as a child.', () => {
       const repeatElementType = testApp.getRegistry().get('element', 'repeat')
-      const page = { id: 1, name: 'Contact Us' }
-
-      const rootRepeatElement = {
-        id: 1,
-        type: 'repeat',
-        page_id: page.id,
-        parent_element_id: null,
-      }
-      const childRepeatElement = {
-        id: 2,
-        type: 'repeat',
-        page_id: page.id,
-        parent_element_id: rootRepeatElement.id,
-      }
-      const grandchildRepeatElement = {
-        id: 3,
-        type: 'repeat',
-        page_id: page.id,
-        parent_element_id: childRepeatElement.id,
-      }
-
-      page.elementMap = { 1: rootRepeatElement, 2: childRepeatElement }
-
-      expect(
-        repeatElementType.childElementTypesForbidden(page, rootRepeatElement)
-      ).toEqual([])
-
-      expect(
-        repeatElementType.childElementTypesForbidden(page, childRepeatElement)
-      ).toEqual([])
-
-      const forbiddenCollectionTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((type) => type.isCollectionElement)
-        .map((elementType) => elementType.getType())
-        .sort()
-
-      expect(
-        repeatElementType
-          .childElementTypesForbidden(page, grandchildRepeatElement)
-          .map((el) => el.getType())
-          .sort()
-      ).toEqual(forbiddenCollectionTypes)
+      const forbiddenChildTypes = repeatElementType
+        .childElementTypesForbidden({}, {})
+        .map((el) => el.getType())
+      expect(forbiddenChildTypes).toEqual([])
     })
   })
 
   describe('elementType childElementTypes tests', () => {
-    test('childElementTypes called with element with no parent only restricts child types to its own requirements.', () => {
-      const page = { id: 1, name: 'Contact Us' }
-      const element = { id: 2, parent_element_id: null }
-      const formContainerElementType = testApp
-        .getRegistry()
-        .get('element', 'form_container')
-      const formElementTypes = Object.values(
-        testApp.getRegistry().getAll('element')
-      )
-        .filter((elementType) => elementType.isFormElement)
-        .map((elementType) => elementType.getType())
-
-      const childElementTypes = formContainerElementType
-        .childElementTypes(page, element)
-        .map((el) => el.getType())
-      expect(childElementTypes).toEqual(formElementTypes)
-    })
     test('childElementTypes called with element with parent restricts child types using all ancestor childElementTypes requirements.', () => {
       const page = { id: 1, name: 'Contact Us' }
       const parentElement = {

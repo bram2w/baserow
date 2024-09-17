@@ -154,6 +154,19 @@ class ColumnElementType(ContainerElementTypeMixin, ElementType):
                 f"place_in_container can at most be {max_place_in_container}, ({place_in_container}, was given)"
             )
 
+    @property
+    def child_types_allowed(self) -> List[str]:
+        """
+        The column container only forbids itself as a child.
+        :return: a list of element types, without the column container type.
+        """
+
+        return [
+            element_type.type
+            for element_type in element_type_registry.get_all()
+            if element_type.type != self.type
+        ]
+
 
 class FormContainerElementType(ContainerElementTypeMixin, ElementType):
     type = "form_container"
@@ -213,13 +226,16 @@ class FormContainerElementType(ContainerElementTypeMixin, ElementType):
 
     @property
     def child_types_allowed(self) -> List[str]:
-        child_types_allowed = []
+        """
+        The form container only forbids itself as a child.
+        :return: a list of element types, without the form container type.
+        """
 
-        for element_type in element_type_registry.get_all():
-            if isinstance(element_type, FormElementTypeMixin):
-                child_types_allowed.append(element_type.type)
-
-        return child_types_allowed
+        return [
+            element_type.type
+            for element_type in element_type_registry.get_all()
+            if element_type.type != self.type
+        ]
 
 
 class TableElementType(CollectionElementWithFieldsTypeMixin, ElementType):
