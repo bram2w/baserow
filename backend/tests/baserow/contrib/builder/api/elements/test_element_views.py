@@ -559,7 +559,7 @@ def test_child_type_not_allowed_validation(api_client, data_fixture):
     url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
     response = api_client.post(
         url,
-        {"type": "button", "parent_element_id": parent.id},
+        {"type": "form_container", "parent_element_id": parent.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

@@ -616,14 +616,16 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * Exclude element types which are not a form element.
+   * Only disallow form containers as nested elements.
    * @param {object} page - The page the element belongs to.
    * @param {Object} element The element in question, it can be used to
    *  determine in a more dynamic way if specific children are permitted.
-   * @returns {Array} An array of non-form element types.
+   * @returns {Array} An array containing the `FormContainerElementType`.
    */
   childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter((type) => !type.isFormElement)
+    return this.elementTypesAll.filter(
+      (elementType) => elementType.type === this.getType()
+    )
   }
 
   get childStylesForbidden() {
@@ -678,15 +680,15 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
   }
 
   /**
-   * Exclude element types which are containers.
+   * Only disallow column elements as nested elements.
    * @param {object} page - The page the element belongs to.
    * @param {Object} element The element in question, it can be used to
    *  determine in a more dynamic way if specific children are permitted.
-   * @returns {Array} An array of container element types.
+   * @returns {Array} An array containing the `ColumnElementType`.
    */
   childElementTypesForbidden(page, element) {
     return this.elementTypesAll.filter(
-      (elementType) => elementType.isContainerElement
+      (elementType) => elementType.type === this.getType()
     )
   }
 
@@ -991,25 +993,6 @@ export class RepeatElementType extends ContainerElementTypeMixin(
 
   get generalFormComponent() {
     return RepeatElementForm
-  }
-
-  /**
-   * The repeat elements will allow all non-collection elements without restrictions.
-   * Collection elements can be nested, but only one level deep.
-   * @param {object} page - The page the element belongs to.
-   * @param {Object} element The element in question, it can be used to
-   *  determine in a more dynamic way if specific children are permitted.
-   * @returns {Array} An array of disallowed child element types.
-   */
-  childElementTypesForbidden(page, element) {
-    const repeatAncestorCount = this.app.store.getters['element/getAncestors'](
-      page,
-      element
-    ).filter(({ type }) => type === this.getType()).length
-    if (repeatAncestorCount !== 2) {
-      return []
-    }
-    return this.elementTypesAll.filter((type) => type.isCollectionElement)
   }
 
   /**

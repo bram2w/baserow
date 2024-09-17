@@ -22,6 +22,7 @@ from baserow.contrib.builder.elements.element_types import (
     ButtonElementType,
     CheckboxElementType,
     ChoiceElementType,
+    ColumnElementType,
     FormContainerElementType,
     HeadingElementType,
     IFrameElementType,
@@ -274,6 +275,18 @@ def test_form_container_element_import_export_formula(data_fixture):
 
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.submit_button_label == expected_formula
+
+
+@pytest.mark.parametrize(
+    "allowed_element_type",
+    [
+        element_type.type
+        for element_type in element_type_registry.get_all()
+        if element_type.type != FormContainerElementType.type
+    ],
+)
+def test_form_container_child_types_allowed(allowed_element_type):
+    assert allowed_element_type in FormContainerElementType().child_types_allowed
 
 
 @pytest.mark.django_db
@@ -1233,3 +1246,15 @@ def test_choice_element_integer_option_values(data_fixture):
     for value in expected_choices:
         dispatch_context.reset_call_stack()
         assert ChoiceElementType().is_valid(choice, value, dispatch_context) is value
+
+
+@pytest.mark.parametrize(
+    "allowed_element_type",
+    [
+        element_type.type
+        for element_type in element_type_registry.get_all()
+        if element_type.type != ColumnElementType.type
+    ],
+)
+def test_column_container_child_types_allowed(allowed_element_type):
+    assert allowed_element_type in ColumnElementType().child_types_allowed
