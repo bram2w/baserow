@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Ensure that navigating to the current page doesn't cause an error.",
+    "issue_number": 2973,
+    "bullet_points": [],
+    "created_at": "2024-09-16"
+}
