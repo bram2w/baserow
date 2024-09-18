@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta, timezone
+
 from django.conf import settings
 from django.test.utils import override_settings
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -600,11 +601,11 @@ def test_run_file_import_task_big_data(data_fixture, patch_filefield_storage):
 
 @pytest.mark.django_db
 def test_cleanup_file_import_job(data_fixture, settings, patch_filefield_storage):
-    now = timezone.now()
-    time_before_soft_limit = now - timezone.timedelta(
+    now = datetime.now(tz=timezone.utc)
+    time_before_soft_limit = now - timedelta(
         minutes=settings.BASEROW_JOB_SOFT_TIME_LIMIT + 1
     )
-    time_before_expiration = now - timezone.timedelta(
+    time_before_expiration = now - timedelta(
         minutes=settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT + 1
     )
     # create recent job

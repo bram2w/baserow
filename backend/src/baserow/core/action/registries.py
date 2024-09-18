@@ -1,12 +1,11 @@
 import abc
 import dataclasses
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, NewType, Optional
 from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from opentelemetry import trace
@@ -247,7 +246,7 @@ class ActionType(
 
         session = get_untrusted_client_session_id(user)
         action_group = get_client_undo_redo_action_group_id(user)
-        action_timestamp = timestamp if timestamp else timezone.now()
+        action_timestamp = timestamp if timestamp else datetime.now(tz=timezone.utc)
 
         add_baserow_trace_attrs(
             action_user_id=user.id,

@@ -321,20 +321,20 @@ def construct_aggregate_wrapper_queryset(
 
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
-    pre_annotations = expr_with_metadata.pre_annotations
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
-        pre_annotations
+        expr_with_metadata.pre_annotations
     )
 
     aggregate_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
-    qs = model.objects_and_trash.annotate(**pre_annotations)
+    qs = model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
 
     return (
-        qs.filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
+        qs.filter(
+            aggregate_filters, id=OuterRef("id"), **not_null_filters_for_inner_join
+        )
         .values("id")
         .annotate(**{result_key: expr_with_metadata.expression})
-        .filter(aggregate_filters)
         .order_by()
         .values(result_key)
     )

@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
-from django.utils import timezone
 
 from baserow.core.models import UserLogEntry
 
@@ -70,7 +71,7 @@ class AdminDashboardHandler:
         """
 
         if not now:
-            now = timezone.now()
+            now = datetime.now(tz=timezone.utc)
 
         if not additional_filters:
             additional_filters = {}
@@ -140,7 +141,7 @@ class AdminDashboardHandler:
         """
 
         if not now:
-            now = timezone.now()
+            now = datetime.now(tz=timezone.utc)
 
         return (
             User.objects.filter(date_joined__gt=now - delta, date_joined__lte=now)
@@ -173,7 +174,7 @@ class AdminDashboardHandler:
         """
 
         if not now:
-            now = timezone.now()
+            now = datetime.now(tz=timezone.utc)
 
         return (
             UserLogEntry.objects.filter(

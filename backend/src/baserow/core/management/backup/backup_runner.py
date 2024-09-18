@@ -5,10 +5,9 @@ import re
 import subprocess  # nosec
 import tarfile
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
-
-from django.utils import timezone
 
 import psycopg2
 
@@ -312,7 +311,7 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
 
 
 def _default_backup_location(database):
-    now = timezone.now().strftime("%Y-%m-%d_%H-%M-%S")
+    now = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
     return f"baserow_backup_{database}_{now}.tar.gz"
 
 

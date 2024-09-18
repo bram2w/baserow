@@ -122,7 +122,7 @@ category is active.
         1. It calls `action_type_registry.get(UpdateTableAction).undo(user, params,
            action_to_undo)
         1. UpdateTableAction using the params undoes the action
-        1. Action.undone_at is set to `timezone.now()` indicating it has now been undone
+        2. Action.undone_at is set to `datetime.now(tz=timezone.utc)` indicating it has now been undone
 
 ### What happens when an undo/redo fails
 
@@ -145,7 +145,7 @@ name'. What will happen when is:
 3. In the ActionHandler.undo method we catch this exception and:
     1. We store it on the action's error field
     2. We mark the action as `undone` by setting it's `undone_at` datetime field
-       to `timezone.now()`
+       to `datetime.now(tz=timezone.utc)`
     3. We send a specific error back to the user saying the undo failed, and we skipped
        over it.
 

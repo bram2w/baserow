@@ -1,12 +1,11 @@
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Set, Tuple
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 from django.db.models import Q
-from django.utils import timezone
 
 from loguru import logger
 from opentelemetry import trace
@@ -126,7 +125,7 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
                 .select_for_update(of=("self",))
             )
 
-        undone_at = timezone.now()
+        undone_at = datetime.now(tz=timezone.utc)
         action_being_undone_ids = [action.id for action in actions_being_undone]
         try:
             # Wrap all the action group to ensure any errors get rolled back.
@@ -274,9 +273,9 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
         data associated with them cleaned up.
         """
 
-        now = timezone.now()
+        now = datetime.now(tz=timezone.utc)
         minutes = int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP)
-        cutoff = now - timezone.timedelta(minutes=minutes)
+        cutoff = now - timedelta(minutes=minutes)
 
         types_with_custom_clean_up = set()
         for action_type in action_type_registry.get_all():

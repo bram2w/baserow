@@ -1,5 +1,4 @@
-import datetime
-from datetime import timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -4068,33 +4067,29 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "datetime_us": [
             {
-                "field_datetime_us": datetime.datetime(
-                    2020, 2, 1, 1, 23, tzinfo=timezone.utc
-                ),
+                "field_datetime_us": datetime(2020, 2, 1, 1, 23, tzinfo=timezone.utc),
                 "count": 1,
             },
             {"field_datetime_us": None, "count": 1},
         ],
         "date_us": [
-            {"field_date_us": datetime.date(2020, 2, 1), "count": 1},
+            {"field_date_us": date(2020, 2, 1), "count": 1},
             {"field_date_us": None, "count": 1},
         ],
         "datetime_eu": [
             {
-                "field_datetime_eu": datetime.datetime(
-                    2020, 2, 1, 1, 23, tzinfo=timezone.utc
-                ),
+                "field_datetime_eu": datetime(2020, 2, 1, 1, 23, tzinfo=timezone.utc),
                 "count": 1,
             },
             {"field_datetime_eu": None, "count": 1},
         ],
         "date_eu": [
-            {"field_date_eu": datetime.date(2020, 2, 1), "count": 1},
+            {"field_date_eu": date(2020, 2, 1), "count": 1},
             {"field_date_eu": None, "count": 1},
         ],
         "datetime_eu_tzone_visible": [
             {
-                "field_datetime_eu_tzone_visible": datetime.datetime(
+                "field_datetime_eu_tzone_visible": datetime(
                     2020, 2, 1, 1, 23, tzinfo=timezone.utc
                 ),
                 "count": 1,
@@ -4103,7 +4098,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "datetime_eu_tzone_hidden": [
             {
-                "field_datetime_eu_tzone_hidden": datetime.datetime(
+                "field_datetime_eu_tzone_hidden": datetime(
                     2020, 2, 1, 1, 23, tzinfo=timezone.utc
                 ),
                 "count": 1,
@@ -4112,7 +4107,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "last_modified_datetime_us": [
             {
-                "field_last_modified_datetime_us": datetime.datetime(
+                "field_last_modified_datetime_us": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4120,7 +4115,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "last_modified_date_us": [
             {
-                "field_last_modified_date_us": datetime.datetime(
+                "field_last_modified_date_us": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4128,7 +4123,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "last_modified_datetime_eu": [
             {
-                "field_last_modified_datetime_eu": datetime.datetime(
+                "field_last_modified_datetime_eu": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4136,7 +4131,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "last_modified_date_eu": [
             {
-                "field_last_modified_date_eu": datetime.datetime(
+                "field_last_modified_date_eu": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4144,7 +4139,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "last_modified_datetime_eu_tzone": [
             {
-                "field_last_modified_datetime_eu_tzone": datetime.datetime(
+                "field_last_modified_datetime_eu_tzone": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4152,7 +4147,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "created_on_datetime_us": [
             {
-                "field_created_on_datetime_us": datetime.datetime(
+                "field_created_on_datetime_us": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4160,7 +4155,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "created_on_date_us": [
             {
-                "field_created_on_date_us": datetime.datetime(
+                "field_created_on_date_us": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4168,7 +4163,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "created_on_datetime_eu": [
             {
-                "field_created_on_datetime_eu": datetime.datetime(
+                "field_created_on_datetime_eu": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4176,7 +4171,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "created_on_date_eu": [
             {
-                "field_created_on_date_eu": datetime.datetime(
+                "field_created_on_date_eu": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4184,7 +4179,7 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
         ],
         "created_on_datetime_eu_tzone": [
             {
-                "field_created_on_datetime_eu_tzone": datetime.datetime(
+                "field_created_on_datetime_eu_tzone": datetime(
                     2021, 1, 2, 12, 0, tzinfo=timezone.utc
                 ),
                 "count": 2,
@@ -4216,9 +4211,9 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
             {"field_formula_decimal": Decimal("33.3333333333"), "count": 2}
         ],
         "formula_dateinterval": [
-            {"field_formula_dateinterval": datetime.timedelta(days=1), "count": 2}
+            {"field_formula_dateinterval": timedelta(days=1), "count": 2}
         ],
-        "formula_date": [{"field_formula_date": datetime.date(2020, 1, 1), "count": 2}],
+        "formula_date": [{"field_formula_date": date(2020, 1, 1), "count": 2}],
         "formula_email": [
             {"field_formula_email": "", "count": 1},
             {"field_formula_email": "test@example.com", "count": 1},

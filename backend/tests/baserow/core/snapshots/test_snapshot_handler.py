@@ -1,7 +1,6 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 
 from django.db import OperationalError, transaction
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -142,10 +141,8 @@ def test_perform_restore(data_fixture: Fixtures):
 def test_delete_expired_snapshots(data_fixture: Fixtures, settings):
     exp_days = 1
     settings.BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS = exp_days
-    now = timezone.now()
-    time_before_expiration = (
-        now - datetime.timedelta(days=exp_days) - datetime.timedelta(seconds=10)
-    )
+    now = datetime.now(tz=timezone.utc)
+    time_before_expiration = now - timedelta(days=exp_days) - timedelta(seconds=10)
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_database_application(workspace=workspace, order=1)

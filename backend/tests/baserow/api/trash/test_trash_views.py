@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta, timezone
+
 from django.shortcuts import reverse
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -217,8 +218,8 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
     user, token = data_fixture.create_user_and_token()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    trashed_at = timezone.now()
-    time_when_trash_item_old_enough = trashed_at + timezone.timedelta(
+    trashed_at = datetime.now(tz=timezone.utc)
+    time_when_trash_item_old_enough = trashed_at + timedelta(
         hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
 

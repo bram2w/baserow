@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.shortcuts import reverse
 from django.test.utils import override_settings
-from django.utils import timezone as django_timezone
 
 import pytest
 from baserow_premium.views.models import CalendarView, CalendarViewFieldOptions
@@ -38,8 +37,8 @@ from baserow.test_utils.helpers import (
 
 def get_list_url(calendar_view_id: int) -> str:
     queryparams_ts_jan2023 = (
-        f"from_timestamp={str(django_timezone.datetime(2023, 1, 1))}"
-        f"&to_timestamp={str(django_timezone.datetime(2023, 2, 1))}"
+        f"from_timestamp={str(datetime(2023, 1, 1))}"
+        f"&to_timestamp={str(datetime(2023, 2, 1))}"
     )
     return (
         reverse(
@@ -51,8 +50,8 @@ def get_list_url(calendar_view_id: int) -> str:
 
 def get_public_list_url(calendar_view_slug: str) -> str:
     queryparams_ts_jan2023 = (
-        f"from_timestamp={str(django_timezone.datetime(2023, 1, 1))}"
-        f"&to_timestamp={str(django_timezone.datetime(2023, 2, 1))}"
+        f"from_timestamp={str(datetime(2023, 1, 1))}"
+        f"&to_timestamp={str(datetime(2023, 2, 1))}"
     )
     return (
         reverse(
@@ -264,18 +263,18 @@ def test_list_all_rows(api_client, premium_data_fixture):
     calendar = premium_data_fixture.create_calendar_view(
         table=table, date_field=date_field
     )
-    datetime_from = django_timezone.datetime(2023, 1, 1)
-    datetime_to = django_timezone.datetime(2023, 2, 1)
+    datetime_from = datetime(2023, 1, 1)
+    datetime_to = datetime(2023, 2, 1)
     queryparams_timestamps = (
         f"?from_timestamp={str(datetime_from)}" f"&to_timestamp={str(datetime_to)}"
     )
     datetimes = [
-        django_timezone.datetime(2022, 12, 31),  # not in range
-        django_timezone.datetime(2023, 1, 1),
-        django_timezone.datetime(2023, 1, 10),
-        django_timezone.datetime(2023, 1, 31),
-        django_timezone.datetime(2023, 1, 31, 23, 59, 59, 999999),
-        django_timezone.datetime(2023, 2, 1),  # not in range,
+        datetime(2022, 12, 31),  # not in range
+        datetime(2023, 1, 1),
+        datetime(2023, 1, 10),
+        datetime(2023, 1, 31),
+        datetime(2023, 1, 31, 23, 59, 59, 999999),
+        datetime(2023, 2, 1),  # not in range,
         None,  # not in range
     ]
     model = table.get_model()
@@ -350,18 +349,18 @@ def test_list_all_rows_limit_offset(api_client, premium_data_fixture):
     calendar = premium_data_fixture.create_calendar_view(
         table=table, date_field=date_field
     )
-    datetime_from = django_timezone.datetime(2023, 1, 1)
-    datetime_to = django_timezone.datetime(2023, 2, 1)
+    datetime_from = datetime(2023, 1, 1)
+    datetime_to = datetime(2023, 2, 1)
     queryparams_timestamps = (
         f"?from_timestamp={str(datetime_from)}" f"&to_timestamp={str(datetime_to)}"
     )
     queryparams_limit_offset = f"&limit=3&offset=2"
     datetimes = [
-        django_timezone.datetime(2022, 12, 31),  # not in range
-        django_timezone.datetime(2023, 1, 1),
-        django_timezone.datetime(2023, 1, 10),
-        django_timezone.datetime(2023, 1, 31),
-        django_timezone.datetime(2023, 2, 1),  # not in range,
+        datetime(2022, 12, 31),  # not in range
+        datetime(2023, 1, 1),
+        datetime(2023, 1, 10),
+        datetime(2023, 1, 31),
+        datetime(2023, 2, 1),  # not in range,
     ]
     model = table.get_model()
 
@@ -706,14 +705,14 @@ def test_list_all_rows_with_field_timezone_set_uses_field_timezone(
     )
 
     melbourne_tz = ZoneInfo("Australia/Melbourne")
-    datetime_from = django_timezone.datetime(2023, 1, 1, tzinfo=melbourne_tz)
-    datetime_to = django_timezone.datetime(2023, 1, 2, tzinfo=melbourne_tz)
+    datetime_from = datetime(2023, 1, 1, tzinfo=melbourne_tz)
+    datetime_to = datetime(2023, 1, 2, tzinfo=melbourne_tz)
     queryparams_timestamps = {
         "from_timestamp": datetime_from.isoformat(),
         "to_timestamp": datetime_to.isoformat(),
     }
-    outside_to_from_period = datetime_from - django_timezone.timedelta(hours=1)
-    inside_to_from_period = datetime_from + django_timezone.timedelta(hours=1)
+    outside_to_from_period = datetime_from - timedelta(hours=1)
+    inside_to_from_period = datetime_from + timedelta(hours=1)
     model = table.get_model()
 
     row1 = model.objects.create(
@@ -765,15 +764,15 @@ def test_list_all_rows_with_user_timezone_set_uses_user_timezone_when_no_field_t
 
     tz_name = "Australia/Melbourne"
     melbourne_tz = ZoneInfo(tz_name)
-    datetime_from = django_timezone.datetime(2023, 1, 1, tzinfo=melbourne_tz)
-    datetime_to = django_timezone.datetime(2023, 1, 2, tzinfo=melbourne_tz)
+    datetime_from = datetime(2023, 1, 1, tzinfo=melbourne_tz)
+    datetime_to = datetime(2023, 1, 2, tzinfo=melbourne_tz)
     queryparams_timestamps = {
         "from_timestamp": datetime_from.isoformat(),
         "to_timestamp": datetime_to.isoformat(),
         "user_timezone": tz_name,
     }
-    outside_to_from_period = datetime_from - django_timezone.timedelta(hours=1)
-    inside_to_from_period = datetime_from + django_timezone.timedelta(hours=1)
+    outside_to_from_period = datetime_from - timedelta(hours=1)
+    inside_to_from_period = datetime_from + timedelta(hours=1)
     model = table.get_model()
 
     row1 = model.objects.create(
@@ -856,10 +855,8 @@ def test_too_wide_timerange_returns_error(api_client, premium_data_fixture):
     calendar = premium_data_fixture.create_calendar_view(
         table=table, date_field=date_field
     )
-    datetime_from = django_timezone.datetime(2023, 1, 1)
-    datetime_to = datetime_from + django_timezone.timedelta(
-        days=settings.MAX_NUMBER_CALENDAR_DAYS + 1
-    )
+    datetime_from = datetime(2023, 1, 1)
+    datetime_to = datetime_from + timedelta(days=settings.MAX_NUMBER_CALENDAR_DAYS + 1)
     queryparams_timestamps = {
         "from_timestamp": datetime_from.isoformat(),
         "to_timestamp": datetime_to.isoformat(),

@@ -1,4 +1,4 @@
-from django.utils import timezone
+from datetime import datetime, timezone
 
 from baserow.contrib.database.webhooks.models import (
     TableWebhook,
@@ -48,7 +48,7 @@ class TableWebhookFixture:
             kwargs["called_url"] = self.fake.url()
 
         if "called_time" not in kwargs:
-            kwargs["called_time"] = timezone.now()
+            kwargs["called_time"] = datetime.now(tz=timezone.utc)
 
         if "request" not in kwargs:
             kwargs["request"] = "Baserow-header: test\n\n{}"

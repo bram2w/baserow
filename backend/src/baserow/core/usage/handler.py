@@ -1,8 +1,8 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from django.db.models import F, OuterRef, PositiveIntegerField, Subquery, Sum
 from django.db.models.functions import Coalesce
-from django.utils import timezone
 
 from baserow.contrib.database.table.models import Table
 from baserow.core.models import Workspace
@@ -31,7 +31,7 @@ class UsageHandler:
         progress = ChildProgressBuilder.build(progress_builder, child_total=qs.count())
 
         for workspaces in grouper(chunk_size, workspaces_queryset):
-            now = timezone.now()
+            now = datetime.now(tz=timezone.utc)
             for workspace in workspaces:
                 usage_in_megabytes = 0
                 for item in workspace_storage_usage_item_registry.get_all():

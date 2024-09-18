@@ -1,6 +1,6 @@
 import collections
 import typing
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from functools import partial
 from operator import attrgetter
 from urllib.parse import urljoin
@@ -8,7 +8,6 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db.models import QuerySet
-from django.utils.timezone import utc
 
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
 from baserow_premium.views.models import CalendarView
@@ -194,7 +193,7 @@ def build_calendar(
     if limit:
         qs = qs[:limit]
 
-    target_timezone_info = ZoneInfo(user_timezone) if user_timezone else utc
+    target_timezone_info = ZoneInfo(user_timezone) if user_timezone else timezone.utc
 
     if getattr(date_field, "date_include_time", False) and (
         field_timezone := getattr(date_field, "date_force_timezone", None)

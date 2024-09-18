@@ -1,11 +1,9 @@
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
 from zoneinfo import ZoneInfo
 
 from django.db.models import Count, Q, QuerySet
-from django.utils import timezone
-from django.utils.timezone import utc
 
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
 from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
@@ -216,12 +214,12 @@ def get_rows_grouped_by_date_field(
     else:
         # If our field is just representing dates, then it makes no sense to split it
         # by timezone as a date on its own cannot have a timezone.
-        target_timezone_info = utc
+        target_timezone_info = timezone.utc
         # We are querying upto but not including to_timestamp, so if someone
         # queries to_timestamp=2023-01-01 00:00 we should include rows with dates
         # on the 1st, however if we don't add one day django with query for
         # date < 2023-01-01 so we add one to make sure to include those.
-        to_timestamp = (to_timestamp + timezone.timedelta(days=1)).date()
+        to_timestamp = (to_timestamp + timedelta(days=1)).date()
         from_timestamp = from_timestamp.date()
 
     for start, end in generate_per_day_intervals(from_timestamp, to_timestamp):
@@ -269,9 +267,9 @@ def to_midnight(dt: datetime) -> datetime:
     Converts a date time to midnight on that date.
     """
 
-    return timezone.datetime.combine(
+    return datetime.combine(
         dt.date(),
-        timezone.datetime.min.time(),
+        datetime.min.time(),
         tzinfo=dt.tzinfo,
     )
 
@@ -303,7 +301,7 @@ def generate_per_day_intervals(
 
     interval_start = from_timestamp
     while interval_start < to_timestamp:
-        start_plus_day = interval_start + timezone.timedelta(days=1)
+        start_plus_day = interval_start + timedelta(days=1)
         if isinstance(start_plus_day, datetime):
             next_midnight = to_midnight(start_plus_day)
         else:

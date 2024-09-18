@@ -1,8 +1,9 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import JSONField, Q
-from django.utils import timezone
 
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import View
@@ -74,7 +75,7 @@ class ExportJob(models.Model):
         :return: A queryset of export jobs that require clean up.
         """
 
-        expired_job_time = current_time - timezone.timedelta(
+        expired_job_time = current_time - timedelta(
             minutes=settings.EXPORT_FILE_EXPIRE_MINUTES
         )
         return ExportJob.objects.filter(created_at__lte=expired_job_time).filter(

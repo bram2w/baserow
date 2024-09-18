@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import partial
 from typing import Any, Dict, List, Optional, Set, Tuple
 from zipfile import ZipFile
@@ -12,7 +12,7 @@ from django.db import connection, models
 from django.db.models import Prefetch
 from django.db.transaction import Atomic
 from django.urls import include, path
-from django.utils import timezone, translation
+from django.utils import translation
 from django.utils.translation import gettext as _
 
 from baserow.contrib.database.api.serializers import DatabaseSerializer

@@ -1,9 +1,8 @@
-from datetime import timezone
+from datetime import datetime, timezone
 
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.functional import cached_property
-from django.utils.timezone import now
 
 from dateutil import parser
 
@@ -61,7 +60,7 @@ class License(models.Model):
         """
 
         return (
-            self.valid_from <= now() <= self.valid_through
+            self.valid_from <= datetime.now(tz=timezone.utc) <= self.valid_through
             and self.valid_cached_properties
         )
 
