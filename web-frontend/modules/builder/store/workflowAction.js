@@ -137,8 +137,10 @@ const actions = {
       ) {
         oldValues[name] = workflowAction[name]
         // Accumulate the changed values to send all the ongoing changes with the
-        // final request
-        updateContext.valuesToUpdate[name] = values[name]
+        // final request. Ensure that the values are cloned by calling `structuredClone`,
+        // as there is a (currently) unexplained issue with an `OpenPage` workflow action
+        // `page_parameter` not being cloned properly.
+        updateContext.valuesToUpdate[name] = structuredClone(values[name])
       }
     })
 
