@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from io import BytesIO
 from os.path import join
 from typing import Any, BinaryIO, Dict, Optional
@@ -7,7 +8,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.utils import timezone
 
 from loguru import logger
 
@@ -165,7 +165,7 @@ class ExportHandler:
         also expired.
         """
 
-        jobs = ExportJob.jobs_requiring_cleanup(timezone.now())
+        jobs = ExportJob.jobs_requiring_cleanup(datetime.now(tz=timezone.utc))
         logger.info(f"Cleaning up {jobs.count()} old jobs")
         for job in jobs:
             if job.exported_file_name:

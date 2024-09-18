@@ -1,4 +1,5 @@
 import inspect
+from datetime import datetime, timezone
 from typing import Any, Dict, List, NamedTuple, Optional
 
 from django.conf import settings
@@ -7,7 +8,7 @@ from django.core.mail import get_connection as get_mail_connection
 from django.db import transaction
 from django.db.models import Count, OuterRef, Prefetch, Q, QuerySet, Subquery
 from django.db.models.functions import Coalesce
-from django.utils import timezone, translation
+from django.utils import translation
 
 from loguru import logger
 from opentelemetry import trace
@@ -806,7 +807,7 @@ class NotificationHandler:
                 )
 
                 UserProfile.objects.filter(user_id__in=email_recipient_ids).update(
-                    last_notifications_email_sent_at=timezone.now()
+                    last_notifications_email_sent_at=datetime.now(tz=timezone.utc)
                 )
 
                 if settings.EMAIL_NOTIFICATIONS_ENABLED:

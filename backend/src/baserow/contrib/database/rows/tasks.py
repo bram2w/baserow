@@ -1,7 +1,6 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from django.conf import settings
-from django.utils import timezone
 
 from baserow.config.celery import app
 
@@ -16,7 +15,9 @@ def clean_up_row_history_entries(self):
 
     older_than_days = timedelta(days=settings.BASEROW_ROW_HISTORY_RETENTION_DAYS)
 
-    cutoff_datetime = datetime.combine(timezone.now() - older_than_days, time.min)
+    cutoff_datetime = datetime.combine(
+        datetime.now(tz=timezone.utc) - older_than_days, time.min
+    )
     RowHistoryHandler.delete_entries_older_than(cutoff_datetime)
 
 

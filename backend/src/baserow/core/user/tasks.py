@@ -26,11 +26,11 @@ def flush_expired_tokens(self):
     Flushes the expired blacklisted refresh tokens.
     """
 
-    from django.utils import timezone
-
     from baserow.core.models import BlacklistedToken
 
-    BlacklistedToken.objects.filter(expires_at__lte=timezone.now()).delete()
+    BlacklistedToken.objects.filter(
+        expires_at__lte=datetime.now(tz=timezone.utc)
+    ).delete()
 
 
 @app.task(bind=True, queue="export")

@@ -1,9 +1,9 @@
-import datetime
 import importlib
 import json
 import os
 import re
 import sys
+from datetime import timedelta
 from decimal import Decimal
 from ipaddress import ip_network
 from pathlib import Path
@@ -457,10 +457,10 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     USER_SOURCE_AUTHENTICATION_HEADER,
 ]
 
-ACCESS_TOKEN_LIFETIME = datetime.timedelta(
+ACCESS_TOKEN_LIFETIME = timedelta(
     minutes=int(os.getenv("BASEROW_ACCESS_TOKEN_LIFETIME_MINUTES", 10))  # 10 minutes
 )
-REFRESH_TOKEN_LIFETIME = datetime.timedelta(
+REFRESH_TOKEN_LIFETIME = timedelta(
     hours=int(os.getenv("BASEROW_REFRESH_TOKEN_LIFETIME_HOURS", 24 * 7))  # 7 days
 )
 

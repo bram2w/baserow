@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from django.conf import settings
 from django.db import transaction
 
@@ -35,8 +37,6 @@ def call_webhook(
         is the name and the value is the value.
     :param payload: The JSON serializable payload that must be used as request body.
     """
-
-    from django.utils import timezone
 
     from advocate import UnacceptableAddressException
     from requests import RequestException
@@ -76,7 +76,7 @@ def call_webhook(
             event_type=event_type,
             webhook=webhook,
             defaults={
-                "called_time": timezone.now(),
+                "called_time": datetime.now(tz=timezone.utc),
                 "called_url": url,
                 "request": handler.format_request(request)
                 if request is not None

@@ -1,11 +1,11 @@
 import re
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from itertools import chain, groupby
 from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
 
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
-from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from baserow.contrib.database.fields.field_types import (
@@ -320,7 +320,7 @@ class UserMentionInRichTextFieldNotificationType(
         if existing_mention_ids_to_delete:
             RichTextFieldMention.objects.filter(
                 id__in=existing_mention_ids_to_delete
-            ).update(marked_for_deletion_at=timezone.now())
+            ).update(marked_for_deletion_at=datetime.now(tz=timezone.utc))
 
     @classmethod
     def create_notifications_grouped_by_user(

@@ -1,11 +1,10 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
 from django.db import IntegrityError, OperationalError
 from django.db.models.query import QuerySet
-from django.utils import timezone
 
 from baserow.contrib.database.exceptions import (
     DatabaseSnapshotMaxLocksExceededException,
@@ -348,7 +347,7 @@ class SnapshotHandler:
         BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS and schedules their deletion.
         """
 
-        threshold = timezone.now() - datetime.timedelta(
+        threshold = datetime.now(tz=timezone.utc) - timedelta(
             days=settings.BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS
         )
         expired_snapshots = Snapshot.objects.filter(

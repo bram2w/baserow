@@ -1,10 +1,9 @@
 import json
+from datetime import datetime, timezone
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 from django.test.utils import override_settings
-from django.utils import timezone
-from django.utils.datetime_safe import datetime
 
 import pytest
 from freezegun import freeze_time

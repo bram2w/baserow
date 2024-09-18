@@ -1,5 +1,5 @@
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, cast
 from unittest.mock import patch
 
@@ -7,7 +7,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import connection, transaction
 from django.test.utils import CaptureQueriesContext, override_settings
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -544,7 +543,7 @@ def test_when_redo_fails_the_action_is_rolled_back(
 def test_actions_which_were_updated_less_than_configured_limit_ago_not_cleaned_up(
     data_fixture, settings
 ):
-    now = timezone.now()
+    now = datetime.now(tz=timezone.utc)
     num_minutes_where_actions_shouldnt_be_cleaned = timedelta(
         minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) / 2
     )
@@ -563,7 +562,7 @@ def test_actions_which_were_updated_less_than_configured_limit_ago_not_cleaned_u
 def test_cleanup_doesnt_do_n_queries_per_action_when_they_have_no_custom_cleanup(
     data_fixture, settings, django_assert_num_queries
 ):
-    now = timezone.now()
+    now = datetime.now(tz=timezone.utc)
     num_minutes_where_actions_will_be_old_for_clean = timedelta(
         minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2
     )
@@ -610,7 +609,7 @@ def _create_two_no_custom_cleanup_actions(data_fixture):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.undo_redo
 def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, settings):
-    now = timezone.now()
+    now = datetime.now(tz=timezone.utc)
     num_minutes_where_actions_will_be_old_enough_for_cleaning = timedelta(
         minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2
     )
@@ -632,7 +631,7 @@ def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, se
 def test_custom_cleanup_failing_doesnt_rollback_other_successful_cleanups(
     data_fixture, settings, mutable_action_registry, django_assert_num_queries
 ):
-    now = timezone.now()
+    now = datetime.now(tz=timezone.utc)
     num_minutes_where_actions_will_be_old_enough_for_cleaning = timedelta(
         minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2
     )

@@ -2051,9 +2051,8 @@ def string_agg_array_of_multiple_select_field(
 
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
-    pre_annotations = expr_with_metadata.pre_annotations
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
-        pre_annotations
+        expr_with_metadata.pre_annotations
     )
     aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
 
@@ -2062,7 +2061,7 @@ def string_agg_array_of_multiple_select_field(
     join_field, _ = expr_with_metadata.join_ids[0]
 
     extract_value_subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(
             id=OuterRef("id"),
             **{join_field: OuterRef(join_field)},
@@ -2084,7 +2083,7 @@ def string_agg_array_of_multiple_select_field(
     orders = _calculate_aggregate_orders(expr_with_metadata.join_ids)
 
     string_agg_values_subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .annotate(
             value=Func(
@@ -2136,9 +2135,9 @@ def aggregate_multiple_selects_options(
 
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
-    pre_annotations = expr_with_metadata.pre_annotations
+
     not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
-        pre_annotations
+        expr_with_metadata.pre_annotations
     )
 
     aggregated_filters = aggregate_expr_with_metadata_filters(expr_with_metadata)
@@ -2148,7 +2147,7 @@ def aggregate_multiple_selects_options(
     join_field, _ = expr_with_metadata.join_ids[0]
 
     inner_subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(
             id=OuterRef("id"),
             **{join_field: OuterRef(join_field)},
@@ -2163,7 +2162,7 @@ def aggregate_multiple_selects_options(
     orders = _calculate_aggregate_orders(expr_with_metadata.join_ids)
 
     subquery = Subquery(
-        model.objects_and_trash.annotate(**pre_annotations)
+        model.objects_and_trash.annotate(**expr_with_metadata.pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .annotate(res=JSONObject(**json_builder_args))
         .values(result=JSONBAgg(F("res"), ordering=orders))[:1],

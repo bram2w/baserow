@@ -1,12 +1,11 @@
 import traceback
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, QuerySet
-from django.utils import timezone
 
 from loguru import logger
 from opentelemetry import trace
@@ -127,7 +126,7 @@ def _run_periodic_field_type_update_per_workspace(
 
 @app.task(bind=True)
 def delete_mentions_marked_for_deletion(self):
-    cutoff_time = timezone.now() - timedelta(
+    cutoff_time = datetime.now(tz=timezone.utc) - timedelta(
         minutes=settings.STALE_MENTIONS_CLEANUP_INTERVAL_MINUTES
     )
     RichTextFieldMention.objects.filter(

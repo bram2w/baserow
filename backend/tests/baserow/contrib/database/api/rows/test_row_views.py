@@ -884,11 +884,13 @@ def test_list_rows_join_lookup(api_client, data_fixture, user_field_names):
         },
         "multiple_select": {
             "blank": [],
-            "row": [
-                {"color": "yellow", "id": AnyInt(), "value": "D"},
-                {"color": "orange", "id": AnyInt(), "value": "C"},
-                {"color": "green", "id": AnyInt(), "value": "E"},
-            ],
+            "row": unordered(
+                [
+                    {"color": "yellow", "id": AnyInt(), "value": "D"},
+                    {"color": "orange", "id": AnyInt(), "value": "C"},
+                    {"color": "green", "id": AnyInt(), "value": "E"},
+                ]
+            ),
         },
         "multiple_collaborators": {
             "blank": [],

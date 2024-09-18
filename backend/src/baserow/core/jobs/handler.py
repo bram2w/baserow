@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Type
 
 from django.conf import settings
@@ -5,7 +6,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, QuerySet
-from django.utils import timezone
 
 from baserow.core.utils import Progress
 
@@ -199,7 +199,7 @@ class JobHandler:
         """
 
         # Delete old job
-        limit_date = timezone.now() - timezone.timedelta(
+        limit_date = datetime.now(tz=timezone.utc) - timedelta(
             minutes=(settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT)
         )
         for job_to_delete in Job.objects.filter(
@@ -210,7 +210,7 @@ class JobHandler:
             job_to_delete.delete()
 
         # Expire non expired jobs
-        limit_date = timezone.now() - timezone.timedelta(
+        limit_date = datetime.now(tz=timezone.utc) - timedelta(
             seconds=(settings.BASEROW_JOB_SOFT_TIME_LIMIT + 1)
         )
 
@@ -223,6 +223,6 @@ class JobHandler:
                     "Something went wrong during the file_import job execution."
                 ),
                 error="Unknown error",
-                updated_on=timezone.now(),
+                updated_on=datetime.now(tz=timezone.utc),
             )
         )

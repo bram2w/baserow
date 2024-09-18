@@ -1,11 +1,10 @@
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import List
 from unittest.mock import patch
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
-from django.utils import timezone as django_timezone
 from django.utils.dateparse import parse_date, parse_datetime
 
 import pytest
@@ -337,12 +336,10 @@ def test_a_complete_export_job_which_has_expired_will_have_its_file_deleted(
     storage_mock, data_fixture, settings
 ):
     handler = ExportHandler()
-    job_start = django_timezone.now()
-    half_file_duration = django_timezone.timedelta(
-        minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2)
-    )
+    job_start = datetime.now(tz=timezone.utc)
+    half_file_duration = timedelta(minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2))
     second_job_start = job_start + half_file_duration
-    time_when_first_job_will_have_expired = job_start + django_timezone.timedelta(
+    time_when_first_job_will_have_expired = job_start + timedelta(
         minutes=settings.EXPORT_FILE_EXPIRE_MINUTES * 1.1
     )
     with freeze_time(job_start):
@@ -381,12 +378,10 @@ def test_a_pending_job_which_has_expired_will_be_cleaned_up(
         workspace=table.database.workspace, user=other_user
     )
     handler = ExportHandler()
-    job_start = django_timezone.now()
-    half_file_duration = django_timezone.timedelta(
-        minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2)
-    )
+    job_start = datetime.now(tz=timezone.utc)
+    half_file_duration = timedelta(minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2))
     second_job_start = job_start + half_file_duration
-    time_when_first_job_will_have_expired = job_start + django_timezone.timedelta(
+    time_when_first_job_will_have_expired = job_start + timedelta(
         minutes=settings.EXPORT_FILE_EXPIRE_MINUTES * 1.1
     )
     with freeze_time(job_start):
@@ -420,12 +415,10 @@ def test_a_running_export_job_which_has_expired_will_be_stopped(
         workspace=table.database.workspace, user=other_user
     )
     handler = ExportHandler()
-    job_start = django_timezone.now()
-    half_file_duration = django_timezone.timedelta(
-        minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2)
-    )
+    job_start = datetime.now(tz=timezone.utc)
+    half_file_duration = timedelta(minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2))
     second_job_start = job_start + half_file_duration
-    time_when_first_job_will_have_expired = job_start + django_timezone.timedelta(
+    time_when_first_job_will_have_expired = job_start + timedelta(
         minutes=settings.EXPORT_FILE_EXPIRE_MINUTES * 1.1
     )
     with freeze_time(job_start):

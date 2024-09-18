@@ -103,9 +103,9 @@ class MultipleSelectManyToManyDescriptor(ManyToManyDescriptor):
                     queryset = self._apply_rel_ordering(queryset)
                     return queryset
 
-            def get_prefetch_queryset(self, instances, queryset=None):
+            def get_prefetch_querysets(self, instances, querysets=None):
                 returned_tuple = list(
-                    super().get_prefetch_queryset(instances, queryset)
+                    super().get_prefetch_querysets(instances, querysets)
                 )
 
                 if self.additional_filters:

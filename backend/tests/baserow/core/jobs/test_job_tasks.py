@@ -1,7 +1,7 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
 
 from django.core.cache import cache
-from django.utils import timezone
 
 import pytest
 from celery.exceptions import SoftTimeLimitExceeded
@@ -176,8 +176,8 @@ def test_run_task_with_exception_mapping(mock_get_by_model, data_fixture):
 @pytest.mark.django_db
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cleanup_file_import_job(storage_mock, data_fixture, settings):
-    now = timezone.now()
-    time_before_expiration = now - timezone.timedelta(
+    now = datetime.now(tz=timezone.utc)
+    time_before_expiration = now - timedelta(
         minutes=settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT + 1
     )
     with freeze_time(now):

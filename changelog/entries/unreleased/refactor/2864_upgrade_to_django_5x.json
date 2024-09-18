@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Upgrade to Django 5.X",
+    "issue_number": 2864,
+    "bullet_points": [],
+    "created_at": "2024-08-12"
+}

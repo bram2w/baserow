@@ -1,9 +1,9 @@
+from datetime import datetime, timezone
 from typing import Iterable, List, cast
 
 from django.core.files.storage import default_storage
 from django.db.models import QuerySet
 from django.db.utils import IntegrityError
-from django.utils import timezone
 
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
@@ -231,7 +231,7 @@ class DomainHandler:
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
         domain.published_to = duplicate_builder
-        domain.last_published = timezone.now()
+        domain.last_published = datetime.now(tz=timezone.utc)
         domain.save()
 
         return domain
