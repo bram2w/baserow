@@ -81,8 +81,12 @@ const actions = {
      *      - Parent collection element (this `element`!) with a schema property.
      */
     if (dataSource === null) {
-      if (element.schema_property === null) {
-        // We've been given no data source, and there's no schema property to use.
+      if (!element.schema_property) {
+        // We have a collection element that supports schema properties, and
+        // we have A) no data source and B) no schema property
+        // or,
+        // We have a collection element that doesn't support schema properties
+        // (record selector), and there's no data source.
         commit('SET_LOADING', { element, value: false })
         return
       }
@@ -171,6 +175,7 @@ const actions = {
 
           // Everything is already loaded we can quit now
           if (!rangeToFetch) {
+            commit('SET_LOADING', { element, value: false })
             return
           }
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]

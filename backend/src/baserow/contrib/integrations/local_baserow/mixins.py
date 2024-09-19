@@ -7,6 +7,7 @@ from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
 from baserow.contrib.database.fields.field_filters import FilterBuilder
+from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.integrations.local_baserow.api.serializers import (
@@ -28,7 +29,7 @@ from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.services.types import ServiceDict, ServiceSubClass
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.table.models import GeneratedTableModel
+    from baserow.contrib.database.table.models import GeneratedTableModel, Table
 
 
 class LocalBaserowTableServiceFilterableMixin:
@@ -169,6 +170,19 @@ class LocalBaserowTableServiceFilterableMixin:
                     service_filter.value = new_formula
                     yield service_filter
 
+    def get_queryset(
+        self,
+        service: ServiceSubClass,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Type["GeneratedTableModel"],
+    ):
+        """Find filters applicable to this service."""
+
+        queryset = super().get_queryset(service, table, dispatch_context, model)
+        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
+        return queryset
+
 
 class LocalBaserowTableServiceSortableMixin:
     """
@@ -234,6 +248,21 @@ class LocalBaserowTableServiceSortableMixin:
 
         return sort_ordering, queryset
 
+    def get_queryset(
+        self,
+        service: ServiceSubClass,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Type["GeneratedTableModel"],
+    ):
+        """Find sorts applicable to this service."""
+
+        queryset = super().get_queryset(service, table, dispatch_context, model)
+        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
+        if view_sorts:
+            queryset = queryset.order_by(*view_sorts)
+        return queryset
+
 
 class LocalBaserowTableServiceSearchableMixin:
     """
@@ -272,6 +301,22 @@ class LocalBaserowTableServiceSearchableMixin:
             raise ServiceImproperlyConfigured(
                 f"The `search_query` formula can't be resolved: {exc}"
             ) from exc
+
+    def get_queryset(
+        self,
+        service: ServiceSubClass,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Type["GeneratedTableModel"],
+    ):
+        """Apply the search query to this Service's View."""
+
+        queryset = super().get_queryset(service, table, dispatch_context, model)
+        search_query = self.get_dispatch_search(service, dispatch_context)
+        if search_query:
+            search_mode = SearchHandler.get_default_search_mode_for_table(table)
+            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
+        return queryset
 
 
 class LocalBaserowTableServiceSpecificRowMixin:

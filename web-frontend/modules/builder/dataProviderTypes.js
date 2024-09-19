@@ -281,7 +281,10 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return true
   }
 
-  // Loads all element contents
+  /**
+   * Here we load all element contents to populate the elements while in SSR for the
+   * first render.
+   */
   async init(applicationContext) {
     const { page } = applicationContext
 
@@ -301,21 +304,25 @@ export class CurrentRecordDataProviderType extends DataProviderType {
               { ...applicationContext, element }
             )
 
-          try {
-            // fetch the initial content
-            return await this.app.store.dispatch(
-              'elementContent/fetchElementContent',
-              {
-                page,
-                element,
-                dataSource,
-                data: dispatchContext,
-                range: [0, element.items_per_page],
-              }
-            )
-          } catch (e) {
-            // We don't want to block next dispatches so we do nothing, a notification
-            // will be displayed by the component itself.
+          const elementType = this.app.$registry.get('element', element.type)
+
+          if (elementType.fetchAtLoad) {
+            try {
+              // fetch the initial content
+              return await this.app.store.dispatch(
+                'elementContent/fetchElementContent',
+                {
+                  page,
+                  element,
+                  dataSource,
+                  data: dispatchContext,
+                  range: [0, element.items_per_page],
+                }
+              )
+            } catch (e) {
+              // We don't want to block next dispatches so we do nothing, a notification
+              // will be displayed by the component itself.
+            }
           }
         }
       })
@@ -331,20 +338,42 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return getValueAtPath(content, path.join('.'))
   }
 
+  getCollectionAncestors({ page, element, allowSameElement }) {
+    const allCollectionAncestry = this.app.store.getters[
+      'element/getAncestors'
+    ](page, element, {
+      predicate: (ancestor) =>
+        this.app.$registry.get('element', ancestor.type).isCollectionElement,
+      includeSelf: allowSameElement,
+    })
+
+    // Choose the right-most index of the ancestry which points
+    // to a data source. If `allowSameElement` is `true`, this could
+    // result in `element`'s `data_source_id`, rather than its parent
+    // element's `data_source_id`.
+    const lastIndex = _.findLastIndex(
+      allCollectionAncestry,
+      (ancestor) => ancestor.data_source_id !== null
+    )
+
+    return allCollectionAncestry.slice(lastIndex)
+  }
+
   getDataContent(applicationContext) {
     // `recordIndexPath` defaults to `[0]` if it's not present, which can happen in
     // places where it can't be provided, such as the elements context.
-    const { page, element, recordIndexPath = [0] } = applicationContext
-
-    const collectionAncestry = this.app.store.getters['element/getAncestors'](
+    const {
       page,
       element,
-      {
-        predicate: (ancestor) =>
-          this.app.$registry.get('element', ancestor.type).isCollectionElement,
-        includeSelf: true,
-      }
-    )
+      recordIndexPath = [0],
+      allowSameElement = false,
+    } = applicationContext
+
+    const collectionAncestry = this.getCollectionAncestors({
+      page,
+      element,
+      allowSameElement,
+    })
 
     const elementWithContent = collectionAncestry.at(-1)
     const contentRows =
@@ -406,28 +435,19 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   ) {
     // Find the first collection ancestor with a `data_source`. If we
     // find one, this is what we'll use to generate the schema.
-    const collectionAncestors = this.app.store.getters['element/getAncestors'](
+    const collectionAncestors = this.getCollectionAncestors({
       page,
       element,
-      {
-        predicate: (ancestor) =>
-          this.app.$registry.get('element', ancestor.type).isCollectionElement,
-        includeSelf: allowSameElement,
-      }
-    )
+      allowSameElement,
+    })
 
-    const firstCollectionElement = collectionAncestors[0]
-    const dataSourceId = firstCollectionElement?.data_source_id
-
-    if (
-      // If the collection element doesn't have a data source configured
-      !dataSourceId ||
-      // Or if the collection element is the application context element
-      // and we don't allow same element
-      (element.id === firstCollectionElement.id && !allowSameElement)
-    ) {
+    if (collectionAncestors.length === 0) {
+      // No collection ancestor with a valid data_source_id we can break now.
       return [null, null]
     }
+
+    const firstCollectionElement = collectionAncestors[0]
+    const dataSourceId = firstCollectionElement.data_source_id
 
     const dataSource = this.app.store.getters[
       'dataSource/getPageDataSourceById'
@@ -436,7 +456,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     const schemaProperties = collectionAncestors
       .filter(
         (ancestor) =>
-          ancestor.schema_property !== null &&
+          ancestor.schema_property &&
           (followSameElementSchemaProperties || ancestor.id !== element.id)
       )
       .map(({ schema_property: schemaProperty }) => schemaProperty)
@@ -492,13 +512,18 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 1) {
-      const { page, element } = applicationContext
+      const {
+        page,
+        element,
+        allowSameElement = false,
+        followSameElementSchemaProperties = true,
+      } = applicationContext
 
       const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
         page,
         element,
-        true,
-        true
+        allowSameElement,
+        followSameElementSchemaProperties
       )
 
       // We have no data source. Let's just return the part.
@@ -698,7 +723,7 @@ export class PreviousActionDataProviderType extends DataProviderType {
 
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
-    return _.get(content, path.join('.'))
+    return getValueAtPath(content, path.join('.'))
   }
 
   getWorkflowActionSchema(workflowAction) {

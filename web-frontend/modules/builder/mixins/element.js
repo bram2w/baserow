@@ -36,6 +36,13 @@ export default {
     isEditMode() {
       return this.mode === 'editing'
     },
+    elementIsInError() {
+      return this.elementType.isInError({
+        page: this.page,
+        element: this.element,
+        builder: this.builder,
+      })
+    },
     runtimeFormulaContext() {
       /**
        * This proxy allow the RuntimeFormulaContextClass to act like a regular object.

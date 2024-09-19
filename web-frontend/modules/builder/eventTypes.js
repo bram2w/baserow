@@ -44,7 +44,11 @@ export class Event {
         const runtimeFormulaContext = new Proxy(
           new RuntimeFormulaContext(
             this.$registry.getAll('builderDataProvider'),
-            { ...applicationContext, previousActionResults: additionalContext }
+            {
+              ...applicationContext,
+              ...this.applicationContextAdditions,
+              previousActionResults: additionalContext,
+            }
           ),
           {
             get(target, prop) {

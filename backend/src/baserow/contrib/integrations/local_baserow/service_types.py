@@ -1,7 +1,18 @@
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.db.models import QuerySet
 
 from drf_spectacular.types import OPENAPI_TYPE_MAPPING
 from rest_framework import serializers
@@ -39,8 +50,6 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
-from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
@@ -62,6 +71,7 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowDeleteRow,
     LocalBaserowGetRow,
     LocalBaserowListRows,
+    LocalBaserowTableService,
     LocalBaserowTableServiceFieldMapping,
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
@@ -73,7 +83,11 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.services.registries import DispatchTypes, ServiceType
+from baserow.core.services.registries import (
+    DispatchTypes,
+    ListServiceTypeMixin,
+    ServiceType,
+)
 from baserow.core.services.types import (
     ServiceDict,
     ServiceFilterDictSubClass,
@@ -81,6 +95,9 @@ from baserow.core.services.types import (
     ServiceSubClass,
 )
 from baserow.core.utils import atomic_if_not_already
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.table.models import GeneratedTableModel, Table
 
 
 class LocalBaserowServiceType(ServiceType):
@@ -567,6 +584,43 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
             )
         )
 
+    def get_queryset(
+        self,
+        service: ServiceSubClass,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Type["GeneratedTableModel"],
+    ):
+        """Return the queryset for this model."""
+
+        return model.objects.all().enhance_by_fields()
+
+    def build_queryset(
+        self,
+        service: LocalBaserowTableService,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Optional[Type["GeneratedTableModel"]] = None,
+    ) -> QuerySet:
+        """
+        Build the queryset for this table, checking for the appropriate permissions.
+        """
+
+        integration = service.integration.specific
+
+        CoreHandler().check_permissions(
+            integration.authorized_user,
+            ListRowsDatabaseTableOperationType.type,
+            workspace=table.database.workspace,
+            context=table,
+        )
+
+        if not model:
+            model = table.get_model()
+
+        queryset = self.get_queryset(service, table, dispatch_context, model)
+        return queryset
+
     def deserialize_property(
         self,
         prop_name: str,
@@ -650,9 +704,10 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
 
 
 class LocalBaserowListRowsUserServiceType(
+    ListServiceTypeMixin,
+    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
-    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowViewServiceType,
 ):
     """
@@ -664,7 +719,6 @@ class LocalBaserowListRowsUserServiceType(
     type = "local_baserow_list_rows"
     model_class = LocalBaserowListRows
     max_result_limit = 200
-    returns_list = True
     dispatch_type = DispatchTypes.DISPATCH_DATA_SOURCE
 
     @property
@@ -852,32 +906,7 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         table = resolved_values["table"]
-
-        integration = service.integration.specific
-
-        CoreHandler().check_permissions(
-            integration.authorized_user,
-            ListRowsDatabaseTableOperationType.type,
-            workspace=table.database.workspace,
-            context=table,
-        )
-
-        model = table.get_model()
-        queryset = model.objects.all().enhance_by_fields()
-
-        # Apply the search query to this Service's View.
-        search_query = self.get_dispatch_search(service, dispatch_context)
-        if search_query:
-            search_mode = SearchHandler.get_default_search_mode_for_table(table)
-            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
-
-        # Find filters applicable to this service.
-        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
-
-        # Find sorts applicable to this service.
-        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts:
-            queryset = queryset.order_by(*view_sorts)
+        queryset = self.build_queryset(service, table, dispatch_context)
 
         offset, count = dispatch_context.range(service)
 
@@ -892,7 +921,7 @@ class LocalBaserowListRowsUserServiceType(
         return {
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
-            "baserow_table_model": model,
+            "baserow_table_model": table.get_model(),
         }
 
     def dispatch_transform(
@@ -918,11 +947,44 @@ class LocalBaserowListRowsUserServiceType(
             "has_next_page": dispatch_data["has_next_page"],
         }
 
+    def get_record_names(
+        self,
+        service: LocalBaserowListRows,
+        record_ids: List[int],
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, str]:
+        """
+        Return the record name associated with each one of the provided record ids.
+
+        :param service: The table service.
+        :param record_ids: A list containing the record identifiers.
+        :param dispatch_context: The context used for the dispatch.
+        :return: A dictionary mapping each record id to its name.
+        :raises ServiceImproperlyConfigured: When service has no associated table.
+        :raises ServiceImproperlyConfigured: When the table is trashed.
+        """
+
+        if not service.table_id:
+            raise ServiceImproperlyConfigured("The table property is missing.")
+        try:
+            table = TableHandler().get_table(service.table_id)
+            primary_field = table.field_set.get(primary=True)
+            model = table.get_model(
+                field_ids=[], fields=[primary_field], add_dependencies=False
+            )
+            queryset = self.build_queryset(
+                service, table, dispatch_context, model
+            ).filter(pk__in=record_ids)
+            record_names = {row.id: str(row) for row in queryset}
+            return record_names
+        except TableDoesNotExist as e:
+            raise ServiceImproperlyConfigured("The specified table is trashed") from e
+
 
 class LocalBaserowGetRowUserServiceType(
+    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
-    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceSpecificRowMixin,
     LocalBaserowViewServiceType,
 ):
@@ -1125,31 +1187,8 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         table = resolved_values["table"]
-        integration = service.integration.specific
-
-        CoreHandler().check_permissions(
-            integration.authorized_user,
-            ReadDatabaseRowOperationType.type,
-            workspace=table.database.workspace,
-            context=table,
-        )
-
         model = table.get_model()
-        queryset = model.objects.all()
-
-        # Apply the search query to this Service's View.
-        search_query = self.get_dispatch_search(service, dispatch_context)
-        if search_query:
-            search_mode = SearchHandler.get_default_search_mode_for_table(table)
-            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
-
-        # Find the `filters` applicable to this Service's View.
-        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
-
-        # Find sorts applicable to this service.
-        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts:
-            queryset = queryset.order_by(*view_sorts)
+        queryset = self.build_queryset(service, table, dispatch_context, model)
 
         # If no row id is provided return the first item from the queryset
         # This is useful when we want to use filters to specifically choose one

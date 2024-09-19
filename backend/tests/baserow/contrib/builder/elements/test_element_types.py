@@ -29,6 +29,7 @@ from baserow.contrib.builder.elements.element_types import (
     ImageElementType,
     InputTextElementType,
     LinkElementType,
+    RecordSelectorElementType,
     TextElementType,
     collection_element_types,
 )
@@ -50,6 +51,7 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
+    RecordSelectorElement,
     TableElement,
     TextElement,
 )
@@ -1258,3 +1260,117 @@ def test_choice_element_integer_option_values(data_fixture):
 )
 def test_column_container_child_types_allowed(allowed_element_type):
     assert allowed_element_type in ColumnElementType().child_types_allowed
+
+
+@pytest.mark.django_db
+def test_record_element_is_valid(data_fixture):
+    user = data_fixture.create_user()
+
+    # There must exist one database with a primary column for the record name
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(name="Name", table=table, primary=True)
+
+    model = table.get_model(attribute_names=True)
+    row_ids = [
+        model.objects.create(name="BMW").id,
+        model.objects.create(name="Audi").id,
+        model.objects.create(name="2Cv").id,
+        model.objects.create(name="Tesla").id,
+    ]
+
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+
+    # Record selector with no data sources is invalid
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement()
+        RecordSelectorElementType().is_valid(element, "", {})
+
+    # Record selector that is required should not accept empty values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement(data_source=data_source, required=True)
+        RecordSelectorElementType().is_valid(element, "", dispatch_context)
+
+    # Record selector that is required should accept only valid values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    element = RecordSelectorElement(data_source=data_source, required=True)
+    for row_id in row_ids:
+        assert (
+            RecordSelectorElementType().is_valid(element, row_id, dispatch_context)
+            == row_id
+        )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
+
+    # Record selector that is not required should accept empty values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    element = RecordSelectorElement(data_source=data_source, required=False)
+    assert RecordSelectorElementType().is_valid(element, "", dispatch_context) == ""
+
+    # Record selector that is not required should accept only valid values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    element = RecordSelectorElement(data_source=data_source, required=False)
+    for row_id in row_ids:
+        assert (
+            RecordSelectorElementType().is_valid(element, row_id, dispatch_context)
+            == row_id
+        )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
+
+    # Record selector that is multiple and required should not accept empty values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement(
+            data_source=data_source, required=True, multiple=True
+        )
+        RecordSelectorElementType().is_valid(element, "", dispatch_context)
+
+    # Record selector that is multiple should not accept invalid values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement(
+            data_source=data_source, required=False, multiple=True
+        )
+        RecordSelectorElementType().is_valid(element, ["invalid", ""], dispatch_context)
+
+    # Record selector that is multiple and required should accept only valid values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    element = RecordSelectorElement(
+        data_source=data_source, required=True, multiple=True
+    )
+    assert (
+        RecordSelectorElementType().is_valid(element, row_ids, dispatch_context)
+        == row_ids
+    )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, [], dispatch_context)
+
+    # Record selector that is multiple and not required should accept empty values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    element = RecordSelectorElement(
+        data_source=data_source, required=False, multiple=True
+    )
+    assert RecordSelectorElementType().is_valid(element, "", dispatch_context) == ""
+
+    # Record selector that is multiple and not required should accept only valid values
+    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
+    element = RecordSelectorElement(
+        data_source=data_source, required=False, multiple=True
+    )
+    assert (
+        RecordSelectorElementType().is_valid(element, row_ids, dispatch_context)
+        == row_ids
+    )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, "-1", dispatch_context)

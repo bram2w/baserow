@@ -36,6 +36,12 @@ export default {
     elementFormDataValue() {
       return this.formElementData?.value
     },
+    formElementInvalid() {
+      return this.$store.getters['formData/getElementInvalid'](
+        this.page,
+        this.uniqueElementId
+      )
+    },
     displayFormDataError() {
       return (
         this.formElementTouched && this.formElementInvalid && !this.isEditMode
@@ -43,12 +49,6 @@ export default {
     },
     errorMessage() {
       return this.displayFormDataError ? this.getErrorMessage() : ''
-    },
-    formElementInvalid() {
-      return this.$store.getters['formData/getElementInvalid'](
-        this.page,
-        this.uniqueElementId
-      )
     },
     formElementTouched() {
       return this.$store.getters['formData/getElementTouched'](

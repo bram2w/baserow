@@ -89,6 +89,17 @@ export default {
       required: false,
       default: false,
     },
+    /**
+     * Before show let the opportunity to execute something before actually opening the
+     * dropdown. Useful when, for instance, you want to populate the item on demand only
+     * when the items are dynamic and you want to avoid the non reactivity issue with
+     * the added dom elements.
+     */
+    beforeShow: {
+      type: Function,
+      required: false,
+      default: null,
+    },
   },
   data() {
     return {
@@ -100,8 +111,10 @@ export default {
       hasItems: true,
       hasDropdownItem: true,
       hover: null,
+      opening: false,
       fixedItemsImmutable: this.fixedItems,
       reactiveMultiple: { value: this.multiple }, // Used for provide
+      isDropdown: true, // Used for dropdown items to retrieve the parent dropdown component
     }
   },
   computed: {
@@ -158,8 +171,20 @@ export default {
     this.observer.disconnect()
   },
   methods: {
+    /**
+     * Recursively finds all the children of this component that have the flag
+     * 'isDropdownItem' set.
+     */
     getDropdownItemComponents() {
-      return this.$children.filter((child) => child.isDropdownItem === true)
+      const traverse = (children) =>
+        children.reduce(
+          (items, child) =>
+            child.isDropdownItem
+              ? [...items, ...traverse(child.$children), child]
+              : [...items, ...traverse(child.$children)],
+          []
+        )
+      return traverse(this.$children)
     },
     focusout(event) {
       // Hide only if we loose focus in favor of another element which is not a
@@ -187,9 +212,15 @@ export default {
     /**
      * Shows the lists of choices, so a user can change the value.
      */
-    show(target) {
-      if (this.disabled || this.open) {
+    async show(target) {
+      if (this.disabled || this.open || this.opening) {
         return
+      }
+
+      if (this.beforeShow) {
+        this.opening = true
+        await this.beforeShow()
+        this.opening = false
       }
 
       const isElementOrigin = isDomElement(target)
@@ -409,11 +440,10 @@ export default {
      * @return {boolean}
      */
     hasValue() {
-      for (const i in this.getDropdownItemComponents()) {
-        const item = this.getDropdownItemComponents()[i]
+      for (const item of this.getDropdownItemComponents()) {
         if (this.multiple) {
-          for (const i2 in this.value) {
-            if (_.isEqual(item.value, this.value[i2])) {
+          for (const value of this.value) {
+            if (_.isEqual(item.value, value)) {
               return true
             }
           }

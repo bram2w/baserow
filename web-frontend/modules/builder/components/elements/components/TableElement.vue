@@ -153,6 +153,7 @@ export default {
               ...this.applicationContext.recordIndexPath,
               index,
             ],
+            allowSameElement: true,
           }
         ),
         {

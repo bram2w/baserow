@@ -50,16 +50,30 @@ export default {
       query: '',
     }
   },
+  computed: {
+    // Retrieve the first parent of this component that has 'isDropdown'
+    // property set.
+    parent() {
+      let parent = this.$parent
+      while (parent) {
+        if (parent.isDropdown) {
+          return parent
+        }
+        parent = parent.$parent
+      }
+      return parent
+    },
+  },
   methods: {
     select(value, disabled) {
       if (!disabled) {
-        this.$parent.select(value)
+        this.parent.select(value)
       }
       this.$emit('click', value)
     },
     hover(value, disabled) {
-      if (!disabled && this.$parent.hover !== value) {
-        this.$parent.hover = value
+      if (!disabled && this.parent.hover !== value) {
+        this.parent.hover = value
       }
     },
     search(query) {
@@ -75,13 +89,13 @@ export default {
     },
     isActive(value) {
       if (this.multiple.value) {
-        return this.$parent.value.includes(value)
+        return this.parent.value.includes(value)
       } else {
-        return this.$parent.value === value
+        return this.parent.value === value
       }
     },
     isHovering(value) {
-      return this.$parent.hover === value
+      return this.parent.hover === value
     },
   },
 }

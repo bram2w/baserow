@@ -104,3 +104,10 @@
 .ab-dropdown__items--max-width {
   max-width: 500px;
 }
+
+// InfiniteScroll component uses absolute positioning by default.
+// To make it work inside a AB Dropdown we override this behavior
+// with relative positioning.
+.ab-dropdown .infinite-scroll {
+  position: relative;
+}
