@@ -4,6 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.serializers import CommaSeparatedIntegerValuesField
 from baserow.api.services.serializers import (
     CreateServiceSerializer,
     ServiceSerializer,
@@ -154,3 +155,7 @@ class MoveDataSourceSerializer(serializers.Serializer):
             "Otherwise the data_source is placed  last for this page."
         ),
     )
+
+
+class GetRecordIdsSerializer(serializers.Serializer):
+    record_ids = CommaSeparatedIntegerValuesField()

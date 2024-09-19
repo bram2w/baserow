@@ -975,3 +975,65 @@ def test_dispatch_data_sources(api_client, data_fixture):
             "'the end of the formula' expecting '('",
         },
     }
+
+
+@pytest.mark.django_db
+def test_get_record_names(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+
+    # There must exist one database with a primary column for the record name
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(name="Name", table=table, primary=True)
+
+    model = table.get_model(attribute_names=True)
+    rows = {
+        str(model.objects.create(name="BMW").id): "BMW",
+        str(model.objects.create(name="Audi").id): "Audi",
+        str(model.objects.create(name="2Cv").id): "2Cv",
+        str(model.objects.create(name="Tesla").id): "Tesla",
+    }
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        table=table,
+        integration=integration,
+    )
+
+    view_name = "api:builder:data_source:record-names"
+    base_url = reverse(view_name, kwargs={"data_source_id": data_source.id})
+
+    # If no `row_ids` query param is passed then it should return an empty result
+    url = f"{base_url}?record_ids="
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {}
+
+    # If the row ids are present, then it should return a mapping with the record names
+    url = f"{base_url}?record_ids={','.join(rows.keys())}"
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == rows
+
+    # If `row_ids` are invalid, then it should raise an error
+    url = f"{base_url}?record_ids=INVALID_1,INVALID_2"
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED"
+
+    # If the data source is not a list data source, it should raise an error
+    non_list_data_source = (
+        data_fixture.create_builder_local_baserow_get_row_data_source(
+            user=user,
+            table=table,
+            integration=integration,
+        )
+    )
+    base_url = reverse(view_name, kwargs={"data_source_id": non_list_data_source.id})
+    url = f"{base_url}?record_ids={','.join(rows.keys())}"
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED"

@@ -158,12 +158,6 @@ export default {
         RepeatElementType.getType()
       )
     },
-    elementIsInError() {
-      return this.elementType.isInError({
-        page: this.page,
-        element: this.element,
-      })
-    },
     addElementErrorTooltipMessage() {
       if (!this.repeatElementIsNested && this.element.data_source_id === null) {
         return this.$t('repeatElement.missingDataSourceTooltip')

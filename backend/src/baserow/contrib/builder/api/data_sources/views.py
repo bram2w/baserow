@@ -4,6 +4,7 @@ from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,6 +34,7 @@ from baserow.contrib.builder.api.data_sources.serializers import (
     BaseUpdateDataSourceSerializer,
     CreateDataSourceSerializer,
     DataSourceSerializer,
+    GetRecordIdsSerializer,
     MoveDataSourceSerializer,
     UpdateDataSourceSerializer,
 )
@@ -529,3 +531,80 @@ class DispatchDataSourcesView(APIView):
                 responses[service_id] = content
 
         return Response(responses)
+
+
+class GetRecordNamesView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source to find the record names.",
+            ),
+            OpenApiParameter(
+                name="record_ids",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="A comma separated list of the record ids to search for.",
+                explode=False,  # This is a single string, not an exploded list
+            ),
+        ],
+        tags=["Builder data sources"],
+        operation_id="get_record_names_builder_page_data_source",
+        description="Find the record names associated with a given list of record ids.",
+        request=GetRecordIdsSerializer,
+        responses={
+            200: {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string",
+                    "description": "Record name",
+                },
+                "description": "A dictionary mapping record ids to their names.",
+                "example": {
+                    "1": "Record name 1",
+                    "2": "Record name 2",
+                },
+            },
+            400: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                ]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            ValidationError: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+        }
+    )
+    def get(self, request, data_source_id: int):
+        # Find the data source corresponding to the given id
+        data_source = DataSourceHandler().get_data_source(data_source_id)
+        service = data_source.service.specific
+        service_type = service.get_type()
+
+        # Check that the data source service is a ListServiceType
+        if not service_type.returns_list:
+            raise ValidationError("This data source does not provide a list service")
+
+        dispatch_context = BuilderDispatchContext(request, data_source.page)
+
+        query = GetRecordIdsSerializer(data=request.query_params)
+        if query.is_valid(raise_exception=True):
+            record_ids = query.validated_data["record_ids"]
+            record_names = service_type.get_record_names(
+                service, record_ids, dispatch_context
+            )
+            return Response(record_names)

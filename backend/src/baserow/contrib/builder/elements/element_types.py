@@ -13,6 +13,7 @@ from baserow.contrib.builder.api.elements.serializers import ChoiceOptionSeriali
 from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
 )
+from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.mixins import (
     CollectionElementTypeMixin,
     CollectionElementWithFieldsTypeMixin,
@@ -34,6 +35,7 @@ from baserow.contrib.builder.elements.models import (
     InputTextElement,
     LinkElement,
     NavigationElementMixin,
+    RecordSelectorElement,
     RepeatElement,
     TableElement,
     TextElement,
@@ -343,6 +345,181 @@ class RepeatElementType(
             "button_load_more_label": "'test'",
             "orientation": RepeatElement.ORIENTATIONS.VERTICAL,
         }
+
+
+class RecordSelectorElementType(
+    FormElementTypeMixin, CollectionElementTypeMixin, ElementType
+):
+    type = "record_selector"
+    model_class = RecordSelectorElement
+    simple_formula_fields = [
+        "option_name_suffix",
+        "label",
+        "default_value",
+        "placeholder",
+    ]
+
+    class SerializedDict(CollectionElementTypeMixin.SerializedDict):
+        required: bool
+        label: BaserowFormula
+        default_value: BaserowFormula
+        placeholder: BaserowFormula
+        multiple: bool
+        option_name_suffix: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        # RecordSelectorElement does not allow 'schema_property' as it always
+        # relies on data sources that return lists.
+        collection_serializer_field_overrides = (
+            super().serializer_field_overrides.copy()
+        )
+        collection_serializer_field_overrides.pop("schema_property")
+
+        return {
+            **collection_serializer_field_overrides,
+            "required": serializers.BooleanField(
+                help_text=RecordSelectorElement._meta.get_field("required").help_text,
+                default=False,
+                required=False,
+            ),
+            "label": FormulaSerializerField(
+                help_text=RecordSelectorElement._meta.get_field("label").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "default_value": FormulaSerializerField(
+                help_text=RecordSelectorElement._meta.get_field(
+                    "default_value"
+                ).help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "placeholder": FormulaSerializerField(
+                help_text=RecordSelectorElement._meta.get_field(
+                    "placeholder"
+                ).help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "multiple": serializers.BooleanField(
+                help_text=RecordSelectorElement._meta.get_field("multiple").help_text,
+                default=False,
+                required=False,
+            ),
+            "option_name_suffix": FormulaSerializerField(
+                help_text=RecordSelectorElement._meta.get_field(
+                    "option_name_suffix"
+                ).help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+        }
+
+    @property
+    def allowed_fields(self):
+        # RecordSelectorElement does not allow 'schema_property' as it always
+        # relies on data sources that return lists.
+        collection_allowed_fields = super().allowed_fields.copy()
+        collection_allowed_fields.remove("schema_property")
+        return collection_allowed_fields + [
+            "required",
+            "label",
+            "default_value",
+            "placeholder",
+            "multiple",
+            "option_name_suffix",
+        ]
+
+    @property
+    def serializer_field_names(self):
+        # RecordSelectorElement does not allow 'schema_property' as it always
+        # relies on data sources that return lists.
+        collection_serializer_field_names = super().serializer_field_names.copy()
+        collection_serializer_field_names.remove("schema_property")
+        return collection_serializer_field_names + [
+            "required",
+            "label",
+            "default_value",
+            "placeholder",
+            "multiple",
+            "option_name_suffix",
+        ]
+
+    def import_context_addition(self, instance, id_mapping):
+        return {"data_source_id": instance.data_source_id}
+
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
+        return {
+            "data_source_id": None,
+            "required": False,
+            "label": "",
+            "default_value": "",
+            "placeholder": "",
+            "multiple": False,
+            "option_name_suffix": "",
+        }
+
+    def is_valid(
+        self,
+        element: RecordSelectorElement,
+        value: Union[List, str],
+        dispatch_context: DispatchContext,
+    ) -> bool:
+        """
+        Responsible for validating `RecordSelectorElement` form data.
+        """
+
+        if not element.data_source_id:
+            msg = "Record selector requires a valid data source."
+            raise FormDataProviderChunkInvalidException(msg)
+
+        data_source = DataSourceHandler().get_data_source(element.data_source_id)
+
+        service = data_source.service
+        service_type = service.get_type()
+
+        try:
+            record_ids = set(map(ensure_integer, ensure_array(value)))
+            record_names = service_type.get_record_names(
+                service.specific,
+                record_ids,
+                dispatch_context,
+            )
+            available_record_ids = set(record_names.keys())
+        except ValidationError as err:
+            msg = (
+                "The value must be an array of integers, or convertible to an"
+                "array of integers"
+            )
+            raise FormDataProviderChunkInvalidException(msg) from err
+
+        if element.multiple:
+            if element.required and not record_ids:
+                msg = "This value is required"
+                raise FormDataProviderChunkInvalidException(msg)
+
+            if not record_ids.issubset(available_record_ids):
+                msg = f"{value} is not a valid option"
+                raise FormDataProviderChunkInvalidException(msg)
+        else:
+            record_id = value
+
+            if not record_id:
+                if element.required:
+                    msg = "This value is required"
+                    raise FormDataProviderChunkInvalidException(msg)
+            elif record_id not in available_record_ids:
+                msg = f"{record_id} is not a valid option"
+                raise FormDataProviderChunkInvalidException(msg)
+
+        return value
 
 
 class HeadingElementType(ElementType):

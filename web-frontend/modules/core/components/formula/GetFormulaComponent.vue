@@ -42,11 +42,6 @@ export default {
   mixins: [formulaComponent],
   inject: ['applicationContext', 'dataProviders'],
   computed: {
-    availableData() {
-      return Object.values(this.dataProviders).map((dataProvider) =>
-        dataProvider.getNodes(this.applicationContext)
-      )
-    },
     isInvalid() {
       return this.findNode(this.nodes, _.toPath(this.path)) === null
     },

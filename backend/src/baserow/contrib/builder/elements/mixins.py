@@ -29,6 +29,7 @@ from baserow.contrib.builder.elements.types import CollectionElementSubClass
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.registry import Instance
+from baserow.core.services.dispatch_context import DispatchContext
 
 
 class ContainerElementTypeMixin:
@@ -443,13 +444,19 @@ class FormElementTypeMixin:
     # Form element types are imported second, after containers.
     import_element_priority = 1
 
-    def is_valid(self, element: Type[FormElement], value: Any) -> bool:
+    def is_valid(
+        self,
+        element: Type[FormElement],
+        value: Any,
+        dispatch_context: DispatchContext,
+    ) -> bool:
         """
         Given an element and form data value, returns whether it's valid.
         Used by `FormDataProviderType` to determine if form data is valid.
 
         :param element: The element we're trying to use form data in.
         :param value: The form data value, which may be invalid.
+        :param dispatch_context: The dispatch context of the request.
         :return: Whether the value is valid or not for this element.
         """
 

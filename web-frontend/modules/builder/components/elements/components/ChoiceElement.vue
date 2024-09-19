@@ -111,10 +111,7 @@ export default {
       }
     },
     canHaveOptions() {
-      return !this.elementType.isInError({
-        element: this.element,
-        builder: this.builder,
-      })
+      return !this.elementIsInError
     },
     optionsResolved() {
       switch (this.element.option_type) {

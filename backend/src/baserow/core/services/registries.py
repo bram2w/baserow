@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
@@ -290,6 +290,30 @@ class ServiceType(
 
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)
+
+
+class ListServiceTypeMixin:
+    """A mixin for services that return lists."""
+
+    returns_list = True
+
+    @abstractmethod
+    def get_record_names(
+        self,
+        service: Service,
+        record_ids: List[int],
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, str]:
+        """
+        Return the record name associated with each one of the provided record ids.
+
+        Implementation is required for any service that uses this mixin.
+
+        :param service: The available service to use.
+        :param record_ids: The list containing the record identifiers.
+        :param dispatch_context: The context used for the dispatch.
+        :return: A dictionary mapping each record to its name.
+        """
 
 
 class ServiceTypeRegistry(

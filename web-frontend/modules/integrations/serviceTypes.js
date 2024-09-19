@@ -54,6 +54,11 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
     return newValues
   }
 
+  /** Returns the name of the given record */
+  getRecordName(service, record) {
+    return ''
+  }
+
   getOrder() {
     return 10
   }
@@ -156,6 +161,12 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
           id: uuid(), // Temporary id
         }
       })
+  }
+
+  getRecordName(service, record) {
+    // We skip row_id and order properties here so we keep only first which should be
+    // the primary field.
+    return Object.values(record)[2]
   }
 
   getOrder() {

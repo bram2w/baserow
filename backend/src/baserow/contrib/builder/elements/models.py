@@ -814,3 +814,29 @@ class RepeatElement(CollectionElement, ContainerElement):
         help_text="The amount repetitions per row, per device type. "
         "Only applicable when the orientation is horizontal.",
     )
+
+
+class RecordSelectorElement(CollectionElement, FormElement):
+    """A collection element that displays a list of records for the user to select."""
+
+    label = FormulaField(
+        default="",
+        help_text="The text label for this record selector",
+    )
+    default_value = FormulaField(
+        default="",
+        help_text="This record selector default value.",
+    )
+    placeholder = FormulaField(
+        default="",
+        help_text="The placeholder text which should be applied to the element.",
+    )
+    multiple = models.BooleanField(
+        default=False,
+        help_text="Whether this record selector allows users to choose multiple values.",
+    )
+    option_name_suffix = FormulaField(
+        help_text="The formula to generate the displayed option name suffix",
+        blank=True,
+        default="",
+    )

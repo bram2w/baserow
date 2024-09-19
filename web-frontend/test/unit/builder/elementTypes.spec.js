@@ -3,6 +3,7 @@ import {
   ChoiceElementType,
   ElementType,
   InputTextElementType,
+  RecordSelectorElementType,
 } from '@baserow/modules/builder/elementTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import _ from 'lodash'
@@ -389,6 +390,53 @@ describe('elementTypes tests', () => {
         options: [{ id: 1, value: 'uk', name: 'UK' }],
       }
       expect(elementType.isValid(element, 'uk', {})).toBe(true)
+    })
+    test('RecordSelectorElementType | required | no value.', () => {
+      const elementType = new RecordSelectorElementType()
+      const element = { required: true, multiple: false }
+      expect(elementType.isValid(element, '', {})).toBe(false)
+    })
+    test('RecordSelectorType | required | valid value.', () => {
+      const app = {
+        store: {
+          getters: {
+            'elementContent/getElementContent'() {
+              return [{ id: 1 }, { id: 2 }]
+            },
+          },
+        },
+      }
+      const elementType = new RecordSelectorElementType({ app })
+      const element = { required: true, multiple: false, data_source_id: 1 }
+      expect(elementType.isValid(element, 1, {})).toBe(true)
+    })
+    test('RecordSelectorElementType | not required | no value.', () => {
+      const app = {
+        store: {
+          getters: {
+            'elementContent/getElementContent'() {
+              return [{ id: 1 }, { id: 2 }]
+            },
+          },
+        },
+      }
+      const elementType = new RecordSelectorElementType({ app })
+      const element = { required: false, multiple: false, data_source_id: 1 }
+      expect(elementType.isValid(element, '', {})).toBe(true)
+    })
+    test('RecordSelectorType | not required | valid value.', () => {
+      const app = {
+        store: {
+          getters: {
+            'elementContent/getElementContent'() {
+              return [{ id: 1 }, { id: 2 }]
+            },
+          },
+        },
+      }
+      const elementType = new RecordSelectorElementType({ app })
+      const element = { required: false, multiple: false, data_source_id: 1 }
+      expect(elementType.isValid(element, 1, {})).toBe(true)
     })
   })
 

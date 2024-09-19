@@ -93,8 +93,8 @@
         {{ $t('choiceOptionSelector.formulas') }}
       </RadioButton>
     </FormGroup>
-    <template v-if="values.options.length">
-      <template v-if="values.option_type === CHOICE_OPTION_TYPES.MANUAL">
+    <template v-if="values.option_type === CHOICE_OPTION_TYPES.MANUAL">
+      <template v-if="values.options.length">
         <div class="row" style="--gap: 6px">
           <label class="col col-5 control__label control__label--small">
             {{ $t('choiceOptionSelector.name') }}
@@ -129,46 +129,14 @@
             <ButtonIcon icon="iconoir-bin" @click="deleteOption(option)" />
           </div>
         </div>
-        <ButtonText
-          type="secondary"
-          size="small"
-          icon="iconoir-plus"
-          :loading="loading"
-          @click="createOption"
-        >
-          {{ $t('choiceOptionSelector.addOption') }}
-        </ButtonText>
       </template>
-      <template v-else-if="values.option_type === CHOICE_OPTION_TYPES.FORMULAS">
-        <FormGroup
-          small-label
-          :label="$t('choiceOptionSelector.name')"
-          class="margin-bottom-2"
-        >
-          <InjectedFormulaInput
-            v-model="values.formula_name"
-            :placeholder="$t('choiceOptionSelector.namePlaceholder')"
-          />
-        </FormGroup>
-        <FormGroup
-          small-label
-          :label="$t('choiceOptionSelector.value')"
-          class="margin-bottom-2"
-          required
-        >
-          <InjectedFormulaInput
-            v-model="values.formula_value"
-            :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
-          />
-        </FormGroup>
+      <template v-else>
+        <div class="row" style="--gap: 6px">
+          <label class="col control__label control__label--small">
+            {{ $t('choiceOptionSelector.addOptionDescription') }}
+          </label>
+        </div>
       </template>
-    </template>
-    <template v-else>
-      <div class="row" style="--gap: 6px">
-        <label class="col control__label control__label--small">
-          {{ $t('choiceOptionSelector.addOptionDescription') }}
-        </label>
-      </div>
       <ButtonText
         type="secondary"
         size="small"
@@ -178,6 +146,29 @@
       >
         {{ $t('choiceOptionSelector.addOption') }}
       </ButtonText>
+    </template>
+    <template v-else-if="values.option_type === CHOICE_OPTION_TYPES.FORMULAS">
+      <FormGroup
+        small-label
+        :label="$t('choiceOptionSelector.name')"
+        class="margin-bottom-2"
+      >
+        <InjectedFormulaInput
+          v-model="values.formula_name"
+          :placeholder="$t('choiceOptionSelector.namePlaceholder')"
+        />
+      </FormGroup>
+      <FormGroup
+        small-label
+        :label="$t('choiceOptionSelector.value')"
+        class="margin-bottom-2"
+        required
+      >
+        <InjectedFormulaInput
+          v-model="values.formula_value"
+          :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
+        />
+      </FormGroup>
     </template>
   </form>
 </template>

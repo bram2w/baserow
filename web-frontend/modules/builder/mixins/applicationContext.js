@@ -9,7 +9,7 @@ export default {
     applicationContextAdditions: {
       type: Object,
       required: false,
-      default: null,
+      default: undefined,
     },
   },
   computed: {

@@ -4,14 +4,7 @@
     required
     :data-explorer-loading="dataExplorerLoading"
     :data-providers="dataProviders"
-    :application-context="
-      applicationContext ?? {
-        page,
-        builder,
-        mode,
-        ...applicationContextAdditions,
-      }
-    "
+    :application-context="applicationContext"
     v-on="$listeners"
   />
 </template>
@@ -19,10 +12,12 @@
 <script>
 import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
 import { DataSourceDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
+import applicationContext from '@baserow/modules/builder/mixins/applicationContext'
 
 export default {
   name: 'ApplicationBuilderFormulaInput',
   components: { FormulaInputField },
+  mixins: [applicationContext],
   inject: {
     page: {
       from: 'page',
@@ -33,21 +28,12 @@ export default {
     mode: {
       from: 'mode',
     },
-    applicationContext: {
-      from: 'applicationContext',
-      default: null,
-    },
   },
   props: {
     dataProvidersAllowed: {
       type: Array,
       required: false,
       default: () => [],
-    },
-    applicationContextAdditions: {
-      type: Object,
-      required: false,
-      default: () => {},
     },
   },
   computed: {
