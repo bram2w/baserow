@@ -49,21 +49,20 @@ def test_local_baserow_table_service_before_dispatch_validation_error(
     )
 
     service_without_table = Mock(table_id=None)
+    dispatch_context = FakeDispatchContext()
     with pytest.raises(ServiceImproperlyConfigured) as exc:
-        cls().resolve_service_formulas(service_without_table, FakeDispatchContext())
+        cls().resolve_service_formulas(service_without_table, dispatch_context)
     assert exc.value.args[0] == "The table property is missing."
 
     service_with_trashed_table = Mock(table_id=trashed_table.id)
     with pytest.raises(ServiceImproperlyConfigured) as exc:
-        cls().resolve_service_formulas(
-            service_with_trashed_table, FakeDispatchContext()
-        )
+        cls().resolve_service_formulas(service_with_trashed_table, dispatch_context)
     assert exc.value.args[0] == "The specified table is trashed"
 
     service_with_table_in_trashed_database = Mock(table_id=table_in_trashed_database.id)
     with pytest.raises(ServiceImproperlyConfigured) as exc:
         cls().resolve_service_formulas(
-            service_with_table_in_trashed_database, FakeDispatchContext()
+            service_with_table_in_trashed_database, dispatch_context
         )
     assert exc.value.args[0] == "The specified table is trashed"
 

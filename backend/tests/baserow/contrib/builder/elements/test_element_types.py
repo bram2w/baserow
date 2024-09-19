@@ -2,11 +2,11 @@ import json
 from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
-from unittest.mock import MagicMock
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
+from django.http import HttpRequest
 
 import pytest
 from rest_framework.exceptions import ValidationError
@@ -624,12 +624,12 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
     )
 
     # Call is_valid with an option that is not present in the list raises an exception
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     with pytest.raises(FormDataProviderChunkInvalidException):
         ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
 
     # Call is_valid with a valid option simply returns its value
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     assert ChoiceElementType().is_valid(choice, "BMW", dispatch_context) == "BMW"
 
 
@@ -669,12 +669,11 @@ def test_choice_element_is_valid_formula_context(data_fixture):
     )
 
     # Call is_valid with an option that is not present in the list raises an exception
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     with pytest.raises(FormDataProviderChunkInvalidException):
         ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
 
     # Call is_valid with a valid option simply returns its value
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
     assert (
         ChoiceElementType().is_valid(choice, "Germany", dispatch_context) == "Germany"
     )
@@ -1244,7 +1243,7 @@ def test_choice_element_integer_option_values(data_fixture):
     )
 
     expected_choices = [row.id for row in rows]
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     for value in expected_choices:
         dispatch_context.reset_call_stack()
         assert ChoiceElementType().is_valid(choice, value, dispatch_context) is value
@@ -1290,19 +1289,19 @@ def test_record_element_is_valid(data_fixture):
         table=table,
     )
 
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+
     # Record selector with no data sources is invalid
     with pytest.raises(FormDataProviderChunkInvalidException):
         element = RecordSelectorElement()
-        RecordSelectorElementType().is_valid(element, "", {})
+        RecordSelectorElementType().is_valid(element, "", dispatch_context)
 
     # Record selector that is required should not accept empty values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     with pytest.raises(FormDataProviderChunkInvalidException):
         element = RecordSelectorElement(data_source=data_source, required=True)
         RecordSelectorElementType().is_valid(element, "", dispatch_context)
 
     # Record selector that is required should accept only valid values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     element = RecordSelectorElement(data_source=data_source, required=True)
     for row_id in row_ids:
         assert (
@@ -1313,12 +1312,10 @@ def test_record_element_is_valid(data_fixture):
         RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
 
     # Record selector that is not required should accept empty values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     element = RecordSelectorElement(data_source=data_source, required=False)
     assert RecordSelectorElementType().is_valid(element, "", dispatch_context) == ""
 
     # Record selector that is not required should accept only valid values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     element = RecordSelectorElement(data_source=data_source, required=False)
     for row_id in row_ids:
         assert (
@@ -1329,7 +1326,6 @@ def test_record_element_is_valid(data_fixture):
         RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
 
     # Record selector that is multiple and required should not accept empty values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     with pytest.raises(FormDataProviderChunkInvalidException):
         element = RecordSelectorElement(
             data_source=data_source, required=True, multiple=True
@@ -1337,7 +1333,6 @@ def test_record_element_is_valid(data_fixture):
         RecordSelectorElementType().is_valid(element, "", dispatch_context)
 
     # Record selector that is multiple should not accept invalid values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     with pytest.raises(FormDataProviderChunkInvalidException):
         element = RecordSelectorElement(
             data_source=data_source, required=False, multiple=True
@@ -1345,7 +1340,6 @@ def test_record_element_is_valid(data_fixture):
         RecordSelectorElementType().is_valid(element, ["invalid", ""], dispatch_context)
 
     # Record selector that is multiple and required should accept only valid values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     element = RecordSelectorElement(
         data_source=data_source, required=True, multiple=True
     )
@@ -1357,14 +1351,12 @@ def test_record_element_is_valid(data_fixture):
         RecordSelectorElementType().is_valid(element, [], dispatch_context)
 
     # Record selector that is multiple and not required should accept empty values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     element = RecordSelectorElement(
         data_source=data_source, required=False, multiple=True
     )
     assert RecordSelectorElementType().is_valid(element, "", dispatch_context) == ""
 
     # Record selector that is multiple and not required should accept only valid values
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=2)
     element = RecordSelectorElement(
         data_source=data_source, required=False, multiple=True
     )

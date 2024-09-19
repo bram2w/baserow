@@ -276,11 +276,12 @@ def test_local_baserow_list_rows_service_dispatch_data_permission_denied(
         table=table,
     )
 
+    dispatch_context = FakeDispatchContext()
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
         LocalBaserowListRowsUserServiceType().dispatch_data(
-            service, {"table": table}, FakeDispatchContext()
+            service, {"table": table}, dispatch_context
         )
 
 
@@ -295,9 +296,10 @@ def test_local_baserow_list_rows_service_before_dispatch_validation_error(data_f
         integration=integration, table=None
     )
 
+    dispatch_context = FakeDispatchContext()
     with pytest.raises(ServiceImproperlyConfigured):
         LocalBaserowListRowsUserServiceType().resolve_service_formulas(
-            service, FakeDispatchContext()
+            service, dispatch_context
         )
 
 
@@ -572,40 +574,49 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
         table=table, integration=integration
     )
 
+    dispatch_context = FakeDispatchContext()
     dispatch_data = service_type.dispatch_data(
-        service, {"table": table}, FakeDispatchContext()
+        service, {"table": table}, dispatch_context
     )
 
     assert len(dispatch_data["results"]) == 10
     assert dispatch_data["has_next_page"] is False
 
-    fake_dispatch = FakeDispatchContext()
+    dispatch_context = FakeDispatchContext()
 
-    fake_dispatch.range = Mock()
-    fake_dispatch.range.return_value = [0, 5]
+    dispatch_context.range = Mock()
+    dispatch_context.range.return_value = [0, 5]
 
-    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(
+        service, {"table": table}, dispatch_context
+    )
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is True
 
-    fake_dispatch.range.return_value = [5, 3]
+    dispatch_context.range.return_value = [5, 3]
 
-    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(
+        service, {"table": table}, dispatch_context
+    )
 
     assert len(dispatch_data["results"]) == 3
     assert dispatch_data["has_next_page"] is True
 
-    fake_dispatch.range.return_value = [5, 5]
+    dispatch_context.range.return_value = [5, 5]
 
-    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(
+        service, {"table": table}, dispatch_context
+    )
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is False
 
-    fake_dispatch.range.return_value = [5, 10]
+    dispatch_context.range.return_value = [5, 10]
 
-    dispatch_data = service_type.dispatch_data(service, {"table": table}, fake_dispatch)
+    dispatch_data = service_type.dispatch_data(
+        service, {"table": table}, dispatch_context
+    )
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is False

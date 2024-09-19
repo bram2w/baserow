@@ -224,6 +224,43 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     class SerializedDict(ServiceDict):
         table_id: int
 
+    def build_queryset(
+        self,
+        service: LocalBaserowTableService,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Optional[Type["GeneratedTableModel"]] = None,
+    ) -> QuerySet:
+        """
+        Build the queryset for this table, checking for the appropriate permissions.
+        """
+
+        integration = service.integration.specific
+
+        CoreHandler().check_permissions(
+            integration.authorized_user,
+            ListRowsDatabaseTableOperationType.type,
+            workspace=table.database.workspace,
+            context=table,
+        )
+
+        if not model:
+            model = table.get_model()
+
+        queryset = self.get_queryset(service, table, dispatch_context, model)
+        return queryset
+
+    def get_queryset(
+        self,
+        service: ServiceSubClass,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Type["GeneratedTableModel"],
+    ):
+        """Return the queryset for this model."""
+
+        return model.objects.all().enhance_by_fields()
+
     def enhance_queryset(self, queryset):
         return queryset.select_related(
             "table",
@@ -583,43 +620,6 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
                 "view__viewgroupby_set",
             )
         )
-
-    def get_queryset(
-        self,
-        service: ServiceSubClass,
-        table: "Table",
-        dispatch_context: DispatchContext,
-        model: Type["GeneratedTableModel"],
-    ):
-        """Return the queryset for this model."""
-
-        return model.objects.all().enhance_by_fields()
-
-    def build_queryset(
-        self,
-        service: LocalBaserowTableService,
-        table: "Table",
-        dispatch_context: DispatchContext,
-        model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> QuerySet:
-        """
-        Build the queryset for this table, checking for the appropriate permissions.
-        """
-
-        integration = service.integration.specific
-
-        CoreHandler().check_permissions(
-            integration.authorized_user,
-            ListRowsDatabaseTableOperationType.type,
-            workspace=table.database.workspace,
-            context=table,
-        )
-
-        if not model:
-            model = table.get_model()
-
-        queryset = self.get_queryset(service, table, dispatch_context, model)
-        return queryset
 
     def deserialize_property(
         self,

@@ -11,3 +11,9 @@ ERROR_ELEMENT_NOT_IN_SAME_PAGE = (
     HTTP_400_BAD_REQUEST,
     "The given elements do not belong to the same page.",
 )
+
+ERROR_ELEMENT_PROPERTY_OPTIONS_NOT_UNIQUE = (
+    "ERROR_ELEMENT_PROPERTY_OPTIONS_NOT_UNIQUE",
+    HTTP_400_BAD_REQUEST,
+    "The provided schema_property are not unique.",
+)

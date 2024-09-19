@@ -8,6 +8,7 @@ from baserow.contrib.builder.data_providers.exceptions import (
 )
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.search.handler import SearchHandler
+from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.integrations.local_baserow.api.serializers import (
@@ -176,11 +177,28 @@ class LocalBaserowTableServiceFilterableMixin:
         table: "Table",
         dispatch_context: DispatchContext,
         model: Type["GeneratedTableModel"],
-    ):
-        """Find filters applicable to this service."""
+    ) -> QuerySet:
+        """
+        Responsible for applying the filters to the queryset. If the dispatch
+        context contains any adhoc-filters, they are applied ontop of existing
+        service and view filters.
+
+        :param service: the service instance.
+        :param table: the table instance.
+        :param dispatch_context: the dispatch context.
+        :param model: the table's generated table model
+        :return: the queryset with filters applied.
+        """
 
         queryset = super().get_queryset(service, table, dispatch_context, model)
         queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
+        dispatch_filters = dispatch_context.filters()
+        if dispatch_filters is not None:
+            deserialized_filters = AdHocFilters.deserialize_dispatch_filters(
+                dispatch_filters
+            )
+            adhoc_filters = AdHocFilters.from_dict(deserialized_filters)
+            queryset = adhoc_filters.apply_to_queryset(model, queryset)
         return queryset
 
 
@@ -254,13 +272,28 @@ class LocalBaserowTableServiceSortableMixin:
         table: "Table",
         dispatch_context: DispatchContext,
         model: Type["GeneratedTableModel"],
-    ):
-        """Find sorts applicable to this service."""
+    ) -> QuerySet:
+        """
+        Responsible for applying the sortings to the queryset. If the dispatch
+        context contains any adhoc-sortings, they replace any existing service
+        and/or view sorts.
+
+        :param service: the service instance.
+        :param table: the table instance.
+        :param dispatch_context: the dispatch context.
+        :param model: the table's generated table model
+        :return: the queryset with sortings applied.
+        """
 
         queryset = super().get_queryset(service, table, dispatch_context, model)
-        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts:
-            queryset = queryset.order_by(*view_sorts)
+
+        adhoc_sort = dispatch_context.sortings()
+        if adhoc_sort is not None:
+            queryset = queryset.order_by_fields_string(adhoc_sort, False)
+        else:
+            view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
+            if view_sorts:
+                queryset = queryset.order_by(*view_sorts)
         return queryset
 
 
@@ -309,13 +342,30 @@ class LocalBaserowTableServiceSearchableMixin:
         dispatch_context: DispatchContext,
         model: Type["GeneratedTableModel"],
     ):
-        """Apply the search query to this Service's View."""
+        """
+        Responsible for applying the search query to the queryset. If the dispatch
+        context contains an adhoc-search-query, it is applied ontop of the existing
+        service search query.
+
+        :param service: the service instance.
+        :param table: the table instance.
+        :param dispatch_context: the dispatch context.
+        :param model: the table's generated table model
+        :return: the queryset with the search query applied.
+        """
 
         queryset = super().get_queryset(service, table, dispatch_context, model)
-        search_query = self.get_dispatch_search(service, dispatch_context)
-        if search_query:
-            search_mode = SearchHandler.get_default_search_mode_for_table(table)
-            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
+        search_mode = SearchHandler.get_default_search_mode_for_table(table)
+        service_search_query = self.get_dispatch_search(service, dispatch_context)
+        if service_search_query:
+            queryset = queryset.search_all_fields(
+                service_search_query, search_mode=search_mode
+            )
+        adhoc_search_query = dispatch_context.search_query()
+        if adhoc_search_query is not None:
+            queryset = queryset.search_all_fields(
+                adhoc_search_query, search_mode=search_mode
+            )
         return queryset
 
 

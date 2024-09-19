@@ -1,8 +1,13 @@
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
+from django.http import HttpRequest
+
 import pytest
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,
@@ -395,11 +400,9 @@ def test_dispatch_data_source(data_fixture):
         row_id="2",
     )
 
-    formula_context = MagicMock()
-    formula_context.cache = {}
-
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
     result = DataSourceService().dispatch_data_source(
-        user, data_source, formula_context
+        user, data_source, dispatch_context
     )
 
     assert result == {
@@ -457,10 +460,10 @@ def test_dispatch_page_data_sources(data_fixture):
         row_id="b",
     )
 
-    formula_context = MagicMock()
-    formula_context.cache = {}
-
-    result = DataSourceService().dispatch_page_data_sources(user, page, formula_context)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    result = DataSourceService().dispatch_page_data_sources(
+        user, page, dispatch_context
+    )
 
     assert result[data_source.id] == {
         "id": rows[1].id,

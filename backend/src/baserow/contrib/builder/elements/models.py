@@ -754,6 +754,40 @@ class CollectionElement(Element):
         abstract = True
 
 
+class CollectionElementPropertyOptions(models.Model):
+    """
+    This model represents the options that can be set for a property of a
+    collection element. These options can be used to determine if the
+    property should be searchable, filterable or sortable.
+    """
+
+    element = models.ForeignKey(
+        Element,
+        related_name="property_options",
+        help_text="The element this property option belongs to.",
+        on_delete=models.CASCADE,
+    )
+    schema_property = models.CharField(
+        max_length=225,
+        help_text="The name of the property in the schema this option belongs to.",
+    )
+    searchable = models.BooleanField(
+        default=False,
+        help_text="Whether this element is searchable or not by visitors.",
+    )
+    filterable = models.BooleanField(
+        default=False,
+        help_text="Whether this element is filterable or not by visitors.",
+    )
+    sortable = models.BooleanField(
+        default=False,
+        help_text="Whether this element is sortable or not by visitors.",
+    )
+
+    class Meta:
+        unique_together = ("element", "schema_property")
+
+
 class TableElement(CollectionElement):
     """
     A table element

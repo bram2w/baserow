@@ -1,3 +1,5 @@
+import json
+
 from django.urls import reverse
 
 import pytest
@@ -656,6 +658,67 @@ def test_dispatch_data_source(api_client, data_fixture):
         "order": AnyStr(),
         fields[0].db_column: "Audi",
         fields[1].db_column: "Orange",
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_with_adhoc_filters(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[["Peter"], ["Afonso"], ["Tsering"], ["Jérémie"]],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    advanced_filters = {
+        "filter_type": "OR",
+        "filters": [
+            {
+                "field": fields[0].id,
+                "type": "equal",
+                "value": "Peter",
+            },
+            {
+                "field": fields[0].id,
+                "type": "equal",
+                "value": "Jérémie",
+            },
+        ],
+    }
+
+    response = api_client.post(
+        f"{url}?filters={json.dumps(advanced_filters)}",
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "results": [
+            {"id": 1, "order": AnyStr(), fields[0].db_column: "Peter"},
+            {"id": 4, "order": AnyStr(), fields[0].db_column: "Jérémie"},
+        ],
+        "has_next_page": False,
     }
 
 

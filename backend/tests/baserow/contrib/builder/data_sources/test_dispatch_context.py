@@ -50,3 +50,35 @@ def test_dispatch_context_page_from_context(data_fixture):
     assert new_dispatch_context.page == page
     assert new_dispatch_context.offset == 5
     assert new_dispatch_context.count == 1
+
+
+def test_dispatch_context_search_query():
+    request = HttpRequest()
+    request.GET["search_query"] = "foobar"
+    dispatch_context = BuilderDispatchContext(request, None)
+    assert dispatch_context.search_query() == "foobar"
+
+
+def test_dispatch_context_filters():
+    request = HttpRequest()
+    filter_data = {
+        "groups": [],
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": 123,
+                "type": "contains",
+                "value": "Alexa",
+            }
+        ],
+    }
+    request.GET["filters"] = filter_data
+    dispatch_context = BuilderDispatchContext(request, None)
+    assert dispatch_context.filters() == filter_data
+
+
+def test_dispatch_context_sortings():
+    request = HttpRequest()
+    request.GET["order_by"] = "-field_1,-field_2"
+    dispatch_context = BuilderDispatchContext(request, None)
+    assert dispatch_context.sortings() == "-field_1,-field_2"

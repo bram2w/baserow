@@ -2,6 +2,7 @@ from collections import defaultdict
 from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import AnonymousUser
+from django.http import HttpRequest
 
 import pytest
 
@@ -130,9 +131,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
-
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
 
     assert (
         data_source_provider.get_data_chunk(
@@ -176,7 +175,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {"id": 2},
@@ -250,7 +249,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {"id": 2},
@@ -323,7 +322,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_list_dataso
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {"id": 2},
@@ -389,7 +388,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {},
@@ -455,7 +454,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {},
@@ -532,7 +531,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     data_source_provider = DataSourceDataProviderType()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {
         "data_source": {"page_id": page.id},
         "page_parameter": {},
@@ -665,7 +664,6 @@ def test_data_source_context_data_provider_get_data_chunk(data_fixture):
 
     fake_request = MagicMock()
     fake_request.data = {
-        "data_source": {"page_id": page.id},
         "page_parameter": {},
     }
     dispatch_context = BuilderDispatchContext(fake_request, page)
@@ -906,7 +904,7 @@ def test_current_record_provider_get_data_chunk_without_record_index(data_fixtur
 
     user, token = data_fixture.create_user_and_token()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.data = {}
 
     builder = data_fixture.create_builder_application(user=user)
@@ -925,7 +923,7 @@ def test_current_record_provider_get_data_chunk(data_fixture):
 
     user, token = data_fixture.create_user_and_token()
 
-    fake_request = MagicMock()
+    fake_request = HttpRequest()
     fake_request.user = user
     fake_request.data = {"current_record": 0}
 
