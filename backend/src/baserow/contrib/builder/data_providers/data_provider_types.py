@@ -249,7 +249,7 @@ class CurrentRecordDataProviderType(DataProviderType):
         data_source_id = first_collection_element_ancestor.specific.data_source_id
 
         # Narrow down our range to just our record index.
-        dispatch_context = BuilderDispatchContext.from_context(
+        dispatch_context = dispatch_context.from_context(
             dispatch_context,
             offset=current_record,
             count=1,

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 
-from rest_framework.request import Request
+from django.http import HttpRequest
 
 from baserow.contrib.builder.data_providers.registries import (
     builder_data_provider_type_registry,
@@ -17,7 +17,7 @@ class BuilderDispatchContext(DispatchContext):
 
     def __init__(
         self,
-        request: Request,
+        request: HttpRequest,
         page: Page,
         workflow_action: Optional["WorkflowAction"] = None,
         offset: Optional[int] = None,
@@ -62,3 +62,34 @@ class BuilderDispatchContext(DispatchContext):
             max(0, offset),
             max(1, count),
         ]
+
+    def search_query(self) -> Optional[str]:
+        """
+        In a `BuilderDispatchContext`, we will use the HTTP request
+        to return the `search_query` provided by the frontend.
+
+        :return: A search query string.
+        """
+
+        return self.request.GET.get("search_query", None)
+
+    def filters(self) -> Optional[str]:
+        """
+        In a `BuilderDispatchContext`, we will use the HTTP request's
+        serialized `filters`, pass it to the `AdHocFilters` class, and
+        return the result.
+
+        :return: A JSON serialized string.
+        """
+
+        return self.request.GET.get("filters", None)
+
+    def sortings(self) -> Optional[str]:
+        """
+        In a `BuilderDispatchContext`, we will use the HTTP request
+        to return the `order_by` provided by the frontend.
+
+        :return: A sort string.
+        """
+
+        return self.request.GET.get("order_by", None)

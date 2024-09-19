@@ -1,11 +1,8 @@
 from collections import defaultdict
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -198,7 +195,7 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, table=table, row_id="get('test')"
+        integration=integration, view=view, table=table, row_id="'2'"
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
@@ -350,14 +347,15 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test')"
+        integration=integration, table=table, row_id="'2'"
     )
 
+    dispatch_context = FakeDispatchContext()
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, {"table": table}, FakeDispatchContext()
+            service, {"table": table}, dispatch_context
         )
 
 
@@ -370,27 +368,29 @@ def test_local_baserow_get_row_service_dispatch_validation_error(data_fixture):
         application=page.builder, user=user
     )
 
+    dispatch_context = FakeDispatchContext()
+
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=None, row_id="1"
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch(service, FakeDispatchContext())
+        service_type.dispatch(service, dispatch_context)
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test2')"
+        integration=integration, table=table, row_id="''"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch(service, FakeDispatchContext())
+        service_type.dispatch(service, dispatch_context)
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=table, row_id="wrong formula"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch(service, FakeDispatchContext())
+        service_type.dispatch(service, dispatch_context)
 
 
 @pytest.mark.django_db
@@ -403,7 +403,7 @@ def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture)
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test999')"
+        integration=integration, table=table, row_id="'999'"
     )
     service_type = service.get_type()
 
@@ -448,10 +448,9 @@ def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
     # If the `row_id` is a formula, and its resolved value is blank, ensure we're
     # raising `ServiceImproperlyConfigured`. We don't want to use the "no row ID"
     # behaviour of returning the first row if we're using formulas.
-    fake_request = Mock()
-    fake_request.data = {"page_parameter": {"id": ""}}
     service.row_id = 'get("page_parameter.id")'
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    service.save()
+    dispatch_context = FakeDispatchContext(context={"page_parameter": {"id": ""}})
     with pytest.raises(ServiceImproperlyConfigured) as exc:
         service_type.resolve_service_formulas(service, dispatch_context)
 

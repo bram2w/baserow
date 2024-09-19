@@ -146,6 +146,9 @@ def test_builder_application_export(data_fixture):
     element4 = data_fixture.create_builder_table_element(
         page=page2, data_source=datasource3, items_per_page=42
     )
+    element4.property_options.create(
+        schema_property="location", filterable=True, sortable=True, searchable=False
+    )
 
     workflow_action_1 = data_fixture.create_notification_workflow_action(
         page=page1,
@@ -464,6 +467,15 @@ def test_builder_application_export(data_fixture):
                                 "styles": {},
                             }
                             for f in element4.fields.all()
+                        ],
+                        "property_options": [
+                            {
+                                "schema_property": po.schema_property,
+                                "filterable": po.filterable,
+                                "sortable": po.sortable,
+                                "searchable": po.searchable,
+                            }
+                            for po in element4.property_options.all()
                         ],
                     },
                 ],
@@ -882,6 +894,14 @@ def test_builder_application_export(data_fixture):
                             "desktop": "horizontal",
                             "smartphone": "horizontal",
                         },
+                        "property_options": [
+                            {
+                                "schema_property": "location",
+                                "filterable": True,
+                                "sortable": True,
+                                "searchable": False,
+                            }
+                        ],
                     },
                 ],
                 "data_sources": [
@@ -1138,6 +1158,7 @@ IMPORT_REFERENCE = {
                             },
                         },
                     ],
+                    "property_options": [],
                 },
                 {
                     "id": 502,

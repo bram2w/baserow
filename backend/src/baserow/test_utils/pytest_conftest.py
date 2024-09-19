@@ -27,6 +27,7 @@ from baserow.core.exceptions import PermissionDenied
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
+from baserow.core.utils import get_value_at_path
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
@@ -710,6 +711,21 @@ def fake_import_formula(formula, id_mapping):
 
 
 class FakeDispatchContext(DispatchContext):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.context = kwargs.pop("context", {})
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def search_query(self):
+        return None
+
+    def filters(self):
+        return None
+
+    def sortings(self):
+        return None
+
     def range(self, service):
         return [0, 100]
 
@@ -723,4 +739,4 @@ class FakeDispatchContext(DispatchContext):
         if key == "test999":
             return "999"
 
-        return super().__getitem__(key)
+        return get_value_at_path(self.context, key)

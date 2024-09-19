@@ -34,6 +34,8 @@ class ServiceFixtures:
     ) -> LocalBaserowTableServiceFilter:
         if "type" not in kwargs:
             kwargs["type"] = "equal"
+        if "order" not in kwargs:
+            kwargs["order"] = 0
         return LocalBaserowTableServiceFilter.objects.create(**kwargs)
 
     def create_local_baserow_table_service_sort(

@@ -26,6 +26,7 @@ from baserow.contrib.builder.api.data_sources.errors import (
 from baserow.contrib.builder.api.elements.errors import (
     ERROR_ELEMENT_DOES_NOT_EXIST,
     ERROR_ELEMENT_NOT_IN_SAME_PAGE,
+    ERROR_ELEMENT_PROPERTY_OPTIONS_NOT_UNIQUE,
 )
 from baserow.contrib.builder.api.elements.serializers import (
     CreateElementSerializer,
@@ -37,6 +38,7 @@ from baserow.contrib.builder.api.elements.serializers import (
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.data_sources.exceptions import DataSourceDoesNotExist
 from baserow.contrib.builder.elements.exceptions import (
+    CollectionElementPropertyOptionsNotUnique,
     ElementDoesNotExist,
     ElementNotInSamePage,
 )
@@ -194,6 +196,7 @@ class ElementView(APIView):
         {
             ElementDoesNotExist: ERROR_ELEMENT_DOES_NOT_EXIST,
             DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            CollectionElementPropertyOptionsNotUnique: ERROR_ELEMENT_PROPERTY_OPTIONS_NOT_UNIQUE,
         }
     )
     def patch(self, request, element_id: int):

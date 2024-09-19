@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from django.http import HttpRequest
 
 import pytest
 
@@ -268,7 +268,7 @@ def test_dispatch_action_with_incompatible_action(data_fixture):
     workflow_action = data_fixture.create_notification_workflow_action(
         page=page, element=element, event=EventTypes.CLICK
     )
-    dispatch_context = BuilderDispatchContext(Mock(), None)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
     with pytest.raises(BuilderWorkflowActionCannotBeDispatched):
         BuilderWorkflowActionService().dispatch_action(
             user, workflow_action, dispatch_context
@@ -284,7 +284,7 @@ def test_dispatch_workflow_action_no_permissions(data_fixture):
         page=page, element=element, event=EventTypes.CLICK, user=user
     )
 
-    dispatch_context = BuilderDispatchContext(Mock(), None)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
     with pytest.raises(UserNotInWorkspace):
         BuilderWorkflowActionService().dispatch_action(
             user, workflow_action, dispatch_context
