@@ -291,8 +291,7 @@ export const UIHelpers = {
 
     const activeCell = tableComponent.get('.grid-view__cell.active')
     // Double click to start editing cell
-    await activeCell.trigger('click')
-    await activeCell.trigger('click')
+    await activeCell.trigger('dblclick')
 
     return activeCell.find('input')
   },

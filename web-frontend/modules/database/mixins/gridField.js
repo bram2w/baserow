@@ -26,15 +26,6 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
-      /**
-       * Timestamp of the last the time the user clicked on the field. We need this to
-       * check if it was double clicked.
-       */
-      clickTimestamp: null,
-    }
-  },
   watch: {
     /**
      * It could happen that the cell is not select, but still being kept alive to
@@ -81,18 +72,11 @@ export default {
      * remove the event listeners when the cell is unselected.
      */
     setupAllEventListenersOnCellSelected() {
-      const clickEventListener = (event) => {
-        const timestamp = new Date().getTime()
-        if (
-          this.clickTimestamp !== null &&
-          timestamp - this.clickTimestamp < 200
-        ) {
-          this.doubleClick(event)
-        }
-
-        this.clickTimestamp = timestamp
-      }
-      this.addEventListenerWithAutoRemove(this.$el, 'click', clickEventListener)
+      this.addEventListenerWithAutoRemove(
+        this.$el,
+        'dblclick',
+        this.doubleClick
+      )
 
       // Register a body click event listener so that we can detect if a user has
       // clicked outside the field. If that happens we want to unselect the field and
@@ -249,7 +233,6 @@ export default {
      */
     _select() {
       this.setupAllEventListenersOnCellSelected()
-      this.clickTimestamp = new Date().getTime()
       this.select()
 
       // Emit the selected event so that the parent component can take an action like
