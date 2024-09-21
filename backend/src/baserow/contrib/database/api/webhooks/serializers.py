@@ -117,9 +117,13 @@ class TableWebhookCallSerializer(serializers.ModelSerializer):
         ]
 
     def get_request(self, obj):
+        if obj.request is None:
+            return ""
         return truncate_middle(obj.request, 100000, "\n...(truncated)\n")
 
     def get_response(self, obj):
+        if obj.response is None:
+            return ""
         return truncate_middle(obj.response, 100000, "\n...(truncated)\n")
 
 

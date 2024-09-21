@@ -106,6 +106,29 @@ def test_list_webhooks_truncated_calls(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_webhooks_empty_request_and_response(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    webhook_1 = data_fixture.create_table_webhook(
+        table=table, headers={"Baserow-add-1": "Value 1"}
+    )
+    call_1 = data_fixture.create_table_webhook_call(
+        webhook=webhook_1, request=None, response=None
+    )
+
+    response = api_client.get(
+        reverse("api:database:webhooks:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json) == 1
+    assert response_json[0]["calls"][0]["request"] == ""
+    assert response_json[0]["calls"][0]["response"] == ""
+
+
+@pytest.mark.django_db
 def test_create_webhooks(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     user_2, jwt_token_2 = data_fixture.create_user_and_token()
