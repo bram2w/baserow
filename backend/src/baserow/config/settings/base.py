@@ -2,7 +2,6 @@ import importlib
 import json
 import os
 import re
-import sys
 from datetime import timedelta
 from decimal import Decimal
 from ipaddress import ip_network
@@ -35,15 +34,6 @@ from baserow.version import VERSION
 FEATURE_FLAGS = [
     flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
 ]
-
-
-class Everything(object):
-    def __contains__(self, other):
-        return True
-
-
-if "*" in FEATURE_FLAGS or "pytest" in sys.modules:
-    FEATURE_FLAGS = Everything()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
