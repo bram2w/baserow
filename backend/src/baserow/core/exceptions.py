@@ -295,3 +295,9 @@ class CannotCalculateIntermediateOrder(Exception):
     Raised when an intermediate order can't be calculated. This could be because the
     fractions are equal.
     """
+
+
+class FeatureDisabled(Exception):
+    """
+    Raised when a feature is disabled.
+    """

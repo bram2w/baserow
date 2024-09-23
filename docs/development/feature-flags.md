@@ -42,20 +42,36 @@ Feature flags should be:
 ### In the Backend
 
 ```python
-# In your feature file:
-from django.conf import settings
+# Add variable with feature flag to baserow.core.feature_flag in format
+# FF_<FEATURE_NAME> = "feature_name"
+# i.e. 
+FF_FEATURE1 = "feature1"
 
-if "feature1" in settings.FEATURE_FLAGS:
-# do the feature
+# In your feature file import flag you need and feature flag function
+from baserow.core.feature_flag import FF_FEATURE1, feature_flag_is_enabled 
+
+# Use to check if feature is enabled
+if feature_flag_is_enabled(FF_FEATURE1):
+    # do the feature
+
+# or if you want to raise exception if the feature is not enabled
+feature_flag_is_enabled(FF_FEATURE1, raise_if_disabled=True)
 ```
 
 ### In the Web-frontend
 
+
+
 ```javascript
+// add feature flag variable in @core/plugins/featureFlags.js in format
+// FF_<FEATURE_NAME> = "feature_name"
+// i.e.
+export const FF_FEATURE1 = "feature1";
+
 methods: {
     someComponentMethod()
     {
-        if (this.$featureFlagIsEnabled("feature1")){
+        if (this.$featureFlagIsEnabled(FF_FEATURE1)){
             // do the feature
         }
     }

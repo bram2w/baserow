@@ -74,3 +74,5 @@ BASEROW_OLLAMA_MODELS = []
 PUBLIC_BACKEND_URL = "http://localhost:8000"
 PUBLIC_WEB_FRONTEND_URL = "http://localhost:3000"
 BASEROW_EMBEDDED_SHARE_URL = "http://localhost:3000"
+
+FEATURE_FLAGS = "*"
