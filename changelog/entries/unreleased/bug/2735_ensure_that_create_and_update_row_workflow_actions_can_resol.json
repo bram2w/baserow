@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "[Builder] Ensure that the create and update row workflow actions can resolve a formula referring to a current record's index.",
+    "issue_number": 2735,
+    "bullet_points": [],
+    "created_at": "2024-09-20"
+}
