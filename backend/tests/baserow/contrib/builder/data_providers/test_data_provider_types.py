@@ -917,6 +917,14 @@ def test_current_record_provider_get_data_chunk_without_record_index(data_fixtur
     assert current_record_provider.get_data_chunk(dispatch_context, ["path"]) is None
 
 
+def test_current_record_provider_get_data_chunk_for_idx():
+    current_record_provider = CurrentRecordDataProviderType()
+    fake_request = HttpRequest()
+    fake_request.data = {"current_record": 123}
+    dispatch_context = BuilderDispatchContext(fake_request, None)
+    assert current_record_provider.get_data_chunk(dispatch_context, ["__idx__"]) == 123
+
+
 @pytest.mark.django_db
 def test_current_record_provider_get_data_chunk(data_fixture):
     current_record_provider = CurrentRecordDataProviderType()
