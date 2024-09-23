@@ -574,7 +574,7 @@ class LocalBaserowUserSourceType(UserSourceType):
             # As we have no unique constraint for fields we return the first matching
             # user.
             user = UserModel.objects.filter(
-                **{user_source.email_field.db_column: kwargs["email"]}
+                **{f"{user_source.email_field.db_column}__iexact": kwargs["email"]}
             ).first()
 
         if kwargs.get("user_id", None):

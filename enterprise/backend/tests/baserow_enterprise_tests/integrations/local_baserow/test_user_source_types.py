@@ -1966,3 +1966,47 @@ def test_get_user_role_handles_empty_role_field(data_fixture, role, expected_rol
     )
 
     assert user_role == expected_role
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "user_provided_email",
+    (
+        [
+            "foo@bar.com",
+            "Foo@bar.com",
+            "foo@Bar.com",
+            "foo@bar.Com",
+            "FOO@bar.com",
+            "foo@BAR.com",
+            "foo@bar.COM",
+            "FOO@BAR.COM",
+        ]
+    ),
+)
+def test_local_baserow_user_source_get_user_is_case_insensitive(
+    data_fixture,
+    user_provided_email,
+):
+    """
+    Ensure that the user provided email address is not case sensitive when
+    authenticating in the backend.
+    """
+
+    data = populate_local_baserow_test_data(data_fixture)
+
+    user_source = data["user_source"]
+    user_source_type = user_source.get_type()
+    UserModel = data["user_table"].get_model()
+
+    user = UserModel.objects.first()
+
+    # set the user's actual email in the backend
+    actual_email = "foo@bar.com"
+    email_field = user_source.email_field.db_column
+    setattr(user, email_field, actual_email)
+    user.save()
+
+    user = user_source_type.get_user(user_source, email=user_provided_email)
+
+    assert user.email == actual_email
