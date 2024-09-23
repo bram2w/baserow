@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fix survey mode view with rich text by not automatically focussing.",
+  "issue_number": 3025,
+  "bullet_points": [],
+  "created_at": "2024-09-19"
+}

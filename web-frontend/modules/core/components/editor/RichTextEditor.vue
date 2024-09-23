@@ -332,7 +332,6 @@ export default {
     },
     setupEditor() {
       if (this.editable) {
-        this.focus()
         this.floatingMenuVisible = true
 
         this.registerResizeObserver()
